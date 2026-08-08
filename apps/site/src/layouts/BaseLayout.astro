@@ -1,0 +1,53 @@
+---
+import ComplianceFooter from "../components/ComplianceFooter.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = "Legality that remembers, and rulings you can cite — a reference tool for Flesh and Blood.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+    <ComplianceFooter />
+  </body>
+</html>
+
+<style is:global>
+  /*
+    Phase 0 placeholder styling, and nothing more.
+
+    The design language in docs/DESIGN.md is built in Phase 1 as a token
+    library, and Phase 1 owns everything visual. This block exists only so the
+    Phase 0 page is legible; it names no colours, uses system defaults, and is
+    meant to be deleted wholesale rather than extended. If you find yourself
+    adding to it, you are inventing the design system early — don't.
+  */
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    margin: 0 auto;
+    padding: 3rem 1.25rem;
+    max-width: 42rem;
+    font-family: system-ui, sans-serif;
+    line-height: 1.6;
+  }
+</style>

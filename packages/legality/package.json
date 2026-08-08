@@ -1,0 +1,47 @@
+{
+  "name": "optfall-legality",
+  "version": "0.0.0",
+  "description": "Flesh and Blood deck legality, as of any date — per-card verdicts that each cite the rule that produced them. Zero runtime dependencies.",
+  "license": "MIT",
+  "author": "alxjrvs",
+  "homepage": "https://github.com/alxjrvs/optfall/tree/main/packages/legality",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alxjrvs/optfall.git",
+    "directory": "packages/legality"
+  },
+  "bugs": "https://github.com/alxjrvs/optfall/issues",
+  "keywords": [
+    "flesh-and-blood",
+    "fabtcg",
+    "deck",
+    "legality",
+    "banned-list",
+    "living-legend"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "src",
+    "!**/*.test.*"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --sourcemap=linked && tsc --noEmit false --emitDeclarationOnly --declaration --declarationMap --outDir ./dist",
+    "test": "bun test"
+  },
+  "dependencies": {}
+}

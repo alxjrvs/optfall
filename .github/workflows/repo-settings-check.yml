@@ -1,0 +1,166 @@
+# Repository-configuration drift check.
+#
+# docs/PLAN.md, "Asserted, not merely declared": a settings file nobody re-runs
+# is a description of the past. This is the job that makes the configuration in
+# scripts/repo-settings.sh a claim something can falsify.
+#
+# WHY THIS IS SCHEDULED AND NOT PART OF ci.yml's GATE — two reasons, and the
+# first one is fatal rather than stylistic:
+#
+#   1. Reading the allow_*/delete_branch_on_merge fields requires a token with
+#      administrative read. A workflow's `permissions:` block has no
+#      `administration` scope, so GITHUB_TOKEN cannot be raised to it by any
+#      setting — only a hand-created PAT works. Making that a required check
+#      means every pull request is red until a human creates and installs a
+#      token, which is precisely the auto-merge deadlock Phase 0 exists to
+#      avoid.
+#
+#   2. It is the wrong trigger anyway. Repository settings drift when somebody
+#      changes a setting, not when somebody changes code. Checking them on
+#      every pull request tests the wrong thing on the wrong event; checking
+#      them weekly tests the right thing on roughly the right one.
+#
+# Drift here is never urgent — nothing is broken, a setting is merely no longer
+# what the repository says it is — so the outcome is an issue to read on Monday,
+# not a red build blocking work.
+
+name: repo-settings-check
+
+on:
+  schedule:
+    # Mondays, 08:00 UTC. Drift is a "notice it this week" problem.
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+  # Also on changes to the script itself, so a mistake in the specification is
+  # caught by the run that introduced it rather than up to a week later.
+  push:
+    branches: [main]
+    paths:
+      - "scripts/repo-settings.sh"
+      - ".github/workflows/repo-settings-check.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: repo-settings-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # SETUP, ONCE: create a token with classic `repo` scope, or a fine-grained
+      # token with Administration: read on this repository, and add it as the
+      # REPO_SETTINGS_TOKEN repository secret.
+      #
+      # Until that exists this run warns and stops rather than failing. It
+      # gates nothing, so a red run here would be pure noise — and a check that
+      # cries wolf every Monday before it is even configured is a check people
+      # learn to ignore.
+      - name: Verify the token is configured
+        id: token
+        env:
+          REPO_SETTINGS_TOKEN: ${{ secrets.REPO_SETTINGS_TOKEN }}
+        run: |
+          if [[ -z "${REPO_SETTINGS_TOKEN}" ]]; then
+            echo "::warning title=Drift check not configured::REPO_SETTINGS_TOKEN is not set, so the repository configuration is unverified. Create a token with administrative read and add it as a repository secret. See scripts/repo-settings.sh."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check the live repository configuration for drift
+        id: check
+        if: steps.token.outputs.configured == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.REPO_SETTINGS_TOKEN }}
+          # The literal repository, NOT github.repository. The script derives
+          # EXPECTED_OWNER from this value, so feeding it the live repo makes
+          # the "owner = alxjrvs" assertion compare a value against itself —
+          # it could never fail, and after a transfer to an organisation it
+          # would cheerfully report ok. Personal ownership is a compliance
+          # requirement (docs/COMPLIANCE.md §1), so it is pinned here.
+          OPTFALL_REPO: alxjrvs/optfall
+        run: |
+          # `set +e` is LOAD-BEARING and must come first.
+          #
+          # GitHub runs `run:` blocks as `bash -e {0}` when no `shell:` is set,
+          # and `set -uo pipefail` does not clear an already-active `-e`. So the
+          # assignment below — whose whole purpose is to capture a non-zero exit
+          # — would abort the step before `status=$?` ran. The drift issue would
+          # never be opened, and this workflow would produce exactly the red
+          # build with no issue that its header says it exists to avoid.
+          set +e
+          set -uo pipefail
+
+          # The script exits 1 on drift and 2 when it cannot see enough to
+          # judge. Both are reportable outcomes, not failures.
+          output="$(./scripts/repo-settings.sh --check 2>&1)"
+          status=$?
+          echo "$output"
+          {
+            echo "status=${status}"
+            echo "output<<REPORT_EOF"
+            echo "$output"
+            echo "REPORT_EOF"
+          } >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Open or update the drift issue
+        if: steps.token.outputs.configured == 'true' && steps.check.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ steps.check.outputs.output }}
+          STATUS: ${{ steps.check.outputs.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$STATUS" == "2" ]]; then
+            title="Repository configuration is unverifiable"
+            lede="The drift check could not read enough of the live configuration to judge it, so it failed closed rather than reporting a pass it could not stand behind. This usually means REPO_SETTINGS_TOKEN lacks administrative read, or has expired."
+          else
+            title="Repository configuration has drifted"
+            lede="The live repository no longer matches \`scripts/repo-settings.sh\`. Nothing is broken — but a setting is no longer what this repository says it is, and one of the two needs to change."
+          fi
+
+          body=$(cat <<BODY
+          ${lede}
+
+          \`\`\`
+          ${REPORT}
+          \`\`\`
+
+          **To restore the configuration:** run \`scripts/repo-settings.sh\` (no \`--check\`) from a terminal with \`gh\` authenticated.
+
+          **If the drift was deliberate:** update \`scripts/repo-settings.sh\` so the specification matches the intent, and say why in the commit. The script is the source of truth; the live settings are its output.
+
+          [Workflow run](${RUN_URL})
+          BODY
+          )
+
+          # Create the label FIRST, unconditionally. `gh issue list --label` on a
+          # label that does not exist is an error, not an empty result — and
+          # under `set -e` that killed the step on the first-ever drift run,
+          # which is the one outcome this workflow exists to guarantee.
+          gh label create repo-settings \
+            --description "Repository configuration drift" \
+            --color BFD4F2 2>/dev/null || true
+
+          # One issue, commented on and reused, rather than a new one every
+          # Monday for the same unfixed drift.
+          existing=$(gh issue list --state open --label repo-settings \
+            --json number --jq '.[0].number // empty')
+
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --label repo-settings --body "$body"
+          fi

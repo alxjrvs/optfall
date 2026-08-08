@@ -1,0 +1,30 @@
+{
+  // Lint severity is DECLARED here, not implied by a CLI flag.
+  //
+  // oxlint's stock preset marks every rule "warn", and oxlint exits 0 on
+  // warnings — so a `lint` job running the stock preset can never fail a build,
+  // which makes that leg of the aggregate gate decorative. Promoting the
+  // categories to "error" is what makes `bun run lint` a real gate.
+  //
+  // `--deny-warnings` in package.json is the second half of the same fix: it
+  // catches any rule that is still a warning here — one a future oxlint release
+  // enables by default, or one a plugin adds — so a new rule cannot arrive
+  // silently disarmed.
+  //
+  // Phase 1 adds the rule that rejects a raw hex or a raw pixel value inside a
+  // component (docs/PLAN.md, "Enforced, not requested"). That rule is only
+  // enforcement because this file makes lint failures fatal.
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/.astro/**",
+    "**/node_modules/**",
+    "**/*-snapshots/**"
+  ]
+}

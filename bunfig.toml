@@ -1,0 +1,9 @@
+# Optfall workspace defaults for Bun.
+#
+# Versions are pinned deliberately rather than floating. The build plan calls
+# out Storybook's Svelte integration as the place where "latest of everything"
+# breaks, and a lockfile alone does not stop the next `bun add` from writing a
+# caret range into package.json. Dependabot moves these; nothing else does.
+
+[install]
+exact = true

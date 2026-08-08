@@ -1,0 +1,569 @@
+name: CI
+
+# Runs on every pull request and on every push to main.
+#
+# Deliberately NO workflow-level `paths:` / `paths-ignore:` filter. The `gate`
+# job below is the sole required status check on the default branch, and a
+# workflow-level path filter would skip the entire workflow — including `gate` —
+# leaving the required check stuck in "pending" forever. Filter individual jobs
+# instead; `gate` treats a skipped job as a pass.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Minimal by default. No job here needs anything beyond reading the repo.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Pin the toolchain line, not just the action.
+  BUN_VERSION: "1.3.x"
+
+jobs:
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "No lockfile committed yet — installing without --frozen-lockfile."
+            bun install
+          fi
+
+      - name: Typecheck
+        run: bun run typecheck
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "No lockfile committed yet — installing without --frozen-lockfile."
+            bun install
+          fi
+
+      - name: Lint
+        run: bun run lint
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "No lockfile committed yet — installing without --frozen-lockfile."
+            bun install
+          fi
+
+      - name: Test
+        run: bun run test
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "No lockfile committed yet — installing without --frozen-lockfile."
+            bun install
+          fi
+
+      - name: Build
+        run: bun run build
+
+  no-llm-dependencies:
+    name: no-llm-dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      # Enforces the project-wide rule in docs/PLAN.md ("Rules that hold across
+      # every phase"): no language model in the shipped product.
+      #
+      # This matches dependency NAMES declared in package.json manifests. It
+      # deliberately does NOT grep source or documentation: docs/PLAN.md
+      # discusses language models at length and by name, and a content grep
+      # would fail the build on the very document that states the rule.
+      - name: Write the manifest scanner
+        run: |
+          set -euo pipefail
+          cat > "${RUNNER_TEMP}/no-llm-check.ts" <<'TS'
+          import { readFileSync } from "node:fs";
+
+          // Exact package names.
+          const BANNED_EXACT = new Set([
+            "ai", // Vercel AI SDK
+            "openai",
+            "openai-edge",
+            "@azure/openai",
+            "anthropic",
+            "@anthropic-ai/sdk",
+            "@google/generative-ai",
+            "@google/genai",
+            "@google-cloud/aiplatform",
+            "langchain",
+            "llamaindex",
+            "cohere-ai",
+            "groq-sdk",
+            "@mistralai/mistralai",
+            "ollama",
+            "replicate",
+            "@huggingface/inference",
+            "@huggingface/transformers",
+            "@xenova/transformers",
+            "transformers.js",
+            "node-llama-cpp",
+            "llama-node",
+            "@aws-sdk/client-bedrock-runtime",
+            "@aws-sdk/client-bedrock-agent-runtime",
+            "@google-cloud/vertexai",
+            "together-ai",
+            "gpt4all",
+            "gpt-3-encoder",
+            "js-tiktoken",
+            "tiktoken",
+            "@vercel/ai",
+            "openai-node",
+            "anthropic-ai",
+            "fireworks-ai",
+            "@deepseek/sdk",
+            "@xai-org/sdk",
+          ]);
+
+          // Whole scopes, matched as a `@scope/` prefix.
+          const BANNED_SCOPES = [
+            "@ai-sdk/",
+            "@anthropic-ai/",
+            "@openai/",
+            "@langchain/",
+            "@llamaindex/",
+            "@mistralai/",
+            "@huggingface/",
+            "@xenova/",
+            "@google/generative-ai",
+            "@llama-node/",
+          ];
+
+          const DEPENDENCY_FIELDS = [
+            "dependencies",
+            "devDependencies",
+            "peerDependencies",
+            "optionalDependencies",
+            "resolutions",
+            "overrides",
+            "trustedDependencies",
+          ] as const;
+
+          function isBannedName(name: string): boolean {
+            if (BANNED_EXACT.has(name)) return true;
+            return BANNED_SCOPES.some((scope) => name.startsWith(scope));
+          }
+
+          // Override and resolution keys are PATHS, not plain package names:
+          // npm and yarn both accept `"astro/openai"` and `"**/langchain"` to
+          // pin a dependency-of-a-dependency. Testing the raw key matches
+          // neither, so a path-style pin on an LLM SDK — which is a pin whose
+          // only purpose is to control one — passed the gate untouched.
+          //
+          // Split on "/", drop glob segments, and re-join `@scope` with the
+          // name that follows it so scoped packages survive the split intact.
+          function candidateNames(key: string): string[] {
+            const parts = key.split("/").filter((part) => part && part !== "**" && part !== "*");
+            const names: string[] = [key];
+            for (let i = 0; i < parts.length; i += 1) {
+              const part = parts[i]!;
+              if (part.startsWith("@") && i + 1 < parts.length) {
+                names.push(`${part}/${parts[i + 1]}`);
+                i += 1;
+              } else {
+                names.push(part);
+              }
+            }
+            return names;
+          }
+
+          function banned(name: string): boolean {
+            return candidateNames(name).some(isBannedName);
+          }
+
+          // Tracked manifests first: that skips node_modules and untracked
+          // scratch for free.
+          function fromGit(): string[] {
+            const listed = Bun.spawnSync([
+              "git",
+              "ls-files",
+              "-z",
+              "--",
+              "package.json",
+              "*/package.json",
+            ]);
+            if (listed.exitCode !== 0) return [];
+            return listed.stdout
+              .toString()
+              .split("\0")
+              .filter((path) => path.endsWith("package.json"));
+          }
+
+          // Fallback for a tree where nothing is committed yet, so that running
+          // this check by hand before the first commit is not a vacuous pass.
+          function fromDisk(): string[] {
+            return [...new Bun.Glob("**/package.json").scanSync({ cwd: ".", dot: false })]
+              .map((path) => path.replaceAll("\\", "/"))
+              .filter((path) => !path.split("/").includes("node_modules"))
+              .sort();
+          }
+
+          const tracked = fromGit();
+          const manifests = tracked.length > 0 ? tracked : fromDisk();
+
+          type Violation = { file: string; field: string; name: string };
+          const violations: Violation[] = [];
+
+          // Walks a dependency block, descending into nested override maps.
+          function walk(
+            block: Record<string, unknown>,
+            file: string,
+            field: string,
+            depth = 0,
+          ): void {
+            if (depth > 8) return; // pathological nesting; nothing real goes this deep
+            for (const [name, value] of Object.entries(block)) {
+              if (banned(name)) violations.push({ file, field, name });
+              if (value && typeof value === "object" && !Array.isArray(value)) {
+                walk(value as Record<string, unknown>, file, field, depth + 1);
+              }
+            }
+          }
+
+          for (const file of manifests) {
+            let manifest: Record<string, unknown>;
+            try {
+              manifest = JSON.parse(readFileSync(file, "utf8"));
+            } catch (error) {
+              console.log(`::error file=${file}::${file} is not valid JSON: ${error}`);
+              process.exit(1);
+            }
+
+            for (const field of DEPENDENCY_FIELDS) {
+              const block = manifest[field];
+              if (!block || typeof block !== "object") continue;
+
+              // `trustedDependencies` is an ARRAY of names, not a map, so the
+              // object walk below never reached it — it sat in the field list
+              // reading as coverage while scanning nothing.
+              if (Array.isArray(block)) {
+                for (const entry of block) {
+                  if (typeof entry === "string" && banned(entry)) {
+                    violations.push({ file, field, name: entry });
+                  }
+                }
+                continue;
+              }
+
+              // Recursive, because `overrides` and `resolutions` nest: npm's
+              // `{"some-lib": {"openai": "^6"}}` pins a TRANSITIVE dependency,
+              // and a top-level-keys-only walk reads the outer name and calls
+              // it clean. That is a pin whose entire purpose is to control an
+              // LLM SDK version, passing a gate named for banning LLM SDKs.
+              walk(block as Record<string, unknown>, file, field);
+            }
+          }
+
+          // The lockfile, which is where the rule is actually decided.
+          //
+          // Manifests only describe what WE declared. `bun.lock` describes what
+          // will be installed — so an LLM SDK arriving as somebody else's
+          // transitive dependency ships in the built product while every
+          // manifest stays clean. docs/PLAN.md's rule is about what the product
+          // contains, not about what we chose to type, so the lockfile is the
+          // authority and a manifest-only scan is a gate with a hole in it.
+          try {
+            const lock = readFileSync("bun.lock", "utf8");
+            // Entries look like:  "js-yaml": ["js-yaml@4.3.1", "", {...}, "sha512-…"],
+            // The resolved specifier is the reliable name source, since keys may
+            // be nested paths like "astro/js-yaml".
+            const seen = new Set<string>();
+            for (const match of lock.matchAll(/"((?:@[^"/]+\/)?[^"@\s/]+)@[^"]*"/g)) {
+              const name = match[1];
+              if (name && !seen.has(name)) {
+                seen.add(name);
+                if (banned(name)) {
+                  violations.push({ file: "bun.lock", field: "resolved tree", name });
+                }
+              }
+            }
+            console.log(`Scanned bun.lock — ${seen.size} distinct package(s) in the resolved tree.`);
+          } catch {
+            // No lockfile is itself a finding: without one the resolved tree is
+            // unknown, and a pass here would be a pass over nothing.
+            console.log(
+              "::error::bun.lock is missing, so the resolved dependency tree cannot be checked. A committed lockfile is required for this gate to mean anything.",
+            );
+            process.exit(1);
+          }
+
+          console.log(
+            `Scanned ${manifests.length} package.json manifest(s) for language-model dependencies.`,
+          );
+          for (const file of manifests) console.log(`  ${file}`);
+
+          if (violations.length === 0) {
+            console.log("No language-model or AI SDK dependency declared. ✔");
+            process.exit(0);
+          }
+
+          console.log("");
+          for (const { file, field, name } of violations) {
+            console.log(
+              `::error file=${file}::Forbidden dependency "${name}" declared in ${field} of ${file}`,
+            );
+          }
+          console.log("");
+          console.log(
+            "Optfall ships no language model: nothing a user touches may call one, and no published dataset may contain model-generated content.",
+          );
+          console.log(
+            'See docs/PLAN.md, "Rules that hold across every phase" — the first rule. It is structural, and there is no exception behind a toggle.',
+          );
+          process.exit(1);
+          TS
+
+      - name: Assert no language-model or AI SDK dependency
+        run: bun "${RUNNER_TEMP}/no-llm-check.ts"
+
+  disclaimer:
+    name: disclaimer
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "No lockfile committed yet — installing without --frozen-lockfile."
+            bun install
+          fi
+
+      # docs/COMPLIANCE.md §4 names this as an enforcement point, and it is the
+      # only one that catches what review does not: a reflow, an editor
+      # autocorrecting `®` or `™`, or a page rendered outside the shared layout.
+      #
+      # It builds the site itself rather than reusing the `build` job's output.
+      # That costs a second build and buys independence — this job fails on its
+      # own evidence, not on an artifact another job says is fine.
+      #
+      # The expected text is read from docs/PLAN.md, never from the site
+      # source: comparing the build against a constant the build imports would
+      # only prove the build is self-consistent. The matching source-side
+      # assertion (constant == PLAN.md == README.md == COMPLIANCE.md) lives in
+      # scripts/canonical-disclaimer.test.ts and runs in the `test` job.
+      - name: Build the site
+        run: bun run build
+
+      - name: Assert the disclaimer appears verbatim on every built page
+        run: bun run check:disclaimer
+
+  # NOTE: the repository-settings drift check deliberately does NOT live here.
+  # It runs on a schedule, in .github/workflows/repo-settings-check.yml.
+  #
+  # It was a required job wired into `gate`, and that was wrong in a way worth
+  # recording so nobody re-adds it. Reading the allow_*/delete_branch_on_merge
+  # fields needs a token with administrative read, and `permissions:` has no
+  # `administration` scope — so no workflow setting can raise GITHUB_TOKEN to
+  # it, and only a hand-created personal access token works. Gating merges on
+  # that means every pull request is red until a human adds a PAT, which is
+  # exactly the auto-merge deadlock Phase 0 exists to avoid.
+  #
+  # It is also the wrong trigger. Repository settings drift when somebody
+  # changes a setting, not when somebody changes code, so checking them per
+  # pull request tests the wrong thing on the wrong event.
+
+  # The single aggregate gate.
+  #
+  # This is the ONLY job that may be configured as a required status check on
+  # the default branch (the ruleset in scripts/repo-settings.sh requires exactly
+  # the name "gate"). Requiring the individual jobs above would strand them in
+  # "pending" forever whenever a path filter skips one, which blocks auto-merge
+  # permanently.
+  #
+  # It runs with `if: always()` so it reports a verdict even when a needed job
+  # failed, was skipped, or the run was cancelled.
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs:
+      - typecheck
+      - lint
+      - test
+      - build
+      - no-llm-dependencies
+      - disclaimer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # A gate can only aggregate what it was told to need, and `needs:` above
+      # is maintained by hand. Adding a job to this workflow and forgetting to
+      # list it there is a silent downgrade: the gate goes green without it and
+      # nothing anywhere says so. docs/PLAN.md schedules exactly that change for
+      # Phase 1 ("a11y and visual-regression checks wired into the aggregate
+      # gate"), so the trigger is already on the roadmap.
+      #
+      # This reads the workflow's own job names back out of the file and fails
+      # if any of them is missing from `needs`.
+      - name: Assert every job in this workflow is wired into the gate
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+
+          declared=$(awk '
+            /^jobs:[[:space:]]*$/ { in_jobs = 1; next }
+            in_jobs && /^[^[:space:]]/ { in_jobs = 0 }
+            in_jobs && /^  [A-Za-z0-9_-]+:[[:space:]]*$/ {
+              name = $0
+              sub(/^  /, "", name)
+              sub(/:[[:space:]]*$/, "", name)
+              print name
+            }
+          ' .github/workflows/ci.yml)
+
+          if [ -z "$declared" ]; then
+            echo "::error::Could not parse any job names out of .github/workflows/ci.yml — this check is blind, which is a failure."
+            exit 1
+          fi
+
+          missing=""
+          for job in $declared; do
+            if [ "$job" = "gate" ]; then continue; fi
+            if ! echo "$NEEDS" | jq -e --arg j "$job" 'has($j)' >/dev/null; then
+              missing="${missing} ${job}"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "::error::Jobs exist in ci.yml but are not in gate's needs:${missing} — add them to \`needs:\` or the gate passes without them."
+            exit 1
+          fi
+
+          echo "Every job in ci.yml is wired into the gate:"
+          echo "$declared" | while read -r job; do echo "  ${job}"; done
+
+      - name: Aggregate job results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+
+          echo "$NEEDS" | jq -r 'to_entries[] | "  \(.key): \(.value.result)"'
+
+          count=$(echo "$NEEDS" | jq -r 'length')
+          if [ "$count" -eq 0 ]; then
+            echo "::error::gate has no needed jobs — the gate is not actually gating anything."
+            exit 1
+          fi
+
+          # Allowlist, not denylist: only "success" and "skipped" pass.
+          # "failure" and "cancelled" fail, and so does any result value this
+          # script does not recognise.
+          bad=$(echo "$NEEDS" | jq -r '
+            [ to_entries[]
+              | select((.value.result == "success" or .value.result == "skipped") | not)
+              | "\(.key) (\(.value.result))"
+            ] | join(", ")
+          ')
+
+          {
+            echo "### gate"
+            echo ""
+            echo "| job | result |"
+            echo "| --- | --- |"
+            echo "$NEEDS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"'
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$bad" ]; then
+            echo "**Verdict: failed** — $bad" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::gate failed — these jobs did not succeed: ${bad}"
+            exit 1
+          fi
+
+          echo "**Verdict: passed** — every job succeeded or was skipped." >> "$GITHUB_STEP_SUMMARY"
+          echo "gate passed — all ${count} needed job(s) succeeded or were skipped."

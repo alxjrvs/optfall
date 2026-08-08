@@ -1,0 +1,50 @@
+---
+// COMPLIANCE COMPONENT — read before editing.
+//
+// Legend Story Studios' Terms of Use for Game and Studio Assets and IP grant
+// third-party applications like this one a written permission, on conditions.
+// Two of those conditions live in this file:
+//
+//   1. The disclaimer must appear verbatim, in the footer, on every page. The
+//      text is not written here — it comes from the single exported constant
+//      required by docs/COMPLIANCE.md, so there is exactly one place a typo
+//      can live. Render it as one text node; never split it across elements
+//      and never reflow it.
+//
+//   2. No Flesh and Blood or Legend Story Studios logos or set symbols may
+//      appear anywhere on the site — product set logos count as FAB logos.
+//      Nothing in this footer is a mark, and nothing here should become one.
+//
+// This component is intentionally styleless beyond the bare minimum. Phase 1
+// replaces the presentation with the token library; the *text* is not Phase 1's
+// to change.
+import { LSS_DISCLAIMER } from "../lib/compliance";
+---
+
+<footer class="compliance">
+  <p class="disclaimer">{LSS_DISCLAIMER}</p>
+  <p class="licence">
+    Optfall's own code is MIT-licensed. Published datasets are openly licensed
+    only over the structural work this project owns — rule identifiers, the
+    legality timeline, diffs and annotations.
+  </p>
+</footer>
+
+<style>
+  .compliance {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid currentColor;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    opacity: 0.75;
+  }
+
+  .compliance p {
+    margin: 0 0 0.75rem;
+  }
+
+  .compliance p:last-child {
+    margin-bottom: 0;
+  }
+</style>

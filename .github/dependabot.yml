@@ -1,0 +1,31 @@
+version: 2
+
+# Deliberately ungrouped. `dependabot/fetch-metadata` reports no `update-type`
+# for a grouped pull request, so grouping would make the minor/patch allowlist
+# in dependabot-auto-merge.yml fail closed and nothing would ever auto-merge.
+# One pull request per dependency, with a low open limit to keep the noise down.
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
+      prefix-development: deps-dev
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope

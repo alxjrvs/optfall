@@ -1,0 +1,57 @@
+name: Dependabot auto-merge
+
+# `pull_request`, never `pull_request_target`. `pull_request_target` would run
+# this workflow with a writable token in the context of the base branch while
+# checking out contributor-controlled code, which is the standard privilege
+# escalation. Dependabot pull requests trigger `pull_request` with Dependabot's
+# own read-only token, raised to exactly the two scopes below.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: auto-merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Both checks matter: `github.actor` is who triggered the run, and
+    # `pull_request.user.login` is who actually opened the pull request.
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.actor == 'dependabot[bot]'
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # An allowlist, never `!= major`. A denylist silently auto-merges every
+      # update type Dependabot invents later — security-only bumps, ecosystem
+      # migrations, anything unrecognised. This fires for minor and patch and
+      # nothing else; everything else waits for a human.
+      - name: Enable auto-merge for minor and patch updates
+        if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        # `--auto` hands the pull request to GitHub's own gate: it merges only
+        # once the required `gate` check from ci.yml is green, and never sooner.
+        # Requires "Allow auto-merge" on the repository, which
+        # scripts/repo-settings.sh sets and its --check mode asserts.
+        run: gh pr merge --auto --squash "$PR_URL"
+
+      - name: Report a skipped update
+        if: >-
+          steps.metadata.outputs.update-type != 'version-update:semver-minor' &&
+          steps.metadata.outputs.update-type != 'version-update:semver-patch'
+        env:
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          set -euo pipefail
+          echo "Update type '${UPDATE_TYPE:-unknown}' is outside the minor/patch allowlist."
+          echo "Auto-merge was not enabled. Review and merge this pull request by hand."
