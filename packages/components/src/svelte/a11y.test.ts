@@ -178,10 +178,27 @@ async function runAxe(dom: JSDOM): Promise<axe.Result[]> {
   return results.violations;
 }
 
-describe("every primitive passes axe in every theme", () => {
-  for (const theme of THEMES) {
+/**
+ * ONE RUN PER CASE, NOT ONE PER THEME — and the reason is worth stating,
+ * because an earlier version of this file looped over both themes and sold
+ * "50 assertions in both themes" as coverage it did not have.
+ *
+ * A theme here is a swap of CSS custom-property VALUES on `:root`. The markup
+ * is identical — `render()` is not passed a theme and no primitive branches on
+ * one — and no axe rule enabled below reads a colour. The single rule that
+ * would, `color-contrast`, is disabled because jsdom cannot evaluate it at all.
+ * So the second pass re-ran the same 25 checks against the same DOM and could
+ * not, even in principle, fail differently.
+ *
+ * Contrast across both themes IS asserted — numerically, from the token values,
+ * in `packages/theme/src/tokens.test.ts`. That is where theme coverage lives,
+ * and duplicating a count here only made this file look like it did more.
+ */
+describe("every primitive passes axe", () => {
+  {
+    const theme = THEMES[0]!;
     for (const { name, component, props } of CASES) {
-      test(`${theme}: ${name}`, async () => {
+      test(`${name}`, async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { body } = render(component as any, { props });
         const violations = await violationsFor(body, theme);

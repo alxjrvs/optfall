@@ -14,14 +14,23 @@ Quoted from `docs/PLAN.md` Phase 1.
 | Storybook — every primitive, both themes | **done** — 62 stories, local-only by decision |
 | Lint rule rejecting literal colour and spacing | **done**, in the gate as `tokens` |
 | a11y checks wired into the aggregate gate | **done**, via the existing `test` job |
+| Storybook's a11y addon, for interactive use | **done** — `test: "error"` in preview |
 | Visual-regression checks wired into the gate | **not done** — see below |
 
 ## Accessibility runs on every primitive, in both themes
 
 `packages/components/src/svelte/a11y.test.ts` renders all eight primitives — 25
-meaningfully-different renderings — through Svelte's server renderer into jsdom
-and runs axe-core over each, in both themes. 50 assertions, in `bun test`, which
-is already a gated job.
+meaningfully-different renderings — through Svelte's server renderer into jsdom,
+injects both the theme stylesheet and the components' own compiled CSS, and runs
+axe-core over each. 25 assertions, in `bun test`, which is already a gated job.
+
+**It runs once per case rather than once per theme, and that is a correction.**
+An earlier version looped over both themes and reported 50 assertions "in both
+themes". It was not coverage: a theme is a swap of CSS custom-property values,
+the markup is identical, and no enabled axe rule reads a colour — the one that
+would, `color-contrast`, is disabled below because jsdom cannot evaluate it. The
+second pass re-ran the same checks against the same DOM and could not fail
+differently. Theme coverage lives in `tokens.test.ts`, numerically.
 
 **It uses jsdom rather than a headless browser deliberately.** Storybook's test
 runner would download a browser on every CI run to assert facts about markup
