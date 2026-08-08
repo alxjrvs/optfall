@@ -74,8 +74,45 @@ GATE_JOB="gate"
 
 RULESET_NAME="default-branch"
 
+usage() {
+  cat <<'USAGE'
+Usage: scripts/repo-settings.sh [--check]
+
+  (no arguments)  Apply the configuration to the live repository.
+  --check         Verify the live repository matches; change nothing.
+  -h, --help      Show this message.
+
+Exit codes: 0 matches / applied, 1 drift, 2 undetermined or usage error.
+USAGE
+}
+
+# Parse strictly, and default to the NON-mutating answer on anything unknown.
+#
+# The obvious spelling — `[[ "$1" == "--check" ]] && CHECK_ONLY=true` — treats
+# every unrecognised argument as "apply". So `--dry-run`, `--help`, `-check` or
+# a plain typo would silently PATCH the live repository settings and create or
+# update the ruleset. For a script whose entire purpose is that its two modes
+# differ, guessing "mutate" from an argument we did not understand is the one
+# unacceptable default.
 CHECK_ONLY=false
-[[ "${1:-}" == "--check" ]] && CHECK_ONLY=true
+case "${1:-}" in
+  --check) CHECK_ONLY=true ;;
+  -h|--help) usage; exit 0 ;;
+  "") ;;
+  *)
+    echo "error: unknown argument '${1}'." >&2
+    echo >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+if [[ $# -gt 1 ]]; then
+  echo "error: unexpected extra arguments: ${*:2}" >&2
+  echo >&2
+  usage >&2
+  exit 2
+fi
 
 drift=0
 undetermined=0

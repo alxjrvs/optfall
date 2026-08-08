@@ -148,8 +148,14 @@ export interface MarkProps {
 
 /**
  * The copyright line that must accompany every card face Optfall renders.
- * Required rather than defaulted on {@link CardImageProps}, so it cannot be
- * dropped by forgetting a prop.
+ *
+ * The component emits this constant itself. It is deliberately NOT a prop:
+ * `docs/COMPLIANCE.md` §5 requires that the notice is "not a prop the caller
+ * may omit, not a default that can be overridden to empty, and not the page's
+ * responsibility". A required `copyright: string` prop satisfies only the first
+ * of those three — `<CardImage copyright="" />` type-checks and renders a card
+ * face with no notice, which is precisely the failure the contract exists to
+ * design out. Making it unrepresentable beats making it mandatory.
  */
 export const CARD_IMAGE_COPYRIGHT = "Card images © Legend Story Studios.";
 
@@ -157,10 +163,16 @@ export const CARD_IMAGE_COPYRIGHT = "Card images © Legend Story Studios.";
  * A card face.
  *
  * Card images are expressly permitted for building card databases, on the
- * condition that a copyright line accompanies them — so the notice is a
- * required prop of the component that shows one. The permission is revocable;
- * losing it should cost a rendering layer and nothing else, which is why no
- * legality or rules data ever travels through this type.
+ * condition that a copyright line accompanies them. The permission is
+ * revocable; losing it should cost a rendering layer and nothing else, which is
+ * why no legality or rules data ever travels through this type.
+ *
+ * **There is deliberately no `copyright` prop.** The implementation renders
+ * {@link CARD_IMAGE_COPYRIGHT} unconditionally, so the notice cannot be
+ * omitted, emptied, or quietly reworded by a caller — see the constant's
+ * documentation for why "required prop" was not enough. A compliance
+ * requirement that a caller can satisfy incorrectly is a convention, not a
+ * contract.
  *
  * The pitch jewel stays an Optfall-drawn overlay rather than a crop of the
  * printed one, so the accessible rendering travels with the component.
@@ -169,8 +181,6 @@ export interface CardImageProps {
   readonly src: string;
   /** The card's printed name, used as the accessible name. */
   readonly alt: string;
-  /** Must be present. Use {@link CARD_IMAGE_COPYRIGHT} unless told otherwise. */
-  readonly copyright: string;
   /** Overlay drawn by us, never sampled from the artwork. */
   readonly pitch?: PitchValue;
 }
