@@ -166,23 +166,43 @@ export const FORBIDDEN_TOKEN_SEGMENTS: readonly string[] = [
 ];
 
 /**
+ * Splits a token id into lowercase words, treating `.`, `-`, `_` and camelCase
+ * humps as equivalent boundaries. `ornament.setSymbol-icon` becomes
+ * `["ornament", "set", "symbol", "icon"]`, so the rules below do not depend on
+ * a house naming style that has not been decided yet.
+ */
+function tokenWords(id: string): string[] {
+  return id
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+/**
  * Whether a token id names something the asset policy forbids shipping.
  *
- * Matches on a normalised substring rather than on whole dot-separated
- * segments, and the difference is the whole value of the check. Nobody names a
- * token `asset.logo`; they name it `asset.fab-logo`, `brand.lssLogo` or
- * `icon.set-symbol-filter`. A segment-equality test returns false for every one
- * of those — it would only catch the naming nobody uses, while passing the
- * naming everybody uses.
+ * Matches on WORD boundaries, which is the only spelling that gets both halves
+ * right. Testing whole dot-separated segments misses everything real — nobody
+ * writes `asset.logo`, they write `asset.fab-logo`, `brand.lssLogo` or
+ * `icon.setSymbol`. But stripping separators entirely and matching substrings
+ * over-fires just as badly: `color.dialog.overlay` collapses to
+ * `colordialogoverlay`, which contains "logo", so a legitimate Phase 1 token
+ * would fail the build with an accusation about LSS's asset policy.
  *
- * Normalising away case and separators also collapses `setSymbol`,
- * `set_symbol` and `set-symbol` onto the same rule, so the check does not turn
- * on a house style that has not been decided yet.
+ * Splitting into words first catches `fab-logo`, `lssLogo` and `setSymbol`
+ * while leaving `dialog.overlay` alone, because "logo" is a word here rather
+ * than an accident of adjacency.
+ *
+ * The deliberate gap: an unseparated coinage like `fablogo` is not caught. That
+ * is the price of not failing builds on `dialog`, and it is the right side to
+ * err on — this check exists to stop an honest mistake reaching production, not
+ * to defeat somebody determined to smuggle a logo past it.
  */
 export function isForbiddenTokenId(id: string): boolean {
-  const normalised = id.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const haystack = `-${tokenWords(id).join("-")}-`;
   return FORBIDDEN_TOKEN_SEGMENTS.some((segment) =>
-    normalised.includes(segment.replace(/[^a-z0-9]/g, "")),
+    haystack.includes(`-${tokenWords(segment).join("-")}-`),
   );
 }
 

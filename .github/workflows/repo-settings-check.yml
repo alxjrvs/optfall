@@ -81,12 +81,27 @@ jobs:
         if: steps.token.outputs.configured == 'true'
         env:
           GH_TOKEN: ${{ secrets.REPO_SETTINGS_TOKEN }}
-          OPTFALL_REPO: ${{ github.repository }}
+          # The literal repository, NOT github.repository. The script derives
+          # EXPECTED_OWNER from this value, so feeding it the live repo makes
+          # the "owner = alxjrvs" assertion compare a value against itself —
+          # it could never fail, and after a transfer to an organisation it
+          # would cheerfully report ok. Personal ownership is a compliance
+          # requirement (docs/COMPLIANCE.md §1), so it is pinned here.
+          OPTFALL_REPO: alxjrvs/optfall
         run: |
+          # `set +e` is LOAD-BEARING and must come first.
+          #
+          # GitHub runs `run:` blocks as `bash -e {0}` when no `shell:` is set,
+          # and `set -uo pipefail` does not clear an already-active `-e`. So the
+          # assignment below — whose whole purpose is to capture a non-zero exit
+          # — would abort the step before `status=$?` ran. The drift issue would
+          # never be opened, and this workflow would produce exactly the red
+          # build with no issue that its header says it exists to avoid.
+          set +e
           set -uo pipefail
+
           # The script exits 1 on drift and 2 when it cannot see enough to
-          # judge. Capture rather than let `set -e` abort, so both outcomes can
-          # be reported as an issue instead of only as a failed run.
+          # judge. Both are reportable outcomes, not failures.
           output="$(./scripts/repo-settings.sh --check 2>&1)"
           status=$?
           echo "$output"

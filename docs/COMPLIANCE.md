@@ -85,15 +85,26 @@ project of an individual and must stay one.
   the owner's type is `User`, not `Organization`**. That second assertion is the
   compliance control: a transfer to an org is the failure this section exists to
   catch, and it fails the build rather than waiting to be noticed.
-- `.github/workflows/ci.yml` — the `repo-settings` job runs that check on every
-  pull request and is wired into the aggregate `gate`, so the assertion is
-  continuous rather than something someone remembers to run.
+- `.github/workflows/repo-settings-check.yml` — runs that check **weekly**, not
+  per pull request, and opens an issue when it fails. It is deliberately not a
+  required check: reading the settings needs administrative read, which no
+  workflow token can be granted, so gating merges on it would block every pull
+  request until a human installed a personal access token. See the workflow's
+  own header for the full reasoning.
 - `LICENSE` — copyright held by `alxjrvs`, an individual, not an entity.
 - The Netlify site, the domain and any future Patreon are held on the same
   personal account.
 
-**Status.** Enforced in CI, for the repository. The Netlify, domain and funding
-accounts are still caught only by a human noticing.
+**Status. Partially enforced, and an open action.** The ownership assertion is
+real and machine-checked, but it runs weekly rather than continuously, and until
+the `REPO_SETTINGS_TOKEN` secret exists the scheduled run warns and stops — so
+today this control is *declared but not yet active*. Per this document's own
+preamble, that makes it an open action rather than an enforced control. The
+Netlify, domain and funding accounts are caught only by a human noticing, and
+always were.
+
+**Open action:** create `REPO_SETTINGS_TOKEN` (see `docs/PHASE-0-STATUS.md`,
+handoff step 3) to activate the weekly assertion.
 
 **What would break it.**
 
