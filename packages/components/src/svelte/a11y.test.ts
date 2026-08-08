@@ -16,8 +16,10 @@
  *
  * WHAT THIS DELIBERATELY CANNOT SEE, so nobody mistakes a pass for total
  * coverage: focus order and focus-visible styling (no layout, no real focus
- * ring), anything depending on element geometry, and `prefers-reduced-motion`
- * behaviour. Those belong to the visual-regression pass.
+ * ring), anything depending on element geometry, `prefers-reduced-motion`
+ * behaviour, and any media query jsdom does not evaluate — `forced-colors`
+ * among them, which `FiligreeCorner` uses to hide itself. Those belong to the
+ * visual-regression pass.
  *
  * AND IT DOES NOT CHECK COLOUR CONTRAST — verified, not assumed. axe's
  * `color-contrast` rule needs a canvas to sample rendered pixels, which jsdom
@@ -33,9 +35,13 @@
  * check anyway: it tests the palette rather than one rendering of it, and it
  * cannot return "incomplete".
  */
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, test } from "bun:test";
 import { JSDOM } from "jsdom";
 import axe from "axe-core";
+import { compile } from "svelte/compiler";
 import { render } from "svelte/server";
 
 import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
@@ -94,6 +100,33 @@ const CASES: readonly { name: string; component: unknown; props: Record<string, 
   { name: "Mark small", component: Mark, props: { size: "sm" } },
 ];
 
+/**
+ * The components' own scoped CSS, compiled from source and injected alongside
+ * the theme.
+ *
+ * Without this the harness renders every primitive with the theme stylesheet
+ * and NO component styles, because the Bun loader keeps only `js` from
+ * `compile()` and discards `css`. axe would then judge markup that never
+ * exists in production — and, worse, silently miss anything a component style
+ * does to visibility: `FiligreeCorner`'s
+ * `@media (forced-colors: active) { display: none }` is invisible to a checker
+ * that cannot see the rule.
+ *
+ * Compiled with `generate: "client"` purely because that is the mode that emits
+ * CSS; the markup still comes from the server renderer.
+ */
+const componentStyles = readdirSync(import.meta.dir)
+  .filter((file) => file.endsWith(".svelte"))
+  .map((file) => {
+    const path = join(import.meta.dir, file);
+    const { css } = compile(readFileSync(path, "utf8"), {
+      generate: "client",
+      filename: path,
+    });
+    return css?.code ?? "";
+  })
+  .join("\n");
+
 const stylesheet = themeStylesheet();
 
 async function violationsFor(
@@ -101,11 +134,23 @@ async function violationsFor(
   theme: string,
 ): Promise<axe.Result[]> {
   const dom = new JSDOM(
-    `<!doctype html><html ${THEME_ATTRIBUTE}="${theme}"><head><style>${stylesheet}</style></head>` +
+    `<!doctype html><html ${THEME_ATTRIBUTE}="${theme}"><head>` +
+      `<style>${stylesheet}</style><style>${componentStyles}</style></head>` +
       `<body style="background: var(--of-color-ground); color: var(--of-color-ink)">${markup}</body></html>`,
     { pretendToBeVisual: true },
   );
 
+  try {
+    return await runAxe(dom);
+  } finally {
+    // In a `finally` because a rejected `axe.run` would otherwise leave this
+    // `pretendToBeVisual` window open with its animation-frame timer live,
+    // hanging `bun test` after a failure instead of reporting one.
+    dom.window.close();
+  }
+}
+
+async function runAxe(dom: JSDOM): Promise<axe.Result[]> {
   const { window } = dom;
   const results = await axe.run(window.document.body, {
     // Rules that need a whole document rather than a fragment would fail every
@@ -130,7 +175,6 @@ async function violationsFor(
     },
   });
 
-  dom.window.close();
   return results.violations;
 }
 
