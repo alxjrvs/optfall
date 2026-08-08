@@ -1,0 +1,545 @@
+# Optfall — phased build plan
+
+Legality that remembers, and rulings you can cite. Six phases, each shipping
+something complete on its own, ordered by what unblocks what.
+
+> Published version:
+> <https://claude.ai/code/artifact/f801332b-9a7b-430a-bf9b-b6d603ce186a>
+
+| Phase | | Duration |
+|---|---|---|
+| 0 | Repo and infrastructure | 1–2 days |
+| 1 | Theme and components | ~1 week |
+| 2 | Legality that remembers | 2–4 weeks |
+| 3 | Card layer | ~1 week |
+| 4 | The rules, made addressable | 2–4 weeks |
+| — | *Gate: are the questions actually novel?* | days |
+| 5 | The interaction record | quarter → ongoing |
+
+---
+
+## The thesis
+
+Every existing Flesh and Blood tool optimises for coverage or convenience.
+Optfall optimises for being **right**: correct legality, correct rules text,
+correct rulings, each citable and each version-stamped. That is a narrow claim
+and a defensible one, and the only positioning in this landscape that does not
+require out-building somebody with a head start.
+
+**Phases are ordered by what unblocks what, not by value.** The highest-value
+surface needs volunteer judges to contribute expertise, and no amount of code
+buys that. So the sequence starts with what nobody can block and earns the
+standing the end depends on. Every phase ships a complete, useful thing — if you
+stop after any of them, what exists still works.
+
+---
+
+## Permission envelope
+
+LSS publishes a *Terms of Use for Game and Studio Assets and IP* containing an
+explicit third-party application policy that names these exact use cases. It is
+a written grant with conditions, and both halves are load-bearing. All of Phase
+0 exists to satisfy it before the first public commit.
+
+### Granted
+
+- **Card databases** and related services, named in the policy.
+- **Rules enforcement applications** — a separately blessed category covering
+  both legality checking and a rulings archive.
+- **APIs** transferring game content, provided they are not directly monetised.
+- **Card face images**, specifically for building card databases.
+- **Indirect monetisation** — Patreon and ad-sense by name, if costs ever need
+  covering.
+
+### Required of us
+
+- **Individual, never a commercial entity.** The policy bars third-party
+  applications built by commercial entities. Repo, domain and any future Patreon
+  stay on the personal account.
+- **No direct monetisation.** No sales, no subscriptions.
+- **No FAB or LSS logos in the app** — and product set logos count as FAB logos.
+  Card faces are fine; set symbols as filter icons are not.
+- **Verbatim disclaimer** in the footer.
+- **Copyright line** on card images.
+- **Terms on our own published data** echoing LSS's, since the grant binds
+  recipients too.
+
+### Required disclaimer
+
+> Optfall is in no way affiliated with Legend Story Studios. Legend Story
+> Studios®, Flesh and Blood™, and set names are trademarks of Legend Story
+> Studios. Flesh and Blood characters, cards, logos, and art are property of
+> Legend Story Studios.
+
+Enforcement is described as friendly warnings before escalation, with immediate
+legal action reserved for commercial entities and deliberate non-compliance. The
+real risk is therefore **revocation, not litigation** — so keep rulings, rules
+and legality data ours and portable. Losing the art licence should cost a
+rendering layer and nothing else.
+
+---
+
+## Stack
+
+Chosen to satisfy one constraint above all others: **nothing here should stop
+working because its maintainer stopped paying attention.** No database, no
+server, no runtime bill. The whole product is static output plus versioned JSON
+in a git repository.
+
+- **TypeScript on Bun.** One workspace across the library, the parsers and the
+  site. The legality package publishes with zero runtime dependencies.
+- **Svelte, compiled two ways.** Native components for our own Astro islands,
+  and the same source compiled to custom elements for everyone else. Svelte is
+  uniquely good at this, so the accessible pitch jewel can be dropped into a
+  React or vanilla site without anyone adopting our stack.
+- **Astro** for the site — static output with client islands. The checker is
+  interactive but needs no server; validation runs in the browser against the
+  shipped dataset.
+- **Storybook as the workbench.** Primitives built and reviewed in isolation, in
+  both themes, with accessibility and visual-regression checks on every story in
+  CI. Deployed publicly, so the library doubles as documentation for anyone
+  adopting our components.
+- **Netlify.** Production from `main`, deploy previews on every pull request.
+  Previews matter more than usual here: a legality bug is visible in a preview
+  and invisible in a diff.
+- **Terraform.** GitHub repository settings and ruleset as code, with the
+  Netlify site alongside. The repo configuration should be reproducible from
+  scratch, not archaeology.
+- **Data as committed JSON.** Every dataset lives versioned in the repo and is
+  served as a static file — simultaneously the storage layer, the public API,
+  the backup and the audit trail.
+- **Scheduled jobs, not services.** Ingestion runs as a scheduled workflow that
+  opens a pull request when upstream changes. Nothing runs continuously, so
+  nothing can silently fall over.
+- **MIT code, open data.** MIT so any FaB tool can embed our components freely.
+  Datasets are openly licensed only over the structural work we own: rule ids,
+  the legality timeline, diffs and annotations. Card text and art remain LSS
+  property and are never relicensed by us.
+
+> **Operational note.** The permission rules on this machine deny the Bash path
+> to secret resolution, so a `terraform apply` needing a Netlify token runs from
+> a human terminal rather than from inside an agent session.
+
+---
+
+## Phase 0 — Repo and infrastructure
+
+**1–2 days. Nothing blocks it.**
+
+`alxjrvs/optfall` — declared in Terraform, deploying to Netlify, compliant
+before the first line of product code.
+
+**Personal ownership is a compliance requirement, not a preference.** LSS's
+policy bars third-party applications built by commercial entities, so the repo,
+the domain and any future Patreon live on the personal account. Putting it under
+an org later would be expensive to undo.
+
+**Terraform the repo settings, don't click them.** The agent-friendly
+configuration is a real specification: squash-only merges, rebase-preferred
+branch updates, required linear history, a single aggregate status check rather
+than per-job checks, no required human review, and an empty bypass list so
+nobody — including you — can route around it. That set is fiddly enough to drift
+when applied by hand.
+
+**The aggregate gate is the part most often got wrong.** Requiring each
+individual CI job as a status check strands required checks in "pending" forever
+on path-filtered pull requests. One `gate` job that depends on every other job
+and always runs is the shape that actually works with auto-merge.
+
+**Compliance boilerplate ships before product code.** Disclaimer in the layout,
+copyright line in the card component contract, data terms, and the no-logo
+constraint written into the design tokens rather than left as a thing to
+remember.
+
+**One five-minute task with outsized leverage:** open an issue upstream on the
+community card dataset asking for an explicit licence. It currently ships none,
+which by default means all rights reserved and no granted right to redistribute
+the compilation — and every phase below depends on it. LSS's own published grant
+strengthens the ask.
+
+### Deliverables
+
+- `alxjrvs/optfall` — public, personal account, TypeScript workspace on Bun
+- Terraform — GitHub repository settings and ruleset as code; Netlify site
+  declared alongside
+- Agent-friendly settings — squash-only, linear history required, branch
+  deletion on merge, no required human review, empty bypass list
+- CI with a single aggregate gate — one always-run job depending on all others,
+  set as the sole required check
+- Netlify — production deploy from `main`, deploy previews on every PR
+- Compliance boilerplate — disclaimer, data terms, copyright line, no-logo rule
+  in the design tokens
+- Licence issue opened upstream on the card dataset
+
+### Exit criteria
+
+A trivial pull request opens a deploy preview, passes the aggregate gate, and
+auto-merges with no human approval — and the repo configuration can be destroyed
+and reproduced from Terraform alone.
+
+---
+
+## Phase 1 — Theme and components
+
+**~1 week. Nothing blocks it.**
+
+The design language is infrastructure, not decoration — so it gets built as a
+library with a workbench, before any product surface can invent its own styles
+under deadline.
+
+**Tokens are the only source of truth.** Colour, type, spacing, bevel and
+ornament live in one theme layer. Components consume tokens and never literals,
+and themes swap at the token layer alone — a component never knows which theme
+it is in, which is precisely what keeps light and dark equally considered rather
+than one being a hasty inversion of the other.
+
+**Enforced, not requested.** A lint rule fails the build on a raw hex or a raw
+pixel value inside a component. A design system maintained by good intentions is
+a design system that erodes the first time someone is shipping at midnight; the
+rule is the whole difference between a language and a folder of screenshots.
+
+**Storybook is the workbench, not the documentation afterthought.** Every
+primitive gets built there first, rendered in both themes, before it appears in
+a product surface. The accessibility addon runs on every story in CI, which
+turns the pitch jewel's contract — shape, numeral and colour carrying the same
+fact three times — from an intention into a test.
+
+**Visual regression without a subscription.** Playwright screenshots committed
+to the repo rather than a hosted service, so the check keeps working after a
+trial lapses or a card expires.
+
+**Publish the library, not just the site.** Storybook deploys publicly as its
+own build. That makes the component library documentation for anyone else who
+wants to adopt the accessible pitch jewel — the only mechanism by which the
+accessibility promise actually reaches other tools rather than stopping at our
+own edges.
+
+### Deliverables
+
+- Theme package — light and dark token sets, no component styles whatsoever
+- Component package — pitch jewel, bevelled plate, notched state pill, brass
+  seal, citation, filigree corner, ornamental rule, the mark
+- Storybook — every primitive, both themes, deployed to a public URL
+- Lint rule rejecting literal colour and spacing in component source
+- a11y and visual-regression checks wired into the aggregate gate
+
+### Exit criteria
+
+A complete product screen can be assembled from the library with **no new CSS**,
+and CI fails if anyone writes a raw hex. If either is untrue, the system is
+decoration rather than infrastructure and the next phase will quietly abandon it.
+
+> **Known risk.** Storybook's Svelte support is the least mature of the
+> mainstream framework integrations, and Svelte 5's runes are recent enough that
+> the integration has rough edges. Pin versions deliberately rather than taking
+> latest-of-everything.
+
+---
+
+## Phase 2 — Legality that remembers
+
+**2–4 weeks. The wedge.**
+
+Is this deck legal in this format — and *was* it legal on the day of that
+tournament?
+
+**This ships first among product surfaces because it is the only one with a
+deadline attached.** Card data and rulings are reference material, visited once
+people already know they exist. A tournament organiser holding 32 decklists at
+6:50pm has a problem right now.
+
+The evidence of unmet need is the cleanest in the study. GEM — LSS's own
+official tournament platform — ships no legality validation at all, and official
+guidance still recommends a paper backup. Dragon Shield's app, with real
+commercial backing, ships *incorrect* banned flags on legal cards. Being right is
+the entire product.
+
+**Time travel is the part nobody has.** Living Legend retirements and banned-list
+revisions move constantly, so every archived decklist in the game is currently
+uninterpretable without knowing the rules state on its date.
+
+**Library first, website second.** A zero-dependency package running entirely
+client-side carries no uptime dependency on a solo maintainer — precisely what
+makes Fabrary, Talishar and the meta sites able to adopt it at zero risk. The
+site exists to prove correctness and generate the bug reports that get it there.
+
+**The document pipeline gets built here, underneath it.** The Comprehensive
+Rules, banned-and-restricted announcements and Living Legend thresholds are the
+same problem wearing three hats: official documents that change by announcement
+and need to be addressable, versioned and diffable. Build that machinery once
+and Phases 4 and 5 consume something that already exists. Prove it on
+banned-list announcements rather than the full rules document — they are short,
+they change visibly, and getting them wrong is cheap.
+
+**Deliberately not shipped as standalone infrastructure.** Publishing a pipeline
+and waiting for adopters is how these projects die unnoticed. Ship a tool whose
+*byproduct* is the infrastructure, and distribution and reusability arrive in the
+same artifact.
+
+### Deliverables
+
+- **Research spike, first task** — establish whether past banned-and-restricted
+  revisions are publicly archived. The time-travel feature depends on it, and
+  the answer decides whether backfill is a scrape or an excavation
+- The document pipeline — fetch, parse to stable sections, assign permanent ids,
+  version, diff, publish; running on a schedule
+- `optfall-legality` — zero-dependency TypeScript, `isLegal(deck, format, asOf)`,
+  per-card verdicts each citing the rule that produced them
+- Six formats — Classic Constructed, Blitz, Living Legend, Commoner, Silver Age,
+  Ultimate Pit Fight
+- Historical timeline backfilled — every banned-list revision and Living Legend
+  threshold, date-stamped, published as open JSON
+- Static checker — single deck or organiser batch paste, shareable permalinks,
+  no backend
+
+### Exit criteria
+
+It correctly validates a corpus of known-good and known-bad decklists *including
+historical ones* — decks legal then and illegal now — and at least one other tool
+in the ecosystem has adopted the library or the published JSON.
+
+---
+
+## Phase 3 — Card layer
+
+**~1 week. Supporting cast, not a product.**
+
+A legality verdict has to show the card it flagged, and a ruling has to render
+the cards it is about. That is the entire justification.
+
+**Deliberately minimal.** Card search was a candidate surface until Opt turned up
+— Scryfall-inspired, already built, and now out of date. That closes it twice:
+the category is occupied enough to make entry unrewarding, and its decay
+demonstrates the treadmill that has now claimed three Flesh and Blood tools.
+
+**Sync, never curate — this is the anti-staleness decision.** Card data comes
+from the actively-maintained community dataset on a nightly pull, pinned by
+commit, with fixes contributed upstream rather than forked. Opt went stale
+because something needed a human in the loop. Consume an upstream someone else
+already maintains and staleness requires active decay rather than passive
+neglect.
+
+**Accessibility ships here, by default.** Pitch value is encoded red, yellow and
+blue — red and yellow being the classic deuteranopia confusion pair, on the
+most-read information on a card. Tellingly, they are *also* the pair Dragon
+Shield's scanner misreads: same physics, two independent confirmed failures. A
+colourblind-safe pitch glyph inside the component means every consumer inherits
+it without deciding to.
+
+### Deliverables
+
+- Nightly card sync with stable ids surviving errata and reprints
+- Printed text vs true text — the errata split surfaced honestly, with a diff
+- Image serving — own bucket, copyright line, no set logos in chrome
+- Colourblind-safe pitch glyph as the default rendering, not an option
+
+### Explicit non-goals
+
+No advanced query grammar. No competing card-search destination. No attempt to
+become the ecosystem's card data layer. If someone wants search, point them at
+Fabrary and move on.
+
+---
+
+## Phase 4 — The rules, made addressable
+
+**2–4 weeks. Still nobody's permission.**
+
+Everything the rulings archive needs, built entirely from published sources —
+and a complete product if Phase 5 never happens.
+
+**This is the de-risking phase, and splitting it out is the most important
+structural decision in the plan.** The Comprehensive Rules, tournament policy and
+the penalty guide are all published deliberately as plain text. Parsing them into
+stable, addressable, version-diffable sections requires no consent from anyone,
+and none of it exists today: the official rules site is a document hub with a
+search box, and nothing cross-references rules against card text.
+
+**The permalink is the product.** A judge pasting a citation into Discord instead
+of describing which paragraph they mean is the unprompted-share moment, and it
+happens on day one rather than after five hundred curated entries.
+
+**The diff view is a recurring content event.** Rules updates in Flesh and Blood
+are consequential and currently arrive as a changelog nobody can cross-reference
+against cards. "Here is exactly what changed in this version, and which cards it
+touches" reaches the judge community organically — which is precisely the
+constituency Phase 5 depends on. This phase earns the standing that phase
+requires.
+
+**The offline penalty lookup matters more than it sounds.** Pick enforcement
+level, pick infraction, get the remedy and the citation, in three taps, at a
+table, on venue wifi. Nobody reads a PDF standing at a table.
+
+### Deliverables
+
+- Rules corpus — Comprehensive Rules, tournament policy and penalty guide,
+  parsed to permanent addressable ids
+- Permalink per section, stable across versions
+- Version diffs — what changed, and which cards it affects
+- Offline penalty lookup, usable at a table
+- Card ↔ rules cross-reference, the join nothing currently makes
+- Openly licensed bulk export of the whole corpus
+
+### Exit criteria
+
+A rules citation from Optfall appears in a community discussion without you
+putting it there — and a rules version bump ships as a diff post the same week
+LSS publishes it.
+
+---
+
+## Gate — decide before starting Phase 5
+
+**Costs days. Saves a quarter.**
+
+Read six months of judge-channel history and classify each question: genuinely
+**novel**, or resolvable by a rules-paragraph lookup. Pick the threshold before
+you look.
+
+If novel questions turn out to be rare, then Phase 4 already *is* the product,
+Phase 5 collapses into a better search interface over it, and you have saved a
+quarter by spending three days. That is a good outcome, not a failure.
+
+---
+
+## Phase 5 — The interaction record
+
+**Quarter → ongoing. Gated on people, not code.**
+
+A searchable, judge-attributed, permanently-linkable record of what happens when
+card X meets card Y.
+
+**The destination, and it won every vote that mattered** — first place from four
+of five independent analyses, present in all five top threes, the only category
+in the landscape with zero incumbents, and the only thing here LSS would
+plausibly link to from its own site.
+
+Today, resolving an interaction means reading the rules on your phone or asking a
+human in a 4,854-member Discord. The official rules Q&A forum is described *by
+LSS's own guidance* as a relatively slow way to get answers. Talishar, the online
+client with a claimed ten thousand daily players, explicitly warns it should not
+be taken as an indication of how the game works.
+
+**The asset exists and nobody has collected it.** Thousands of adjudicated
+interactions live only as unsearchable Discord scrollback. The unit is the *card
+pair*, not the question, because pairs are enumerable — which yields both a
+coverage metric and a work queue.
+
+**No language model anywhere in version one.** Lexical and structured search over
+the Phase 4 corpus. The tool never composes prose, so a confident wrong answer to
+a player mid-round is structurally impossible rather than mitigated. Retrieval
+may assist search later; never the answer.
+
+**Recruit authors, do not mine an archive.** Retroactive consent from thousands
+of people is impossible, and asking would itself be the hostile act. Forward
+consent from a few dozen active certified judges is not. Judges get bylines,
+moderation power and a distinct identity for this surface — contributing must
+read as co-ownership, never as donating labour to someone else's database.
+
+### Deliverables
+
+- Two irreconcilable tiers — judge-signed *verified* versus amber *unverified*;
+  the latter never permalinkable, never citable at an event
+- Version pinning — every entry records the rules version it was answered under;
+  a bump flags it for review rather than silently serving stale law
+- Published abstention rate — when no verified ruling exists, say so and offer
+  one click to the judge queue. The number is public; if we will not publish it,
+  we do not ship the feature
+- Permalink per interaction, keyed by card pair
+- Judge attribution — name, date, rules version, on every verified entry
+
+### Exit criteria
+
+A judge links an Optfall permalink in the Discord instead of retyping the answer.
+That single behaviour is the entire thesis working, and it is directly
+observable.
+
+---
+
+## Rules that hold across every phase
+
+Three Flesh and Blood tools have now died or decayed, none of them from lack of
+demand. This is the part of the plan that is not about features.
+
+- **Compose, never restyle.** Every surface is assembled from the component
+  library. A screen that needs new CSS is a signal the library is missing a
+  primitive — add it there, not in the page.
+- **Tokens or nothing.** No component may name a colour or a size directly. The
+  lint rule is what makes this real; a design system defended by prose lasts
+  about six weeks.
+- **Publish the data, not just the site.** Every dataset ships as an openly
+  licensed bulk dump from day one. If the site disappears the corpus does not.
+- **Static by default.** No backend means no uptime story to fail, no bill to
+  lapse, and no service that quietly dies six months after attention moves on.
+- **Sync, never curate.** Automated pulls from maintained upstreams.
+  Hand-curation only for the small announcement-driven feeds where no upstream
+  exists.
+- **Degrade visibly.** Every surface shows when its data was last confirmed. A
+  stale Optfall must look stale — a tool that lies about freshness is worse than
+  one obviously behind.
+- **Contribute upstream, never fork.** Being the ecosystem's best downstream
+  contributor is more durable than being its fragile single point of failure.
+- **Show up before you need them.** Phase 5's code is late but its relationships
+  are not. Be present in the judge community from Phase 2 onward — answering,
+  citing, being useful — so the eventual ask comes from a familiar name rather
+  than a stranger with a URL.
+- **Survive revocation.** The art licence is revocable at LSS's discretion.
+  Rulings, rules and legality data are ours. Losing images costs a rendering
+  layer, never the product.
+
+---
+
+## Out of scope, and why
+
+- **A better Fabrary.** Not merely the leading deckbuilder — the ecosystem's
+  sharing layer, which LSS's own deck builder imports *from*. Its predecessor
+  died in that slot without the network effect transferring.
+- **A card search destination.** Occupied by Opt, whose decay proves the
+  treadmill.
+- **A tournament results database.** Paper results split across two incompatible
+  platforms with no export; one site tried and fell back to manual submission.
+  Not permanently dead — the cross-platform player-identity join is a moat LSS
+  can never replicate, since they do not own the rival platform — but gate it on
+  a day of work first: hand-resolve 200 players appearing in both systems
+  against a pre-committed precision threshold.
+- **Anything in the collector economy.** The most contested territory in the
+  game: six price aggregators, sealed expected-value calculators already
+  modelling FaB's own post-draw sift, live buyout and arbitrage detection,
+  population reports from three grading companies, and a mature scanner app with
+  commercial backing.
+- **Tournament software.** The white space is total and empty for a reason: GEM
+  is mandatory for sanctioned play, so anything touching pairings or results
+  demands double entry of every player.
+- **Deck-math tooling** — parked, not rejected. Flesh and Blood decks are
+  *queues, not bags*: pitched cards go to the bottom in an order you choose, so
+  every hypergeometric calculator in the ecosystem may be importing an
+  assumption from Magic that does not hold. Two checks before any code: verify
+  the pitch-ordering rule against the current Comprehensive Rules, then test
+  whether strong players *disagree with each other* on ordering in comparable
+  spots. Disagreement means the skill has depth; convergence means it is
+  folklore that already works.
+
+---
+
+## Settled, and still open
+
+**Settled.** `alxjrvs/optfall`, personal ownership, MIT, TypeScript on Bun,
+Svelte components, Astro site, Netlify hosting, Terraform for repo and
+infrastructure, no direct monetisation. Cold start confirmed — the phase order
+stands as written.
+
+**Open, and it decides a headline feature.** Whether past banned-and-restricted
+revisions are publicly archived. If they are, time travel is a scraping job; if
+only the current list is published, reconstructing history is an excavation and
+may drop behind the rules work. First task of Phase 2, before the estimate
+hardens.
+
+**Open, and cheap to settle.** Domain (`optfall.com` did not resolve when
+checked, so it may be free), Terraform state backend, and the display typeface.
+None block Phase 0; all want deciding before Phase 1 ends.
+
+**Unverified.** The pitch-queue mechanic behind the parked deck-math work was
+never confirmed against the current rules — the official site blocks automated
+access. Community pain-point evidence is largely inferential, since research was
+blocked from Reddit: the gaps are well evidenced, the intensity of demand for
+them is not.
