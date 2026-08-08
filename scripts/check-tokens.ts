@@ -25,6 +25,8 @@
 
 import { readFileSync } from "node:fs";
 
+import { DARK_TOKENS, LIGHT_TOKENS } from "../packages/theme/src/index";
+
 /** Directories whose component source must consume tokens. */
 const SCANNED = ["packages/components/src", "apps/site/src"] as const;
 
@@ -122,6 +124,41 @@ function filesUnder(dir: string): string[] {
     .toSorted();
 }
 
+/**
+ * Every `--of-*` custom property the theme actually defines.
+ *
+ * THIS IS THE HALF THE LITERAL RULE CANNOT SEE, and it is the more dangerous
+ * one. `var(--of-color-grond)` contains no literal, so the scan above passes it
+ * happily — and CSS resolves an undefined custom property to nothing, so the
+ * declaration is simply dropped. The component renders with no background, no
+ * one gets an error, and the failure surfaces as "that looks a bit odd" weeks
+ * later. A typo'd token is strictly worse than a hardcoded hex, which at least
+ * renders what its author intended.
+ */
+const DEFINED = new Set(
+  [...Object.keys(DARK_TOKENS), ...Object.keys(LIGHT_TOKENS)].map(
+    (id) => `--of-${id.replaceAll(".", "-")}`,
+  ),
+);
+
+function undefinedReferences(file: string, source: string): Violation[] {
+  const found: Violation[] = [];
+  source.split("\n").forEach((text, index) => {
+    for (const match of text.matchAll(/var\(\s*(--of-[a-z0-9-]+)/g)) {
+      const name = match[1]!;
+      if (!DEFINED.has(name)) {
+        found.push({
+          file,
+          line: index + 1,
+          text: text.trim(),
+          rule: `undefined token ${name}`,
+        });
+      }
+    }
+  });
+  return found;
+}
+
 let failures = 0;
 let staleDeferrals = 0;
 
@@ -130,6 +167,19 @@ for (const dir of SCANNED) {
   const violations = files.flatMap((file) =>
     violationsIn(file, readFileSync(file, "utf8")),
   );
+
+  // Undefined references are NEVER deferred. A deferred path is one whose
+  // literals have not been migrated yet — a legible, working state. A typo'd
+  // token is a silently broken declaration in any state, so it fails wherever
+  // it appears.
+  const dangling = files.flatMap((file) =>
+    undefinedReferences(file, readFileSync(file, "utf8")),
+  );
+  for (const v of dangling) {
+    console.log(`::error file=${v.file},line=${v.line}::${v.rule} — resolves to nothing at runtime: ${v.text}`);
+    failures += 1;
+  }
+
   const deferral = DEFERRED[dir];
 
   if (deferral) {

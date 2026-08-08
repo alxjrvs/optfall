@@ -78,7 +78,38 @@ export interface PitchJewelProps {
   readonly label?: string;
 }
 
-/** A struck plate: square corners, light top edge, dark bottom edge. */
+/**
+ * Corner ids in CSS logical order — block axis first, then inline, exactly as
+ * `border-start-start-radius` names them. Not `top-left`, because a plate flips
+ * with writing direction and its ornament flips with it.
+ *
+ * It lives in the contract layer rather than inside either component because
+ * two of them have to agree about it: `BevelledPlate` passes one of these ids
+ * to its `corner` snippet, and `FiligreeCorner` consumes it to decide which way
+ * to mirror the motif. Declared twice, the two sets agreed by coincidence.
+ */
+export type PlateCorner = "start-start" | "start-end" | "end-start" | "end-end";
+
+export const PLATE_CORNERS: readonly PlateCorner[] = [
+  "start-start",
+  "start-end",
+  "end-start",
+  "end-end",
+];
+
+/**
+ * A struck plate: square corners, light top edge, dark bottom edge.
+ *
+ * **The plate hosts panel filigree; it does not draw it.** With
+ * `ornament="panel-corner"` it opens four slots — placed *and sized* by the
+ * plate, since only the plate knows where its corners are — and renders a
+ * `corner` snippet into each, passing the {@link PlateCorner} id. The caller
+ * composes `FiligreeCorner role="panel-corner" corner={id}` in, which keeps
+ * scrollwork rationed by the call site that can see the whole screen rather
+ * than by a plate that can only see itself. The snippet prop is deliberately
+ * not typed here: snippets are a Svelte concern and stay local to the
+ * component, exactly as `children` does.
+ */
 export interface BevelledPlateProps {
   readonly emphasis?: "flat" | "raised" | "sunken";
   /** Which edges carry the bevel highlight. Defaults to both. */
@@ -93,7 +124,19 @@ export interface BevelledPlateProps {
  */
 export interface StatePillProps {
   readonly tone: StateTone;
-  /** Label text, supplied by the caller and never composed by a component. */
+  /**
+   * Label text, supplied by the caller and never composed by a component — the
+   * corpus owns the wording of a verdict — and it must *name the state*
+   * (`"Banned"`, not `"Blitz"`), because the text is the primary channel and
+   * colour is the redundant one.
+   *
+   * Required is not the same as non-empty, and the implementation closes that
+   * gap: `label=""` type-checks but renders the tone spoken in full rather than
+   * an empty coloured chip, which would leave colour and the notch as the sole
+   * carriers of meaning. Same argument as {@link CARD_IMAGE_COPYRIGHT} — a
+   * required prop a caller can satisfy incorrectly is a convention, not a
+   * contract.
+   */
   readonly label: string;
 }
 
@@ -123,9 +166,75 @@ export interface CitationProps {
   readonly version?: string;
 }
 
-/** Filigree, in one of its three sanctioned roles. Never on a control. */
+/**
+ * Filigree, in one of its three sanctioned roles. Never on a control.
+ *
+ * **It draws scrollwork and owns no layout.** One instance is *one* ornament,
+ * and every role is hosted by a primitive that already knows where the ornament
+ * goes — which is the contract both sides kept getting wrong, so it is written
+ * here rather than in either component:
+ *
+ * | Role | Host | What the host owns | What this owns |
+ * |---|---|---|---|
+ * | `panel-corner` | `BevelledPlate` (`ornament="panel-corner"`) | Four slots, placed and sized; passes the {@link PlateCorner} id to its `corner` snippet | The drawing, mirrored per corner |
+ * | `card-corner` | The card frame | The same four slots, at the lighter card size | The drawing, mirrored per corner |
+ * | `section-rule` | `OrnamentalRule` (`ornament`) | The `<hr>`, both hairlines, the vertical rhythm | A bare centred figure — no lines, no `role="separator"` |
+ *
+ * There is deliberately no label prop, and this is the one primitive where an
+ * absent accessible name is correct: the ornament carries no information, so it
+ * is `aria-hidden` unconditionally in all three roles. Remove every ornament in
+ * the library and nothing is lost — which is what "decoration" has to mean.
+ */
 export interface FiligreeProps {
   readonly role: OrnamentRole;
+  /**
+   * Which corner of the frame this instance draws. Selects the mirroring of the
+   * motif and nothing else; the host slot supplies the position. Defaults to
+   * `start-start`, and is ignored in the `section-rule` role.
+   */
+  readonly corner?: PlateCorner;
+}
+
+/**
+ * The section rule — a hairline divider, optionally carrying the centred
+ * filigree ornament. This is the primitive that replaces the card: where a
+ * lesser system would box a section, this one draws a line and moves on.
+ *
+ * It owns every part of a rule that is not the drawing — the `<hr>`, both
+ * hairlines and the vertical rhythm — because a rule is structure. See
+ * {@link FiligreeProps} for the division of labour with the ornament.
+ */
+export interface OrnamentalRuleProps {
+  /**
+   * Open the centre of the rule and mount the filigree. Defaults to `false`
+   * because ornament is rationed: a screen gets one of these at most, and the
+   * plain hairline is overwhelmingly the common case.
+   */
+  readonly ornament?: boolean;
+  /**
+   * Render a line that is *not* a thematic break — furniture inside a plate
+   * rather than a division between sections. Hidden from assistive technology
+   * entirely, which is the honest rendering of a decoration.
+   *
+   * It defaults to `false` because the expensive mistake runs in one direction
+   * only. A screen reader announcing "separator" between every header and its
+   * body, on every card page, is noise that trains people to ignore the one
+   * that meant something — so a decorative line has to be *asked for*, and the
+   * default is the semantic `<hr>`.
+   */
+  readonly decorative?: boolean;
+  /**
+   * Accessible name for the break, such as the section it introduces.
+   *
+   * **Its default is deliberately absence**, which is the one place this
+   * library departs from "the accessible name is a prop with a sensible
+   * default". A `separator` needs no name to be understood — it is already
+   * announced by its role — so a default here would be invented text read
+   * aloud on every rule in the interface, which is the same noise `decorative`
+   * exists to prevent. Supply one only when the break genuinely names
+   * something, and never as a description of the line itself.
+   */
+  readonly label?: string;
 }
 
 /**
@@ -139,7 +248,22 @@ export interface FiligreeProps {
  */
 export interface MarkProps {
   readonly size?: "sm" | "md" | "lg";
+  /**
+   * Accessible name, defaulting to the product's own. A blank falls back to
+   * that default rather than through it — `title=""` must not be able to strip
+   * the name off a `role="img"`.
+   */
   readonly title?: string;
+  /**
+   * Render the mark as pure decoration: `aria-hidden`, no role, no name.
+   *
+   * It exists so that "hide it" and "name it" are two questions rather than
+   * one. Without it, the caller who legitimately wants a silent mark — beside a
+   * visible "Optfall" wordmark, where announcing the name twice is noise —
+   * reaches for `title=""`, which is the single spelling that produces an
+   * unnamed image instead of a hidden one.
+   */
+  readonly decorative?: boolean;
 }
 
 /* -------------------------------------------------------------------------- */

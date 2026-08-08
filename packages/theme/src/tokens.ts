@@ -94,6 +94,14 @@ const STRUCTURE: TokenTable = {
   "ornament.rule.width": "1px",
   "ornament.filigree.size": "1.25rem",
 
+  /* The jewel is sized here rather than in the component, because it is the
+     one silhouette reserved to a single meaning — it appears at these three
+     sizes and no others, and a component free to pick its own would erode
+     that. */
+  "ornament.jewel.small": "1.25rem",
+  "ornament.jewel.base": "1.75rem",
+  "ornament.jewel.large": "2.5rem",
+
   /* Quick enough not to be noticed, slow enough not to flicker. */
   "motion.fast": "120ms",
   "motion.base": "180ms",
