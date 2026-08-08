@@ -311,7 +311,20 @@ jobs:
 
             for (const field of DEPENDENCY_FIELDS) {
               const block = manifest[field];
-              if (!block || typeof block !== "object" || Array.isArray(block)) continue;
+              if (!block || typeof block !== "object") continue;
+
+              // `trustedDependencies` is an ARRAY of names, not a map, so the
+              // object walk below never reached it — it sat in the field list
+              // reading as coverage while scanning nothing.
+              if (Array.isArray(block)) {
+                for (const entry of block) {
+                  if (typeof entry === "string" && banned(entry)) {
+                    violations.push({ file, field, name: entry });
+                  }
+                }
+                continue;
+              }
+
               // Recursive, because `overrides` and `resolutions` nest: npm's
               // `{"some-lib": {"openai": "^6"}}` pins a TRANSITIVE dependency,
               // and a top-level-keys-only walk reads the outer name and calls

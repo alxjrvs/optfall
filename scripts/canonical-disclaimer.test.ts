@@ -18,6 +18,7 @@ import {
   readCanonicalDisclaimer,
 } from "./canonical-disclaimer";
 import { LSS_DISCLAIMER } from "../apps/site/src/lib/compliance";
+import { CARD_IMAGE_COPYRIGHT } from "../packages/components/src/index";
 
 const expected = readCanonicalDisclaimer();
 
@@ -44,6 +45,47 @@ describe("the canonical disclaimer", () => {
     expect(normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8"))).toContain(
       expected,
     );
+  });
+
+  // docs/DATA-TERMS.md carries two copies, and one of them is the text this
+  // project instructs DOWNSTREAM CONSUMERS to reproduce. A typo there does not
+  // just misstate our own position — it propagates into third-party
+  // applications that took us at our word, which is the worst place for this
+  // sentence to be wrong and the reason it cannot be left out of the check.
+  test("appears in docs/DATA-TERMS.md, including the copy consumers reproduce", () => {
+    const source = normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8"));
+    expect(source).toContain(expected);
+
+    const occurrences = source.split(expected).length - 1;
+    expect(occurrences).toBeGreaterThanOrEqual(2);
+  });
+});
+
+/**
+ * The copyright line is a second, shorter piece of mandated text, and it is
+ * spelled two legitimately different ways: the policy mandates the notice
+ * `© Legend Story Studios`, while {@link CARD_IMAGE_COPYRIGHT} is Optfall's
+ * rendering of it, which wraps that notice in a sentence.
+ *
+ * So this asserts containment rather than equality. Pinning the rendering to an
+ * exact string in a test would make it *look* specified while the mandated form
+ * and the rendering drifted apart independently — the failure the disclaimer
+ * check above exists to prevent, reintroduced one requirement over.
+ */
+describe("the card-image copyright line", () => {
+  const MANDATED_NOTICE = "© Legend Story Studios";
+
+  test("is mandated in the same words by both compliance documents", () => {
+    expect(normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8"))).toContain(
+      MANDATED_NOTICE,
+    );
+    expect(normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8"))).toContain(
+      MANDATED_NOTICE,
+    );
+  });
+
+  test("is contained in the constant the card component renders", () => {
+    expect(CARD_IMAGE_COPYRIGHT).toContain(MANDATED_NOTICE);
   });
 });
 

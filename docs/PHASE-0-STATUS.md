@@ -205,18 +205,27 @@ Done, and verified:
 
 What makes it partial:
 
-- **The no-logo token guard is much weaker than COMPLIANCE §3 claims.** I probed
-  the real export: `ornament.set-symbol` → `true`, but `asset.fab-logo` →
-  `false`, `brand.lss-logo` → `false`, `icon.setSymbol` → `false`,
-  `ornament.set-symbol-icon` → `false`, `image.fabLogo` → `false`. It matches
-  only a whole dot-separated segment exactly. Four of the five plausible ways a
-  set symbol actually gets added pass straight through.
-- **The card-image copyright line has three spellings and no test.**
-  `packages/components/src/index.ts:154` says `"Card images © Legend Story
-  Studios."`; `docs/COMPLIANCE.md:258` states the requirement as `© Legend Story
-  Studios`; `docs/DATA-TERMS.md:182` tells downstream consumers the same bare
-  form. That is precisely the drift the disclaimer constant was created to
-  prevent, applied to the other legally-required string.
+- ~~**The no-logo token guard is much weaker than COMPLIANCE §3 claims.**~~
+  **Fixed.** It matched only whole dot-separated segments, so `asset.fab-logo`,
+  `brand.lss-logo`, `icon.setSymbol`, `ornament.set-symbol-icon` and
+  `image.fabLogo` all passed straight through — four of the five plausible ways
+  a set symbol actually gets added. `isForbiddenTokenId` now splits on
+  separators *and* camelCase humps and matches on word boundaries. Re-probed:
+  all of the above return `true`, while `color.dialog.overlay` and
+  `space.dialog.offset` correctly return `false` — an intermediate fix that
+  stripped separators entirely matched "logo" inside "dialog…overlay" and would
+  have failed builds on legitimate Phase 1 tokens.
+- ~~**The card-image copyright line has three spellings and no test.**~~
+  **Fixed, and the diagnosis was half right.** Two of the three "spellings" are
+  not drift: the policy mandates the notice `© Legend Story Studios`, and
+  `CARD_IMAGE_COPYRIGHT` is Optfall's *rendering* of it, which wraps that notice
+  in a sentence. So the check asserts containment, not equality —
+  `scripts/canonical-disclaimer.test.ts` now verifies the mandated form appears
+  in both compliance documents and inside the constant. Pinning the full
+  rendering to an exact string was tried and reverted: it would have made the
+  wording *look* ratified while the mandated form and our rendering drifted
+  apart independently, which is the failure the disclaimer check exists to
+  prevent, reintroduced one requirement over.
 - **The LSS terms page has never been read.** `fabtcg.com` returns 403 to
   automated fetches. The clause summaries were assembled from search excerpts
   plus the envelope already in PLAN.md. COMPLIANCE.md carries this as a named
@@ -328,17 +337,19 @@ the way `check-disclaimer.ts` already is. *Why it remains:* moving it is
 entangled with fixing the two findings above; doing all three at once is one
 coherent change rather than three.
 
-**The no-logo token guard matches only exact whole segments** (probe results in
-§1). COMPLIANCE §3 leans on it as a primary enforcement point. Fix is to
-normalise — lowercase, strip non-alphanumerics, `includes` — and add the four
-passing spellings as regression cases. *Why it remains:* out of the repair
-pass's assigned file set.
+~~**The no-logo token guard matches only exact whole segments.**~~ **Fixed** —
+see §1. Worth noting that the fix suggested here (strip non-alphanumerics, then
+`includes`) was implemented, found to be wrong, and replaced: it matches "logo"
+inside `color.dialog.overlay`, so it would have failed builds on legitimate
+Phase 1 tokens while accusing them of breaching LSS's asset policy. Word-boundary
+matching is what actually works.
 
-**`CARD_IMAGE_COPYRIGHT` has three spellings across three files with no test**
-(§1). *Why it remains:* the exact required wording is one of the three things
-COMPLIANCE.md's verification caveat says a human must read off the live LSS
-terms page, so canonicalising it now risks canonicalising the wrong string.
-Sequence it after open action #1.
+~~**`CARD_IMAGE_COPYRIGHT` has three spellings across three files with no
+test.**~~ **Fixed** — see §1. The deferral reasoning below was sound and is why
+the fix asserts *containment* rather than equality: the mandated notice is
+`© Legend Story Studios`, the rendering wraps it, and the wrapper is still
+unratified pending a human reading the live LSS terms page. Containment binds
+what is actually specified without canonicalising what is not.
 
 **`apps/site/package.json` uses five caret ranges** — `@astrojs/svelte ^9.0.1`,
 `astro ^7.2.0`, `svelte ^5.56.8`, `@astrojs/check ^0.9.10`, `typescript ^6.0.3`
@@ -669,9 +680,18 @@ differently than documented, the `bun` Dependabot ecosystem having been rejected
 wholesale, and the Netlify preview check not appearing because branch deploys
 were left on.
 
-One thing that should not wait for Phase 1: **the zero-LLM scanner's evasion
-holes.** It is the enforcement mechanism for the project's single most binding
-rule, and I demonstrated six real language-model packages passing it today. It
-does not block the exit criteria — but it is the finding whose failure mode is
-silent, and the one worth fixing before the first dependency lands that nobody
-reads twice.
+The one thing that was not allowed to wait for Phase 1 — **the zero-LLM
+scanner's evasion holes** — is now closed. It is the enforcement mechanism for
+the project's single most binding rule, and six real language-model packages
+demonstrably passed it. It now recurses into nested overrides, decomposes
+path-style keys, reads `bun.lock` for the resolved tree, scans the array-shaped
+`trustedDependencies` field, and fails on a missing lockfile. Every one of those
+cases was re-run against a fixture and exits 1; the real tree (416 packages)
+still passes.
+
+What remains open on that gate is not correctness but *placement*: it is still a
+130-line heredoc inside `ci.yml`, never typechecked, never linted, and runnable
+only by extracting it with a YAML parser. It should become
+`scripts/no-llm-check.ts` with a colocated test, the way `check-disclaimer.ts`
+already is. That is a Phase 1 tidy-up, and the reason to record it is that a
+gate nobody can run locally is a gate nobody will extend correctly.

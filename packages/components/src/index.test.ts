@@ -13,8 +13,14 @@ describe("card image compliance contract", () => {
   // only defends against forgetting it — `copyright=""` type-checks and renders
   // a card face with no notice. These two tests pin the stronger shape, so the
   // prop cannot be reintroduced without a failing build to argue with.
-  test("the notice is the exact text the asset policy requires", () => {
-    expect(CARD_IMAGE_COPYRIGHT).toBe("Card images © Legend Story Studios.");
+  // Containment, not equality. The policy mandates the notice
+  // "© Legend Story Studios"; this constant is Optfall's rendering of it, and
+  // the exact wrapper sentence is not ratified. Pinning the full string here
+  // would make it look specified while the mandated form and our rendering
+  // drifted apart — scripts/canonical-disclaimer.test.ts asserts the two agree
+  // across the compliance documents, which is the check that actually binds.
+  test("contains the notice the asset policy mandates", () => {
+    expect(CARD_IMAGE_COPYRIGHT).toContain("© Legend Story Studios");
   });
 
   test("is not caller-supplied", () => {
