@@ -3,7 +3,12 @@
   "extends": "../../tsconfig.base.json",
   "$comment": "svelte-check's half of the split described in tsconfig.json. This one sees the .svelte sources and the barrel that imports them — the files tsc structurally cannot resolve. Two configs rather than one because the two checkers genuinely disagree about what a `.svelte` import is, and pretending otherwise means typing every component as `any`.",
   "compilerOptions": {
-    "types": ["svelte"],
+    // "bun" is load-bearing, not incidental. `types` is an allowlist: naming
+    // any package here stops TypeScript loading the rest of @types/*, so
+    // listing only "svelte" hid @types/bun and broke `import ... from
+    // "bun:test"` in the accessibility suite — which lives under src/svelte and
+    // is therefore checked by this config rather than the other one.
+    "types": ["svelte", "bun"],
     "verbatimModuleSyntax": false
   },
   "include": ["src/svelte/**/*.ts", "src/svelte/**/*.svelte"],

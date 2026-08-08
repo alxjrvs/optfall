@@ -2,7 +2,16 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "_comment": "Repository-root config: what an editor opens at the top of the tree, and the config that covers loose root-level TypeScript — the repository scripts in `scripts/` among them, since a checker nobody type checks is a checker that breaks silently. Each workspace also type checks itself through its own tsconfig.json; `bun run typecheck` runs this file first and then fans out.",
   "extends": "./tsconfig.base.json",
-  "include": ["packages/*/src/**/*.ts", "scripts/**/*.ts"],
+  "include": [
+    "packages/*/src/**/*.ts",
+    // Loose package-root TypeScript — `packages/components/svelte-loader.ts`
+    // today. Without this the loader every accessibility assertion depends on
+    // is checked by nothing, which is the precise failure this file's own
+    // comment claims to prevent: a checker nobody type checks is a checker that
+    // breaks silently.
+    "packages/*/*.ts",
+    "scripts/**/*.ts"
+  ],
   "$comment_svelte": "packages/components/src/svelte is excluded here for the same reason it is excluded from that package's own tsconfig: tsc cannot resolve a `.svelte` import, and the ambient `declare module '*.svelte'` workaround would type every primitive as `any`. svelte-check covers those files with real component types, via packages/components/tsconfig.svelte.json, and runs as part of that package's typecheck script.",
   "exclude": [
     "**/node_modules",
