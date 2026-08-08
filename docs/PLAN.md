@@ -235,18 +235,31 @@ fact three times — from an intention into a test.
 to the repo rather than a hosted service, so the check keeps working after a
 trial lapses or a card expires.
 
-**Publish the library, not just the site.** Storybook deploys publicly as its
-own build. That makes the component library documentation for anyone else who
-wants to adopt the accessible pitch jewel — the only mechanism by which the
-accessibility promise actually reaches other tools rather than stopping at our
-own edges.
+**Storybook is local-only, and that is a deliberate narrowing.** An earlier
+version of this plan had it deploying publicly as its own build, on the
+reasoning that a hosted workbench is how the library becomes documentation for
+anyone adopting the accessible pitch jewel. It is dropped because it was the
+weaker half of that argument: what actually carries the accessibility promise
+past our own edges is the **published component**, compiled to a custom element
+so a React or vanilla site can drop the jewel in without adopting our stack. A
+hosted Storybook would have made that easier to *discover*, not possible.
+
+So the cost is discoverability, paid against a second deploy target, a second
+build to keep green, and a public surface to keep compliant — for a project
+whose whole premise is that nothing should stop working because its maintainer
+stopped paying attention. `bun run storybook` is the workbench; every primitive
+is still built there first, in both themes, before it reaches a product surface.
+
+Revisit if someone actually asks to adopt a primitive. Until then, publishing a
+workbench nobody has asked for is the shape of maintenance that outlives its
+reason.
 
 ### Deliverables
 
 - Theme package — light and dark token sets, no component styles whatsoever
 - Component package — pitch jewel, bevelled plate, notched state pill, brass
   seal, citation, filigree corner, ornamental rule, the mark
-- Storybook — every primitive, both themes, deployed to a public URL
+- Storybook — every primitive, both themes, run locally (`bun run storybook`)
 - Lint rule rejecting literal colour and spacing in component source
 - a11y and visual-regression checks wired into the aggregate gate
 

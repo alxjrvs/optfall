@@ -11,7 +11,7 @@ Quoted from `docs/PLAN.md` Phase 1.
 |---|---|
 | Theme package — light and dark token sets, no component styles | **done** |
 | Component package — the eight primitives | **done** |
-| Storybook — every primitive, both themes | **done** (62 stories); public deploy **not done** |
+| Storybook — every primitive, both themes | **done** — 62 stories, local-only by decision |
 | Lint rule rejecting literal colour and spacing | **done**, in the gate as `tokens` |
 | a11y checks wired into the aggregate gate | **done**, via the existing `test` job |
 | Visual-regression checks wired into the gate | **not done** — see below |
@@ -71,14 +71,18 @@ with `--update-snapshots`, commit the baselines it produces, and only then add
 the comparison job to `gate`. One bootstrap run, and the check is satisfiable
 from that point forward.
 
-## Storybook's public deploy — not done, and why
+## Storybook is local-only, by decision
 
-The plan wants Storybook deployed publicly as its own build, because that is
-what makes the component library documentation for anyone else adopting the
-accessible pitch jewel. `bun run build:storybook` produces `storybook-static/`
-and it builds clean. What is missing is the Netlify site to put it on — no
-Netlify site exists for this project at all yet (Phase 0 handoff, step 4), so
-there is nothing to deploy to rather than anything wrong with the build.
+`bun run storybook` serves all 62 stories at `localhost:6006` — verified
+running, 51 ms for the manager and 89 ms for the preview.
+`bun run build:storybook` also produces a clean static build, so nothing
+technical stands in the way of hosting it later.
+
+The public deploy was dropped rather than deferred. What carries the
+accessibility promise past our own edges is the **published component**,
+compiled to a custom element; a hosted workbench would have made that easier to
+discover, not possible. Against that: a second deploy target, a second build to
+keep green, and a public surface to keep compliant. See `docs/PLAN.md` Phase 1.
 
 ## The Storybook integration risk landed
 
