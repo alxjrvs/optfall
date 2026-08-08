@@ -7,3 +7,18 @@
 
 [install]
 exact = true
+
+[test]
+# Bun's runtime has no Svelte loader, so `import X from "./X.svelte"` resolves
+# to the file path as a string and fails inside Svelte's renderer with an error
+# that points at Svelte rather than at the missing loader. This preload teaches
+# the test runner to compile Svelte components on import, which is what lets the
+# accessibility suite render the real primitives instead of mocks.
+#
+# THE PATH IS RESOLVED FROM THE WORKING DIRECTORY, so `bun test` must be run
+# from the repository root — which is what `bun run test` does and what CI does.
+# Running `bun test` from inside packages/components fails all 50 accessibility
+# assertions with "component is not a function", which reads like a broken suite
+# rather than a missing preload. If that is ever a real workflow, give the
+# package its own bunfig.toml rather than making this path cleverer.
+preload = ["./packages/components/svelte-loader.ts"]
