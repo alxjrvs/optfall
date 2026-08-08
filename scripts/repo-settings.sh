@@ -13,8 +13,15 @@
 #
 # What Terraform would not have given us for free is the --check mode. Drift
 # only surfaces from `terraform plan` when somebody remembers to run it, whereas
-# --check runs in CI on every pull request (.github/workflows/ci.yml, the
-# `repo-settings` job, which is wired into the aggregate `gate`).
+# --check runs on a schedule in .github/workflows/repo-settings-check.yml.
+#
+# THAT CHECK IS DELIBERATELY NOT A REQUIRED CI JOB. It was one, briefly, and it
+# deadlocked: reading the settings below needs administrative read, a workflow's
+# `permissions:` block has no `administration` scope, so GITHUB_TOKEN cannot be
+# raised to it and only a hand-made PAT works. As a gated job it left every pull
+# request red until a human installed a token — the exact auto-merge deadlock
+# Phase 0 exists to prevent. If you are about to "fix" the schedule by moving
+# this back into ci.yml's gate, that is the thing that breaks.
 #
 # Authentication is `gh`, deliberately. It needs no 1Password token, so this
 # stays runnable from an agent session rather than requiring a human terminal.
@@ -73,32 +80,61 @@ CHECK_ONLY=false
 drift=0
 undetermined=0
 
+# Colour only when stdout is a terminal, and never when NO_COLOR is set.
+#
+# This output is not only read by humans: the scheduled drift workflow captures
+# it and pastes it into a GitHub issue. Emitting escapes unconditionally would
+# put raw \033[31m sequences in the issue body — the one place the report most
+# needs to be readable, and the one place nobody would notice until drift
+# actually happened.
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+  C_OK=$'\033[32m'; C_BAD=$'\033[31m'; C_UNK=$'\033[33m'; C_OFF=$'\033[0m'
+else
+  C_OK=""; C_BAD=""; C_UNK=""; C_OFF=""
+fi
+
 note() { printf '  %s\n' "$*"; }
-ok()   { printf '  \033[32mok\033[0m            %s\n' "$*"; }
-bad()  { printf '  \033[31mdrift\033[0m         %s\n' "$*"; drift=1; }
-unk()  { printf '  \033[33mundetermined\033[0m  %s\n' "$*"; undetermined=1; }
+ok()   { printf '  %sok%s            %s\n' "$C_OK"  "$C_OFF" "$*"; }
+bad()  { printf '  %sdrift%s         %s\n' "$C_BAD" "$C_OFF" "$*"; drift=1; }
+unk()  { printf '  %sundetermined%s  %s\n' "$C_UNK" "$C_OFF" "$*"; undetermined=1; }
 
 # Run a `gh api` GET and classify the outcome instead of swallowing it.
-# Prints the response body on success; sets `api_status` to the HTTP status
-# gh reported (or 0 on success, 000 when gh printed no status at all).
 #
-# This exists because `gh api ... >/dev/null 2>&1` cannot tell 403 from 404,
-# and for a probe whose "absent" answer is the passing one, that difference is
-# the entire result.
+# This exists because `gh api ... >/dev/null 2>&1` cannot tell 403 from 404, and
+# for a probe whose "absent" answer is the passing one, that difference is the
+# entire result.
+#
+# IT RETURNS THE BODY IN A GLOBAL, NOT ON STDOUT, AND THAT IS DELIBERATE. The
+# obvious spelling — `body="$(api_get …)"` — runs the function in a
+# command-substitution subshell, so every variable it sets dies with that
+# subshell. `api_status` would then still hold whatever the *previous*
+# non-subshell call left behind, and the error message would confidently report
+# a stale status: a 403 on one endpoint printed as the 404 from the last probe.
+# Silently wrong beats blank, so:
+#
+#     if api_get "repos/${REPO}"; then use "$api_body"; else … "$api_status"; fi
+#
 api_status=0
+api_body=""
 api_get() {
-  local path="$1" body err rc=0
+  local path="$1" errfile rc=0
+  errfile="$(mktemp "${TMPDIR:-/tmp}/repo-settings-err.XXXXXX")"
+
   set +e
-  body="$(gh api "$path" 2>/tmp/repo-settings-err.$$)"
+  api_body="$(gh api "$path" 2>"$errfile")"
   rc=$?
   set -e
-  err="$(cat /tmp/repo-settings-err.$$ 2>/dev/null || true)"
-  rm -f "/tmp/repo-settings-err.$$"
+
+  local err
+  err="$(cat "$errfile" 2>/dev/null || true)"
+  rm -f "$errfile"
+
   if [[ $rc -eq 0 ]]; then
     api_status=0
-    printf '%s' "$body"
     return 0
   fi
+
+  api_body=""
   if [[ "$err" =~ HTTP\ ([0-9]{3}) ]]; then
     api_status="${BASH_REMATCH[1]}"
   else
@@ -130,10 +166,11 @@ for tool in gh jq; do
   }
 done
 
-if ! live_settings="$(api_get "repos/${REPO}")"; then
+if ! api_get "repos/${REPO}"; then
   echo "error: cannot read repos/${REPO} (HTTP ${api_status}). Is \`gh\` authenticated, and does the repository exist?" >&2
   exit 2
 fi
+live_settings="$api_body"
 
 # ---------------------------------------------------------------------------
 # Ownership and visibility
@@ -226,7 +263,15 @@ if [[ "$CHECK_ONLY" == false ]]; then
   gh api -X PUT "repos/${REPO}/vulnerability-alerts" --silent
 
   note "applied"
-  live_settings="$(api_get "repos/${REPO}")"
+  # Re-read so the assertions below judge what GitHub actually stored, not what
+  # we asked it to store. If that re-read fails, keep the pre-apply snapshot:
+  # every setting will then report drift, which is the honest outcome — better
+  # than asserting against an empty body and claiming everything is missing.
+  if api_get "repos/${REPO}"; then
+    live_settings="$api_body"
+  else
+    unk "could not re-read repos/${REPO} after applying (HTTP ${api_status}); assertions below are against the pre-apply state"
+  fi
 fi
 
 for key in "${!SETTINGS[@]}"; do
@@ -315,14 +360,26 @@ ruleset_body="$(jq -n --arg name "$RULESET_NAME" --arg gate "$GATE_JOB" '{
   ]
 }')"
 
-if ! rulesets="$(api_get "repos/${REPO}/rulesets")"; then
+rulesets_readable=true
+if api_get "repos/${REPO}/rulesets"; then
+  rulesets="$api_body"
+else
   unk "cannot list rulesets (HTTP ${api_status})"
   rulesets='[]'
+  rulesets_readable=false
 fi
 existing_id="$(jq -r --arg n "$RULESET_NAME" '.[] | select(.name == $n) | .id' <<<"$rulesets")"
 
 if [[ "$CHECK_ONLY" == false ]]; then
-  if [[ -n "$existing_id" ]]; then
+  if [[ "$rulesets_readable" == false ]]; then
+    # Do NOT fall through to POST here. An unreadable listing is indistinguishable
+    # from an empty one, so creating would add a SECOND ruleset named
+    # "default-branch" whenever one already exists — and GitHub unions rulesets,
+    # which is exactly the "two declarations, whichever ran last wins and neither
+    # can tell you so" failure this file's header warns against. Refusing to
+    # guess is the only safe move.
+    unk "not applying the ruleset: the existing rulesets could not be listed, and creating one blind risks a duplicate"
+  elif [[ -n "$existing_id" ]]; then
     gh api -X PUT "repos/${REPO}/rulesets/${existing_id}" --input - <<<"$ruleset_body" --silent
     note "updated (id ${existing_id})"
   else
@@ -332,10 +389,15 @@ if [[ "$CHECK_ONLY" == false ]]; then
 fi
 
 if [[ -z "$existing_id" ]]; then
-  bad "ruleset '${RULESET_NAME}' does not exist"
-elif ! live="$(api_get "repos/${REPO}/rulesets/${existing_id}")"; then
+  if [[ "$rulesets_readable" == false ]]; then
+    unk "ruleset '${RULESET_NAME}' — cannot tell; the listing was unreadable"
+  else
+    bad "ruleset '${RULESET_NAME}' does not exist"
+  fi
+elif ! api_get "repos/${REPO}/rulesets/${existing_id}"; then
   unk "cannot read ruleset ${existing_id} (HTTP ${api_status})"
 else
+  live="$api_body"
   [[ "$(jq -r '.enforcement' <<<"$live")" == "active" ]] \
     && ok "enforcement = active" \
     || bad "enforcement = $(jq -r '.enforcement' <<<"$live") (expected active)"

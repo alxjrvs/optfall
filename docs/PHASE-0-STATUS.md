@@ -292,23 +292,32 @@ These remain. Each was re-verified today rather than taken from a report.
 
 ### Medium
 
-**The zero-LLM scanner has demonstrated allowlist holes.** I extracted the
-scanner verbatim out of `ci.yml` and ran it against a manifest declaring
-`@openai/agents`, `@google-cloud/vertexai`, `together-ai` and `gpt4all` in
-`dependencies`, a nested override `{"some-lib": {"openai": "^6"}}`, and
-path-style resolutions `"astro/openai"` and `"**/langchain"`. Result:
-`No language-model or AI SDK dependency declared. ✔`, **exit 0**. The clearest
-asymmetry is that `openai` is banned by exact name but the `@openai/` scope is
-not. *Why it remains:* the repair pass prioritised the three findings that
-falsified the binding plan (split brain, unwired check, unenforced disclaimer)
-and the one that made a whole gate leg decorative. This is the highest-value
-remaining item.
+~~**The zero-LLM scanner has demonstrated allowlist holes.**~~ **Fixed.** The
+scanner previously returned `✔` exit 0 on a manifest declaring `@openai/agents`,
+`@google-cloud/vertexai`, `together-ai` and `gpt4all`, a nested override
+`{"some-lib": {"openai": "^6"}}`, and path-style resolutions `"astro/openai"`
+and `"**/langchain"` — every one of them a real way to introduce an LLM SDK.
+Three defects, all closed:
 
-**The scanner reads manifests only, never `bun.lock`.** A direct dependency that
-itself pulls in `openai` or `@ai-sdk/*` ships that code into the bundle with the
-check green. The constraint is "no LLM SDK may ever appear as a dependency", not
-"as a direct dependency", and the lockfile enumerating the full resolved graph
-is committed and greppable. *Why it remains:* same triage.
+- the allowlist gained the `@openai/` scope and the missing exact names;
+- `walk()` now recurses into nested override maps, instead of reading only the
+  outer key and calling `{"some-lib": {"openai": "^6"}}` clean;
+- `candidateNames()` decomposes path-style keys, so `"astro/openai"` and
+  `"**/langchain"` are matched on their package segment rather than on the raw
+  string, with `@scope/name` pairs rejoined so scoped packages survive the
+  split.
+
+Re-verified by extracting the scanner and running it against all seven cases:
+each now emits a `::error` and exits 1, and the real tree still passes.
+
+~~**The scanner reads manifests only, never `bun.lock`.**~~ **Fixed.** This was
+the one that mattered most, because the rule is about what the product
+*contains*, not what we chose to type: an LLM SDK arriving as somebody else's
+transitive dependency shipped into the bundle with every manifest clean and the
+gate green. The scanner now reads the resolved tree out of `bun.lock` (416
+packages today) and treats a **missing** lockfile as a failure, since a pass
+over an unknown tree is a pass over nothing. Verified against a fixture whose
+manifests are clean and whose lockfile contains `@anthropic-ai/sdk`: exit 1.
 
 **The scanner is a 130-line heredoc written into `RUNNER_TEMP` at job time.** It
 is the only substantial code in the repo that is never typechecked, never

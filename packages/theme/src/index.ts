@@ -165,10 +165,25 @@ export const FORBIDDEN_TOKEN_SEGMENTS: readonly string[] = [
   "set-logo",
 ];
 
-/** Whether a token id names something the asset policy forbids shipping. */
+/**
+ * Whether a token id names something the asset policy forbids shipping.
+ *
+ * Matches on a normalised substring rather than on whole dot-separated
+ * segments, and the difference is the whole value of the check. Nobody names a
+ * token `asset.logo`; they name it `asset.fab-logo`, `brand.lssLogo` or
+ * `icon.set-symbol-filter`. A segment-equality test returns false for every one
+ * of those — it would only catch the naming nobody uses, while passing the
+ * naming everybody uses.
+ *
+ * Normalising away case and separators also collapses `setSymbol`,
+ * `set_symbol` and `set-symbol` onto the same rule, so the check does not turn
+ * on a house style that has not been decided yet.
+ */
 export function isForbiddenTokenId(id: string): boolean {
-  const segments = id.toLowerCase().split(".");
-  return segments.some((segment) => FORBIDDEN_TOKEN_SEGMENTS.includes(segment));
+  const normalised = id.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return FORBIDDEN_TOKEN_SEGMENTS.some((segment) =>
+    normalised.includes(segment.replace(/[^a-z0-9]/g, "")),
+  );
 }
 
 /**

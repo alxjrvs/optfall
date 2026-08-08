@@ -131,15 +131,21 @@ jobs:
           BODY
           )
 
-          # One issue, reopened and updated, rather than a new one every Monday.
+          # Create the label FIRST, unconditionally. `gh issue list --label` on a
+          # label that does not exist is an error, not an empty result — and
+          # under `set -e` that killed the step on the first-ever drift run,
+          # which is the one outcome this workflow exists to guarantee.
+          gh label create repo-settings \
+            --description "Repository configuration drift" \
+            --color BFD4F2 2>/dev/null || true
+
+          # One issue, commented on and reused, rather than a new one every
+          # Monday for the same unfixed drift.
           existing=$(gh issue list --state open --label repo-settings \
             --json number --jq '.[0].number // empty')
 
           if [[ -n "$existing" ]]; then
             gh issue comment "$existing" --body "$body"
           else
-            gh label create repo-settings \
-              --description "Repository configuration drift" \
-              --color BFD4F2 2>/dev/null || true
             gh issue create --title "$title" --label repo-settings --body "$body"
           fi
