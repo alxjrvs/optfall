@@ -425,10 +425,12 @@ interactions live only as unsearchable Discord scrollback. The unit is the *card
 pair*, not the question, because pairs are enumerable — which yields both a
 coverage metric and a work queue.
 
-**No language model anywhere in version one.** Lexical and structured search over
-the Phase 4 corpus. The tool never composes prose, so a confident wrong answer to
-a player mid-round is structurally impossible rather than mitigated. Retrieval
-may assist search later; never the answer.
+**No language model — and not merely "not in version one".** Lexical and
+structured search over the Phase 4 corpus. The tool never composes prose, so a
+confident wrong answer to a player mid-round is structurally impossible rather
+than mitigated. This is the surface where the temptation is strongest and the
+project-wide rule below admits no exception for it: no retrieval-augmented
+answer, no summarised ruling, no "AI assist" behind a toggle.
 
 **Recruit authors, do not mine an archive.** Retroactive consent from thousands
 of people is impossible, and asking would itself be the hostile act. Forward
@@ -461,6 +463,16 @@ observable.
 Three Flesh and Blood tools have now died or decayed, none of them from lack of
 demand. This is the part of the plan that is not about features.
 
+- **No language model in the shipped product.** Nothing a user touches calls one,
+  and no dataset Optfall publishes contains model-generated content — which rules
+  out LLM-assisted parsing in the document pipeline exactly as much as it rules
+  out a chat box. Parsers are deterministic code whose output diffs cleanly and
+  fails loudly; a model's does neither. Every string served traces to a parsed
+  official document or a named human author. Treat this as structural rather than
+  a quality bar: the positioning is *being right*, and a tool with no capacity to
+  compose prose cannot state a confident wrong rule to a player mid-round. The
+  boundary is output, not tooling — a model used off to the side while building is
+  fine right up until its words reach a user or a published file.
 - **Compose, never restyle.** Every surface is assembled from the component
   library. A screen that needs new CSS is a signal the library is missing a
   primitive — add it there, not in the page.
@@ -525,8 +537,8 @@ demand. This is the part of the plan that is not about features.
 
 **Settled.** `alxjrvs/optfall`, personal ownership, MIT, TypeScript on Bun,
 Svelte components, Astro site, Netlify hosting, Terraform for repo and
-infrastructure, no direct monetisation. Cold start confirmed — the phase order
-stands as written.
+infrastructure, no direct monetisation, and no language model in anything
+shipped. Cold start confirmed — the phase order stands as written.
 
 **Open, and it decides a headline feature.** Whether past banned-and-restricted
 revisions are publicly archived. If they are, time travel is a scraping job; if

@@ -13,6 +13,10 @@ Optfall optimises for the one thing no incumbent optimises for: **being right**.
 Correct legality, correct rules text, correct rulings — each citable, each
 version-stamped, each with a permanent URL.
 
+No language model is involved in anything Optfall serves. Every answer is a
+parsed official document or a named human author, never generated prose — so a
+confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
+
 ## Documents
 
 | Document | Contents |
