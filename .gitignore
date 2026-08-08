@@ -1,0 +1,61 @@
+# --- Dependencies ---------------------------------------------------------
+node_modules/
+.bun/
+.pnp.*
+
+# --- Build output ---------------------------------------------------------
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# --- Astro ----------------------------------------------------------------
+.astro/
+apps/*/dist/
+
+# --- Netlify --------------------------------------------------------------
+.netlify/
+.netlify-cache/
+
+# --- Storybook ------------------------------------------------------------
+storybook-static/
+
+# --- Playwright / visual regression ---------------------------------------
+# Committed baselines live in `*-snapshots/` and must stay tracked; only the
+# per-run diff output is ignored.
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+*-actual.png
+*-diff.png
+
+# --- Coverage -------------------------------------------------------------
+coverage/
+*.lcov
+
+# --- Secrets and local environment ----------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Editors and OS -------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- Logs -----------------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# --- Agent worktrees ------------------------------------------------------
+.claude/worktrees/

@@ -1,0 +1,24 @@
+{
+  "name": "optfall-theme",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Optfall design tokens — the single source of truth for colour, type, spacing, bevel and ornament. No component styles.",
+  "license": "MIT",
+  "author": "alxjrvs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alxjrvs/optfall.git",
+    "directory": "packages/theme"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "bun test"
+  },
+  "dependencies": {}
+}

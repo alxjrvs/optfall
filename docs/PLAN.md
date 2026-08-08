@@ -102,9 +102,13 @@ in a git repository.
 - **Netlify.** Production from `main`, deploy previews on every pull request.
   Previews matter more than usual here: a legality bug is visible in a preview
   and invisible in a diff.
-- **Terraform.** GitHub repository settings and ruleset as code, with the
-  Netlify site alongside. The repo configuration should be reproducible from
-  scratch, not archaeology.
+- **A shell script, not Terraform.** Repository settings and ruleset live in a
+  checked-in `gh api` script, re-runnable at any time, with a CI job asserting
+  the live settings still match. Reproducible from scratch rather than
+  archaeology — which was Terraform's whole pitch, minus a state file that has to
+  live somewhere durable, minus a provider dependency, minus a language nobody
+  here writes. Terraform earns its keep across many repos or real cloud
+  resources; this is one repo and a twelve-line checklist.
 - **Data as committed JSON.** Every dataset lives versioned in the repo and is
   served as a static file — simultaneously the storage layer, the public API,
   the backup and the audit trail.
@@ -117,8 +121,11 @@ in a git repository.
   property and are never relicensed by us.
 
 > **Operational note.** The permission rules on this machine deny the Bash path
-> to secret resolution, so a `terraform apply` needing a Netlify token runs from
-> a human terminal rather than from inside an agent session.
+> to secret resolution, so anything needing a Netlify token runs from a human
+> terminal rather than from inside an agent session. The repo-settings script is
+> deliberately not in that category: it authenticates with `gh`, which an agent
+> session already has, so the settings stay reproducible without a human in the
+> loop.
 
 ---
 
@@ -126,20 +133,39 @@ in a git repository.
 
 **1–2 days. Nothing blocks it.**
 
-`alxjrvs/optfall` — declared in Terraform, deploying to Netlify, compliant
-before the first line of product code.
+`alxjrvs/optfall` — settings in a script, deploying to Netlify, compliant before
+the first line of product code.
 
 **Personal ownership is a compliance requirement, not a preference.** LSS's
 policy bars third-party applications built by commercial entities, so the repo,
 the domain and any future Patreon live on the personal account. Putting it under
 an org later would be expensive to undo.
 
-**Terraform the repo settings, don't click them.** The agent-friendly
-configuration is a real specification: squash-only merges, rebase-preferred
-branch updates, required linear history, a single aggregate status check rather
-than per-job checks, no required human review, and an empty bypass list so
-nobody — including you — can route around it. That set is fiddly enough to drift
-when applied by hand.
+**Script the repo settings, don't click them.** The agent-friendly configuration
+is a real specification: squash-only merges, rebase-preferred branch updates,
+required linear history, a single aggregate status check rather than per-job
+checks, no required human review, and an empty bypass list so nobody — including
+you — can route around it. That set is fiddly enough to drift when applied by
+hand, so it lives in `scripts/repo-settings.sh` and is checked on a schedule.
+
+**Asserted, not merely declared.** A settings file that nobody re-runs is a
+description of the past. The script has a `--check` mode that reads the live
+repository and exits non-zero on any divergence, and a weekly workflow runs it
+and opens an issue when it finds one. That check is the part Terraform would not
+have given us for free, since `plan` only detects drift when somebody remembers
+to run it.
+
+**The drift check is deliberately not a required check, and the reason
+generalises.** Reading the merge settings needs a token with administrative
+read, and a workflow's `permissions:` block has no `administration` scope — so
+`GITHUB_TOKEN` cannot be raised to it and only a hand-made personal access token
+works. Gating merges on that would leave every pull request red until a human
+installed a token: the exact auto-merge deadlock this phase exists to prevent,
+reintroduced by the mechanism meant to protect it. It is also simply the wrong
+trigger, since settings drift when somebody changes a setting rather than when
+somebody changes code. The general rule: **a required check must be something
+the repository can satisfy on its own.** Anything needing a human-issued
+credential belongs on a schedule, reporting to an issue.
 
 **The aggregate gate is the part most often got wrong.** Requiring each
 individual CI job as a status check strands required checks in "pending" forever
@@ -160,8 +186,9 @@ strengthens the ask.
 ### Deliverables
 
 - `alxjrvs/optfall` — public, personal account, TypeScript workspace on Bun
-- Terraform — GitHub repository settings and ruleset as code; Netlify site
-  declared alongside
+- `scripts/repo-settings.sh` — repository settings and ruleset as a re-runnable
+  `gh api` script, with a `--check` mode run weekly to catch drift
+- Netlify configuration in `netlify.toml`, alongside the site it builds
 - Agent-friendly settings — squash-only, linear history required, branch
   deletion on merge, no required human review, empty bypass list
 - CI with a single aggregate gate — one always-run job depending on all others,
@@ -174,8 +201,8 @@ strengthens the ask.
 ### Exit criteria
 
 A trivial pull request opens a deploy preview, passes the aggregate gate, and
-auto-merges with no human approval — and the repo configuration can be destroyed
-and reproduced from Terraform alone.
+auto-merges with no human approval — and the repo configuration can be wiped and
+restored by running `scripts/repo-settings.sh` alone.
 
 ---
 
@@ -536,9 +563,10 @@ demand. This is the part of the plan that is not about features.
 ## Settled, and still open
 
 **Settled.** `alxjrvs/optfall`, personal ownership, MIT, TypeScript on Bun,
-Svelte components, Astro site, Netlify hosting, Terraform for repo and
-infrastructure, no direct monetisation, and no language model in anything
-shipped. Cold start confirmed — the phase order stands as written.
+Svelte components, Astro site, Netlify hosting, repository settings as a
+`gh api` script rather than Terraform, no direct monetisation, and no language
+model in anything shipped. Cold start confirmed — the phase order stands as
+written.
 
 **Open, and it decides a headline feature.** Whether past banned-and-restricted
 revisions are publicly archived. If they are, time travel is a scraping job; if
@@ -547,8 +575,10 @@ may drop behind the rules work. First task of Phase 2, before the estimate
 hardens.
 
 **Open, and cheap to settle.** Domain (`optfall.com` did not resolve when
-checked, so it may be free), Terraform state backend, and the display typeface.
-None block Phase 0; all want deciding before Phase 1 ends.
+checked, so it may be free) and the display typeface. Neither blocks Phase 0;
+both want deciding before Phase 1 ends. The state-backend question that sat here
+is gone rather than answered — dropping Terraform removed the thing that needed
+a backend, which is the cheapest way to close a question.
 
 **Unverified.** The pitch-queue mechanic behind the parked deck-math work was
 never confirmed against the current rules — the official site blocks automated

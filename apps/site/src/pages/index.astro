@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Optfall">
+  <h1>Optfall</h1>
+
+  <p>
+    Legality that remembers, and rulings you can cite — a reference tool for
+    Flesh and Blood.
+  </p>
+
+  <p>
+    Optfall optimises for the one thing no incumbent optimises for: being right.
+    Correct legality, correct rules text, correct rulings — each citable, each
+    version-stamped, each with a permanent URL.
+  </p>
+
+  <p>
+    No language model is involved in anything Optfall serves. Every answer is a
+    parsed official document or a named human author, never generated prose — so
+    a confidently wrong ruling is not a risk to manage but a thing the tool
+    cannot do.
+  </p>
+
+  <h2>Status</h2>
+
+  <!--
+    Inline elements are kept on the same source line as the text around them.
+    Astro compresses the built HTML and drops the whitespace at a line break
+    that falls immediately before an inline tag, which silently welds words
+    together in the output. Verified against dist/index.html.
+  -->
+  <p>
+    <strong>Pre-Phase-0. Nothing is built yet.</strong> This page is the deployment target proving the pipeline works: a static build from <code>main</code>, a deploy preview on every pull request, and the compliance footer that ships before any product code does.
+  </p>
+
+  <p>
+    The plan and the design language are written down and public: <a href="https://github.com/alxjrvs/optfall/blob/main/docs/PLAN.md">the phased build plan</a> and <a href="https://github.com/alxjrvs/optfall/blob/main/docs/DESIGN.md">the design pass</a>.
+  </p>
+</BaseLayout>

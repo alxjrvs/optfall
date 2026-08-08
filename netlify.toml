@@ -1,0 +1,75 @@
+# Netlify configuration for Optfall.
+#
+# The site is static output only — no functions, no edge handlers, no runtime.
+# See docs/PLAN.md, "Stack": nothing here should stop working because its
+# maintainer stopped paying attention.
+#
+# This file is public and contains no secrets, and must never contain one.
+#
+# It covers what the build needs, and nothing else. The site itself is created
+# once by hand — `netlify sites:create`, or the UI — and linked to
+# `alxjrvs/optfall` there, because that link is an OAuth grant between two
+# accounts and is not expressible as configuration. There is deliberately no
+# Terraform in this repository (docs/PLAN.md, "Stack"); the GitHub half is
+# scripts/repo-settings.sh, and this is the Netlify half.
+#
+# Three site settings live only in the Netlify UI, so they are written down
+# here rather than left as folklore. Confirm them once, when the site is
+# created:
+#
+#   production branch      `main`
+#   deploy previews        on — a legality bug is visible in a preview and
+#                          invisible in a diff, which is why previews matter
+#                          more on this project than on most
+#   branch deploys         off — previews already cover pull requests, and every
+#                          extra published surface is another place the required
+#                          disclaimer has to be correct
+#
+# Also enable "prevent non-git production deploys" if the plan offers it: it
+# closes the path where a stray `netlify deploy --prod` publishes a build that
+# exists in no commit. For a project whose thesis is *being right*, serving
+# legality data nobody can trace back to a source is the specific failure to
+# design out.
+#
+# Anything below overrides the site's stored build settings at build time, so
+# where the two disagree, this file is what ran.
+
+[build]
+  # Built from the repository root, not from apps/site, for two reasons: the
+  # Bun workspace only resolves from the root, and the root `build` script fans
+  # out across every workspace in dependency order — so once the site imports
+  # `optfall-legality`, that package is built before Astro tries to bundle it.
+  #
+  # This is deliberately the same command CI runs. A deploy that succeeds where
+  # the aggregate gate fails would be a lie about the state of `main`.
+  #
+  # Netlify detects Bun from the root lockfile and runs the install step itself.
+  command = "bun run build"
+  publish = "apps/site/dist"
+
+[build.environment]
+  # Pinned deliberately. Astro 7 requires Node >= 22.12.0.
+  # BUN_VERSION sits inside the "1.3.x" line CI pins in .github/workflows/ci.yml.
+  NODE_VERSION = "22"
+  BUN_VERSION = "1.3.14"
+
+[[headers]]
+  for = "/*"
+
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Deploy previews exist to catch legality bugs that are invisible in a diff.
+# They are not the published site, so keep them out of search results.
+[[context.deploy-preview.headers]]
+  for = "/*"
+
+  [context.deploy-preview.headers.values]
+    X-Robots-Tag = "noindex"
+
+[[context.branch-deploy.headers]]
+  for = "/*"
+
+  [context.branch-deploy.headers.values]
+    X-Robots-Tag = "noindex"
