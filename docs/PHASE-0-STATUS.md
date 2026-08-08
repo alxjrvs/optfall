@@ -361,6 +361,21 @@ not in the repair pass's file set.
 
 ### Low
 
+- **`scripts/check-disclaimer.ts` applies a Markdown normaliser to built HTML.**
+  `normalizeProse()` strips a leading `>` from every line, which is right for a
+  Markdown blockquote and wrong for HTML, where a line can legitimately begin
+  with a tag-closing `>`. The blast radius is confined to the *diagnostic*: a
+  genuinely-absent disclaimer can be reported as "reflowed or split across
+  elements" rather than "does not contain". Pass/fail is decided by the
+  byte-exact `html.includes(expected)` above it, so this cannot produce a false
+  pass — it can only send someone looking in the wrong place.
+- **`assertDeck` validates less than its documentation claims.** It checks
+  `hero` is non-empty and `quantity` is a positive integer, but not that
+  `cardId` is non-empty or that `cards` is an array — while the JSDoc and the
+  test name ("validates its arguments before deferring") read as full argument
+  validation. Harmless today because evaluation throws `NotImplementedError`
+  regardless; the point is that Phase 2's real implementation will inherit the
+  gap along with the reassuring docstring.
 - **`oxlint` cannot parse `.astro` or `.svelte`** (confirmed: it offers a Vue
   plugin and nothing else). Three `.astro` files are unlinted today, and Phase
   1's exit criterion — "CI fails if anyone writes a raw hex" — needs a linter
