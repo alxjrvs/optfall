@@ -396,6 +396,29 @@ jobs:
       - name: Assert no language-model or AI SDK dependency
         run: bun "${RUNNER_TEMP}/no-llm-check.ts"
 
+  # docs/PLAN.md Phase 1: "A lint rule fails the build on a raw hex or a raw
+  # pixel value inside a component." This is that rule, and it is a required
+  # job because the plan is explicit that the difference between a design
+  # language and a folder of screenshots is enforcement rather than intent.
+  #
+  # It is a separate job from `lint` because oxlint cannot parse .svelte or
+  # .astro, which is where component styles actually live.
+  tokens:
+    name: tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Assert components consume tokens, never literals
+        run: bun run check:tokens
+
   disclaimer:
     name: disclaimer
     runs-on: ubuntu-latest
@@ -474,6 +497,7 @@ jobs:
       - test
       - build
       - no-llm-dependencies
+      - tokens
       - disclaimer
     steps:
       - name: Checkout
