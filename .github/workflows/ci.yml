@@ -462,6 +462,12 @@ jobs:
       - name: Assert the disclaimer appears verbatim on every built page
         run: bun run check:disclaimer
 
+      # The token layer reaching the page is a separate fact from the tokens
+      # being spelled correctly, and its failure mode is silent: a dropped
+      # stylesheet renders browser defaults while every other check stays green.
+      - name: Assert the token layer reaches every built page
+        run: bun run check:built-tokens
+
   # NOTE: the repository-settings drift check deliberately does NOT live here.
   # It runs on a schedule, in .github/workflows/repo-settings-check.yml.
   #

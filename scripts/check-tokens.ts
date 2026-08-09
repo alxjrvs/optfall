@@ -80,10 +80,28 @@ function styleRegions(file: string, source: string): { line: number; text: strin
 
   const regions: { line: number; text: string }[] = [];
   let inStyle = false;
+
+  // Opening and closing are tested INDEPENDENTLY, not as an if/else chain.
+  // A single line can carry both — `<style is:global set:html={tokens}></style>`
+  // in the site layout is exactly that — and an `else if` would set `inStyle`
+  // and never clear it, scanning every following markup line as CSS until the
+  // next `<style>`. That yields no violations today and would misreport the
+  // first literal anyone ever writes in ordinary markup as a style violation,
+  // in a region that is not a style block.
   lines.forEach((text, index) => {
-    if (/<style[\s>]/.test(text)) inStyle = true;
-    else if (/<\/style>/.test(text)) inStyle = false;
-    else if (inStyle) regions.push({ line: index + 1, text });
+    const opens = /<style[\s>]/.test(text);
+    const closes = /<\/style>/.test(text);
+
+    if (opens && closes) return; // self-contained; no CSS body to scan
+    if (opens) {
+      inStyle = true;
+      return;
+    }
+    if (closes) {
+      inStyle = false;
+      return;
+    }
+    if (inStyle) regions.push({ line: index + 1, text });
   });
   return regions;
 }
