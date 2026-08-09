@@ -36,15 +36,22 @@ import { LSS_DISCLAIMER } from "../lib/compliance";
     margin-block-start: var(--of-space-loosest);
     padding-block-start: var(--of-space-looser);
     border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
-    color: var(--of-color-ink-faint);
+    /* `ink.muted`, NOT `ink.faint`, and the difference is a compliance one.
+       This footer carries the LSS disclaimer — the one piece of text the
+       licence requires to be present — at `type.size.micro`, which is small
+       body copy and therefore needs 4.5:1, not the 3:1 large-text threshold.
+       `ink.faint` measures 3.86:1 dark and 3.63:1 light against the ground and
+       would have put the required notice below AA on every page. `ink.muted`
+       measures 8.09:1 and 6.33:1, and is the token `tokens.test.ts` asserts in
+       its BODY_TEXT set at 4.5:1. */
+    color: var(--of-color-ink-muted);
     font-size: var(--of-type-size-micro);
     line-height: var(--of-type-leading-loose);
   }
 
-  /* Muted by token rather than by `opacity`. Opacity would dim the text
-     against whatever sits behind it, which makes the contrast unknowable —
-     and `color.ink.faint` is a value the theme's own tests assert against the
-     ground at the large-text threshold. */
+  /* Muted by token rather than by `opacity`: opacity dims text against
+     whatever happens to sit behind it, which makes the contrast unknowable and
+     therefore unassertable. */
   .compliance p {
     margin-block: 0 var(--of-space-base);
   }
