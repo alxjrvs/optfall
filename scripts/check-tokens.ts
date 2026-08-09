@@ -39,8 +39,15 @@ const SCANNED = ["packages/components/src", "apps/site/src"] as const;
  * the day it stops being needed rather than whenever somebody notices.
  */
 const DEFERRED: Readonly<Record<string, string>> = {
-  "apps/site/src":
-    "Phase 0 placeholder styling, marked in BaseLayout.astro for wholesale deletion. Remove this entry in the layer that rebuilds the site on the primitives.",
+  // Empty, and it should stay that way.
+  //
+  // `apps/site/src` was deferred while the Phase 0 placeholder styling stood.
+  // That entry is gone because the site now consumes tokens — and the check
+  // below FAILS on a deferral whose path has become clean, so removing it was
+  // not optional once the styling landed. That is the mechanism working: an
+  // exemption that outlives its reason is how a rule quietly stops applying to
+  // half a codebase, so this one had to be deleted the day it stopped being
+  // needed rather than whenever somebody noticed.
 };
 
 const NAMED_COLOURS = [

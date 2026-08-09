@@ -389,15 +389,15 @@ not in the repair pass's file set.
   not broken: `@astrojs/check`'s peer range is `^5 || ^6`, so aligning the site
   to 7 would break it. It is undocumented, which makes the obvious tidy-up a
   regression waiting to happen.
-- **Actions are pinned to mutable major tags**, not commit SHAs —
+- ~~**Actions are pinned to mutable major tags**~~ **Fixed** — all pinned to commit SHAs with a trailing version comment., not commit SHAs —
   `actions/checkout@v4` and `oven-sh/setup-bun@v2` throughout `ci.yml`, and
   `dependabot/fetch-metadata@v2` in the one job holding `contents: write`.
-- **`dependabot-auto-merge.yml` declares `permissions:` at workflow level**, so
+- ~~**`dependabot-auto-merge.yml` declares `permissions:` at workflow level**~~ **Fixed** — workflow level is now `{}`, write scopes moved onto the one job that needs them., so
   every job the file ever gains inherits write. Should be on the job.
-- **Bun version drift:** CI pins the floating `1.3.x`, `netlify.toml` pins
+- ~~**Bun version drift**~~ **Fixed** — CI pins 1.3.14 exactly, matching netlify.toml. CI pins the floating `1.3.x`, `netlify.toml` pins
   `1.3.14`. A green gate can attest to a build on a Bun that never produced the
   deploy preview.
-- **The CI install step's `else` branch is dead** — `bun.lock` is committed, so
+- ~~**The CI install step's `else` branch is dead**~~ **Fixed** — removed from all five jobs; a PR deleting the lockfile now fails loudly. — `bun.lock` is committed, so
   the only remaining effect of `if [ -f bun.lock ] … else bun install` is that a
   PR deleting the lockfile silently downgrades four jobs to an unpinned install
   and still goes green.
@@ -410,11 +410,11 @@ not in the repair pass's file set.
   Fixed. It now checks `BASH_VERSINFO` and exits 2 with an explanation.
   Confirmed by running it under `/bin/bash` (3.2.57), which reports the version
   and how to fix it instead of dying on a syntax error.
-- **`README.md` is stale.** It says "Pre-Phase-0. Nothing is built yet," and its
+- ~~**`README.md` is stale.**~~ **Fixed** — status, document table and a working-on-it section all current. It says "Pre-Phase-0. Nothing is built yet," and its
   Documents table lists only PLAN and DESIGN — so `COMPLIANCE.md` and
   `DATA-TERMS.md`, the terms document that DATA-TERMS itself directs consumers
   to, are unreachable from the repository's front door.
-- **No `/data-terms` route exists** for the URL every published payload will
+- ~~**No `/data-terms` route exists**~~ **Fixed** — the page exists and carries the disclaimer. for the URL every published payload will
   carry.
 
 ### Not a defect, but not verified either

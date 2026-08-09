@@ -1,0 +1,54 @@
+---
+/**
+ * `/data-terms` — the URL every published Optfall payload carries.
+ *
+ * `docs/DATA-TERMS.md` has each dataset embed
+ * `"terms": "https://optfall.com/data-terms"`, and until this page existed that
+ * link 404'd. A terms URL that does not resolve is worse than none: it is a
+ * claim of provenance a recipient cannot check, on a project whose whole thesis
+ * is being right.
+ *
+ * The page is deliberately a SUMMARY that points at the canonical document
+ * rather than a second copy of it. Two prose copies of a licensing position
+ * drift, and the one people would find first is the one nobody edits. The
+ * disclaimer is the exception — it is required verbatim in the footer of every
+ * page, which `scripts/check-disclaimer.ts` enforces against the built output.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const CANONICAL =
+  "https://github.com/alxjrvs/optfall/blob/main/docs/DATA-TERMS.md";
+---
+
+<BaseLayout
+  title="Data terms — Optfall"
+  description="Terms on the data Optfall publishes: what is openly licensed, and what belongs to Legend Story Studios."
+>
+  <h1>Data terms</h1>
+
+  <p>
+    This page summarises the terms on data Optfall publishes. The canonical text is <a href={CANONICAL}><code>docs/DATA-TERMS.md</code></a>, and where the two differ, that document governs.
+  </p>
+
+  <h2>What is openly licensed</h2>
+
+  <p>
+    The <strong>structural work this project owns</strong>: rule identifiers, the legality timeline, version diffs, and annotations. These are ours to license, and they are published openly so that if this site disappears the corpus does not.
+  </p>
+
+  <h2>What is not ours to license</h2>
+
+  <p>
+    <strong>Card names, card text and card art remain the property of Legend Story Studios</strong> and are never relicensed here. Optfall uses them under LSS's published policy for third-party applications, which permits card databases and rules-enforcement tools on conditions that bind anyone we pass the data to as well.
+  </p>
+
+  <p>
+    So a dataset from Optfall carries two things at once: an open licence over the structure, and LSS's conditions over the game content inside it. Redistributing one without the other is not something this project can authorise.
+  </p>
+
+  <h2>The copyright line</h2>
+
+  <p>
+    Wherever card images are shown, the notice <code>© Legend Story Studios</code> must accompany them. In Optfall's own components that notice is rendered by the component itself rather than passed in, so it cannot be omitted or emptied by a caller.
+  </p>
+</BaseLayout>

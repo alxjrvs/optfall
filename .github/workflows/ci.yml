@@ -21,8 +21,14 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  # Pin the toolchain line, not just the action.
-  BUN_VERSION: "1.3.x"
+  # EXACT, and it must equal netlify.toml's BUN_VERSION.
+  #
+  # This was "1.3.x". A floating line means a green gate can attest to a build
+  # on a Bun that never produced the deploy preview, and never will again — the
+  # two would drift apart silently the next time a patch landed. `bunfig.toml`
+  # already pins every dependency exactly for the same reason; the runtime that
+  # installs them should not be the one floating thing.
+  BUN_VERSION: "1.3.14"
 
 jobs:
   typecheck:
@@ -31,22 +37,21 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
         run: |
           set -euo pipefail
-          if [ -f bun.lock ] || [ -f bun.lockb ]; then
-            bun install --frozen-lockfile
-          else
-            echo "No lockfile committed yet — installing without --frozen-lockfile."
-            bun install
-          fi
+          # No fallback branch. bun.lock is committed, so the only thing an
+          # `else` could ever do is let a pull request that DELETES the lockfile
+          # silently downgrade every job to an unpinned install and still go
+          # green — which is the one case where failing loudly is the point.
+          bun install --frozen-lockfile
 
       - name: Typecheck
         run: bun run typecheck
@@ -57,22 +62,21 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
         run: |
           set -euo pipefail
-          if [ -f bun.lock ] || [ -f bun.lockb ]; then
-            bun install --frozen-lockfile
-          else
-            echo "No lockfile committed yet — installing without --frozen-lockfile."
-            bun install
-          fi
+          # No fallback branch. bun.lock is committed, so the only thing an
+          # `else` could ever do is let a pull request that DELETES the lockfile
+          # silently downgrade every job to an unpinned install and still go
+          # green — which is the one case where failing loudly is the point.
+          bun install --frozen-lockfile
 
       - name: Lint
         run: bun run lint
@@ -83,22 +87,21 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
         run: |
           set -euo pipefail
-          if [ -f bun.lock ] || [ -f bun.lockb ]; then
-            bun install --frozen-lockfile
-          else
-            echo "No lockfile committed yet — installing without --frozen-lockfile."
-            bun install
-          fi
+          # No fallback branch. bun.lock is committed, so the only thing an
+          # `else` could ever do is let a pull request that DELETES the lockfile
+          # silently downgrade every job to an unpinned install and still go
+          # green — which is the one case where failing loudly is the point.
+          bun install --frozen-lockfile
 
       - name: Test
         run: bun run test
@@ -109,22 +112,21 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
         run: |
           set -euo pipefail
-          if [ -f bun.lock ] || [ -f bun.lockb ]; then
-            bun install --frozen-lockfile
-          else
-            echo "No lockfile committed yet — installing without --frozen-lockfile."
-            bun install
-          fi
+          # No fallback branch. bun.lock is committed, so the only thing an
+          # `else` could ever do is let a pull request that DELETES the lockfile
+          # silently downgrade every job to an unpinned install and still go
+          # green — which is the one case where failing loudly is the point.
+          bun install --frozen-lockfile
 
       - name: Build
         run: bun run build
@@ -135,10 +137,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
@@ -409,10 +411,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
@@ -425,22 +427,21 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
         run: |
           set -euo pipefail
-          if [ -f bun.lock ] || [ -f bun.lockb ]; then
-            bun install --frozen-lockfile
-          else
-            echo "No lockfile committed yet — installing without --frozen-lockfile."
-            bun install
-          fi
+          # No fallback branch. bun.lock is committed, so the only thing an
+          # `else` could ever do is let a pull request that DELETES the lockfile
+          # silently downgrade every job to an unpinned install and still go
+          # green — which is the one case where failing loudly is the point.
+          bun install --frozen-lockfile
 
       # docs/COMPLIANCE.md §4 names this as an enforcement point, and it is the
       # only one that catches what review does not: a reflow, an editor
@@ -501,7 +502,7 @@ jobs:
       - disclaimer
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # A gate can only aggregate what it was told to need, and `needs:` above
       # is maintained by hand. Adding a job to this workflow and forgetting to

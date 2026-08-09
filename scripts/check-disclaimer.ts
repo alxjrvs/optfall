@@ -18,7 +18,7 @@
  * decoration.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { readCanonicalDisclaimer, normalizeProse } from "./canonical-disclaimer";
+import { readCanonicalDisclaimer, normalizeHtmlWhitespace } from "./canonical-disclaimer";
 
 const outputDirectory = process.argv[2] ?? "apps/site/dist";
 
@@ -53,7 +53,7 @@ for (const page of pages) {
   // still a compliance failure, but it is a different one and deserves a
   // different message.
   if (html.includes(expected)) continue;
-  if (normalizeProse(html).includes(expected)) {
+  if (normalizeHtmlWhitespace(html).includes(expected)) {
     console.log(
       `::error file=${file}::${file} contains the disclaimer only after whitespace normalisation — it has been reflowed or split across elements. Render it as one text node.`,
     );

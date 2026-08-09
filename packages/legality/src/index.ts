@@ -331,16 +331,65 @@ function assertIsoDate(value: IsoDate, label: string): void {
   }
 }
 
+/**
+ * Validates the whole deck, not the parts that happened to be easy.
+ *
+ * An earlier version checked `hero` and `quantity` and nothing else, while its
+ * documentation and its test name both said "validates its arguments". That
+ * gap was inert only because evaluation throws `NotImplementedError` before
+ * anything reads the deck — the moment Phase 2 implements evaluation, it would
+ * have inherited a blank `cardId` and a non-array `cards` along with a
+ * docstring saying neither could happen.
+ *
+ * Every message names the offending value, because this library's whole claim
+ * is that a verdict can be traced to its cause; a validator that says only
+ * "invalid deck" fails that standard at the first step.
+ */
 function assertDeck(deck: Deck): void {
-  if (deck.hero.length === 0) {
-    throw new TypeError("deck.hero must be the card id of a hero.");
+  if (typeof deck !== "object" || deck === null) {
+    throw new TypeError(`deck must be an object; received ${String(deck)}.`);
   }
+
+  if (typeof deck.hero !== "string" || deck.hero.trim().length === 0) {
+    throw new TypeError(
+      `deck.hero must be the non-empty card id of a hero; received ${JSON.stringify(deck.hero)}.`,
+    );
+  }
+
+  if (!Array.isArray(deck.cards)) {
+    throw new TypeError(
+      `deck.cards must be an array of entries; received ${JSON.stringify(deck.cards)}.`,
+    );
+  }
+
+  const seen = new Set<string>();
   for (const entry of deck.cards) {
+    if (typeof entry !== "object" || entry === null) {
+      throw new TypeError(`deck.cards entries must be objects; received ${String(entry)}.`);
+    }
+
+    if (typeof entry.cardId !== "string" || entry.cardId.trim().length === 0) {
+      throw new TypeError(
+        `deck entry cardId must be a non-empty string; received ${JSON.stringify(entry.cardId)}.`,
+      );
+    }
+
     if (!Number.isInteger(entry.quantity) || entry.quantity < 1) {
       throw new TypeError(
         `deck entry ${JSON.stringify(entry.cardId)} must register a positive integer quantity; received ${String(entry.quantity)}.`,
       );
     }
+
+    // A card listed twice is ambiguous rather than merely untidy: a format's
+    // copy limit cannot be applied to two separate counts of the same card
+    // without deciding whether to sum them, and that decision belongs to the
+    // caller who wrote the list.
+    if (seen.has(entry.cardId)) {
+      throw new TypeError(
+        `deck lists ${JSON.stringify(entry.cardId)} more than once; combine the entries into a single quantity.`,
+      );
+    }
+    seen.add(entry.cardId);
   }
 }
 
