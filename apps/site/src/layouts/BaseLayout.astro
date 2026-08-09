@@ -1,4 +1,25 @@
 ---
+/**
+ * The site's one layout, assembled from the token layer.
+ *
+ * This replaces the Phase 0 placeholder block wholesale, which is what that
+ * block's own comment asked for. The rule it now obeys is `docs/PLAN.md`,
+ * "Rules that hold across every phase": **compose, never restyle** — a screen
+ * that needs new CSS is a signal the library is missing a primitive, and the
+ * primitive gets added there rather than here.
+ *
+ * So every value below is `var(--of-*)`. `scripts/check-tokens.ts` enforces
+ * that and the `tokens` CI job is in the aggregate gate — and because this
+ * directory's deferral in that script FAILS once the path is clean, landing
+ * this change is what deletes the exemption. An exemption that outlives its
+ * reason is how a rule quietly stops applying.
+ *
+ * The theme stylesheet is generated from the token tables at build time rather
+ * than written out as CSS. There is no second declaration of the palette to
+ * drift, which is the same argument the Storybook preview makes.
+ */
+import { themeStylesheet } from "optfall-theme";
+
 import ComplianceFooter from "../components/ComplianceFooter.astro";
 
 interface Props {
@@ -10,6 +31,8 @@ const {
   title,
   description = "Legality that remembers, and rulings you can cite — a reference tool for Flesh and Blood.",
 } = Astro.props;
+
+const tokens = themeStylesheet();
 ---
 
 <!doctype html>
@@ -20,6 +43,7 @@ const {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
+    <style is:global set:html={tokens}></style>
   </head>
   <body>
     <main>
@@ -31,23 +55,81 @@ const {
 
 <style is:global>
   /*
-    Phase 0 placeholder styling, and nothing more.
-
-    The design language in docs/DESIGN.md is built in Phase 1 as a token
-    library, and Phase 1 owns everything visual. This block exists only so the
-    Phase 0 page is legible; it names no colours, uses system defaults, and is
-    meant to be deleted wholesale rather than extended. If you find yourself
-    adding to it, you are inventing the design system early — don't.
+    Document-level rules only. Anything that is a *component* belongs in
+    optfall-components, not here — see the note at the top of this file.
   */
   :root {
-    color-scheme: light dark;
+    color-scheme: dark light;
   }
 
   body {
-    margin: 0 auto;
-    padding: 3rem 1.25rem;
-    max-width: 42rem;
-    font-family: system-ui, sans-serif;
-    line-height: 1.6;
+    margin: 0;
+    padding: var(--of-space-loosest) var(--of-space-looser);
+    background: var(--of-color-ground);
+    color: var(--of-color-ink);
+    font-family: var(--of-type-family-sans);
+    font-size: var(--of-type-size-base);
+    line-height: var(--of-type-leading-base);
+  }
+
+  main {
+    max-inline-size: var(--of-type-measure);
+    margin-inline: auto;
+  }
+
+  /* Serif for names, questions and headings — one of the three assigned
+     voices. `docs/DESIGN.md`: typography carries hierarchy, so weight and
+     rhythm do the work that boxes and accent bars do on lesser sites. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--of-type-family-serif);
+    font-weight: var(--of-type-weight-regular);
+    line-height: var(--of-type-leading-tight);
+    letter-spacing: var(--of-type-tracking-tight);
+    margin-block: var(--of-space-loosest) var(--of-space-loose);
+  }
+
+  h1 {
+    font-size: var(--of-type-size-display);
+  }
+
+  h2 {
+    font-size: var(--of-type-size-title);
+  }
+
+  p {
+    margin-block: 0 var(--of-space-loose);
+  }
+
+  /* Mono, wide-tracked: if it is monospaced in this system, it is something
+     you can paste into an argument. */
+  code {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-small);
+    letter-spacing: var(--of-type-tracking-mono);
+    color: var(--of-color-ink-muted);
+  }
+
+  a {
+    color: var(--of-color-accent);
+    text-underline-offset: var(--of-space-tightest);
+  }
+
+  a:hover {
+    color: var(--of-color-accent-hover);
+  }
+
+  /* Never `outline: none`. A visible focus ring is the difference between a
+     keyboard being usable and being technically supported. */
+  a:focus-visible,
+  button:focus-visible {
+    outline: var(--of-bevel-width) solid var(--of-color-focus);
+    outline-offset: var(--of-space-tightest);
+  }
+
+  strong {
+    font-weight: var(--of-type-weight-bold);
+    color: var(--of-color-ink);
   }
 </style>

@@ -40,6 +40,25 @@ export function normalizeProse(markdown: string): string {
 }
 
 /**
+ * The same whitespace collapsing, WITHOUT the blockquote stripping.
+ *
+ * {@link normalizeProse} removes a leading `>` from every line, which is right
+ * for a Markdown blockquote and wrong for HTML — where a line may legitimately
+ * begin with the `>` that closes a tag spread over several lines. Applying the
+ * Markdown normaliser to built pages silently deletes that character before
+ * comparing, so a genuinely absent disclaimer could be reported as "reflowed or
+ * split across elements": the wrong diagnosis, sending someone to look at
+ * layout when the text is simply missing.
+ *
+ * It cannot cause a false PASS — `check-disclaimer.ts` decides pass and fail on
+ * a byte-exact comparison and uses this only to choose the error message — but
+ * a checker that misdiagnoses is a checker people stop trusting.
+ */
+export function normalizeHtmlWhitespace(html: string): string {
+  return html.replace(/\s+/g, " ").trim();
+}
+
+/**
  * Extract the disclaimer from the text of `docs/PLAN.md`.
  *
  * Throws rather than returning a fallback: a missing section means the

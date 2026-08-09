@@ -39,8 +39,15 @@ const SCANNED = ["packages/components/src", "apps/site/src"] as const;
  * the day it stops being needed rather than whenever somebody notices.
  */
 const DEFERRED: Readonly<Record<string, string>> = {
-  "apps/site/src":
-    "Phase 0 placeholder styling, marked in BaseLayout.astro for wholesale deletion. Remove this entry in the layer that rebuilds the site on the primitives.",
+  // Empty, and it should stay that way.
+  //
+  // `apps/site/src` was deferred while the Phase 0 placeholder styling stood.
+  // That entry is gone because the site now consumes tokens — and the check
+  // below FAILS on a deferral whose path has become clean, so removing it was
+  // not optional once the styling landed. That is the mechanism working: an
+  // exemption that outlives its reason is how a rule quietly stops applying to
+  // half a codebase, so this one had to be deleted the day it stopped being
+  // needed rather than whenever somebody noticed.
 };
 
 const NAMED_COLOURS = [
@@ -73,10 +80,28 @@ function styleRegions(file: string, source: string): { line: number; text: strin
 
   const regions: { line: number; text: string }[] = [];
   let inStyle = false;
+
+  // Opening and closing are tested INDEPENDENTLY, not as an if/else chain.
+  // A single line can carry both — `<style is:global set:html={tokens}></style>`
+  // in the site layout is exactly that — and an `else if` would set `inStyle`
+  // and never clear it, scanning every following markup line as CSS until the
+  // next `<style>`. That yields no violations today and would misreport the
+  // first literal anyone ever writes in ordinary markup as a style violation,
+  // in a region that is not a style block.
   lines.forEach((text, index) => {
-    if (/<style[\s>]/.test(text)) inStyle = true;
-    else if (/<\/style>/.test(text)) inStyle = false;
-    else if (inStyle) regions.push({ line: index + 1, text });
+    const opens = /<style[\s>]/.test(text);
+    const closes = /<\/style>/.test(text);
+
+    if (opens && closes) return; // self-contained; no CSS body to scan
+    if (opens) {
+      inStyle = true;
+      return;
+    }
+    if (closes) {
+      inStyle = false;
+      return;
+    }
+    if (inStyle) regions.push({ line: index + 1, text });
   });
   return regions;
 }

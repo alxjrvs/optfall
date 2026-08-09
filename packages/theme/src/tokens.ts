@@ -71,6 +71,12 @@ const STRUCTURE: TokenTable = {
   "type.tracking.tight": "-0.01em",
   "type.tracking.normal": "0",
 
+  /* The measure — maximum line length for running prose. A typographic
+     constraint rather than a layout one, which is why it lives on the type
+     axis: it is chosen from how far an eye can track a line and return to the
+     right next one, not from any container. */
+  "type.measure": "46rem",
+
   /* A 4px base step. Tight vertical rhythm is what holds density together
      without boxes and shadows. */
   "space.hair": "1px",

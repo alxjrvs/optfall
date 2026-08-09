@@ -139,7 +139,22 @@ describe("contrast, in both modes equally", () => {
       });
     }
 
-    test(`${mode}: faint ink still meets the large-text threshold`, () => {
+    /**
+     * `color.ink.faint` IS ONLY SAFE FOR LARGE TEXT, and this test asserting
+     * 3:1 rather than 4.5:1 is the whole statement of that.
+     *
+     * It is worth saying loudly because the distinction has already been got
+     * wrong once: the site footer used `ink.faint` at `type.size.micro` and put
+     * the LSS disclaimer — the one piece of text the licence requires to be
+     * legible — below AA on every page, while a comment cited *this* test as
+     * justification. The test was right; the reading of it was not.
+     *
+     * The rule: anything at `type.size.base` or smaller uses `color.ink` or
+     * `color.ink.muted`, both asserted at 4.5:1 in BODY_TEXT above.
+     * `color.ink.faint` is for text at `type.size.large` and up, or for
+     * non-textual hairlines and marks.
+     */
+    test(`${mode}: faint ink meets the LARGE-TEXT threshold only`, () => {
       const ratio = contrastRatio(
         token(tokens, "color.ink.faint"),
         token(tokens, "color.ground"),

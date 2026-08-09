@@ -118,7 +118,11 @@ by `svelte-check` rather than inferred at build time.
 - **Three tokens the primitives wanted and did not get**, composed around rather
   than invented: a named deep-bevel step, a muted brass for de-emphasis inside
   the seal, and an inverted bevel pair for recessed surfaces. None is blocking.
-- **The site still runs Phase 0 placeholder styling.** `scripts/check-tokens.ts`
-  defers `apps/site/src` for exactly this reason, and that deferral **fails once
-  the path is clean** — so the entry must be deleted by whichever change rebuilds
-  the site on these primitives, rather than whenever somebody notices.
+- ~~**The site still runs Phase 0 placeholder styling.**~~ **Done.** The layout
+  and the compliance footer are rebuilt on the token layer, `/data-terms` exists
+  (the URL every published payload carries, which until now 404'd), and the
+  `apps/site/src` deferral in `scripts/check-tokens.ts` is deleted — which was
+  not optional, because that check fails on a deferral whose path has become
+  clean. The rule then caught a raw `46rem` in the new layout, which is how
+  `type.measure` came to be a token: the system was missing a value and said so,
+  rather than a human deciding to add one.

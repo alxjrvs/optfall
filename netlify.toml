@@ -35,10 +35,16 @@
 # where the two disagree, this file is what ran.
 
 [build]
-  # Built from the repository root, not from apps/site, for two reasons: the
-  # Bun workspace only resolves from the root, and the root `build` script fans
-  # out across every workspace in dependency order — so once the site imports
-  # `optfall-legality`, that package is built before Astro tries to bundle it.
+  # Built from the repository root, not from apps/site, because the Bun
+  # workspace only resolves from the root.
+  #
+  # The root `build` script fans out across the workspaces that DECLARE a build
+  # script — today that is `apps/site` and nothing else, since `theme`,
+  # `components` and `legality` are consumed from source. An earlier version of
+  # this comment claimed it built "every workspace in dependency order", which
+  # was not true then and would matter the day one of those packages needs a
+  # compile step: the site would bundle a stale artefact and the deploy would
+  # still be green.
   #
   # This is deliberately the same command CI runs. A deploy that succeeds where
   # the aggregate gate fails would be a lie about the state of `main`.
@@ -49,7 +55,12 @@
 
 [build.environment]
   # Pinned deliberately. Astro 7 requires Node >= 22.12.0.
-  # BUN_VERSION sits inside the "1.3.x" line CI pins in .github/workflows/ci.yml.
+  #
+  # BUN_VERSION must equal env.BUN_VERSION in .github/workflows/ci.yml EXACTLY.
+  # CI used to pin the floating line "1.3.x" against this exact pin, which meant
+  # a green gate could attest to a build on a Bun that never produced the deploy
+  # preview. Two exact pins that must match is a thing a human can check; an
+  # exact pin against a floating line is not.
   NODE_VERSION = "22"
   BUN_VERSION = "1.3.14"
 

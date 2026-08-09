@@ -15,9 +15,8 @@
 //      appear anywhere on the site — product set logos count as FAB logos.
 //      Nothing in this footer is a mark, and nothing here should become one.
 //
-// This component is intentionally styleless beyond the bare minimum. Phase 1
-// replaces the presentation with the token library; the *text* is not Phase 1's
-// to change.
+// Presentation now comes from the token layer, as Phase 1 said it would. The
+// *text* is still not Phase 1's to change, and is not changed here.
 import { LSS_DISCLAIMER } from "../lib/compliance";
 ---
 
@@ -26,25 +25,38 @@ import { LSS_DISCLAIMER } from "../lib/compliance";
   <p class="licence">
     Optfall's own code is MIT-licensed. Published datasets are openly licensed
     only over the structural work this project owns — rule identifiers, the
-    legality timeline, diffs and annotations.
+    legality timeline, diffs and annotations. <a href="/data-terms">Data terms</a>.
   </p>
 </footer>
 
 <style>
+  /* A hairline rule, not a box. `docs/DESIGN.md`: density is held together by
+     tight vertical rhythm and hairline rules rather than cards and shadows. */
   .compliance {
-    margin-top: 4rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid currentColor;
-    font-size: 0.8125rem;
-    line-height: 1.6;
-    opacity: 0.75;
+    margin-block-start: var(--of-space-loosest);
+    padding-block-start: var(--of-space-looser);
+    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+    /* `ink.muted`, NOT `ink.faint`, and the difference is a compliance one.
+       This footer carries the LSS disclaimer — the one piece of text the
+       licence requires to be present — at `type.size.micro`, which is small
+       body copy and therefore needs 4.5:1, not the 3:1 large-text threshold.
+       `ink.faint` measures 3.86:1 dark and 3.63:1 light against the ground and
+       would have put the required notice below AA on every page. `ink.muted`
+       measures 8.09:1 and 6.33:1, and is the token `tokens.test.ts` asserts in
+       its BODY_TEXT set at 4.5:1. */
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-micro);
+    line-height: var(--of-type-leading-loose);
   }
 
+  /* Muted by token rather than by `opacity`: opacity dims text against
+     whatever happens to sit behind it, which makes the contrast unknowable and
+     therefore unassertable. */
   .compliance p {
-    margin: 0 0 0.75rem;
+    margin-block: 0 var(--of-space-base);
   }
 
   .compliance p:last-child {
-    margin-bottom: 0;
+    margin-block-end: 0;
   }
 </style>

@@ -14,6 +14,8 @@
   "dependencies": {
     "@astrojs/svelte": "^9.0.1",
     "astro": "^7.2.0",
+    "optfall-components": "workspace:*",
+    "optfall-theme": "workspace:*",
     "svelte": "^5.56.8"
   },
   "devDependencies": {
