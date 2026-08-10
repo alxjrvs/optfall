@@ -1,12 +1,17 @@
 import { describe, expect, test } from "bun:test";
 
+import * as legality from "./index";
 import {
+  CARD_STATUSES,
   FORMAT_NAMES,
+  FORMAT_RULES,
   FORMATS,
+  isCardStatus,
   isFormatId,
   isIsoDate,
   isLegal,
   NotImplementedError,
+  statusAsOf,
   type Deck,
   type FormatId,
 } from "./index";
@@ -35,6 +40,65 @@ describe("formats", () => {
     expect(isFormatId("classic-constructed")).toBe(true);
     expect(isFormatId("Classic Constructed")).toBe(false);
     expect(isFormatId("sealed")).toBe(false);
+  });
+});
+
+describe("card statuses", () => {
+  test("the vocabulary is enumerated once each, and the guard agrees with it", () => {
+    expect(new Set(CARD_STATUSES).size).toBe(CARD_STATUSES.length);
+    for (const status of CARD_STATUSES) expect(isCardStatus(status)).toBe(true);
+  });
+
+  test("isCardStatus rejects the shapes a prose scrape actually produces", () => {
+    for (const wrong of ["Banned", "unbanned", "legal ", "", "BANNED"]) {
+      expect(isCardStatus(wrong)).toBe(false);
+    }
+  });
+});
+
+describe("the package presents one entry point", () => {
+  /*
+   * `formats` and `timeline` are finished and usable on their own; `isLegal` is
+   * not, because joining them needs a card dataset that ships no licence. A
+   * consumer should not have to know which of the three files a symbol lives
+   * in, and — more to the point — should not have to import a deep path that a
+   * future reorganisation would break.
+   */
+  test("format rules are reachable from the package root", () => {
+    expect(FORMAT_RULES.blitz.format).toBe("blitz");
+    expect(legality.getFormatRules("silver-age").cardPoolMaximum.value).toBe(55);
+    expect(typeof legality.requireVerified).toBe("function");
+  });
+
+  test("timeline mechanics are reachable from the package root", () => {
+    const lookup = statusAsOf(
+      {
+        version: "fixture",
+        generatedAt: "2030-01-01",
+        source: "fixture",
+        entries: [],
+      },
+      { cardId: "fixture:card", format: "blitz", asOf: "2026-01-01" },
+    );
+    // Still the rule that outranks the others, and it survives re-export.
+    expect(lookup.kind).toBe("no-record");
+    expect("legal" in lookup).toBe(false);
+  });
+
+  test("re-export does not shadow anything index.ts defines itself", () => {
+    // Both modules import from this one; a name collision would resolve
+    // silently in whichever direction the bundler felt like.
+    expect(legality.FORMATS).toBe(FORMATS);
+    expect(legality.isFormatId("blitz")).toBe(true);
+  });
+
+  test("ingestion machinery stays off the root entry point", () => {
+    // `sources/wayback` opens network connections and belongs to a scheduled
+    // job, not to a browser consumer of `isLegal`. It ships under the
+    // `optfall-legality/sources` subpath instead.
+    for (const exported of Object.keys(legality)) {
+      expect(exported).not.toMatch(/wayback|cdx|capture/i);
+    }
   });
 });
 

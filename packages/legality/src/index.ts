@@ -153,6 +153,25 @@ export type CardStatus =
   | "not-in-format"
   | "unknown-card";
 
+/**
+ * Every {@link CardStatus}, as data.
+ *
+ * Exported for the same reason {@link FORMATS} is: the dataset validator has to
+ * check a published entry's `status` against the vocabulary, and a second copy
+ * of that list somewhere else is a second thing to forget to update. The
+ * banned-list backfill is a prose scrape, so an unrecognised status string is
+ * precisely what that pipeline will emit on a bad day.
+ */
+export const CARD_STATUSES: readonly CardStatus[] = [
+  "legal",
+  "banned",
+  "suspended",
+  "restricted",
+  "living-legend",
+  "not-in-format",
+  "unknown-card",
+];
+
 /** The verdict for one line of the decklist. */
 export interface CardVerdict {
   readonly cardId: CardId;
@@ -271,11 +290,24 @@ export interface LegalityOptions {
 
 const FORMAT_IDS: ReadonlySet<string> = new Set<string>(FORMATS);
 
+const CARD_STATUS_IDS: ReadonlySet<string> = new Set<string>(CARD_STATUSES);
+
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Whether `value` is one of the six sanctioned formats. */
 export function isFormatId(value: string): value is FormatId {
   return FORMAT_IDS.has(value);
+}
+
+/**
+ * Whether `value` is one of the seven recognised card statuses.
+ *
+ * Takes `string` rather than `CardStatus` on purpose: the interesting call site
+ * is a published JSON row whose `status` field is only *typed* as a
+ * `CardStatus` because somebody asserted it was.
+ */
+export function isCardStatus(value: string): value is CardStatus {
+  return CARD_STATUS_IDS.has(value);
 }
 
 /**
@@ -440,3 +472,38 @@ export function isLegal(
 
   throw new NotImplementedError("Legality evaluation", 2);
 }
+
+/* -------------------------------------------------------------------------- */
+/* The rest of the public surface                                              */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Two modules are finished and usable on their own, and they are re-exported
+ * here so `optfall-legality` is one import rather than three.
+ *
+ * - `./formats` — deck-construction rules for the six formats, every constraint
+ *   carrying either a verbatim quotation or a written reason it could not be
+ *   confirmed. Answers "how big may a Blitz deck be" without any card data.
+ * - `./timeline` — interval arithmetic over a published {@link LegalityTimeline}.
+ *   Answers "what did the dataset record for this card on this day", including
+ *   the answer "nothing", which it will never round to "legal".
+ *
+ * `isLegal` still throws {@link NotImplementedError}: joining these two needs
+ * the card dataset, and the community dataset ships no licence (see
+ * `docs/PHASE-2-STATUS.md`). Both halves work today regardless — a caller can
+ * read `FORMAT_RULES` for construction limits and `statusAsOf` for card status
+ * without waiting for that licence.
+ *
+ * This is a module cycle: both files import `isFormatId`/`isIsoDate`/`FORMATS`
+ * from here. It is a safe one — neither reads a binding from this module at
+ * evaluation time, only inside function bodies — but do not add a top-level
+ * `FORMATS.map(...)` to either file without rechecking that.
+ *
+ * `./sources/wayback` is deliberately NOT here. It is ingestion machinery for a
+ * scheduled job: it opens network connections and no browser consumer of
+ * `isLegal` needs it in their bundle. It ships under the `optfall-legality/sources`
+ * subpath instead.
+ */
+
+export * from "./formats";
+export * from "./timeline";
