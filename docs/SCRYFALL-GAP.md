@@ -187,49 +187,126 @@ project that would need storage, a bill and a maintainer.
 Three options, and the trade is not close:
 
 1. **Hotlink upstream directly.** Zero infrastructure — and 695 KB PNGs on a
-   60-card grid is a 40 MB page. Unusable as the default view.
-2. **Mirror and resize into the repo or a bucket.** Full control, and it
-   introduces the exact dependency the Stack section exists to refuse: storage
-   that costs money and rots when nobody is watching.
-3. **Transform on demand at the edge, from the upstream source.** ✅
+   60-card grid is a 40 MB page. Unusable as the default view. It also leaves
+   the product's most visible layer at the mercy of four hosts we do not
+   control, any of which can add a referer check on a Tuesday.
+2. **Commit resized images to the repo.** Even at WebP thumb + normal this is
+   hundreds of megabytes of binary in git history, permanently. No.
+3. **Our own asset host, bytes in object storage, sourced from upstream once.** ✅
 
-**Take option 3: Netlify Image CDN over remote sources.** It transforms images
-from external domains listed in a `netlify.toml` allowlist, with no storage on
-our side:
+**Take option 3, built as a second Netlify site inside this monorepo.** This is
+a pattern that already exists and is in production next door:
+`SU-SRD/apps/su-assets` serves `assets.salvageunion.io` from a Netlify Blobs
+store, and its own header states the rule — **"the bytes live only in Blobs
+(never in git)."** One Functions v2 handler bound to `path: '/*'`, an immutable
+cache header so the edge answers and the function runs only on a miss, a
+path-traversal guard and an extension allowlist. Optfall's copy differs in what
+it stores and how keys are shaped, and in nothing else.
 
-```toml
-[images]
-  remote_images = [
-    "https://storage\\.googleapis\\.com/fabmaster/.*",
-    "https://legendstory-production-s3-public\\.s3\\.amazonaws\\.com/.*",
-    "https://d2wlb52bya4y8z\\.cloudfront\\.net/.*",
-    "https://dhhim4ltzu1pj\\.cloudfront\\.net/.*",
-  ]
+```
+apps/images/                       →  a second Netlify site, same workspace
+  netlify.toml                        publish = apps/images/public
+  netlify/functions/face.ts           config.path = '/*'; reads the Blobs store
+  public/                             the NO IMAGE placeholders, static
 ```
 
-Requests become `/.netlify/images?url=<upstream>&w=<width>&fm=webp&q=75`, cached
-at the edge. Zero bytes stored, zero build cost, WebP and AVIF for free.
+**Why a whole second site rather than a route on the main one.** The main site's
+`netlify.toml` opens with a promise — *"static output only — no functions, no
+edge handlers, no runtime"* — and that promise is load-bearing: it is the
+"no uptime story to fail" the Stack section is built on. Serving images needs a
+function. Putting that function on the main site would trade the guarantee for
+the whole product; putting it on its own deploy confines the runtime to the one
+layer `docs/PLAN.md` already designates as expendable: *"Losing images costs a
+rendering layer, never the product."* The main site stays a pile of static
+files, and if the image host is down, cards render as NO IMAGE and every fact on
+every page is still correct.
 
-This does add the project's first vendor-specific dependency, and that should be
-stated plainly rather than discovered later. It is acceptable on two grounds:
-the failure mode is graceful — a `<picture>` whose `<source>` points at the
-transform and whose `<img src>` points at the raw upstream URL degrades to
-"correct but heavy" if Netlify is ever left behind, never to "broken" — and
-`docs/PLAN.md` already rules that losing the art layer must cost a rendering
-layer and nothing else. Images are the one part of Optfall that is allowed to
-depend on somebody else.
+**We are now a redistributor, and that is inside the grant but worth naming.**
+LSS's policy permits **card face images specifically for building card
+databases**, conditioned on the copyright line — `docs/COMPLIANCE.md` §5. Serving
+them ourselves is the granted use rather than a stretch of it, but it moves us
+from "pointing at LSS's bytes" to "serving copies of them", so the copyright
+line stops being good manners and becomes the condition the permission rests on.
+It is therefore enforced at *both* ends: structurally inside `CardFace`, and by
+the ingest tool refusing to run without the rights envelope stamped in the
+manifest.
 
-**Three tiers, and deliberately not six.**
+**Two tiers, not six, and the widths are dictated by the sources.** Upstream
+faces are not uniform — measured: `546×762` PNG from fabmaster, `450×628` PNG
+from one CloudFront distribution, WebP of varying size from S3. The largest
+width every source can satisfy **without upscaling** is 450, so that is the
+ceiling. Inventing pixels to reach a rounder number would be the tool asserting
+detail it does not have.
 
-| Tier | Width | Where |
+| Tier | Size | Where |
 |---|---|---|
-| `thumb` | 180 | grid cells, list rows |
-| `normal` | 488 | card page primary face |
-| `full` | upstream PNG | linked, never embedded |
+| `thumb` | 180 × 251 | grid cells, list rows |
+| `normal` | 450 × 628 | card page primary face |
+| `source` | upstream URL | linked from the printing, never embedded |
+
+Both tiers are WebP. A 546×762 PNG at 695 KB becomes roughly 55 KB at `normal`
+and 8 KB at `thumb` — the difference between a 40 MB grid and a 500 KB one.
 
 **No art crop.** Scryfall's comes from first-party data. Ours would be a crop we
 invented off a licensed face — a derivative work we have no grant to
 manufacture, to save a rectangle nobody asked for.
+
+### 5.1a The blob key, and why it is not the printing id
+
+This is the detail that decides whether multiple printings work, and the obvious
+answer is wrong.
+
+`printing.id` is the collector number — `MST131` — and `cards.ts` calls it "the
+citable identity of a printing". It is **not unique**: measured, 4,780 of them
+appear on more than one printing row. The reason is visible in the data —
+`MST131` occurs twice with the same edition and different foiling (`S` standard,
+`R` rainbow), and **both point at the same image**. Foiling variants are distinct
+printings that share a face.
+
+`printing.unique_id` *is* unique, but keying on it would store 16,502 blobs where
+only 11,377 distinct images exist — 45% of the store paying for bytes it already
+has, and an opaque nanoid in every URL.
+
+**Key on the source image's basename**, which is exactly the granularity upstream
+publishes the art at:
+
+```
+thumb/MST131.webp        normal/MST131.webp
+```
+
+Measured across the 11,377 distinct URLs: **11,376 distinct basenames** — one
+collision, `LGS387.webp`, served from two hosts under the same name. So the rule
+is *basename, with a build-time assertion that it is unique*, and a deterministic
+suffix for a genuine clash. The assertion is the point: it is the same discipline
+`cards.ts` already applies to slug collisions, and for the same reason — a silent
+key collision would serve one card's art under another card's name, which is a
+wrong answer rather than a missing one.
+
+A printing therefore resolves to a face by a pure function of its `image_url`,
+and the 5,056 printings that share art with a sibling share a blob rather than
+duplicating one.
+
+### 5.1b NO IMAGE — a real asset, not a missing one
+
+Four printings carry no `image_url`, upstream will add more, and the image host
+can be down. All three states need the same thing: **an image of the correct
+shape**, so a grid does not reflow and a card page does not collapse.
+
+FaB cards are standard TCG stock, and every source measured lands on the same
+ratio — 546/762 and 450/628 are both 63:88 (0.7159). So the placeholder is
+generated at exactly the tier dimensions, ships **statically in
+`apps/images/public/`** rather than from Blobs (it must resolve even when the
+store does not), and is drawn from the design system: bevelled plate ground, the
+mark, and NO IMAGE in the wide-tracked mono label voice.
+
+Two orientations, because 15 cards are `played_horizontally` and 10 printings
+carry a non-zero `image_rotation_degrees` — a portrait placeholder under a
+landscape card is a bug visible at a glance.
+
+**The function serves it, rather than 404ing.** A miss returns the placeholder
+with `200` and a *short* cache lifetime, where a hit returns the face immutable
+for a year. That way a card whose art lands next week starts showing it without a
+purge, and a broken image icon never appears in a grid.
 
 **A `CardFace` primitive in `optfall-components`** carries the whole contract in
 one place, so no surface can render an image and forget half of it:
@@ -249,12 +326,34 @@ one place, so no surface can render an image and forget half of it:
 - `image_rotation_degrees` and `played_horizontally` honoured — some cards are
   printed sideways, and a grid that ignores that shows them wrong.
 
-**One rule the index needs: which printing is a card's face.** A card averages
-3.3 printings. The default must be deterministic and stated — *first printing in
-upstream order* is the cheapest defensible rule, and pulling `set.json` (§5.3)
-allows the better one, *earliest `initial_release_date`, ties broken by
-collector number*. Pick one, write it down, and let `unique:prints` show the
-rest.
+### 5.1c Multiple printings, as a first-class thing
+
+A card averages 3.3 printings and the corpus carries 16,502 of them. Today the
+card page renders them as a table of codes and the search index ignores them
+entirely. Scryfall treats the printing as the addressable unit; so should we.
+
+**The default face must be deterministic and stated.** Search results and a card
+page's initial state each need one printing chosen out of several, and "whichever
+came first in the JSON" is a rule that silently changes when upstream reorders.
+The rule: **earliest `initial_release_date` from `set.json` (§5.3), ties broken
+by collector number, then by `unique_id`** — total, so it cannot depend on
+iteration order. Until `set.json` lands, first-in-upstream-order, written down as
+a stopgap rather than left implicit.
+
+**Three things follow, and they are the printings feature:**
+
+- **A printings rail on the card page.** Every printing, as a thumb, with set,
+  collector number, rarity, edition, foiling and artist. Selecting one swaps the
+  primary face. It is the one interactive element the card page gets.
+- **Per-printing URLs** — `/card/<slug>/<set>/<number>`, resolving to the card
+  page with that printing selected. This is Scryfall's canonical form and the
+  thing that makes "the alternate art one" linkable.
+- **`unique:cards` (default) and `unique:prints`** in search — collapse to one
+  row per card, or show every printing as its own result.
+
+**Artist becomes searchable here, not later.** `artist:` was listed as pending
+because nothing indexed it; artists live on the *printing*, so the same pass that
+makes printings first-class is the pass that indexes them.
 
 ### 5.2 The search surface Scryfall actually has
 
@@ -377,6 +476,57 @@ there is nothing to wait for.
 
 ---
 
+## 6a. The redesign — streamline, with Scryfall as north star
+
+Images change the interface's job. A page that was a stack of tables is now a
+page with a picture on it, and the chrome that made the tables legible is in the
+way. This is the simplification pass, and most of it is **subtraction**.
+
+**The card page becomes two columns.** Face and printings rail on the left,
+sticky; identity, printed text and legality on the right. Everything that
+answers "what is this card" lands above the fold, and the apparatus — printings
+table, flavour, related, source — goes below it. Today the face-shaped hole is
+filled by eight stacked sections and you scroll past three of them to reach the
+legality verdict, which is the best thing on the page.
+
+**Stop spending filigree eight times a screen.** `CardEntry.astro` opens a
+section with an `OrnamentalRule` for Stats, Printed text, Attributes, Legality,
+Printings, Flavour, Related and Source. `docs/DESIGN.md` rations scrollwork to
+three roles and says **"never twice on one screen"** — so the page currently
+violates the system it is built on, eight times. Sections keep the wide-tracked
+mono label voice, which is already the system's answer for "name a region", and
+the filigree returns to exactly one appearance, at the fold. This is the single
+biggest visual simplification available and it costs no information.
+
+**Legality moves up and its evidence folds away.** Six formats × six keys is 36
+rows of `cc_banned_start: —` rendered inline, above the printings. The evidence
+is the auditability promise and it stays — but behind a `<details>` per format,
+open on demand. The verdict pills stay always-visible, because they are the
+answer.
+
+**The stat block becomes the card's own furniture.** `docs/DESIGN.md` describes
+it exactly — jewel top-left, cost in a hexagonal plate, power and defence in
+chamfered plates — and the page renders a `<dl>` instead. With a real face
+beside it, the stat strip should be compact and card-like rather than a
+definition list restating what the image already shows.
+
+**Search results lose the per-row explanation.** Every row currently carries a
+`.why` badge naming the field that matched. It is honest and it is right for a
+text list; on a grid of 60 faces it is 60 pieces of chrome explaining something
+the reader did not ask. It moves to the row's `title`/detail affordance and stays
+visible only in `display:list`, where it earns its place.
+
+**One search chrome, not two.** `SearchField` and `ResultRow`/`ResultGrid` become
+primitives, and 1,144 lines of near-duplicate island collapse into one. Both
+files already carry a comment asking for exactly this.
+
+**What does not change.** The token layer, the pitch jewel's three-channel
+contract, the notched state pill, and the rule that a component may not name a
+colour. The redesign is composition and subtraction — no new CSS in a page, per
+*Compose, never restyle*.
+
+---
+
 ## 7. Extend the grammar
 
 Today's parser produces a flat list of ANDed filters. Scryfall's produces an
@@ -408,20 +558,25 @@ them in the rewrite.
 
 ## 8. Phasing
 
-Ordered so each step ships something visible, and so the cheap reconciliation
-happens before anyone builds against the wrong position.
+Ordered so each step ships something visible, and so the infrastructure that
+everything else renders against exists before anything tries to render.
 
 | | Step | Cost | Ships |
 |---|---|---|---|
-| **A** | Reconcile `DESIGN.md` with `PLAN.md`; move the card↔rules join into Phase 2 | hours | The repo stops contradicting itself |
-| **B** | `CardFace` primitive + Netlify Image CDN + copyright enforcement | ~2 days | Cards have faces |
-| **C** | Card search at `/` as hero + explainer links + results; submit-driven, not live; `/cards` → 301; grid default; `display:`/`order:`/paging | ~3 days | The front door is right |
-| **D** | The keyword↔CR join, both directions, with published coverage | ~2 days | The thing nobody else has |
-| **E** | `set.json` + decode tables; `/sets`; printing-level URLs; `unique:` | ~3 days | The corpus gets a spine |
-| **F** | Grammar: AST, negation/`OR`/parens, comparisons, `artist:`/`flavor:` | ~1 week | Search becomes a language |
-| **G** | `/random`, shared `SearchField`/`ResultRow`/`ResultGrid` primitives | ~2 days | The polish that reads as finished |
+| **A** | `apps/images` — the assets site: Blobs-backed face handler, NO IMAGE placeholders, deployed | ~1 day | A host to put faces on |
+| **B** | Ingest — download, transcode to two WebP tiers, upload to Blobs; image manifest in the corpus build | ~1 day | 11,377 faces, addressable |
+| **C** | `CardFace` primitive; card page face, printings rail, per-printing URLs | ~2 days | Cards have faces |
+| **D** | Card search at `/` — hero, explainer links, results; submit-driven; grid default; `display:`/`order:`/paging; `/cards` → 301 | ~3 days | The front door is right |
+| **E** | The redesign pass (§6a) — two-column card page, filigree back to one, evidence folded, one search chrome | ~2 days | It reads as finished |
+| **F** | The keyword↔CR join, both directions, with published coverage | ~2 days | The thing nobody else has |
+| **G** | `set.json` + decode tables; `/sets`; `unique:`; `order:released` | ~2 days | The corpus gets a spine |
+| **H** | Grammar: AST, negation/`OR`/parens, comparisons, `flavor:` | ~1 week | Search becomes a language |
 
-A through D is the version worth showing anyone. E through G is what makes it
+Reconciling `DESIGN.md` with `PLAN.md` folds into **E** rather than standing as
+its own step: the redesign is where those positions become code, and amending the
+prose separately would be a diff nobody reads.
+
+A through E is the version worth showing anyone. F through H is what makes it
 the reference.
 
 ---
@@ -447,8 +602,9 @@ the reference.
 
 ## 10. The one-sentence version
 
-Make the homepage a card search hero over explainer links over results, give
-every card its face through an edge-transformed image tier, let the keyword→rule
-join carry the Comprehensive Rules onto the card page and the cards back onto the
-rule page — and reconcile `DESIGN.md` with the position `PLAN.md` already
-settled, before anything else is built against the old one.
+Stand up our own image host as a second Netlify site with the bytes in Blobs and
+never in git, give every printing a face and every card a printings rail, make
+the homepage a card search hero over explainer links over results, let the
+keyword→rule join carry the Comprehensive Rules onto the card page and the cards
+back onto the rule page — and subtract enough chrome that what is left reads as
+the reference it claims to be.
