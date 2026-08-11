@@ -1,36 +1,73 @@
 # Optfall — phased build plan
 
-Legality that remembers, and rulings you can cite. Six phases, each shipping
-something complete on its own, ordered by what unblocks what.
+**Scryfall, for Flesh and Blood.** A card search engine and reference, with a
+rules engine attached — every card, every printing, every rule, each citable and
+each with a permanent URL.
 
 > Published version:
 > <https://claude.ai/code/artifact/f801332b-9a7b-430a-bf9b-b6d603ce186a>
 
-| Phase | | Duration |
+| Phase | | State |
 |---|---|---|
-| 0 | Repo and infrastructure | 1–2 days |
-| 1 | Theme and components | ~1 week |
-| 2 | Legality that remembers | 2–4 weeks |
-| 3 | Card layer | ~1 week |
-| 4 | The rules, made addressable | 2–4 weeks |
+| 0 | Repo and infrastructure | **done** |
+| 1 | Theme and components | **done** |
+| 2 | The card layer — search, cards, printings | next |
+| 3 | Legality that remembers | after 2 |
+| 4 | The rules, made addressable | parser done; surface in progress |
 | — | *Gate: are the questions actually novel?* | days |
 | 5 | The interaction record | quarter → ongoing |
+
+> **This document was reordered on 2026-08-11**, when the owner settled the
+> positioning: Optfall is *mostly a card browser and lookup with a rules engine
+> attached* — a copy of Scryfall's functionality for Flesh and Blood. Earlier
+> revisions had the card layer as "supporting cast, not a product" and listed a
+> card-search destination under *out of scope*. Both are now wrong and both have
+> been rewritten. The change is recorded rather than silently applied, because
+> the previous reasoning was argued at length and a reader deserves to see what
+> replaced it.
 
 ---
 
 ## The thesis
 
-Every existing Flesh and Blood tool optimises for coverage or convenience.
-Optfall optimises for being **right**: correct legality, correct rules text,
-correct rulings, each citable and each version-stamped. That is a narrow claim
-and a defensible one, and the only positioning in this landscape that does not
-require out-building somebody with a head start.
+**Be the reference.** Scryfall's position in Magic is not that it found an
+unoccupied niche — it is that it became the thing everyone links to, because it
+was complete, fast, precise, and the link always worked. Flesh and Blood has no
+equivalent. That is the opening.
 
-**Phases are ordered by what unblocks what, not by value.** The highest-value
-surface needs volunteer judges to contribute expertise, and no amount of code
-buys that. So the sequence starts with what nobody can block and earns the
-standing the end depends on. Every phase ships a complete, useful thing — if you
-stop after any of them, what exists still works.
+Optfall optimises for being **right**: correct card text, correct legality,
+correct rules, each citable and each version-stamped. Everything else follows
+from that — the search grammar, the permalinks, the refusal to compose prose.
+
+**Why enter a category that already has tools.** An earlier revision of this plan
+ruled card search out because Opt existed and had gone stale. That reads the
+evidence backwards. Opt going stale is the *opportunity*, and it names the thing
+to solve: a card database dies when keeping it current needs a human in the loop.
+So the answer is structural rather than diligent — **sync, never curate**, from an
+actively-maintained upstream, so staleness requires active decay rather than
+passive neglect. If that discipline holds, the treadmill that claimed three
+Flesh and Blood tools is not a risk we share.
+
+**Three things make it ours rather than a fifth copy.**
+
+1. **Legality that knows about time.** Every card database answers *is this legal
+   now*. None answers *was this legal on the day of that tournament* — and
+   Living Legend retirements and banned-list revisions move constantly, so every
+   archived decklist in the game is currently uninterpretable. This is the
+   feature nobody has, and it is the reason the card layer is worth building
+   again rather than pointing at what exists.
+2. **Rules that are addressable.** The Comprehensive Rules parsed to permanent
+   identifiers, so a card can link to the rule that governs it and a judge can
+   paste a citation instead of describing which paragraph they meant.
+3. **No language model anywhere.** Search is lexical and deterministic; the tool
+   never composes prose. A confidently wrong answer is structurally impossible
+   rather than mitigated.
+
+**The order now follows the product rather than what unblocks what.** Cards come
+first because cards are what people arrive for, and because present-day legality
+already ships inside the card data — so the first release is useful on its own.
+Every phase still ships a complete thing: if you stop after any of them, what
+exists still works.
 
 ---
 
@@ -95,10 +132,9 @@ in a git repository.
 - **Astro** for the site — static output with client islands. The checker is
   interactive but needs no server; validation runs in the browser against the
   shipped dataset.
-- **Storybook as the workbench.** Primitives built and reviewed in isolation, in
-  both themes, with accessibility and visual-regression checks on every story in
-  CI. Deployed publicly, so the library doubles as documentation for anyone
-  adopting our components.
+- **Storybook as the workbench, run locally.** Primitives built and reviewed in
+  isolation, in both themes, with accessibility checks on every story in CI. Not
+  deployed — see Phase 1 for why the public build was dropped.
 - **Netlify.** Production from `main`, deploy previews on every pull request.
   Previews matter more than usual here: a legality bug is visible in a preview
   and invisible in a diff.
@@ -276,17 +312,95 @@ decoration rather than infrastructure and the next phase will quietly abandon it
 
 ---
 
-## Phase 2 — Legality that remembers
+## Phase 2 — The card layer
 
-**2–4 weeks. The wedge.**
+**The product. Everything else attaches to this.**
+
+Search, card pages, printings. The thing people arrive for, and the surface every
+later phase hangs off.
+
+**The dataset makes this tractable today.** The community dataset carries **4,862
+cards** with the fields search needs — name, pitch, cost, power, defence, health,
+intelligence, arcane, types, traits, keywords, functional text, printings — *and*
+per-format legality already computed: `cc_legal`, `blitz_legal`, `cc_banned`,
+`ll_restricted`, `upf_banned` and the rest. So the first release answers "is this
+legal" without any of our own legality work. Phase 3 adds the part the dataset
+structurally cannot answer.
+
+**Sync, never curate — the anti-staleness decision, and the one that decides
+whether this lasts.** Card data comes from the actively-maintained upstream on a
+scheduled pull, pinned by commit, with fixes contributed upstream rather than
+forked. Opt went stale because something needed a human in the loop. Consume an
+upstream someone else already maintains and staleness requires active decay
+rather than passive neglect. **If this discipline slips, the project becomes the
+fourth tool on the treadmill** — it is the single most important operational rule
+in this document.
+
+**The grammar is inherited, not invented.** LSS's Card Vault already has a search
+syntax and people arrive fluent in it. Adopt it verbatim — `pitch:3
+class:guardian` — and extend it with ours: `cr:` for the rules, `legal:cc@DATE`
+for time travel, `is:verified` for judge-signed rulings. A second dialect would
+fragment the thing it claims to consolidate. Every operator we add must feel like
+it was always part of the same language, which is a constraint on naming as much
+as on engineering.
+
+**Every view is a URL.** `/card/command-and-conquer` and `/search?q=…` are the
+product, not decoration on it. Scryfall's real artefact is the link you paste
+into a conversation to settle it, and a card page that cannot be linked is a
+lookup rather than a reference.
+
+**Accessibility ships here, by default.** Pitch is encoded red, yellow and blue —
+red and yellow being the classic deuteranopia confusion pair, on the most-read
+value on a card. Tellingly they are *also* the pair Dragon Shield's scanner
+misreads: same physics, two independent confirmed failures. The pitch jewel built
+in Phase 1 already carries the numeral as its primary channel, so every consumer
+inherits the fix without deciding to.
+
+### Deliverables
+
+- Scheduled card sync, pinned by commit, published as versioned JSON
+- Search with the inherited Card Vault grammar, running client-side against a
+  static index — no backend, no query service
+- `/card/<name>` permalinks: full text, printings, per-format legality, and links
+  into the rules corpus
+- Printed text vs true text — the errata split surfaced honestly, with a diff
+- Card images with the required copyright line, and no set logos in chrome
+- Bulk export of everything structural we own
+
+### Exit criteria
+
+Somebody links an Optfall card page in a conversation instead of describing the
+card — and a card's legality, text and printings are correct enough that a second
+tool would rather consume our export than build its own.
+
+---
+
+## Phase 3 — Legality that remembers
+
+**2–4 weeks. The differentiator.**
 
 Is this deck legal in this format — and *was* it legal on the day of that
 tournament?
 
-**This ships first among product surfaces because it is the only one with a
-deadline attached.** Card data and rulings are reference material, visited once
-people already know they exist. A tournament organiser holding 32 decklists at
-6:50pm has a problem right now.
+**This follows the card layer rather than preceding it**, which reverses an
+earlier revision of this plan. The reasoning then was that legality is the only
+surface with a deadline attached — a tournament organiser holding 32 decklists at
+6:50pm has a problem right now, where card data is reference material visited
+once people know it exists. That is still true, and it is still the sharpest
+unmet need in the game.
+
+What changed is the finding that **present-day legality already ships inside the
+card dataset**. `cc_banned`, `blitz_legal`, `ll_restricted` and the rest are
+computed upstream, so the card layer answers the 6:50pm question on its own
+without waiting for this phase. What remains here is the half no dataset carries:
+**time**. Building it second costs the organiser nothing and gives the historical
+work a surface to appear on.
+
+**The gap is real and demonstrable.** Seeds of Agony was banned from Classic
+Constructed in LSS's announcement of 21 September 2021. The current dataset
+records it as `cc_banned: false, cc_legal: true` — it was unbanned since. Both
+facts are correct; the dataset simply has no way to express the first. Every
+archived decklist in the game sits in that gap.
 
 The evidence of unmet need is the cleanest in the study. GEM — LSS's own
 official tournament platform — ships no legality validation at all, and official
@@ -337,47 +451,6 @@ same artifact.
 It correctly validates a corpus of known-good and known-bad decklists *including
 historical ones* — decks legal then and illegal now — and at least one other tool
 in the ecosystem has adopted the library or the published JSON.
-
----
-
-## Phase 3 — Card layer
-
-**~1 week. Supporting cast, not a product.**
-
-A legality verdict has to show the card it flagged, and a ruling has to render
-the cards it is about. That is the entire justification.
-
-**Deliberately minimal.** Card search was a candidate surface until Opt turned up
-— Scryfall-inspired, already built, and now out of date. That closes it twice:
-the category is occupied enough to make entry unrewarding, and its decay
-demonstrates the treadmill that has now claimed three Flesh and Blood tools.
-
-**Sync, never curate — this is the anti-staleness decision.** Card data comes
-from the actively-maintained community dataset on a nightly pull, pinned by
-commit, with fixes contributed upstream rather than forked. Opt went stale
-because something needed a human in the loop. Consume an upstream someone else
-already maintains and staleness requires active decay rather than passive
-neglect.
-
-**Accessibility ships here, by default.** Pitch value is encoded red, yellow and
-blue — red and yellow being the classic deuteranopia confusion pair, on the
-most-read information on a card. Tellingly, they are *also* the pair Dragon
-Shield's scanner misreads: same physics, two independent confirmed failures. A
-colourblind-safe pitch glyph inside the component means every consumer inherits
-it without deciding to.
-
-### Deliverables
-
-- Nightly card sync with stable ids surviving errata and reprints
-- Printed text vs true text — the errata split surfaced honestly, with a diff
-- Image serving — own bucket, copyright line, no set logos in chrome
-- Colourblind-safe pitch glyph as the default rendering, not an option
-
-### Explicit non-goals
-
-No advanced query grammar. No competing card-search destination. No attempt to
-become the ecosystem's card data layer. If someone wants search, point them at
-Fabrary and move on.
 
 ---
 
@@ -532,9 +605,9 @@ demand. This is the part of the plan that is not about features.
 - **Contribute upstream, never fork.** Being the ecosystem's best downstream
   contributor is more durable than being its fragile single point of failure.
 - **Show up before you need them.** Phase 5's code is late but its relationships
-  are not. Be present in the judge community from Phase 2 onward — answering,
-  citing, being useful — so the eventual ask comes from a familiar name rather
-  than a stranger with a URL.
+  are not. Be present in the judge community from the first shipped surface
+  onward — answering, citing, being useful — so the eventual ask comes from a
+  familiar name rather than a stranger with a URL.
 - **Survive revocation.** The art licence is revocable at LSS's discretion.
   Rulings, rules and legality data are ours. Losing images costs a rendering
   layer, never the product.
@@ -546,8 +619,12 @@ demand. This is the part of the plan that is not about features.
 - **A better Fabrary.** Not merely the leading deckbuilder — the ecosystem's
   sharing layer, which LSS's own deck builder imports *from*. Its predecessor
   died in that slot without the network effect transferring.
-- **A card search destination.** Occupied by Opt, whose decay proves the
-  treadmill.
+- ~~**A card search destination.**~~ **This is now the product** — see Phase 2.
+  The earlier entry ruled it out because Opt occupied the category and had gone
+  stale. That reads the evidence backwards: Opt's decay is the opening, and it
+  names the thing to solve structurally rather than by diligence. Kept visible
+  rather than deleted, because the argument was made at length and a reader
+  should see what replaced it.
 - **A tournament results database.** Paper results split across two incompatible
   platforms with no export; one site tried and fell back to manual submission.
   Not permanently dead — the cross-platform player-identity join is a moat LSS
@@ -578,14 +655,23 @@ demand. This is the part of the plan that is not about features.
 **Settled.** `alxjrvs/optfall`, personal ownership, MIT, TypeScript on Bun,
 Svelte components, Astro site, Netlify hosting, repository settings as a
 `gh api` script rather than Terraform, no direct monetisation, and no language
-model in anything shipped. Cold start confirmed — the phase order stands as
-written.
+model in anything shipped. **The positioning is settled too: a card search
+engine and reference, Scryfall-shaped, with the rules engine attached.**
 
-**Open, and it decides a headline feature.** Whether past banned-and-restricted
-revisions are publicly archived. If they are, time travel is a scraping job; if
-only the current list is published, reconstructing history is an excavation and
-may drop behind the rules work. First task of Phase 2, before the estimate
-hardens.
+**Settled, and it was the headline question.** Past banned-and-restricted
+revisions *are* publicly archived — the Wayback Machine carries 202 archived
+announcement URLs spanning 2021-03-18 to 2025-11-14, and a capture retrieves as
+readable content carrying date, author, card, format and action. **Time travel is
+a scraping job, not an excavation.** See `docs/PHASE-2-STATUS.md` for the
+evidence and for the one caveat: the announcements are editorial prose rather
+than tables, so extraction is closed-vocabulary matching against known card names
+with human review, never a language model.
+
+**Settled, and it removes a licence worry.** The card dataset ships no `LICENSE`
+file, and earlier revisions treated that as a hard blocker. It is not. What
+legality checking needs from it are facts, LSS publishes the same information,
+and the realistic worst case is a maintainer asking us to stop. Asking for a
+licence is still worth five minutes; it is not a gate to clear before building.
 
 **Open, and cheap to settle.** Domain (`optfall.com` did not resolve when
 checked, so it may be free) and the display typeface. Neither blocks Phase 0;

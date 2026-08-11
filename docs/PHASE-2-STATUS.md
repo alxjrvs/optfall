@@ -374,7 +374,22 @@ code is not the same as having read it.
 
 ## Blockers, and the exact action that clears each
 
-### 1. The card dataset licence — unchanged, still the only one code cannot clear
+### 1. The card dataset licence — downgraded from blocker to courtesy
+
+**This was over-weighted in earlier drafts of this document, and the owner has
+settled it: the dataset is fine to use, and building proceeds.**
+
+The reasoning, so the framing does not creep back. A missing `LICENSE` file makes
+the *compilation* all-rights-reserved by default — but what legality checking
+needs from it are facts: card names, costs, pitch values. Facts are not the part
+a compilation licence protects, LSS publishes the same information themselves,
+and the realistic worst case is a maintainer asking us to stop rather than any
+kind of claim. Asking for a licence is still worth doing — it takes five minutes
+and it makes the dependency robust rather than merely tolerated — but it is not
+a gate to clear before writing code.
+
+Everything below this line was written under the old framing and is kept for the
+detail rather than the urgency.
 
 `the-fab-cube/flesh-and-blood-cards`, checked via the GitHub API today:
 pushed 2026-08-10, 164 stars, not archived, **licence: none**. By default that
