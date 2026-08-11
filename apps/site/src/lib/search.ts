@@ -423,15 +423,49 @@ export function parseQuery(raw: string): ParsedQuery {
     }
   };
 
-  const addValue = (value: string) => {
-    if (isSectionNumber(value.trim()) && !ids.includes(value.trim())) {
-      ids.push(value.trim());
+  /**
+   * Route a chunk to either the section-number jump or the text search.
+   *
+   * A BARE NUMBER IS ONLY AN IDENTIFIER WHEN IT LOOKS LIKE ONE. An earlier
+   * version sent anything matching the section-number shape to `ids`, which
+   * meant a lone digit anywhere in a query was swallowed as a jump: "arcane
+   * barrier 2" parsed to terms ["arcane","barrier"] and ids ["2"], and the
+   * chapter-2 tier then placed roughly 150 sections numbered `2.*` ahead of
+   * every text match — filling the whole result limit, so the rows the user
+   * actually wanted were unreachable.
+   *
+   * That also contradicted this file's own tokeniser contract, which states
+   * that single digits are deliberately kept because "Arcane Barrier 2" is a
+   * real thing to search for and `2` is the discriminating half of it. The
+   * tokeniser was right; the routing above it was throwing the digit away
+   * before `tokenise` ever saw it.
+   *
+   * So a bare token counts as an identifier only when it is unambiguous:
+   * it carries a `.` or a letter suffix (`8.3.4b`, `1.0`), or it is the entire
+   * query (typing "2" alone plainly means chapter 2). Otherwise it is a search
+   * term like any other.
+   */
+  const addValue = (value: string, soleChunk: boolean) => {
+    const trimmed = value.trim();
+    const looksStructural = /[.a-z]/i.test(trimmed);
+
+    if (
+      isSectionNumber(trimmed) &&
+      (looksStructural || soleChunk) &&
+      !ids.includes(trimmed)
+    ) {
+      ids.push(trimmed);
       return;
     }
     addWords(value);
   };
 
-  for (const { value, quoted } of chunk(raw)) {
+  const chunks = chunk(raw);
+  // A lone chunk means the whole query is that token, which is the only case
+  // where a bare number unambiguously means "jump to this section".
+  const soleChunk = chunks.length === 1;
+
+  for (const { value, quoted } of chunks) {
     if (quoted) {
       note(
         "phrase-approximate",
@@ -443,7 +477,7 @@ export function parseQuery(raw: string): ParsedQuery {
 
     const operator = /^([a-zA-Z][a-zA-Z-]*):(.*)$/.exec(value);
     if (!operator) {
-      addValue(value);
+      addValue(value, soleChunk);
       continue;
     }
 
@@ -451,7 +485,9 @@ export function parseQuery(raw: string): ParsedQuery {
     const operand = operator[2] ?? "";
 
     if (name === RULE_NAMESPACE) {
-      if (operand.trim() !== "") addValue(operand);
+      // `cr:2` is an explicit request for a section, so the operand is always
+      // treated as an identifier regardless of how many chunks there are.
+      if (operand.trim() !== "") addValue(operand, true);
       continue;
     }
 
