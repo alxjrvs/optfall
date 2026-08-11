@@ -1,0 +1,65 @@
+# Netlify configuration for the Optfall card-face host.
+#
+# This is the SECOND Netlify site in this repository, and the split is
+# deliberate. The root `netlify.toml` opens by promising the main site is
+# "static output only — no functions, no edge handlers, no runtime", and that
+# promise is what docs/PLAN.md's "no uptime story to fail" rests on. Serving
+# card images needs a function. Putting it here rather than there confines the
+# runtime to the one layer the plan already calls expendable:
+#
+#   "Losing images costs a rendering layer, never the product."
+#
+# If this site is down, every card page on optfall.com still renders and every
+# fact on it is still correct — cards simply show NO IMAGE.
+#
+# THE IMAGE BYTES ARE NOT IN THIS REPOSITORY. They live in the
+# `optfall-card-faces` Netlify Blobs store, put there out-of-band by
+# `scripts/ingest-card-images.ts`. 11,377 distinct faces at ~695 KB apiece is
+# ~7.7 GB of source; even as two WebP tiers it is hundreds of megabytes that git
+# would carry forever. See docs/SCRYFALL-GAP.md §5.1.
+#
+# This file is public and contains no secrets, and must never contain one.
+#
+# Two site settings live only in the Netlify UI, so they are written down here
+# rather than left as folklore. Confirm them once, when the site is created:
+#
+#   production branch      `main`
+#   deploy previews        off — this site has no visual surface to review, and
+#                          every preview is another public host serving licensed
+#                          card art under a URL nobody is watching
+#
+# The site is created once by hand (`netlify sites:create`, or the UI) and
+# linked to `alxjrvs/optfall` there, because that link is an OAuth grant between
+# two accounts and is not expressible as configuration.
+
+[build]
+  # Built from the repository root, not from apps/images, because the Bun
+  # workspace only resolves from the root.
+  #
+  # There is nothing to compile: the function is TypeScript that Netlify's own
+  # bundler handles, and the only static asset is robots.txt. So the build step
+  # is a no-op rather than a script that exists to look busy.
+  command = "true"
+  publish = "apps/images/public"
+  functions = "apps/images/netlify/functions"
+
+[build.environment]
+  # BUN_VERSION must equal env.BUN_VERSION in .github/workflows/ci.yml EXACTLY,
+  # for the same reason the main site's does: an exact pin against a floating
+  # line means a green gate can attest to a build on a runtime that never
+  # produced the deploy.
+  NODE_VERSION = "22"
+  BUN_VERSION = "1.3.14"
+
+[[headers]]
+  for = "/*"
+
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    # This host exists to be embedded by optfall.com, and by any other Flesh and
+    # Blood tool that wants to consume the same faces. The card art is LSS's and
+    # is served under their third-party application policy, which grants card
+    # face images for building card databases — so the permissive origin is the
+    # point rather than an oversight. The copyright line travels with the
+    # rendering, in `CardFace`; see docs/COMPLIANCE.md §5.
+    Access-Control-Allow-Origin = "*"

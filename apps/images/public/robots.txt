@@ -1,0 +1,10 @@
+# This host serves card face images and nothing a search engine should index.
+# The pages that give those images meaning — names, text, legality, rulings —
+# live on optfall.com, and that is the surface worth crawling.
+#
+# Card art here is the property of Legend Story Studios, served under their
+# third-party application policy. Optfall is in no way affiliated with Legend
+# Story Studios.
+
+User-agent: *
+Disallow: /
