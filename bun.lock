@@ -51,6 +51,10 @@
       "name": "optfall-legality",
       "version": "0.0.0",
     },
+    "packages/rules": {
+      "name": "optfall-rules",
+      "version": "0.0.0",
+    },
     "packages/theme": {
       "name": "optfall-theme",
       "version": "0.0.0",
@@ -966,6 +970,8 @@
     "optfall-components": ["optfall-components@workspace:packages/components"],
 
     "optfall-legality": ["optfall-legality@workspace:packages/legality"],
+
+    "optfall-rules": ["optfall-rules@workspace:packages/rules"],
 
     "optfall-theme": ["optfall-theme@workspace:packages/theme"],
 

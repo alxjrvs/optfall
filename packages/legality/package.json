@@ -33,6 +33,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./sources": {
+      "types": "./dist/sources/wayback.d.ts",
+      "default": "./dist/sources/wayback.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -40,7 +44,7 @@
   },
   "scripts": {
     "typecheck": "tsc",
-    "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --sourcemap=linked && tsc --noEmit false --emitDeclarationOnly --declaration --declarationMap --outDir ./dist",
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm --sourcemap=linked && bun build ./src/sources/wayback.ts --outdir ./dist/sources --target node --format esm --sourcemap=linked && tsc --noEmit false --emitDeclarationOnly --declaration --declarationMap --outDir ./dist",
     "test": "bun test"
   },
   "dependencies": {}

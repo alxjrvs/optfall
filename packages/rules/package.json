@@ -1,0 +1,35 @@
+{
+  "name": "optfall-rules",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Flesh and Blood Comprehensive Rules, parsed into permanently addressable sections. LSS's own numbering is the identifier; nothing here invents one. Zero runtime dependencies.",
+  "license": "MIT",
+  "author": "alxjrvs",
+  "homepage": "https://github.com/alxjrvs/optfall/tree/main/packages/rules",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alxjrvs/optfall.git",
+    "directory": "packages/rules"
+  },
+  "bugs": "https://github.com/alxjrvs/optfall/issues",
+  "keywords": [
+    "flesh-and-blood",
+    "fabtcg",
+    "comprehensive-rules",
+    "parser"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./extract": "./src/extract.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "build": "echo \"optfall-rules is a build-time tool; it publishes no bundle.\"",
+    "test": "bun test",
+    "rules:parse": "bun src/cli.ts"
+  },
+  "dependencies": {}
+}
