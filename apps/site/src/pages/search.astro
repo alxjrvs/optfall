@@ -1,0 +1,92 @@
+---
+/**
+ * `/search` — and `/search?q=dominate`, which is the same page with an answer
+ * on it.
+ *
+ * THE URL IS THE POINT. `docs/DESIGN.md`: "Every view is a URL. Scryfall's real
+ * product is the link you paste into a conversation to settle it." So the query
+ * lives in the address bar, not in component state that evaporates when the tab
+ * closes — and the island reads it back on load, which is what makes a pasted
+ * link render the results the sender was looking at.
+ *
+ * THE INDEX IS BUILT HERE, ONCE, AT BUILD TIME. This frontmatter runs during
+ * `astro build` and never again: there is no server to run it on. The corpus is
+ * read off disk, `buildIndex` reduces 651 KB of verbatim rules text to the
+ * ~200 KB the ranking actually needs, and that is what the island receives. The
+ * full text is deliberately not shipped — it already exists, one click away, on
+ * the permalink page for each section, which is the thing this page exists to
+ * send people to.
+ *
+ * WHY `?raw` RATHER THAN A PLAIN JSON IMPORT OR `readFileSync`. All three read
+ * the same bytes; only this one reads them reliably. A JSON import hands
+ * TypeScript a 19,000-line literal to infer a type from, for a file whose shape
+ * is already declared in `search.ts`. `readFileSync` resolves its path against
+ * the *bundled* module at build time, not against this file, so it points at a
+ * directory that does not exist — which is not a theory, it is what the first
+ * attempt did. `?raw` is resolved by Vite against this source file, inlined at
+ * build time, and parsed once here: a build-time input, which is exactly what
+ * the corpus is.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import NoScriptNotice from "../components/NoScriptNotice.astro";
+import RulesSearch from "../components/RulesSearch.svelte";
+import { buildIndex, type RulesCorpus } from "../lib/search";
+import corpusJson from "../../../../data/rules/cr-2.14.0.json?raw";
+
+const corpus = JSON.parse(corpusJson) as RulesCorpus;
+const index = buildIndex(corpus);
+
+const sections = corpus.sections.length.toLocaleString("en-GB");
+const published = new Date(`${corpus.publishedDateIso}T00:00:00Z`).toLocaleDateString(
+  "en-GB",
+  { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" },
+);
+---
+
+<BaseLayout
+  title="Search the rules — Optfall"
+  description="Lexical search over the Flesh and Blood Comprehensive Rules. Every section has a permanent, citable URL."
+>
+  <h1>Search the rules</h1>
+
+  <!--
+    THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form on any surface submits
+    here, so a reader with scripting off arrives at `/search?q=dominate` with a
+    query in the address bar and no machinery on the page able to answer it.
+    Without this block that reads as an empty field and nothing else — a silent
+    failure, which is the one shape "degrade visibly" forbids. It is above the
+    island because the island renders its own hint, rule and browse, and an
+    explanation printed after all of that is an explanation nobody reaching for
+    the field will see.
+  -->
+  <NoScriptNotice />
+
+  <!--
+    `client:load` rather than `client:visible`: the field is the first thing on
+    the page and the whole reason anyone opened it, so it is hydrated before it
+    is looked at rather than after. It is also what reads `?q=` back out of the
+    URL, which has to happen on arrival, not on scroll.
+  -->
+  <RulesSearch index={index} client:load />
+
+  <!--
+    Degrade visibly. `docs/PLAN.md`: "Every surface shows when its data was last
+    confirmed. A stale Optfall must look stale." The version, the date and the
+    source are stated on the surface that serves the text, not buried in an
+    about page — and the source is a link, so the claim is checkable.
+  -->
+  <p class="provenance">
+    {corpus.title} <strong>{corpus.version}</strong>, published {published} by Legend
+    Story Studios and parsed to {sections} addressable sections. Read
+    from <a href={corpus.sourceUrl}>the published document</a>; nothing on this page
+    is summarised, paraphrased or generated.
+  </p>
+</BaseLayout>
+
+<style>
+  .provenance {
+    margin-block-start: var(--of-space-loosest);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+  }
+</style>

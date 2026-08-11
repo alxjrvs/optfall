@@ -1,45 +1,160 @@
 ---
+/**
+ * Home — `optfall.com`.
+ *
+ * `docs/DESIGN.md`, Screen 1: "One search field, one hint line, one daily
+ * object", and the principle it inherits — "No marketing hero, no illustration
+ * above the fold. The first thing on the page is the thing you came to do."
+ *
+ * So the fold holds the mark, the field and one hint, and nothing else. The
+ * explanation of what Optfall is lives BELOW it deliberately: a reference tool
+ * that explains itself before letting you search has misunderstood what it is.
+ * The daily chain link — the third object Screen 1 names — is absent rather
+ * than faked; it is keyed on the interaction corpus, which does not exist yet,
+ * and a placeholder for it would be the marketing hero this page exists to
+ * refuse.
+ *
+ * ONE HINT, AND IT IS NOT THIS FILE'S. The hint teaches by example rather than
+ * by documentation, because people arrive already fluent — `docs/DESIGN.md`
+ * puts one inherited Card Vault operator beside ours, so the extension is
+ * discovered where the fluency already is. All of that wording now lives in
+ * `RulesSearch`, on the line that is wired to the field by `aria-describedby`.
+ * This page used to print a second hint of its own *after* the island, which
+ * put two hint lines on one screen and left the one teaching the extension ten
+ * rows below the field it described. One field, one hint; if the hint needs
+ * changing, change it where the field is.
+ *
+ * ORNAMENT MARKS THE END OF THE FOLD, SO THE ISLAND PLACES IT. The chapter
+ * browse renders inside `RulesSearch`, which means an ornamented rule written
+ * here can only land after it — below the fold it was supposed to terminate.
+ * `ornament` on the island puts it between the hint and the browse instead,
+ * where the fold actually ends. The plain rule further down is the ordinary
+ * hairline that introduces the prose, and carries no filigree: scrollwork is
+ * rationed to once a screen.
+ *
+ * COMPOSE, NEVER RESTYLE. The mark and the rule are primitives from
+ * `optfall-components`; the search island is its own component; the layout owns
+ * typography, the measure and the focus ring. What is left here is the stacking
+ * of those pieces, and every value in it names a `--of-*` token — the `tokens`
+ * CI job fails the build otherwise, including on a `var()` naming a token that
+ * does not exist.
+ */
+import { Mark, OrnamentalRule } from "optfall-components/svelte";
+
 import BaseLayout from "../layouts/BaseLayout.astro";
+import NoScriptNotice from "../components/NoScriptNotice.astro";
+import RulesSearch from "../components/RulesSearch.svelte";
+import { buildIndex, type RulesCorpus } from "../lib/search";
+import corpusJson from "../../../../data/rules/cr-2.14.0.json?raw";
+
+/**
+ * The corpus is read here, at build time, and the index is built from it — the
+ * same shape `/search` uses, deliberately: one way to load the corpus, so the
+ * two surfaces cannot disagree about what is in it. This frontmatter runs
+ * during `astro build` and never again; there is no server to run it on.
+ *
+ * `?raw` rather than `readFileSync`, for the reason `search.astro` records: a
+ * relative path handed to `readFileSync` resolves against the *bundled* module
+ * during `astro build`, not against this source file, so it points at a
+ * directory that does not exist. That is not a theory — the first version of
+ * this page did exactly that, and the only visible symptom was a fallback
+ * string in `dist/index.html`.
+ *
+ * The full 651 KB of verbatim rules text never reaches a browser. `buildIndex`
+ * reduces it to what ranking needs plus one line of context per section, and
+ * the section text itself lives on the permalink page, which is the thing the
+ * field exists to send people to.
+ */
+const corpus = JSON.parse(corpusJson) as RulesCorpus;
+const index = buildIndex(corpus);
+
+/**
+ * Stated rather than typed into the prose. "Degrade visibly" is a project-wide
+ * rule — every surface shows when its data was last confirmed — and a version
+ * and a count copied by hand are two more things to rot at the next release.
+ */
+const sections = corpus.sections.length.toLocaleString("en-GB");
+const published = new Date(`${corpus.publishedDateIso}T00:00:00Z`).toLocaleDateString(
+  "en-GB",
+  { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" },
+);
+const bulkExport =
+  "https://github.com/alxjrvs/optfall/blob/main/data/rules/cr-2.14.0.json";
 ---
 
 <BaseLayout title="Optfall">
-  <h1>Optfall</h1>
+  <!-- The mark is decorative here: the wordmark beside it already carries the
+       name, and announcing it twice is noise rather than information. -->
+  <div class="wordmark">
+    <Mark size="lg" decorative />
+    <h1>Optfall</h1>
+  </div>
 
-  <p>
-    Legality that remembers, and rulings you can cite — a reference tool for
-    Flesh and Blood.
-  </p>
-
-  <p>
-    Optfall optimises for the one thing no incumbent optimises for: being right.
-    Correct legality, correct rules text, correct rulings — each citable, each
-    version-stamped, each with a permanent URL.
-  </p>
-
-  <p>
-    No language model is involved in anything Optfall serves. Every answer is a
-    parsed official document or a named human author, never generated prose — so
-    a confidently wrong ruling is not a risk to manage but a thing the tool
-    cannot do.
-  </p>
-
-  <h2>Status</h2>
+  <!-- Above the field, because it explains the field. Renders for nobody with
+       scripting on, and for everybody without it. -->
+  <NoScriptNotice />
 
   <!--
-    Inline elements are kept on the same source line as the text around them.
-    Astro compresses the built HTML and drops the whitespace at a line break
-    that falls immediately before an inline tag, which silently welds words
-    together in the output. Verified against dist/index.html.
+    `client:load`, not `client:visible` or `client:idle`. On this page the field
+    is the only thing that matters, and a hero that is inert for the first
+    keystrokes is a broken hero.
+
+    `ornament` spends the screen's one filigree on the island's own section
+    rule, which is the only position where it sits between the hint and the
+    chapter browse — the point where the fold ends.
   -->
+  <RulesSearch index={index} ornament client:load />
+
+  <!-- The ordinary hairline that introduces the prose, and deliberately not a
+       second ornament: filigree is rationed to three roles and never twice on a
+       page. No `label`: the break is already announced by its role and named by
+       the heading beneath it, and a name here would be invented text read aloud
+       for nothing. -->
+  <OrnamentalRule />
+
+  <h2>What this is</h2>
+
   <p>
-    <strong>The foundation is built; no product surface exists yet.</strong> What runs today is the repository and its gate, the token layer this page is drawn from, and eight accessible primitives with a workbench. The deck checker — the first thing anyone will actually come here to use — is next.
+    A reference tool for Flesh and Blood that optimises for the one thing no incumbent optimises for: being <strong>right</strong>. Correct rules text, correct legality, correct rulings — each citable, each version-stamped, each with a permanent URL you can paste into an argument instead of describing which paragraph you meant.
   </p>
 
   <p>
-    This page is also the deployment target proving the pipeline works: a static build from <code>main</code>, a deploy preview on every pull request, and the compliance footer that ships before any product code does.
+    No language model is involved in anything Optfall serves. Search is lexical and deterministic, and every string traces to a parsed official document or a named human author — so a confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
+  </p>
+
+  <h2>What is built</h2>
+
+  <p>
+    The Comprehensive Rules, <strong>{corpus.version}</strong>, published {published} by Legend Story Studios and parsed to {sections} addressable sections — searchable above, and each one on its own permanent URL. The identifier is LSS's own numbering rather than a slug of ours, so <a href="/cr/1.0.1a"><code>cr:1.0.1a</code></a> means here exactly what it means in the PDF.
   </p>
 
   <p>
-    The plan and the design language are written down and public: <a href="https://github.com/alxjrvs/optfall/blob/main/docs/PLAN.md">the phased build plan</a> and <a href="https://github.com/alxjrvs/optfall/blob/main/docs/DESIGN.md">the design pass</a>.
+    Not yet: the deck checker and legality as of a date, version diffs, the card layer, and the judge-attributed interaction record. Nothing above hides behind a placeholder — if a surface is not here, it is not built.
+  </p>
+
+  <p>
+    The corpus is not only a website. It ships as an openly licensed <a href={bulkExport}>bulk export</a>, read from <a href={corpus.sourceUrl}>the published document</a>, so if this site disappears the corpus does not. The plan and the design language are public too — <a href="https://github.com/alxjrvs/optfall/blob/main/docs/PLAN.md">the phased build plan</a> and <a href="https://github.com/alxjrvs/optfall/blob/main/docs/DESIGN.md">the design pass</a>.
   </p>
 </BaseLayout>
+
+<style>
+  /*
+    Stacking only. Nothing here draws anything: no colour of its own beyond the
+    muted ink the hint already owes the token layer, no box, no shadow, no
+    border — the system holds a page together with typography and hairlines
+    rather than with cards and padding.
+  */
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: var(--of-space-base);
+    /* The fold starts at the top of the page. The layout's own heading rhythm
+       would push the field down behind a title, which is the marketing hero
+       this screen refuses. */
+    margin-block-end: var(--of-space-looser);
+  }
+
+  .wordmark h1 {
+    margin-block: 0;
+  }
+</style>
