@@ -23,6 +23,7 @@ confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
 |---|---|
 | [`docs/PLAN.md`](docs/PLAN.md) | Phased build plan — what gets built, in what order, and why |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Design language, component system, and screen designs |
+| [`docs/SCRYFALL-GAP.md`](docs/SCRYFALL-GAP.md) | Comparative analysis against Scryfall, and the remove/update/extend plan to close it |
 | [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) | The permission envelope, as an operational checklist with enforcement points |
 | [`docs/DATA-TERMS.md`](docs/DATA-TERMS.md) | Terms on the data Optfall publishes, and what is *not* ours to license |
 | [`docs/PHASE-0-STATUS.md`](docs/PHASE-0-STATUS.md) | What Phase 0 delivered, and every finding left unfixed |
@@ -32,6 +33,7 @@ The plan and design pass are also published as browsable pages:
 
 - [Build plan](https://claude.ai/code/artifact/f801332b-9a7b-430a-bf9b-b6d603ce186a)
 - [Design pass](https://claude.ai/code/artifact/7cb29b44-9250-48bb-a733-e9f4c8a5eb64)
+- [The Scryfall gap](https://claude.ai/code/artifact/a0870818-24e7-4ca8-8711-940e5f3fcf9d)
 
 ## Status
 
