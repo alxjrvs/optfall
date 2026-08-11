@@ -305,7 +305,7 @@
     immediately before an inline tag, welding words together in the output.
   -->
   <p class="hint" id={hintId}>
-    <code>dominate</code> searches the text · <code>cr:dominate</code> names the corpus · <code>8.3.4b</code> goes straight to that section · <kbd>/</kbd> returns here. Card Vault's own operators are inherited verbatim; <code>pitch:3</code> arrives with the card layer, not before.
+    <code>dominate</code> searches the text · <code>cr:dominate</code> names the corpus · <code>8.3.4b</code> goes straight to that section · <kbd>/</kbd> returns here. This field searches the rules; Card Vault's own card operators — <code>pitch:3</code>, <code>class:guardian</code> — are inherited verbatim and answered at <a href="/cards">the card search</a>.
   </p>
 </form>
 

@@ -1,0 +1,84 @@
+---
+/**
+ * The `/card/` route — 4,941 card pages and 900 disambiguation pages, every one
+ * a permalink.
+ *
+ * `docs/PLAN.md` Phase 2: **"Every view is a URL. `/card/command-and-conquer`
+ * and `/search?q=…` are the product, not decoration on it … a card page that
+ * cannot be linked is a lookup rather than a reference."** This file is the
+ * whole of what makes that true — `apps/site/src/lib/cards.ts` already derived
+ * every slug, every verdict and every link, and until this route existed all of
+ * it was unreachable: `CARD_ROUTES` had zero consumers, and Astro emitted
+ * nothing under `dist/card/`.
+ *
+ * THREE THINGS THIS FILE DECIDES.
+ *
+ * **One route, two kinds of page.** `CardRoute` is a discriminated union, so
+ * the branch below is exhaustive by construction: a third kind of route added
+ * to `cards.ts` fails the typecheck here rather than silently rendering as a
+ * card. Two components rather than one with conditionals inside it, because the
+ * disambiguation page is a genuinely different document — it has no stats, no
+ * legality and no printings, and a component pretending to be both would be
+ * mostly `{#if}`.
+ *
+ * **Every path is emitted at build time. There is no fallback renderer.** A URL
+ * either names a card Legend Story Studios has printed or it 404s, which is the
+ * honest behaviour for a reference index — the same rule `/cr/[...id].astro`
+ * follows. `output: "static"` in `astro.config.mjs` makes that structural.
+ *
+ * **The `<title>` and the description are built in `cards.ts`, not here.** They
+ * are fixed labels wrapped around verbatim values, and they live beside the
+ * data so that the two cannot drift. Note in particular that
+ * `descriptionFor` deliberately omits legality: an unfurl preview is
+ * snapshotted at paste time and never revisited, so "Banned in Classic
+ * Constructed" is exactly the sentence that must not be cached for six months
+ * in the conversation where someone is deciding what to sleeve.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CardEntry from "../../components/CardEntry.astro";
+import NameIndex from "../../components/NameIndex.astro";
+import {
+  CARD_ROUTES,
+  descriptionFor,
+  descriptionForName,
+  titleFor,
+  titleForName,
+  type CardRoute,
+} from "../../lib/cards";
+
+/**
+ * Every card URL, statically.
+ *
+ * `[...slug]` rather than `[slug]` so the route owns the whole remainder of the
+ * path: a slug is `a-z0-9-` by construction (see `slugify`), so the two are
+ * equivalent today — and the rest parameter is what keeps a future slug
+ * containing a separator from silently becoming an unreachable URL instead of a
+ * build failure.
+ */
+export function getStaticPaths() {
+  return CARD_ROUTES.map((route) => ({
+    params: { slug: route.slug },
+    props: { route },
+  }));
+}
+
+interface Props {
+  route: CardRoute;
+}
+
+const { route } = Astro.props;
+
+const title = route.kind === "card" ? titleFor(route.page) : titleForName(route.page);
+const description =
+  route.kind === "card" ? descriptionFor(route.page) : descriptionForName(route.page);
+---
+
+<BaseLayout title={title} description={description}>
+  {
+    route.kind === "card" ? (
+      <CardEntry page={route.page} />
+    ) : (
+      <NameIndex page={route.page} />
+    )
+  }
+</BaseLayout>

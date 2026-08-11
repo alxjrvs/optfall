@@ -1,0 +1,830 @@
+---
+/**
+ * One card, in full — the body of `/card/<slug>`, and the thing `docs/PLAN.md`
+ * Phase 2 says people arrive for.
+ *
+ * "Every view is a URL. `/card/command-and-conquer` … is the product, not
+ * decoration on it." So this page is built to be *pasted*: the name is the
+ * heading, the legality is dated and evidenced, and everything on it is either
+ * a value read off the upstream record or a fixed label wrapped around one.
+ *
+ * SIX DECISIONS, EACH OF WHICH A REVIEWER SHOULD BE ABLE TO ARGUE WITH.
+ *
+ * **THE VERDICT IS A LIST OF PILLS, NEVER A SINGLE WORD, AND IT IS NEVER
+ * `cc_legal`.** `apps/site/src/lib/cards.ts` derives it; this page only prints
+ * what it derived. The distinction matters because upstream's `cc_legal` means
+ * "in the Classic Constructed card pool" and is `true` on all 51 `cc_banned`
+ * cards — rendering that flag as a Legal pill is precisely the incumbent bug
+ * `docs/PLAN.md` Phase 3 cites as the reason this project exists. One card
+ * (Winter's Wail) is `cc_banned` *and* `cc_living_legend`, so both pills render.
+ *
+ * **EVERY VERDICT PRINTS ITS EVIDENCE, INLINE AND UNCONDITIONALLY.** The raw
+ * upstream keys sit directly beneath the pills, in the mono voice, with an
+ * absent key shown as `—` rather than as `false`. `docs/PLAN.md`: the tool is
+ * "auditable rather than merely assertive, which is what matters when the
+ * commercially-backed incumbent ships incorrect flags". It is not behind a
+ * disclosure widget, because a claim whose evidence needs a click is a claim
+ * being asserted.
+ *
+ * **THE PAGE MAKES NO HISTORICAL CLAIM.** Every legality sentence here is
+ * present-tense and stamped with the date the corpus was confirmed. `since`
+ * dates are printed where upstream publishes one and are labelled as the start
+ * of the *current* state, never as a history. Legality as of a date is Phase 3
+ * and is named as absent rather than implied.
+ *
+ * **THE STAT BLOCK IS A `<dl>`.** Cost, Power, Defence, Life, Intellect and
+ * Arcane are term-and-value data, so they are marked up as term-and-value data
+ * rather than as a row of styled `<div>`s. A card with no power has no Power
+ * row at all — and 13 cards genuinely have `power: "0"`, which is a different
+ * fact and gets a row saying `0`.
+ *
+ * **EVERY LINK TO ANOTHER CARD RENDERS `link.label`, NEVER `link.name`.** 900
+ * names in this corpus belong to two to four different cards, so a list of
+ * anchors reading "Head Jab", "Head Jab", "Head Jab" pointing at three URLs is
+ * both useless and a WCAG 2.4.4 failure. The label carries the variant suffix
+ * and is composed once, in `cards.ts`, so a page cannot forget it.
+ *
+ * **NO CARD FACE IS RENDERED, DELIBERATELY.** Card images are permitted for
+ * card databases on the condition that a copyright line accompanies them, and
+ * `packages/components/src/index.ts` designs that condition to be
+ * unrepresentable-if-missing by putting the notice inside a `CardImage`
+ * primitive rather than in a prop. That primitive does not exist yet. Writing a
+ * bare `<img>` here would satisfy neither "compose, never restyle" nor the
+ * copyright condition, so the printings table cites the collector number, the
+ * set and the artist — which is the citable identity of a printing — and no
+ * face is shown until the primitive lands.
+ *
+ * Everything visible is composed from `optfall-components`. The styles below
+ * are layout and voice assignment only, and every value in them is a
+ * `var(--of-*)`; `bun run check:tokens` fails the build otherwise.
+ */
+import { BevelledPlate, OrnamentalRule, PitchJewel, StatePill } from "optfall-components/svelte";
+
+import {
+  CORPUS,
+  LAST_CONFIRMED,
+  hrefForSlug,
+  type CardLink,
+  type CardPage,
+} from "../lib/cards";
+
+interface Props {
+  page: CardPage;
+}
+
+const { page } = Astro.props;
+const { card } = page;
+
+const typeLine = card.type_text.trim();
+const text = card.functional_text.trim();
+
+/**
+ * Lists upstream publishes per card, rendered only where non-empty.
+ *
+ * Read off the record and labelled, never summarised. `traits` is populated on
+ * 9 cards and `removed_keywords` on 12 — printing an empty "Traits: none" row
+ * on the other 4,932 would be noise dressed as completeness.
+ */
+const vocabularies: readonly (readonly [string, readonly string[]])[] = [
+  ["Types", card.types],
+  ["Traits", card.traits],
+  ["Keywords", card.card_keywords],
+  ["Abilities and effects", card.abilities_and_effects],
+  ["Ability keywords", card.ability_and_effect_keywords],
+  ["Grants", card.granted_keywords],
+  ["Removes", card.removed_keywords],
+  ["Interacts with", card.interacts_with_keywords],
+];
+const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
+
+/**
+ * Pitch leads the stat block rather than sitting only in the masthead jewel.
+ *
+ * The jewel is the reserved silhouette and carries pitch as shape, numeral and
+ * colour; the `<dl>` is the tabular record, and a tabular record with a hole in
+ * it where its most-read value should be is a worse artefact than a duplicated
+ * one. Cards with no pitch get no row, exactly as they get no other absent stat.
+ */
+const stats =
+  page.pitch === 0
+    ? page.stats
+    : [{ label: "Pitch", value: String(page.pitch) }, ...page.stats];
+
+const nameHref = hrefForSlug(page.nameSlug);
+
+/** Related-card lists, in the order they answer a question about this card. */
+const related: readonly (readonly [string, string, readonly CardLink[]])[] = [
+  ["Other versions", "Same name, different pitch.", page.variants],
+  ["Names these cards", "Cards this card's text refers to by name.", page.references],
+  ["Named by", "Cards whose text refers to this one by name.", page.referencedBy],
+];
+const relatedShown = related.filter(([, , links]) => links.length > 0);
+
+const printingCount = card.printings.length;
+---
+
+<nav class="lineage" aria-label="Breadcrumb">
+  <ol class="crumbs">
+    <li><a href="/">Optfall</a></li>
+    <li><a href="/cards">Cards</a></li>
+    {
+      page.disambiguated && (
+        <li>
+          <a href={nameHref}>{card.name}</a>
+        </li>
+      )
+    }
+    <li><span class="crumb-current" aria-current="page">{page.label}</span></li>
+  </ol>
+</nav>
+
+<article>
+  <header class="masthead">
+    <p class="eyebrow">{typeLine === "" ? "Flesh and Blood card" : typeLine}</p>
+    <div class="title-row">
+      <PitchJewel value={page.pitch} size="lg" />
+      <h1 class="card-name">{page.label}</h1>
+    </div>
+  </header>
+
+  <section class="apparatus" aria-labelledby="stats">
+    <h2 class="apparatus-heading" id="stats">Stats</h2>
+    {
+      stats.length === 0 ? (
+        <p class="void">This card carries no printed cost, power, defence, life, intellect or arcane value.</p>
+      ) : (
+        <dl class="stats">
+          {stats.map((stat) => (
+            <div class="stat">
+              <dt>{stat.label}</dt>
+              <dd>{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+  </section>
+
+  <section class="apparatus" aria-labelledby="printed-text">
+    <h2 class="apparatus-heading" id="printed-text">Printed text</h2>
+    {
+      text === "" ? (
+        <p class="void">This card has no rules text in the published dataset.</p>
+      ) : (
+        <BevelledPlate emphasis="raised">
+          <p class="card-text">{card.functional_text}</p>
+        </BevelledPlate>
+      )
+    }
+    <!--
+      Reproduced, not interpreted. Upstream writes emphasis as `**Ward 10**` and
+      symbols as `{r}` / `{p}`, and Optfall has no published table mapping those
+      markers to words — so substituting any would be inventing a vocabulary and
+      calling it the card's text. `docs/PLAN.md`: every string served traces to a
+      parsed source. The markers stay; the note says why.
+    -->
+    <p class="verify">Printed exactly as the upstream dataset publishes it, including its own <code>**</code> emphasis and <code>&#123;…&#125;</code> symbol markers. Optfall does not rewrite, expand or summarise card text.</p>
+  </section>
+
+  {
+    vocabulary.length > 0 && (
+      <section class="apparatus" aria-labelledby="attributes">
+        <h2 class="apparatus-heading" id="attributes">Attributes</h2>
+        <dl class="attributes">
+          {vocabulary.map(([label, values]) => (
+            <div class="attribute">
+              <dt>{label}</dt>
+              <dd>
+                <ul class="tags">
+                  {values.map((value) => (
+                    <li class="tag">{value}</li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          ))}
+          {card.played_horizontally && (
+            <div class="attribute">
+              <dt>Orientation</dt>
+              <dd>Played horizontally</dd>
+            </div>
+          )}
+        </dl>
+      </section>
+    )
+  }
+</article>
+
+<OrnamentalRule label="Legality" />
+
+<section class="apparatus" aria-labelledby="legality">
+  <h2 class="apparatus-heading" id="legality">Legality</h2>
+
+  <!--
+    The scope of the claim, stated before the claim. `docs/PLAN.md`: "Every
+    surface shows when its data was last confirmed", and Phase 3 — legality as
+    of a date — is named as absent rather than left to be assumed present.
+  -->
+  <!--
+    Inline elements stay on the same source line as the text around them. Astro
+    compresses the built HTML and drops the whitespace at a line break falling
+    immediately before an inline tag, which silently welds words together in the
+    output — "last confirmed2026-08-10". Same trap `NoScriptNotice.astro`
+    records; same fix.
+  -->
+  <p class="scope">
+    Current state only, as published by the upstream dataset and last confirmed <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>. Optfall does not yet answer what was legal on an earlier date; where upstream publishes the date a state began, it is printed below and means the start of the state that applies now.
+  </p>
+
+  <ul class="formats">
+    {
+      page.verdicts.map((verdict) => (
+        <li class="format">
+          <h3 class="format-name" id={`format-${verdict.format.id}`}>
+            {verdict.format.name}
+          </h3>
+
+          {verdict.unknown ? (
+            <p class="void">
+              The dataset publishes no legality flag for this format, so Optfall
+              has nothing to say about this card in it. It publishes only
+              exclusions here, and none is set on this card.
+            </p>
+          ) : (
+            <ul class="states">
+              {verdict.states.map((state) => (
+                <li class="state">
+                  <StatePill tone={state.tone} label={state.label} />
+                  {state.since !== null && (
+                    <span class="since">
+                      since <time datetime={state.since}>{state.since}</time>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {verdict.affectsFullCycle && verdict.format.id === "living-legend" && (
+            <p class="scope">Upstream records this restriction as affecting the full cycle of cards sharing this name.</p>
+          )}
+
+          <dl class="evidence">
+            {verdict.evidence.map((fact) => (
+              <div class="fact" data-present={String(fact.present)}>
+                <dt>{fact.key}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<OrnamentalRule label="Printings" />
+
+<section class="apparatus" aria-labelledby="printings">
+  <h2 class="apparatus-heading" id="printings">Printings</h2>
+  <p class="scope">
+    {printingCount} printing{printingCount === 1 ? "" : "s"}. The collector number
+    is the citable identity of a printing. Set, edition, foiling and rarity are
+    upstream's own single-letter codes, reproduced rather than expanded — Optfall
+    publishes no table mapping them to words, and inventing one would be a claim
+    rather than a lookup. No card face is shown: images are permitted with a
+    copyright line, and the component that carries that line unconditionally is
+    not built yet.
+  </p>
+
+  <div class="scroller">
+    <table class="printings">
+      <caption class="visually-hidden">Every published printing of {page.label}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Number</th>
+          <th scope="col">Set</th>
+          <th scope="col">Rarity</th>
+          <th scope="col">Edition</th>
+          <th scope="col">Foiling</th>
+          <th scope="col">Artist</th>
+          <th scope="col">Other face</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          page.printings.map(({ printing, otherFace }) => (
+            <tr>
+              <th scope="row" class="collector">{printing.id}</th>
+              <td class="code">{printing.set_id}</td>
+              <td class="code">{printing.rarity === "" ? "—" : printing.rarity}</td>
+              <td class="code">{printing.edition === "" ? "—" : printing.edition}</td>
+              <td class="code">{printing.foiling === "" ? "—" : printing.foiling}</td>
+              <td>{printing.artists.length === 0 ? "—" : printing.artists.join(", ")}</td>
+              <td>
+                {otherFace === null ? (
+                  "—"
+                ) : (
+                  <a href={otherFace.href}>{otherFace.label}</a>
+                )}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+
+  {
+    page.printings.some(({ printing }) => printing.flavor_text.trim() !== "") && (
+      <div class="flavour">
+        <h3 class="apparatus-heading" id="flavour">Flavour text</h3>
+        <dl class="attributes">
+          {page.printings
+            .filter(({ printing }) => printing.flavor_text.trim() !== "")
+            .map(({ printing }) => (
+              <div class="attribute">
+                <dt class="collector">{printing.id}</dt>
+                <dd class="flavour-text">{printing.flavor_text}</dd>
+              </div>
+            ))}
+        </dl>
+      </div>
+    )
+  }
+</section>
+
+{
+  relatedShown.length > 0 && (
+    <>
+      <OrnamentalRule label="Related cards" />
+      <section class="apparatus" aria-labelledby="related">
+        <h2 class="apparatus-heading" id="related">Related cards</h2>
+        {relatedShown.map(([label, blurb, links]) => (
+          <div class="related">
+            <h3 class="related-name">{label}</h3>
+            <p class="scope">{blurb}</p>
+            <ul class="links">
+              {links.map((link) => (
+                <li class="link">
+                  <PitchJewel value={link.pitch} size="sm" />
+                  {/*
+                    `link.label`, never `link.name`. Two cards on this list can
+                    share a name; the label is what makes the two anchors
+                    distinguishable to somebody reading the links alone.
+                  */}
+                  <a href={link.href}>{link.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    </>
+  )
+}
+
+<OrnamentalRule label="Source" />
+
+<section class="apparatus" aria-labelledby="source">
+  <h2 class="apparatus-heading" id="source">Source</h2>
+  <BevelledPlate emphasis="sunken">
+    <dl class="provenance">
+      <dt>Upstream</dt>
+      <dd><a class="source-url" href={`https://github.com/${CORPUS.source.repository}`}>{CORPUS.source.repository}</a></dd>
+
+      <dt>File</dt>
+      <dd><code>{CORPUS.source.path}</code></dd>
+
+      <dt>Pinned commit</dt>
+      <dd><code class="hash">{CORPUS.source.commit}</code></dd>
+
+      <dt>Last confirmed</dt>
+      <dd><time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time></dd>
+
+      <dt>Retrieved from</dt>
+      <dd><a class="source-url" href={CORPUS.source.url}>{CORPUS.source.url}</a></dd>
+
+      <dt>File SHA-256</dt>
+      <dd><code class="hash">{CORPUS.source.sha256}</code></dd>
+
+      <dt>This card</dt>
+      <dd><code>{card.unique_id}</code></dd>
+    </dl>
+  </BevelledPlate>
+  <p class="verify">Card {page.ordinal} of {CORPUS.counts.cards}. Fetch that URL yourself, hash it and compare. Every value on this page is read from those exact bytes by deterministic code — no language model reads, rewrites or summarises any part of this corpus.</p>
+  <p class="verify">{CORPUS.rights}</p>
+</section>
+
+<style>
+  /* Layout and voice assignment only. Every value is a token — no literal
+     colour, no literal length — and no media query, because a breakpoint is a
+     length the token layer has nothing to offer. Everything below wraps or
+     scrolls instead. */
+
+  /* -- Breadcrumb ---------------------------------------------------------- */
+
+  .lineage {
+    margin-block-end: var(--of-space-looser);
+  }
+
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--of-space-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--of-type-size-small);
+  }
+
+  /* Generated content, so a separator never lands in copied text. */
+  .crumbs li + li::before {
+    content: "›";
+    color: var(--of-color-ink-muted);
+    margin-inline-end: var(--of-space-tight);
+  }
+
+  .crumb-current {
+    color: var(--of-color-ink-muted);
+  }
+
+  /* -- Masthead ------------------------------------------------------------ */
+
+  .masthead {
+    margin-block-end: var(--of-space-looser);
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    font-weight: var(--of-type-weight-medium);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--of-space-base);
+    margin-block-start: var(--of-space-tight);
+  }
+
+  /* Serif — the voice assigned to names. The layout already sets the display
+     size on `h1`; what is added here is the margin reset the flex row needs. */
+  .card-name {
+    margin-block: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* -- Shared apparatus ---------------------------------------------------- */
+
+  .apparatus {
+    margin-block: var(--of-space-looser);
+  }
+
+  /* A real heading, restyled rather than downgraded to a `<p>`: the level is
+     what a screen reader navigates by, and the mono micro type is what keeps it
+     from shouting over the card. Same idiom as the rules page. */
+  .apparatus-heading {
+    margin-block: 0 var(--of-space-base);
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    font-weight: var(--of-type-weight-medium);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .scope {
+    margin-block: 0 var(--of-space-base);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+    line-height: var(--of-type-leading-loose);
+  }
+
+  .void {
+    margin: 0;
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+  }
+
+  .verify {
+    margin-block: var(--of-space-base) 0;
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-micro);
+    line-height: var(--of-type-leading-loose);
+  }
+
+  /* -- Stats --------------------------------------------------------------- */
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-loose);
+    margin: 0;
+  }
+
+  .stat dt {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .stat dd {
+    margin: 0;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-title);
+    color: var(--of-color-ink);
+  }
+
+  /* -- Printed text -------------------------------------------------------- */
+
+  /* `pre-line` collapses runs of spaces but keeps the newlines, which is the
+     only formatting the printed text carries. Nothing here is reflowed. */
+  .card-text {
+    margin: 0;
+    white-space: pre-line;
+    font-size: var(--of-type-size-large);
+    line-height: var(--of-type-leading-loose);
+  }
+
+  /* -- Attributes ---------------------------------------------------------- */
+
+  .attributes {
+    display: grid;
+    gap: var(--of-space-base);
+    margin: 0;
+  }
+
+  .attribute {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--of-space-base);
+  }
+
+  .attribute dt {
+    flex: 0 0 auto;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .attribute dd {
+    flex: 1 1 60%;
+    margin: 0;
+    font-size: var(--of-type-size-small);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Not a `StatePill`: a keyword is not a state, and the notch means "this
+     carries state" everywhere else in the system. A hairline outline is the
+     honest weight for a tag. */
+  .tag {
+    padding-block: var(--of-space-tightest);
+    padding-inline: var(--of-space-tight);
+    border: var(--of-bevel-width) solid var(--of-color-rule);
+    border-radius: var(--of-bevel-radius);
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    color: var(--of-color-ink-muted);
+  }
+
+  /* -- Legality ------------------------------------------------------------ */
+
+  .formats {
+    display: grid;
+    gap: var(--of-space-looser);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .format {
+    padding-block-start: var(--of-space-base);
+    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  }
+
+  .format-name {
+    margin-block: 0 var(--of-space-tight);
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-large);
+    letter-spacing: var(--of-type-tracking-tight);
+    color: var(--of-color-ink);
+  }
+
+  .states {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-base);
+    margin: 0 0 var(--of-space-base);
+    padding: 0;
+    list-style: none;
+  }
+
+  .state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--of-space-tight);
+  }
+
+  .since {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    color: var(--of-color-ink-muted);
+  }
+
+  /* The audit trail, always visible. Wrapping key/value pairs rather than a
+     grid, so a long date never forces a horizontal scroll. */
+  .evidence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-tight) var(--of-space-base);
+    margin: 0;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+  }
+
+  .fact {
+    display: flex;
+    gap: var(--of-space-tightest);
+  }
+
+  .fact dt {
+    color: var(--of-color-ink-faint);
+  }
+
+  .fact dt::after {
+    content: ":";
+  }
+
+  .fact dd {
+    margin: 0;
+    color: var(--of-color-ink-muted);
+  }
+
+  /* An absent key is a different claim from a false one, so it is dimmer and
+     prints `—` rather than `false`. */
+  .fact[data-present="false"] dd {
+    color: var(--of-color-ink-faint);
+  }
+
+  /* -- Printings ----------------------------------------------------------- */
+
+  /* The table is the one thing on this page that can genuinely exceed the
+     measure — 50 printings of seven columns — so it scrolls inside its own box
+     rather than making the document scroll sideways. */
+  .scroller {
+    overflow-x: auto;
+  }
+
+  .printings {
+    inline-size: 100%;
+    border-collapse: collapse;
+    font-size: var(--of-type-size-small);
+  }
+
+  .printings th,
+  .printings td {
+    padding-block: var(--of-space-tight);
+    padding-inline-end: var(--of-space-base);
+    text-align: start;
+    vertical-align: baseline;
+    border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+    white-space: nowrap;
+  }
+
+  .printings thead th {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    font-weight: var(--of-type-weight-medium);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .collector,
+  .code {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-small);
+    letter-spacing: var(--of-type-tracking-mono);
+  }
+
+  /* The citable identity of a printing, so one click takes all of it. */
+  .collector {
+    color: var(--of-color-ink);
+    font-weight: var(--of-type-weight-medium);
+    user-select: all;
+  }
+
+  .code {
+    color: var(--of-color-ink-muted);
+  }
+
+  .flavour {
+    margin-block-start: var(--of-space-looser);
+  }
+
+  /* Serif, because flavour text is prose rather than data — and italic, which
+     is how it is set on the card itself. */
+  .flavour-text {
+    font-family: var(--of-type-family-serif);
+    font-style: italic;
+    color: var(--of-color-ink-muted);
+  }
+
+  /* -- Related ------------------------------------------------------------- */
+
+  .related {
+    margin-block-end: var(--of-space-looser);
+  }
+
+  .related-name {
+    margin-block: 0 var(--of-space-tight);
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-large);
+    letter-spacing: var(--of-type-tracking-tight);
+    color: var(--of-color-ink);
+  }
+
+  .links {
+    display: grid;
+    gap: var(--of-space-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--of-space-tight);
+  }
+
+  /* -- Provenance ---------------------------------------------------------- */
+
+  .provenance {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: var(--of-space-tight) var(--of-space-loose);
+    margin: 0;
+  }
+
+  .provenance dt {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+    white-space: nowrap;
+  }
+
+  .provenance dd {
+    margin: 0;
+    font-size: var(--of-type-size-small);
+  }
+
+  .source-url,
+  .hash {
+    overflow-wrap: anywhere;
+  }
+
+  /* The table caption names the table for a screen reader without repeating the
+     `<h2>` on screen. Sized from `space.hair` rather than collapsed to zero: a
+     zero-area element is skipped by some screen readers. Idiom copied verbatim
+     from `RulesSearch.svelte`. */
+  .visually-hidden {
+    position: absolute;
+    inline-size: var(--of-space-hair);
+    block-size: var(--of-space-hair);
+    margin: calc(var(--of-space-hair) * -1);
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

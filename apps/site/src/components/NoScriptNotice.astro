@@ -1,35 +1,48 @@
 ---
 /**
- * What the search field does when JavaScript is off — said out loud, on the
- * page, before anyone types into it.
+ * What a search field does when JavaScript is off — said out loud, on the page,
+ * before anyone types into it.
  *
- * WHY THIS EXISTS. The field is a real `GET` form, so a browser with no islands
- * running still produces `/search?q=dominate` and still puts a shareable URL in
- * the address bar. What it cannot do is *answer* it: the ranking runs in the
- * island, the build is static, and there is no server to render a query string
- * into results. Without this block the failure is silent — you type, you submit,
- * you land on a page with an empty field, no count and no results, and nothing
- * tells you why. `docs/PLAN.md`, "Rules that hold across every phase": "degrade
- * visibly … a tool that lies about freshness is worse than one obviously
- * behind." A silent failure is the one shape that rule forbids, so this turns it
- * into a stated one.
+ * WHY THIS EXISTS. Every field on this site is a real `GET` form, so a browser
+ * with no islands running still produces `/search?q=dominate` or
+ * `/cards?q=banned:cc` and still puts a shareable URL in the address bar. What
+ * it cannot do is *answer* it: the ranking runs in the island, the build is
+ * static, and there is no server to render a query string into results. Without
+ * this block the failure is silent — you type, you submit, you land on a page
+ * with an empty field, no count and no results, and nothing tells you why.
+ * `docs/PLAN.md`, "Rules that hold across every phase": "degrade visibly … a
+ * tool that lies about freshness is worse than one obviously behind." A silent
+ * failure is the one shape that rule forbids, so this turns it into a stated
+ * one.
  *
- * AND IT NAMES THE WAY THROUGH. The corpus is not gated behind the island:
- * every one of the 1,278 sections is its own statically built page at
- * `/cr/<number>`, and the chapter list under the field is nine ordinary links
- * into it. So the honest message is not "this is broken" but "typing is the part
- * that needs JavaScript; the addresses do not" — which is the whole argument for
+ * AND IT NAMES THE WAY THROUGH. Neither corpus is gated behind an island: 1,278
+ * rules sections and 5,841 card URLs are each their own statically built page.
+ * So the honest message is not "this is broken" but "typing is the part that
+ * needs JavaScript; the addresses do not" — which is the whole argument for
  * `docs/DESIGN.md`'s "every view is a URL".
  *
+ * THE EXAMPLE IS A REQUIRED PROP, NOT A DEFAULT. This component was written for
+ * `/search` and hard-coded that page's example query and its "nine chapter
+ * links" sentence. When `/cards` mounted the same component, both sentences
+ * became false there — the shape of failure this project calls worse than being
+ * obviously behind. A default would have let that happen silently a second
+ * time, so the caller has to say which field it is describing, and the way
+ * through is a slot rather than a string this component guesses at.
+ *
  * IT SITS ABOVE THE FIELD, DELIBERATELY. The island renders its own hint, rule,
- * count and chapter browse, so anything a page places after it lands ten rows
- * below the thing it describes. An explanation of a control has to reach the eye
- * before the control does, and for a reader with scripting off the field alone
- * is not yet "the thing you came to do".
+ * count and browse, so anything a page places after it lands ten rows below the
+ * thing it describes. An explanation of a control has to reach the eye before
+ * the control does.
  *
  * WRITTEN, NEVER GENERATED. Interface wording by a person, checked in — the
  * same rule every other string on these surfaces is held to.
  */
+interface Props {
+  /** The address the form submits to, with an example query — `/search?q=dominate`. */
+  example: string;
+}
+
+const { example } = Astro.props;
 ---
 
 <noscript>
@@ -40,7 +53,7 @@
     output.
   -->
   <p class="degraded">
-    <strong>Live search needs JavaScript.</strong> The field below still submits to a real address — <code>/search?q=dominate</code> — but with scripting off nothing on that page answers it, so you will arrive at an empty field rather than at results. Every section is addressable without it: <code>/cr/8.3.4b</code> is the section cited as <code>cr:8.3.4b</code>, and the chapter list under the field is nine links into the same corpus.
+    <strong>Live search needs JavaScript.</strong> The field below still submits to a real address — <code>{example}</code> — but with scripting off nothing on that page answers it, so you will arrive at an empty field rather than at results. <slot />
   </p>
 </noscript>
 

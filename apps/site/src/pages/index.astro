@@ -46,6 +46,9 @@ import NoScriptNotice from "../components/NoScriptNotice.astro";
 import RulesSearch from "../components/RulesSearch.svelte";
 import { buildIndex, type RulesCorpus } from "../lib/search";
 import corpusJson from "../../../../data/rules/cr-2.14.0.json?raw";
+// Build-time only — this is frontmatter, not an island, so the 16 MB card
+// corpus is read on the build machine and none of it reaches a browser.
+import { CORPUS as CARDS } from "../lib/cards";
 
 /**
  * The corpus is read here, at build time, and the index is built from it — the
@@ -74,6 +77,7 @@ const index = buildIndex(corpus);
  * and a count copied by hand are two more things to rot at the next release.
  */
 const sections = corpus.sections.length.toLocaleString("en-GB");
+const cards = CARDS.counts.cards.toLocaleString("en-GB");
 const published = new Date(`${corpus.publishedDateIso}T00:00:00Z`).toLocaleDateString(
   "en-GB",
   { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" },
@@ -92,7 +96,7 @@ const bulkExport =
 
   <!-- Above the field, because it explains the field. Renders for nobody with
        scripting on, and for everybody without it. -->
-  <NoScriptNotice />
+  <NoScriptNotice example="/search?q=dominate">Every section is addressable without it: <code>/cr/8.3.4b</code> is the section cited as <code>cr:8.3.4b</code>, and the chapter list under the field is nine links into the same corpus.</NoScriptNotice>
 
   <!--
     `client:load`, not `client:visible` or `client:idle`. On this page the field
@@ -129,7 +133,11 @@ const bulkExport =
   </p>
 
   <p>
-    Not yet: the deck checker and legality as of a date, version diffs, the card layer, and the judge-attributed interaction record. Nothing above hides behind a placeholder — if a surface is not here, it is not built.
+    <strong>{cards}</strong> cards, pinned to an upstream commit and synced rather than curated, each on its own permanent URL with its printed text, its printings and its per-format legality — and every legality verdict prints the upstream flags it was derived from, because <a href="/card/winters-wail">a card can be two things at once</a> and a tool that collapses that is a tool that is wrong. <a href="/cards">Search the cards</a>.
+  </p>
+
+  <p>
+    Not yet: legality as of a date, the deck checker, version diffs, and the judge-attributed interaction record. Nothing above hides behind a placeholder — if a surface is not here, it is not built.
   </p>
 
   <p>

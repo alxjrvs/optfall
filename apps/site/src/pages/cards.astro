@@ -1,0 +1,99 @@
+---
+/**
+ * `/cards` — and `/cards?q=banned:cc`, which is the same page with an answer on
+ * it.
+ *
+ * THE URL IS THE POINT. `docs/DESIGN.md`: "Every view is a URL. Scryfall's real
+ * product is the link you paste into a conversation to settle it." So the query
+ * lives in the address bar, not in component state that evaporates when the tab
+ * closes — and the island reads it back on load, which is what makes a pasted
+ * link render the results the sender was looking at.
+ *
+ * THE INDEX IS BUILT HERE, ONCE, AT BUILD TIME, FROM `CARD_PAGES`. This
+ * frontmatter runs during `astro build` and never again: there is no server to
+ * run it on. It is built from the same shaped pages `/card/<slug>` renders
+ * rather than from the raw corpus, which is what makes it impossible for a
+ * search result and the page it links to to disagree about a slug, a label or a
+ * legality verdict — the derivation happens once, in `lib/cards.ts`, and both
+ * surfaces read it.
+ *
+ * WHAT THE ISLAND RECEIVES, AND WHAT IT DOES NOT. About 470 KB of index: card
+ * labels, slugs, type lines, printed stats, keyword and set memberships, the
+ * per-format verdict vector, and an inverted index over printed card text. Not
+ * the corpus — 16 MB of printings, artists, flavour text and image URLs stays
+ * on the build machine, and the card page is where it is served from. That
+ * split is the same one `/search` makes, for the same reason: the index ships
+ * what *ranking* needs, and the permalink page is the thing the field exists to
+ * send you to.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import NoScriptNotice from "../components/NoScriptNotice.astro";
+import CardSearch from "../components/CardSearch.svelte";
+import { buildCardIndex } from "../lib/card-search";
+import { CARD_PAGES, CORPUS, LAST_CONFIRMED, NAME_PAGES } from "../lib/cards";
+
+const index = buildCardIndex(CARD_PAGES, {
+  commit: CORPUS.source.commit,
+  confirmed: LAST_CONFIRMED,
+});
+
+/**
+ * Stated rather than typed into the prose. "Degrade visibly" is a project-wide
+ * rule — every surface shows when its data was last confirmed — and a count
+ * copied by hand is one more thing to rot at the next sync.
+ */
+const cards = CORPUS.counts.cards.toLocaleString("en-GB");
+const printings = CORPUS.counts.printings.toLocaleString("en-GB");
+const permalinks = (CARD_PAGES.length + NAME_PAGES.length).toLocaleString("en-GB");
+const upstream = `https://github.com/${CORPUS.source.repository}`;
+---
+
+<BaseLayout
+  title="Search the cards — Optfall"
+  description="Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from."
+>
+  <h1>Search the cards</h1>
+
+  <!--
+    THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form submits here, so a
+    reader with scripting off arrives at `/cards?q=…` with a query in the
+    address bar and no machinery on the page able to answer it. Without this
+    block that reads as an empty field and nothing else — a silent failure,
+    which is the one shape "degrade visibly" forbids.
+  -->
+  <NoScriptNotice example="/cards?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is a page listing every version.</NoScriptNotice>
+
+  <!--
+    `client:load` rather than `client:visible`: the field is the first thing on
+    the page and the whole reason anyone opened it, so it is hydrated before it
+    is looked at rather than after. It is also what reads `?q=` back out of the
+    URL, which has to happen on arrival, not on scroll.
+
+    `ornament` spends the screen's one filigree on the island's own section
+    rule, between the hint and the browse — the point where the fold ends.
+  -->
+  <CardSearch index={index} ornament client:load />
+
+  <!--
+    Degrade visibly. The version, the date and the source are stated on the
+    surface that serves the data, not buried in an about page — and the source
+    is a link pinned to a commit, so the claim is checkable.
+
+    Inline elements stay on the same source line as the text around them: the
+    build compresses this HTML and drops the whitespace at a line break falling
+    immediately before an inline tag, welding words together in the output.
+  -->
+  <p class="provenance">
+    {cards} cards and {printings} printings, at {permalinks} permanent URLs, read from <a href={upstream}>{CORPUS.source.repository}</a> at commit <code>{CORPUS.source.commit}</code> and last confirmed {LAST_CONFIRMED}. Legality is present-day only and every verdict prints the upstream flags it was derived from; legality as of a date is not built yet and the query language says so rather than guessing. Nothing on this page is summarised, paraphrased or generated.
+  </p>
+
+  <p class="provenance">{CORPUS.rights}</p>
+</BaseLayout>
+
+<style>
+  .provenance {
+    margin-block-start: var(--of-space-loosest);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+  }
+</style>

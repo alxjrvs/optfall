@@ -28,7 +28,8 @@
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:repo-settings": "scripts/repo-settings.sh --check",
     "check:built-tokens": "bun scripts/check-built-tokens.ts",
-    "corpus:rules": "bun scripts/build-rules-corpus.ts"
+    "corpus:rules": "bun scripts/build-rules-corpus.ts",
+    "corpus:cards": "bun scripts/build-card-corpus.ts"
   },
   "devDependencies": {
     "@types/bun": "1.3.14",
