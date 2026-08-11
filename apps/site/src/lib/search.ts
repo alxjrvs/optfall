@@ -322,15 +322,23 @@ export function decodeIndex(encoded: EncodedIndex): SearchIndex {
  * understand is the one thing that breaks that feeling for good.
  */
 const PENDING_OPERATORS: Readonly<Record<string, string>> = {
-  pitch: "searches cards, which Optfall does not serve yet",
-  class: "searches cards, which Optfall does not serve yet",
-  type: "searches cards, which Optfall does not serve yet",
-  set: "searches cards, which Optfall does not serve yet",
-  rarity: "searches cards, which Optfall does not serve yet",
-  cost: "searches cards, which Optfall does not serve yet",
-  name: "searches cards, which Optfall does not serve yet",
-  legal: "answers legality as of a date, which is not published yet",
-  banned: "answers legality as of a date, which is not published yet",
+  // These seven searched nothing when this table was written, and the wording
+  // said so. The card layer answers them now, so the sentence changed the day
+  // it landed: an operator that WORKS ELSEWHERE is a redirection, not a
+  // pending feature, and describing it as unbuilt would be the same lie in the
+  // other direction. `docs/PLAN.md`, "degrade visibly".
+  pitch: "searches cards, which live at /cards",
+  class: "searches cards, which live at /cards",
+  type: "searches cards, which live at /cards",
+  set: "searches cards, which live at /cards",
+  rarity: "searches cards, which live at /cards",
+  cost: "searches cards, which live at /cards",
+  name: "searches cards, which live at /cards",
+  text: "searches printed card text, which lives at /cards",
+  banned: "filters cards by present-day legality, which lives at /cards",
+  // `legal:` alone is answerable at /cards; `legal:cc@2026-03-14` is not
+  // answerable anywhere yet, and that is the half worth naming here.
+  legal: "filters cards by present-day legality at /cards; legality as of a date is not published yet",
   format: "answers legality as of a date, which is not published yet",
   is: "filters judge-verified rulings, which are not published yet",
   changed: "lists what a rules version touched, which is not published yet",

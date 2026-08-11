@@ -1,5 +1,23 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  "exclude": ["dist"],
+  "compilerOptions": {
+    // `astro check` is the ONLY thing that type checks apps/site — the
+    // repository-root tsconfig covers `packages/*/src` and `scripts`, not this
+    // directory. So the site's test files are checked here or nowhere, and
+    // without Bun's ambient types `import { describe } from "bun:test"` fails
+    // to resolve and the whole check goes red.
+    //
+    // `@types/bun` is the root workspace's devDependency and is hoisted, so
+    // naming it here costs no manifest change and no lockfile change — which
+    // matters, because CI installs with `--frozen-lockfile`.
+    //
+    // Setting `types` explicitly turns OFF automatic inclusion of every other
+    // `@types/*` package. That is safe here and deliberate: astro, svelte and
+    // the Astro integrations all ship their own types through their package
+    // exports rather than through DefinitelyTyped, and `.astro/types.d.ts` is
+    // already included by path above.
+    "types": ["bun"]
+  }
 }

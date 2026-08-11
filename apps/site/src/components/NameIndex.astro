@@ -1,0 +1,240 @@
+---
+/**
+ * The disambiguation page — one name, several cards.
+ *
+ * WHY IT EXISTS. `/card/head-jab` is the URL a person guesses, types and
+ * pastes: it is the card's name with the punctuation taken out. Emitting only
+ * `/card/head-jab-1`, `-2` and `-3` would make the guessable form a 404, and a
+ * reference work whose most obvious URL is a dead end is a lookup tool
+ * pretending to be a reference. 900 names in this corpus need one.
+ *
+ * THE ENTIRE JOB OF THIS PAGE IS TELLING IDENTICAL NAMES APART, so the one
+ * thing it must not do is print the bare name three times. Every anchor carries
+ * `page.label` — the name plus its variant suffix, composed once in
+ * `cards.ts` — which is what stops a screen reader's link list from reading
+ * "Head Jab, Head Jab, Head Jab" against three different destinations (WCAG
+ * 2.4.4, and axe's `identical-links-same-purpose`). The pitch jewel beside each
+ * link states the same fact a second time in shape, numeral and colour; it is
+ * redundancy, not the mechanism.
+ *
+ * NO LEGALITY HERE, DELIBERATELY. Three cards sharing a name can be in three
+ * different states, and a summary pill on a list is the shape of claim that
+ * gets copied into an argument without the format attached. The per-format
+ * verdict, with its evidence and its date, lives one click away on each card's
+ * own page — which is the page the reader is choosing between anyway.
+ */
+import { OrnamentalRule, PitchJewel } from "optfall-components/svelte";
+
+import { LAST_CONFIRMED, type NamePage } from "../lib/cards";
+
+interface Props {
+  page: NamePage;
+}
+
+const { page } = Astro.props;
+---
+
+<nav class="lineage" aria-label="Breadcrumb">
+  <ol class="crumbs">
+    <li><a href="/">Optfall</a></li>
+    <li><a href="/cards">Cards</a></li>
+    <li><span class="crumb-current" aria-current="page">{page.name}</span></li>
+  </ol>
+</nav>
+
+<header class="masthead">
+  <p class="eyebrow">{page.cards.length} cards share this name</p>
+  <h1 class="card-name">{page.name}</h1>
+</header>
+
+<!--
+  Inline elements stay on the same source line as the text around them: the
+  build compresses this HTML and drops the whitespace at a line break falling
+  immediately before an inline tag, welding words together in the output.
+-->
+<p class="scope">
+  Each of these is a different card with its own text, stats and per-format legality. They are told apart by pitch, which is the discriminator the URL uses too. Last confirmed against upstream <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>.
+</p>
+
+<OrnamentalRule label="Versions" />
+
+{/*
+  A real level-two heading, not only the rule's accessible name. A separator's
+  name is announced when a reader reaches it in document order; a heading is
+  what a screen-reader user *navigates by*, and this list is the entire content
+  of the page. The mono micro styling is the same `apparatus-heading` idiom the
+  card page and the rules page use — restyled, never downgraded to a paragraph.
+
+  Written as a JSX-style comment rather than an HTML one on purpose: Astro emits
+  HTML comments verbatim into the built page, so a comment quoting a tag ships
+  that tag's spelling into the document. Harmless to a browser, and enough to
+  make a heading-order check read a comment as a heading — which is exactly how
+  it was found.
+*/}
+<h2 class="apparatus-heading" id="versions">Versions</h2>
+
+<ul class="versions" aria-labelledby="versions">
+  {
+    page.cards.map((card) => (
+      <li class="version">
+        <PitchJewel value={card.pitch} size="lg" />
+        <div class="body">
+          {/* `card.label`, never `card.card.name` — see the note at the top. */}
+          <p class="line">
+            <a class="name" href={card.href}>{card.label}</a>
+          </p>
+          <p class="meta">
+            {card.card.type_text.trim() === ""
+              ? "Flesh and Blood card"
+              : card.card.type_text}
+          </p>
+          {card.stats.length > 0 && (
+            <dl class="stats">
+              {card.stats.map((stat) => (
+                <div class="stat">
+                  <dt>{stat.label}</dt>
+                  <dd>{stat.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  /* Layout and voice assignment only; every value is a token. */
+
+  .lineage {
+    margin-block-end: var(--of-space-looser);
+  }
+
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--of-space-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--of-type-size-small);
+  }
+
+  .crumbs li + li::before {
+    content: "›";
+    color: var(--of-color-ink-muted);
+    margin-inline-end: var(--of-space-tight);
+  }
+
+  .crumb-current {
+    color: var(--of-color-ink-muted);
+  }
+
+  .masthead {
+    margin-block-end: var(--of-space-loose);
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    font-weight: var(--of-type-weight-medium);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .card-name {
+    margin-block: var(--of-space-tight) 0;
+    overflow-wrap: anywhere;
+  }
+
+  .scope {
+    margin-block: 0 var(--of-space-base);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+    line-height: var(--of-type-leading-loose);
+  }
+
+  /* The label voice on a real heading — same idiom as the card and rules
+     pages, so the three surfaces navigate alike. */
+  .apparatus-heading {
+    margin-block: 0 var(--of-space-base);
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    font-weight: var(--of-type-weight-medium);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  /* Density without clutter: one hairline between rows, no cards, no shadows —
+     the same row idiom the rules search results use. */
+  .versions {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .version {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--of-space-base);
+    padding-block: var(--of-space-base);
+    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  }
+
+  .body {
+    flex: 1 1 60%;
+    min-inline-size: 0;
+  }
+
+  .line {
+    margin: 0;
+  }
+
+  /* Serif — the voice assigned to names. */
+  .name {
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-title);
+    letter-spacing: var(--of-type-tracking-tight);
+  }
+
+  .meta {
+    margin-block: var(--of-space-tightest) 0;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-base);
+    margin-block: var(--of-space-tight) 0;
+  }
+
+  .stat {
+    display: flex;
+    align-items: baseline;
+    gap: var(--of-space-tightest);
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+  }
+
+  .stat dt {
+    color: var(--of-color-ink-faint);
+    text-transform: uppercase;
+  }
+
+  .stat dd {
+    margin: 0;
+    color: var(--of-color-ink-muted);
+  }
+</style>
