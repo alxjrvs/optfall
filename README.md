@@ -23,6 +23,7 @@ confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
 |---|---|
 | [`docs/PLAN.md`](docs/PLAN.md) | Phased build plan — what gets built, in what order, and why |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Design language, component system, and screen designs |
+| [`docs/SCRYFALL-GAP.md`](docs/SCRYFALL-GAP.md) | Comparative analysis against Scryfall, and the remove/update/extend plan to close it |
 | [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) | The permission envelope, as an operational checklist with enforcement points |
 | [`docs/DATA-TERMS.md`](docs/DATA-TERMS.md) | Terms on the data Optfall publishes, and what is *not* ours to license |
 | [`docs/PHASE-0-STATUS.md`](docs/PHASE-0-STATUS.md) | What Phase 0 delivered, and every finding left unfixed |
