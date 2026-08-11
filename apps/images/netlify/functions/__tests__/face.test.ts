@@ -9,13 +9,13 @@
  */
 import { describe, expect, test } from "bun:test";
 
-import { placeholderSvg, TIERS } from "./_placeholder";
+import { placeholderSvg, TIERS } from "../_placeholder";
 import {
   makeFaceHandler,
   parseFacePath,
   parsePlaceholderPath,
   type FaceBlobStore,
-} from "./face";
+} from "../face";
 
 /** A store holding exactly the keys given, and nothing else. */
 function storeWith(keys: readonly string[]): FaceBlobStore {
