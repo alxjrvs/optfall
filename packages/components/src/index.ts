@@ -48,7 +48,8 @@ export type PrimitiveName =
   | "mark"
   | "card-face"
   | "search-field"
-  | "result-row";
+  | "result-row"
+  | "stat-glyph";
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
@@ -62,6 +63,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "card-face",
   "search-field",
   "result-row",
+  "stat-glyph",
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -94,6 +96,21 @@ export interface PitchJewelProps {
  * to its `corner` snippet, and `FiligreeCorner` consumes it to decide which way
  * to mirror the motif. Declared twice, the two sets agreed by coincidence.
  */
+/**
+ * The printed stats a card can carry, in the order a card face reads.
+ *
+ * Closed on purpose: each one owns a silhouette in `StatGlyph`, and a seventh
+ * stat would need a seventh shape that is not the pitch jewel's octagon — which
+ * is a design decision rather than a type widening.
+ */
+export type StatKind =
+  | "cost"
+  | "power"
+  | "defence"
+  | "life"
+  | "intellect"
+  | "arcane";
+
 export type PlateCorner = "start-start" | "start-end" | "end-start" | "end-end";
 
 export const PLATE_CORNERS: readonly PlateCorner[] = [
