@@ -1,0 +1,1113 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "the-fab-cube/flesh-and-blood-cards",
+    "commit": "7a4822f3dab483a52a78206b7ad8696394e02dc0",
+    "files": [
+      "set.json",
+      "rarity.json",
+      "edition.json",
+      "foiling.json"
+    ]
+  },
+  "rights": "Set names are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. Only Optfall's structural work over this data — the field selection, the upstream pin and this envelope — is openly licensed.",
+  "counts": {
+    "sets": 118,
+    "dated": 101
+  },
+  "decode": {
+    "rarity": {
+      "C": "Common",
+      "R": "Rare",
+      "S": "Super Rare",
+      "M": "Majestic",
+      "L": "Legendary",
+      "F": "Fabled",
+      "T": "Token",
+      "B": "Basic",
+      "V": "Marvel",
+      "P": "Promo"
+    },
+    "edition": {
+      "A": "Alpha",
+      "F": "First",
+      "U": "Unlimited",
+      "N": "No specified edition (used for promos, non-set releases, etc.)"
+    },
+    "foiling": {
+      "S": "Standard",
+      "R": "Rainbow Foil",
+      "C": "Cold Foil",
+      "G": "Gold Cold Foil"
+    }
+  },
+  "sets": [
+    {
+      "id": "1HB",
+      "name": "History Pack 1 - Bravo Blitz Deck",
+      "released": "2023-02-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "1HD",
+      "name": "History Pack 1 - Dash Blitz Deck",
+      "released": "2023-02-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "1HK",
+      "name": "History Pack 1 - Kano Blitz Deck",
+      "released": "2023-02-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "1HP",
+      "name": "History Pack 1",
+      "released": "2022-05-06",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "1HR",
+      "name": "History Pack 1 - Rhinar Blitz Deck",
+      "released": "2023-02-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "1HT",
+      "name": "History Pack 1 - Dorinthea Blitz Deck",
+      "released": "2023-02-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "1HV",
+      "name": "History Pack 1 - Viserai Blitz Deck",
+      "released": "2023-02-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AAC",
+      "name": "Armory Deck - Arakni",
+      "released": "2025-12-12",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AAZ",
+      "name": "Armory Deck - Azalea",
+      "released": "2024-08-02",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AGB",
+      "name": "Armory Deck - Gravy Bones",
+      "released": "2025-05-30",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AHA",
+      "name": "Armory Deck Origins - Hala",
+      "released": "2026-04-17",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AIO",
+      "name": "Armory Deck - Dash I/O",
+      "released": "2024-10-18",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AJV",
+      "name": "Armory Deck Origins - Jarl Vetreiði",
+      "released": "2024-11-29",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AKO",
+      "name": "Armory Deck - Kayo",
+      "released": "2024-05-03",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AMX",
+      "name": "Amory Deck - Maxx",
+      "released": "2025-04-17",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ANQ",
+      "name": "Compendium of Rathe - Antiquity Pack",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AOL",
+      "name": "Armory Deck - Olympia",
+      "released": "2026-08-07",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "APR",
+      "name": "Armory Deck Legends - Prism",
+      "released": "2025-07-24",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "APS",
+      "name": "Armory Deck - Pleiades",
+      "released": "2025-09-19",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ARA",
+      "name": "Arakni Blitz Deck",
+      "released": "2023-03-24",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ARC",
+      "name": "Arcane Rising",
+      "released": "2020-03-27",
+      "outOfPrint": true,
+      "editions": [
+        "F",
+        "U"
+      ]
+    },
+    {
+      "id": "ARK",
+      "name": "Arakni Blitz Deck",
+      "released": "2025-01-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ARR",
+      "name": "Armory Deck - Rhinar",
+      "released": "2025-11-14",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ASB",
+      "name": "Armory Deck - Boltyn",
+      "released": "2024-07-12",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ASR",
+      "name": "Armory Deck - Ira",
+      "released": "2025-07-11",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AST",
+      "name": "Armory Deck - Aurora",
+      "released": "2025-03-14",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AUA",
+      "name": "Aurora Blitz Deck",
+      "released": "2024-09-20",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AUR",
+      "name": "First Strike - Aurora",
+      "released": "2024-08-23",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AVS",
+      "name": "Armory Deck Legends - Viserai",
+      "released": "2025-07-24",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AZL",
+      "name": "Azalea Blitz Deck",
+      "released": "2023-03-24",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AZS",
+      "name": "Armory Deck - Zyggy",
+      "released": "2026-05-29",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "BDD",
+      "name": "Bravo Demo Deck",
+      "released": "2025-08-08",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "BEN",
+      "name": "Benji Blitz Deck",
+      "released": "2023-03-24",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "BET",
+      "name": "Betsy Blitz Deck",
+      "released": "2024-02-02",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "BOL",
+      "name": "Boltyn Blitz Deck",
+      "released": "2021-05-07",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "BRI",
+      "name": "Briar Blitz Deck",
+      "released": "2021-11-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "BVO",
+      "name": "Bravo Hero Deck",
+      "released": "2019-10-11",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "CHN",
+      "name": "Chane Blitz Deck",
+      "released": "2021-05-07",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "CIN",
+      "name": "Cindra Blitz Deck",
+      "released": "2025-01-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "CON",
+      "name": "Convention Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "CRU",
+      "name": "Crucible of War",
+      "released": "2020-08-28",
+      "outOfPrint": true,
+      "editions": [
+        "F",
+        "U"
+      ]
+    },
+    {
+      "id": "DDD",
+      "name": "Dorinthea Demo Deck",
+      "released": "2026-08-07",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "DRO",
+      "name": "Dromai Blitz Deck",
+      "released": "2022-06-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "DTD",
+      "name": "Dusk till Dawn",
+      "released": "2023-07-23",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "DVR",
+      "name": "Classic Battles: Rhinar vs Dorinthea – Dorinthea",
+      "released": "2022-05-27",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "DYN",
+      "name": "Dynasty",
+      "released": "2022-11-11",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ELE",
+      "name": "Tales of Aria",
+      "released": "2021-09-24",
+      "outOfPrint": true,
+      "editions": [
+        "F",
+        "U"
+      ]
+    },
+    {
+      "id": "ENG",
+      "name": "Enigma Blitz Deck",
+      "released": "2024-05-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "EVO",
+      "name": "Bright Lights",
+      "released": "2023-10-06",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "EVR",
+      "name": "Everfest",
+      "released": "2022-02-04",
+      "outOfPrint": true,
+      "editions": [
+        "F"
+      ]
+    },
+    {
+      "id": "FAB",
+      "name": "Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "FAI",
+      "name": "Fai Blitz Deck",
+      "released": "2022-06-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "FLR",
+      "name": "Florian Blitz Deck",
+      "released": "2024-09-20",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "FNG",
+      "name": "Fang Blitz Deck",
+      "released": "2025-01-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "GEM",
+      "name": "GEM Pack Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "HER",
+      "name": "Hero Card Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "HNT",
+      "name": "The Hunted",
+      "released": "2025-01-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "HVY",
+      "name": "Heavy Hitters",
+      "released": "2024-02-02",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "IAR",
+      "name": "??? Set 20 ???",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "IRA",
+      "name": "Ira Welcome Deck",
+      "released": "2019-08-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "JDG",
+      "name": "Judge Unique Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "KAT",
+      "name": "Katsu Blitz Deck",
+      "released": "2023-03-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "KSI",
+      "name": "Kassai Blitz Deck",
+      "released": "2024-02-02",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "KSU",
+      "name": "Katsu Hero Deck",
+      "released": "2019-10-11",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "KYO",
+      "name": "Kayo Blitz Deck",
+      "released": "2024-02-02",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "LEV",
+      "name": "Levia Blitz Deck",
+      "released": "2021-05-07",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "LGS",
+      "name": "Local Game Store Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "LSS",
+      "name": "LSS Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "LXI",
+      "name": "Lexi Blitz Deck",
+      "released": "2021-11-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "MON",
+      "name": "Monarch",
+      "released": "2021-05-07",
+      "outOfPrint": true,
+      "editions": [
+        "F",
+        "U"
+      ]
+    },
+    {
+      "id": "MPG",
+      "name": "Mastery Pack Guardian",
+      "released": "2025-08-08",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "MPW",
+      "name": "Mastery Pack Warrior",
+      "released": "2026-07-08",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "MST",
+      "name": "Part the Mistveil",
+      "released": "2024-05-31",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "NUU",
+      "name": "Nuu Blitz Deck",
+      "released": "2024-05-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "OLA",
+      "name": "Olympia Blitz Deck",
+      "released": "2024-02-02",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "OLD",
+      "name": "Oldhim Blitz Deck",
+      "released": "2021-11-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "OMN",
+      "name": "Omens of the Third Age",
+      "released": "2026-06-05",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "OSC",
+      "name": "Oscilio Blitz Deck",
+      "released": "2024-09-20",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "OUT",
+      "name": "Outsiders",
+      "released": "2023-03-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "OXO",
+      "name": "Slingshot Underground Promos",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "PEN",
+      "name": "Compendium of Rathe",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "PSM",
+      "name": "Prism Blitz Deck",
+      "released": "2021-05-07",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "RHI",
+      "name": "Rhinar Blitz Deck",
+      "released": "2024-02-02",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "RIP",
+      "name": "Riptide Blitz Deck",
+      "released": "2023-03-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "RNR",
+      "name": "Rhinar Hero Deck",
+      "released": "2019-10-11",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ROS",
+      "name": "Rosetta",
+      "released": "2024-09-20",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "RVD",
+      "name": "Classic Battles: Rhinar vs Dorinthea – Rhinar",
+      "released": "2022-05-27",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SAR",
+      "name": "Silver Age Chapter 2 - Arakni, Web of Deceit",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SAZ",
+      "name": "Silver Age Chapter 2 - Azalea",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SBA",
+      "name": "Silver Age Chapter 3 - Briar",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SBL",
+      "name": "Silver Age Chapter 3 - Boltyn",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SBR",
+      "name": "Silver Age Chapter 1 - Bravo, Flattering Showman",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SBZ",
+      "name": "Silver Age Chapter 3 - Blaze, Firemind",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SDA",
+      "name": "Silver Age Chapter 1 - Dash",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SDO",
+      "name": "Silver Age Chapter 2 - Dorinthea",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SEA",
+      "name": "High Seas",
+      "released": "2025-06-06",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SEN",
+      "name": "Silver Age Chapter 2 - Enigma",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SFA",
+      "name": "Silver Age Chapter 2 - Fai",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SGB",
+      "name": "Silver Age Chapter 3 - Gravy Bones",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SIY",
+      "name": "Silver Age Chapter 1 - Iyslander",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SKA",
+      "name": "Silver Age Chapter 1 - Kayo",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SLY",
+      "name": "Silver Age Chapter 3 - Lyath Goldmane",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SMP",
+      "name": "Smash Palace",
+      "released": "2025-08-29",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SUP",
+      "name": "Super Slam",
+      "released": "2025-09-26",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SVI",
+      "name": "Silver Age Chapter 1 - Viserai",
+      "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "TCC",
+      "name": "Round the Table: TCC X LSS",
+      "released": "2023-09-29",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "TEA",
+      "name": "Dorinthea Hero Deck",
+      "released": "2019-10-11",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "TER",
+      "name": "First Strike - Terra",
+      "released": "2024-08-23",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "TNP",
+      "name": "Tournament Pack",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "UPR",
+      "name": "Uprising",
+      "released": "2022-06-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "UZU",
+      "name": "Uzuri Blitz Deck",
+      "released": "2023-03-24",
+      "outOfPrint": true,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "VER",
+      "name": "Verdance Blitz Deck",
+      "released": "2024-09-20",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "VIC",
+      "name": "Victor Goldmane Blitz Deck",
+      "released": "2024-02-02",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "WIN",
+      "name": "Worlds / Pro Tour Prize Cards",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "WOD",
+      "name": "Arakni, Web of Deceit Blitz Deck",
+      "released": "2025-01-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "WTR",
+      "name": "Welcome to Rathe",
+      "released": "2019-10-11",
+      "outOfPrint": true,
+      "editions": [
+        "A",
+        "U"
+      ]
+    },
+    {
+      "id": "XXX",
+      "name": "OP Event Tokens",
+      "released": null,
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "ZEN",
+      "name": "Zen Blitz Deck",
+      "released": "2024-05-31",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    }
+  ]
+}

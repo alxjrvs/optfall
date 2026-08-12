@@ -1,0 +1,168 @@
+---
+/**
+ * `/sets/<code>` — one set, and the cards Optfall carries from it.
+ *
+ * A SET PAGE IS A LIST, NOT A SEARCH RESULT, and the distinction is why this
+ * exists rather than redirecting to `/cards?q=set:MST`. The query answers "what
+ * matches"; this answers "what is in this set", which is a fact about the set
+ * rather than about a question somebody asked. It also gives the set a
+ * permanent URL, which a query string is not — `docs/DESIGN.md`: "Every view is
+ * a URL … the link you paste into a conversation to settle it."
+ *
+ * Emitted only for sets that carry a card. A page listing nothing is a 404 that
+ * renders, and upstream publishes several sets with no cards in this corpus.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { CARD_PAGES } from "../../lib/cards";
+import { SETS, editionName, hrefForSet, setFor } from "../../lib/sets";
+
+export function getStaticPaths() {
+  /*
+    Built once for the whole route rather than per page: 112 set pages each
+    re-scanning 4,941 cards is that work 112 times for an answer that does not
+    change. One pass, grouped.
+  */
+  const bySet = new Map<string, typeof CARD_PAGES>();
+  for (const page of CARD_PAGES) {
+    for (const id of new Set(page.card.printings.map((printing) => printing.set_id))) {
+      const existing = bySet.get(id);
+      if (existing) (existing as unknown as (typeof CARD_PAGES)[number][]).push(page);
+      else bySet.set(id, [page] as unknown as typeof CARD_PAGES);
+    }
+  }
+
+  return [...bySet.entries()]
+    .filter(([id]) => setFor(id) !== undefined)
+    .map(([id, cards]) => ({
+      params: { code: id.toLowerCase() },
+      props: { id, cards },
+    }));
+}
+
+interface Props {
+  id: string;
+  cards: typeof CARD_PAGES;
+}
+
+const { id, cards } = Astro.props;
+const set = setFor(id);
+
+/* Corpus order is upstream's name sort, which is the order a set list wants. */
+const listed = cards;
+---
+
+{
+  set === undefined ? null : (
+    <BaseLayout
+      title={`${set.name} — Optfall`}
+      description={`The ${listed.length} Flesh and Blood cards Optfall carries from ${set.name} (${set.id}), each with its printed text, its printings and its per-format legality.`}
+    >
+      <nav class="lineage" aria-label="Breadcrumb">
+        <ol class="crumbs">
+          <li><a href="/">Optfall</a></li>
+          <li><a href="/sets">Sets</a></li>
+          <li><span aria-current="page">{set.name}</span></li>
+        </ol>
+      </nav>
+
+      <header class="masthead">
+        <p class="eyebrow">Set {set.id}</p>
+        <h1>{set.name}</h1>
+        <p class="meta">
+          {set.released === null ? (
+            "No published release date."
+          ) : (
+            <>Released <time datetime={set.released}>{set.released}</time>.</>
+          )}
+          {" "}
+          {listed.length.toLocaleString("en-GB")} cards in this corpus.
+          {set.outOfPrint && " Out of print."}
+          {set.editions.length > 0 && ` Editions: ${set.editions.map(editionName).join(", ")}.`}
+        </p>
+      </header>
+
+      <ul class="cards">
+        {listed.map((card) => (
+          <li>
+            <a href={card.href}>{card.label}</a>
+          </li>
+        ))}
+      </ul>
+
+      <p class="provenance">
+        Read from <a href={`https://github.com/${SETS.source.repository}`}>{SETS.source.repository}</a> at commit <code>{SETS.source.commit}</code>. A card appears here when any of its printings belongs to this set, so a card reprinted across sets is listed under each.
+      </p>
+    </BaseLayout>
+  )
+}
+
+<style>
+  .lineage {
+    margin-block-end: var(--of-space-looser);
+  }
+
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-faint);
+  }
+
+  .crumbs li + li::before {
+    content: "/";
+    margin-inline-end: var(--of-space-tight);
+    color: var(--of-color-ink-faint);
+  }
+
+  .masthead {
+    margin-block-end: var(--of-space-loosest);
+  }
+
+  .masthead h1 {
+    margin-block: var(--of-space-tight) var(--of-space-base);
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-faint);
+  }
+
+  .meta {
+    margin: 0;
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+  }
+
+  /* Two or three columns where there is room, because a 400-card set is a
+     column of names and a reader is scanning rather than reading. */
+  .cards {
+    columns: var(--of-card-face-thumb);
+    column-gap: var(--of-space-loosest);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--of-type-family-serif);
+  }
+
+  .cards li {
+    break-inside: avoid;
+    padding-block: var(--of-space-tightest);
+  }
+
+  .provenance {
+    margin-block-start: var(--of-space-loosest);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+  }
+</style>
