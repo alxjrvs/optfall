@@ -85,6 +85,9 @@ import {
   type CardLink,
   type CardPage,
 } from "../lib/cards";
+import corpusJson from "../../../../data/rules/cr-2.14.0.json";
+import { buildKeywordVocabulary, rulesForCard } from "../lib/keywords";
+import { hrefForNumber, type RulesCorpus } from "../lib/search";
 import {
   boxFor,
   faceKeyFor,
@@ -146,6 +149,29 @@ const related: readonly (readonly [string, string, readonly CardLink[]])[] = [
 const relatedShown = related.filter(([, , links]) => links.length > 0);
 
 const printingCount = card.printings.length;
+
+/* -------------------------------------------------------------------------- */
+/* The rules that govern this card                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * THE JOIN NOTHING ELSE IN THE GAME MAKES. `docs/PLAN.md` Phase 4 lists
+ * "Card ↔ rules cross-reference" as a deliverable; this is it, on the surface
+ * that needs it.
+ *
+ * Both sides are published documents and the join is exact matching over a
+ * closed vocabulary the Comprehensive Rules itself defines — see `lib/keywords`
+ * for the extraction and for why this survives the no-language-model rule. A
+ * keyword either cites a rule the document names, or it appears without one.
+ * Nothing here guesses at the nearest paragraph.
+ *
+ * Built at build time from the committed corpus; the 651 KB of rules text never
+ * reaches a browser, only the identifiers do.
+ */
+const keywordRules = rulesForCard(
+  buildKeywordVocabulary(corpusJson as unknown as RulesCorpus),
+  [...card.card_keywords, ...card.ability_and_effect_keywords],
+);
 
 /* -------------------------------------------------------------------------- */
 /* The face                                                                    */
@@ -511,6 +537,34 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
         <p class="verify">Printed exactly as the upstream dataset publishes it, including its own <code>**</code> emphasis and <code>&#123;…&#125;</code> symbol markers. Optfall does not rewrite, expand or summarise card text.</p>
       </section>
 
+      {
+        keywordRules.length > 0 && (
+          <section class="apparatus" aria-labelledby="governed-by">
+            <h2 class="apparatus-heading" id="governed-by">Governed by</h2>
+            <ul class="rules-list">
+              {keywordRules.map((rule) => (
+                <li class="rules-item">
+                  <a class="rules-citation" href={hrefForNumber(rule.number)}>{rule.ruleId}</a>
+                  <span class="rules-keyword">{rule.keyword}</span>
+                  {rule.via === "family" && (
+                    /*
+                      SAID OUT LOUD, because it is a slightly weaker claim. The
+                      rules define `Specialization` once and cards instantiate
+                      it per hero, so "Briar Specialization is governed by the
+                      Specialization rule" is true but is a resolution rather
+                      than a direct hit — and a reference work should say which
+                      kind of claim it is making.
+                    */
+                    <span class="rules-via">via the general rule</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p class="verify">Each keyword printed on this card, matched to the Comprehensive Rules section that defines it. Matching is exact against the vocabulary the rules publish; a keyword the document does not define is absent here rather than guessed at.</p>
+          </section>
+        )
+      }
+
       <!--
         LEGALITY MOVES UP, INTO THE FOLD. It used to sit below the article,
         after stats, text and attributes — the fourth thing on the page. It is
@@ -857,6 +911,47 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
      control the component library does not own. */
   .evidence-fold[open] .evidence-summary {
     margin-block-end: var(--of-space-tight);
+  }
+
+  /* -- Governed by ---------------------------------------------------------- */
+
+  .rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--of-space-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rules-item {
+    display: flex;
+    align-items: baseline;
+    gap: var(--of-space-base);
+    flex-wrap: wrap;
+  }
+
+  /* Monospaced, because in this system that means you can paste it into an
+     argument — which is the entire point of a citation. */
+  .rules-citation {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-small);
+    letter-spacing: var(--of-type-tracking-mono);
+    color: var(--of-color-accent);
+  }
+
+  .rules-keyword {
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-base);
+    text-transform: capitalize;
+  }
+
+  .rules-via {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-faint);
   }
 
   /* -- Pitch version tabs --------------------------------------------------- */

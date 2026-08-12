@@ -56,6 +56,10 @@
 import { BevelledPlate, Citation, OrnamentalRule } from "optfall-components/svelte";
 
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import cardsJson from "../../../../../data/rules/cr-2.14.0.json";
+import { buildKeywordVocabulary, cardsByRule } from "../../lib/keywords";
+import { CARD_PAGES } from "../../lib/cards";
+import type { RulesCorpus } from "../../lib/search";
 import {
   CORPUS,
   LEVEL_LABEL,
@@ -82,8 +86,49 @@ interface Props {
   page: RulePage;
 }
 
+/**
+ * WHICH CARDS THIS RULE GOVERNS — the direction that makes a rules corpus worth
+ * visiting rather than merely correct.
+ *
+ * `docs/PLAN.md` Phase 4 asks for the cross-reference in both directions, and a
+ * rule that lists its cards is the half nothing else in the game has: the
+ * Comprehensive Rules is a PDF with a search box, and no tool joins it to the
+ * cards it governs.
+ *
+ * Built ONCE at module scope rather than per page. This route emits 1,278 rule
+ * pages; rebuilding a 4,941-card index for each of them would be that work
+ * 1,278 times over for an answer that does not change.
+ */
+const KEYWORD_VOCABULARY = buildKeywordVocabulary(
+  cardsJson as unknown as RulesCorpus,
+);
+
+const CARDS_BY_RULE = cardsByRule(
+  KEYWORD_VOCABULARY,
+  CARD_PAGES.map((card) => ({
+    label: card.label,
+    href: card.href,
+    keywords: [...card.card.card_keywords, ...card.card.ability_and_effect_keywords],
+  })),
+);
+
+/**
+ * How many cards a rule page lists before it stops being a rule page.
+ *
+ * `Go again` is on 1,434 cards. Printing all of them would bury the rule's own
+ * text under a directory, so the list is capped and the true total is stated —
+ * the same honesty the search results page keeps, and the link goes somewhere
+ * that can show the rest.
+ */
+const CARD_LIST_LIMIT = 24;
+
 const { page } = Astro.props;
 const { section, ancestors, children, references, previous, next, ordinal } = page;
+
+const governedCards = CARDS_BY_RULE.get(section.number) ?? [];
+const governedShown = governedCards.slice(0, CARD_LIST_LIMIT);
+/** The keyword these cards share, for the search link. Every entry agrees. */
+const governedKeyword = governedShown[0]?.keyword ?? "";
 
 const hasText = section.text.trim() !== "";
 const hasBody =
@@ -165,6 +210,34 @@ const eyebrow =
       )
     }
   </article>
+
+  {
+    governedCards.length > 0 && (
+      <>
+        <OrnamentalRule label="Cards" />
+        <section class="apparatus" aria-labelledby="governs">
+          <h2 class="apparatus-heading" id="governs">Cards this rule governs</h2>
+          <p class="scope">
+            {governedCards.length.toLocaleString("en-GB")} card{governedCards.length === 1 ? "" : "s"} print the keyword this section defines. Matched exactly against the vocabulary the Comprehensive Rules publishes — a card appears here because it carries the keyword, never because its text resembles this rule.
+          </p>
+          <ul class="governs-list">
+            {governedShown.map((card) => (
+              <li>
+                <a href={card.href}>{card.label}</a>
+              </li>
+            ))}
+          </ul>
+          {governedCards.length > governedShown.length && (
+            <p class="scope">
+              <a href={`/cards?q=${encodeURIComponent(`keyword:"${governedKeyword}"`)}`}>
+                All {governedCards.length.toLocaleString("en-GB")} in card search
+              </a>
+            </p>
+          )}
+        </section>
+      </>
+    )
+  }
 
   {
     children.length > 0 && (
@@ -250,6 +323,18 @@ const eyebrow =
 </BaseLayout>
 
 <style>
+  /* -- Cards this rule governs --------------------------------------------- */
+
+  .governs-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-tight) var(--of-space-loose);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--of-type-family-serif);
+  }
+
   /* Layout and voice assignment only. Every value is a token — no literal
      colour, no literal length — and no media query, because a breakpoint is a
      length the token layer has nothing to offer. Everything below wraps
