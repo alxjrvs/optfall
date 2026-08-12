@@ -12,7 +12,7 @@
    *
    * FOUR THINGS IT HAS TO GET RIGHT.
    *
-   * 1. **Every view is a URL.** `/cards?q=banned:cc` is a real address that
+   * 1. **Every view is a URL.** `/search?q=banned:cc` is a real address that
    *    renders those results: the query is read from the URL on load, written
    *    back as you type (`replaceState`, so the back button is not filled with
    *    keystrokes) and pushed on submit.
@@ -219,6 +219,21 @@
     submitted = query;
     syncUrl("push", query);
     field?.blur();
+
+    /*
+      ONE RESULT IS NOT A RESULT SET, IT IS THE ANSWER — the same behaviour
+      Scryfall has, and for the same reason: a page whose entire content is a
+      single row asking to be clicked has made the reader press twice for one
+      destination.
+
+      Deliberately only on SUBMIT. Arriving at a pasted `/search?q=…` link does
+      NOT redirect, because the sender chose to share a search and silently
+      turning it into a card page would rewrite what they sent. And the URL is
+      pushed first, so the back button returns to the results rather than to
+      whatever came before them.
+    */
+    const only = outcome.total === 1 ? outcome.results[0] : undefined;
+    if (only) window.location.assign(only.href);
   }
 
   /** Switching view is a navigation too, so it lands in the URL. */
@@ -251,7 +266,7 @@
 <SearchField
   label="Search the cards"
   region="Flesh and Blood cards"
-  action="/cards"
+  action="/search"
   placeholder="command and conquer"
   bind:value={query}
   bind:element={field}
@@ -427,7 +442,7 @@
   <ul class="browse">
     {#each cards.browse as [line, count] (line)}
       <li>
-        <a class="browse-link" href={`/cards?q=${encodeURIComponent(`type:"${line}"`)}`}>
+        <a class="browse-link" href={`/search?q=${encodeURIComponent(`type:"${line}"`)}`}>
           {line}
         </a>
         <span class="browse-count">{count}</span>

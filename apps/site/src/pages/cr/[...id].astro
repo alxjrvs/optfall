@@ -229,7 +229,7 @@ const eyebrow =
           </ul>
           {governedCards.length > governedShown.length && (
             <p class="scope">
-              <a href={`/cards?q=${encodeURIComponent(`keyword:"${governedKeyword}"`)}`}>
+              <a href={`/search?q=${encodeURIComponent(`keyword:"${governedKeyword}"`)}`}>
                 All {governedCards.length.toLocaleString("en-GB")} in card search
               </a>
             </p>

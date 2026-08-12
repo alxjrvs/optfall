@@ -74,10 +74,10 @@ const listed = SETS_BY_RELEASE.filter((set) => (cardsPerSet.get(set.id)?.size ??
   </ul>
 
   <p class="provenance">
-    Set names and release dates read from <a href={`https://github.com/${SETS.source.repository}`}>{SETS.source.repository}</a> at commit <code>{SETS.source.commit}</code>, the same snapshot the card corpus is pinned to. {SETS.counts.sets - listed.length} further sets are published upstream but carry no card in this corpus and are not listed.
+    From <a href={`https://github.com/${SETS.source.repository}`}>{SETS.source.repository}</a> at <code>{SETS.source.commit}</code>, the same snapshot as the cards. {SETS.counts.sets - listed.length} further sets carry no card here and are not listed.
   </p>
 
-  <p class="provenance">{SETS.rights}</p>
+  <p class="legal">{SETS.rights}</p>
 </BaseLayout>
 
 <style>
@@ -128,6 +128,13 @@ const listed = SETS_BY_RELEASE.filter((set) => (cardsPerSet.get(set.id)?.size ??
 
   .set-meta {
     margin-inline-start: auto;
+  }
+
+  .legal {
+    margin-block-start: var(--of-space-base);
+    font-size: var(--of-type-size-legal);
+    letter-spacing: var(--of-type-tracking-tight);
+    color: var(--of-color-ink-faint);
   }
 
   .provenance {

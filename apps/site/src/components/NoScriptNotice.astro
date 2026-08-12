@@ -5,7 +5,7 @@
  *
  * WHY THIS EXISTS. Every field on this site is a real `GET` form, so a browser
  * with no islands running still produces `/search?q=dominate` or
- * `/cards?q=banned:cc` and still puts a shareable URL in the address bar. What
+ * `/search?q=banned:cc` and still puts a shareable URL in the address bar. What
  * it cannot do is *answer* it: the ranking runs in the island, the build is
  * static, and there is no server to render a query string into results. Without
  * this block the failure is silent — you type, you submit, you land on a page
