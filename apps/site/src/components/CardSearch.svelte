@@ -354,6 +354,23 @@
                 height={box.height}
               />
               <span class="cell-name">{result.label}</span>
+              {#if result.matchedPitches.length < result.totalVersions}
+                <!--
+                  ONLY SOME PITCH VERSIONS MATCHED, AND SAYING SO IS NOT
+                  OPTIONAL. Four names in this corpus carry versions whose
+                  Classic Constructed ban differs — Electromagnetic Somersault
+                  red and yellow are banned, blue is legal. A `banned:cc` row
+                  that named the card and stopped would be putting a card on a
+                  banned list without saying which version was banned, which is
+                  the "collapses two true facts into one" failure the verdict
+                  model exists to prevent.
+                -->
+                <span class="cell-versions">
+                  {result.matchedPitches
+                    .map((pitch) => (pitch === 0 ? "no pitch" : `pitch ${pitch}`))
+                    .join(", ")}
+                </span>
+              {/if}
             </a>
           </li>
         {/each}
@@ -507,6 +524,14 @@
     font-size: var(--of-type-size-small);
     line-height: var(--of-type-leading-tight);
     color: var(--of-color-ink);
+  }
+
+  .cell-versions {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
   }
 
   .cell-link:hover .cell-name,

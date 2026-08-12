@@ -199,6 +199,59 @@ const rail = card.printings
  */
 const showRail = rail.length > 1;
 
+/* -------------------------------------------------------------------------- */
+/* Pitch versions                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The red, yellow and blue versions of a card, as tabs.
+ *
+ * A PLAYER CALLS THESE ONE CARD, AND THE DATASET CALLS THEM THREE. Upstream
+ * gives each pitch version its own `unique_id`, its own printed text and its own
+ * legality, because mechanically they are distinct — "Head Jab" red and "Head
+ * Jab" blue do different things. But nobody at a table says "I'm playing the
+ * pitch-2 Head Jab" as though naming a different card; they say Head Jab and
+ * hold up a yellow one. So the versions belong on ONE page, switched, rather
+ * than on three pages a reader has to find separately or on an index page that
+ * makes them choose before showing them anything.
+ *
+ * THE TABS ARE REAL LINKS, NOT A SCRIPTED WIDGET, and that is the whole reason
+ * this works on a static site. Each version keeps its own permanent URL, so a
+ * tab is something you can paste; the switch works with scripting off; and there
+ * is no state to lose. `docs/PLAN.md`: "Every view is a URL." A JavaScript tab
+ * panel would have taken three addressable documents and made them one
+ * unaddressable one, which is the opposite of what this project is for.
+ *
+ * The jewel carries the colour and the label carries the number, which is the
+ * pitch contract from `docs/DESIGN.md` — the numeral is the primary channel and
+ * colour is the redundant one, so a tab strip is legible to a reader who cannot
+ * tell red from yellow. No colour NAMES are invented here: "Pitch 2" is the
+ * vocabulary `variantSuffix` already uses in every link to a variant.
+ */
+/**
+ * No-pitch sorts last, matching `byPitch` in `cards.ts`, so a card and its
+ * token variant do not swap places between the tab strip and the URL scheme.
+ *
+ * At module scope because it captures nothing — the same rule
+ * `unicorn(consistent-function-scoping)` enforces on `pitchRank` in `cards.ts`,
+ * and for the same reason: a comparator that rebuilds a closure on every one of
+ * its O(n log n) calls is what the rule exists to catch.
+ */
+function pitchRank(pitch: number): number {
+  return pitch === 0 ? 4 : pitch;
+}
+
+const versions = [
+  { pitch: page.pitch, href: page.href, current: true },
+  ...page.variants.map((variant) => ({
+    pitch: variant.pitch,
+    href: variant.href,
+    current: false,
+  })),
+].toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch));
+
+const showVersions = versions.length > 1;
+
 /**
  * Whether one format's evidence is shown without being asked for.
  *
@@ -304,9 +357,55 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
         <p class="eyebrow">{typeLine === "" ? "Flesh and Blood card" : typeLine}</p>
         <div class="title-row">
           <PitchJewel value={page.pitch} size="lg" />
-          <h1 class="card-name">{page.label}</h1>
+          <!--
+            THE BARE NAME, NOT THE DISAMBIGUATED LABEL. Everywhere else in the
+            product a link to this card renders `page.label` — "Head Jab (pitch
+            2)" — because 900 names belong to more than one card and two anchors
+            that differ only in where they point are a WCAG 2.4.4 failure. Here
+            the tab strip immediately below carries that distinction, and
+            visibly, so repeating it in the heading would say the same thing
+            twice and make the three versions read as three cards.
+          -->
+          <h1 class="card-name">{card.name}</h1>
         </div>
       </header>
+
+      {
+        showVersions && (
+          <nav class="versions" aria-label={`Pitch versions of ${card.name}`}>
+            <ul class="version-tabs">
+              {versions.map((version) => (
+                <li>
+                  {version.current ? (
+                    /*
+                      The current tab is not a link. An anchor pointing at the
+                      page you are already on is a control that does nothing,
+                      and `aria-current` on a link still leaves it in the tab
+                      order as a dead end.
+                    */
+                    <span class="version-tab current" aria-current="page">
+                      <PitchJewel value={version.pitch} size="sm" />
+                      <span class="version-label">
+                        {version.pitch === 0 ? "No pitch" : `Pitch ${version.pitch}`}
+                      </span>
+                    </span>
+                  ) : (
+                    <a class="version-tab" href={version.href}>
+                      <PitchJewel value={version.pitch} size="sm" />
+                      <span class="version-label">
+                        {version.pitch === 0 ? "No pitch" : `Pitch ${version.pitch}`}
+                      </span>
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p class="versions-note">
+              Same name, different card. Each version has its own printed text, stats and legality — the tabs are permanent URLs, so the one you are reading is the one you can paste.
+            </p>
+          </nav>
+        )
+      }
 
       <!--
         THE STAT BLOCK STAYS A DEFINITION LIST AND STOPS LOOKING LIKE A TABLE.
@@ -703,6 +802,67 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
      control the component library does not own. */
   .evidence-fold[open] .evidence-summary {
     margin-block-end: var(--of-space-tight);
+  }
+
+  /* -- Pitch version tabs --------------------------------------------------- */
+
+  .versions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--of-space-tight);
+  }
+
+  .version-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* The strip sits on a rule rather than in a box: the system separates
+       regions with hairlines, and a tab row is a region boundary by nature. */
+    border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  }
+
+  .version-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--of-space-tight);
+    padding: var(--of-space-tight) var(--of-space-base);
+    text-decoration: none;
+    color: var(--of-color-ink-muted);
+    /* Square, never rounded — stated rather than omitted, so a host stylesheet
+       cannot round the one control this page owns. */
+    border-radius: var(--of-bevel-radius);
+    /* Every tab reserves the selected edge, so selecting one moves no pixels. */
+    border-block-end: var(--of-bevel-width) solid transparent;
+  }
+
+  .version-tab:hover {
+    color: var(--of-color-ink);
+  }
+
+  /*
+    The current tab is marked by weight, ink AND a bevelled edge — three
+    channels, because "which version am I reading" is the single most important
+    fact on a page that shows one of three near-identical cards.
+  */
+  .version-tab.current {
+    color: var(--of-color-ink);
+    border-block-end-color: var(--of-color-accent);
+  }
+
+  .version-label {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+  }
+
+  .versions-note {
+    margin: 0;
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
   }
 
   .rail-list {

@@ -1114,23 +1114,3 @@ export function descriptionFor(page: CardPage): string {
   return truncateAtWord(head === "" ? body : `${head}. ${body}`, DESCRIPTION_BUDGET);
 }
 
-/** The `<title>` for a disambiguation page. */
-export function titleForName(page: NamePage): string {
-  return `${page.name} · ${page.cards.length} versions · Optfall`;
-}
-
-/**
- * The `<meta name="description">` for a disambiguation page.
- *
- * Fixed labels around counted values. It says what the page is, because that is
- * the only honest thing a page listing several different cards can say.
- */
-export function descriptionForName(page: NamePage): string {
-  const pitches = page.cards
-    .map((card) => (card.pitch === 0 ? "no pitch" : `pitch ${card.pitch}`))
-    .join(", ");
-  return truncateAtWord(
-    `${page.cards.length} Flesh and Blood cards are named ${page.name} — ${pitches}. Each has its own text, stats and per-format legality.`,
-    DESCRIPTION_BUDGET,
-  );
-}

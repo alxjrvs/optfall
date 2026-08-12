@@ -36,13 +36,10 @@
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CardEntry from "../../components/CardEntry.astro";
-import NameIndex from "../../components/NameIndex.astro";
 import {
   CARD_ROUTES,
   descriptionFor,
-  descriptionForName,
   titleFor,
-  titleForName,
   type CardRoute,
 } from "../../lib/cards";
 
@@ -68,17 +65,29 @@ interface Props {
 
 const { route } = Astro.props;
 
-const title = route.kind === "card" ? titleFor(route.page) : titleForName(route.page);
-const description =
-  route.kind === "card" ? descriptionFor(route.page) : descriptionForName(route.page);
+/**
+ * THE BARE NAME SLUG IS THE CARD, NOT AN INDEX OF CARDS.
+ *
+ * `/card/head-jab` used to be a disambiguation page: a list of links asking the
+ * reader to pick a pitch before they were shown anything. That was the wrong
+ * document, because a player calls the red, yellow and blue versions ONE card —
+ * so the guessable URL now serves the card itself, at its lowest-pitch version,
+ * with the tab strip in `CardEntry` switching between them.
+ *
+ * `NAME_PAGES` sorts its cards by pitch (`byPitch` in `cards.ts`, no-pitch
+ * last), so `cards[0]` is the lowest-pitch version and the choice is total
+ * rather than dependent on iteration order. The fallback is unreachable —
+ * a name page exists only where a group has more than one card — and is
+ * written rather than asserted because a `!` here would be a claim about
+ * another module's invariant.
+ */
+const page = route.kind === "card" ? route.page : route.page.cards[0];
 ---
 
-<BaseLayout title={title} description={description}>
-  {
-    route.kind === "card" ? (
-      <CardEntry page={route.page} />
-    ) : (
-      <NameIndex page={route.page} />
-    )
-  }
-</BaseLayout>
+{
+  page === undefined ? null : (
+    <BaseLayout title={titleFor(page)} description={descriptionFor(page)}>
+      <CardEntry page={page} />
+    </BaseLayout>
+  )
+}
