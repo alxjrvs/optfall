@@ -263,16 +263,27 @@ const showVersions = versions.length > 1;
  * `cc_banned_start: —` on the overwhelming majority of cards, which pushed the
  * verdict itself off the screen.
  *
- * So the evidence opens itself whenever the verdict says anything other than
- * plain `Legal`: any ban, suspension, restriction or Living Legend status, and
- * any format the dataset cannot answer for. Those are the claims a reader might
- * want to check, and they still arrive already checked.
+ * So the evidence opens itself whenever the verdict carries a real exclusion:
+ * any ban, suspension, restriction or Living Legend status. Those are the
+ * claims a reader might want to check, and they arrive already checked.
  *
- * Put the other way round: the only thing that folds is `legal: true` and five
- * dashes.
+ * AN `unknown` VERDICT DELIBERATELY DOES NOT OPEN, and the first version of
+ * this function got that wrong. It read "a format Optfall cannot answer for" as
+ * an unusual claim and opened those too — but Ultimate Pit Fight is unknown on
+ * 4,939 of 4,941 cards, so the rule fired on every card page in the corpus.
+ * Measured: **zero** cards had nothing open, and on 2,552 of them the only open
+ * disclosure was that one. A fold that opens everywhere is not a fold, and the
+ * change had quietly bought nothing.
+ *
+ * It is also redundant rather than merely noisy. An unknown verdict renders a
+ * full sentence — "It publishes only exclusions here, and none is set on this
+ * card" — and the evidence behind it is the single row `upf_banned: false`,
+ * which says the same thing in upstream's vocabulary. The sentence is the
+ * better disclosure and it is already unfoldable; the row stays one click away.
+ *
+ * Put the other way round: what folds is every verdict nobody would dispute.
  */
 function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
-  if (verdict.unknown) return true;
   return verdict.states.some((state) => state.tone !== "legal");
 }
 ---
