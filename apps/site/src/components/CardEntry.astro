@@ -198,6 +198,30 @@ const rail = card.printings
  * the same picture again.
  */
 const showRail = rail.length > 1;
+
+/**
+ * Whether one format's evidence is shown without being asked for.
+ *
+ * THIS IS THE RULE THAT LETS THE EVIDENCE FOLD WITHOUT BREAKING THE PROMISE.
+ * An earlier version of this page printed every key inline for every format and
+ * argued for it: a claim whose evidence needs a click is a claim being
+ * asserted. That is right. What was wrong was applying it to the case where
+ * *nothing interesting is being claimed* — six formats × six keys is 36 rows of
+ * `cc_banned_start: —` on the overwhelming majority of cards, which pushed the
+ * verdict itself off the screen.
+ *
+ * So the evidence opens itself whenever the verdict says anything other than
+ * plain `Legal`: any ban, suspension, restriction or Living Legend status, and
+ * any format the dataset cannot answer for. Those are the claims a reader might
+ * want to check, and they still arrive already checked.
+ *
+ * Put the other way round: the only thing that folds is `legal: true` and five
+ * dashes.
+ */
+function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
+  if (verdict.unknown) return true;
+  return verdict.states.some((state) => state.tone !== "legal");
+}
 ---
 
 <nav class="lineage" aria-label="Breadcrumb">
@@ -216,101 +240,216 @@ const showRail = rail.length > 1;
 </nav>
 
 <article>
-  <header class="masthead">
-    <p class="eyebrow">{typeLine === "" ? "Flesh and Blood card" : typeLine}</p>
-    <div class="title-row">
-      <PitchJewel value={page.pitch} size="lg" />
-      <h1 class="card-name">{page.label}</h1>
-    </div>
-  </header>
-
   <!--
-    THE PICTURE IS THE FIRST THING, because it is what somebody opening a card
-    page came to see — docs/SCRYFALL-GAP.md, which settled that the card layer
-    is the product rather than supporting cast.
+    TWO COLUMNS, AND THE SPLIT IS THE REDESIGN.
 
-    `loading="eager"` here and nowhere else on the site: this is the one face
-    above the fold, and lazy-loading the thing the page is about only delays it.
+    `docs/SCRYFALL-GAP.md` §6a: everything answering "what is this card" lands
+    above the fold, and the apparatus — printings, flavour, related, source —
+    goes below it. Before this, the face was followed by eight stacked sections
+    and you scrolled past three of them to reach the legality verdict, which is
+    the best thing on the page and most of the reason the project exists.
+
+    It collapses to one column under a narrow viewport, where side-by-side would
+    make the face too small to read a stat line off.
   -->
-  <div class="face-block">
-    <CardFace
-      src={faceSrc}
-      alt={faceAlt}
-      width={faceBox.width}
-      height={faceBox.height}
-      loading="eager"
-    />
+  <div class="identity">
+    <div class="identity-face">
+      <!--
+        `loading="eager"` here and nowhere else on the site: this is the one
+        face above the fold, and lazy-loading the thing the page is about only
+        delays it.
+      -->
+      <CardFace
+        src={faceSrc}
+        alt={faceAlt}
+        width={faceBox.width}
+        height={faceBox.height}
+        loading="eager"
+      />
 
-    {
-      showRail && (
-        <nav class="rail" aria-label={`Printings of ${page.label}`}>
-          <ul class="rail-list">
-            {rail.map((printing) => (
-              <li>
+      {
+        showRail && (
+          <nav class="rail" aria-label={`Printings of ${page.label}`}>
+            <ul class="rail-list">
+              {rail.map((printing) => (
+                <li>
+                  {/*
+                    Not a link yet. Per-printing URLs are the next layer of this
+                    work (docs/SCRYFALL-GAP.md §5.1c); until they exist, an
+                    anchor would point at the page it is already on, which is a
+                    worse affordance than a plain thumbnail. The collector
+                    number is the accessible name because it is the citable
+                    identity of a printing.
+                  */}
+                  <img
+                    src={printing.src}
+                    alt={`${page.label} — printing ${printing.id}`}
+                    width={printing.box.width}
+                    height={printing.box.height}
+                    loading="lazy"
+                    decoding="async"
+                    class:list={["rail-face", { current: printing.current }]}
+                  />
+                  <span class="rail-id">{printing.id}</span>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+    </div>
+
+    <div class="identity-facts">
+      <header class="masthead">
+        <p class="eyebrow">{typeLine === "" ? "Flesh and Blood card" : typeLine}</p>
+        <div class="title-row">
+          <PitchJewel value={page.pitch} size="lg" />
+          <h1 class="card-name">{page.label}</h1>
+        </div>
+      </header>
+
+      <!--
+        THE STAT BLOCK STAYS A DEFINITION LIST AND STOPS LOOKING LIKE A TABLE.
+
+        An earlier note here argued the semantics and was right: cost, power and
+        defence are term-and-value data, and marking them up as anything else
+        would be a lie for a layout's sake. What was wrong was the RENDERING — a
+        stacked grid restating in rows what the face beside it now shows at a
+        glance. So the markup is unchanged and the CSS makes it a compact strip,
+        which is the card's own furniture rather than a table of it. 13 cards
+        genuinely have a printed power of 0 and still get a row saying 0.
+      -->
+      <section class="apparatus" aria-labelledby="stats">
+        <h2 class="apparatus-heading" id="stats">Stats</h2>
+        {
+          stats.length === 0 ? (
+            <p class="void">This card carries no printed cost, power, defence, life, intellect or arcane value.</p>
+          ) : (
+            <dl class="stats">
+              {stats.map((stat) => (
+                <div class="stat">
+                  <dt>{stat.label}</dt>
+                  <dd>{stat.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )
+        }
+      </section>
+
+      <section class="apparatus" aria-labelledby="printed-text">
+        <h2 class="apparatus-heading" id="printed-text">Printed text</h2>
+        {
+          text === "" ? (
+            <p class="void">This card has no rules text in the published dataset.</p>
+          ) : (
+            <BevelledPlate emphasis="raised">
+              <p class="card-text">{card.functional_text}</p>
+            </BevelledPlate>
+          )
+        }
+        <!--
+          Reproduced, not interpreted. Upstream writes its own emphasis and
+          symbol markers, and Optfall has no published table mapping those
+          markers to words — so substituting any would be inventing a vocabulary
+          and calling it the card's text.
+        -->
+        <p class="verify">Printed exactly as the upstream dataset publishes it, including its own <code>**</code> emphasis and <code>&#123;…&#125;</code> symbol markers. Optfall does not rewrite, expand or summarise card text.</p>
+      </section>
+
+      <!--
+        LEGALITY MOVES UP, INTO THE FOLD. It used to sit below the article,
+        after stats, text and attributes — the fourth thing on the page. It is
+        the differentiator: a verdict that is a LIST of states, each with the
+        upstream flags it was derived from.
+      -->
+      <section class="apparatus" aria-labelledby="legality">
+        <h2 class="apparatus-heading" id="legality">Legality</h2>
+
+        <!--
+          The scope of the claim, stated before the claim. Inline elements stay
+          on the same source line as the text around them: the build drops the
+          whitespace at a line break falling immediately before an inline tag,
+          welding words together in the output.
+        -->
+        <p class="scope">
+          Current state only, as published by the upstream dataset and last confirmed <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>. Optfall does not yet answer what was legal on an earlier date; where upstream publishes the date a state began, it is printed below and means the start of the state that applies now.
+        </p>
+
+        <ul class="formats">
+          {
+            page.verdicts.map((verdict) => (
+              <li class="format">
+                <h3 class="format-name" id={`format-${verdict.format.id}`}>
+                  {verdict.format.name}
+                </h3>
+
+                {verdict.unknown ? (
+                  <p class="void">
+                    The dataset publishes no legality flag for this format, so Optfall
+                    has nothing to say about this card in it. It publishes only
+                    exclusions here, and none is set on this card.
+                  </p>
+                ) : (
+                  <ul class="states">
+                    {verdict.states.map((state) => (
+                      <li class="state">
+                        <StatePill tone={state.tone} label={state.label} />
+                        {state.since !== null && (
+                          <span class="since">
+                            since <time datetime={state.since}>{state.since}</time>
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {verdict.affectsFullCycle && verdict.format.id === "living-legend" && (
+                  <p class="scope">Upstream records this restriction as affecting the full cycle of cards sharing this name.</p>
+                )}
+
                 {/*
-                  Not a link yet. Per-printing URLs are the next layer of this
-                  work (docs/SCRYFALL-GAP.md §5.1c); until they exist, an anchor
-                  would point at the page it is already on, which is a worse
-                  affordance than a plain thumbnail. The collector number is the
-                  accessible name because it is the citable identity of a
-                  printing.
+                  THE EVIDENCE FOLDS — AND THE RULE FOR WHEN IT DOES NOT IS THE
+                  WHOLE POINT.
+
+                  An earlier version of this file printed all six keys inline for
+                  all six formats and argued for it: "it is not behind a
+                  disclosure widget, because a claim whose evidence needs a click
+                  is a claim being asserted." That argument is correct, and
+                  simply reversing it to buy vertical space would trade away the
+                  thing that makes this page worth more than the incumbent's.
+
+                  So it is honoured rather than overruled. `open` is not a
+                  styling choice here: a verdict claiming anything OTHER than
+                  plain Legal — banned, suspended, restricted, Living Legend, or
+                  a format Optfall cannot speak to at all — shows its evidence
+                  unasked, exactly as before. What folds is the boring majority,
+                  where the evidence reads `cc_legal: true` and five dashes.
+
+                  An unusual claim shows its working; a routine one stops
+                  shouting. Thirty-six rows of `cc_banned_start: —` above the
+                  printings was not auditability, it was noise wearing
+                  auditability's coat.
                 */}
-                <img
-                  src={printing.src}
-                  alt={`${page.label} — printing ${printing.id}`}
-                  width={printing.box.width}
-                  height={printing.box.height}
-                  loading="lazy"
-                  decoding="async"
-                  class:list={["rail-face", { current: printing.current }]}
-                />
-                <span class="rail-id">{printing.id}</span>
+                <details class="evidence-fold" open={evidenceOpen(verdict)}>
+                  <summary class="evidence-summary">Upstream flags</summary>
+                  <dl class="evidence">
+                    {verdict.evidence.map((fact) => (
+                      <div class="fact" data-present={String(fact.present)}>
+                        <dt>{fact.key}</dt>
+                        <dd>{fact.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </details>
               </li>
-            ))}
-          </ul>
-        </nav>
-      )
-    }
+            ))
+          }
+        </ul>
+      </section>
+    </div>
   </div>
-
-  <section class="apparatus" aria-labelledby="stats">
-    <h2 class="apparatus-heading" id="stats">Stats</h2>
-    {
-      stats.length === 0 ? (
-        <p class="void">This card carries no printed cost, power, defence, life, intellect or arcane value.</p>
-      ) : (
-        <dl class="stats">
-          {stats.map((stat) => (
-            <div class="stat">
-              <dt>{stat.label}</dt>
-              <dd>{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )
-    }
-  </section>
-
-  <section class="apparatus" aria-labelledby="printed-text">
-    <h2 class="apparatus-heading" id="printed-text">Printed text</h2>
-    {
-      text === "" ? (
-        <p class="void">This card has no rules text in the published dataset.</p>
-      ) : (
-        <BevelledPlate emphasis="raised">
-          <p class="card-text">{card.functional_text}</p>
-        </BevelledPlate>
-      )
-    }
-    <!--
-      Reproduced, not interpreted. Upstream writes emphasis as `**Ward 10**` and
-      symbols as `{r}` / `{p}`, and Optfall has no published table mapping those
-      markers to words — so substituting any would be inventing a vocabulary and
-      calling it the card's text. `docs/PLAN.md`: every string served traces to a
-      parsed source. The markers stay; the note says why.
-    -->
-    <p class="verify">Printed exactly as the upstream dataset publishes it, including its own <code>**</code> emphasis and <code>&#123;…&#125;</code> symbol markers. Optfall does not rewrite, expand or summarise card text.</p>
-  </section>
 
   {
     vocabulary.length > 0 && (
@@ -340,74 +479,6 @@ const showRail = rail.length > 1;
     )
   }
 </article>
-
-<OrnamentalRule label="Legality" />
-
-<section class="apparatus" aria-labelledby="legality">
-  <h2 class="apparatus-heading" id="legality">Legality</h2>
-
-  <!--
-    The scope of the claim, stated before the claim. `docs/PLAN.md`: "Every
-    surface shows when its data was last confirmed", and Phase 3 — legality as
-    of a date — is named as absent rather than left to be assumed present.
-  -->
-  <!--
-    Inline elements stay on the same source line as the text around them. Astro
-    compresses the built HTML and drops the whitespace at a line break falling
-    immediately before an inline tag, which silently welds words together in the
-    output — "last confirmed2026-08-10". Same trap `NoScriptNotice.astro`
-    records; same fix.
-  -->
-  <p class="scope">
-    Current state only, as published by the upstream dataset and last confirmed <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>. Optfall does not yet answer what was legal on an earlier date; where upstream publishes the date a state began, it is printed below and means the start of the state that applies now.
-  </p>
-
-  <ul class="formats">
-    {
-      page.verdicts.map((verdict) => (
-        <li class="format">
-          <h3 class="format-name" id={`format-${verdict.format.id}`}>
-            {verdict.format.name}
-          </h3>
-
-          {verdict.unknown ? (
-            <p class="void">
-              The dataset publishes no legality flag for this format, so Optfall
-              has nothing to say about this card in it. It publishes only
-              exclusions here, and none is set on this card.
-            </p>
-          ) : (
-            <ul class="states">
-              {verdict.states.map((state) => (
-                <li class="state">
-                  <StatePill tone={state.tone} label={state.label} />
-                  {state.since !== null && (
-                    <span class="since">
-                      since <time datetime={state.since}>{state.since}</time>
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {verdict.affectsFullCycle && verdict.format.id === "living-legend" && (
-            <p class="scope">Upstream records this restriction as affecting the full cycle of cards sharing this name.</p>
-          )}
-
-          <dl class="evidence">
-            {verdict.evidence.map((fact) => (
-              <div class="fact" data-present={String(fact.present)}>
-                <dt>{fact.key}</dt>
-                <dd>{fact.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </li>
-      ))
-    }
-  </ul>
-</section>
 
 <OrnamentalRule label="Printings" />
 
@@ -550,15 +621,88 @@ const showRail = rail.length > 1;
     the copyright line it will not let a caller omit; this places it and nothing
     more.
   */
-  .face-block {
+  /*
+    THE TWO-COLUMN FOLD, WITH NO BREAKPOINT — and that is deliberate rather
+    than clever. There is not one width media query anywhere else in this
+    repository: the system holds pages together with intrinsic sizing, and a
+    chosen pixel width would be the first arbitrary number in a codebase whose
+    lint rule exists to keep arbitrary numbers out. `check:tokens` refuses a raw
+    length here, which is the rule doing its job.
+
+    So the columns wrap when they stop fitting rather than when a designer
+    guessed they would. The face keeps its natural width; the facts column
+    asks for one face-width of room and takes any surplus. When the viewport
+    cannot seat both, the basis is unsatisfiable and the facts wrap beneath —
+    which is the real condition ("the face and the text no longer fit side by
+    side") expressed directly instead of approximated by a breakpoint.
+  */
+  .identity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--of-space-loosest);
+  }
+
+  .identity-face {
     display: flex;
     flex-direction: column;
     gap: var(--of-space-base);
-    margin-block-end: var(--of-space-looser);
-    /* The face is a fixed-width object in a text column, not a banner. Held to
-       its own measure so a wide viewport does not stretch a card to the width
-       of a paragraph. */
-    max-inline-size: fit-content;
+    /* Never grows, never shrinks below the face: it is a fixed-size object
+       beside a text column, not a banner. */
+    flex: 0 0 auto;
+    max-inline-size: 100%;
+  }
+
+  /*
+    NO `position: sticky` ON THE FACE, and it was tried. Following the reader
+    down the legality list is genuinely nice on a wide screen — and the same
+    declaration, once the columns have wrapped, pins the face to the top of a
+    phone screen and scrolls the entire card underneath it. Turning it off for
+    the wrapped case needs the breakpoint this layout exists to avoid, and a
+    behaviour that is pleasant on a desktop and hostile on a phone is not worth
+    a media query's worth of arbitrary number.
+  */
+  .identity-facts {
+    /* One face-width of preferred room, free to take the surplus, free to
+       wrap. `min-inline-size: 0` because a flex item's default `auto` minimum
+       refuses to shrink below its content, which a long card name would
+       otherwise use to force a horizontal scroll. */
+    flex: 1 1 var(--of-card-face-normal);
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--of-space-looser);
+  }
+
+  /* -- The evidence disclosure --------------------------------------------- */
+
+  /*
+    Open on anything other than a plain Legal verdict — see `evidenceOpen` in
+    the frontmatter for why that rule, rather than a preference, is what lets
+    this fold at all.
+  */
+  .evidence-fold {
+    margin-block-start: var(--of-space-tight);
+  }
+
+  .evidence-summary {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-faint);
+    cursor: pointer;
+  }
+
+  .evidence-summary:hover {
+    color: var(--of-color-ink-muted);
+  }
+
+  /* The marker is the only disclosure affordance in the system, so it is left
+     to the platform rather than redrawn — a custom triangle here would be a
+     control the component library does not own. */
+  .evidence-fold[open] .evidence-summary {
+    margin-block-end: var(--of-space-tight);
   }
 
   .rail-list {
