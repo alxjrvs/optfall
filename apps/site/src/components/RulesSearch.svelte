@@ -368,9 +368,11 @@
     every value already named a token and the two copies were kept identical on
     purpose.
 
-    What is left below is the dense list row, which is still a real gap rather
-    than one-off decoration: every list in the product needs it. It belongs in
-    the library as `ResultRow`, and is written here until it goes.
+    `ResultRow` has landed too, and the card search adopts it. This file keeps
+    its own row for now: a rules result leads with a Citation and carries a
+    chapter breadcrumb rather than a stat line, so moving it is a second
+    adoption rather than the same cut — worth doing, and worth doing as its own
+    change rather than smuggled into the one that built the primitive.
   */
 
 

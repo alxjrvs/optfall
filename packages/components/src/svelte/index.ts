@@ -27,3 +27,4 @@ export { default as OrnamentalRule } from "./OrnamentalRule.svelte";
 export { default as Mark } from "./Mark.svelte";
 export { default as CardFace } from "./CardFace.svelte";
 export { default as SearchField } from "./SearchField.svelte";
+export { default as ResultRow } from "./ResultRow.svelte";
