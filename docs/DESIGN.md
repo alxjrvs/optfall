@@ -21,7 +21,7 @@ move; each expression of it does not.
 | **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on anything carrying state. The chrome should feel struck from metal, not laid out in a design tool. |
 | **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch appears only as a cut jewel; the interface never uses that form for anything else. |
 | **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Three voices, strictly assigned.** A serif for names and questions, a sans for interface, a wide-tracked mono for labels and anything citable. |
-| **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the verdict, not the card.** Card pages exist, but the shareable objects are `/i/…` interactions and `/cr/…` rules — the things arguments are actually about. |
+| **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the card**, and the rules and rulings attach to it. Card pages are the shareable object; `/cr/…` sections are addressable too and a card links into them. ~~The unit is the verdict, not the card.~~ — see below. |
 | **Dark mode is not an inversion.** It is designed, and for many users it is the only mode they will ever see. | **Black is the native key.** Near-black ground, blood accent, brass for anything authoritative. Light mode is the printed-rulebook translation — ash and iron, not paper white. |
 
 ---
@@ -169,12 +169,32 @@ interactions cite it, so a change tells you exactly what it invalidates.
 
 ### 5. Card page — `optfall.com/card/command-and-conquer`
 
-Supporting cast, explicitly not a destination. The face follows the game's own
-furniture: jewel top-left, cost in a hexagonal plate top-right, name in a struck
-bar, type line in tracked caps, power and defence in chamfered plates at the
-corners, rarity centred between them. Two things exist nowhere else — the
-*printed versus true text* diff, which matters to anyone holding a physical card
-with outdated wording, and legality that knows about time.
+**The destination.** ~~Supporting cast, explicitly not a destination.~~ That was
+this document's position and it is now wrong: `PLAN.md` was rewritten on
+2026-08-11 to make the card layer the product, and this page was not updated
+with it. The correction is recorded rather than silently applied, because the
+old position was argued at length and a reader deserves to see what replaced it.
+
+**Two columns.** The printed face and a rail of every printing on the left; the
+name, the stat strip, the printed text and the legality verdict on the right.
+Everything answering *what is this card* is above the fold, and the apparatus —
+printings table, flavour, related cards, source — sits below it.
+
+**Pitch versions are tabs, not separate pages.** A player calls the red, yellow
+and blue versions one card, so they share one page and one heading, switched by
+a strip of real links. Each version keeps its own permanent URL, so a tab is
+something you can paste.
+
+**The verdict shows its working, in proportion.** Every format's pills are
+always visible. The raw upstream flags behind them open unasked whenever the
+verdict claims anything other than plain `Legal` — a ban, a suspension, a
+restriction, a Living Legend, or a format the dataset cannot answer for — and
+fold away for the routine majority. An unusual claim shows its evidence; a
+boring one stops shouting.
+
+Two things still exist nowhere else: the *printed versus true text* diff, which
+matters to anyone holding a physical card with outdated wording, and legality
+that knows about time.
 
 ---
 
@@ -243,10 +263,15 @@ See [`PLAN.md`](PLAN.md) Phase 1.
   (angular, faintly medieval, uncommon), **Cinzel** (inscriptional but the default
   fantasy choice), **Eczar** (high contrast, distinctive). A commercial display
   weight would beat all three — confirm the licence covers webfont embedding.
-- **Card rendering.** The card face is drawn from primitives rather than showing
-  real art. Real images are expressly permitted for card databases with a
-  copyright line, but the pitch jewel should stay an Optfall-drawn overlay rather
-  than a crop, so the accessible version travels with the component.
+- ~~**Card rendering.**~~ **Settled, and it went the other way.** This entry said
+  the card face is drawn from primitives rather than showing real art. Real art
+  is now the rendering: 11,377 faces are served from Optfall's own host at two
+  WebP tiers, and the drawn plate survives as the NO IMAGE placeholder for the
+  printings upstream publishes no face for. The half of the entry that was right
+  is kept and enforced — the pitch jewel stays an Optfall-drawn overlay rather
+  than a crop, so the accessible rendering travels with the component, and the
+  copyright line is emitted by `CardFace` itself with no prop and no variant that
+  can drop it.
 - **Illustrative content.** Card names in the mockups are real; specific legality
   states, rule numbers, stat lines and ruling text are placeholders chosen to
   exercise the layouts.

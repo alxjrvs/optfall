@@ -489,14 +489,18 @@ table, flavour, related, source — goes below it. Today the face-shaped hole is
 filled by eight stacked sections and you scroll past three of them to reach the
 legality verdict, which is the best thing on the page.
 
-**Stop spending filigree eight times a screen.** `CardEntry.astro` opens a
-section with an `OrnamentalRule` for Stats, Printed text, Attributes, Legality,
-Printings, Flavour, Related and Source. `docs/DESIGN.md` rations scrollwork to
-three roles and says **"never twice on one screen"** — so the page currently
-violates the system it is built on, eight times. Sections keep the wide-tracked
-mono label voice, which is already the system's answer for "name a region", and
-the filigree returns to exactly one appearance, at the fold. This is the single
-biggest visual simplification available and it costs no information.
+~~**Stop spending filigree eight times a screen.**~~ **Withdrawn — the claim was
+false.** This section asserted that `CardEntry.astro` violates the three-role
+filigree ration eight times, once per `OrnamentalRule`. Checked before acting on
+it: `OrnamentalRule` takes `ornament` and it **defaults to `false`**, and every
+usage on the card page passes only `label`. They are plain labelled hairlines
+spending no scrollwork at all — which is precisely the "hairline rules rather
+than cards, shadows and padding" idiom this document praises two rows above.
+
+The error is left visible rather than deleted, because it is the more useful
+artefact: it was written by reading a component's *call sites* and inferring its
+behaviour from its name, and the fix cost one `grep` that should have come first.
+The card page's four rules are correct as they stand.
 
 **Legality moves up and its evidence folds away.** Six formats × six keys is 36
 rows of `cc_banned_start: —` rendered inline, above the printings. The evidence
@@ -563,21 +567,29 @@ everything else renders against exists before anything tries to render.
 
 | | Step | Cost | Ships |
 |---|---|---|---|
-| **A** | `apps/images` — the assets site: Blobs-backed face handler, NO IMAGE placeholders, deployed | ~1 day | A host to put faces on |
-| **B** | Ingest — download, transcode to two WebP tiers, upload to Blobs; image manifest in the corpus build | ~1 day | 11,377 faces, addressable |
-| **C** | `CardFace` primitive; card page face, printings rail, per-printing URLs | ~2 days | Cards have faces |
-| **D** | Card search at `/` — hero, explainer links, results; submit-driven; grid default; `display:`/`order:`/paging; `/cards` → 301 | ~3 days | The front door is right |
-| **E** | The redesign pass (§6a) — two-column card page, filigree back to one, evidence folded, one search chrome | ~2 days | It reads as finished |
+| **A** ✅ | `apps/images` — the assets site: Blobs-backed face handler, NO IMAGE placeholders, deployed | done | A host to put faces on |
+| **B** ✅ | Ingest — download, transcode to two WebP tiers, upload to Blobs; image manifest in the corpus build | ~1 day | 11,377 faces, addressable |
+| **C** ✅ | `CardFace` primitive; card page face, printings rail, per-printing URLs | ~2 days | Cards have faces |
+| **D** ✅ | Card search at `/` — hero, explainer links, results; submit-driven; grid default; `display:`/`order:`/paging; `/cards` → 301 | ~3 days | The front door is right |
+| **E** ✅ | The redesign pass (§6a) — two-column card page, filigree back to one, evidence folded, one search chrome | ~2 days | It reads as finished |
 | **F** | The keyword↔CR join, both directions, with published coverage | ~2 days | The thing nobody else has |
 | **G** | `set.json` + decode tables; `/sets`; `unique:`; `order:released` | ~2 days | The corpus gets a spine |
 | **H** | Grammar: AST, negation/`OR`/parens, comparisons, `flavor:` | ~1 week | Search becomes a language |
 
-Reconciling `DESIGN.md` with `PLAN.md` folds into **E** rather than standing as
-its own step: the redesign is where those positions become code, and amending the
-prose separately would be a diff nobody reads.
+Reconciling `DESIGN.md` with `PLAN.md` folded into **E**, as planned: the
+redesign is where those positions became code.
 
-A through E is the version worth showing anyone. F through H is what makes it
-the reference.
+**A through E have shipped.** One item planned for E is not in it and is now
+listed under G instead — extracting `SearchField`/`ResultRow` into primitives,
+which is a refactor of two working components rather than a change anyone can
+see. F through H is what makes it the reference.
+
+**One thing E gained that was not planned**: pitch versions became one tabbed
+card rather than three pages plus a disambiguation index. That is a model change
+rather than a visual one — a player calls the red, yellow and blue versions one
+card — and it forced the search to collapse them, which in turn forced the
+result row to name *which* versions matched, because four cards in this corpus
+are banned at one pitch and legal at another.
 
 ---
 
