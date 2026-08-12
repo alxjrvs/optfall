@@ -205,7 +205,8 @@
   */
   .copyright {
     font-family: var(--of-type-family-sans);
-    font-size: var(--of-type-size-micro);
+    /* The smallest step in the scale, and the only thing that uses it. */
+    font-size: var(--of-type-size-legal);
     /* Tight rather than tracked: the opposite of the label treatment above. */
     letter-spacing: var(--of-type-tracking-tight);
     color: var(--of-color-ink-faint);
