@@ -82,11 +82,33 @@ const { route } = Astro.props;
  * another module's invariant.
  */
 const page = route.kind === "card" ? route.page : route.page.cards[0];
+
+/**
+ * The bare-name route names the CARD; a `-N` route names a version.
+ *
+ * `titleFor` defaults to `page.label`, which carries the variant suffix —
+ * "Head Jab (pitch 2)" — and that is right on `/card/head-jab-2`, which is the
+ * pitch-2 version's own address. It is wrong on `/card/head-jab`: that page
+ * heads itself "Head Jab" and presents all three versions as tabs, so a
+ * `<title>` reading "Head Jab (pitch 1)" contradicts the page and, worse,
+ * follows the link into a browser tab and an unfurl preview, where it is the
+ * only thing a reader sees.
+ *
+ * The description is deliberately left alone. It carries the stat line of the
+ * version actually rendered — "Pitch 1 · Cost 0 · Power 3" — which is what the
+ * page shows on arrival, and the stats genuinely differ between versions.
+ */
+const title =
+  page === undefined
+    ? ""
+    : route.kind === "name"
+      ? titleFor(page, route.page.name)
+      : titleFor(page);
 ---
 
 {
   page === undefined ? null : (
-    <BaseLayout title={titleFor(page)} description={descriptionFor(page)}>
+    <BaseLayout title={title} description={descriptionFor(page)}>
       <CardEntry page={page} />
     </BaseLayout>
   )
