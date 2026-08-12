@@ -89,11 +89,11 @@
 
     /* The mono voice, in its definitive use. Wide tracking is the property that
        separates a label from a line of code. */
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-small);
     font-weight: var(--of-type-weight-medium);
     line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
 
     /* The plate — surface, bevel, hairline, mono voice — is what marks this as
        a link, so the underline is spent on hover and focus instead of being

@@ -20,7 +20,7 @@ move; each expression of it does not.
 | **The search field is the hero.** No marketing hero, no illustration above the fold. The first thing on the page is the thing you came to do. | **The grammar is inherited, not invented.** LSS's own Card Vault already has a syntax. We adopt it verbatim and extend it to rules and interactions, so a query someone already knows keeps working. |
 | **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on anything carrying state. The chrome should feel struck from metal, not laid out in a design tool. |
 | **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch appears only as a cut jewel; the interface never uses that form for anything else. |
-| **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Three voices, strictly assigned.** A serif for names and questions, a sans for interface, a wide-tracked mono for labels and anything citable. |
+| **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Two voices, strictly assigned.** A serif for names and questions, a sans for everything else. ~~a wide-tracked mono for labels and anything citable~~ — see below. |
 | **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the card**, and the rules and rulings attach to it. Card pages are the shareable object; `/cr/…` sections are addressable too and a card links into them. ~~The unit is the verdict, not the card.~~ — see below. |
 | **Dark mode is not an inversion.** It is designed, and for many users it is the only mode they will ever see. | **Black is the native key.** Near-black ground, blood accent, brass for anything authoritative. Light mode is the printed-rulebook translation — ash and iron, not paper white. |
 
@@ -88,12 +88,24 @@ exactly three roles: the corners of a feature panel, the corners of a card frame
 and a section rule. Never on a control, never on a list, never twice on one
 screen.
 
-### Three voices
+### Two voices
 
 - **Serif** — card names, questions, headings.
-- **Sans** — interface text.
-- **Mono, wide-tracked uppercase** — labels and anything citable. If it is
-  monospaced, you can paste it into an argument.
+- **Sans** — everything else, including labels and citations.
+
+**There were three, and the third was retired.** The rule was: *mono,
+wide-tracked uppercase, for labels and anything citable — if it is monospaced,
+you can paste it into an argument.* It is a good rule and the implementation
+stopped honouring it. The same face ended up on eyebrows, state pills, stat
+labels, set codes, view switches and provenance lines — chrome, none of it
+citable — so by the time a reader met an actual rule identifier the signal had
+already been spent seventeen files ago. A mark that appears everywhere marks
+nothing.
+
+So a citation is marked by **being** one: a link, in the accent, beside the
+thing it cites. The wide tracking survives as a label treatment, because that is
+a tracking step rather than a face — the token is named `type.tracking.wide`
+now, for what it does.
 
 ---
 

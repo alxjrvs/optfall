@@ -293,7 +293,7 @@ function paragraph(text: string): string {
  * collect. A workbench that has to switch a check off to go green is not one.
  */
 function caption(text: string): string {
-  return `<p style="margin: 0; font-family: var(--of-type-family-mono); font-size: var(--of-type-size-micro); letter-spacing: var(--of-type-tracking-mono); text-transform: uppercase; color: var(--of-color-ink-muted);">${text}</p>`;
+  return `<p style="margin: 0; font-family: var(--of-type-family-sans); font-size: var(--of-type-size-micro); letter-spacing: var(--of-type-tracking-wide); text-transform: uppercase; color: var(--of-color-ink-muted);">${text}</p>`;
 }
 
 /**

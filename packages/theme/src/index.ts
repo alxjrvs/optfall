@@ -117,9 +117,10 @@ export function toCssDeclarations(theme: Theme): string {
 
 /**
  * Three voices, strictly assigned: a serif for names and questions, a sans for
- * interface text, a wide-tracked mono for labels and anything citable.
+ * interface text. Two voices, not three — the monospace face was retired; see
+ * `tokens.ts` for why.
  */
-export type Voice = "serif" | "sans" | "mono";
+export type Voice = "serif" | "sans";
 
 /**
  * Filigree earns exactly three roles. Never on a control, never on a list,

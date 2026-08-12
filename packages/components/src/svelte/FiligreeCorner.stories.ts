@@ -190,9 +190,9 @@ function cardFrame(role: OrnamentRole) {
   }).join("");
 
   const label =
-    `font-family:${cssValue("type.family.mono")};` +
+    `font-family:${cssValue("type.family.sans")};` +
     `font-size:${cssValue("type.size.micro")};` +
-    `letter-spacing:${cssValue("type.tracking.mono")};` +
+    `letter-spacing:${cssValue("type.tracking.wide")};` +
     `text-transform:uppercase;color:${cssValue("color.ink.muted")}`;
 
   return createRawSnippet<[]>(() => ({

@@ -62,7 +62,19 @@ describe("the primitive set", () => {
 describe("typographic voice", () => {
   test("is fixed by role rather than chosen per usage", () => {
     expect(VOICE_BY_ROLE["card-name"]).toBe("serif");
-    expect(VOICE_BY_ROLE.citation).toBe("mono");
+    expect(VOICE_BY_ROLE.question).toBe("serif");
     expect(VOICE_BY_ROLE.interface).toBe("sans");
+  });
+
+  test("is two voices, not three — the monospace face is retired", () => {
+    // It used to mark "anything citable", on the rule that if a string is
+    // monospaced you can paste it into an argument. That rule stopped being
+    // true as the same face spread to eyebrows, pills, stat labels and set
+    // codes — chrome rather than identifiers — so the signal it was carrying
+    // had already been spent. A citation is marked by BEING one now: a link,
+    // in the accent, beside the thing it cites.
+    expect(VOICE_BY_ROLE.citation).toBe("sans");
+    expect(VOICE_BY_ROLE.label).toBe("sans");
+    expect(new Set(Object.values(VOICE_BY_ROLE))).toEqual(new Set(["serif", "sans"]));
   });
 });
