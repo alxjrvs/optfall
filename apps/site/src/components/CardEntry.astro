@@ -18,13 +18,19 @@
  * `docs/PLAN.md` Phase 3 cites as the reason this project exists. One card
  * (Winter's Wail) is `cc_banned` *and* `cc_living_legend`, so both pills render.
  *
- * **EVERY VERDICT PRINTS ITS EVIDENCE, INLINE AND UNCONDITIONALLY.** The raw
- * upstream keys sit directly beneath the pills, in the mono voice, with an
- * absent key shown as `—` rather than as `false`. `docs/PLAN.md`: the tool is
+ * **EVERY VERDICT SHIPS ITS EVIDENCE, AND AN UNUSUAL ONE SHOWS IT UNASKED.**
+ * The raw upstream keys sit beneath the pills in the mono voice, with an absent
+ * key shown as `—` rather than as `false`. `docs/PLAN.md`: the tool is
  * "auditable rather than merely assertive, which is what matters when the
- * commercially-backed incumbent ships incorrect flags". It is not behind a
- * disclosure widget, because a claim whose evidence needs a click is a claim
- * being asserted.
+ * commercially-backed incumbent ships incorrect flags."
+ *
+ * This comment used to end "it is not behind a disclosure widget, because a
+ * claim whose evidence needs a click is a claim being asserted", and the
+ * evidence is now behind one — so the sentence is corrected rather than left to
+ * contradict the code beneath it. The argument it made is not abandoned: see
+ * {@link evidenceOpen}, where `open` is computed rather than chosen. Any verdict
+ * carrying a real exclusion — banned, suspended, restricted, Living Legend —
+ * arrives already open. What folds is the verdict nobody would dispute.
  *
  * **THE PAGE MAKES NO HISTORICAL CLAIM.** Every legality sentence here is
  * present-tense and stamped with the date the corpus was confirmed. `since`

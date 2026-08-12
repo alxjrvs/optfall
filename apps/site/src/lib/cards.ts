@@ -1071,11 +1071,11 @@ function truncateAtWord(text: string, budget: number): string {
  * alone does not identify it — the same information the URL carries, so a
  * pasted link and its preview agree.
  */
-export function titleFor(page: CardPage): string {
+export function titleFor(page: CardPage, label: string = page.label): string {
   const type = page.card.type_text.trim();
   return type === ""
-    ? `${page.label} · Flesh and Blood card · Optfall`
-    : `${page.label} · ${type} · Optfall`;
+    ? `${label} · Flesh and Blood card · Optfall`
+    : `${label} · ${type} · Optfall`;
 }
 
 /**
