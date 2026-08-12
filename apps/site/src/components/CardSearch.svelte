@@ -368,27 +368,33 @@
     {:else}
     <ol class="results">
       {#each outcome.results as result (result.href)}
-        <li class="result">
-          <PitchJewel value={result.pitch} size="sm" />
-          <div class="body">
-            <p class="line">
-              <!-- `result.label`, never the bare name: 900 names in this corpus
-                   belong to two to four different cards, and a list of anchors
-                   reading "Head Jab" three times against three destinations is
-                   a WCAG 2.4.4 failure as well as being useless. The label
-                   carries the variant suffix and is composed once, in
-                   `cards.ts`. -->
-              <a class="name" href={result.href}>{result.label}</a>
-            </p>
-            <p class="meta">
-              <span class="type">{result.typeLine}</span>
-              {#each result.stats as [label, value] (label)}
-                <span class="stat">{label} {value}</span>
-              {/each}
-              <span class="why">{WHY[result.matchedIn]}</span>
-            </p>
-          </div>
-        </li>
+        <ResultRow href={result.href} label={result.label}>
+          {#snippet lead()}
+            <PitchJewel value={result.pitch} size="sm" />
+          {/snippet}
+          {#snippet meta()}
+            <!--
+              `result.label` above, never the bare name: 900 names in this
+              corpus belong to two to four different cards, and a list of
+              anchors reading "Head Jab" three times against three destinations
+              is a WCAG 2.4.4 failure as well as being useless. `ResultRow`
+              takes the label as a STRING rather than a snippet for exactly
+              that reason — the accessible name has to be composed on purpose.
+            -->
+            <span>{result.typeLine}</span>
+            {#each result.stats as [label, value] (label)}
+              <span>{label} {value}</span>
+            {/each}
+            {#if result.matchedPitches.length < result.totalVersions}
+              <span>
+                {result.matchedPitches
+                  .map((pitch) => (pitch === 0 ? "no pitch" : `pitch ${pitch}`))
+                  .join(", ")}
+              </span>
+            {/if}
+            <span class="why">{WHY[result.matchedIn]}</span>
+          {/snippet}
+        </ResultRow>
       {/each}
     </ol>
     {/if}
@@ -604,47 +610,12 @@
     intrinsically rather than at a breakpoint, since the theme publishes no
     breakpoint tokens and a raw one is not available to write.
   */
-  .result {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--of-space-tight);
-    padding-block: var(--of-space-base);
-    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
-  }
 
-  .body {
-    flex: 1 1 60%;
-    min-inline-size: 0;
-  }
 
-  .line {
-    margin: 0;
-  }
 
   /* Serif — the voice assigned to names. */
-  .name {
-    font-family: var(--of-type-family-serif);
-    font-size: var(--of-type-size-large);
-    letter-spacing: var(--of-type-tracking-tight);
-  }
 
-  .meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--of-space-tight);
-    margin-block: var(--of-space-tightest) 0;
-    font-family: var(--of-type-family-mono);
-    font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
-    text-transform: uppercase;
-    color: var(--of-color-ink-faint);
-  }
 
-  .type,
-  .stat {
-    color: var(--of-color-ink-muted);
-  }
 
   .browse {
     display: grid;

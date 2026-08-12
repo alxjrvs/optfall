@@ -48,6 +48,7 @@ import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
 
 import BevelledPlate from "./BevelledPlate.svelte";
 import CardFace from "./CardFace.svelte";
+import ResultRow from "./ResultRow.svelte";
 import SearchField from "./SearchField.svelte";
 import BrassSeal from "./BrassSeal.svelte";
 import Citation from "./Citation.svelte";
@@ -62,7 +63,24 @@ import StatePill from "./StatePill.svelte";
  * primitive whose variants differ only in a token value cannot fail
  * differently; a primitive whose variants change markup or contrast can.
  */
-const CASES: readonly { name: string; component: unknown; props: Record<string, unknown> }[] = [
+/**
+ * A primitive that is only valid INSIDE something else names its container.
+ *
+ * `ResultRow` renders an `<li>`, which axe correctly refuses on its own — "must
+ * be contained in a <ul> or <ol>". That is the component being right and the
+ * harness mounting it wrong: every caller puts it in a list, and making the row
+ * carry its own `<ul>` to satisfy a test would mean a list of results could
+ * never be one list.
+ *
+ * So the case supplies the context instead. Nothing else needs it, which is why
+ * it is optional rather than a required field on every case.
+ */
+const CASES: readonly {
+  name: string;
+  component: unknown;
+  props: Record<string, unknown>;
+  wrap?: [string, string];
+}[] = [
   { name: "PitchJewel none", component: PitchJewel, props: { value: 0 } },
   { name: "PitchJewel one", component: PitchJewel, props: { value: 1 } },
   { name: "PitchJewel two", component: PitchJewel, props: { value: 2 } },
@@ -125,6 +143,14 @@ const CASES: readonly { name: string; component: unknown; props: Record<string, 
       value: "",
       placeholder: "command and conquer",
     },
+  },
+  // A list row is a link with facts under it — the shape axe checks for an
+  // accessible name and for list semantics.
+  {
+    name: "ResultRow",
+    component: ResultRow,
+    props: { href: "/card/head-jab-1", label: "Head Jab (pitch 1)" },
+    wrap: ['<ul class="results">', "</ul>"],
   },
   {
     name: "CardFace landscape",
@@ -235,11 +261,12 @@ async function runAxe(dom: JSDOM): Promise<axe.Result[]> {
 describe("every primitive passes axe", () => {
   {
     const theme = THEMES[0]!;
-    for (const { name, component, props } of CASES) {
+    for (const { name, component, props, wrap } of CASES) {
       test(`${name}`, async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { body } = render(component as any, { props });
-        const violations = await violationsFor(body, theme);
+        const [open = "", close = ""] = wrap ?? [];
+        const violations = await violationsFor(`${open}${body}${close}`, theme);
 
         // Name each violation in the failure rather than asserting a bare
         // count: "expected 1 to be 0" sends someone hunting, and axe already
