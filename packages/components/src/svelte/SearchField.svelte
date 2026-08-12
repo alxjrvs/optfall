@@ -236,7 +236,15 @@
     font-size: var(--of-type-size-small);
   }
 
-  .hint kbd {
+  /*
+    `:global()`, and it is not laziness. The hint is authored as a SNIPPET in
+    the caller, so its markup carries the caller's scope hash rather than this
+    component's — a plain `.hint kbd` compiled to nothing, svelte-check reported
+    `css_unused_selector`, and both search hints silently lost their `<kbd>`
+    styling when this file was extracted. Scoping to `.hint` keeps the reach
+    narrow: it styles keys inside this component's own hint and nowhere else.
+  */
+  .hint :global(kbd) {
     font-family: var(--of-type-family-mono);
     font-size: var(--of-type-size-small);
     letter-spacing: var(--of-type-tracking-mono);

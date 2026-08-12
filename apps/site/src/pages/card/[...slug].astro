@@ -38,7 +38,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import CardEntry from "../../components/CardEntry.astro";
 import {
   CARD_ROUTES,
+  NAME_PAGES,
   descriptionFor,
+  hrefForSlug,
   titleFor,
   type CardRoute,
 } from "../../lib/cards";
@@ -98,6 +100,36 @@ const page = route.kind === "card" ? route.page : route.page.cards[0];
  * version actually rendered — "Pitch 1 · Cost 0 · Power 3" — which is what the
  * page shows on arrival, and the stats genuinely differ between versions.
  */
+/**
+ * `/card/head-jab` and `/card/head-jab-1` render the same card at the same
+ * version, so one of them has to say which is the real address.
+ *
+ * The BARE NAME wins, because it is the URL a person guesses, types and pastes
+ * — `slugify` exists to make it guessable — and because it is the one that
+ * survives upstream printing a fourth pitch version. Roughly 900 pairs;
+ * without this they are 900 requests to a search engine to pick for us.
+ *
+ * A non-default version keeps its own canonical: `/card/head-jab-2` is not a
+ * duplicate of anything.
+ */
+const DEFAULT_SLUG_BY_NAME = new Map(
+  NAME_PAGES.map((name) => [name.slug, name.cards[0]?.slug]),
+);
+
+const canonical = (() => {
+  if (page === undefined) return undefined;
+  // The name route IS the bare name; it canonicals to itself by default.
+  if (route.kind === "name") return hrefForSlug(page.nameSlug);
+  // A variant page duplicates the bare name ONLY if it is the version that
+  // page renders — the lowest-pitch one. An earlier attempt compared the slug
+  // to `<nameSlug>-<pitch>`, which is true of EVERY variant, so pitch 2 and
+  // pitch 3 each declared themselves duplicates of pitch 1. They are different
+  // cards with different text and different legality; saying otherwise would
+  // ask a search engine to drop two thirds of the corpus.
+  const isDefault = DEFAULT_SLUG_BY_NAME.get(page.nameSlug) === page.slug;
+  return isDefault ? hrefForSlug(page.nameSlug) : undefined;
+})();
+
 const title =
   page === undefined
     ? ""
@@ -108,7 +140,7 @@ const title =
 
 {
   page === undefined ? null : (
-    <BaseLayout title={title} description={descriptionFor(page)}>
+    <BaseLayout title={title} description={descriptionFor(page)} canonical={canonical}>
       <CardEntry page={page} />
     </BaseLayout>
   )

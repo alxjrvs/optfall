@@ -86,7 +86,7 @@
   }: Props = $props();
 </script>
 
-<figure class="face">
+<figure class="face" style={`--face-ratio: ${width} / ${height}`}>
   <span class="frame">
     <img
       {src}
@@ -133,6 +133,19 @@
     display: block;
     max-inline-size: 100%;
     block-size: auto;
+    /*
+      THE BOX IS HELD BY THE PROPS, NOT BY WHAT LOADS INTO IT.
+      `block-size: auto` alone lets the LOADED image's own ratio drive the
+      height, which is fine until the thing that loads is not the shape the
+      caller promised. The face host answers a miss with a portrait placeholder
+      whatever was asked for, so the 15 horizontally-played cards would resolve
+      a portrait SVG inside a landscape box and shift the layout the intrinsic
+      attributes exist to hold still. `aspect-ratio` comes from the same
+      `width`/`height` the caller already had to supply, and `object-fit`
+      letterboxes anything that disagrees rather than distorting it.
+    */
+    aspect-ratio: var(--face-ratio);
+    object-fit: contain;
     /* Stated rather than omitted, exactly as BevelledPlate does it: the token
        exists only to be zero, and saying it out loud is what stops a host
        stylesheet rounding a card face. */
