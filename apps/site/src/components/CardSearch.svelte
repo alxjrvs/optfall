@@ -12,12 +12,12 @@
    *
    * FOUR THINGS IT HAS TO GET RIGHT.
    *
-   * 1. **Every view is a URL.** `/cards?q=banned:cc` is a real address that
+   * 1. **Every view is a URL.** `/?q=banned:cc` is a real address that
    *    renders those results: the query is read from the URL on load, written
    *    back as you type (`replaceState`, so the back button is not filled with
    *    keystrokes) and pushed on submit.
    * 2. **The form degrades to a static browse; live results need JavaScript.**
-   *    The form is a real `GET` to `/cards`, so a browser with no islands
+   *    The form is a real `GET` to `/`, so a browser with no islands
    *    running still produces a shareable URL and still reaches every
    *    `/card/<slug>` page. What it cannot do is answer the query — the ranking
    *    runs here, and a static build has no server. The page says so in a
@@ -49,7 +49,14 @@
    * unparseable from the pages that import it, with no indication that a comment
    * is the cause.
    */
-  import { BevelledPlate, OrnamentalRule, PitchJewel } from "optfall-components/svelte";
+  import {
+    BevelledPlate,
+    CardFace,
+    OrnamentalRule,
+    PitchJewel,
+  } from "optfall-components/svelte";
+
+  import { boxFor, faceUrl, placeholderUrl } from "../lib/faces";
 
   import {
     CARD_RESULT_LIMIT,
@@ -81,17 +88,54 @@
     return new URLSearchParams(window.location.search).get("q") ?? "";
   }
 
+  /**
+   * TWO PIECES OF STATE, AND THE SPLIT IS THE WHOLE INTERACTION MODEL.
+   *
+   * `query` is what is in the box. `submitted` is what has been asked. Results
+   * derive from `submitted`, so nothing re-ranks while somebody is still
+   * typing — `docs/SCRYFALL-GAP.md` §5.2, which settled that search here is
+   * submit-driven rather than live, for reasons beyond imitating Scryfall:
+   *
+   * - A grid of card faces reflowing under the cursor on every keystroke is
+   *   noise, and it makes the image layer fight the search layer for bandwidth.
+   * - The URL is the product, and a submit is the moment a query becomes a link
+   *   worth pasting. Live filtering blurs the point at which that happens.
+   * - It deletes the debounce, the race handling and the partial-query ranking
+   *   path outright, rather than tuning them.
+   * - The no-JS path stops being a special case: the form is a real GET to this
+   *   same address, so the difference between scripting on and off narrows to
+   *   who renders the list rather than whether the page works.
+   */
   let query = $state(queryFromUrl());
+  let submitted = $state(queryFromUrl());
   let field = $state<HTMLInputElement | null>(null);
 
-  const outcome = $derived(searchCards(cards, query));
-  const asked = $derived(query.trim() !== "");
+  const outcome = $derived(searchCards(cards, submitted));
+  const asked = $derived(submitted.trim() !== "");
   const truncated = $derived(outcome.total > outcome.results.length);
+
+  /**
+   * How results are shown. In the URL like everything else, so a pasted link
+   * carries the view its sender was looking at.
+   *
+   * The grid is the default because the face is the fastest way to recognise a
+   * card. The list is the dense row this component already had — it is not
+   * thrown away, it is a mode, and it stays better than Scryfall's checklist
+   * because it carries the stat line and the reason the row matched.
+   */
+  function displayFromUrl(): "grid" | "list" {
+    if (typeof window === "undefined") return "grid";
+    return new URLSearchParams(window.location.search).get("display") === "list"
+      ? "list"
+      : "grid";
+  }
+
+  let display = $state(displayFromUrl());
 
   /** Wording for the live region and the count line. Written, never generated. */
   function summarise(): string {
     if (!asked) return "";
-    if (outcome.total === 0) return `Nothing matches ${query.trim()}.`;
+    if (outcome.total === 0) return `Nothing matches ${submitted.trim()}.`;
     const found = `${outcome.total} card${outcome.total === 1 ? "" : "s"}`;
     const shown = truncated ? `, showing the first ${CARD_RESULT_LIMIT}` : "";
     return `${found} match${outcome.total === 1 ? "es" : ""}${shown}.`;
@@ -100,21 +144,16 @@
   const summary = $derived(summarise());
 
   /**
-   * The live region settles before it speaks. Results update on every keystroke
-   * because that is what makes the field feel like a tool; announcing on every
-   * keystroke would make a screen reader unusable, since each interruption
-   * cancels the last.
+   * The live region can speak immediately now, and that is a direct dividend of
+   * the submit-driven model above.
+   *
+   * This used to debounce by 600ms, because results changed on every keystroke
+   * and announcing each one would make a screen reader unusable — every
+   * interruption cancels the last. Results now change only when somebody asks,
+   * so there is exactly one announcement per query and nothing to settle. The
+   * timer is gone rather than tuned.
    */
-  const SETTLE = 600;
-  let announcement = $state(summarise());
-
-  $effect(() => {
-    const next = summary;
-    const timer = setTimeout(() => {
-      announcement = next;
-    }, SETTLE);
-    return () => clearTimeout(timer);
-  });
+  const announcement = $derived(summary);
 
   function syncUrl(mode: "replace" | "push"): void {
     if (typeof window === "undefined") return;
@@ -122,24 +161,22 @@
     const trimmed = query.trim();
     if (trimmed === "") url.searchParams.delete("q");
     else url.searchParams.set("q", query);
+    // Only when it is not the default: a URL should carry what somebody chose,
+    // not restate what they did not.
+    if (display === "grid") url.searchParams.delete("display");
+    else url.searchParams.set("display", display);
     const target = `${url.pathname}${url.search}`;
     if (target === `${window.location.pathname}${window.location.search}`) return;
     if (mode === "push") window.history.pushState({}, "", target);
     else window.history.replaceState({}, "", target);
   }
 
-  $effect(() => {
-    const typed = query;
-    const timer = setTimeout(() => {
-      if (typed === query) syncUrl("replace");
-    }, SETTLE);
-    return () => clearTimeout(timer);
-  });
-
   /** Back and forward have to work, which means listening for them. */
   $effect(() => {
     const onPop = () => {
       query = queryFromUrl();
+      submitted = query;
+      display = displayFromUrl();
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -166,8 +203,15 @@
 
   function onSubmit(event: SubmitEvent): void {
     event.preventDefault();
+    submitted = query;
     syncUrl("push");
     field?.blur();
+  }
+
+  /** Switching view is a navigation too, so it lands in the URL. */
+  function show(next: "grid" | "list"): void {
+    display = next;
+    syncUrl("push");
   }
 
   function onKeydown(event: KeyboardEvent): void {
@@ -197,7 +241,7 @@
   class="search"
   role="search"
   aria-label="Flesh and Blood cards"
-  action="/cards"
+  action="/"
   method="get"
   onsubmit={onSubmit}
 >
@@ -261,7 +305,60 @@
 
 {#if asked}
   {#if outcome.results.length > 0}
-    <p class="count">{summary}</p>
+    <div class="result-head">
+      <p class="count">{summary}</p>
+
+      <!--
+        Two views of the same answer. A radio group rather than a pair of
+        buttons, because that is what "pick exactly one" is, and it gets arrow
+        keys and a group name for free.
+      -->
+      <fieldset class="views">
+        <legend class="views-legend">Show results as</legend>
+        {#each [["grid", "Grid"], ["list", "List"]] as const as [mode, label] (mode)}
+          <label class="view">
+            <input
+              type="radio"
+              name="display"
+              value={mode}
+              checked={display === mode}
+              onchange={() => show(mode)}
+            />
+            <span>{label}</span>
+          </label>
+        {/each}
+      </fieldset>
+    </div>
+
+    {#if display === "grid"}
+      <!--
+        The face is the row. `docs/SCRYFALL-GAP.md`: results are images by
+        default, because recognising a card by its face is faster than reading
+        its name — which is the single largest difference between this and every
+        text-list card tool in the game.
+
+        `CardFace` carries the copyright line on every one of these, and that is
+        not negotiable: COMPLIANCE.md §5 forbids a variant that drops it.
+      -->
+      <ul class="grid">
+        {#each outcome.results as result (result.href)}
+          {@const box = boxFor("thumb", result.faceLandscape ? "landscape" : "portrait")}
+          <li class="cell">
+            <a class="cell-link" href={result.href}>
+              <CardFace
+                src={result.faceKey === null
+                  ? placeholderUrl(result.faceLandscape ? "landscape" : "portrait")
+                  : faceUrl(result.faceKey, "thumb")}
+                alt={`${result.label} — ${result.typeLine}`}
+                width={box.width}
+                height={box.height}
+              />
+              <span class="cell-name">{result.label}</span>
+            </a>
+          </li>
+        {/each}
+      </ul>
+    {:else}
     <ol class="results">
       {#each outcome.results as result (result.href)}
         <li class="result">
@@ -287,6 +384,7 @@
         </li>
       {/each}
     </ol>
+    {/if}
     {#if truncated}
       <p class="count">
         {outcome.total - outcome.results.length} more match. Narrow the query — every
@@ -296,7 +394,7 @@
   {:else}
     <p class="count">
       Nothing in the {cards.size.toLocaleString("en-GB")} cards matches every part of
-      <strong>{query.trim()}</strong>. Words match whole words and the start of words,
+      <strong>{submitted.trim()}</strong>. Words match whole words and the start of words,
       so <code>domin</code> finds <code>dominate</code> — but every word you type has
       to appear in the name, the type line, a keyword or the printed text.
     </p>
@@ -316,7 +414,7 @@
   <ul class="browse">
     {#each cards.browse as [line, count] (line)}
       <li>
-        <a class="browse-link" href={`/cards?q=${encodeURIComponent(`type:"${line}"`)}`}>
+        <a class="browse-link" href={`/?q=${encodeURIComponent(`type:"${line}"`)}`}>
           {line}
         </a>
         <span class="browse-count">{count}</span>
@@ -326,6 +424,96 @@
 {/if}
 
 <style>
+  /* -- Result head: the count, and the view switch ------------------------- */
+
+  .result-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--of-space-base);
+  }
+
+  .views {
+    display: flex;
+    align-items: center;
+    gap: var(--of-space-base);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  /* The group needs a name for assistive technology and no name on screen —
+     the two labels beside it already say what it does. */
+  .views-legend {
+    position: absolute;
+    inline-size: var(--of-space-hair);
+    block-size: var(--of-space-hair);
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .view {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--of-space-tight);
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+    cursor: pointer;
+  }
+
+  .view:has(input:checked) {
+    color: var(--of-color-ink);
+  }
+
+  /* -- The grid ------------------------------------------------------------ */
+
+  /*
+    Sized from the thumb tier so a cell is the width of the face it holds, and
+    the track count follows the viewport rather than being chosen. `auto-fill`
+    rather than `auto-fit` so a single result stays card-sized instead of
+    stretching across the row.
+  */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--of-card-face-thumb), 1fr));
+    gap: var(--of-space-loose);
+    margin-block-start: var(--of-space-loose);
+    padding: 0;
+    list-style: none;
+  }
+
+  .cell-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--of-space-tight);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /*
+    The name is the accessible name of the link along with the face's alt text,
+    and it is visible because recognising art is not the same as being sure —
+    900 names in this corpus belong to more than one card, and the variant
+    suffix is what tells two identical-looking faces apart.
+  */
+  .cell-name {
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-small);
+    line-height: var(--of-type-leading-tight);
+    color: var(--of-color-ink);
+  }
+
+  .cell-link:hover .cell-name,
+  .cell-link:focus-visible .cell-name {
+    color: var(--of-color-accent);
+  }
+
   /*
     THE PRIMITIVES THIS PAGE FOUND MISSING, exactly as `RulesSearch.svelte`
     records: a text field and a dense list row. Both are real gaps rather than

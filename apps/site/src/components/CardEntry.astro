@@ -44,15 +44,21 @@
  * both useless and a WCAG 2.4.4 failure. The label carries the variant suffix
  * and is composed once, in `cards.ts`, so a page cannot forget it.
  *
- * **NO CARD FACE IS RENDERED, DELIBERATELY.** Card images are permitted for
- * card databases on the condition that a copyright line accompanies them, and
- * `packages/components/src/index.ts` designs that condition to be
- * unrepresentable-if-missing by putting the notice inside a `CardImage`
- * primitive rather than in a prop. That primitive does not exist yet. Writing a
- * bare `<img>` here would satisfy neither "compose, never restyle" nor the
- * copyright condition, so the printings table cites the collector number, the
- * set and the artist — which is the citable identity of a printing — and no
- * face is shown until the primitive lands.
+ * **THE FACE IS THE FIRST THING, AND IT ARRIVES THROUGH A PRIMITIVE.** This
+ * comment used to say the opposite — that no face was rendered, deliberately,
+ * because card images are permitted only on the condition that a copyright line
+ * accompanies them and the primitive designed to make that condition
+ * unrepresentable-if-missing did not exist yet. It exists now. `CardFace` emits
+ * `CARD_IMAGE_COPYRIGHT` itself on every render, with no prop and no variant
+ * that can drop it, so the condition is satisfied by construction rather than by
+ * this page remembering. The printings table still cites collector number, set
+ * and artist, because that is the citable identity of a printing and a picture
+ * is not a citation.
+ *
+ * **THE RAIL SHOWS ONLY PRINTINGS THAT HAVE ART.** A card averages 3.3
+ * printings and several list a cold-foil variant upstream does not publish a
+ * face for. A row of NO IMAGE tiles would be a worse artefact than a shorter
+ * rail, and the table below still lists every printing, so nothing is hidden.
  *
  * Everything visible is composed from `optfall-components`. The styles below
  * are layout and voice assignment only, and every value in them is a
@@ -197,7 +203,7 @@ const showRail = rail.length > 1;
 <nav class="lineage" aria-label="Breadcrumb">
   <ol class="crumbs">
     <li><a href="/">Optfall</a></li>
-    <li><a href="/cards">Cards</a></li>
+    <li><a href="/">Cards</a></li>
     {
       page.disambiguated && (
         <li>

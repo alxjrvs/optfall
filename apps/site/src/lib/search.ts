@@ -327,13 +327,13 @@ const PENDING_OPERATORS: Readonly<Record<string, string>> = {
   // it landed: an operator that WORKS ELSEWHERE is a redirection, not a
   // pending feature, and describing it as unbuilt would be the same lie in the
   // other direction. `docs/PLAN.md`, "degrade visibly".
-  pitch: "searches cards, which live at /cards",
-  class: "searches cards, which live at /cards",
-  type: "searches cards, which live at /cards",
-  set: "searches cards, which live at /cards",
-  rarity: "searches cards, which live at /cards",
-  cost: "searches cards, which live at /cards",
-  name: "searches cards, which live at /cards",
+  pitch: "searches cards, which live at /",
+  class: "searches cards, which live at /",
+  type: "searches cards, which live at /",
+  set: "searches cards, which live at /",
+  rarity: "searches cards, which live at /",
+  cost: "searches cards, which live at /",
+  name: "searches cards, which live at /",
   text: "searches printed card text, which lives at /cards",
   banned: "filters cards by present-day legality, which lives at /cards",
   // `legal:` alone is answerable at /cards; `legal:cc@2026-03-14` is not
