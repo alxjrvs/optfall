@@ -32,7 +32,7 @@
    * is announced rather than merely outlined, and a reader who cannot see the
    * accent border still knows which printing they are looking at.
    */
-  import { CardFace } from "optfall-components/svelte";
+  import { CardFace, CardFaceGroup } from "optfall-components/svelte";
 
   interface Printing {
     /** Blob key, already resolved by the build. */
@@ -69,7 +69,17 @@
 </script>
 
 {#if current}
-  <div class="picker">
+  <!--
+    EVERY FACE HERE GOES THROUGH THE COMPONENT, thumbnails included. An earlier
+    version of this file rendered the tiles as bare `<img>` tags, which is the
+    exact path docs/COMPLIANCE.md §5 names as a way to break the copyright
+    condition — and it left 22 card images on a page under one notice.
+
+    The group carries the notice for all of them, once, because these are eight
+    pictures of ONE card and the legal fact is the same for each.
+  -->
+  <CardFaceGroup>
+    <div class="picker">
     <CardFace
       src={current.normal}
       {alt}
@@ -91,14 +101,14 @@
                   checked={index === selected}
                   onchange={() => (selected = index)}
                 />
-                <img
-                  src={printing.thumb}
-                  alt=""
-                  width={printing.thumbWidth}
-                  height={printing.thumbHeight}
-                  loading="lazy"
-                  decoding="async"
-                />
+                <span class="tile-face">
+                  <CardFace
+                    src={printing.thumb}
+                    alt=""
+                    width={printing.thumbWidth}
+                    height={printing.thumbHeight}
+                  />
+                </span>
                 <span class="tile-set">{printing.setName}</span>
                 <span class="tile-id">{printing.id}</span>
               </label>
@@ -107,7 +117,8 @@
         </ul>
       </fieldset>
     {/if}
-  </div>
+    </div>
+  </CardFaceGroup>
 {/if}
 
 <style>
@@ -165,11 +176,12 @@
     block-size: var(--of-space-hair);
   }
 
-  .tile img {
+  /* The selected outline goes on the wrapper: `CardFace` owns how a face is
+     drawn, and reaching past it to restyle the image would be the page
+     restyling a primitive. */
+  .tile-face {
     display: block;
-    border-radius: var(--of-bevel-radius);
-    border: var(--of-bevel-width) solid var(--of-color-rule);
-    background: var(--of-color-sunken);
+    outline: var(--of-bevel-width) solid var(--of-color-rule);
   }
 
   .tile:hover {
@@ -185,13 +197,13 @@
     color: var(--of-color-ink);
   }
 
-  .tile.current img {
-    border-color: var(--of-color-accent);
+  .tile.current .tile-face {
+    outline-color: var(--of-color-accent);
   }
 
   /* Focus lands on the hidden radio, so the ring is drawn on the tile it
      controls — never removed, only relocated. */
-  .tile:has(input:focus-visible) img {
+  .tile:has(input:focus-visible) .tile-face {
     outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
     outline-offset: var(--of-space-tightest);
   }

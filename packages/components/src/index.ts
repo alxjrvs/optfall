@@ -47,6 +47,7 @@ export type PrimitiveName =
   | "ornamental-rule"
   | "mark"
   | "card-face"
+  | "card-face-group"
   | "search-field"
   | "result-row"
   | "stat-glyph";
@@ -61,6 +62,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "ornamental-rule",
   "mark",
   "card-face",
+  "card-face-group",
   "search-field",
   "result-row",
   "stat-glyph",

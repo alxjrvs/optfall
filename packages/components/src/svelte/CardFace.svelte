@@ -40,6 +40,7 @@
    * cannot know why the first one did not fire.
    */
   import { CARD_IMAGE_COPYRIGHT } from "../index";
+  import { insideCardFaceGroup } from "./CardFaceGroup.svelte";
   import type { PitchValue } from "optfall-theme";
 
   interface Props {
@@ -84,6 +85,18 @@
     loading = "lazy",
     jewel,
   }: Props = $props();
+
+  /**
+   * A group above us carries the notice for all of its faces.
+   *
+   * READ FROM CONTEXT, NOT FROM A PROP, and that distinction is the whole
+   * guarantee. `docs/COMPLIANCE.md` §5 forbids a prop the caller may omit and a
+   * variant that drops the line — a caller cannot forge this from markup, and
+   * the only thing that sets it is `CardFaceGroup`, which emits the notice
+   * itself. The line is hoisted, never dropped: a face outside a group still
+   * carries its own.
+   */
+  const carriedByGroup = insideCardFaceGroup();
 </script>
 
 <figure class="face" style={`--face-ratio: ${width} / ${height}`}>
@@ -106,9 +119,12 @@
 
   <!--
     Not optional, not overridable, not the page's job. See the block comment
-    above and docs/COMPLIANCE.md §5.
+    above and docs/COMPLIANCE.md §5. The only thing that suppresses it here is a
+    `CardFaceGroup` ancestor, which emits it for the whole group.
   -->
-  <figcaption class="copyright">{CARD_IMAGE_COPYRIGHT}</figcaption>
+  {#if !carriedByGroup}
+    <figcaption class="copyright">{CARD_IMAGE_COPYRIGHT}</figcaption>
+  {/if}
 </figure>
 
 <style>
@@ -174,16 +190,28 @@
   }
 
   /*
-    The mono label voice: if it is monospaced in this system it is something you
-    can cite, and this is a legal notice. Micro size and muted ink so a grid of
-    sixty of them reads as apparatus rather than as sixty sentences — small, but
-    never hidden, and never conditional.
+    LEGALESE, AND SET LIKE IT.
+
+    This carried `tracking.wide` — the label treatment — which was right while
+    it was the monospace label voice and wrong the moment that voice was
+    retired. Wide-tracked sans at the top of a card reads as a heading, so the
+    one line on the page that should recede was the one shouting. Fine print is
+    small, tight and quiet; it is not a label, and it is not announcing itself.
+
+    Still never hidden and never conditional. `docs/COMPLIANCE.md` §5 requires
+    the notice accompany the image, and this component emits it with no prop and
+    no variant that can drop it — but "present" was never the same as "loud",
+    and the requirement asks for the first.
   */
   .copyright {
     font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-wide);
+    /* Tight rather than tracked: the opposite of the label treatment above. */
+    letter-spacing: var(--of-type-tracking-tight);
     color: var(--of-color-ink-faint);
     line-height: var(--of-type-leading-tight);
+    /* Never wider than the face it belongs to, so a thumbnail's notice cannot
+       widen the cell it sits in. */
+    max-inline-size: 100%;
   }
 </style>

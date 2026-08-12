@@ -49,7 +49,7 @@ describe("the primitive set", () => {
     // why the count moved: docs/SCRYFALL-GAP.md §5.1 made images a product
     // surface, and a component that renders a card image is the only place the
     // compliance line can be made unrepresentable-to-omit.
-    expect(PRIMITIVES).toHaveLength(12);
+    expect(PRIMITIVES).toHaveLength(13);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
@@ -57,6 +57,7 @@ describe("the primitive set", () => {
     expect(PRIMITIVES).toContain("search-field");
     expect(PRIMITIVES).toContain("result-row");
     expect(PRIMITIVES).toContain("stat-glyph");
+    expect(PRIMITIVES).toContain("card-face-group");
   });
 });
 
