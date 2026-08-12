@@ -47,6 +47,7 @@ import { render } from "svelte/server";
 import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
 
 import BevelledPlate from "./BevelledPlate.svelte";
+import CardFace from "./CardFace.svelte";
 import BrassSeal from "./BrassSeal.svelte";
 import Citation from "./Citation.svelte";
 import FiligreeCorner from "./FiligreeCorner.svelte";
@@ -98,6 +99,29 @@ const CASES: readonly { name: string; component: unknown; props: Record<string, 
   { name: "OrnamentalRule", component: OrnamentalRule, props: {} },
   { name: "Mark", component: Mark, props: {} },
   { name: "Mark small", component: Mark, props: { size: "sm" } },
+  // The face carries a real accessible name and a copyright line that no
+  // caller can drop. Both orientations, because the landscape box is a
+  // different rendering rather than the same one scaled.
+  {
+    name: "CardFace portrait",
+    component: CardFace,
+    props: {
+      src: "https://optfall-images.netlify.app/normal/MST131.webp",
+      alt: "Command and Conquer (pitch 1) — Guardian Action - Attack",
+      width: 450,
+      height: 628,
+    },
+  },
+  {
+    name: "CardFace landscape",
+    component: CardFace,
+    props: {
+      src: "https://optfall-images.netlify.app/normal/HVY140.webp",
+      alt: "Crown of Providence — Head",
+      width: 628,
+      height: 450,
+    },
+  },
 ];
 
 /**

@@ -45,7 +45,8 @@ export type PrimitiveName =
   | "citation"
   | "filigree-corner"
   | "ornamental-rule"
-  | "mark";
+  | "mark"
+  | "card-face";
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
@@ -56,6 +57,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "filigree-corner",
   "ornamental-rule",
   "mark",
+  "card-face",
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -303,11 +305,38 @@ export const CARD_IMAGE_COPYRIGHT = "Card images © Legend Story Studios.";
  */
 export interface CardImageProps {
   readonly src: string;
+  /**
+   * Optional `srcset`, when more than one tier is worth offering, and the
+   * `sizes` that goes with it.
+   */
+  readonly srcset?: string;
+  readonly sizes?: string;
   /** The card's printed name, used as the accessible name. */
   readonly alt: string;
+  /**
+   * Intrinsic pixel box. REQUIRED rather than optional, and that is a
+   * correctness property rather than a nicety: a grid of lazily-loaded faces
+   * with no intrinsic size is a grid of layout shifts, and the landscape cases
+   * are real — 15 cards are played horizontally and 10 printings carry a
+   * rotation, so a portrait box around a landscape face is visible at a glance.
+   */
+  readonly width: number;
+  readonly height: number;
   /** Overlay drawn by us, never sampled from the artwork. */
   readonly pitch?: PitchValue;
+  /** Eager only for the one face above the fold on a card page. */
+  readonly loading?: "lazy" | "eager";
 }
+
+/**
+ * The URL grammar for card faces deliberately does NOT live in this package.
+ *
+ * `apps/site/src/lib/faces.ts` owns it, because it is shared with the ingest
+ * that writes the blobs and the two must not be able to disagree. Keeping the
+ * host name and the key rule out of here is also what keeps these primitives
+ * adoptable by a Flesh and Blood tool that serves its faces from somewhere
+ * else — which is the entire premise of publishing them.
+ */
 
 /**
  * Typography assignments are fixed by role, not chosen per usage: serif for

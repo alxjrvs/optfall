@@ -25,3 +25,4 @@ export { default as Citation } from "./Citation.svelte";
 export { default as FiligreeCorner } from "./FiligreeCorner.svelte";
 export { default as OrnamentalRule } from "./OrnamentalRule.svelte";
 export { default as Mark } from "./Mark.svelte";
+export { default as CardFace } from "./CardFace.svelte";
