@@ -25,6 +25,9 @@ import NoScriptNotice from "../components/NoScriptNotice.astro";
 import CardSearch from "../components/CardSearch.svelte";
 import { buildCardIndex } from "../lib/card-search";
 import { CARD_PAGES, CORPUS, LAST_CONFIRMED, NAME_PAGES } from "../lib/cards";
+import rulesJson from "../../../../data/rules/cr-2.14.0.json";
+import { buildKeywordVocabulary, keywordCoverage } from "../lib/keywords";
+import type { RulesCorpus } from "../lib/search";
 
 /*
  * Built here, once, at build time, from the same shaped pages `/card/<slug>`
@@ -41,6 +44,24 @@ const cards = CORPUS.counts.cards.toLocaleString("en-GB");
 const printings = CORPUS.counts.printings.toLocaleString("en-GB");
 const permalinks = (CARD_PAGES.length + NAME_PAGES.length).toLocaleString("en-GB");
 const upstream = `https://github.com/${CORPUS.source.repository}`;
+
+/**
+ * THE JOIN'S COVERAGE, STATED RATHER THAN IMPLIED.
+ *
+ * Card keywords are matched to the Comprehensive Rules sections that define
+ * them, and the match is exact against a closed vocabulary — so some keywords
+ * do not resolve. `docs/PLAN.md`: "A stale Optfall must look stale", and a join
+ * that quietly drops what it cannot answer is asserting a completeness it does
+ * not have. The number is computed here rather than typed, so it cannot rot
+ * when either document is re-synced.
+ */
+const coverage = keywordCoverage(
+  buildKeywordVocabulary(rulesJson as unknown as RulesCorpus),
+  CORPUS.cards.flatMap((card) =>
+    card.card_keywords.concat(card.ability_and_effect_keywords),
+  ),
+);
+const unmatchedList = coverage.unmatched.join(", ");
 ---
 
 <BaseLayout
@@ -68,6 +89,10 @@ const upstream = `https://github.com/${CORPUS.source.repository}`;
   -->
   <p class="provenance">
     {cards} cards and {printings} printings, at {permalinks} permanent URLs, read from <a href={upstream}>{CORPUS.source.repository}</a> at commit <code>{CORPUS.source.commit}</code> and last confirmed {LAST_CONFIRMED}. Legality is present-day only and every verdict prints the upstream flags it was derived from; legality as of a date is not built yet and the query language says so rather than guessing. Nothing on this page is summarised, paraphrased or generated.
+  </p>
+
+  <p class="provenance">
+    Card keywords are matched to the Comprehensive Rules section that defines each one, and every card page cites the rules that govern it. Coverage is <strong>{coverage.percent}%</strong> — {coverage.direct + coverage.viaFamily} of {coverage.baseForms} distinct keywords, {coverage.direct} matched directly and {coverage.viaFamily} through a rule the document parameterises. The {coverage.unmatched.length} it cannot resolve are named rather than hidden: {unmatchedList}. A keyword the rules do not define carries no citation instead of a guessed one.
   </p>
 
   <p class="provenance">{CORPUS.rights}</p>
