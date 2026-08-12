@@ -51,7 +51,25 @@ export type TokenNamespace =
   | "space"
   | "bevel"
   | "ornament"
-  | "motion";
+  | "motion"
+  /**
+   * The card itself.
+   *
+   * Added with the card layer rather than with the design system, and it earns
+   * a namespace rather than being filed under `space` because it is not part of
+   * the spacing rhythm: `card.face.thumb` and `card.face.normal` are the two
+   * widths the face host actually publishes, so they are a fact about a
+   * *published artefact* that a surface must match, not a step on a scale a
+   * designer chose. Filing them under `space` would invite the next person to
+   * reach for `space.looser` when they wanted a card, which is exactly the
+   * confusion the namespaces exist to prevent.
+   *
+   * Same argument as `ornament.jewel.*`: the jewel is sized in the token layer
+   * because it is a reserved silhouette and a component free to pick its own
+   * size would erode it. A card face is stronger still — a surface free to pick
+   * its own width would be asking the host for a tier that does not exist.
+   */
+  | "card";
 
 /** A dotted token identifier, such as `color.ground` or `space.gutter`. */
 export type TokenId = `${TokenNamespace}.${string}`;

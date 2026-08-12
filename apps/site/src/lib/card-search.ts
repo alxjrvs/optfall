@@ -84,6 +84,26 @@ export interface EncodedCardIndex {
   readonly labels: string;
   /** Card slugs, one per line. */
   readonly slugs: string;
+  /**
+   * Face blob keys, one per line, empty where the card publishes no art.
+   *
+   * SHIPPED RATHER THAN DERIVED, for the same reason the slugs are: the key is
+   * a pure function of an image URL, but the URL lives in the 16 MB corpus that
+   * deliberately never reaches a browser. The build already resolved it, so the
+   * index carries the answer rather than the input.
+   *
+   * About 130 KB across 4,941 cards, and it is what turns a text result list
+   * into a grid of card faces.
+   */
+  readonly faceKeys: string;
+  /**
+   * One digit per card: `1` where the face is landscape, `0` where portrait.
+   *
+   * Needed because the box has to be right BEFORE the image loads, and a
+   * portrait box around a landscape face is visible at a glance. 15 cards are
+   * played horizontally.
+   */
+  readonly faceLandscape: string;
   /** One digit per card: `0`–`3`. */
   readonly pitches: string;
   /** Printed type lines, deduplicated, one per line. */
@@ -270,6 +290,8 @@ export function buildCardIndex(
 
   const labels: string[] = [];
   const slugs: string[] = [];
+  const faceKeys: string[] = [];
+  const faceLandscape: string[] = [];
   const pitches: string[] = [];
   const stats: string[] = [];
   const memberships: string[] = [];
@@ -293,6 +315,8 @@ export function buildCardIndex(
   pages.forEach((page, ordinal) => {
     labels.push(page.label);
     slugs.push(page.slug);
+    faceKeys.push(page.face.key ?? "");
+    faceLandscape.push(page.face.orientation === "landscape" ? "1" : "0");
     pitches.push(String(page.pitch));
     typeAt.push(pad2(types.idOf.get(page.card.type_text) ?? 0));
     stats.push([page.card.cost, page.card.power, page.card.defense].join("\t"));
@@ -374,6 +398,8 @@ export function buildCardIndex(
     confirmed: source.confirmed,
     labels: labels.join("\n"),
     slugs: slugs.join("\n"),
+    faceKeys: faceKeys.join("\n"),
+    faceLandscape: faceLandscape.join(""),
     pitches: pitches.join(""),
     typeDict: types.list.join("\n"),
     typeAt: typeAt.join(""),
@@ -403,6 +429,9 @@ export interface CardIndex {
   /** Tokenised labels, so a name match is whole-word-or-prefix like the rest. */
   readonly labelTokens: readonly (readonly string[])[];
   readonly slugs: readonly string[];
+  /** Face blob key per card; `null` where the card publishes no art. */
+  readonly faceKeys: readonly (string | null)[];
+  readonly faceLandscape: readonly boolean[];
   readonly pitches: readonly PitchValue[];
   readonly typeLines: readonly string[];
   readonly typeTokens: readonly (readonly string[])[];
@@ -430,6 +459,7 @@ function splitIds(field: string, dict: readonly string[]): readonly string[] {
 export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const labels = encoded.labels === "" ? [] : encoded.labels.split("\n");
   const slugs = encoded.slugs === "" ? [] : encoded.slugs.split("\n");
+  const faceKeyLines = encoded.faceKeys === "" ? [] : encoded.faceKeys.split("\n");
   const typeDict = encoded.typeDict === "" ? [] : encoded.typeDict.split("\n");
   const keywordDict = encoded.keywordDict === "" ? [] : encoded.keywordDict.split("\n");
   const traitDict = encoded.traitDict === "" ? [] : encoded.traitDict.split("\n");
@@ -503,6 +533,11 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
     commit: encoded.commit,
     confirmed: encoded.confirmed,
     labels,
+    faceKeys: labels.map((_, ordinal) => {
+      const key = faceKeyLines[ordinal] ?? "";
+      return key === "" ? null : key;
+    }),
+    faceLandscape: labels.map((_, ordinal) => encoded.faceLandscape[ordinal] === "1"),
     folded: labels.map(fold),
     labelTokens: labels.map((label) => tokeniseCard(label)),
     slugs,
@@ -987,6 +1022,10 @@ const FIELD_RANK: Readonly<Record<CardMatchField, number>> = {
 export interface CardResult {
   readonly label: string;
   readonly href: string;
+  /** Face blob key, or `null` where the card publishes no art. */
+  readonly faceKey: string | null;
+  /** True where the face is landscape and needs a transposed box. */
+  readonly faceLandscape: boolean;
   readonly pitch: PitchValue;
   readonly typeLine: string;
   /** Cost, power and defence as printed; `""` where the card has none. */
@@ -1018,6 +1057,8 @@ function toResult(
   return {
     label: index.labels[ordinal] ?? "",
     href: `/card/${index.slugs[ordinal] ?? ""}`,
+    faceKey: index.faceKeys[ordinal] ?? null,
+    faceLandscape: index.faceLandscape[ordinal] === true,
     pitch: index.pitches[ordinal] ?? 0,
     typeLine: index.typeLines[ordinal] ?? "",
     stats: STAT_LABELS.map(

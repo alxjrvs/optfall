@@ -1,168 +1,140 @@
 ---
 /**
- * Home — `optfall.com`.
+ * Home — `optfall.com`. **The card search.**
  *
- * `docs/DESIGN.md`, Screen 1: "One search field, one hint line, one daily
- * object", and the principle it inherits — "No marketing hero, no illustration
- * above the fold. The first thing on the page is the thing you came to do."
+ * THIS PAGE USED TO BE THE RULES SEARCH, and moving it is the single
+ * highest-signal change in `docs/SCRYFALL-GAP.md`. `docs/PLAN.md` was rewritten
+ * to make the card layer the product — "cards are what people arrive for" — and
+ * the front door went on serving the Comprehensive Rules to everyone who
+ * arrived, with card search reachable from one sentence of body copy eleven rows
+ * below the fold. The rules browser is not diminished by the move; it is at
+ * `/search`, linked from the row below the field, and every `/cr/<id>` permalink
+ * is untouched.
  *
- * So the fold holds the mark, the field and one hint, and nothing else. The
- * explanation of what Optfall is lives BELOW it deliberately: a reference tool
- * that explains itself before letting you search has misunderstood what it is.
- * The daily chain link — the third object Screen 1 names — is absent rather
- * than faked; it is keyed on the interaction corpus, which does not exist yet,
- * and a placeholder for it would be the marketing hero this page exists to
- * refuse.
+ * THREE THINGS, IN THIS ORDER: the field as the hero, a row of explainer links,
+ * and the results. Nothing else above the fold, and no fourth element earning
+ * its way in later.
  *
- * ONE HINT, AND IT IS NOT THIS FILE'S. The hint teaches by example rather than
- * by documentation, because people arrive already fluent — `docs/DESIGN.md`
- * puts one inherited Card Vault operator beside ours, so the extension is
- * discovered where the fluency already is. All of that wording now lives in
- * `RulesSearch`, on the line that is wired to the field by `aria-describedby`.
- * This page used to print a second hint of its own *after* the island, which
- * put two hint lines on one screen and left the one teaching the extension ten
- * rows below the field it described. One field, one hint; if the hint needs
- * changing, change it where the field is.
+ * EXPLAINER LINKS, NOT EXPLAINER PARAGRAPHS. This page used to carry five
+ * paragraphs of "what this is" and "what is built" between the field and
+ * nothing. `docs/DESIGN.md`'s own principle — "a reference tool that explains
+ * itself before letting you search has misunderstood what it is" — was written
+ * here and then not followed here. The prose is now a row of links, and the
+ * provenance line that "degrade visibly" requires sits under the results where
+ * it belongs rather than between the reader and the search.
  *
- * ORNAMENT MARKS THE END OF THE FOLD, SO THE ISLAND PLACES IT. The chapter
- * browse renders inside `RulesSearch`, which means an ornamented rule written
- * here can only land after it — below the fold it was supposed to terminate.
- * `ornament` on the island puts it between the hint and the browse instead,
- * where the fold actually ends. The plain rule further down is the ordinary
- * hairline that introduces the prose, and carries no filigree: scrollwork is
- * rationed to once a screen.
- *
- * COMPOSE, NEVER RESTYLE. The mark and the rule are primitives from
- * `optfall-components`; the search island is its own component; the layout owns
- * typography, the measure and the focus ring. What is left here is the stacking
- * of those pieces, and every value in it names a `--of-*` token — the `tokens`
- * CI job fails the build otherwise, including on a `var()` naming a token that
- * does not exist.
+ * THE ISLAND IS SUBMIT-DRIVEN. See `CardSearch.svelte`: results change when
+ * somebody asks, not while they type. That is what lets a grid of card faces be
+ * the default view without the page thrashing under the cursor.
  */
-import { Mark, OrnamentalRule } from "optfall-components/svelte";
-
 import BaseLayout from "../layouts/BaseLayout.astro";
 import NoScriptNotice from "../components/NoScriptNotice.astro";
-import RulesSearch from "../components/RulesSearch.svelte";
-import { buildIndex, type RulesCorpus } from "../lib/search";
-import corpusJson from "../../../../data/rules/cr-2.14.0.json?raw";
-// Build-time only — this is frontmatter, not an island, so the 16 MB card
-// corpus is read on the build machine and none of it reaches a browser.
-import { CORPUS as CARDS } from "../lib/cards";
+import CardSearch from "../components/CardSearch.svelte";
+import { buildCardIndex } from "../lib/card-search";
+import { CARD_PAGES, CORPUS, LAST_CONFIRMED, NAME_PAGES } from "../lib/cards";
 
-/**
- * The corpus is read here, at build time, and the index is built from it — the
- * same shape `/search` uses, deliberately: one way to load the corpus, so the
- * two surfaces cannot disagree about what is in it. This frontmatter runs
- * during `astro build` and never again; there is no server to run it on.
- *
- * `?raw` rather than `readFileSync`, for the reason `search.astro` records: a
- * relative path handed to `readFileSync` resolves against the *bundled* module
- * during `astro build`, not against this source file, so it points at a
- * directory that does not exist. That is not a theory — the first version of
- * this page did exactly that, and the only visible symptom was a fallback
- * string in `dist/index.html`.
- *
- * The full 651 KB of verbatim rules text never reaches a browser. `buildIndex`
- * reduces it to what ranking needs plus one line of context per section, and
- * the section text itself lives on the permalink page, which is the thing the
- * field exists to send people to.
+/*
+ * Built here, once, at build time, from the same shaped pages `/card/<slug>`
+ * renders — which is what makes it impossible for a search result and the page
+ * it links to to disagree about a slug, a label, a legality verdict or now a
+ * face. The 16 MB corpus stays on the build machine.
  */
-const corpus = JSON.parse(corpusJson) as RulesCorpus;
-const index = buildIndex(corpus);
+const index = buildCardIndex(CARD_PAGES, {
+  commit: CORPUS.source.commit,
+  confirmed: LAST_CONFIRMED,
+});
 
-/**
- * Stated rather than typed into the prose. "Degrade visibly" is a project-wide
- * rule — every surface shows when its data was last confirmed — and a version
- * and a count copied by hand are two more things to rot at the next release.
- */
-const sections = corpus.sections.length.toLocaleString("en-GB");
-const cards = CARDS.counts.cards.toLocaleString("en-GB");
-const published = new Date(`${corpus.publishedDateIso}T00:00:00Z`).toLocaleDateString(
-  "en-GB",
-  { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" },
-);
-const bulkExport =
-  "https://github.com/alxjrvs/optfall/blob/main/data/rules/cr-2.14.0.json";
+/* Stated rather than typed into the prose, so they cannot rot at the next sync. */
+const cards = CORPUS.counts.cards.toLocaleString("en-GB");
+const printings = CORPUS.counts.printings.toLocaleString("en-GB");
+const permalinks = (CARD_PAGES.length + NAME_PAGES.length).toLocaleString("en-GB");
+const upstream = `https://github.com/${CORPUS.source.repository}`;
 ---
 
-<BaseLayout title="Optfall">
-  <!-- The mark is decorative here: the wordmark beside it already carries the
-       name, and announcing it twice is noise rather than information. -->
-  <div class="wordmark">
-    <Mark size="lg" decorative />
-    <h1>Optfall</h1>
-  </div>
+<BaseLayout
+  title="Optfall — Flesh and Blood card search"
+  description="Search every Flesh and Blood card. Every card has a permanent, citable URL with its printed text, its printings and its per-format legality — and every legality verdict shows the upstream flags it was derived from."
+>
+  <!--
+    The wordmark is small and the field is large, which is the whole hierarchy.
+    A reference tool's home page is a control surface, not a title page.
+  -->
+  <h1 class="wordmark">Optfall</h1>
 
-  <!-- Above the field, because it explains the field. Renders for nobody with
-       scripting on, and for everybody without it. -->
-  <NoScriptNotice example="/search?q=dominate">Every section is addressable without it: <code>/cr/8.3.4b</code> is the section cited as <code>cr:8.3.4b</code>, and the chapter list under the field is nine links into the same corpus.</NoScriptNotice>
+  <NoScriptNotice example="/?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is a page listing every version.</NoScriptNotice>
 
   <!--
-    `client:load`, not `client:visible` or `client:idle`. On this page the field
-    is the only thing that matters, and a hero that is inert for the first
-    keystrokes is a broken hero.
+    `client:load`, not `client:visible`. The field is the only thing that
+    matters on this page and the whole reason anyone opened it, so it is
+    hydrated before it is looked at. It is also what reads `?q=` back out of the
+    URL, which has to happen on arrival.
 
     `ornament` spends the screen's one filigree on the island's own section
-    rule, which is the only position where it sits between the hint and the
-    chapter browse — the point where the fold ends.
+    rule, between the hint and the results — the point where the fold ends.
   -->
-  <RulesSearch index={index} ornament client:load />
+  <CardSearch index={index} ornament client:load />
 
-  <!-- The ordinary hairline that introduces the prose, and deliberately not a
-       second ornament: filigree is rationed to three roles and never twice on a
-       page. No `label`: the break is already announced by its role and named by
-       the heading beneath it, and a name here would be invented text read aloud
-       for nothing. -->
-  <OrnamentalRule />
+  <!--
+    The explainer row. Links rather than paragraphs, and every one of them goes
+    somewhere that answers the question rather than describing the answer.
+  -->
+  <nav class="explainers" aria-label="About Optfall">
+    <a href="/search">Search the rules</a>
+    <a href="/card/winters-wail">A card that is two things at once</a>
+    <a href="/cr/1.0.1a">A rules permalink</a>
+    <a href={upstream}>The upstream card data</a>
+    <a href="/data-terms">Terms on our data</a>
+    <a href="https://github.com/alxjrvs/optfall/blob/main/docs/PLAN.md">The build plan</a>
+  </nav>
 
-  <h2>What this is</h2>
+  <!--
+    Degrade visibly, under the results rather than above them. The version, the
+    date and the source are stated on the surface that serves the data, and the
+    source is a link pinned to a commit, so the claim is checkable.
 
-  <p>
-    A reference tool for Flesh and Blood that optimises for the one thing no incumbent optimises for: being <strong>right</strong>. Correct rules text, correct legality, correct rulings — each citable, each version-stamped, each with a permanent URL you can paste into an argument instead of describing which paragraph you meant.
+    Inline elements stay on the same source line as the text around them: the
+    build compresses this HTML and drops the whitespace at a line break falling
+    immediately before an inline tag, welding words together in the output.
+  -->
+  <p class="provenance">
+    {cards} cards and {printings} printings, at {permalinks} permanent URLs, read from <a href={upstream}>{CORPUS.source.repository}</a> at commit <code>{CORPUS.source.commit}</code> and last confirmed {LAST_CONFIRMED}. Legality is present-day only and every verdict prints the upstream flags it was derived from; legality as of a date is not built yet and the query language says so rather than guessing. Nothing on this page is summarised, paraphrased or generated, and no language model is involved in anything Optfall serves.
   </p>
 
-  <p>
-    No language model is involved in anything Optfall serves. Search is lexical and deterministic, and every string traces to a parsed official document or a named human author — so a confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
-  </p>
-
-  <h2>What is built</h2>
-
-  <p>
-    The Comprehensive Rules, <strong>{corpus.version}</strong>, published {published} by Legend Story Studios and parsed to {sections} addressable sections — searchable above, and each one on its own permanent URL. The identifier is LSS's own numbering rather than a slug of ours, so <a href="/cr/1.0.1a"><code>cr:1.0.1a</code></a> means here exactly what it means in the PDF.
-  </p>
-
-  <p>
-    <strong>{cards}</strong> cards, pinned to an upstream commit and synced rather than curated, each on its own permanent URL with its printed text, its printings and its per-format legality — and every legality verdict prints the upstream flags it was derived from, because <a href="/card/winters-wail">a card can be two things at once</a> and a tool that collapses that is a tool that is wrong. <a href="/cards">Search the cards</a>.
-  </p>
-
-  <p>
-    Not yet: legality as of a date, the deck checker, version diffs, and the judge-attributed interaction record. Nothing above hides behind a placeholder — if a surface is not here, it is not built.
-  </p>
-
-  <p>
-    The corpus is not only a website. It ships as an openly licensed <a href={bulkExport}>bulk export</a>, read from <a href={corpus.sourceUrl}>the published document</a>, so if this site disappears the corpus does not. The plan and the design language are public too — <a href="https://github.com/alxjrvs/optfall/blob/main/docs/PLAN.md">the phased build plan</a> and <a href="https://github.com/alxjrvs/optfall/blob/main/docs/DESIGN.md">the design pass</a>.
-  </p>
+  <p class="provenance">{CORPUS.rights}</p>
 </BaseLayout>
 
 <style>
   /*
-    Stacking only. Nothing here draws anything: no colour of its own beyond the
-    muted ink the hint already owes the token layer, no box, no shadow, no
-    border — the system holds a page together with typography and hairlines
-    rather than with cards and padding.
+    Stacking and voice assignment only. Nothing here draws anything: no colour
+    of its own beyond what the token layer owes, no box, no shadow, no border —
+    the system holds a page together with typography and hairlines rather than
+    with cards and padding.
   */
   .wordmark {
-    display: flex;
-    align-items: center;
-    gap: var(--of-space-base);
     /* The fold starts at the top of the page. The layout's own heading rhythm
        would push the field down behind a title, which is the marketing hero
        this screen refuses. */
-    margin-block-end: var(--of-space-looser);
+    margin-block: 0 var(--of-space-loose);
+    font-size: var(--of-type-size-large);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    font-family: var(--of-type-family-mono);
+    color: var(--of-color-ink-muted);
   }
 
-  .wordmark h1 {
-    margin-block: 0;
+  .explainers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-base) var(--of-space-looser);
+    margin-block-start: var(--of-space-loosest);
+    padding-block-start: var(--of-space-loose);
+    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+    font-size: var(--of-type-size-small);
+  }
+
+  .provenance {
+    margin-block-start: var(--of-space-looser);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
   }
 </style>

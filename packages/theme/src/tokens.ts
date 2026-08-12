@@ -108,6 +108,18 @@ const STRUCTURE: TokenTable = {
   "ornament.jewel.base": "1.75rem",
   "ornament.jewel.large": "2.5rem",
 
+  /* The two widths a card face is published at, for exactly the reason the
+     jewel's sizes are here: the face host serves `thumb` and `normal` and
+     nothing else, so a surface free to pick its own width would be asking for a
+     size that does not exist. 180px and 450px, stated in rem so a reader who
+     scales their text scales the grid with it.
+
+     The heights are deliberately absent. A card is 63:88 and the `width`/
+     `height` attributes carry the real pixel box per image — a second copy of
+     the ratio in CSS is a second place for it to be wrong. */
+  "card.face.thumb": "11.25rem",
+  "card.face.normal": "28.125rem",
+
   /* Quick enough not to be noticed, slow enough not to flicker. */
   "motion.fast": "120ms",
   "motion.base": "180ms",
