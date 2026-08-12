@@ -106,6 +106,24 @@
   }
 </script>
 
+<!--
+  Top level, because `<svelte:window>` cannot live inside an element — and it is
+  here rather than inside `SearchField` because that primitive owns a form and
+  nothing else. A primitive that also bound a global key would be deciding for
+  every caller that its field is THE field on the page.
+-->
+<svelte:window
+  onkeydown={(event) => {
+    if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    const tag = target?.tagName.toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select") return;
+    if (target?.isContentEditable) return;
+    event.preventDefault();
+    field?.focus();
+  }}
+/>
+
 <div class="typeahead">
   <SearchField
     label="Search the cards"
@@ -115,35 +133,24 @@
     bind:value={query}
     bind:element={field}
     onkeydown={onKeydown}
+    listboxId={listId}
+    expanded={open}
+    activeDescendant={active === -1 ? undefined : optionId(active)}
   >
     {#snippet hint()}
       <code>pitch:3 class:guardian</code> is Card Vault's own syntax · <code>banned:cc</code> is ours · <kbd>/</kbd> returns here.
     {/snippet}
   </SearchField>
 
-  <!--
-    Bound after the field rather than inside it, because `SearchField` owns a
-    form and nothing else: a primitive that also rendered a popup would be
-    deciding for every caller that a search field has one.
-  -->
-  <svelte:window onkeydown={(event) => {
-    if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
-    const target = event.target as HTMLElement | null;
-    const tag = target?.tagName.toLowerCase();
-    if (tag === "input" || tag === "textarea" || tag === "select") return;
-    if (target?.isContentEditable) return;
-    event.preventDefault();
-    field?.focus();
-  }} />
 
   {#if open}
     <ul class="suggestions" id={listId} role="listbox" aria-label="Card names">
-      {#each suggestions as suggestion, index (suggestion.href)}
+      {#each suggestions as suggestion, position (suggestion.href)}
         <li
-          id={optionId(index)}
+          id={optionId(position)}
           role="option"
-          aria-selected={index === active}
-          class:active={index === active}
+          aria-selected={position === active}
+          class:active={position === active}
         >
           <a class="suggestion" href={suggestion.href} tabindex="-1">
             <span class="jewels">

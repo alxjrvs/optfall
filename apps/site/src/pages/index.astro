@@ -1,140 +1,132 @@
 ---
 /**
- * Home — `optfall.com`. **The card search.**
+ * Home — `optfall.com`. **A door, not a room.**
  *
- * THIS PAGE USED TO BE THE RULES SEARCH, and moving it is the single
- * highest-signal change in `docs/SCRYFALL-GAP.md`. `docs/PLAN.md` was rewritten
- * to make the card layer the product — "cards are what people arrive for" — and
- * the front door went on serving the Comprehensive Rules to everyone who
- * arrived, with card search reachable from one sentence of body copy eleven rows
- * below the fold. The rules browser is not diminished by the move; it is at
- * `/search`, linked from the row below the field, and every `/cr/<id>` permalink
- * is untouched.
+ * WHAT THIS PAGE IS FOR: taking a card name and sending you somewhere. That is
+ * the whole brief, and everything not serving it has been taken off.
  *
- * THREE THINGS, IN THIS ORDER: the field as the hero, a row of explainer links,
- * and the results. Nothing else above the fold, and no fourth element earning
- * its way in later.
+ * WHAT IT LOOKED LIKE BEFORE. 474 words and 32 links — twenty-four of them a
+ * browse list of type lines — two dense provenance paragraphs, a hint teaching
+ * six operators, and the full card-search index: about 470 KB of inverted
+ * postings, keyword memberships and per-format verdict vectors, shipped to a
+ * browser so it could render a list of links. A reference tool's front page had
+ * become a page *about* the reference tool.
  *
- * EXPLAINER LINKS, NOT EXPLAINER PARAGRAPHS. This page used to carry five
- * paragraphs of "what this is" and "what is built" between the field and
- * nothing. `docs/DESIGN.md`'s own principle — "a reference tool that explains
- * itself before letting you search has misunderstood what it is" — was written
- * here and then not followed here. The prose is now a row of links, and the
- * provenance line that "degrade visibly" requires sits under the results where
- * it belongs rather than between the reader and the search.
+ * WHAT IT SHIPS NOW: `lib/typeahead.ts`'s index — names, slugs and pitches.
+ * Everything the door needs and nothing the room does.
  *
- * THE ISLAND IS SUBMIT-DRIVEN. See `CardSearch.svelte`: results change when
- * somebody asks, not while they type. That is what lets a grid of card faces be
- * the default view without the page thrashing under the cursor.
+ * THE RESULTS MOVED TO `/cards`, and that is the substance of the change rather
+ * than a detail of it. A page that both takes a query and renders the answer
+ * has to hold two states, and the empty one is what was noisy: with no results
+ * to show, it filled itself with things to look at. Splitting them lets the
+ * door be empty on purpose.
+ *
+ * `/cards` WAS A 301 TO HERE AND IS A PAGE AGAIN. That redirect landed earlier
+ * in the same pass that moved card search to the front door; it is removed
+ * rather than left pointing at a page that no longer answers queries, because a
+ * 301 to a door is worse than the 404 it replaced.
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import NoScriptNotice from "../components/NoScriptNotice.astro";
-import CardSearch from "../components/CardSearch.svelte";
-import { buildCardIndex } from "../lib/card-search";
-import { CARD_PAGES, CORPUS, LAST_CONFIRMED, NAME_PAGES } from "../lib/cards";
+import CardTypeahead from "../components/CardTypeahead.svelte";
+import { buildNameIndex } from "../lib/typeahead";
+import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../lib/cards";
 
-/*
- * Built here, once, at build time, from the same shaped pages `/card/<slug>`
- * renders — which is what makes it impossible for a search result and the page
- * it links to to disagree about a slug, a label, a legality verdict or now a
- * face. The 16 MB corpus stays on the build machine.
- */
-const index = buildCardIndex(CARD_PAGES, {
-  commit: CORPUS.source.commit,
-  confirmed: LAST_CONFIRMED,
-});
+const names = buildNameIndex(CARD_PAGES);
 
-/* Stated rather than typed into the prose, so they cannot rot at the next sync. */
+/** Stated rather than typed into prose, so it cannot rot at the next sync. */
 const cards = CORPUS.counts.cards.toLocaleString("en-GB");
-const printings = CORPUS.counts.printings.toLocaleString("en-GB");
-const permalinks = (CARD_PAGES.length + NAME_PAGES.length).toLocaleString("en-GB");
-const upstream = `https://github.com/${CORPUS.source.repository}`;
 ---
 
 <BaseLayout
   title="Optfall — Flesh and Blood card search"
   description="Search every Flesh and Blood card. Every card has a permanent, citable URL with its printed text, its printings and its per-format legality — and every legality verdict shows the upstream flags it was derived from."
 >
+  <div class="door">
+    <!--
+      The name at the size a masthead wants, not the size a logo wants.
+      `docs/DESIGN.md`: no marketing hero, no illustration above the fold — the
+      first thing on the page is the thing you came to do, and the wordmark's
+      only job is to say where you are.
+    -->
+    <h1 class="wordmark">Optfall</h1>
+
+    <NoScriptNotice example="/cards?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is that card too, with its pitch versions as tabs.</NoScriptNotice>
+
+    <!--
+      `client:load`, not `client:visible`. The field is the only thing on this
+      page and the whole reason anyone opened it, so it is hydrated before it is
+      looked at rather than after.
+    -->
+    <CardTypeahead index={names} action="/cards" client:load />
+
+    <!--
+      Four links, each going somewhere that ANSWERS a question rather than
+      describing the answer. The five paragraphs of "what this is" that used to
+      sit here were the page explaining itself to somebody who had already
+      arrived.
+    -->
+    <nav class="ways-in" aria-label="Elsewhere in Optfall">
+      <a href="/cards">Browse all {cards} cards</a>
+      <a href="/search">Search the rules</a>
+      <a href="/card/winters-wail">A card that is two things at once</a>
+      <a href="/cr/1.0.1a">A rules permalink</a>
+    </nav>
+  </div>
+
   <!--
-    The wordmark is small and the field is large, which is the whole hierarchy.
-    A reference tool's home page is a control surface, not a title page.
+    Degrade visibly — one line, at the foot, in the quiet voice. The full
+    provenance (commit, byte count, hash) lives on `/cards`, which is the
+    surface that actually serves the data.
   -->
-  <h1 class="wordmark">Optfall</h1>
-
-  <NoScriptNotice example="/?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is that card, with its pitch versions as tabs.</NoScriptNotice>
-
-  <!--
-    `client:load`, not `client:visible`. The field is the only thing that
-    matters on this page and the whole reason anyone opened it, so it is
-    hydrated before it is looked at. It is also what reads `?q=` back out of the
-    URL, which has to happen on arrival.
-
-    `ornament` spends the screen's one filigree on the island's own section
-    rule, between the hint and the results — the point where the fold ends.
-  -->
-  <CardSearch index={index} ornament client:load />
-
-  <!--
-    The explainer row. Links rather than paragraphs, and every one of them goes
-    somewhere that answers the question rather than describing the answer.
-  -->
-  <nav class="explainers" aria-label="About Optfall">
-    <a href="/search">Search the rules</a>
-    <a href="/card/winters-wail">A card that is two things at once</a>
-    <a href="/cr/1.0.1a">A rules permalink</a>
-    <a href={upstream}>The upstream card data</a>
-    <a href="/data-terms">Terms on our data</a>
-    <a href="https://github.com/alxjrvs/optfall/blob/main/docs/PLAN.md">The build plan</a>
-  </nav>
-
-  <!--
-    Degrade visibly, under the results rather than above them. The version, the
-    date and the source are stated on the surface that serves the data, and the
-    source is a link pinned to a commit, so the claim is checkable.
-
-    Inline elements stay on the same source line as the text around them: the
-    build compresses this HTML and drops the whitespace at a line break falling
-    immediately before an inline tag, welding words together in the output.
-  -->
-  <p class="provenance">
-    {cards} cards and {printings} printings, at {permalinks} permanent URLs, read from <a href={upstream}>{CORPUS.source.repository}</a> at commit <code>{CORPUS.source.commit}</code> and last confirmed {LAST_CONFIRMED}. Legality is present-day only and every verdict prints the upstream flags it was derived from; legality as of a date is not built yet and the query language says so rather than guessing. Nothing on this page is summarised, paraphrased or generated, and no language model is involved in anything Optfall serves.
+  <p class="stamp">
+    {cards} cards, last confirmed {LAST_CONFIRMED}. Nothing here is summarised, paraphrased or generated.
   </p>
-
-  <p class="provenance">{CORPUS.rights}</p>
 </BaseLayout>
 
 <style>
   /*
-    Stacking and voice assignment only. Nothing here draws anything: no colour
-    of its own beyond what the token layer owes, no box, no shadow, no border —
-    the system holds a page together with typography and hairlines rather than
-    with cards and padding.
+    Stacking and voice assignment only. Nothing here draws anything: no box, no
+    shadow, no border beyond the hairlines the system already owns.
+
+    The door is given vertical room rather than centred in the viewport. A hero
+    that vertically centres itself has to guess the viewport height, and guesses
+    wrong on the phone where it matters most.
+  */
+  .door {
+    display: flex;
+    flex-direction: column;
+    gap: var(--of-space-looser);
+    padding-block-start: var(--of-space-loosest);
+  }
+
+  /*
+    Small, tracked and quiet. The field below is the loud thing on this page,
+    and a wordmark competing with it would be the marketing hero the design
+    language refuses.
   */
   .wordmark {
-    /* The fold starts at the top of the page. The layout's own heading rhythm
-       would push the field down behind a title, which is the marketing hero
-       this screen refuses. */
-    margin-block: 0 var(--of-space-loose);
-    font-size: var(--of-type-size-large);
+    margin: 0;
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-small);
+    font-weight: var(--of-type-weight-medium);
     letter-spacing: var(--of-type-tracking-mono);
     text-transform: uppercase;
-    font-family: var(--of-type-family-mono);
     color: var(--of-color-ink-muted);
   }
 
-  .explainers {
+  .ways-in {
     display: flex;
     flex-wrap: wrap;
     gap: var(--of-space-base) var(--of-space-looser);
-    margin-block-start: var(--of-space-loosest);
-    padding-block-start: var(--of-space-loose);
-    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
     font-size: var(--of-type-size-small);
   }
 
-  .provenance {
-    margin-block-start: var(--of-space-looser);
-    color: var(--of-color-ink-muted);
+  .stamp {
+    margin-block-start: var(--of-space-loosest);
+    padding-block-start: var(--of-space-loose);
+    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+    color: var(--of-color-ink-faint);
     font-size: var(--of-type-size-small);
   }
 </style>

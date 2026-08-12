@@ -57,6 +57,25 @@
     onkeydown?: (event: KeyboardEvent) => void;
     /** One line, wired to the field by `aria-describedby`. */
     hint?: Snippet;
+    /**
+     * COMBOBOX WIRING, for a caller that renders a suggestion list beside this
+     * field.
+     *
+     * The list itself is emphatically NOT this component's job — a primitive
+     * that rendered a popup would be deciding for every caller that a search
+     * field has one, and two of the three fields in this product do not. But
+     * the ARIA that makes a list usable lives on the INPUT, and the input lives
+     * here, so a caller physically cannot supply it from outside. Passing it
+     * through is the only arrangement in which a typeahead can be accessible at
+     * all.
+     *
+     * Omitted, none of these attributes render — an `aria-expanded` on a field
+     * with nothing to expand is a promise to a screen reader that is never kept.
+     */
+    listboxId?: string;
+    expanded?: boolean;
+    /** The id of the active option, or `undefined` when none is active. */
+    activeDescendant?: string;
   }
 
   let {
@@ -69,6 +88,9 @@
     onsubmit,
     onkeydown,
     hint,
+    listboxId,
+    expanded = false,
+    activeDescendant,
   }: Props = $props();
 
   const uid = $props.id();
@@ -92,6 +114,11 @@
         enterkeyhint="search"
         {placeholder}
         aria-describedby={hint ? hintId : undefined}
+        role={listboxId ? "combobox" : undefined}
+        aria-expanded={listboxId ? expanded : undefined}
+        aria-controls={listboxId}
+        aria-activedescendant={activeDescendant}
+        aria-autocomplete={listboxId ? "list" : undefined}
         bind:value
         bind:this={element}
         {onkeydown}

@@ -64,20 +64,6 @@
   NODE_VERSION = "22"
   BUN_VERSION = "1.3.14"
 
-# `/cards` was the card search until it moved to the front door
-# (docs/SCRYFALL-GAP.md §4). Every link anyone has already pasted must keep
-# working, so this is a permanent redirect rather than a deleted route.
-#
-# A Netlify redirect rather than Astro's, and the difference is load-bearing:
-# Astro's static redirects are meta-refresh pages, which DROP the query string —
-# so `/cards?q=banned:cc` would arrive at an empty search box, which is a worse
-# failure than a 404 because it looks like it worked.
-[[redirects]]
-  from = "/cards"
-  to = "/"
-  status = 301
-  force = true
-
 [[headers]]
   for = "/*"
 

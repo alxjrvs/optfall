@@ -12,12 +12,12 @@
    *
    * FOUR THINGS IT HAS TO GET RIGHT.
    *
-   * 1. **Every view is a URL.** `/?q=banned:cc` is a real address that
+   * 1. **Every view is a URL.** `/cards?q=banned:cc` is a real address that
    *    renders those results: the query is read from the URL on load, written
    *    back as you type (`replaceState`, so the back button is not filled with
    *    keystrokes) and pushed on submit.
    * 2. **The form degrades to a static browse; live results need JavaScript.**
-   *    The form is a real `GET` to `/`, so a browser with no islands
+   *    The form is a real `GET` to `/cards`, so a browser with no islands
    *    running still produces a shareable URL and still reaches every
    *    `/card/<slug>` page. What it cannot do is answer the query — the ranking
    *    runs here, and a static build has no server. The page says so in a
@@ -251,7 +251,7 @@
 <SearchField
   label="Search the cards"
   region="Flesh and Blood cards"
-  action="/"
+  action="/cards"
   placeholder="command and conquer"
   bind:value={query}
   bind:element={field}
@@ -421,7 +421,7 @@
   <ul class="browse">
     {#each cards.browse as [line, count] (line)}
       <li>
-        <a class="browse-link" href={`/?q=${encodeURIComponent(`type:"${line}"`)}`}>
+        <a class="browse-link" href={`/cards?q=${encodeURIComponent(`type:"${line}"`)}`}>
           {line}
         </a>
         <span class="browse-count">{count}</span>
