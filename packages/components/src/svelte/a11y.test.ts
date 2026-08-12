@@ -48,6 +48,7 @@ import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
 
 import BevelledPlate from "./BevelledPlate.svelte";
 import CardFace from "./CardFace.svelte";
+import SearchField from "./SearchField.svelte";
 import BrassSeal from "./BrassSeal.svelte";
 import Citation from "./Citation.svelte";
 import FiligreeCorner from "./FiligreeCorner.svelte";
@@ -110,6 +111,19 @@ const CASES: readonly { name: string; component: unknown; props: Record<string, 
       alt: "Command and Conquer (pitch 1) — Guardian Action - Attack",
       width: 450,
       height: 628,
+    },
+  },
+  // The one real control in the library: a labelled form carrying a named
+  // search landmark, which is exactly the shape axe has opinions about.
+  {
+    name: "SearchField",
+    component: SearchField,
+    props: {
+      label: "Search the cards",
+      region: "Flesh and Blood cards",
+      action: "/",
+      value: "",
+      placeholder: "command and conquer",
     },
   },
   {

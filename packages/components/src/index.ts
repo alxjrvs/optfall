@@ -46,7 +46,8 @@ export type PrimitiveName =
   | "filigree-corner"
   | "ornamental-rule"
   | "mark"
-  | "card-face";
+  | "card-face"
+  | "search-field";
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
@@ -58,6 +59,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "ornamental-rule",
   "mark",
   "card-face",
+  "search-field",
 ];
 
 /* -------------------------------------------------------------------------- */

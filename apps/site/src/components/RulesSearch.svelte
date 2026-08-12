@@ -47,7 +47,9 @@
    * sentence to prevent. The Svelte compiler itself is untroubled by it, so the
    * build stays green while the typecheck gate goes red.
    */
-  import { BevelledPlate, Citation, OrnamentalRule } from "optfall-components/svelte";
+  import { BevelledPlate, Citation, OrnamentalRule,
+    SearchField,
+  } from "optfall-components/svelte";
 
   import {
     chapters,
@@ -248,41 +250,18 @@
    * survives the round trip.
    */
   const uid = $props.id();
-  const fieldId = `${uid}-query`;
-  const hintId = `${uid}-hint`;
 </script>
 
-<form
-  class="search"
-  role="search"
-  aria-label="Comprehensive Rules"
+<SearchField
+  label="Search the Comprehensive Rules"
+  region="Comprehensive Rules"
   action="/search"
-  method="get"
+  placeholder="dominate"
+  bind:value={query}
+  bind:element={field}
   onsubmit={onSubmit}
+  onkeydown={onKeydown}
 >
-  <label class="label" for={fieldId}>Search the Comprehensive Rules</label>
-
-  <BevelledPlate emphasis="sunken">
-    <div class="well">
-      <input
-        class="field"
-        id={fieldId}
-        name="q"
-        type="search"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-        enterkeyhint="search"
-        placeholder="dominate"
-        aria-describedby={hintId}
-        bind:value={query}
-        bind:this={field}
-        onkeydown={onKeydown}
-      />
-      <button class="submit" type="submit">Search</button>
-    </div>
-  </BevelledPlate>
-
   <!--
     THE PAGE'S ONE HINT LINE, AND IT LIVES HERE.
 
@@ -304,10 +283,10 @@
     build compresses this HTML and drops the whitespace at a line break falling
     immediately before an inline tag, welding words together in the output.
   -->
-  <p class="hint" id={hintId}>
+  {#snippet hint()}
     <code>dominate</code> searches the text · <code>cr:dominate</code> names the corpus · <code>8.3.4b</code> goes straight to that section · <kbd>/</kbd> returns here. This field searches the rules; Card Vault's own card operators — <code>pitch:3</code>, <code>class:guardian</code> — are inherited verbatim and answered at <a href="/cards">the card search</a>.
-  </p>
-</form>
+  {/snippet}
+</SearchField>
 
 <!-- Always present, never emptied: a live region added to the page at the
      moment it has something to say is a live region that says nothing. -->
@@ -383,31 +362,18 @@
 
 <style>
   /*
-    THE PRIMITIVE THIS PAGE FOUND MISSING. Everything below styles two things
-    the library has no component for: a text field, and a dense list row. Both
-    are real gaps rather than one-off decoration — a checker, a card search and
-    a penalty lookup all need the first, and every list in the product needs
-    the second — so they belong in `optfall-components` as `SearchField` and
-    `ResultRow` rather than here. They are written here because the primitives
-    are settled for this pass; every value names a token, so moving them costs
-    a cut and a paste.
+    ONE OF THE TWO PRIMITIVES THIS PAGE FOUND MISSING HAS LANDED. The text field
+    is now `SearchField` in `optfall-components`, shared with the card search —
+    and the move cost exactly what this note predicted, a cut and a paste, because
+    every value already named a token and the two copies were kept identical on
+    purpose.
+
+    What is left below is the dense list row, which is still a real gap rather
+    than one-off decoration: every list in the product needs it. It belongs in
+    the library as `ResultRow`, and is written here until it goes.
   */
 
-  .label {
-    display: block;
-    margin-block-end: var(--of-space-tight);
-    font-family: var(--of-type-family-mono);
-    font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
-    text-transform: uppercase;
-    color: var(--of-color-ink-muted);
-  }
 
-  .well {
-    display: flex;
-    align-items: stretch;
-    gap: var(--of-space-tight);
-  }
 
   /*
     The field is bare because the well around it is the primitive: a sunken
@@ -415,23 +381,7 @@
     the input draws no box of its own and contributes only the caret and the
     text. Serif, because a query is a question.
   */
-  .field {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--of-color-ink);
-    font-family: var(--of-type-family-serif);
-    font-size: var(--of-type-size-title);
-    line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-tight);
-  }
 
-  .field::placeholder {
-    color: var(--of-color-ink-faint);
-  }
 
   /*
     Never `outline: none`. The ring is offset off the well's own inner edge so
@@ -440,57 +390,12 @@
     still a text field you are about to type into, and hiding that from the one
     input on the page would be hiding the state that matters most.
   */
-  .field:focus {
-    outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
-    outline-offset: var(--of-space-tighter);
-  }
 
-  .submit {
-    flex: 0 0 auto;
-    padding-block: var(--of-space-tighter);
-    padding-inline: var(--of-space-base);
-    border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
-    border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
-    border-inline: var(--of-bevel-width) solid var(--of-color-rule);
-    border-radius: var(--of-bevel-radius);
-    background: var(--of-color-surface-raised);
-    color: var(--of-color-ink);
-    font-family: var(--of-type-family-mono);
-    font-size: var(--of-type-size-micro);
-    font-weight: var(--of-type-weight-medium);
-    letter-spacing: var(--of-type-tracking-mono);
-    text-transform: uppercase;
-    cursor: pointer;
-  }
 
-  .submit:hover {
-    border-inline-color: var(--of-color-rule-strong);
-    color: var(--of-color-accent-hover);
-  }
 
-  .submit:focus-visible {
-    outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
-    outline-offset: var(--of-bevel-width);
-  }
 
-  .submit:active {
-    background: var(--of-color-sunken);
-    border-block-start-color: var(--of-bevel-dark);
-    border-block-end-color: var(--of-bevel-light);
-  }
 
-  .hint {
-    margin-block: var(--of-space-tight) 0;
-    color: var(--of-color-ink-muted);
-    font-size: var(--of-type-size-small);
-  }
 
-  .hint kbd {
-    font-family: var(--of-type-family-mono);
-    font-size: var(--of-type-size-small);
-    letter-spacing: var(--of-type-tracking-mono);
-    color: var(--of-color-ink-muted);
-  }
 
   /*
     The announcement is for assistive technology; the same words are printed

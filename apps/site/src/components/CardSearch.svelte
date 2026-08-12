@@ -34,12 +34,14 @@
    *    `banned:cc` filter *by* it, so the question is answerable without the
    *    surface making an unqualified claim.
    *
-   * COMPOSED, NOT RESTYLED. The jewel on every row, the well the field sits in
-   * and the rule under it are `optfall-components` primitives. What is left in
-   * this file's style block is the search field itself and the rhythm of a
-   * result row — the two primitives `RulesSearch.svelte` records the library as
-   * missing (`SearchField` and `ResultRow`), kept byte-identical here on purpose
-   * so the eventual extraction is a cut and a paste rather than a redesign.
+   * COMPOSED, NOT RESTYLED. The field, the jewel on every row, the plate and the
+   * rule under it are all `optfall-components` primitives. This file used to
+   * carry its own copy of the search form and its styles, alongside a note that
+   * they were being kept byte-identical against the day somebody extracted them;
+   * `SearchField` is that extraction, and the styles were lifted verbatim rather
+   * than rewritten so the reasoning attached to each rule came with it. What is
+   * left here is the rhythm of a result row and the grid — `ResultRow` and
+   * `ResultGrid` are the primitives this file now records as missing.
    *
    * A NOTE FOR THE NEXT PERSON EDITING THIS COMMENT: do not write the literal
    * opening style tag anywhere in this script, in prose or in backticks. Astro's
@@ -54,6 +56,7 @@
     CardFace,
     OrnamentalRule,
     PitchJewel,
+    SearchField,
   } from "optfall-components/svelte";
 
   import { boxFor, faceUrl, placeholderUrl } from "../lib/faces";
@@ -233,41 +236,18 @@
   };
 
   const uid = $props.id();
-  const fieldId = `${uid}-query`;
-  const hintId = `${uid}-hint`;
 </script>
 
-<form
-  class="search"
-  role="search"
-  aria-label="Flesh and Blood cards"
+<SearchField
+  label="Search the cards"
+  region="Flesh and Blood cards"
   action="/"
-  method="get"
+  placeholder="command and conquer"
+  bind:value={query}
+  bind:element={field}
   onsubmit={onSubmit}
+  onkeydown={onKeydown}
 >
-  <label class="label" for={fieldId}>Search the cards</label>
-
-  <BevelledPlate emphasis="sunken">
-    <div class="well">
-      <input
-        class="field"
-        id={fieldId}
-        name="q"
-        type="search"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-        enterkeyhint="search"
-        placeholder="command and conquer"
-        aria-describedby={hintId}
-        bind:value={query}
-        bind:this={field}
-        onkeydown={onKeydown}
-      />
-      <button class="submit" type="submit">Search</button>
-    </div>
-  </BevelledPlate>
-
   <!--
     THE PAGE'S ONE HINT LINE. `docs/DESIGN.md` Screen 1: it pairs an operator
     people already know from Card Vault with ours, so the extension is
@@ -280,10 +260,10 @@
     build compresses this HTML and drops the whitespace at a line break falling
     immediately before an inline tag, welding words together in the output.
   -->
-  <p class="hint" id={hintId}>
+  {#snippet hint()}
     <code>pitch:3 class:guardian</code> is Card Vault's own syntax · <code>banned:cc</code> and <code>legal:blitz</code> are ours · <code>text:dominate</code> searches printed text · <kbd>/</kbd> returns here. Legality here is today's; <code>legal:cc@2026-03-14</code> is not answerable yet and says so rather than guessing.
-  </p>
-</form>
+  {/snippet}
+</SearchField>
 
 <!-- Always present, never emptied: a live region added to the page at the
      moment it has something to say is a live region that says nothing. -->
@@ -547,39 +527,9 @@
     names a token, so moving them costs a cut and a paste.
   */
 
-  .label {
-    display: block;
-    margin-block-end: var(--of-space-tight);
-    font-family: var(--of-type-family-mono);
-    font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
-    text-transform: uppercase;
-    color: var(--of-color-ink-muted);
-  }
 
-  .well {
-    display: flex;
-    align-items: stretch;
-    gap: var(--of-space-tight);
-  }
 
-  .field {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--of-color-ink);
-    font-family: var(--of-type-family-serif);
-    font-size: var(--of-type-size-title);
-    line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-tight);
-  }
 
-  .field::placeholder {
-    color: var(--of-color-ink-faint);
-  }
 
   /*
     Never `outline: none`, and `:focus` rather than `:focus-visible` alone — a
@@ -587,57 +537,12 @@
     into, and hiding that from the one input on the page would be hiding the
     state that matters most.
   */
-  .field:focus {
-    outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
-    outline-offset: var(--of-space-tighter);
-  }
 
-  .submit {
-    flex: 0 0 auto;
-    padding-block: var(--of-space-tighter);
-    padding-inline: var(--of-space-base);
-    border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
-    border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
-    border-inline: var(--of-bevel-width) solid var(--of-color-rule);
-    border-radius: var(--of-bevel-radius);
-    background: var(--of-color-surface-raised);
-    color: var(--of-color-ink);
-    font-family: var(--of-type-family-mono);
-    font-size: var(--of-type-size-micro);
-    font-weight: var(--of-type-weight-medium);
-    letter-spacing: var(--of-type-tracking-mono);
-    text-transform: uppercase;
-    cursor: pointer;
-  }
 
-  .submit:hover {
-    border-inline-color: var(--of-color-rule-strong);
-    color: var(--of-color-accent-hover);
-  }
 
-  .submit:focus-visible {
-    outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
-    outline-offset: var(--of-bevel-width);
-  }
 
-  .submit:active {
-    background: var(--of-color-sunken);
-    border-block-start-color: var(--of-bevel-dark);
-    border-block-end-color: var(--of-bevel-light);
-  }
 
-  .hint {
-    margin-block: var(--of-space-tight) 0;
-    color: var(--of-color-ink-muted);
-    font-size: var(--of-type-size-small);
-  }
 
-  .hint kbd {
-    font-family: var(--of-type-family-mono);
-    font-size: var(--of-type-size-small);
-    letter-spacing: var(--of-type-tracking-mono);
-    color: var(--of-color-ink-muted);
-  }
 
   /*
     The announcement is for assistive technology; the same words are printed
