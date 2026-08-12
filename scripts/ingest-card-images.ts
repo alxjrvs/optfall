@@ -95,9 +95,19 @@ function netlifyToken(): string {
     );
   }
   const config = JSON.parse(readFileSync(path, "utf8")) as {
+    userId?: string;
     users?: Record<string, { auth?: { token?: string } }>;
   };
-  const token = Object.values(config.users ?? {})[0]?.auth?.token;
+  /*
+    THE ACTIVE USER, NOT AN ARBITRARY ONE. `users` is keyed by account id and
+    the CLI records which one is signed in as `userId`. Taking the first entry
+    would silently authenticate as whichever account happened to serialise
+    first — against a hard-coded SITE_ID, so the failure would be a confusing
+    403 rather than an obvious wrong-account error.
+  */
+  const users = config.users ?? {};
+  const active = config.userId === undefined ? undefined : users[config.userId];
+  const token = (active ?? Object.values(users)[0])?.auth?.token;
   if (!token) {
     throw new Error(
       "The Netlify CLI config carries no auth token. Run `netlify login`.",

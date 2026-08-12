@@ -83,17 +83,27 @@ export const CARD_ASPECT_RATIO = 63 / 88;
 export function faceKeyFor(imageUrl: string | null | undefined): string | null {
   if (imageUrl === null || imageUrl === undefined || imageUrl === "") return null;
 
-  let path: string;
+  let basename: string;
   try {
-    path = new URL(imageUrl).pathname;
+    const path = new URL(imageUrl).pathname;
+    // THE DECODE IS INSIDE THE TRY, and it was not. `decodeURIComponent` throws
+    // `URIError` on malformed percent-encoding — `%E0%A4%A` is enough — and it
+    // sat one line below a comment promising that throwing here "would take
+    // down every page that lists the card". It would have: this function runs
+    // at module scope from `cards.ts` building `CARD_PAGES`, so a single
+    // malformed URL arriving in a scheduled corpus sync would fail the whole
+    // Astro build rather than degrade one card to a placeholder. No URL in
+    // today's corpus contains a `%`, so this was latent rather than live — and
+    // latent is exactly how it would have arrived, on a sync nobody was
+    // watching.
+    basename = decodeURIComponent(path.split("/").pop() ?? "");
   } catch {
     // A malformed URL is a corpus problem, not a rendering problem. Reporting
     // it as "no image" puts a placeholder on the page, which is the honest
-    // outcome; throwing here would take down every page that lists the card.
+    // outcome.
     return null;
   }
 
-  const basename = decodeURIComponent(path.split("/").pop() ?? "");
   if (basename === "") return null;
 
   // Everything is stored as WebP regardless of what the source was, because the

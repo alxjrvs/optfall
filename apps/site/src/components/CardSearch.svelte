@@ -158,12 +158,22 @@
    */
   const announcement = $derived(summary);
 
-  function syncUrl(mode: "replace" | "push"): void {
+  /**
+   * `written` is what the URL should say, and it is NOT always the box.
+   *
+   * A submit writes what was just asked; switching Grid/List writes what is
+   * *currently answered*. Both were writing `query`, so typing a new query
+   * without submitting and then toggling the view pushed a URL carrying the
+   * un-submitted text while the screen showed results for the old one —
+   * reloading or sharing that link then showed something different from what
+   * was on screen.
+   */
+  function syncUrl(mode: "replace" | "push", written: string = submitted): void {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
-    const trimmed = query.trim();
+    const trimmed = written.trim();
     if (trimmed === "") url.searchParams.delete("q");
-    else url.searchParams.set("q", query);
+    else url.searchParams.set("q", written);
     // Only when it is not the default: a URL should carry what somebody chose,
     // not restate what they did not.
     if (display === "grid") url.searchParams.delete("display");
@@ -207,7 +217,7 @@
   function onSubmit(event: SubmitEvent): void {
     event.preventDefault();
     submitted = query;
-    syncUrl("push");
+    syncUrl("push", query);
     field?.blur();
   }
 

@@ -79,6 +79,16 @@ describe("parseFacePath", () => {
     expect(parseFacePath("")).toBeNull();
   });
 
+  test("malformed percent-encoding is a 404, not a crash", () => {
+    // `decodeURIComponent` throws URIError on these. Uncaught, Netlify answered
+    // 500 where this guard is written to answer 404 — on a host that serves
+    // every path on a public domain, so the first scanner probing bad escapes
+    // would have found it.
+    expect(parseFacePath("/normal/%zz.webp")).toBeNull();
+    expect(parseFacePath("/normal/%E0%A4%A.webp")).toBeNull();
+    expect(parseFacePath("/%.webp")).toBeNull();
+  });
+
   test("decodes percent-encoding before guarding it", () => {
     // %2e%2e is `..`. Guarding the raw string would let this through.
     expect(parseFacePath("/normal/%2e%2e%2fsecret.webp")).toBeNull();
