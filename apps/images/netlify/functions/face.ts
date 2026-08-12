@@ -115,7 +115,18 @@ function placeholderResponse(orientation: Orientation, status = 200): Response {
 export function parseFacePath(
   pathname: string,
 ): { tier: Tier; key: string } | null {
-  const raw = decodeURIComponent(pathname.replace(/^\/+/, ""));
+  let raw: string;
+  try {
+    raw = decodeURIComponent(pathname.replace(/^\/+/, ""));
+  } catch {
+    // `decodeURIComponent` throws `URIError` on malformed percent-encoding —
+    // `/normal/%zz.webp` is enough. Uncaught, it escaped this function and
+    // Netlify answered 500 where the guard below is written to answer 404. This
+    // function serves every path on a public, crawler-visible host, so the
+    // first scanner probing bad escapes would have turned the error log into
+    // noise and the guard into a crash.
+    return null;
+  }
   const slash = raw.indexOf("/");
   if (slash <= 0) return null;
 

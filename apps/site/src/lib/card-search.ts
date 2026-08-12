@@ -1132,14 +1132,35 @@ function toResult(
   const nameSlug = index.nameSlugs[ordinal] ?? slug;
   const collapsed = nameSlug !== slug;
 
+  /**
+   * A PARTIAL MATCH MUST LAND ON A VERSION THAT MATCHED.
+   *
+   * `/card/<nameSlug>` renders the LOWEST-PITCH version. When every version
+   * matched, that is fine — whichever one opens, the reader's query is true of
+   * it. When only some matched, it is a wrong answer of the exact kind this
+   * project exists not to give.
+   *
+   * Measured on the shipped build: `banned:cc` returned four such rows, and on
+   * two of them — Bonds of Ancestry and Orb-Weaver Spinneret, banned at pitch 2
+   * and 3 and legal at pitch 1 — the reader clicked a result from a BANNED list
+   * and arrived at a page reading **Legal**, with nothing on either surface
+   * saying the version had changed underneath them.
+   *
+   * So a partial match links to the best-ranked version that actually matched,
+   * whose own slug is `slug`. The row already names the matched pitches, so the
+   * tab it opens on is the one the row is talking about, and the other versions
+   * are one click away in the strip.
+   */
+  const partial = matchedPitches.length < totalVersions;
+
   return {
-    // THE BARE NAME WHEN THE RESULT STANDS FOR SEVERAL VERSIONS. Everywhere a
-    // row points at ONE card it must render the disambiguated label, or two
-    // anchors differ only in where they point. Here the row points at the card
-    // as a whole, whose name is unambiguous — and the destination shows the
-    // versions as tabs, so nothing is lost by not choosing one in the link.
+    // THE BARE NAME WHEN THE ROW STANDS FOR THE WHOLE CARD. Everywhere a row
+    // points at ONE version it must render the disambiguated label, or two
+    // anchors differ only in where they point. A row that stands for the card
+    // carries the bare name, which is unambiguous — and where the row is
+    // partial, the version qualifier beside it does the disambiguating.
     label: collapsed ? nameOf(index.labels[ordinal] ?? "") : index.labels[ordinal] ?? "",
-    href: `/card/${collapsed ? nameSlug : slug}`,
+    href: `/card/${collapsed && !partial ? nameSlug : slug}`,
     matchedPitches,
     totalVersions,
     faceKey: index.faceKeys[ordinal] ?? null,

@@ -179,25 +179,56 @@ const faceSrc =
  * — a row of NO IMAGE tiles would be a worse artefact than a shorter rail, and
  * the printings TABLE below still lists every one of them, so nothing is hidden.
  */
-const rail = card.printings
-  .map((printing) => {
+const rail = (() => {
+  const seen = new Set<string>();
+  const entries: {
+    key: string;
+    id: string;
+    src: string;
+    box: { width: number; height: number };
+    orientation: "portrait" | "landscape";
+    current: boolean;
+  }[] = [];
+
+  for (const printing of card.printings) {
     const key = faceKeyFor(printing.image_url);
-    if (key === null) return null;
+    if (key === null) continue;
+
+    /*
+      DEDUPLICATED BY FACE, and this is not a tidy-up. A printing is a
+      (collector number, edition, foiling) triple, and foiling variants share
+      one image — so the rail rendered the same thumbnail two or more times,
+      under identical captions, on 4,118 of 4,941 cards. The rail exists to show
+      what the card LOOKS like across its printings; two identical tiles say
+      nothing twice.
+    */
+    if (seen.has(key)) continue;
+    seen.add(key);
+
     const orientation = orientationOf({
       playedHorizontally: card.played_horizontally,
       rotationDegrees: printing.image_rotation_degrees,
     });
-    return {
+    entries.push({
       key,
-      orientation,
       id: printing.id,
-      setId: printing.set_id,
       src: faceUrl(key, "thumb"),
       box: boxFor("thumb", orientation),
-      current: printing.id === page.face.printingId,
-    };
-  })
-  .filter((entry) => entry !== null);
+      orientation,
+      /*
+        COMPARED ON THE FACE, NOT ON THE COLLECTOR NUMBER. `page.face` is chosen
+        by image, and `printing.id` is NOT unique — `faces.ts` documents that
+        4,780 collector numbers appear on more than one printing, and comparing
+        on it marked two or more thumbnails "current" on 3,091 cards. The face
+        key is what the hero image is actually keyed on, so it is what
+        "currently shown" means.
+      */
+      current: key === page.face.key,
+    });
+  }
+
+  return entries;
+})();
 
 /**
  * Shown only when there is a choice to make. One printing is not a rail, it is
@@ -344,22 +375,29 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
               {rail.map((printing) => (
                 <li>
                   {/*
-                    Not a link yet. Per-printing URLs are the next layer of this
-                    work (docs/SCRYFALL-GAP.md §5.1c); until they exist, an
-                    anchor would point at the page it is already on, which is a
-                    worse affordance than a plain thumbnail. The collector
-                    number is the accessible name because it is the citable
-                    identity of a printing.
+                    THROUGH `CardFace`, NOT A BARE `<img>`. These used to be raw
+                    image tags, which `docs/COMPLIANCE.md` §5 names explicitly as
+                    a way to break the copyright condition — "a … path that
+                    renders the image outside the component" — and up to a dozen
+                    card images per page were carrying no notice as a result.
+                    The component emits the line itself and cannot be told not
+                    to, which is the entire reason it exists.
+
+                    Not a link yet. Per-printing URLs are the next layer
+                    (docs/SCRYFALL-GAP.md §5.1c); until they exist, an anchor
+                    would point at the page it is already on, which is a worse
+                    affordance than a plain thumbnail. The collector number is
+                    the accessible name because it is the citable identity of a
+                    printing.
                   */}
-                  <img
-                    src={printing.src}
-                    alt={`${page.label} — printing ${printing.id}`}
-                    width={printing.box.width}
-                    height={printing.box.height}
-                    loading="lazy"
-                    decoding="async"
-                    class:list={["rail-face", { current: printing.current }]}
-                  />
+                  <div class:list={["rail-face", { current: printing.current }]}>
+                    <CardFace
+                      src={printing.src}
+                      alt={`${page.label} — printing ${printing.id}`}
+                      width={printing.box.width}
+                      height={printing.box.height}
+                    />
+                  </div>
                   <span class="rail-id">{printing.id}</span>
                 </li>
               ))}

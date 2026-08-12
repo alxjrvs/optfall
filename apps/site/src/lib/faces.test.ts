@@ -57,6 +57,15 @@ describe("faceKeyFor", () => {
     expect(faceKeyFor("")).toBeNull();
   });
 
+  test("malformed percent-encoding is no image rather than an exception", () => {
+    // This runs at module scope building CARD_PAGES, so a throw here fails the
+    // whole Astro build rather than degrading one card. No corpus URL contains
+    // a `%` today, which is exactly how this would have arrived: on a scheduled
+    // sync nobody was watching.
+    expect(faceKeyFor("https://example.com/media/%E0%A4%A.png")).toBeNull();
+    expect(faceKeyFor("https://example.com/media/%zz.png")).toBeNull();
+  });
+
   test("a malformed URL is no image rather than an exception", () => {
     // Throwing here would take down every page that lists the card. A
     // placeholder is the honest outcome.

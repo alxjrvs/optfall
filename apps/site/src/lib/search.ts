@@ -334,8 +334,8 @@ const PENDING_OPERATORS: Readonly<Record<string, string>> = {
   rarity: "searches cards, which live at /",
   cost: "searches cards, which live at /",
   name: "searches cards, which live at /",
-  text: "searches printed card text, which lives at /cards",
-  banned: "filters cards by present-day legality, which lives at /cards",
+  text: "searches printed card text, which lives at /",
+  banned: "filters cards by present-day legality, which lives at /",
   // `legal:` alone is answerable at /cards; `legal:cc@2026-03-14` is not
   // answerable anywhere yet, and that is the half worth naming here.
   legal: "filters cards by present-day legality at /cards; legality as of a date is not published yet",
