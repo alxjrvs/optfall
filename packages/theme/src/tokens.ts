@@ -42,11 +42,15 @@ import type { TokenTable } from "./index";
  */
 const STRUCTURE: TokenTable = {
   /* Three voices, strictly assigned. Serif for names and questions, sans for
-     interface text, mono — wide-tracked, uppercase — for anything citable. */
+     interface text. TWO VOICES, not three: the monospace face was retired
+     because it was doing chrome's job. It marked eyebrows, pills, stat labels
+     and set codes as much as it marked identifiers, so "monospaced means
+     citable" had stopped being true long before anyone read it that way. The
+     sans carries all of it now, and a citation is marked by BEING a citation —
+     a link, in the accent, next to the thing it cites. */
   "type.family.serif": "Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
   "type.family.sans":
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  "type.family.mono": "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
 
   /* A restrained scale. Density without clutter means fewer sizes used more
      deliberately, not more sizes used approximately. */
@@ -67,7 +71,7 @@ const STRUCTURE: TokenTable = {
 
   /* Wide tracking is what makes the mono voice read as a label rather than as
      code. It is the voice's defining property, so it is a token. */
-  "type.tracking.mono": "0.09em",
+  "type.tracking.wide": "0.09em",
   "type.tracking.tight": "-0.01em",
   "type.tracking.normal": "0",
 
@@ -135,10 +139,10 @@ export const DARK_TOKENS: TokenTable = {
   ...STRUCTURE,
 
   /* Near-black ground, and true neutrals throughout. */
-  "color.ground": "#0b0b0b",
-  "color.sunken": "#060606",
-  "color.surface": "#151515",
-  "color.surface.raised": "#1e1e1e",
+  "color.ground": "#1a1a1a",
+  "color.sunken": "#131313",
+  "color.surface": "#232323",
+  "color.surface.raised": "#2c2c2c",
 
   "color.ink": "#ededed",
   "color.ink.muted": "#a6a6a6",
@@ -151,7 +155,7 @@ export const DARK_TOKENS: TokenTable = {
 
   /* Blood. The game's own accent, and chrome rather than data — it can share a
      hue with pitch because it never shares a shape. */
-  "color.accent": "#c01722",
+  "color.accent": "#cf1f2b",
   "color.accent.hover": "#d92531",
   "color.accent.ink": "#ffffff",
 

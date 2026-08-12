@@ -66,8 +66,8 @@ const PROSE =
   "margin:0;font-family:var(--of-type-family-sans);" +
   "font-size:var(--of-type-size-base);line-height:var(--of-type-leading-base)";
 const CAPTION =
-  "margin:0;font-family:var(--of-type-family-mono);" +
-  "font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-mono);" +
+  "margin:0;font-family:var(--of-type-family-sans);" +
+  "font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);" +
   "text-transform:uppercase;color:var(--of-color-ink-muted)";
 
 /** `space.loose` between specimens, laid out along one axis, equal tracks. */

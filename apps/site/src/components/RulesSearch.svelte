@@ -487,9 +487,9 @@
     flex-wrap: wrap;
     gap: var(--of-space-tight);
     margin-block: var(--of-space-tightest) 0;
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     text-transform: uppercase;
     color: var(--of-color-ink-faint);
   }

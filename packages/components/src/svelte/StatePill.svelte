@@ -141,11 +141,11 @@
   /* The mono voice: if it is monospaced in this system, you can paste it into
      an argument. Wide tracking is what separates a label from code. */
   .pill {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
     font-weight: var(--of-type-weight-medium);
     line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     text-transform: uppercase;
 
     /* Deliberately absent: `overflow: hidden`, `text-overflow: ellipsis`, and

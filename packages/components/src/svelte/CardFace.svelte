@@ -180,9 +180,9 @@
     never hidden, and never conditional.
   */
   .copyright {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     color: var(--of-color-ink-faint);
     line-height: var(--of-type-leading-tight);
   }

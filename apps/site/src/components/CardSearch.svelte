@@ -472,9 +472,9 @@
     display: inline-flex;
     align-items: center;
     gap: var(--of-space-tight);
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     text-transform: uppercase;
     color: var(--of-color-ink-muted);
     cursor: pointer;
@@ -523,9 +523,9 @@
   }
 
   .cell-versions {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     text-transform: uppercase;
     color: var(--of-color-ink-muted);
   }
@@ -636,15 +636,15 @@
   }
 
   .browse-link {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-small);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
   }
 
   .browse-count {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     color: var(--of-color-ink-faint);
   }
 </style>

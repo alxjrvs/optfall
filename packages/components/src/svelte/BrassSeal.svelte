@@ -142,11 +142,11 @@
      The only lower-contrast brass available is the edge tone, and it drops
      under 4.5:1 on this plate in light mode — so nothing here is dimmed. */
   .claim {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
     font-weight: var(--of-type-weight-bold);
     line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     text-transform: uppercase;
   }
 
@@ -162,11 +162,11 @@
   }
 
   .date {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
     font-weight: var(--of-type-weight-regular);
     line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     font-variant-numeric: tabular-nums;
     text-transform: uppercase;
   }
@@ -192,20 +192,20 @@
   }
 
   .version-label {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
     font-weight: var(--of-type-weight-regular);
     line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     text-transform: uppercase;
   }
 
   .version {
-    font-family: var(--of-type-family-mono);
+    font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-small);
     font-weight: var(--of-type-weight-bold);
     line-height: var(--of-type-leading-tight);
-    letter-spacing: var(--of-type-tracking-mono);
+    letter-spacing: var(--of-type-tracking-wide);
     font-variant-numeric: tabular-nums;
   }
 

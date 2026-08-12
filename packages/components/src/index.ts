@@ -160,8 +160,13 @@ export interface BrassSealProps {
 }
 
 /**
- * A citation: monospaced, wide-tracked, and pasteable into an argument. If it
- * is monospaced in this system, it is something you can cite.
+ * A citation: a permanent identifier you can paste into an argument.
+ *
+ * It used to be marked by the monospace face, on the rule "if it is monospaced
+ * in this system, you can cite it". That rule stopped being true as the same
+ * face spread to eyebrows, pills and stat labels — chrome, not identifiers — so
+ * the face was retired. A citation is now marked by being one: a link, in the
+ * accent, next to the thing it cites.
  */
 export interface CitationProps {
   /** Permanent rule identifier, such as `cr:8.3.4b`. */
@@ -344,7 +349,7 @@ export interface CardImageProps {
 
 /**
  * Typography assignments are fixed by role, not chosen per usage: serif for
- * names and questions, sans for interface text, mono for anything citable.
+ * names and questions, sans for everything else.
  */
 export const VOICE_BY_ROLE: Readonly<
   Record<"card-name" | "question" | "heading" | "interface" | "label" | "citation", Voice>
@@ -353,6 +358,6 @@ export const VOICE_BY_ROLE: Readonly<
   question: "serif",
   heading: "serif",
   interface: "sans",
-  label: "mono",
-  citation: "mono",
+  label: "sans",
+  citation: "sans",
 };
