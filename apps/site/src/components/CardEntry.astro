@@ -58,7 +58,13 @@
  * are layout and voice assignment only, and every value in them is a
  * `var(--of-*)`; `bun run check:tokens` fails the build otherwise.
  */
-import { BevelledPlate, OrnamentalRule, PitchJewel, StatePill } from "optfall-components/svelte";
+import {
+  BevelledPlate,
+  CardFace,
+  OrnamentalRule,
+  PitchJewel,
+  StatePill,
+} from "optfall-components/svelte";
 
 import {
   CORPUS,
@@ -67,6 +73,13 @@ import {
   type CardLink,
   type CardPage,
 } from "../lib/cards";
+import {
+  boxFor,
+  faceKeyFor,
+  faceUrl,
+  orientationOf,
+  placeholderUrl,
+} from "../lib/faces";
 
 interface Props {
   page: CardPage;
@@ -121,6 +134,64 @@ const related: readonly (readonly [string, string, readonly CardLink[]])[] = [
 const relatedShown = related.filter(([, , links]) => links.length > 0);
 
 const printingCount = card.printings.length;
+
+/* -------------------------------------------------------------------------- */
+/* The face                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The accessible name for the card's picture.
+ *
+ * FIXED LABELS AROUND VERBATIM VALUES, exactly as `titleFor` and
+ * `descriptionFor` in `lib/cards.ts` are built — the card's own label and its
+ * own printed type line, joined by an em dash this file supplies. Nothing here
+ * describes the artwork, because Optfall has no way to know what is in it and a
+ * generated description of a picture is precisely the composed prose the
+ * project rules out. A reader who cannot see the image gets the card's identity,
+ * which is what the image is doing on the page.
+ */
+const faceAlt = typeLine === "" ? page.label : `${page.label} — ${typeLine}`;
+
+const faceBox = boxFor("normal", page.face.orientation);
+const faceSrc =
+  page.face.key === null
+    ? placeholderUrl(page.face.orientation)
+    : faceUrl(page.face.key, "normal");
+
+/**
+ * Every printing that publishes art, as a rail beneath the face.
+ *
+ * `docs/SCRYFALL-GAP.md` §5.1c: the printing is the addressable unit, and a
+ * card averaging 3.3 of them should show them rather than list their codes in a
+ * table. Printings with no published art are deliberately absent from the rail
+ * — a row of NO IMAGE tiles would be a worse artefact than a shorter rail, and
+ * the printings TABLE below still lists every one of them, so nothing is hidden.
+ */
+const rail = card.printings
+  .map((printing) => {
+    const key = faceKeyFor(printing.image_url);
+    if (key === null) return null;
+    const orientation = orientationOf({
+      playedHorizontally: card.played_horizontally,
+      rotationDegrees: printing.image_rotation_degrees,
+    });
+    return {
+      key,
+      orientation,
+      id: printing.id,
+      setId: printing.set_id,
+      src: faceUrl(key, "thumb"),
+      box: boxFor("thumb", orientation),
+      current: printing.id === page.face.printingId,
+    };
+  })
+  .filter((entry) => entry !== null);
+
+/**
+ * Shown only when there is a choice to make. One printing is not a rail, it is
+ * the same picture again.
+ */
+const showRail = rail.length > 1;
 ---
 
 <nav class="lineage" aria-label="Breadcrumb">
@@ -146,6 +217,55 @@ const printingCount = card.printings.length;
       <h1 class="card-name">{page.label}</h1>
     </div>
   </header>
+
+  <!--
+    THE PICTURE IS THE FIRST THING, because it is what somebody opening a card
+    page came to see — docs/SCRYFALL-GAP.md, which settled that the card layer
+    is the product rather than supporting cast.
+
+    `loading="eager"` here and nowhere else on the site: this is the one face
+    above the fold, and lazy-loading the thing the page is about only delays it.
+  -->
+  <div class="face-block">
+    <CardFace
+      src={faceSrc}
+      alt={faceAlt}
+      width={faceBox.width}
+      height={faceBox.height}
+      loading="eager"
+    />
+
+    {
+      showRail && (
+        <nav class="rail" aria-label={`Printings of ${page.label}`}>
+          <ul class="rail-list">
+            {rail.map((printing) => (
+              <li>
+                {/*
+                  Not a link yet. Per-printing URLs are the next layer of this
+                  work (docs/SCRYFALL-GAP.md §5.1c); until they exist, an anchor
+                  would point at the page it is already on, which is a worse
+                  affordance than a plain thumbnail. The collector number is the
+                  accessible name because it is the citable identity of a
+                  printing.
+                */}
+                <img
+                  src={printing.src}
+                  alt={`${page.label} — printing ${printing.id}`}
+                  width={printing.box.width}
+                  height={printing.box.height}
+                  loading="lazy"
+                  decoding="async"
+                  class:list={["rail-face", { current: printing.current }]}
+                />
+                <span class="rail-id">{printing.id}</span>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+  </div>
 
   <section class="apparatus" aria-labelledby="stats">
     <h2 class="apparatus-heading" id="stats">Stats</h2>
@@ -417,6 +537,65 @@ const printingCount = card.printings.length;
 </section>
 
 <style>
+  /* -- The face and its printings rail ------------------------------------- */
+
+  /*
+    Layout only. `CardFace` owns everything about how a face is drawn, including
+    the copyright line it will not let a caller omit; this places it and nothing
+    more.
+  */
+  .face-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--of-space-base);
+    margin-block-end: var(--of-space-looser);
+    /* The face is a fixed-width object in a text column, not a banner. Held to
+       its own measure so a wide viewport does not stretch a card to the width
+       of a paragraph. */
+    max-inline-size: fit-content;
+  }
+
+  .rail-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-base);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rail-list li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--of-space-hair);
+    align-items: center;
+  }
+
+  .rail-face {
+    display: block;
+    max-inline-size: 100%;
+    block-size: auto;
+    border-radius: var(--of-bevel-radius);
+    border: var(--of-bevel-width) solid var(--of-color-rule);
+    background: var(--of-color-sunken);
+  }
+
+  /*
+    The printing currently shown as the face. Marked with the accent edge rather
+    than by dimming the others: a rail where five of six thumbnails are faded
+    reads as five broken images.
+  */
+  .rail-face.current {
+    border-color: var(--of-color-accent);
+  }
+
+  .rail-id {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    color: var(--of-color-ink-muted);
+  }
+
   /* Layout and voice assignment only. Every value is a token — no literal
      colour, no literal length — and no media query, because a breakpoint is a
      length the token layer has nothing to offer. Everything below wraps or

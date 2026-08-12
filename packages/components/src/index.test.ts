@@ -43,11 +43,17 @@ describe("card image compliance contract", () => {
 });
 
 describe("the primitive set", () => {
-  test("matches the eight Phase 1 deliverables, without duplicates", () => {
-    expect(PRIMITIVES).toHaveLength(8);
+  test("is the eight Phase 1 deliverables plus the card face, without duplicates", () => {
+    // The eight are Phase 1's closed list. `card-face` is the ninth and it
+    // arrived with the card layer rather than with the design system, which is
+    // why the count moved: docs/SCRYFALL-GAP.md §5.1 made images a product
+    // surface, and a component that renders a card image is the only place the
+    // compliance line can be made unrepresentable-to-omit.
+    expect(PRIMITIVES).toHaveLength(9);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
+    expect(PRIMITIVES).toContain("card-face");
   });
 });
 

@@ -48,6 +48,8 @@
 
 import type { PitchValue, StateTone } from "optfall-theme";
 
+import { faceKeyFor, orientationOf } from "./faces";
+
 import corpus from "../../../../data/cards/cards.json";
 
 /* -------------------------------------------------------------------------- */
@@ -681,6 +683,36 @@ export interface CardLink {
   readonly disambiguated: boolean;
 }
 
+/**
+ * A card's face: which printing supplies it, and which way round it is.
+ *
+ * WHICH PRINTING IS THE CARD'S FACE HAS TO BE A STATED RULE. A card averages
+ * 3.3 printings and both the card page and a search result need exactly one of
+ * them; "whichever came first in the JSON" is a rule that changes silently the
+ * day upstream reorders its file, which would move a card's picture for no
+ * reason anybody could trace.
+ *
+ * The rule is **the first printing that actually has an image**, in upstream
+ * order. It is deliberately not the best rule available — `docs/SCRYFALL-GAP.md`
+ * §5.1c names that one as earliest `initial_release_date` with collector number
+ * as the tiebreak — but release dates live in `set.json`, which is a corpus this
+ * repository does not carry yet. So this is a stopgap, and it is written down as
+ * one rather than left implicit, because an undocumented default is how a
+ * placeholder rule becomes permanent.
+ *
+ * Skipping imageless printings matters more than it sounds: several cards list a
+ * cold-foil variant first that upstream does not actually publish art for, and
+ * taking `printings[0]` blindly would show NO IMAGE on a card whose ordinary
+ * printing has a perfectly good face.
+ */
+export interface CardFaceRef {
+  /** Blob key at the face host, or `null` where no printing publishes art. */
+  readonly key: string | null;
+  readonly orientation: "portrait" | "landscape";
+  /** The printing the face came from, for the caption and the rail's initial state. */
+  readonly printingId: string | null;
+}
+
 /** A printing, plus the one thing that needs the whole corpus to resolve. */
 export interface PrintingView {
   readonly printing: CardPrinting;
@@ -718,6 +750,8 @@ export interface CardPage {
   readonly stats: readonly Stat[];
   readonly verdicts: readonly FormatVerdict[];
   readonly printings: readonly PrintingView[];
+  /** The face this card is shown by. See {@link CardFaceRef} for the rule. */
+  readonly face: CardFaceRef;
   /** Cards this card names, resolved. */
   readonly references: readonly CardLink[];
   /** Cards that name this one — derived, since upstream's inverse was dropped. */
@@ -877,6 +911,36 @@ function byPitch(a: Card, b: Card): number {
   return pitchRank(a) - pitchRank(b) || (a.unique_id < b.unique_id ? -1 : 1);
 }
 
+/**
+ * The face a card is shown by. See {@link CardFaceRef} for the rule and why it
+ * is a stopgap.
+ */
+function faceOf(card: Card): CardFaceRef {
+  const playedHorizontally = card.played_horizontally;
+
+  for (const printing of card.printings) {
+    const key = faceKeyFor(printing.image_url);
+    if (key === null) continue;
+    return {
+      key,
+      orientation: orientationOf({
+        playedHorizontally,
+        rotationDegrees: printing.image_rotation_degrees,
+      }),
+      printingId: printing.id,
+    };
+  }
+
+  // No printing publishes art. The page still needs a box of the right shape,
+  // so the orientation is answered from the card itself and the key is null —
+  // which `CardFace` renders as the placeholder rather than as nothing.
+  return {
+    key: null,
+    orientation: orientationOf({ playedHorizontally, rotationDegrees: 0 }),
+    printingId: card.printings[0]?.id ?? null,
+  };
+}
+
 /** Every card page, in corpus order — which is upstream's, name-sorted. */
 export const CARD_PAGES: readonly CardPage[] = CORPUS.cards.map((card, index) => {
   const nameSlug = slugify(card.name);
@@ -897,6 +961,7 @@ export const CARD_PAGES: readonly CardPage[] = CORPUS.cards.map((card, index) =>
       .map(linkTo),
     pitch: pitchValueOf(card),
     stats: statsOf(card),
+    face: faceOf(card),
     verdicts: FORMATS.map((format) => verdictFor(card, format)),
     printings: card.printings.map((printing) => {
       const otherId = printing.double_sided_card_info?.[0]?.other_face_unique_id;
