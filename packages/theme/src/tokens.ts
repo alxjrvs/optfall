@@ -54,6 +54,10 @@ const STRUCTURE: TokenTable = {
 
   /* A restrained scale. Density without clutter means fewer sizes used more
      deliberately, not more sizes used approximately. */
+  /* Fine print. Smaller than `micro`, which is the label step — a legal notice
+     that has to accompany every card image should recede below the smallest
+     thing a reader is meant to READ, not sit level with it. */
+  "type.size.legal": "0.625rem",
   "type.size.micro": "0.6875rem",
   "type.size.small": "0.8125rem",
   "type.size.base": "0.9375rem",
