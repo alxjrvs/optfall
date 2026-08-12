@@ -23,6 +23,16 @@ import { themeStylesheet } from "optfall-theme";
 import ComplianceFooter from "../components/ComplianceFooter.astro";
 
 interface Props {
+  /**
+   * The address this page wants to be known by, root-relative.
+   *
+   * Defaults to the page's own URL, which is right for almost everything. It is
+   * passed explicitly where two URLs render the same document: `/card/head-jab`
+   * and `/card/head-jab-1` are the same card at the same version, and without a
+   * canonical they are roughly 900 duplicate pairs asking a search engine to
+   * pick one.
+   */
+  canonical?: string;
   title: string;
   description?: string;
 }
@@ -30,7 +40,28 @@ interface Props {
 const {
   title,
   description = "Legality that remembers, and rulings you can cite — a reference tool for Flesh and Blood.",
+  canonical,
 } = Astro.props;
+
+/**
+ * The absolute address this page wants to be known by.
+ *
+ * Built against `Astro.site` — set in `astro.config.mjs` now that the domain is
+ * live — so the tag carries an origin rather than a path, which is what a
+ * canonical has to be to mean anything. Defaults to the page's own URL.
+ */
+const canonicalPath = canonical ?? Astro.url.pathname;
+/*
+  NORMALISED TO ONE FORM. Astro's own `pathname` carries a trailing slash and a
+  hand-written `/card/head-jab` does not, so the two sources produced
+  `…/head-jab-2/` and `…/head-jab` on pages that sit beside each other. Both
+  resolve, and that is exactly why it is worth fixing: a canonical whose whole
+  job is to name ONE address for a document should not have two spellings.
+*/
+const canonicalUrl = new URL(
+  canonicalPath.endsWith("/") ? canonicalPath : `${canonicalPath}/`,
+  Astro.site,
+);
 
 const tokens = themeStylesheet();
 ---
@@ -43,6 +74,7 @@ const tokens = themeStylesheet();
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
+    <link rel="canonical" href={canonicalUrl.href} />
     <style is:global set:html={tokens}></style>
   </head>
   <body>
