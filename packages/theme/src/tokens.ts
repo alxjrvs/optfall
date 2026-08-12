@@ -108,6 +108,11 @@ const STRUCTURE: TokenTable = {
      one silhouette reserved to a single meaning — it appears at these three
      sizes and no others, and a component free to pick its own would erode
      that. */
+  /* The stat plate. Larger than the jewel because it carries a numeral that is
+     read rather than glanced at, and because the jewel must stay the smallest
+     reserved shape on the card. */
+  "ornament.stat.size": "2.25rem",
+
   "ornament.jewel.small": "1.25rem",
   "ornament.jewel.base": "1.75rem",
   "ornament.jewel.large": "2.5rem",

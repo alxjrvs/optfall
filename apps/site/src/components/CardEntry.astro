@@ -75,8 +75,11 @@ import {
   CardFace,
   OrnamentalRule,
   PitchJewel,
+  StatGlyph,
   StatePill,
 } from "optfall-components/svelte";
+
+import PrintingPicker from "./PrintingPicker.svelte";
 
 import {
   CORPUS,
@@ -140,10 +143,27 @@ const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
  * it where its most-read value should be is a worse artefact than a duplicated
  * one. Cards with no pitch get no row, exactly as they get no other absent stat.
  */
-const stats =
-  page.pitch === 0
-    ? page.stats
-    : [{ label: "Pitch", value: String(page.pitch) }, ...page.stats];
+/**
+ * Which glyph each printed stat takes, or `null` for pitch — the jewel owns
+ * that one and its octagon is reserved to it.
+ */
+const GLYPH_FOR: Record<string, "cost" | "power" | "defence" | "life" | "intellect" | "arcane" | undefined> = {
+  Cost: "cost",
+  Power: "power",
+  Defence: "defence",
+  Life: "life",
+  Intellect: "intellect",
+  Arcane: "arcane",
+};
+
+const stats = (page.pitch === 0
+  ? page.stats
+  : [{ label: "Pitch", value: String(page.pitch) }, ...page.stats]
+).map((stat) => ({
+  label: stat.label,
+  value: stat.value,
+  kind: GLYPH_FOR[stat.label] ?? null,
+}));
 
 const nameHref = hrefForSlug(page.nameSlug);
 
@@ -212,62 +232,90 @@ const faceSrc =
  * — a row of NO IMAGE tiles would be a worse artefact than a shorter rail, and
  * the printings TABLE below still lists every one of them, so nothing is hidden.
  */
-const rail = (() => {
+/**
+ * Every distinct printing, for the picker.
+ *
+ * Named by SET and number rather than by number alone: `BEN010` answers "which
+ * printing" for somebody who already knows the set codes and for nobody else.
+ * Deduplicated by face, because foiling variants share one image and two
+ * identical tiles say nothing twice.
+ */
+const printings = (() => {
   const seen = new Set<string>();
   const entries: {
     key: string;
     id: string;
-    src: string;
-    box: { width: number; height: number };
-    orientation: "portrait" | "landscape";
-    current: boolean;
+    edition: string;
+    setName: string;
+    setCode: string;
+    thumb: string;
+    normal: string;
+    width: number;
+    height: number;
+    thumbWidth: number;
+    thumbHeight: number;
   }[] = [];
 
   for (const printing of card.printings) {
     const key = faceKeyFor(printing.image_url);
-    if (key === null) continue;
-
-    /*
-      DEDUPLICATED BY FACE, and this is not a tidy-up. A printing is a
-      (collector number, edition, foiling) triple, and foiling variants share
-      one image — so the rail rendered the same thumbnail two or more times,
-      under identical captions, on 4,118 of 4,941 cards. The rail exists to show
-      what the card LOOKS like across its printings; two identical tiles say
-      nothing twice.
-    */
-    if (seen.has(key)) continue;
+    if (key === null || seen.has(key)) continue;
     seen.add(key);
 
     const orientation = orientationOf({
       playedHorizontally: card.played_horizontally,
       rotationDegrees: printing.image_rotation_degrees,
     });
+    const normalBox = boxFor("normal", orientation);
+    const thumbBox = boxFor("thumb", orientation);
+
     entries.push({
       key,
       id: printing.id,
-      src: faceUrl(key, "thumb"),
-      box: boxFor("thumb", orientation),
-      orientation,
-      /*
-        COMPARED ON THE FACE, NOT ON THE COLLECTOR NUMBER. `page.face` is chosen
-        by image, and `printing.id` is NOT unique — `faces.ts` documents that
-        4,780 collector numbers appear on more than one printing, and comparing
-        on it marked two or more thumbnails "current" on 3,091 cards. The face
-        key is what the hero image is actually keyed on, so it is what
-        "currently shown" means.
-      */
-      current: key === page.face.key,
+      edition: printing.edition,
+      setName: setName(printing.set_id),
+      setCode: printing.set_id,
+      thumb: faceUrl(key, "thumb"),
+      normal: faceUrl(key, "normal"),
+      width: normalBox.width,
+      height: normalBox.height,
+      thumbWidth: thumbBox.width,
+      thumbHeight: thumbBox.height,
     });
+  }
+
+  /*
+    DISAMBIGUATED ONLY WHERE IT IS NEEDED. Set and collector number identify a
+    printing almost always — but not always: Head Jab's Welcome to Rathe entry
+    is Alpha AND Unlimited, two different pieces of art under one number, and
+    labelling both "Welcome to Rathe · WTR098" is exactly the useless repetition
+    naming them by set was meant to fix. The edition is appended only to the
+    groups that collide, so an ordinary tile stays a set and a number.
+  */
+  const perNumber = new Map<string, number>();
+  for (const entry of entries) {
+    const key = `${entry.setCode}/${entry.id}`;
+    perNumber.set(key, (perNumber.get(key) ?? 0) + 1);
+  }
+
+  for (const entry of entries) {
+    if ((perNumber.get(`${entry.setCode}/${entry.id}`) ?? 0) > 1) {
+      entry.id = `${entry.id} · ${editionName(entry.edition)}`;
+    }
   }
 
   return entries;
 })();
 
 /**
+ * The card still needs a face when no printing publishes art — four printings
+ * in the corpus, and the picker has nothing to show for them.
+ */
+const facelessBox = boxFor("normal", page.face.orientation);
+
+/**
  * Shown only when there is a choice to make. One printing is not a rail, it is
  * the same picture again.
  */
-const showRail = rail.length > 1;
 
 /* -------------------------------------------------------------------------- */
 /* Pitch versions                                                              */
@@ -322,40 +370,6 @@ const versions = [
 
 const showVersions = versions.length > 1;
 
-/**
- * Whether one format's evidence is shown without being asked for.
- *
- * THIS IS THE RULE THAT LETS THE EVIDENCE FOLD WITHOUT BREAKING THE PROMISE.
- * An earlier version of this page printed every key inline for every format and
- * argued for it: a claim whose evidence needs a click is a claim being
- * asserted. That is right. What was wrong was applying it to the case where
- * *nothing interesting is being claimed* — six formats × six keys is 36 rows of
- * `cc_banned_start: —` on the overwhelming majority of cards, which pushed the
- * verdict itself off the screen.
- *
- * So the evidence opens itself whenever the verdict carries a real exclusion:
- * any ban, suspension, restriction or Living Legend status. Those are the
- * claims a reader might want to check, and they arrive already checked.
- *
- * AN `unknown` VERDICT DELIBERATELY DOES NOT OPEN, and the first version of
- * this function got that wrong. It read "a format Optfall cannot answer for" as
- * an unusual claim and opened those too — but Ultimate Pit Fight is unknown on
- * 4,939 of 4,941 cards, so the rule fired on every card page in the corpus.
- * Measured: **zero** cards had nothing open, and on 2,552 of them the only open
- * disclosure was that one. A fold that opens everywhere is not a fold, and the
- * change had quietly bought nothing.
- *
- * It is also redundant rather than merely noisy. An unknown verdict renders a
- * full sentence — "It publishes only exclusions here, and none is set on this
- * card" — and the evidence behind it is the single row `upf_banned: false`,
- * which says the same thing in upstream's vocabulary. The sentence is the
- * better disclosure and it is already unfoldable; the row stays one click away.
- *
- * Put the other way round: what folds is every verdict nobody would dispute.
- */
-function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
-  return verdict.states.some((state) => state.tone !== "legal");
-}
 ---
 
 <nav class="lineage" aria-label="Breadcrumb">
@@ -389,53 +403,29 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
   <div class="identity">
     <div class="identity-face">
       <!--
-        `loading="eager"` here and nowhere else on the site: this is the one
-        face above the fold, and lazy-loading the thing the page is about only
-        delays it.
+        THE PICKER IS AN ISLAND, and it is the only one on this page. §5.2 rules
+        out live updating for SEARCH — results must not re-rank under a cursor,
+        because the URL is the product. A printing picker is the opposite case:
+        it changes which image is shown and nothing else. No query, no ranking,
+        nothing a reader would want to paste that the card's own URL does not
+        already carry.
       -->
-      <CardFace
-        src={faceSrc}
-        alt={faceAlt}
-        width={faceBox.width}
-        height={faceBox.height}
-        loading="eager"
-      />
-
       {
-        showRail && (
-          <nav class="rail" aria-label={`Printings of ${page.label}`}>
-            <ul class="rail-list">
-              {rail.map((printing) => (
-                <li>
-                  {/*
-                    THROUGH `CardFace`, NOT A BARE `<img>`. These used to be raw
-                    image tags, which `docs/COMPLIANCE.md` §5 names explicitly as
-                    a way to break the copyright condition — "a … path that
-                    renders the image outside the component" — and up to a dozen
-                    card images per page were carrying no notice as a result.
-                    The component emits the line itself and cannot be told not
-                    to, which is the entire reason it exists.
-
-                    Not a link yet. Per-printing URLs are the next layer
-                    (docs/SCRYFALL-GAP.md §5.1c); until they exist, an anchor
-                    would point at the page it is already on, which is a worse
-                    affordance than a plain thumbnail. The collector number is
-                    the accessible name because it is the citable identity of a
-                    printing.
-                  */}
-                  <div class:list={["rail-face", { current: printing.current }]}>
-                    <CardFace
-                      src={printing.src}
-                      alt={`${page.label} — printing ${printing.id}`}
-                      width={printing.box.width}
-                      height={printing.box.height}
-                    />
-                  </div>
-                  <span class="rail-id">{printing.id}</span>
-                </li>
-              ))}
-            </ul>
-          </nav>
+        printings.length > 0 ? (
+          <PrintingPicker
+            printings={printings}
+            alt={faceAlt}
+            label={page.label}
+            client:load
+          />
+        ) : (
+          <CardFace
+            src={placeholderUrl(page.face.orientation)}
+            alt={faceAlt}
+            width={facelessBox.width}
+            height={facelessBox.height}
+            loading="eager"
+          />
         )
       }
     </div>
@@ -516,7 +506,21 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
               {stats.map((stat) => (
                 <div class="stat">
                   <dt>{stat.label}</dt>
-                  <dd>{stat.value}</dd>
+                  <dd>
+                    {/*
+                      THE SHAPE SAYS WHICH STAT IT IS, as docs/DESIGN.md always
+                      described the card face — cost in a hexagonal plate,
+                      power and defence in chamfered ones. The numeral stays the
+                      primary channel and the label stays visible, so the
+                      silhouette is the third redundant carrier rather than the
+                      only one.
+                    */}
+                    {stat.kind === null ? (
+                      stat.value
+                    ) : (
+                      <StatGlyph kind={stat.kind} value={stat.value} />
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -625,39 +629,25 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
                 )}
 
                 {/*
-                  THE EVIDENCE FOLDS — AND THE RULE FOR WHEN IT DOES NOT IS THE
-                  WHOLE POINT.
+                  THE UPSTREAM FLAGS ARE NO LONGER RENDERED, and the argument
+                  for them is worth recording rather than deleting.
 
-                  An earlier version of this file printed all six keys inline for
-                  all six formats and argued for it: "it is not behind a
-                  disclosure widget, because a claim whose evidence needs a click
-                  is a claim being asserted." That argument is correct, and
-                  simply reversing it to buy vertical space would trade away the
-                  thing that makes this page worth more than the incumbent's.
+                  They existed for auditability: "the tool is auditable rather
+                  than merely assertive, which is what matters when the
+                  commercially-backed incumbent ships incorrect flags". That
+                  still matters. What changed is the observation that the row
+                  was saying what the pills already said — `ll_banned: true`
+                  beside a pill reading Banned, `ll_banned_start: 2024-07-08`
+                  beside "since 2024-07-08" — in upstream's key names rather
+                  than in words. It was a second rendering of the verdict, not
+                  evidence for it.
 
-                  So it is honoured rather than overruled. `open` is not a
-                  styling choice here: a verdict claiming anything OTHER than
-                  plain Legal — banned, suspended, restricted, Living Legend, or
-                  a format Optfall cannot speak to at all — shows its evidence
-                  unasked, exactly as before. What folds is the boring majority,
-                  where the evidence reads `cc_legal: true` and five dashes.
-
-                  An unusual claim shows its working; a routine one stops
-                  shouting. Thirty-six rows of `cc_banned_start: —` above the
-                  printings was not auditability, it was noise wearing
-                  auditability's coat.
+                  Auditability moves to where PLAN.md already puts it: "Publish
+                  the data, not just the site." The full flag set ships in the
+                  openly-licensed corpus, which is the artefact a second tool
+                  would check us against — and a reader who wants to see the
+                  derivation reads the export rather than 36 rows of dashes.
                 */}
-                <details class="evidence-fold" open={evidenceOpen(verdict)}>
-                  <summary class="evidence-summary">Upstream flags</summary>
-                  <dl class="evidence">
-                    {verdict.evidence.map((fact) => (
-                      <div class="fact" data-present={String(fact.present)}>
-                        <dt>{fact.key}</dt>
-                        <dd>{fact.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </details>
               </li>
             ))
           }
