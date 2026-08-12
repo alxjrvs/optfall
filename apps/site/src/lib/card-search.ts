@@ -85,6 +85,17 @@ export interface EncodedCardIndex {
   /** Card slugs, one per line. */
   readonly slugs: string;
   /**
+   * The BARE NAME slug per card, one per line — `head-jab` for all three of
+   * `head-jab-1`, `-2` and `-3`.
+   *
+   * This is what lets a search collapse the pitch versions of a card into one
+   * result. It is shipped rather than derived by stripping a `-N` suffix,
+   * because that would be a second, weaker evaluation of the slug rule: a card
+   * genuinely named something ending in a digit would be mangled by it, and a
+   * reference work should not have two places a permalink can come from.
+   */
+  readonly nameSlugs: string;
+  /**
    * Face blob keys, one per line, empty where the card publishes no art.
    *
    * SHIPPED RATHER THAN DERIVED, for the same reason the slugs are: the key is
@@ -290,6 +301,7 @@ export function buildCardIndex(
 
   const labels: string[] = [];
   const slugs: string[] = [];
+  const nameSlugs: string[] = [];
   const faceKeys: string[] = [];
   const faceLandscape: string[] = [];
   const pitches: string[] = [];
@@ -315,6 +327,7 @@ export function buildCardIndex(
   pages.forEach((page, ordinal) => {
     labels.push(page.label);
     slugs.push(page.slug);
+    nameSlugs.push(page.nameSlug);
     faceKeys.push(page.face.key ?? "");
     faceLandscape.push(page.face.orientation === "landscape" ? "1" : "0");
     pitches.push(String(page.pitch));
@@ -381,12 +394,25 @@ export function buildCardIndex(
    * cannot express an opinion about which types matter. Ties break
    * alphabetically, so the list is a function of the corpus alone.
    */
-  const typeCounts = new Map<string, number>();
+  /*
+   * COUNTED IN CARDS, NOT CORPUS ROWS, TO MATCH WHAT CLICKING THE LINK SHOWS.
+   *
+   * A search result stands for a card — the red, yellow and blue versions
+   * collapse to one row — so a browse link promising "33" and then rendering
+   * 21 rows would be lying about its own destination. The set is keyed on the
+   * bare-name slug for exactly the reason the collapse is.
+   */
+  const typeCards = new Map<string, Set<string>>();
   for (const page of pages) {
     const line = page.card.type_text.trim();
     if (line === "") continue;
-    typeCounts.set(line, (typeCounts.get(line) ?? 0) + 1);
+    const seen = typeCards.get(line);
+    if (seen) seen.add(page.nameSlug);
+    else typeCards.set(line, new Set([page.nameSlug]));
   }
+  const typeCounts = new Map(
+    [...typeCards.entries()].map(([line, names]) => [line, names.size]),
+  );
   const browse = [...typeCounts.entries()]
     .toSorted((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
     .slice(0, BROWSE_LIMIT)
@@ -398,6 +424,7 @@ export function buildCardIndex(
     confirmed: source.confirmed,
     labels: labels.join("\n"),
     slugs: slugs.join("\n"),
+    nameSlugs: nameSlugs.join("\n"),
     faceKeys: faceKeys.join("\n"),
     faceLandscape: faceLandscape.join(""),
     pitches: pitches.join(""),
@@ -429,6 +456,16 @@ export interface CardIndex {
   /** Tokenised labels, so a name match is whole-word-or-prefix like the rest. */
   readonly labelTokens: readonly (readonly string[])[];
   readonly slugs: readonly string[];
+  /** Bare-name slug per card, shared by every pitch version. */
+  readonly nameSlugs: readonly string[];
+  /**
+   * How many pitch versions the CORPUS carries per bare-name slug.
+   *
+   * Counted once here rather than per query, and counted over the corpus rather
+   * than over the results — "2 of 3 versions matched" needs the 3, and the
+   * result set only knows the 2.
+   */
+  readonly versionsByName: ReadonlyMap<string, number>;
   /** Face blob key per card; `null` where the card publishes no art. */
   readonly faceKeys: readonly (string | null)[];
   readonly faceLandscape: readonly boolean[];
@@ -460,6 +497,9 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const labels = encoded.labels === "" ? [] : encoded.labels.split("\n");
   const slugs = encoded.slugs === "" ? [] : encoded.slugs.split("\n");
   const faceKeyLines = encoded.faceKeys === "" ? [] : encoded.faceKeys.split("\n");
+  const nameSlugLines =
+    encoded.nameSlugs === "" ? [] : encoded.nameSlugs.split("\n");
+  const nameSlugPerCard = labels.map((_, ordinal) => nameSlugLines[ordinal] ?? "");
   const typeDict = encoded.typeDict === "" ? [] : encoded.typeDict.split("\n");
   const keywordDict = encoded.keywordDict === "" ? [] : encoded.keywordDict.split("\n");
   const traitDict = encoded.traitDict === "" ? [] : encoded.traitDict.split("\n");
@@ -533,6 +573,14 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
     commit: encoded.commit,
     confirmed: encoded.confirmed,
     labels,
+    nameSlugs: nameSlugPerCard,
+    versionsByName: (() => {
+      const counts = new Map<string, number>();
+      for (const name of nameSlugPerCard) {
+        counts.set(name, (counts.get(name) ?? 0) + 1);
+      }
+      return counts;
+    })(),
     faceKeys: labels.map((_, ordinal) => {
       const key = faceKeyLines[ordinal] ?? "";
       return key === "" ? null : key;
@@ -1022,6 +1070,25 @@ const FIELD_RANK: Readonly<Record<CardMatchField, number>> = {
 export interface CardResult {
   readonly label: string;
   readonly href: string;
+  /**
+   * Which pitch versions of this card matched, and how many the corpus has.
+   *
+   * A ROW STANDS FOR A CARD, BUT LEGALITY BELONGS TO A VERSION, and those two
+   * facts collide. Measured on this corpus: four names carry pitch versions
+   * whose Classic Constructed ban differs — Electromagnetic Somersault red and
+   * yellow are banned and blue is legal, and Bonds of Ancestry is the other way
+   * round. A `banned:cc` search that collapsed those to one bare row would put
+   * a card on a banned list without saying which version was banned, which is
+   * the exact "collapses two true facts into one" failure `cards.ts` builds the
+   * whole verdict model to avoid.
+   *
+   * So the collapse keeps the count: when `matched` is shorter than `total`,
+   * the row names the versions it is talking about. When they are equal — the
+   * ordinary case, including every plain name search — there is nothing to
+   * qualify and the row says nothing.
+   */
+  readonly matchedPitches: readonly PitchValue[];
+  readonly totalVersions: number;
   /** Face blob key, or `null` where the card publishes no art. */
   readonly faceKey: string | null;
   /** True where the face is landscape and needs a transposed box. */
@@ -1048,15 +1115,33 @@ export const CARD_RESULT_LIMIT = 60;
 
 const STAT_LABELS = ["Cost", "Power", "Defence"] as const;
 
+/** `"Head Jab (pitch 2)"` → `"Head Jab"`. The suffix `labelFor` added. */
+function nameOf(label: string): string {
+  return label.replace(/ \((?:no pitch|pitch \d)\)$/, "");
+}
+
 function toResult(
   index: CardIndex,
   ordinal: number,
   matchedIn: CardMatchField,
+  matchedPitches: readonly PitchValue[],
+  totalVersions: number,
 ): CardResult {
   const printed = index.stats[ordinal] ?? ["", "", ""];
+  const slug = index.slugs[ordinal] ?? "";
+  const nameSlug = index.nameSlugs[ordinal] ?? slug;
+  const collapsed = nameSlug !== slug;
+
   return {
-    label: index.labels[ordinal] ?? "",
-    href: `/card/${index.slugs[ordinal] ?? ""}`,
+    // THE BARE NAME WHEN THE RESULT STANDS FOR SEVERAL VERSIONS. Everywhere a
+    // row points at ONE card it must render the disambiguated label, or two
+    // anchors differ only in where they point. Here the row points at the card
+    // as a whole, whose name is unambiguous — and the destination shows the
+    // versions as tabs, so nothing is lost by not choosing one in the link.
+    label: collapsed ? nameOf(index.labels[ordinal] ?? "") : index.labels[ordinal] ?? "",
+    href: `/card/${collapsed ? nameSlug : slug}`,
+    matchedPitches,
+    totalVersions,
     faceKey: index.faceKeys[ordinal] ?? null,
     faceLandscape: index.faceLandscape[ordinal] === true,
     pitch: index.pitches[ordinal] ?? 0,
@@ -1132,12 +1217,54 @@ export function searchCards(
     (a, b) => FIELD_RANK[a.field] - FIELD_RANK[b.field] || a.ordinal - b.ordinal,
   );
 
+  /**
+   * PITCH VERSIONS COLLAPSE TO ONE RESULT.
+   *
+   * A player calls the red, yellow and blue versions of a card ONE card, and
+   * searching "head jab" should not answer with three rows that differ only by
+   * a jewel. So results are grouped by bare-name slug and the best-ranked
+   * version of each stands for the group, linking to the card page — where the
+   * versions are tabs.
+   *
+   * NOTHING IS HIDDEN BY THIS, and that distinction matters. The grouping runs
+   * AFTER matching, so a query that only one version satisfies still finds the
+   * card: `text:` terms unique to the blue version put the card on the page,
+   * and the tab strip is one click from the text that matched. What collapses
+   * is the presentation, never the search.
+   *
+   * `total` counts CARDS after collapsing rather than corpus rows, because it
+   * is the number a reader is told — "3 cards match" has to mean three things
+   * they can click, not three rows two of which go to the same page.
+   */
+  const bestByName = new Map<string, { ordinal: number; field: CardMatchField }>();
+  const matchedByName = new Map<string, PitchValue[]>();
+  for (const row of ranked) {
+    const name = index.nameSlugs[row.ordinal] ?? index.slugs[row.ordinal] ?? "";
+    const pitches = matchedByName.get(name);
+    const pitch = index.pitches[row.ordinal] ?? 0;
+    if (pitches) pitches.push(pitch);
+    else matchedByName.set(name, [pitch]);
+    // `ranked` is already in rank order, so the first sighting is the best one.
+    if (!bestByName.has(name)) bestByName.set(name, row);
+  }
+  const collapsed = [...bestByName.entries()];
+
   return {
     query: raw,
     terms,
     filters,
     notices,
-    results: ranked.slice(0, limit).map((row) => toResult(index, row.ordinal, row.field)),
-    total: ranked.length,
+    results: collapsed
+      .slice(0, limit)
+      .map(([name, row]) =>
+        toResult(
+          index,
+          row.ordinal,
+          row.field,
+          (matchedByName.get(name) ?? []).toSorted((a, b) => a - b),
+          index.versionsByName.get(name) ?? 1,
+        ),
+      ),
+    total: collapsed.length,
   };
 }
