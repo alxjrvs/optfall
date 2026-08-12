@@ -1,0 +1,138 @@
+---
+/**
+ * `/sets` — the browsable spine.
+ *
+ * `docs/SCRYFALL-GAP.md` §2 item 7: "a browsable spine … gives the corpus a
+ * shape you can walk without knowing what to type". Search answers a question;
+ * this answers "what is there". They are different needs and the field cannot
+ * serve the second — an empty search box is a demand, not an invitation.
+ *
+ * NEWEST FIRST, because somebody opening a set list is far more often looking
+ * for what just came out than for what came out in 2019. Undated sets sort last
+ * rather than first, which is where an empty string would put them; calling an
+ * undated set the oldest is a claim the data does not support.
+ *
+ * NO SET SYMBOLS, and that is a compliance constraint rather than a stylistic
+ * one. `docs/COMPLIANCE.md`: product set logos count as FAB logos, and the
+ * policy bars them. Set identity here is typographic — the name, the code and
+ * the date — which `docs/DESIGN.md` notes "pushed the design somewhere more
+ * original than it would otherwise have gone".
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { CORPUS as CARDS } from "../../lib/cards";
+import { SETS, SETS_BY_RELEASE, hrefForSet } from "../../lib/sets";
+
+/**
+ * How many cards each set contains, counted once over the corpus.
+ *
+ * Counted in CARDS rather than printings, to match what the set page and the
+ * search both report — a set listing "412 printings" beside a page showing 380
+ * rows is two true numbers arguing.
+ */
+const cardsPerSet = new Map<string, Set<string>>();
+for (const card of CARDS.cards) {
+  for (const printing of card.printings) {
+    const seen = cardsPerSet.get(printing.set_id);
+    if (seen) seen.add(card.unique_id);
+    else cardsPerSet.set(printing.set_id, new Set([card.unique_id]));
+  }
+}
+
+/** Sets no card in the corpus belongs to are omitted rather than shown empty. */
+const listed = SETS_BY_RELEASE.filter((set) => (cardsPerSet.get(set.id)?.size ?? 0) > 0);
+---
+
+<BaseLayout
+  title="Sets — Optfall"
+  description="Every Flesh and Blood set, newest first, with its release date and the number of cards Optfall carries from it."
+>
+  <h1 class="heading">Sets</h1>
+
+  <p class="lede">
+    {listed.length} sets, newest first. Each links to the cards Optfall carries from it.
+  </p>
+
+  <ul class="sets">
+    {
+      listed.map((set) => (
+        <li class="set">
+          <a class="set-name" href={hrefForSet(set.id)}>{set.name}</a>
+          <span class="set-code">{set.id}</span>
+          <span class="set-meta">
+            {set.released === null ? (
+              "undated"
+            ) : (
+              <time datetime={set.released}>{set.released}</time>
+            )}
+            {" · "}
+            {(cardsPerSet.get(set.id)?.size ?? 0).toLocaleString("en-GB")} cards
+            {set.outOfPrint && " · out of print"}
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="provenance">
+    Set names and release dates read from <a href={`https://github.com/${SETS.source.repository}`}>{SETS.source.repository}</a> at commit <code>{SETS.source.commit}</code>, the same snapshot the card corpus is pinned to. {SETS.counts.sets - listed.length} further sets are published upstream but carry no card in this corpus and are not listed.
+  </p>
+
+  <p class="provenance">{SETS.rights}</p>
+</BaseLayout>
+
+<style>
+  .heading {
+    margin-block: 0 var(--of-space-base);
+  }
+
+  .lede {
+    margin-block: 0 var(--of-space-loosest);
+    color: var(--of-color-ink-muted);
+  }
+
+  /* Hairlines rather than cards, exactly as every other list here. */
+  .sets {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .set {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--of-space-tight) var(--of-space-base);
+    padding-block: var(--of-space-tight);
+    border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  }
+
+  .set-name {
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-large);
+  }
+
+  .set-code,
+  .set-meta {
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    text-transform: uppercase;
+    color: var(--of-color-ink-faint);
+  }
+
+  /* The code is the citable identity, so it sits next to the name rather than
+     at the end of the row with the incidental facts. */
+  .set-code {
+    color: var(--of-color-ink-muted);
+  }
+
+  .set-meta {
+    margin-inline-start: auto;
+  }
+
+  .provenance {
+    margin-block-start: var(--of-space-loosest);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+  }
+</style>

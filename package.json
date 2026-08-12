@@ -29,7 +29,8 @@
     "check:repo-settings": "scripts/repo-settings.sh --check",
     "check:built-tokens": "bun scripts/check-built-tokens.ts",
     "corpus:rules": "bun scripts/build-rules-corpus.ts",
-    "corpus:cards": "bun scripts/build-card-corpus.ts"
+    "corpus:cards": "bun scripts/build-card-corpus.ts",
+    "corpus:sets": "bun scripts/build-sets-corpus.ts"
   },
   "devDependencies": {
     "@netlify/blobs": "10.7.12",

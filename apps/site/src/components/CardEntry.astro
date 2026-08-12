@@ -89,6 +89,13 @@ import corpusJson from "../../../../data/rules/cr-2.14.0.json";
 import { buildKeywordVocabulary, rulesForCard } from "../lib/keywords";
 import { hrefForNumber, type RulesCorpus } from "../lib/search";
 import {
+  editionName,
+  foilingName,
+  hrefForSet,
+  rarityName,
+  setName,
+} from "../lib/sets";
+import {
   boxFor,
   faceKeyFor,
   faceUrl,
@@ -721,10 +728,23 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
           page.printings.map(({ printing, otherFace }) => (
             <tr>
               <th scope="row" class="collector">{printing.id}</th>
-              <td class="code">{printing.set_id}</td>
-              <td class="code">{printing.rarity === "" ? "—" : printing.rarity}</td>
-              <td class="code">{printing.edition === "" ? "—" : printing.edition}</td>
-              <td class="code">{printing.foiling === "" ? "—" : printing.foiling}</td>
+              {/*
+                IN WORDS, WITH THE CODE KEPT BESIDE IT. Until now this table
+                printed upstream's storage letters — R, N, S — which is a
+                database dump rather than a reference work. The name is what a
+                reader wants; the code is what a printing is CITED by, so both
+                are here and the code stays in the mono voice that means
+                citable. An unknown code falls back to itself rather than to a
+                blank, so a set Optfall has not re-synced reads as unnamed
+                rather than as missing.
+              */}
+              <td>
+                <a href={hrefForSet(printing.set_id)}>{setName(printing.set_id)}</a>
+                <span class="code-hint">{printing.set_id}</span>
+              </td>
+              <td>{printing.rarity === "" ? "—" : rarityName(printing.rarity)}</td>
+              <td>{printing.edition === "" ? "—" : editionName(printing.edition)}</td>
+              <td>{printing.foiling === "" ? "—" : foilingName(printing.foiling)}</td>
               <td>{printing.artists.length === 0 ? "—" : printing.artists.join(", ")}</td>
               <td>
                 {otherFace === null ? (
@@ -911,6 +931,14 @@ function evidenceOpen(verdict: CardPage["verdicts"][number]): boolean {
      control the component library does not own. */
   .evidence-fold[open] .evidence-summary {
     margin-block-end: var(--of-space-tight);
+  }
+
+  .code-hint {
+    margin-inline-start: var(--of-space-tight);
+    font-family: var(--of-type-family-mono);
+    font-size: var(--of-type-size-micro);
+    letter-spacing: var(--of-type-tracking-mono);
+    color: var(--of-color-ink-faint);
   }
 
   /* -- Governed by ---------------------------------------------------------- */
