@@ -1,0 +1,46 @@
+---
+/**
+ * `/random` — one card, chosen without being asked for.
+ *
+ * Every reference site has this and Scryfall's is at `/random`, so ours is
+ * too. `docs/DESIGN.md` argues a daily puzzle would build a habit better than
+ * a random button; that remains true and this is not the puzzle. It is the
+ * affordance somebody reaches for when they want to look at a card and have no
+ * card in mind, and it costs one page.
+ *
+ * CHOSEN IN THE BROWSER, because there is no server to choose on. The page
+ * ships the name index — the same one the front door uses — and navigates. A
+ * build-time choice would be random once per deploy, which is a fixed link
+ * wearing a random name.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import RandomCard from "../components/RandomCard.svelte";
+import { buildNameIndex } from "../lib/typeahead";
+import { CARD_PAGES } from "../lib/cards";
+
+const names = buildNameIndex(CARD_PAGES);
+---
+
+<BaseLayout
+  title="A random card — Optfall"
+  description="One Flesh and Blood card, chosen at random."
+>
+  <h1 class="heading">A random card</h1>
+  <RandomCard index={names} client:load />
+
+  <noscript>
+    <p class="note">
+      Choosing a card at random needs scripting, because Optfall is a static site with no server to choose on. <a href="/search">Search the cards</a> instead, or <a href="/sets">browse by set</a>.
+    </p>
+  </noscript>
+</BaseLayout>
+
+<style>
+  .heading {
+    margin-block: 0 var(--of-space-loose);
+  }
+
+  .note {
+    color: var(--of-color-ink-muted);
+  }
+</style>

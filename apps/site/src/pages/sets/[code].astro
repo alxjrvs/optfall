@@ -3,7 +3,7 @@
  * `/sets/<code>` — one set, and the cards Optfall carries from it.
  *
  * A SET PAGE IS A LIST, NOT A SEARCH RESULT, and the distinction is why this
- * exists rather than redirecting to `/cards?q=set:MST`. The query answers "what
+ * exists rather than redirecting to `/search?q=set:MST`. The query answers "what
  * matches"; this answers "what is in this set", which is a fact about the set
  * rather than about a question somebody asked. It also gives the set a
  * permanent URL, which a query string is not — `docs/DESIGN.md`: "Every view is
@@ -90,7 +90,7 @@ const listed = cards;
       </ul>
 
       <p class="provenance">
-        Read from <a href={`https://github.com/${SETS.source.repository}`}>{SETS.source.repository}</a> at commit <code>{SETS.source.commit}</code>. A card appears here when any of its printings belongs to this set, so a card reprinted across sets is listed under each.
+        From <a href={`https://github.com/${SETS.source.repository}`}>{SETS.source.repository}</a> at <code>{SETS.source.commit}</code>. A card is listed under every set it was printed in.
       </p>
     </BaseLayout>
   )

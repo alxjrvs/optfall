@@ -375,7 +375,7 @@ const showVersions = versions.length > 1;
 <nav class="lineage" aria-label="Breadcrumb">
   <ol class="crumbs">
     <li><a href="/">Optfall</a></li>
-    <li><a href="/cards">Cards</a></li>
+    <li><a href="/search">Cards</a></li>
     {
       page.disambiguated && (
         <li>
@@ -545,7 +545,7 @@ const showVersions = versions.length > 1;
           markers to words — so substituting any would be inventing a vocabulary
           and calling it the card's text.
         -->
-        <p class="verify">Printed exactly as the upstream dataset publishes it, including its own <code>**</code> emphasis and <code>&#123;…&#125;</code> symbol markers. Optfall does not rewrite, expand or summarise card text.</p>
+        <p class="verify">Verbatim, including upstream’s own <code>**</code> and <code>&#123;…&#125;</code> markers. Never rewritten or summarised.</p>
       </section>
 
       {
@@ -571,7 +571,7 @@ const showVersions = versions.length > 1;
                 </li>
               ))}
             </ul>
-            <p class="verify">Each keyword printed on this card, matched to the Comprehensive Rules section that defines it. Matching is exact against the vocabulary the rules publish; a keyword the document does not define is absent here rather than guessed at.</p>
+            <p class="verify">Matched exactly against the vocabulary the rules publish. A keyword the document does not define is absent rather than guessed at.</p>
           </section>
         )
       }
@@ -592,7 +592,7 @@ const showVersions = versions.length > 1;
           welding words together in the output.
         -->
         <p class="scope">
-          Current state only, as published by the upstream dataset and last confirmed <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>. Optfall does not yet answer what was legal on an earlier date; where upstream publishes the date a state began, it is printed below and means the start of the state that applies now.
+          Present day only, confirmed <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>. A <em>since</em> date is when the current state began — not a history.
         </p>
 
         <ul class="formats">
@@ -827,8 +827,8 @@ const showVersions = versions.length > 1;
       <dd><code>{card.unique_id}</code></dd>
     </dl>
   </BevelledPlate>
-  <p class="verify">Card {page.ordinal} of {CORPUS.counts.cards}. Fetch that URL yourself, hash it and compare. Every value on this page is read from those exact bytes by deterministic code — no language model reads, rewrites or summarises any part of this corpus.</p>
-  <p class="verify">{CORPUS.rights}</p>
+  <p class="verify">Card {page.ordinal} of {CORPUS.counts.cards}. Fetch that URL, hash it, compare. Every value here is read from those bytes by deterministic code — no language model touches this corpus.</p>
+  <p class="legal">{CORPUS.rights}</p>
 </section>
 
 <style>
@@ -1168,6 +1168,20 @@ const showVersions = versions.length > 1;
     margin: 0;
     color: var(--of-color-ink-muted);
     font-size: var(--of-type-size-small);
+  }
+
+  /*
+    THE RIGHTS NOTICE IS LEGALESE, NOT APPARATUS. It is 500 characters of
+    licence text that has to be present and does not have to compete — the same
+    argument the card-image copyright line settled, so it gets the same
+    treatment: the smallest step in the scale, tight, faint.
+  */
+  .legal {
+    margin-block-start: var(--of-space-base);
+    font-size: var(--of-type-size-legal);
+    letter-spacing: var(--of-type-tracking-tight);
+    line-height: var(--of-type-leading-base);
+    color: var(--of-color-ink-faint);
   }
 
   .verify {

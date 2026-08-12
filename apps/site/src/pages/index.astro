@@ -51,14 +51,14 @@ const cards = CORPUS.counts.cards.toLocaleString("en-GB");
     -->
     <h1 class="wordmark">Optfall</h1>
 
-    <NoScriptNotice example="/cards?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is that card too, with its pitch versions as tabs.</NoScriptNotice>
+    <NoScriptNotice example="/search?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is that card too, with its pitch versions as tabs.</NoScriptNotice>
 
     <!--
       `client:load`, not `client:visible`. The field is the only thing on this
       page and the whole reason anyone opened it, so it is hydrated before it is
       looked at rather than after.
     -->
-    <CardTypeahead index={names} action="/cards" client:load />
+    <CardTypeahead index={names} action="/search" client:load />
 
     <!--
       Four links, each going somewhere that ANSWERS a question rather than
@@ -67,9 +67,9 @@ const cards = CORPUS.counts.cards.toLocaleString("en-GB");
       arrived.
     -->
     <nav class="ways-in" aria-label="Elsewhere in Optfall">
-      <a href="/cards">Browse all {cards} cards</a>
+      <a href="/search">Browse all {cards} cards</a>
       <a href="/sets">Browse by set</a>
-      <a href="/search">Search the rules</a>
+      <a href="/cr">Search the rules</a>
       <a href="/card/winters-wail">A card that is two things at once</a>
       <a href="/cr/1.0.1a">A rules permalink</a>
     </nav>

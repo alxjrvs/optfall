@@ -136,7 +136,7 @@ Deletions first, because most of the confusion is *surplus*, not absence.
   keystroke today. It becomes submit-driven (§5.2), which deletes the debounce,
   the partial-query ranking path and the case for autocomplete along with it.
 - **`/cards` as a distinct route.** It becomes a Netlify 301 to `/`, so every
-  pasted `/cards?q=…` link keeps working. Query strings survive a 301.
+  pasted `/search?q=…` link keeps working. Query strings survive a 301.
 - **`docs/DESIGN.md` principles table, row 5** — *"The unit is the verdict, not
   the card."* Replaced by the card as the unit, with interactions and rules as
   objects that attach to it. Record the change in place rather than deleting it,

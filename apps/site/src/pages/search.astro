@@ -1,89 +1,114 @@
 ---
 /**
- * `/search` — and `/search?q=dominate`, which is the same page with an answer
- * on it.
+ * `/search` — and `/search?q=banned:cc`, which is the same page with an answer
+ * on it. **The room the front door opens onto.**
  *
- * THE URL IS THE POINT. `docs/DESIGN.md`: "Every view is a URL. Scryfall's real
- * product is the link you paste into a conversation to settle it." So the query
- * lives in the address bar, not in component state that evaporates when the tab
- * closes — and the island reads it back on load, which is what makes a pasted
- * link render the results the sender was looking at.
+ * IT IS AT `/search` BECAUSE THAT IS WHERE PEOPLE LOOK. Scryfall's results live
+ * at `/search?q=`, and `docs/DESIGN.md` settled that the grammar is inherited
+ * rather than invented — "people arrive already fluent". The address is part of
+ * the grammar: somebody who knows one card site knows to type `/search`, and
+ * this page used to be at `/cards` while `/search` answered the Comprehensive
+ * Rules, which is the least helpful arrangement available.
  *
- * THE INDEX IS BUILT HERE, ONCE, AT BUILD TIME. This frontmatter runs during
- * `astro build` and never again: there is no server to run it on. The corpus is
- * read off disk, `buildIndex` reduces 651 KB of verbatim rules text to the
- * ~200 KB the ranking actually needs, and that is what the island receives. The
- * full text is deliberately not shipped — it already exists, one click away, on
- * the permalink page for each section, which is the thing this page exists to
- * send people to.
+ * `/cards` is a permanent redirect here, so every link already pasted survives.
  *
- * WHY `?raw` RATHER THAN A PLAIN JSON IMPORT OR `readFileSync`. All three read
- * the same bytes; only this one reads them reliably. A JSON import hands
- * TypeScript a 19,000-line literal to infer a type from, for a file whose shape
- * is already declared in `search.ts`. `readFileSync` resolves its path against
- * the *bundled* module at build time, not against this file, so it points at a
- * directory that does not exist — which is not a theory, it is what the first
- * attempt did. `?raw` is resolved by Vite against this source file, inlined at
- * build time, and parsed once here: a build-time input, which is exactly what
- * the corpus is.
+ * THE SPLIT FROM `/` IS UNCHANGED. The door takes a name and sends you
+ * somewhere; this page renders the answer. The door ships names, slugs and
+ * pitches; this ships the full index — inverted postings over printed text,
+ * keyword and trait memberships, per-format verdict vectors. Somebody looking
+ * up "head jab" never downloads the machinery.
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import NoScriptNotice from "../components/NoScriptNotice.astro";
-import RulesSearch from "../components/RulesSearch.svelte";
-import { buildIndex, type RulesCorpus } from "../lib/search";
-import corpusJson from "../../../../data/rules/cr-2.14.0.json?raw";
+import CardSearch from "../components/CardSearch.svelte";
+import { buildCardIndex } from "../lib/card-search";
+import { CARD_PAGES, CORPUS, LAST_CONFIRMED, NAME_PAGES } from "../lib/cards";
+import rulesJson from "../../../../data/rules/cr-2.14.0.json";
+import { buildKeywordVocabulary, keywordCoverage } from "../lib/keywords";
+import type { RulesCorpus } from "../lib/search";
 
-const corpus = JSON.parse(corpusJson) as RulesCorpus;
-const index = buildIndex(corpus);
+/*
+ * Built here, once, at build time, from the same shaped pages `/card/<slug>`
+ * renders — which is what makes it impossible for a search result and the page
+ * it links to to disagree about a slug, a label, a legality verdict or a face.
+ * The 16 MB corpus stays on the build machine.
+ */
+const index = buildCardIndex(CARD_PAGES, {
+  commit: CORPUS.source.commit,
+  confirmed: LAST_CONFIRMED,
+});
 
-const sections = corpus.sections.length.toLocaleString("en-GB");
-const published = new Date(`${corpus.publishedDateIso}T00:00:00Z`).toLocaleDateString(
-  "en-GB",
-  { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" },
+const cards = CORPUS.counts.cards.toLocaleString("en-GB");
+const printings = CORPUS.counts.printings.toLocaleString("en-GB");
+const permalinks = (CARD_PAGES.length + NAME_PAGES.length).toLocaleString("en-GB");
+const upstream = `https://github.com/${CORPUS.source.repository}`;
+
+/**
+ * THE JOIN'S COVERAGE, STATED RATHER THAN IMPLIED.
+ *
+ * Card keywords are matched to the Comprehensive Rules sections that define
+ * them, and the match is exact against a closed vocabulary — so some keywords
+ * do not resolve. `docs/PLAN.md`: "A stale Optfall must look stale", and a join
+ * that quietly drops what it cannot answer is asserting a completeness it does
+ * not have. The number is computed here rather than typed, so it cannot rot
+ * when either document is re-synced.
+ */
+const coverage = keywordCoverage(
+  buildKeywordVocabulary(rulesJson as unknown as RulesCorpus),
+  CORPUS.cards.flatMap((card) =>
+    card.card_keywords.concat(card.ability_and_effect_keywords),
+  ),
 );
+const unmatchedList = coverage.unmatched.join(", ");
 ---
 
 <BaseLayout
-  title="Search the rules — Optfall"
-  description="Lexical search over the Flesh and Blood Comprehensive Rules. Every section has a permanent, citable URL."
+  title="Search the cards — Optfall"
+  description="Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from."
 >
-  <h1>Search the rules</h1>
+  <h1 class="heading">Search the cards</h1>
 
   <!--
-    THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form on any surface submits
-    here, so a reader with scripting off arrives at `/search?q=dominate` with a
-    query in the address bar and no machinery on the page able to answer it.
-    Without this block that reads as an empty field and nothing else — a silent
-    failure, which is the one shape "degrade visibly" forbids. It is above the
-    island because the island renders its own hint, rule and browse, and an
-    explanation printed after all of that is an explanation nobody reaching for
-    the field will see.
+    THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form submits here, so a
+    reader with scripting off arrives at `/search?q=…` with a query in the
+    address bar and no machinery on the page able to answer it. Without this
+    block that reads as an empty field and nothing else — a silent failure,
+    which is the one shape "degrade visibly" forbids.
   -->
-  <NoScriptNotice example="/search?q=dominate">Every section is addressable without it: <code>/cr/8.3.4b</code> is the section cited as <code>cr:8.3.4b</code>, and the chapter list under the field is nine links into the same corpus.</NoScriptNotice>
+  <NoScriptNotice example="/search?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is that card too, with its pitch versions as tabs.</NoScriptNotice>
+
+  <CardSearch index={index} ornament client:load />
 
   <!--
-    `client:load` rather than `client:visible`: the field is the first thing on
-    the page and the whole reason anyone opened it, so it is hydrated before it
-    is looked at rather than after. It is also what reads `?q=` back out of the
-    URL, which has to happen on arrival, not on scroll.
-  -->
-  <RulesSearch index={index} client:load />
-
-  <!--
-    Degrade visibly. `docs/PLAN.md`: "Every surface shows when its data was last
-    confirmed. A stale Optfall must look stale." The version, the date and the
-    source are stated on the surface that serves the text, not buried in an
-    about page — and the source is a link, so the claim is checkable.
+    Degrade visibly, on the surface that serves the data rather than on the one
+    that links to it. Inline elements stay on the same source line as the text
+    around them: the build drops the whitespace at a line break falling
+    immediately before an inline tag, welding words together in the output.
   -->
   <p class="provenance">
-    {corpus.title} <strong>{corpus.version}</strong>, published {published} by Legend
-    Story Studios and parsed to {sections} addressable sections. Read
-    from <a href={corpus.sourceUrl}>the published document</a>; nothing on this page
-    is summarised, paraphrased or generated.
+    {cards} cards and {printings} printings at {permalinks} permanent URLs, from <a href={upstream}>{CORPUS.source.repository}</a> at <code>{CORPUS.source.commit}</code>, confirmed {LAST_CONFIRMED}. Legality is present day only; the query language says so rather than guessing. Nothing here is summarised or generated.
   </p>
+
+  <p class="provenance">
+    Card keywords are matched to the Comprehensive Rules section that defines each one, and every card page cites the rules that govern it. Coverage is <strong>{coverage.percent}%</strong> — {coverage.direct + coverage.viaFamily} of {coverage.baseForms} distinct keywords, {coverage.direct} matched directly and {coverage.viaFamily} through a rule the document parameterises. The {coverage.unmatched.length} it cannot resolve are named rather than hidden: {unmatchedList}. A keyword the rules do not define carries no citation instead of a guessed one.
+  </p>
+
+  <p class="legal">{CORPUS.rights}</p>
 </BaseLayout>
 
 <style>
+  .heading {
+    margin-block: 0 var(--of-space-looser);
+  }
+
+  /* The rights notice is legalese: present, not competing. */
+  .legal {
+    margin-block-start: var(--of-space-base);
+    font-size: var(--of-type-size-legal);
+    letter-spacing: var(--of-type-tracking-tight);
+    color: var(--of-color-ink-faint);
+  }
+
   .provenance {
     margin-block-start: var(--of-space-loosest);
     color: var(--of-color-ink-muted);
