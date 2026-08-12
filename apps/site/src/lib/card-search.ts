@@ -54,6 +54,15 @@ import type { PitchValue, StateTone } from "optfall-theme";
  * column.
  */
 import type { CardPage } from "./cards";
+import {
+  evaluate,
+  leaves,
+  parse,
+  tokenise,
+  type QueryLeaf,
+  type QueryNode,
+  type Token,
+} from "./query";
 
 /* -------------------------------------------------------------------------- */
 /* The wire format                                                             */
@@ -702,40 +711,17 @@ export interface ParsedCardQuery {
   readonly notices: readonly CardNotice[];
   /** The whole query, folded — used only for the exact-name tier. */
   readonly folded: string;
+  /**
+   * The query as an expression.
+   *
+   * `terms` and `filters` remain because they are what the interface describes
+   * back to the reader, and because a flat list is the right shape for "what
+   * did you ask for". They are derived FROM this tree rather than parsed
+   * alongside it, so the two cannot disagree about what the query said.
+   */
+  readonly tree: QueryNode | null;
 }
 
-/**
- * Splits on whitespace, keeping `"quoted groups"` whole — and keeping an
- * operator attached to the quoted group it introduces.
- *
- * THE OPERATOR PREFIX IS THE PART THAT IS EASY TO GET WRONG. A naïve
- * `/"([^"]*)"|(\S+)/` splits `type:"Illusionist Action"` into `type:"Illusionist`
- * and `Action"`, because the quote is not at the start of the chunk — which
- * silently turns a precise filter into two junk free terms and returns nothing.
- * Multi-word operands are not exotic here: 674 printed type lines contain a
- * space, and the browse links on the empty state are built out of them.
- */
-function chunk(raw: string): { readonly value: string; readonly quoted: boolean }[] {
-  const out: { value: string; quoted: boolean }[] = [];
-  for (const match of raw.matchAll(/(?:([a-zA-Z][a-zA-Z-]*):)?"([^"]*)"|(\S+)/g)) {
-    const prefix = match[1];
-    const phrase = match[2];
-    if (phrase !== undefined) {
-      // A quoted group with an operator in front is that operator's operand;
-      // one without is a phrase to search for.
-      if (phrase.trim() === "") continue;
-      out.push(
-        prefix === undefined
-          ? { value: phrase, quoted: true }
-          : { value: `${prefix}:${phrase}`, quoted: false },
-      );
-      continue;
-    }
-    const value = match[3] ?? "";
-    if (value.trim() !== "") out.push({ value, quoted: false });
-  }
-  return out;
-}
 
 const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
   legal: "legal",
@@ -792,10 +778,7 @@ const WORD_VALUED: ReadonlySet<CardFilter["field"]> = new Set([
  * the three options, so it produces a notice.
  */
 export function parseCardQuery(raw: string): ParsedCardQuery {
-  const terms: string[] = [];
-  const filters: CardFilter[] = [];
   const notices: CardNotice[] = [];
-  const seenTerm = new Set<string>();
   const seenNotice = new Set<string>();
 
   const note = (kind: CardNotice["kind"], text: string) => {
@@ -805,77 +788,86 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     notices.push({ kind, text });
   };
 
-  const addWords = (source: string) => {
-    const kept = tokeniseCard(source);
-    for (const term of kept) {
-      if (seenTerm.has(term)) continue;
-      seenTerm.add(term);
-      terms.push(term);
-    }
-    const dropped = (source.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
-      (token) => !kept.includes(token),
-    );
-    for (const word of new Set(dropped)) {
-      note(
-        "term-ignored",
-        STOPWORDS.has(word)
-          ? `“${word}” is in most cards, so it cannot narrow anything. Ignored.`
-          : `“${word}” is a single letter — too short to search on. Ignored.`,
+  /**
+   * Turn one token into a leaf, or reject it and say why.
+   *
+   * ALL THE OPERATOR KNOWLEDGE LIVES HERE, and the grammar in `./query` has
+   * none of it: that module knows about `and`, `or`, `not` and grouping, and
+   * this function knows what `banned:cc` means. Keeping them apart is what
+   * makes the tree testable without a corpus and the operators testable
+   * without a parser.
+   */
+  const toLeaf = (token: Token): QueryNode | null => {
+    /* ---------------------------------------------------------- free word */
+    if (token.kind === "term") {
+      if (token.quoted) {
+        note(
+          "phrase-approximate",
+          `“${token.value.trim()}” is matched word by word. The index carries no word positions, so adjacency is not checked.`,
+        );
+      }
+      const kept = tokeniseCard(token.value);
+      const dropped = (token.value.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
+        (word) => !kept.includes(word),
       );
-    }
-  };
-
-  for (const { value, quoted } of chunk(raw)) {
-    if (quoted) {
-      note(
-        "phrase-approximate",
-        `“${value.trim()}” is matched word by word. The index carries no word positions, so adjacency is not checked.`,
+      for (const word of new Set(dropped)) {
+        note(
+          "term-ignored",
+          STOPWORDS.has(word)
+            ? `“${word}” is in most cards, so it cannot narrow anything. Ignored.`
+            : `“${word}” is a single letter — too short to search on. Ignored.`,
+        );
+      }
+      if (kept.length === 0) return null;
+      const children = kept.map(
+        (value): QueryNode => ({ kind: "leaf", field: "any", value, label: value }),
       );
-      addWords(value);
-      continue;
+      return children.length === 1 ? children[0]! : { kind: "and", children };
     }
 
-    if (value === "+") {
-      note(
-        "operator-pending",
-        "the card-pair operator returns the interaction between two cards, which is not published yet.",
-      );
-      continue;
+    /* ------------------------------------------------------- exact name */
+    if (token.kind === "exact") {
+      const folded = fold(token.value);
+      if (folded === "") {
+        note("operand-unknown", "! was typed with no name after it. Ignored.");
+        return null;
+      }
+      return {
+        kind: "leaf",
+        field: "name-exact",
+        value: folded,
+        label: `!${token.value}`,
+      };
     }
 
-    const comparison = /^([a-zA-Z][a-zA-Z-]*)\s*(>=|<=|>|<|!=)/.exec(value);
-    if (comparison) {
-      note(
-        "operator-unknown",
-        `${comparison[1]}${comparison[2]}: comparisons are not supported. Printed costs and powers include X, XX and blanks, so there is no order over them to compare against. Use an exact value — ${comparison[1]}:3.`,
-      );
-      continue;
-    }
+    if (token.kind !== "field") return null;
 
-    const operator = /^([a-zA-Z][a-zA-Z-]*):(.*)$/.exec(value);
-    if (!operator) {
-      addWords(value);
-      continue;
-    }
-
-    const name = (operator[1] ?? "").toLowerCase();
-    const operandRaw = (operator[2] ?? "").trim();
+    const name = token.field;
+    const operandRaw = token.value;
     const operand = operandRaw.toLowerCase();
 
     if (operand === "") {
       note("operand-unknown", `${name}: was typed with nothing after it. Ignored.`);
-      continue;
+      return null;
     }
 
+    /* ------------------------------------------------------------- state */
     const stateTone = STATE_OPERATORS[name];
     if (stateTone) {
+      if (token.compare !== undefined) {
+        note(
+          "operator-unknown",
+          `${name}${token.compare}: a legality filter names a format, so there is nothing to compare. Use ${name}:cc.`,
+        );
+        return null;
+      }
       const [formatName = "", asOf] = operand.split("@");
       if (asOf !== undefined) {
         note(
           "operator-pending",
           `${name}:${formatName}@${asOf} asks what was legal on a date. Optfall publishes present-day legality only; legality that remembers is not built yet, and answering with today's flags would be a wrong answer rather than a missing one.`,
         );
-        continue;
+        return null;
       }
       const formatIndex = FORMAT_ALIASES[formatName];
       if (formatIndex === undefined) {
@@ -883,27 +875,48 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
           "operand-unknown",
           `${name}:${formatName} names no format Optfall serves. The six are ${FORMAT_NAMES.join(", ")}.`,
         );
-        continue;
+        return null;
       }
-      filters.push({
+      return {
+        kind: "leaf",
         field: "state",
-        value: formatName,
-        formatIndex,
-        bit: TONE_BIT[stateTone],
+        value: `${formatIndex}:${TONE_BIT[stateTone]}`,
         label: `${stateTone} in ${FORMAT_NAMES[formatIndex] ?? formatName}`,
-      });
-      continue;
+      };
     }
 
+    /* ------------------------------------------------------------ fields */
     const field = FIELD_OPERATORS[name];
     if (field) {
-      const label = `${name}:${operandRaw}`;
-      // A WORD-VALUED OPERAND IS TOKENISED; A CODE-VALUED ONE IS NOT.
-      // `type:"Illusionist Action - Aura"` has to become three requirements
-      // that all hold, or a filter built from a printed type line matches
-      // nothing. `set:MST`, `cost:X` and `pitch:none` are single opaque values
-      // where splitting would be meaningless — `cost:x1` is not `cost:x` and
-      // `cost:1`.
+      const label = `${name}${token.compare ?? ":"}${operandRaw}`;
+
+      if (token.compare !== undefined) {
+        // COMPARISONS, HONESTLY. Only the three printed stats have any order at
+        // all, and even there `X`, `XX` and blanks do not — so a comparison is
+        // answered as "this value is numeric AND satisfies the comparison", and
+        // a card printing `X` simply does not match. That is a stated partial
+        // order, which beats the flat refusal this replaced.
+        if (field !== "cost" && field !== "power" && field !== "defence") {
+          note(
+            "operator-unknown",
+            `${name}${token.compare}: ${name} has no order to compare. Comparisons work on cost, power and defence.`,
+          );
+          return null;
+        }
+        if (!/^\d+$/.test(operand)) {
+          note(
+            "operand-unknown",
+            `${label} compares against something that is not a number. Ignored.`,
+          );
+          return null;
+        }
+        note(
+          "phrase-approximate",
+          `${label} matches printed ${field} values that are numeric. ${operandRaw === "" ? "" : ""}Cards printing X, XX or nothing at all have no place in that order and do not match.`,
+        );
+        return { kind: "leaf", field, value: operand, compare: token.compare, label };
+      }
+
       if (WORD_VALUED.has(field)) {
         const tokens = tokeniseCard(operand);
         if (tokens.length === 0) {
@@ -911,29 +924,63 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
             "operand-unknown",
             `${label} has nothing searchable in it once single letters and common words are dropped. Ignored.`,
           );
-          continue;
+          return null;
         }
-        for (const token of tokens) filters.push({ field, value: token, label });
-      } else {
-        filters.push({ field, value: operand, label });
+        const children = tokens.map(
+          (value): QueryNode => ({ kind: "leaf", field, value, label }),
+        );
+        return children.length === 1 ? children[0]! : { kind: "and", children };
       }
-      continue;
+
+      return { kind: "leaf", field, value: operand, label };
     }
 
     const pending = PENDING_OPERATORS[name];
     if (pending) {
       note("operator-pending", `${name}: ${pending}.`);
-      continue;
+      return null;
     }
 
     note(
       "operator-unknown",
       `${name}: is not an operator here. Supported: name, text (o), type (class), trait, keyword, set, rarity, pitch, cost, power, defence, and legal/banned/suspended/restricted with a format.`,
     );
-    addWords(operandRaw);
-  }
+    return toLeaf({ kind: "term", value: operandRaw, quoted: false });
+  };
 
-  return { terms, filters, notices, folded: fold(raw) };
+  const tree = parse(tokenise(raw), toLeaf);
+
+  /*
+    `terms` and `filters` are DERIVED from the tree rather than collected
+    alongside it, so the list the interface shows and the expression the engine
+    evaluates cannot describe different queries.
+  */
+  const all = tree === null ? [] : leaves(tree);
+  const terms = [...new Set(all.filter((leaf) => leaf.field === "any").map((leaf) => leaf.value))];
+  const filters: CardFilter[] = all
+    .filter((leaf) => leaf.field !== "any")
+    .map((leaf) => toCardFilter(leaf));
+
+  return { terms, filters, notices, folded: fold(raw), tree };
+}
+
+/** A leaf, in the shape the interface has always described a filter in. */
+function toCardFilter(leaf: QueryLeaf): CardFilter {
+  if (leaf.field === "state") {
+    const [formatIndex = "0", bit = "0"] = leaf.value.split(":");
+    return {
+      field: "state",
+      value: leaf.value,
+      formatIndex: Number(formatIndex),
+      bit: Number(bit),
+      label: leaf.label,
+    };
+  }
+  return {
+    field: leaf.field as CardFilter["field"],
+    value: leaf.value,
+    label: leaf.label,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1009,6 +1056,58 @@ function passesFilter(index: CardIndex, ordinal: number, filter: CardFilter): bo
     }
     default:
       return false;
+  }
+}
+
+/**
+ * A printed stat compared against a number.
+ *
+ * ONLY NUMERIC VALUES TAKE PART, and that is the honest reading rather than a
+ * limitation. 4,941 printed costs include `X`, `XX`, `X1` and the empty string;
+ * those have no place in an order, so `cost>=3` does not match them. The old
+ * engine refused comparisons outright for this reason — a stated partial order
+ * is strictly better than no answer, and the notice says which one is being
+ * given.
+ */
+function comparePrinted(index: CardIndex, ordinal: number, leaf: QueryLeaf): boolean {
+  const [cost = "", power = "", defence = ""] = index.stats[ordinal] ?? [];
+  const printed =
+    leaf.field === "cost" ? cost : leaf.field === "power" ? power : defence;
+  if (!/^\d+$/.test(printed)) return false;
+
+  const actual = Number(printed);
+  const wanted = Number(leaf.value);
+  switch (leaf.compare) {
+    case ">":
+      return actual > wanted;
+    case ">=":
+      return actual >= wanted;
+    case "<":
+      return actual < wanted;
+    case "<=":
+      return actual <= wanted;
+    case "!=":
+      return actual !== wanted;
+    default:
+      return actual === wanted;
+  }
+}
+
+/**
+ * The free words that are being asked FOR, ignoring any under a negation.
+ *
+ * Ranking says which field put a card on the page, and a term the reader
+ * excluded did not put it anywhere — ranking `guardian -attack` by "attack"
+ * would report the reason a card was nearly rejected.
+ */
+function positiveFreeTerms(node: QueryNode, negated = false): readonly string[] {
+  switch (node.kind) {
+    case "leaf":
+      return !negated && node.field === "any" ? [node.value] : [];
+    case "not":
+      return positiveFreeTerms(node.child, !negated);
+    default:
+      return node.children.flatMap((child) => positiveFreeTerms(child, negated));
   }
 }
 
@@ -1182,41 +1281,76 @@ export function searchCards(
   raw: string,
   limit: number = CARD_RESULT_LIMIT,
 ): CardOutcome {
-  const { terms, filters, notices, folded } = parseCardQuery(raw);
+  const { terms, filters, notices, folded, tree } = parseCardQuery(raw);
 
   const ranked: { ordinal: number; field: CardMatchField }[] = [];
 
-  /* Text postings are the only lookup that is not a linear scan, so they are
-     resolved once per term rather than once per card — for free terms and for
-     `text:`/`o:` filters alike. */
-  const textHits = terms.map((term) => textMatches(index, term));
-  const textFilters = filters
-    .filter((filter) => filter.field === "text")
-    .map((filter) => textMatches(index, filter.value));
-  const scanned = filters.filter((filter) => filter.field !== "text");
+  if (tree === null) {
+    return { query: raw, terms, filters, notices, results: [], total: 0 };
+  }
+
+  /*
+    TEXT POSTINGS ARE RESOLVED ONCE, BEFORE THE WALK. They are the only lookup
+    that is not a linear scan, and the tree can mention the same term more than
+    once — `text:strike or name:strike` — so resolving inside the per-card test
+    would redo a postings walk 4,941 times per occurrence. Every distinct text
+    value becomes a set here, and the leaf test is a membership check.
+  */
+  const textSets = new Map<string, ReadonlySet<number>>();
+  for (const leaf of leaves(tree)) {
+    if (leaf.field !== "text" && leaf.field !== "any") continue;
+    if (!textSets.has(leaf.value)) textSets.set(leaf.value, textMatches(index, leaf.value));
+  }
+
+  /** Whether one card satisfies one leaf. The corpus half of the grammar. */
+  const test = (leaf: QueryLeaf, ordinal: number): boolean => {
+    if (leaf.field === "any") {
+      // A free word matches the card anywhere it can: the name, the printed
+      // type line, a keyword or trait, or the printed text. The TIER it matched
+      // in decides ranking, and that is computed separately below.
+      return (
+        tokensMatch(index.labelTokens[ordinal] ?? [], leaf.value) ||
+        tokensMatch(index.typeTokens[ordinal] ?? [], leaf.value) ||
+        valuesMatch(index.keywords[ordinal] ?? [], leaf.value) ||
+        valuesMatch(index.traits[ordinal] ?? [], leaf.value) ||
+        textSets.get(leaf.value)?.has(ordinal) === true
+      );
+    }
+
+    if (leaf.field === "text") return textSets.get(leaf.value)?.has(ordinal) === true;
+
+    if (leaf.field === "name-exact") {
+      // AGAINST THE BARE NAME, not the disambiguated label. `index.folded`
+      // folds "Head Jab (pitch 1)", so `!"Head Jab"` matched nothing at all on
+      // the 900 names that carry a variant suffix — which is most of the names
+      // anybody would reach for the exact operator to pin down.
+      return fold(nameOf(index.labels[ordinal] ?? "")) === leaf.value;
+    }
+
+    if (leaf.compare !== undefined) return comparePrinted(index, ordinal, leaf);
+
+    return passesFilter(index, ordinal, toCardFilter(leaf));
+  };
+
+  /* The free words, for ranking. A word under a NOT is excluded: a card is not
+     ranked by a term the reader asked it NOT to contain. */
+  const positiveTerms = positiveFreeTerms(tree);
 
   for (let ordinal = 0; ordinal < index.size; ordinal += 1) {
-    if (!textFilters.every((hits) => hits.has(ordinal))) continue;
-    if (!scanned.every((filter) => passesFilter(index, ordinal, filter))) continue;
+    if (!evaluate(tree, ordinal, test)) continue;
 
-    if (terms.length === 0) {
-      if (filters.length > 0) ranked.push({ ordinal, field: "filter" });
+    if (positiveTerms.length === 0) {
+      ranked.push({ ordinal, field: "filter" });
       continue;
     }
 
     const nameTokens = index.labelTokens[ordinal] ?? [];
     const typeTokens = index.typeTokens[ordinal] ?? [];
-    const vocabulary = [
-      ...(index.keywords[ordinal] ?? []),
-      ...(index.traits[ordinal] ?? []),
-    ];
+    const vocabulary = (index.keywords[ordinal] ?? []).concat(index.traits[ordinal] ?? []);
 
-    const inName = terms.every((term) => tokensMatch(nameTokens, term));
-    const inType = terms.every((term) => tokensMatch(typeTokens, term));
-    const inVocabulary = terms.every((term) => valuesMatch(vocabulary, term));
-    const inText = terms.every((_, position) => textHits[position]?.has(ordinal) === true);
-
-    if (!inName && !inType && !inVocabulary && !inText) continue;
+    const inName = positiveTerms.every((term) => tokensMatch(nameTokens, term));
+    const inType = positiveTerms.every((term) => tokensMatch(typeTokens, term));
+    const inVocabulary = positiveTerms.every((term) => valuesMatch(vocabulary, term));
 
     const label = index.folded[ordinal] ?? "";
     const field: CardMatchField = !inName
