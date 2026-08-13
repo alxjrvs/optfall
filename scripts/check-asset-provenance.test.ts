@@ -108,6 +108,50 @@ describe("auditDir", () => {
     expect(problems.join("\n")).toContain("does not exist");
   });
 
+  test("rejects a first-party origin that escapes the repository", async () => {
+    /* `/etc/hosts` and `../../elsewhere` both resolved happily while the check
+       only asked whether the path existed, which is not what "names a script in
+       this repository" means. */
+    const escapes = ["/etc/hosts", "../../../../etc/hosts"];
+    const results = await Promise.all(
+      escapes.map(async (escape) => {
+        const { dir, manifest } = await fixture({ key: "assets", url: `first-party:${escape}` });
+        const audit = await auditDir(dir, manifest, "assets");
+        return { escape, problems: audit.problems };
+      }),
+    );
+
+    for (const { escape, problems } of results) {
+      expect(problems.join("\n"), escape).toContain("repository-relative");
+    }
+  });
+
+  test("rejects a first-party origin naming something that is not a script", async () => {
+    const { dir, manifest } = await fixture({ key: "assets", url: "first-party:README.md" });
+
+    const { problems } = await auditDir(dir, manifest, "assets");
+    expect(problems.join("\n")).toContain("must name a script");
+  });
+
+  test("resolves a first-party script against the repo, not the caller's cwd", async () => {
+    /* Resolution used to run against `process.cwd()`, so the same manifest
+       verified differently depending on where the check was invoked — which is
+       not a property a provenance record may have. */
+    const { dir, manifest } = await fixture({
+      key: "assets",
+      url: "first-party:scripts/check-asset-provenance.ts",
+    });
+
+    const original = process.cwd();
+    process.chdir(tmpdir());
+    try {
+      const { problems } = await auditDir(dir, manifest, "assets");
+      expect(problems).toEqual([]);
+    } finally {
+      process.chdir(original);
+    }
+  });
+
   test("rejects an origin that is neither https nor first-party", async () => {
     const { dir, manifest } = await fixture({
       key: "assets",
