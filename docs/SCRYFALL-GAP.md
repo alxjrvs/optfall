@@ -489,6 +489,25 @@ table, flavour, related, source — goes below it. Today the face-shaped hole is
 filled by eight stacked sections and you scroll past three of them to reach the
 legality verdict, which is the best thing on the page.
 
+> **This shipped as markup and never once rendered.** Recorded here rather than
+> quietly fixed, because the failure is more instructive than the fix and the
+> row in the phase table below said ✅ for months while the page looked exactly
+> the way the paragraph above complains about.
+>
+> `CardEntry.astro` grew a real two-column flex container, and `BaseLayout`
+> capped `main` at `type.measure` on every page in the site. The face is
+> `card.face.normal` and the facts column asked for a face-width basis beside
+> it, so the flex line's hypothetical width was two faces and a gutter inside a
+> container narrower than the two faces alone. Flex wraps on hypothetical width,
+> before shrinking is considered — so it wrapped at every viewport, always, and
+> what shipped was the eight stacked sections in a narrower column than before.
+>
+> Nobody caught it because every artefact agreed the work was done: the markup
+> had two columns, the CSS had two columns, the comments explained the two
+> columns at length, and the checks that gate this repo — typecheck, lint,
+> tokens, tests — cannot see a layout. **A visual change needs a visual check.**
+> The fix was one declaration in the layout; finding it took looking at the page.
+
 ~~**Stop spending filigree eight times a screen.**~~ **Withdrawn — the claim was
 false.** This section asserted that `CardEntry.astro` violates the three-role
 filigree ration eight times, once per `OrnamentalRule`. Checked before acting on
@@ -571,7 +590,7 @@ everything else renders against exists before anything tries to render.
 | **B** ✅ | Ingest — download, transcode to two WebP tiers, upload to Blobs; image manifest in the corpus build | ~1 day | 11,377 faces, addressable |
 | **C** ✅ | `CardFace` primitive; card page face, printings rail, per-printing URLs | ~2 days | Cards have faces |
 | **D** ✅ | Card search at `/` — hero, explainer links, results; submit-driven; grid default; `display:`/`order:`/paging; `/cards` → 301 | ~3 days | The front door is right |
-| **E** ✅ | The redesign pass (§6a) — two-column card page, filigree back to one, evidence folded, one search chrome | ~2 days | It reads as finished |
+| **E** ✅ | The redesign pass (§6a) — filigree back to one, evidence folded, one search chrome. **The two-column card page in this row was not true when it was ticked**; see the note in §6a | ~2 days | It reads as finished |
 | **F** | The keyword↔CR join, both directions, with published coverage | ~2 days | The thing nobody else has |
 | **G** | `set.json` + decode tables; `/sets`; `unique:`; `order:released` | ~2 days | The corpus gets a spine |
 | **H** | Grammar: AST, negation/`OR`/parens, comparisons, `flavor:` | ~1 week | Search becomes a language |
