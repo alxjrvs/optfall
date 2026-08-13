@@ -140,7 +140,9 @@ const title =
 
 {
   page === undefined ? null : (
-    <BaseLayout title={title} description={descriptionFor(page)} canonical={canonical}>
+    <BaseLayout title={title} description={descriptionFor(page)} canonical={canonical}
+  section="cards"
+>
       <CardEntry page={page} />
     </BaseLayout>
   )
