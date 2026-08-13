@@ -44,6 +44,28 @@ interface Props {
   section?: "cards" | "sets" | "rules" | "none";
   title: string;
   description?: string;
+  /**
+   * How wide the content column is allowed to get.
+   *
+   * `"measure"` — the default, and right for every page that is a column of
+   * prose — caps at `type.measure`, the distance an eye can track a line and
+   * find the right next one.
+   *
+   * `"wide"` is for the ONE shape that is not prose: a card page, which is a
+   * picture with a column of facts beside it. That page has claimed to be two
+   * columns since the §6a redesign and has never rendered as two, because the
+   * face alone is `card.face.normal` and the measure is not wide enough to
+   * seat it beside anything — so the facts column's flex basis was permanently
+   * unsatisfiable and wrapped underneath, every time, at every viewport. The
+   * fold that redesign describes did not exist.
+   *
+   * A page width is not a typographic value and there is no token for one,
+   * which is the honest signal here: this is not a number anybody chose. It is
+   * a face, a gutter and a measure, added up — so the facts column gets exactly
+   * the reading width every other page gets, and the face gets exactly the
+   * width the face host publishes. Widening either changes this on its own.
+   */
+  width?: "measure" | "wide";
 }
 
 const {
@@ -51,6 +73,7 @@ const {
   description = "Legality that remembers, and rulings you can cite — a reference tool for Flesh and Blood.",
   canonical,
   section,
+  width = "measure",
 } = Astro.props;
 
 /**
@@ -105,7 +128,7 @@ const tokens = themeStylesheet();
   <body>
     <div class="shell">
       {section === "none" ? null : <SiteHeader section={section === undefined ? undefined : section} />}
-      <main>
+      <main data-width={width}>
         <slot />
       </main>
     </div>
@@ -180,6 +203,19 @@ const tokens = themeStylesheet();
   main {
     max-inline-size: var(--of-type-measure);
     margin-inline: auto;
+  }
+
+  /*
+    A face, a gutter and a measure. See the `width` prop for why this is a sum
+    rather than a chosen width: every term is a value the system already
+    committed to elsewhere, so there is no third number here to drift from the
+    other two. Still a MAXIMUM — a narrow viewport gets whatever it has, and the
+    card page's own grid wraps to one column when it can no longer seat both.
+  */
+  main[data-width="wide"] {
+    max-inline-size: calc(
+      var(--of-card-face-normal) + var(--of-space-loosest) + var(--of-type-measure)
+    );
   }
 
   /* Serif for names, questions and headings — one of the three assigned

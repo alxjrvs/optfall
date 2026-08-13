@@ -213,10 +213,29 @@
     white-space: nowrap;
   }
 
+  /*
+    A PICKER, NOT A GALLERY — and the tile size is the whole difference.
+
+    The thumbs rendered at the full published `card.face.thumb` width, which is
+    two per row under a face and therefore five rows for the nine printings of
+    Head Jab: a control four times the height of the image it controls, and a
+    left column running most of a thousand pixels past the bottom of the card's
+    own text. The rail was outgrowing the page it sits on.
+
+    Half the published width is still large enough to tell one piece of art from
+    another — which is the only question this control asks — and it packs four
+    to a row, so the average card's 3.3 printings are one row and the worst case
+    is three. Asking the host for the `thumb` tier and drawing it smaller also
+    costs nothing and hands a high-DPI screen a sharper picture; the tier is
+    what the host publishes, and the size is what this surface needs.
+  */
   .rail-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--of-space-base);
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(calc(var(--of-card-face-thumb) / 2), 100%), 1fr)
+    );
+    gap: var(--of-space-base) var(--of-space-tight);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -229,6 +248,7 @@
     gap: var(--of-space-tightest);
     cursor: pointer;
     color: var(--of-color-ink-muted);
+    text-align: center;
   }
 
   /* The input is the control and the label is the target, so the radio itself
@@ -243,9 +263,12 @@
 
   /* The selected outline goes on the wrapper: `CardFace` owns how a face is
      drawn, and reaching past it to restyle the image would be the page
-     restyling a primitive. */
+     restyling a primitive. The width goes here too, for the same reason — the
+     image inside is already `max-inline-size: 100%`, so constraining the
+     wrapper scales the face without touching the component that drew it. */
   .tile-face {
     display: block;
+    inline-size: 100%;
     outline: var(--of-bevel-width) solid var(--of-color-rule);
   }
 
@@ -275,8 +298,8 @@
 
   .tile-set {
     font-size: var(--of-type-size-micro);
-    max-inline-size: var(--of-card-face-thumb);
-    text-align: center;
+    line-height: var(--of-type-leading-tight);
+    max-inline-size: 100%;
   }
 
   .tile-id {

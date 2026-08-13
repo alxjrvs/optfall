@@ -139,16 +139,8 @@ const vocabularies: readonly (readonly [string, readonly string[]])[] = [
 const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
 
 /**
- * Pitch leads the stat block rather than sitting only in the masthead jewel.
- *
- * The jewel is the reserved silhouette and carries pitch as shape, numeral and
- * colour; the `<dl>` is the tabular record, and a tabular record with a hole in
- * it where its most-read value should be is a worse artefact than a duplicated
- * one. Cards with no pitch get no row, exactly as they get no other absent stat.
- */
-/**
- * Which glyph each printed stat takes, or `null` for pitch — the jewel owns
- * that one and its octagon is reserved to it.
+ * Which glyph each printed stat takes. Pitch is absent deliberately — the jewel
+ * owns that one and its octagon is reserved to it.
  */
 const GLYPH_FOR: Record<string, "cost" | "power" | "defence" | "life" | "intellect" | "arcane" | undefined> = {
   Cost: "cost",
@@ -188,10 +180,7 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
   Intellect: "intellect",
 };
 
-const stats = (page.pitch === 0
-  ? page.stats
-  : [{ label: "Pitch", value: String(page.pitch) }, ...page.stats]
-).map((stat) => {
+const printedStats = page.stats.map((stat) => {
   const kind = SYMBOL_FOR[stat.label];
   return {
     label: stat.label,
@@ -200,6 +189,86 @@ const stats = (page.pitch === 0
     symbol: kind === undefined ? null : symbolForKind(kind),
   };
 });
+
+/**
+ * THE STATS SPLIT ACROSS TWO BANDS, THE WAY THE THING THEY DESCRIBE DOES.
+ *
+ * Pitch and cost are what you pay and they ride the name; power, defence, life,
+ * intellect and arcane are what the card *is* and they ride the type line. That
+ * is Scryfall's arrangement — mana cost on the name line, power/toughness on
+ * the type line — read onto Flesh and Blood's own stat set rather than copied
+ * slot for slot, because the games do not have the same stats.
+ *
+ * Pitch stays IN the record rather than only in the masthead. An earlier note
+ * here defended that as "a tabular record with a hole in it where its most-read
+ * value should be is a worse artefact than a duplicated one", and it was right;
+ * what has changed is that there is no longer a separate record for it to be
+ * missing from. The bands ARE the record, and pitch appears in this one as the
+ * jewel — one `<dl>` entry rendered as the reserved silhouette instead of as a
+ * numeral, which is the same fact in the channel the system assigns it.
+ */
+const costStat = printedStats.find((stat) => stat.kind === "cost");
+
+/**
+ * WHICH CORNER EACH STAT IS PRINTED IN.
+ *
+ * The panel mirrors the card, so a stat goes where the card puts it: power and
+ * intellect are struck into the bottom-LEFT plate, defence and life into the
+ * bottom-RIGHT one. Pitch and cost are the top corners and are handled above.
+ *
+ * ARCANE IS THE ONE THAT IS NOT PRINTED ANYWHERE. Upstream publishes it as a
+ * stat and the card does not carry it in a corner — Aether Flare's "3 arcane"
+ * lives in its rules text, not on its frame. It is real data and it is shown,
+ * grouped with the right-hand corner because it has to be somewhere; that is a
+ * layout decision and not a claim that the card prints it there.
+ */
+const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
+  Power: "start",
+  Intellect: "start",
+  Defence: "end",
+  Life: "end",
+  Arcane: "end",
+};
+
+const bodyStats = printedStats.filter((stat) => stat.kind !== "cost");
+const startStats = bodyStats.filter((stat) => CORNER_FOR[stat.label] === "start");
+const endStats = bodyStats.filter((stat) => CORNER_FOR[stat.label] !== "start");
+const hasStats = page.pitch !== 0 || printedStats.length > 0;
+
+/**
+ * Everyone who drew this card, once each.
+ *
+ * `docs/SCRYFALL-GAP.md` §5.1c: the printing is the addressable unit, and
+ * attribution belongs to a printing rather than to a card — so a card with four
+ * printings by three artists genuinely has three. Deduplicated in encounter
+ * order rather than sorted: upstream lists printings in its own order and
+ * re-sorting names would be a claim about billing that the data does not make.
+ */
+const artists = [...new Set(card.printings.flatMap((printing) => printing.artists))];
+
+/**
+ * The card's flavour text, WHEN THERE IS ONE OF IT.
+ *
+ * Flavour is per-printing data and this page is a card, so it cannot simply be
+ * shown the way Scryfall shows it — Scryfall's card page IS a printing. But
+ * where every printing that carries flavour carries the SAME flavour, the
+ * distinction is one the data does not draw either, and hiding a card's only
+ * flavour line inside a printings appendix to preserve a distinction that has
+ * collapsed is pedantry rather than precision.
+ *
+ * So: exactly one distinct text and it is the card's, shown in the panel where
+ * a reader looks for it. Two or more and they stay in the printings section,
+ * each attributed to the collector number it was printed under, because then
+ * the difference is real and only that list can show it.
+ */
+const flavours = [
+  ...new Set(
+    page.printings
+      .map(({ printing }) => printing.flavor_text.trim())
+      .filter((flavour) => flavour !== ""),
+  ),
+];
+const soleFlavour = flavours.length === 1 ? flavours[0] : undefined;
 
 const nameHref = hrefForSlug(page.nameSlug);
 
@@ -253,11 +322,12 @@ const keywordRules = rulesForCard(
  */
 const faceAlt = typeLine === "" ? page.label : `${page.label} — ${typeLine}`;
 
-const faceBox = boxFor("normal", page.face.orientation);
-const faceSrc =
-  page.face.key === null
-    ? placeholderUrl(page.face.orientation)
-    : faceUrl(page.face.key, "normal");
+/*
+  `faceBox` and `faceSrc` used to be computed here and were read by nothing —
+  the picker resolves its own source per printing, and the no-art case below has
+  `facelessBox`. Two `ts(6133)` warnings that predate this change, deleted while
+  the file is open rather than left for the next person to wonder about.
+*/
 
 /**
  * Every printing that publishes art, as a rail beneath the face.
@@ -320,21 +390,38 @@ const printings = (() => {
   }
 
   /*
-    DISAMBIGUATED ONLY WHERE IT IS NEEDED. Set and collector number identify a
-    printing almost always — but not always: Head Jab's Welcome to Rathe entry
-    is Alpha AND Unlimited, two different pieces of art under one number, and
-    labelling both "Welcome to Rathe · WTR098" is exactly the useless repetition
-    naming them by set was meant to fix. The edition is appended only to the
-    groups that collide, so an ordinary tile stays a set and a number.
+    DISAMBIGUATED ONLY WHERE IT IS NEEDED, AND ONLY WHERE IT WORKS.
+
+    Set and collector number identify a printing almost always — but not always:
+    Head Jab's Welcome to Rathe entry is Alpha AND Unlimited, two different
+    pieces of art under one number, and labelling both "Welcome to Rathe ·
+    WTR098" is exactly the useless repetition naming them by set was meant to
+    fix. The edition is appended only to the groups that collide, so an ordinary
+    tile stays a set and a number.
+
+    THE SECOND CONDITION IS NEW, AND IT IS THE ONE THAT WAS WRONG. A collision
+    was assumed to be an edition difference, and it is not always: Arakni's
+    HNT264 collides with itself because upstream publishes a front and a back
+    face under one number, both edition `N`. The old rule appended the edition
+    to both — the SAME edition, to both — which distinguished nothing and, since
+    `N` decodes to "No specified edition (used for promos, non-set releases,
+    etc.)", spent sixty characters saying so twice under two thumbnails.
+
+    So the edition is appended only when the colliding printings actually differ
+    by it. Where they do not, the tiles keep the plain number and are told apart
+    by the thing that genuinely differs — the picture, which is what this
+    control is for.
   */
-  const perNumber = new Map<string, number>();
+  const editionsPerNumber = new Map<string, Set<string>>();
   for (const entry of entries) {
     const key = `${entry.setCode}/${entry.id}`;
-    perNumber.set(key, (perNumber.get(key) ?? 0) + 1);
+    const seenEditions = editionsPerNumber.get(key) ?? new Set<string>();
+    seenEditions.add(entry.edition);
+    editionsPerNumber.set(key, seenEditions);
   }
 
   for (const entry of entries) {
-    if ((perNumber.get(`${entry.setCode}/${entry.id}`) ?? 0) > 1) {
+    if ((editionsPerNumber.get(`${entry.setCode}/${entry.id}`)?.size ?? 0) > 1) {
       entry.id = `${entry.id} · ${editionName(entry.edition)}`;
     }
   }
@@ -445,11 +532,11 @@ const pitchTargets = JSON.stringify(
   </ol>
 </nav>
 
-<!--
+{/*
   Inline because it is a redirect rather than a component: an island would ship
   a runtime to do what four lines of navigation do, and it has to run before the
   reader reads anything.
--->
+*/}
 <script is:inline define:vars={{ pitchTargets }}>
   {
     const wanted = new URLSearchParams(window.location.search).get("pitch");
@@ -470,28 +557,33 @@ const pitchTargets = JSON.stringify(
 </script>
 
 <article>
-  <!--
-    TWO COLUMNS, AND THE SPLIT IS THE REDESIGN.
+  {/*
+    TWO COLUMNS, AND THIS TIME THERE IS ROOM FOR THEM.
 
-    `docs/SCRYFALL-GAP.md` §6a: everything answering "what is this card" lands
-    above the fold, and the apparatus — printings, flavour, related, source —
-    goes below it. Before this, the face was followed by eight stacked sections
-    and you scrolled past three of them to reach the legality verdict, which is
-    the best thing on the page and most of the reason the project exists.
+    `docs/SCRYFALL-GAP.md` §6a asked for this shape and the markup has claimed
+    to have it since: everything answering "what is this card" beside the face,
+    the apparatus below. It never rendered. `main` was capped at the prose
+    measure on every page in the site, the face is `card.face.normal`, and the
+    facts column asked for a face-width basis on top of that — so the line was
+    unsatisfiable at every viewport the site could be opened at, the facts
+    wrapped underneath every time, and what shipped was the eight stacked
+    sections the redesign was written to replace. `BaseLayout`'s `width="wide"`
+    is the missing half; see the prop for why the number is a sum.
 
-    It collapses to one column under a narrow viewport, where side-by-side would
-    make the face too small to read a stat line off.
-  -->
-  <div class="identity">
-    <div class="identity-face">
-      <!--
+    It still collapses to one column, and the rule is now a real one rather than
+    an accident: two columns when the line can seat a face beside a column at
+    least as wide as a face, one below that.
+  */}
+  <div class="card-page">
+    <div class="face-column">
+      {/*
         THE PICKER IS AN ISLAND, and it is the only one on this page. §5.2 rules
         out live updating for SEARCH — results must not re-rank under a cursor,
         because the URL is the product. A printing picker is the opposite case:
         it changes which image is shown and nothing else. No query, no ranking,
         nothing a reader would want to paste that the card's own URL does not
         already carry.
-      -->
+      */}
       {
         printings.length > 0 ? (
           <PrintingPicker
@@ -512,24 +604,16 @@ const pitchTargets = JSON.stringify(
       }
     </div>
 
-    <div class="identity-facts">
-      <header class="masthead">
-        <p class="eyebrow">{typeLine === "" ? "Flesh and Blood card" : typeLine}</p>
-        <div class="title-row">
-          <PitchJewel value={page.pitch} size="lg" />
-          <!--
-            THE BARE NAME, NOT THE DISAMBIGUATED LABEL. Everywhere else in the
-            product a link to this card renders `page.label` — "Head Jab (pitch
-            2)" — because 900 names belong to more than one card and two anchors
-            that differ only in where they point are a WCAG 2.4.4 failure. Here
-            the tab strip immediately below carries that distinction, and
-            visibly, so repeating it in the heading would say the same thing
-            twice and make the three versions read as three cards.
-          -->
-          <h1 class="card-name">{card.name}</h1>
-        </div>
-      </header>
+    <div class="facts-column">
+      {/*
+        THE TAB STRIP IS ABOVE THE PANEL, NOT IN IT.
 
+        It was a band for a while, and it was the one band that is not on the
+        card. The panel below is a mirror of a printed object; a control for
+        choosing WHICH printed object it mirrors belongs outside the frame,
+        the same way the printings picker sits outside the face rather than on
+        top of it.
+      */}
       {
         showVersions && (
           <nav class="versions" aria-label={`Pitch versions of ${card.name}`}>
@@ -567,141 +651,304 @@ const pitchTargets = JSON.stringify(
         )
       }
 
-      <!--
-        THE STAT BLOCK STAYS A DEFINITION LIST AND STOPS LOOKING LIKE A TABLE.
+      {/*
+        THE PANEL IS THE CARD, AND IT IS LAID OUT LIKE ONE.
 
-        An earlier note here argued the semantics and was right: cost, power and
-        defence are term-and-value data, and marking them up as anything else
-        would be a lie for a layout's sake. What was wrong was the RENDERING — a
-        stacked grid restating in rows what the face beside it now shows at a
-        glance. So the markup is unchanged and the CSS makes it a compact strip,
-        which is the card's own furniture rather than a table of it. 13 cards
-        genuinely have a printed power of 0 and still get a row saying 0.
-      -->
-      <section class="apparatus" aria-labelledby="stats">
-        <h2 class="apparatus-heading" id="stats">Stats</h2>
-        {
-          stats.length === 0 ? (
-            <p class="void">This card carries no printed cost, power, defence, life, intellect or arcane value.</p>
-          ) : (
-            <dl class="stats">
-              {stats.map((stat) => (
-                <div class="stat">
-                  <dt>
-                    {stat.label}
-                    {/*
-                      The printed marker, beside the word it names. This is what
-                      connects the stat block to the card text below it: a
-                      reader who sees the power plate here recognises the same
-                      plate in `+1{p}`, and the pair is the whole reason
-                      `GameSymbol` and `StatGlyph` share a shape table.
+        Not like Scryfall's panel, which is where this started: Scryfall puts
+        the mana cost on the name line and power/toughness on the type line,
+        because that is where Magic prints them. Flesh and Blood prints its
+        stats somewhere else, so copying the arrangement rather than the idea
+        would have produced a panel that mirrors the wrong game.
 
-                      `aria-hidden`, because the label already says "Power" and
-                      a screen reader announcing "Power power" is worse than
-                      one announcing "Power".
-                    */}
-                    {stat.symbol !== null && (
-                      <span class="stat-symbol" aria-hidden="true">
-                        <GameSymbol
-                          kind={stat.symbol.kind}
-                          letter={stat.symbol.letter}
-                          name={stat.symbol.name}
-                        />
-                      </span>
-                    )}
-                  </dt>
-                  <dd>
-                    {/*
-                      THE SHAPE SAYS WHICH STAT IT IS, as docs/DESIGN.md always
-                      described the card face — cost in a hexagonal plate,
-                      power and defence in chamfered ones. The numeral stays the
-                      primary channel and the label stays visible, so the
-                      silhouette is the third redundant carrier rather than the
-                      only one.
-                    */}
-                    {stat.kind === null ? (
-                      stat.value
-                    ) : (
-                      <StatGlyph kind={stat.kind} value={stat.value} />
-                    )}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          )
-        }
-      </section>
+        The idea is that the panel reads in the order the card reads. On a Flesh
+        and Blood card that is:
 
-      <section class="apparatus" aria-labelledby="printed-text">
-        <h2 class="apparatus-heading" id="printed-text">Printed text</h2>
-        {
-          text === "" ? (
-            <p class="void">This card has no rules text in the published dataset.</p>
-          ) : (
-            <PrintedText text={card.functional_text} uid={page.slug} />
-          )
-        }
-        <!--
-          REPRODUCED *AND* INTERPRETED, WITH BOTH ON THE PAGE.
+            <pitch>   NAME   <cost>
+            <card text>
+            <attack>  <type>  <defence>
+            <artist>
 
-          This note used to say the opposite: "Optfall has no published table
-          mapping those markers to words — so substituting any would be
-          inventing a vocabulary and calling it the card's text." The premise
-          was true of the card corpus and false of this repository. The
-          Comprehensive Rules — already committed, already parsed, already what
-          every keyword on this page cites — defines all of them at 1.12.4a–h.
+        — pitch struck into the top-left corner, cost into the top-right, the
+        text box between them, the bottom bar carrying attack left, type centre
+        and defence right, and the credit in the margin under all of it. Every
+        band below is one of those lines, in that order, on those sides.
 
-          So rendering them is not an interpretation, it is the same join this
-          site already makes between a keyword and its rule. "Raw text" keeps
-          upstream's bytes one click away, because a join is a claim and a
-          reference work should let you check it.
-        -->
-        <p class="verify">Verbatim in both views. “Text” renders upstream’s own <code>**</code> and <code>&#123;…&#125;</code> markers using the rules’ own symbol table; “Raw text” is the published bytes, unaltered.</p>
-      </section>
+        What was here before the redesign was six sibling `<section>`s — Stats,
+        Printed text, Governed by, Legality — each with the same uppercase micro
+        heading and the same margin: a stack of equally-weighted apparatus with
+        the card's own text as one entry in it. Nothing said "this part IS the
+        card and the rest is about it". The bands say it in layout, and now they
+        say it in the card's own arrangement.
 
-      {
-        keywordRules.length > 0 && (
-          <section class="apparatus" aria-labelledby="governed-by">
-            <h2 class="apparatus-heading" id="governed-by">Governed by</h2>
-            <ul class="rules-list">
-              {keywordRules.map((rule) => (
-                <li class="rules-item">
-                  <a class="rules-citation" href={hrefForNumber(rule.number)}>{rule.ruleId}</a>
-                  <span class="rules-keyword">{rule.keyword}</span>
-                  {rule.via === "family" && (
-                    /*
-                      SAID OUT LOUD, because it is a slightly weaker claim. The
-                      rules define `Specialization` once and cards instantiate
-                      it per hero, so "Briar Specialization is governed by the
-                      Specialization rule" is true but is a resolution rather
-                      than a direct hit — and a reference work should say which
-                      kind of claim it is making.
-                    */
-                    <span class="rules-via">via the general rule</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <p class="verify">Matched exactly against the vocabulary the rules publish. A keyword the document does not define is absent rather than guessed at.</p>
-          </section>
-        )
-      }
+        Everything below the panel — legality, the rules join, the attribute
+        vocabularies — is commentary ON the card and looks like it, which is
+        what lets the legality verdict stay above the fold without competing
+        with the text.
+      */}
+      <BevelledPlate emphasis="flat">
+        <div class="panel">
+          <header class="band band-title">
+            {
+              page.pitch === 0 ? (
+                /* Keeps the name in the centre column when there is no jewel to
+                   hold the left corner — a hero has no pitch, and its name is
+                   still centred on the card. */
+                <span class="corner-empty" aria-hidden="true" />
+              ) : (
+                <dl class="badges badges-start">
+                  <div class="badge">
+                    <dt>Pitch</dt>
+                    <dd>
+                      <PitchJewel value={page.pitch} size="lg" />
+                    </dd>
+                  </div>
+                </dl>
+              )
+            }
 
-      <!--
-        LEGALITY MOVES UP, INTO THE FOLD. It used to sit below the article,
-        after stats, text and attributes — the fourth thing on the page. It is
-        the differentiator: a verdict that is a LIST of states, each with the
-        upstream flags it was derived from.
-      -->
+            {/*
+              THE BARE NAME, NOT THE DISAMBIGUATED LABEL. Everywhere else in the
+              product a link to this card renders `page.label` — "Head Jab (pitch
+              2)" — because 900 names belong to more than one card and two anchors
+              that differ only in where they point are a WCAG 2.4.4 failure. Here
+              the tab strip immediately above carries that distinction, and
+              visibly, so repeating it in the heading would say the same thing
+              twice and make the three versions read as three cards.
+            */}
+            <h1 class="card-name">{card.name}</h1>
+
+            {
+              costStat === undefined ? (
+                <span class="corner-empty" aria-hidden="true" />
+              ) : (
+                <dl class="badges badges-end">
+                  <div class="badge">
+                    <dt>
+                      {costStat.label}
+                      {/*
+                        The printed marker, beside the word it names. This is
+                        what connects the stat block to the card text below it:
+                        a reader who sees the resource plate here recognises
+                        the same plate in the text, and the pair is the whole
+                        reason `GameSymbol` and `StatGlyph` share a shape
+                        table.
+
+                        `aria-hidden`, because the label already says "Cost"
+                        and a screen reader announcing it twice is worse than
+                        announcing it once.
+                      */}
+                      {costStat.symbol !== null && (
+                        <span class="stat-symbol" aria-hidden="true">
+                          <GameSymbol
+                            kind={costStat.symbol.kind}
+                            letter={costStat.symbol.letter}
+                            name={costStat.symbol.name}
+                          />
+                        </span>
+                      )}
+                    </dt>
+                    <dd>
+                      <StatGlyph kind="cost" value={costStat.value} />
+                    </dd>
+                  </div>
+                </dl>
+              )
+            }
+          </header>
+
+          {/*
+            THE TEXT IS NO LONGER IN A PLATE INSIDE A SECTION INSIDE A COLUMN.
+
+            It used to be wrapped in its own raised `BevelledPlate` under an
+            `<h2>Printed text</h2>` — a box, in a box, under a label. That was
+            the right instinct (the text is the most important thing here) in
+            the wrong register: the emphasis was spent on a container, and by
+            then the container was one of six.
+
+            The panel is the box now, so the text simply IS the widest band in
+            it, set a step larger than everything around it. The heading stays
+            for a screen reader, which navigates by headings and would otherwise
+            arrive at unannounced prose.
+          */}
+          <div class="band band-oracle">
+            <h2 class="visually-hidden" id="printed-text">Printed text</h2>
+            {
+              text === "" ? (
+                <p class="void">This card has no rules text in the published dataset.</p>
+              ) : (
+                <PrintedText text={card.functional_text} uid={page.slug} />
+              )
+            }
+          </div>
+
+          {
+            soleFlavour !== undefined && (
+              <div class="band band-flavour">
+                <h2 class="visually-hidden" id="flavour-text">Flavour text</h2>
+                <p class="flavour-text">{soleFlavour}</p>
+              </div>
+            )
+          }
+
+          {/*
+            THE BOTTOM BAR: attack left, type centre, defence right.
+
+            This is the line along the foot of a Flesh and Blood card, and the
+            reason the stats are split across two `<dl>`s rather than sitting in
+            one cluster. It is also why they are BELOW the text rather than
+            above it — the earlier arrangement put them on the type line under
+            the name, which is Magic's layout, and a panel that mirrors the
+            wrong game's card is a worse artefact than one that mirrors none.
+
+            Still definition lists, and the argument for that has not changed:
+            cost, power and defence are term-and-value data, and marking them up
+            as anything else would be a lie for a layout's sake. What has gone is
+            the `<h2>Stats</h2>` that used to head them — a heading's worth of
+            apparatus over what the card carries in its corners. 13 cards
+            genuinely have a printed power of 0 and still get an entry saying 0.
+          */}
+          <div class="band band-bar">
+            {
+              startStats.length === 0 ? (
+                <span class="corner-empty" aria-hidden="true" />
+              ) : (
+                <dl class="badges badges-start">
+                  {startStats.map((stat) => (
+                    <div class="badge">
+                      <dt>
+                        {stat.label}
+                        {/* Same marker, same reason — see the cost badge above. */}
+                        {stat.symbol !== null && (
+                          <span class="stat-symbol" aria-hidden="true">
+                            <GameSymbol
+                              kind={stat.symbol.kind}
+                              letter={stat.symbol.letter}
+                              name={stat.symbol.name}
+                            />
+                          </span>
+                        )}
+                      </dt>
+                      <dd>
+                        {/*
+                          THE SHAPE SAYS WHICH STAT IT IS, as docs/DESIGN.md
+                          always described the card face — cost in a hexagonal
+                          plate, power and defence in chamfered ones. The numeral
+                          stays the primary channel and the label stays visible,
+                          so the silhouette is the third redundant carrier rather
+                          than the only one.
+                        */}
+                        {stat.kind === null ? stat.value : <StatGlyph kind={stat.kind} value={stat.value} />}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )
+            }
+
+            <p class="type-line">{typeLine === "" ? "Flesh and Blood card" : typeLine}</p>
+
+            {
+              endStats.length === 0 ? (
+                <span class="corner-empty" aria-hidden="true" />
+              ) : (
+                <dl class="badges badges-end">
+                  {endStats.map((stat) => (
+                    <div class="badge">
+                      <dt>
+                        {stat.label}
+                        {stat.symbol !== null && (
+                          <span class="stat-symbol" aria-hidden="true">
+                            <GameSymbol
+                              kind={stat.symbol.kind}
+                              letter={stat.symbol.letter}
+                              name={stat.symbol.name}
+                            />
+                          </span>
+                        )}
+                      </dt>
+                      <dd>
+                        {stat.kind === null ? stat.value : <StatGlyph kind={stat.kind} value={stat.value} />}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )
+            }
+
+            {
+              !hasStats && (
+                <p class="void">No printed cost, power, defence, life, intellect or arcane value.</p>
+              )
+            }
+          </div>
+
+          {/*
+            THE FOOT OF THE PANEL, IN THE FINE-PRINT REGISTER — the line Scryfall
+            puts under the flavour: who drew it, and which printings exist. Both
+            are read straight off the record. The printing count is a link rather
+            than a number because the table it names is on this same page, and a
+            count that cannot take you to what it counted is decoration.
+          */}
+          <footer class="band band-credits">
+            <p class="credit">
+              {
+                artists.length === 0
+                  ? "No artist is credited in the published dataset."
+                  : `Illustrated by ${artists.join(", ")}`
+              }
+            </p>
+            <p class="credit">
+              <a href="#printings">{printingCount} printing{printingCount === 1 ? "" : "s"}</a>
+            </p>
+          </footer>
+        </div>
+      </BevelledPlate>
+
+      {/*
+        REPRODUCED *AND* INTERPRETED, WITH BOTH ON THE PAGE.
+
+        This note used to say the opposite: "Optfall has no published table
+        mapping those markers to words — so substituting any would be
+        inventing a vocabulary and calling it the card's text." The premise
+        was true of the card corpus and false of this repository. The
+        Comprehensive Rules — already committed, already parsed, already what
+        every keyword on this page cites — defines all of them at 1.12.4a–h.
+
+        So rendering them is not an interpretation, it is the same join this
+        site already makes between a keyword and its rule. "Raw text" keeps
+        upstream's bytes one click away, because a join is a claim and a
+        reference work should let you check it.
+
+        It sits BELOW the panel rather than inside it, with the rest of the
+        apparatus: it is a note about how the text was rendered, not part of
+        the card, and the panel holds only what the card itself carries.
+      */}
+      <p class="verify">Verbatim in both views. “Text” renders upstream’s own <code>**</code> and <code>&#123;…&#125;</code> markers using the rules’ own symbol table; “Raw text” is the published bytes, unaltered.</p>
+
+      {/*
+        LEGALITY IS THE FIRST THING UNDER THE PANEL, which is where Scryfall
+        puts its legality grid and — separately — where this project's own
+        argument puts it. `docs/SCRYFALL-GAP.md` §3: "our legality table is
+        already better than Scryfall's … keep this, and put it on the card page
+        above the fold — it is the differentiator that is already finished."
+        It reads as a grid now rather than as six stacked subsections. Six
+        formats, each a serif `<h3>` over its own pills with a hairline above,
+        ran to most of a screen on its own and pushed the rules join out of
+        sight; the verdict for one format is a name and one or two pills, which
+        is a row, and rows belong side by side. Nothing is lost in the
+        compression — the multi-state list, the `since` dates and the
+        "we do not know" case all still render, because those are the parts that
+        make this table worth having.
+      */}
       <section class="apparatus" aria-labelledby="legality">
         <h2 class="apparatus-heading" id="legality">Legality</h2>
 
-        <!--
+        {/*
           The scope of the claim, stated before the claim. Inline elements stay
           on the same source line as the text around them: the build drops the
           whitespace at a line break falling immediately before an inline tag,
           welding words together in the output.
-        -->
+        */}
         <p class="scope">
           Present day only, confirmed <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>. A <em>since</em> date is when the current state began — not a history.
         </p>
@@ -715,11 +962,22 @@ const pitchTargets = JSON.stringify(
                 </h3>
 
                 {verdict.unknown ? (
-                  <p class="void">
-                    The dataset publishes no legality flag for this format, so Optfall
-                    has nothing to say about this card in it. It publishes only
-                    exclusions here, and none is set on this card.
-                  </p>
+                  /*
+                    THE SAME REFUSAL, SAID ONCE INSTEAD OF SIX TIMES. This cell
+                    used to carry the whole two-sentence explanation, and a card
+                    outside four formats therefore carried four identical
+                    paragraphs — 60 words of the page's most careful reasoning,
+                    repeated until it read as boilerplate and stopped being read
+                    at all. The row says what is true of THIS format; the
+                    sentence beneath the grid says what that means, verbatim,
+                    for however many rows say it.
+
+                    It is deliberately not a `StatePill`. A pill here would have
+                    to name a state, and the entire point is that there is no
+                    state to name — "Not in format" is a claim upstream did not
+                    make and this project will not make for it.
+                  */
+                  <p class="unknown">No flag published</p>
                 ) : (
                   <ul class="states">
                     {verdict.states.map((state) => (
@@ -763,37 +1021,80 @@ const pitchTargets = JSON.stringify(
             ))
           }
         </ul>
+
+        {
+          page.verdicts.some((verdict) => verdict.unknown) && (
+            <p class="verify">
+              Where no flag is published, Optfall has nothing to say about this card in that format. Upstream publishes only exclusions there, and none is set on this card.
+            </p>
+          )
+        }
       </section>
+
+      {
+        keywordRules.length > 0 && (
+          <section class="apparatus" aria-labelledby="governed-by">
+            <h2 class="apparatus-heading" id="governed-by">Governed by</h2>
+            <ul class="rules-list">
+              {keywordRules.map((rule) => (
+                <li class="rules-item">
+                  <a class="rules-citation" href={hrefForNumber(rule.number)}>{rule.ruleId}</a>
+                  <span class="rules-keyword">{rule.keyword}</span>
+                  {rule.via === "family" && (
+                    /*
+                      SAID OUT LOUD, because it is a slightly weaker claim. The
+                      rules define `Specialization` once and cards instantiate
+                      it per hero, so "Briar Specialization is governed by the
+                      Specialization rule" is true but is a resolution rather
+                      than a direct hit — and a reference work should say which
+                      kind of claim it is making.
+                    */
+                    <span class="rules-via">via the general rule</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p class="verify">Matched exactly against the vocabulary the rules publish. A keyword the document does not define is absent rather than guessed at.</p>
+          </section>
+        )
+      }
+
+      {/*
+        ATTRIBUTES COME UP INTO THE COLUMN, out of the full-width run below.
+        This is Scryfall's "card info" block — the metadata that describes the
+        card rather than the printing — and it belongs beside the face with the
+        rest of what the card IS, not stranded between the printings table and
+        the related-cards list where a reader has already left the card behind.
+      */}
+      {
+        vocabulary.length > 0 && (
+          <section class="apparatus" aria-labelledby="attributes">
+            <h2 class="apparatus-heading" id="attributes">Attributes</h2>
+            <dl class="attributes">
+              {vocabulary.map(([label, values]) => (
+                <div class="attribute">
+                  <dt>{label}</dt>
+                  <dd>
+                    <ul class="tags">
+                      {values.map((value) => (
+                        <li class="tag">{value}</li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              ))}
+              {card.played_horizontally && (
+                <div class="attribute">
+                  <dt>Orientation</dt>
+                  <dd>Played horizontally</dd>
+                </div>
+              )}
+            </dl>
+          </section>
+        )
+      }
     </div>
   </div>
-
-  {
-    vocabulary.length > 0 && (
-      <section class="apparatus" aria-labelledby="attributes">
-        <h2 class="apparatus-heading" id="attributes">Attributes</h2>
-        <dl class="attributes">
-          {vocabulary.map(([label, values]) => (
-            <div class="attribute">
-              <dt>{label}</dt>
-              <dd>
-                <ul class="tags">
-                  {values.map((value) => (
-                    <li class="tag">{value}</li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          ))}
-          {card.played_horizontally && (
-            <div class="attribute">
-              <dt>Orientation</dt>
-              <dd>Played horizontally</dd>
-            </div>
-          )}
-        </dl>
-      </section>
-    )
-  }
 </article>
 
 <OrnamentalRule label="Printings" />
@@ -802,12 +1103,9 @@ const pitchTargets = JSON.stringify(
   <h2 class="apparatus-heading" id="printings">Printings</h2>
   <p class="scope">
     {printingCount} printing{printingCount === 1 ? "" : "s"}. The collector number
-    is the citable identity of a printing. Set, edition, foiling and rarity are
-    upstream's own single-letter codes, reproduced rather than expanded — Optfall
-    publishes no table mapping them to words, and inventing one would be a claim
-    rather than a lookup. No card face is shown: images are permitted with a
-    copyright line, and the component that carries that line unconditionally is
-    not built yet.
+    is the citable identity of a printing, which is why this table lists every
+    one of them — including the printings with no published art, which the
+    picker beside the face cannot show.
   </p>
 
   <div class="scroller">
@@ -861,10 +1159,17 @@ const pitchTargets = JSON.stringify(
     </table>
   </div>
 
+  {/*
+    ONLY WHERE THE PRINTINGS DISAGREE. A card whose every printing carries the
+    same flavour has that flavour shown once, in the panel, where a reader looks
+    for it — see `soleFlavour`. Repeating it here under a collector number would
+    be the same words twice, the second time implying a distinction between
+    printings that does not exist.
+  */}
   {
-    page.printings.some(({ printing }) => printing.flavor_text.trim() !== "") && (
+    flavours.length > 1 && (
       <div class="flavour">
-        <h3 class="apparatus-heading" id="flavour">Flavour text</h3>
+        <h3 class="apparatus-heading" id="flavour">Flavour text, by printing</h3>
         <dl class="attributes">
           {page.printings
             .filter(({ printing }) => printing.flavor_text.trim() !== "")
@@ -959,27 +1264,37 @@ const pitchTargets = JSON.stringify(
     length here, which is the rule doing its job.
 
     So the columns wrap when they stop fitting rather than when a designer
-    guessed they would. The face keeps its natural width; the facts column
-    asks for one face-width of room and takes any surplus. When the viewport
-    cannot seat both, the basis is unsatisfiable and the facts wrap beneath —
-    which is the real condition ("the face and the text no longer fit side by
-    side") expressed directly instead of approximated by a breakpoint.
+    guessed they would. WHAT WAS WRONG WAS THE THRESHOLD, NOT THE TECHNIQUE.
+    The facts column asked for `card.face.normal` of preferred room beside a
+    face that is itself `card.face.normal` wide — two faces and a gutter of
+    hypothetical width, inside a `main` that every page in the site capped at
+    the prose measure, which is narrower than the two faces alone. Flex wraps
+    on hypothetical size, before shrinking is considered, so the line was over
+    budget at every viewport this site can be opened at and the fold never once
+    rendered. Two columns, in the markup, for months, always stacked.
+
+    `BaseLayout`'s `width="wide"` gives the line room; the basis below now
+    states a rule that can actually be met or missed: TWO COLUMNS WHEN THE PAGE
+    CAN SEAT A FACE BESIDE A COLUMN AT LEAST AS WIDE AS A FACE, one below that.
+    The `min(…, 100%)` is what keeps the unmet case from overflowing a phone
+    instead of wrapping on it.
   */
-  .identity {
+  .card-page {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: var(--of-space-loosest);
   }
 
-  .identity-face {
+  .face-column {
     display: flex;
     flex-direction: column;
     gap: var(--of-space-base);
-    /* Never grows, never shrinks below the face: it is a fixed-size object
-       beside a text column, not a banner. */
-    flex: 0 0 auto;
-    max-inline-size: 100%;
+    /* Asks for a face and will give some of it back before it wraps — the
+       image is `max-inline-size: 100%` inside, so a squeezed column scales the
+       face down rather than clipping it. */
+    flex: 0 1 var(--of-card-face-normal);
+    min-inline-size: min(var(--of-card-face-thumb), 100%);
   }
 
   /*
@@ -991,47 +1306,151 @@ const pitchTargets = JSON.stringify(
     behaviour that is pleasant on a desktop and hostile on a phone is not worth
     a media query's worth of arbitrary number.
   */
-  .identity-facts {
-    /* One face-width of preferred room, free to take the surplus, free to
-       wrap. `min-inline-size: 0` because a flex item's default `auto` minimum
-       refuses to shrink below its content, which a long card name would
-       otherwise use to force a horizontal scroll. */
-    flex: 1 1 var(--of-card-face-normal);
+  .facts-column {
+    /* `min-inline-size: 0` because a flex item's default `auto` minimum refuses
+       to shrink below its content, which a long card name would otherwise use
+       to force a horizontal scroll. */
+    flex: 1 1 min(var(--of-card-face-normal), 100%);
     min-inline-size: 0;
     display: flex;
     flex-direction: column;
     gap: var(--of-space-looser);
   }
 
-  /* -- The evidence disclosure --------------------------------------------- */
+  /* -- The panel: the card, as an object ----------------------------------- */
 
   /*
-    Open on anything other than a plain Legal verdict — see `evidenceOpen` in
-    the frontmatter for why that rule, rather than a preference, is what lets
-    this fold at all.
+    BANDS, DIVIDED BY HAIRLINES, IN THE ORDER THE PRINTED CARD PUTS THEM.
+
+    The plate around this is a `BevelledPlate`, so the border, the bevel and the
+    padding are the component's; everything here is the division of what sits
+    inside it. A band is separated from the one above by the same hairline the
+    rest of the system separates regions with — no boxes, no shadows, no second
+    background — which is why the panel reads as one object with parts rather
+    than as four stacked cards.
+
+    The rules are inset by the plate's own padding rather than running edge to
+    edge. Full-bleed would mean reaching into `BevelledPlate` to zero its
+    padding and re-adding it per band, and a component's box is the component's
+    business — "compose, never restyle" is the project rule, and an inset rule
+    is a smaller cost than breaking it.
   */
-  .evidence-fold {
-    margin-block-start: var(--of-space-tight);
+  .panel {
+    display: flex;
+    flex-direction: column;
   }
 
-  .evidence-summary {
+  .band + .band {
+    margin-block-start: var(--of-space-base);
+    padding-block-start: var(--of-space-base);
+    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  }
+
+  /*
+    THE TWO CORNER BANDS, EACH A THREE-COLUMN GRID.
+
+    A corner, the centred thing, the other corner — which is the geometry of
+    both the top of a Flesh and Blood card (pitch, name, cost) and the bottom of
+    one (attack, type, defence). The columns are `auto 1fr auto` so the corners
+    take exactly what their plates need and the middle takes the rest; the name
+    and the type line are centred inside that middle column rather than by the
+    grid, so a corner that is absent cannot slide them off-axis.
+
+    A corner that is absent renders `.corner-empty` rather than nothing, because
+    an omitted grid item would let the next one take its column and put the
+    cost where the pitch should be.
+
+    `align-items: center` on the bar and `start` on the title: a name wrapping
+    to three lines should grow downward past a jewel that stays at the top, and
+    a one-line type line should sit level with the plates beside it.
+  */
+  .band-title,
+  .band-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--of-space-base);
+  }
+
+  .band-title {
+    align-items: start;
+  }
+
+  .band-bar {
+    align-items: center;
+  }
+
+  /* Serif — the voice assigned to names. The layout already sets the display
+     size on `h1`; what is added here is the margin reset and the centring the
+     mirrored card asks for. */
+  .card-name {
+    margin-block: 0;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  .type-line {
+    margin: 0;
+    text-align: center;
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-large);
+    color: var(--of-color-ink-muted);
+  }
+
+  /*
+    The stat cluster. Still a `<dl>` — see the note in the markup — and still
+    labelled, because the glyph's silhouette is the third redundant carrier of
+    which stat it is rather than the only one.
+  */
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--of-space-base);
+    margin: 0;
+  }
+
+  .badges-end {
+    justify-content: flex-end;
+  }
+
+  .badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--of-space-tightest);
+  }
+
+  .badge dt {
     font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
     letter-spacing: var(--of-type-tracking-wide);
     text-transform: uppercase;
     color: var(--of-color-ink-faint);
-    cursor: pointer;
   }
 
-  .evidence-summary:hover {
-    color: var(--of-color-ink-muted);
+  .badge dd {
+    margin: 0;
+    font-family: var(--of-type-family-sans);
+    font-size: var(--of-type-size-title);
+    color: var(--of-color-ink);
   }
 
-  /* The marker is the only disclosure affordance in the system, so it is left
-     to the platform rather than redrawn — a custom triangle here would be a
-     control the component library does not own. */
-  .evidence-fold[open] .evidence-summary {
-    margin-block-end: var(--of-space-tight);
+  /*
+    The foot of the panel: attribution and the printing count, in the fine-print
+    register the card-image copyright line already established. Present, never
+    loud — the same argument, and so the same treatment.
+  */
+  .band-credits {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--of-space-tight) var(--of-space-base);
+  }
+
+  .credit {
+    margin: 0;
+    font-size: var(--of-type-size-micro);
+    color: var(--of-color-ink-faint);
   }
 
   .code-hint {
@@ -1138,51 +1557,13 @@ const pitchTargets = JSON.stringify(
     text-transform: uppercase;
   }
 
+  /* Fine print, not body copy: it explains a control right above it and must
+     not out-weigh the card text in the panel below. */
   .versions-note {
     margin: 0;
-    color: var(--of-color-ink-muted);
-    font-size: var(--of-type-size-small);
-  }
-
-  .rail-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--of-space-base);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .rail-list li {
-    display: flex;
-    flex-direction: column;
-    gap: var(--of-space-hair);
-    align-items: center;
-  }
-
-  .rail-face {
-    display: block;
-    max-inline-size: 100%;
-    block-size: auto;
-    border-radius: var(--of-bevel-radius);
-    border: var(--of-bevel-width) solid var(--of-color-rule);
-    background: var(--of-color-sunken);
-  }
-
-  /*
-    The printing currently shown as the face. Marked with the accent edge rather
-    than by dimming the others: a rail where five of six thumbnails are faded
-    reads as five broken images.
-  */
-  .rail-face.current {
-    border-color: var(--of-color-accent);
-  }
-
-  .rail-id {
-    font-family: var(--of-type-family-sans);
+    color: var(--of-color-ink-faint);
     font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-wide);
-    color: var(--of-color-ink-muted);
+    line-height: var(--of-type-leading-loose);
   }
 
   /* Layout and voice assignment only. Every value is a token — no literal
@@ -1218,41 +1599,20 @@ const pitchTargets = JSON.stringify(
     color: var(--of-color-ink-muted);
   }
 
-  /* -- Masthead ------------------------------------------------------------ */
-
-  .masthead {
-    margin-block-end: var(--of-space-looser);
-  }
-
-  .eyebrow {
-    margin: 0;
-    font-family: var(--of-type-family-sans);
-    font-size: var(--of-type-size-micro);
-    font-weight: var(--of-type-weight-medium);
-    letter-spacing: var(--of-type-tracking-wide);
-    text-transform: uppercase;
-    color: var(--of-color-ink-muted);
-  }
-
-  .title-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--of-space-base);
-    margin-block-start: var(--of-space-tight);
-  }
-
-  /* Serif — the voice assigned to names. The layout already sets the display
-     size on `h1`; what is added here is the margin reset the flex row needs. */
-  .card-name {
-    margin-block: 0;
-    overflow-wrap: anywhere;
-  }
-
   /* -- Shared apparatus ---------------------------------------------------- */
 
+  /*
+    Inside the facts column the gap owns the rhythm, so a margin here would be
+    added to it rather than instead of it. The margin stays for the full-width
+    sections below the fold, which are siblings in the document rather than
+    items in a flex column.
+  */
   .apparatus {
     margin-block: var(--of-space-looser);
+  }
+
+  .facts-column > .apparatus {
+    margin-block: 0;
   }
 
   /* A real heading, restyled rather than downgraded to a `<p>`: the level is
@@ -1302,35 +1662,15 @@ const pitchTargets = JSON.stringify(
     line-height: var(--of-type-leading-loose);
   }
 
-  /* -- Stats --------------------------------------------------------------- */
-
-  .stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--of-space-loose);
-    margin: 0;
-  }
-
-  .stat dt {
-    font-family: var(--of-type-family-sans);
-    font-size: var(--of-type-size-micro);
-    letter-spacing: var(--of-type-tracking-wide);
-    text-transform: uppercase;
-    color: var(--of-color-ink-muted);
-  }
-
-  .stat dd {
-    margin: 0;
-    font-family: var(--of-type-family-sans);
-    font-size: var(--of-type-size-title);
-    color: var(--of-color-ink);
-  }
-
-  /* The marker sits beside its word, at the label's own baseline. */
-  .stat dt {
+  /* The printed marker sits beside its word, at the label’s own baseline.
+     Rehomed from `.stat dt` onto `.badge dt` when the stat block became two
+     bands of the panel — the symbols are the same fact in the same place, and
+     the selector followed the markup rather than the markup being kept for the
+     selector. */
+  .badge dt {
     display: flex;
     align-items: center;
-    gap: var(--of-space-tight);
+    gap: var(--of-space-tighter);
   }
 
   .stat-symbol {
@@ -1399,32 +1739,65 @@ const pitchTargets = JSON.stringify(
 
   /* -- Legality ------------------------------------------------------------ */
 
+  /*
+    A GRID OF ROWS, WHICH IS WHAT A LEGALITY TABLE IS.
+
+    Each verdict is a format name and one or two pills — a row — and six rows
+    stacked full-width with a serif heading apiece ran the length of a screen
+    to say six short things. Two-up, they are one glance.
+
+    The column minimum is a length the token layer cannot supply, so it is
+    derived from one it can: one and a half thumbs is the width at which the
+    longest format name this corpus has ("Classic Constructed") and the longest
+    pill it can carry ("Living Legend") still sit on one line together. Below
+    that the grid drops to one column on its own, which is the right behaviour
+    in the wrapped layout and on a phone.
+  */
   .formats {
     display: grid;
-    gap: var(--of-space-looser);
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(calc(var(--of-card-face-thumb) * 1.5), 100%), 1fr)
+    );
+    gap: var(--of-space-tight) var(--of-space-loose);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
+  /*
+    The name and the verdict on one line, pushed to opposite edges — so the
+    pills form a readable column of their own down the right of each grid
+    column, and a reader scanning for "is it banned anywhere" scans one edge
+    rather than six paragraphs.
+  */
   .format {
-    padding-block-start: var(--of-space-base);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--of-space-tight);
+    padding-block: var(--of-space-tight);
     border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
   }
 
+  /* Demoted from the serif large it used to carry. It is a row label now, not a
+     subsection heading, and the pill beside it is the thing worth reading. */
   .format-name {
-    margin-block: 0 var(--of-space-tight);
-    font-family: var(--of-type-family-serif);
-    font-size: var(--of-type-size-large);
-    letter-spacing: var(--of-type-tracking-tight);
-    color: var(--of-color-ink);
+    margin-block: 0;
+    font-family: var(--of-type-family-sans);
+    font-size: var(--of-type-size-small);
+    letter-spacing: var(--of-type-tracking-normal);
+    color: var(--of-color-ink-muted);
   }
 
   .states {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--of-space-base);
-    margin: 0 0 var(--of-space-base);
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: var(--of-space-tight);
+    margin: 0;
     padding: 0;
     list-style: none;
   }
@@ -1433,7 +1806,7 @@ const pitchTargets = JSON.stringify(
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--of-space-tight);
+    gap: var(--of-space-tighter);
   }
 
   .since {
@@ -1443,40 +1816,23 @@ const pitchTargets = JSON.stringify(
     color: var(--of-color-ink-muted);
   }
 
-  /* The audit trail, always visible. Wrapping key/value pairs rather than a
-     grid, so a long date never forces a horizontal scroll. */
-  .evidence {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--of-space-tight) var(--of-space-base);
+  /* Not a pill and deliberately quiet: it is the absence of a claim, and it
+     must not read as one of the states beside it. */
+  .unknown {
     margin: 0;
     font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-micro);
     letter-spacing: var(--of-type-tracking-wide);
-  }
-
-  .fact {
-    display: flex;
-    gap: var(--of-space-tightest);
-  }
-
-  .fact dt {
+    text-transform: uppercase;
     color: var(--of-color-ink-faint);
   }
 
-  .fact dt::after {
-    content: ":";
-  }
-
-  .fact dd {
+  /* The full-cycle note belongs to its row rather than to the grid, so it takes
+     the whole of that row's width underneath the pills. */
+  .format .scope {
+    flex-basis: 100%;
     margin: 0;
-    color: var(--of-color-ink-muted);
-  }
-
-  /* An absent key is a different claim from a false one, so it is dimmer and
-     prints `—` rather than `false`. */
-  .fact[data-present="false"] dd {
-    color: var(--of-color-ink-faint);
+    font-size: var(--of-type-size-micro);
   }
 
   /* -- Printings ----------------------------------------------------------- */
