@@ -21,7 +21,8 @@
  * reviewable diff — a new manifest entry naming a URL — rather than a PNG
  * appearing in a directory nobody diffs.
  */
-import { readdir } from "node:fs/promises";
+import { readdir, realpath } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 /**
  * The repository root, derived from this file's own location.
@@ -193,7 +194,19 @@ async function auditFile(
       ];
     }
 
-    const resolved = new URL(script, REPO_ROOT);
+    /* `new URL` THROWS on input it cannot parse — `https://` on its own, or
+       `http://[` — and an exception here propagates through `Promise.all` and
+       aborts the whole audit with an unhandled rejection instead of the one
+       annotation naming the offending file. It failed closed, so it was a
+       reporting defect rather than a hole; it was also the exact case the
+       comment above claims to have closed. */
+    let resolved: URL;
+    try {
+      resolved = new URL(script, REPO_ROOT);
+    } catch {
+      return [`::error file=${path}::first-party origin is not a usable path: ${script}`];
+    }
+
     if (resolved.protocol !== "file:" || !resolved.href.startsWith(REPO_ROOT.href)) {
       return [
         `::error file=${path}::first-party origin resolves outside the repository: ${script}`,
@@ -204,6 +217,21 @@ async function auditFile(
     }
     if (!(await Bun.file(resolved).exists())) {
       return [`::error file=${path}::first-party origin names ${script}, which does not exist`];
+    }
+
+    /*
+      AND THE REAL PATH, because the guard above is textual and a symlink is
+      not. A committed `scripts/gen.js` pointing at `/etc/passwd` satisfies both
+      the prefix test and `exists()`, which makes "the thing asserted on is the
+      thing that will be opened" false — the thing opened is the target. The
+      practical risk is low (a symlink is a visible diff) and the claim should
+      still be true rather than nearly true.
+    */
+    const real = await realpath(fileURLToPath(resolved)).catch(() => null);
+    if (real === null || !real.startsWith(fileURLToPath(REPO_ROOT))) {
+      return [
+        `::error file=${path}::first-party origin resolves outside the repository once symlinks are followed: ${script}`,
+      ];
     }
     return [];
   }

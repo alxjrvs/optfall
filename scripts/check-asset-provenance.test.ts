@@ -146,6 +146,24 @@ describe("auditDir", () => {
     }
   });
 
+  test("reports, rather than crashing, on an origin that cannot be parsed", async () => {
+    /* `new URL` throws on these, and an exception here used to propagate out
+       through `Promise.all` and abort the whole audit with an unhandled
+       rejection instead of one annotation naming the file. */
+    const unparseable = ["https://", "http://["];
+    const results = await Promise.all(
+      unparseable.map(async (bad) => {
+        const { dir, manifest } = await fixture({ key: "assets", url: `first-party:${bad}` });
+        const audit = await auditDir(dir, manifest, "assets");
+        return { bad, problems: audit.problems };
+      }),
+    );
+
+    for (const { bad, problems } of results) {
+      expect(problems.length, bad).toBeGreaterThan(0);
+    }
+  });
+
   test("rejects a first-party origin naming something that is not a script", async () => {
     const { dir, manifest } = await fixture({ key: "assets", url: "first-party:README.md" });
 
