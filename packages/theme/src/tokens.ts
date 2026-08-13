@@ -315,8 +315,16 @@ export const DARK_TOKENS: TokenTable = {
   "color.stat.power.ink": "#171307",
   "color.stat.defence": "#a9a9a9",
   "color.stat.defence.ink": "#141414",
-  "color.stat.cost": "#c62b30",
-  "color.stat.cost.ink": "#ffffff",
+  /* GRAPHITE, NOT RED, and the reason is a collision rather than a preference.
+     Cost was given `pitch.one`s exact red on the argument that the reserved
+     thing is the octagon and not the hue. That argument died when the jewel
+     became a vertex-up octagon with all four corners cut: at the size these are
+     read, a red cut stone and a red disc are the same object, and the pitch
+     jewel — the one silhouette this system reserves — stopped being findable on
+     the page it heads. The card agrees: its cost plate is dark, and the
+     COLOURED circle is the pitch. */
+  "color.stat.cost": "#3a3a3a",
+  "color.stat.cost.ink": "#ededed",
 
   /* Rarity. Ten of them, and the honest note is at the top rather than buried:
      THESE ARE OPTFALL'S COLOURS, NOT LEGEND STORY STUDIOS'. Nothing in the
@@ -441,7 +449,7 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.stat.power.ink": "#1a1405",
   "color.stat.defence": "#767676",
   "color.stat.defence.ink": "#ffffff",
-  "color.stat.cost": "#a81f25",
+  "color.stat.cost": "#5c5c5c",
   "color.stat.cost.ink": "#ffffff",
 
   /* Darkened to hold the same separation against an ash ground, and every one

@@ -682,9 +682,6 @@ const pitchTargets = JSON.stringify(
                 </li>
               ))}
             </ul>
-            <p class="versions-note">
-              Same name, different card — its own text, stats and legality. Each tab is a permanent URL, and <code>?pitch=2</code> resolves to one.
-            </p>
           </nav>
         )
       }
@@ -934,7 +931,6 @@ const pitchTargets = JSON.stringify(
         apparatus: it is a note about how the text was rendered, not part of
         the card, and the panel holds only what the card itself carries.
       */}
-      <p class="verify">Verbatim in both views. “Text” renders upstream’s own <code>**</code> and <code>&#123;…&#125;</code> markers using the rules’ own symbol table; “Raw text” is the published bytes, unaltered.</p>
 
       {/*
         LEGALITY IS THE FIRST THING UNDER THE PANEL, which is where Scryfall
@@ -960,9 +956,6 @@ const pitchTargets = JSON.stringify(
           whitespace at a line break falling immediately before an inline tag,
           welding words together in the output.
         */}
-        <p class="scope">
-          Present day only, confirmed <time datetime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>. A <em>since</em> date is when the current state began — not a history.
-        </p>
 
         <ul class="formats">
           {
@@ -1226,10 +1219,23 @@ const pitchTargets = JSON.stringify(
   )
 }
 
+{/*
+  THE PROVENANCE FOLDS. It is seven rows of hashes, URLs and a pinned commit —
+  the auditability promise, and the thing almost nobody opens. It stayed
+  expanded on the argument that a claim whose evidence needs a click is a claim
+  being asserted; that argument belongs to the LEGALITY verdict, which is a
+  claim about a card, and it does not extend to the corpus envelope, which is a
+  claim about a file and is identical on all 4,941 pages.
+
+  Closed by default, and one click from the reader who wants it. The rights
+  line stays outside the fold, because it has to accompany the page rather than
+  be available from it.
+*/}
 <OrnamentalRule label="Source" />
 
 <section class="apparatus" aria-labelledby="source">
-  <h2 class="apparatus-heading" id="source">Source</h2>
+  <details class="source-fold">
+    <summary class="source-summary"><h2 class="apparatus-heading" id="source">Source</h2></summary>
   <BevelledPlate emphasis="sunken">
     <dl class="provenance">
       <dt>Upstream</dt>
@@ -1255,6 +1261,7 @@ const pitchTargets = JSON.stringify(
     </dl>
   </BevelledPlate>
   <p class="verify">Card {page.ordinal} of {CORPUS.counts.cards}. Fetch that URL, hash it, compare. Every value here is read from those bytes by deterministic code — no language model touches this corpus.</p>
+  </details>
   <p class="legal">{CORPUS.rights}</p>
 </section>
 
@@ -1325,7 +1332,11 @@ const pitchTargets = JSON.stringify(
     min-inline-size: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--of-space-looser);
+    /* Tightened from `looser`. Scryfall runs its right column dense — the
+       panel, the legality grid and the rulings sit close enough to be read as
+       one document — and three of the paragraphs that used to need air here
+       have been deleted. */
+    gap: var(--of-space-loose);
   }
 
   /* -- The panel: the card, as an object ----------------------------------- */
@@ -1352,8 +1363,8 @@ const pitchTargets = JSON.stringify(
   }
 
   .band + .band {
-    margin-block-start: var(--of-space-base);
-    padding-block-start: var(--of-space-base);
+    margin-block-start: var(--of-space-tight);
+    padding-block-start: var(--of-space-tight);
     border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
   }
 
@@ -1672,13 +1683,31 @@ const pitchTargets = JSON.stringify(
     text-transform: uppercase;
   }
 
-  /* Fine print, not body copy: it explains a control right above it and must
-     not out-weigh the card text in the panel below. */
-  .versions-note {
+  /* -- The source fold ------------------------------------------------------
+     The heading IS the summary, so the disclosure carries no second label and
+     the marker sits against the same uppercase micro type every other section
+     head uses. `display: inline-flex` on the summary keeps the platform
+     triangle beside the heading rather than above it, which is what a block
+     `<h2>` inside a `<summary>` would otherwise do. */
+  /*
+    `display` IS LEFT ALONE, and that is the whole rule. A `<summary>` is
+    `display: list-item`, and its disclosure triangle is the `::marker` of that
+    list item — set `inline-flex` (as this did) and Chrome drops the marker
+    entirely, leaving a fold with no affordance at all: a heading that happens
+    to be clickable, which nobody clicks. The `<h2>` inside is made inline
+    instead, which is enough to keep the triangle and the text on one line.
+  */
+  .source-summary {
+    cursor: pointer;
+  }
+
+  .source-summary .apparatus-heading {
+    display: inline;
     margin: 0;
-    color: var(--of-color-ink-faint);
-    font-size: var(--of-type-size-micro);
-    line-height: var(--of-type-leading-loose);
+  }
+
+  .source-fold[open] .source-summary {
+    margin-block-end: var(--of-space-base);
   }
 
   /* Layout and voice assignment only. Every value is a token — no literal
@@ -1723,7 +1752,7 @@ const pitchTargets = JSON.stringify(
     items in a flex column.
   */
   .apparatus {
-    margin-block: var(--of-space-looser);
+    margin-block: var(--of-space-loose);
   }
 
   .facts-column > .apparatus {
@@ -1895,7 +1924,7 @@ const pitchTargets = JSON.stringify(
     align-items: baseline;
     justify-content: space-between;
     gap: var(--of-space-tight);
-    padding-block: var(--of-space-tight);
+    padding-block: var(--of-space-tighter);
     border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
   }
 

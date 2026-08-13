@@ -203,12 +203,14 @@
     color: var(--of-color-stat-power-ink);
   }
 
+  /* Centred in the shield's body rather than pinned to the top of its box —
+     same reasoning as `StatGlyph`, and the same fraction, so the inline marker
+     and the corner plate stay the same object at two sizes. */
   .defence {
     clip-path: var(--of-ornament-cut-shield);
     background: var(--of-color-stat-defence);
     color: var(--of-color-stat-defence-ink);
-    align-items: start;
-    padding-block-start: var(--of-space-tightest);
+    padding-block-end: calc(var(--symbol-size) * 0.28);
   }
 
   /* Life — the plain plate. Nothing is cut, which is its own signal in a set
