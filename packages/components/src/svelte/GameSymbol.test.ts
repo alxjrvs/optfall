@@ -105,19 +105,35 @@ describe("GameSymbol with ingested artwork", () => {
     }
   });
 
-  test("the artwork reset outranks every silhouette's background", () => {
-    /* Same argument for colour: a plate showing through behind a round icon is
-       a coloured ring around it, which reads as a rendering fault. */
+  test("the artwork reset outranks every background the plate would paint", () => {
+    /*
+      Same argument for colour: a plate showing through behind a round icon is a
+      coloured ring around it, which reads as a rendering fault.
+
+      NO EXEMPTIONS, and the first version of this test had two that were both
+      dead. It skipped selectors containing `.symbol,` — but Svelte rewrites
+      every compound selector individually, so a comma never survives compilation
+      and the base `.symbol` rule (which does set `background`) fell through into
+      the compared set. It passed anyway, on the accident that `.symbol` plus one
+      scoping class counts 2 against the reset's 3. Scope the base rule as
+      `.symbol:not(.art)` — a reasonable thing to want — and the test would have
+      failed on the one rule the exemption was written to excuse. It also skipped
+      selectors with zero classes, which cannot occur because the scoping class
+      is always there.
+
+      Comparing everything is both simpler and stricter: the base plate genuinely
+      IS a background the artwork must beat, so asserting it is correct rather
+      than incidental.
+    */
     const painters = rulesSetting("background");
     const reset = painters.filter((selector) => selector.includes(".art"));
-    const plates = painters.filter(
-      (selector) => !selector.includes(".art") && !selector.includes(".symbol,"),
-    );
+    const plates = painters.filter((selector) => !selector.includes(".art"));
 
     expect(reset.length).toBeGreaterThan(0);
+    expect(plates.length).toBeGreaterThan(0);
+
     const weakest = Math.min(...reset.map(classCount));
     for (const plate of plates) {
-      if (classCount(plate) === 0) continue;
       expect(classCount(plate), `${plate} would paint behind the artwork`).toBeLessThan(weakest);
     }
   });

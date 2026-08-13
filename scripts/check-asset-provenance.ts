@@ -33,10 +33,19 @@ import { readdir } from "node:fs/promises";
  * directory nobody thought to list. `docs/COMPLIANCE.md` §3 claims this job
  * covers "every binary under a public directory", and that claim should be
  * true rather than nearly true.
+ *
+ * `key` NAMES THE MANIFEST'S ARRAY, and it is here rather than hard-coded
+ * because it was hard-coded and that was a trap. Reading `record.symbols` out
+ * of every manifest meant a future `assets.json` that named its array anything
+ * else would parse to zero entries — and then report every file beneath it as
+ * having no recorded origin, pointing the reader at the assets rather than at
+ * the one-word key mismatch that actually caused it. It fails closed, so it was
+ * confusing rather than unsafe; naming the key makes the contract discoverable
+ * from the table instead of from this script's internals.
  */
 const GOVERNED = [
-  { dir: "apps/site/public", manifest: "data/symbols/symbols.json" },
-  { dir: "apps/images/public", manifest: "data/images/assets.json" },
+  { dir: "apps/site/public", manifest: "data/symbols/symbols.json", key: "symbols" },
+  { dir: "apps/images/public", manifest: "data/images/assets.json", key: "assets" },
 ] as const;
 
 /**
@@ -99,8 +108,29 @@ async function auditFile(
     return [`::error file=${path}::bytes do not match the recorded SHA-256 in ${manifest}`];
   }
 
-  if (!entry.url.startsWith("https://")) {
-    return [`::error file=${path}::provenance URL is not an https origin`];
+  /*
+    TWO KINDS OF ORIGIN, AND THE SECOND ONE HAD TO EXIST BEFORE SOMEBODY FAKED IT.
+
+    An https URL is the right record for a file fetched from somewhere. It is
+    the WRONG record for a file this project drew — and `docs/SCRYFALL-GAP.md`
+    §5 already plans exactly that: generated NO IMAGE placeholders, shipped
+    statically in `apps/images/public/` so they resolve when the Blobs store
+    does not. They have no upstream. Requiring a URL of them would have left
+    whoever builds that with two options, both bad: disable the check for that
+    directory, or invent a plausible-looking origin for a file nobody fetched.
+    The second is precisely the weakening this script's header warns about, and
+    it is likelier, because it keeps the build green.
+
+    So `first-party:<script>` is a legal origin, naming the thing that generated
+    the bytes. It is not a loophole: it is a positive claim that Optfall drew
+    this, which is checkable by reading that script, and it cannot be written by
+    accident.
+  */
+  const generated = entry.url.startsWith("first-party:");
+  if (!generated && !entry.url.startsWith("https://")) {
+    return [
+      `::error file=${path}::origin is neither an https URL nor \`first-party:<script>\``,
+    ];
   }
 
   return [];
