@@ -174,3 +174,58 @@ describe("over the whole corpus", () => {
     expect(keys.size).toBe(11376);
   });
 });
+
+describe("a face key identifies a printing within its card", () => {
+  test("no card has two distinct printings sharing a face key", () => {
+    // THE INVARIANT `?printing=` RESTS ON. The picker resolves the param by
+    // scanning one card's printings for a matching key, so two different
+    // printings of the SAME card sharing a key would make the link ambiguous —
+    // it would silently select whichever came first.
+    //
+    // This is the per-card version of the corpus-wide claim above, and the
+    // known mirror is allowed by name rather than by loosening the test.
+    //
+    // `LGS387` on Batter to a Pulp is reached by two URLs — the same image on
+    // two hosts, fetched and hashed while the key rule was written and found
+    // byte-identical. The picker dedupes by key, so it renders ONE tile and
+    // `?printing=LGS387` is unambiguous in every sense that matters. Anything
+    // else appearing here would be two different pictures fighting over one
+    // parameter value, which is the thing this test exists to catch.
+    const KNOWN_MIRROR = "Batter to a Pulp: LGS387.webp";
+    const ambiguous: string[] = [];
+
+    for (const card of CORPUS.cards) {
+      const urlsByKey = new Map<string, Set<string>>();
+      for (const printing of card.printings) {
+        const key = faceKeyFor(printing.image_url);
+        if (key === null || printing.image_url === null) continue;
+        const seen = urlsByKey.get(key);
+        if (seen) seen.add(printing.image_url);
+        else urlsByKey.set(key, new Set([printing.image_url]));
+      }
+      for (const [key, urls] of urlsByKey) {
+        if (urls.size > 1) ambiguous.push(`${card.name}: ${key}`);
+      }
+    }
+
+    expect(ambiguous).toEqual([KNOWN_MIRROR]);
+  });
+
+  test("the key is a clean URL parameter once its extension is dropped", () => {
+    // `?printing=U-WTR098`. The param strips `.webp`, so what is left has to be
+    // safe in a query string without escaping — otherwise a pasted link would
+    // arrive percent-encoded and fail the lookup.
+    const params = new Set(
+      CORPUS.cards
+        .flatMap((card) => card.printings)
+        .map((printing) => faceKeyFor(printing.image_url))
+        .filter((key): key is string => key !== null)
+        .map((key) => key.replace(/\.webp$/, "")),
+    );
+
+    expect(params.size).toBeGreaterThan(0);
+    for (const param of params) {
+      expect(encodeURIComponent(param)).toBe(param);
+    }
+  });
+});
