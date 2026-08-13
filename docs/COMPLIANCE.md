@@ -229,13 +229,23 @@ job walks **every** public directory — `apps/site/public` and
 bytes and https origin are not recorded in that directory's manifest. It runs
 offline, so it cannot go red because a third-party host is down.
 
-Two details that are the difference between a control and a gesture. Assets are
-matched on their **path within the directory**, not their basename, so a copy of
-an approved file at a new depth does not inherit the original's approval and a
-moved file is reported twice rather than zero times. And a public directory with
-**no manifest** is not exempt, it is empty of approved binaries — the first PNG
-dropped into `apps/images/public` fails, rather than sailing through a directory
-nobody remembered to list.
+Three details that are the difference between a control and a gesture. Assets
+are matched on their **path within the directory**, not their basename, so a
+copy of an approved file at a new depth does not inherit the original's approval
+and a moved file is reported twice rather than zero times. A public directory
+with **no manifest** is not exempt, it is empty of approved binaries — the first
+PNG dropped into `apps/images/public` fails, rather than sailing through a
+directory nobody remembered to list.
+
+And an origin may be **`first-party:<script>`** as well as an https URL, because
+some committed bytes are ours. `SCRYFALL-GAP.md` §5 plans generated NO IMAGE
+placeholders shipped statically in `apps/images/public/`; they have no upstream,
+and demanding a URL of them would have left the next person choosing between
+disabling the check and inventing a plausible origin for a file nobody fetched.
+The second is the likelier of the two, because it keeps the build green, and it
+is exactly the weakening this section exists to prevent. A `first-party:` origin
+is a positive claim that Optfall drew the file, checkable by reading the script
+it names — not a way to skip the question.
 
 **Be precise about what a green tick buys.** It proves an asset's origin is
 *recorded*, not that the origin was *permitted*. Somebody who ingests a set
