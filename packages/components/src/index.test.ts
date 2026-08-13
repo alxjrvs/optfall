@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
+import { readFileSync } from "node:fs";
+
 import {
   CARD_IMAGE_COPYRIGHT,
+  JEWEL_SILHOUETTE,
+  MARK_GEOMETRY,
   PRIMITIVES,
   VOICE_BY_ROLE,
   type CardImageProps,
@@ -64,6 +68,101 @@ describe("the primitive set", () => {
     // `ornament.cut.*`: the plate a reader meets inline in `+1{p}` is the same
     // plate carrying `4` in the stat block.
     expect(PRIMITIVES).toContain("game-symbol");
+  });
+});
+
+/*
+ * THE RESERVED SILHOUETTE IS ONE SHAPE, AND IT WAS TWO.
+ *
+ * `PitchJewel.svelte` drew an edge-up octagon — a chamfered square, flat on top
+ * — while `scripts/build-design-system.ts` drew a vertex-up diamond, so the
+ * published design-system cards advertised a silhouette the product never
+ * rendered. Neither was wrong against `docs/DESIGN.md`, which said only "an
+ * eight-sided cut stone": true of both, and therefore no help at all.
+ *
+ * These tests exist because the fix is a *duplicated string* and duplication is
+ * only safe when it is checked. A Svelte `<style>` block cannot interpolate a
+ * module constant, and moving the polygon onto an inline `style` attribute
+ * would ship it on every jewel on every card page rather than once in a cached
+ * stylesheet — so the component keeps its own copy, and this asserts the copies
+ * agree. Change one and the suite fails naming the other.
+ */
+/** An SVG `points` list, as coordinates. */
+function points(list: string): { x: number; y: number }[] {
+  return list.split(" ").map((pair) => {
+    const [x, y] = pair.split(",").map(Number);
+    return { x: x ?? 0, y: y ?? 0 };
+  });
+}
+
+describe("the reserved silhouette", () => {
+  /*
+   * COMMENTS ARE STRIPPED FIRST, and that is not fastidiousness — the first
+   * draft of this test failed against a correct component because the prose
+   * above the declaration quotes the OLD value (`--cut: 30%`) while explaining
+   * why it changed. A scanner that reads a file's commentary as if it were its
+   * code will keep finding whichever value the prose happens to mention.
+   */
+  const jewelSource = readFileSync(
+    new URL("./svelte/PitchJewel.svelte", import.meta.url),
+    "utf8",
+  ).replaceAll(/\/\*[\s\S]*?\*\//g, "");
+
+  /** The component's `clip-path`, flattened to one line and `--cut` resolved. */
+  const componentClip = (): string => {
+    const match = /clip-path:\s*(polygon\([^;]*\));/.exec(jewelSource);
+    if (match?.[1] === undefined) throw new Error("no clip-path in PitchJewel.svelte");
+    const cut = /--cut:\s*([\d.]+%)/.exec(jewelSource)?.[1];
+    if (cut === undefined) throw new Error("no --cut in PitchJewel.svelte");
+    return match[1]
+      .replaceAll("var(--cut)", cut)
+      // `calc(100% - 15%)` is the component's spelling of the constant's `85%`.
+      .replaceAll(/calc\(\s*100%\s*-\s*([\d.]+)%\s*\)/g, (_, n: string) => `${100 - Number(n)}%`)
+      .replaceAll(/\s+/g, " ")
+      .replaceAll("( ", "(")
+      .replaceAll(" )", ")");
+  };
+
+  test("the jewel renders the diamond the constant declares", () => {
+    expect(componentClip()).toBe(JEWEL_SILHOUETTE);
+  });
+
+  test("is vertex-up, which is the half of it that drifted", () => {
+    // An edge-up octagon starts its polygon at a cut corner on the top edge; a
+    // vertex-up one starts at the apex. This is the assertion that would have
+    // caught the drift, so it is worth making separately from the equality
+    // above — that one pins a string, this one pins the shape's orientation.
+    expect(JEWEL_SILHOUETTE.startsWith("polygon(50% 0%")).toBe(true);
+    expect(JEWEL_SILHOUETTE).toContain("100% 50%");
+    expect(JEWEL_SILHOUETTE).toContain("50% 100%");
+    expect(JEWEL_SILHOUETTE).toContain("0% 50%");
+  });
+
+  test("the mark is that diamond, cleaved rather than a second shape", () => {
+    const crown = points(MARK_GEOMETRY.crown);
+    const pavilion = points(MARK_GEOMETRY.pavilion);
+
+    // The crown holds the top apex and the pavilion holds the bottom one, which
+    // is what makes the pair a diamond rather than two lozenges.
+    const apex = crown.reduce((a, b) => (a.y <= b.y ? a : b));
+    const base = pavilion.reduce((a, b) => (a.y >= b.y ? a : b));
+    expect(apex.x).toBeGreaterThan(12);
+    expect(apex.x).toBeLessThan(20);
+    expect(base.x).toBeGreaterThan(12);
+    expect(base.x).toBeLessThan(20);
+
+    // The girdle — the stone's widest points — survives on the pavilion, so the
+    // fallen half is the one that still reads as the jewel.
+    const widest = Math.max(...pavilion.map((p) => p.x)) - Math.min(...pavilion.map((p) => p.x));
+    const crownWidest = Math.max(...crown.map((p) => p.x)) - Math.min(...crown.map((p) => p.x));
+    expect(widest).toBeGreaterThan(crownWidest);
+
+    // The gap is the whole idea and the last thing to disappear: it must stay
+    // wide enough to survive a 16px favicon, where one viewBox unit is half a
+    // device pixel.
+    const crownLowest = Math.max(...crown.map((p) => p.y));
+    const pavilionHighest = Math.min(...pavilion.map((p) => p.y));
+    expect(pavilionHighest - crownLowest).toBeGreaterThanOrEqual(2);
   });
 });
 

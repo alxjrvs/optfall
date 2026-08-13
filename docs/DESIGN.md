@@ -29,9 +29,11 @@ move; each expression of it does not.
 ## The mark
 
 A cut jewel, cleaved and falling — the crown separating from the pavilion. It is
-the same octagonal silhouette as the pitch gem, which means **the logo and the
-core interface primitive are the same object**: the thing you see a thousand
-times a session is the thing on the tab.
+the pitch diamond, the same reserved silhouette as the gem, which means **the
+logo and the core interface primitive are the same object**: the thing you see a
+thousand times a session is the thing on the tab. The pavilion keeps the girdle
+and the bottom apex, so the half that falls is the half still recognisable as
+the jewel.
 
 Two solids and a hairline, so it survives a favicon. The gap between crown and
 pavilion is the whole idea and it is the last thing to disappear at small sizes.
@@ -58,9 +60,19 @@ plate rather than as flat rectangles.
 
 ### The pitch jewel
 
-An eight-sided cut stone with a facet highlight, carrying its numeral. Shape,
-number and colour state the same fact three times — and the silhouette is
+A **diamond**: vertex up, vertex down, widest across the middle, with all four
+corners cut — eight sides, and a facet highlight, carrying its numeral. Shape,
+number and colour state the same fact three times, and the silhouette is
 reserved: nothing else in the interface is ever this shape.
+
+**The orientation is part of the specification, not a drawing detail.** This
+section used to say only "an eight-sided cut stone", which is equally true of an
+edge-up chamfered square — and so, for a while, the component drew one of those
+while the design-system cards drew the diamond, and the logo followed the
+component. Nothing failed, because nothing disagreed with the words. An edge-up
+octagon reads as a *button*; a vertex-up one reads as a *gem*. The exact
+polygon lives in `JEWEL_SILHOUETTE` in `optfall-components`, which every surface
+now reads and a test now pins.
 
 The numeral is the **primary** channel, not an accessibility fallback. Red and
 yellow are the classic deuteranopia confusion pair, pitch is the most-read value

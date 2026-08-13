@@ -3,11 +3,19 @@
    * The mark — a cut jewel, cleaved and falling.
    *
    * `docs/DESIGN.md`: **the logo and the core interface primitive are the same
-   * object.** This is the pitch jewel's octagon, the reserved silhouette, split
-   * along a cleavage plane — so the thing on the tab is the thing you see a
-   * thousand times a session, rather than two shapes that happen to coexist.
-   * The geometry below is `PitchJewel.svelte`'s `clip-path` restated in SVG
-   * coordinates: same eight sides, same proportion of cut to edge.
+   * object.** This is the pitch diamond — the reserved silhouette, vertex up
+   * and widest across the middle — split along a cleavage plane, so the thing
+   * on the tab is the thing you see a thousand times a session rather than two
+   * shapes that happen to coexist.
+   *
+   * THAT CLAIM WAS FALSE FOR A WHILE, WHICH IS WHY IT IS SPELLED OUT NOW. This
+   * file used to say the geometry was "`PitchJewel.svelte`'s `clip-path`
+   * restated in SVG coordinates" while drawing an edge-up octagon — a chamfered
+   * square — and the jewel drew one too, against design-system cards that had
+   * always published the diamond. Two drawings, one reserved silhouette, and
+   * `docs/DESIGN.md` describing only "an eight-sided cut stone", which is true
+   * of both. Nothing failed; the logo was simply not the shape the identity
+   * said it was. Both are the diamond now, declared together in `../index`.
    *
    * Following `PitchJewel.svelte` in every convention — styles name tokens and
    * nothing else, square corners, a light top edge and a dark bottom one, and
@@ -115,15 +123,17 @@
     <title id={titleId}>{name}</title>
   {/if}
 
-  <!-- The crown: the shallow upper third of the cut, holding the top of the
-       frame. Its lower edge is the cleavage plane, and it is off level — a
-       crystal parts along its own lattice, not along a saw line, and that tilt
-       is most of what keeps the mark from reading as a lid on a box. -->
+  <!-- The crown: the diamond above the break — its apex, its two upper cut
+       corners, and the parted edge. That edge is off level, because a crystal
+       parts along its own lattice rather than along a saw line, and the tilt is
+       most of what keeps the mark from reading as a lid on a box. -->
   <polygon class="crown" points={MARK_GEOMETRY.crown} />
 
-  <!-- The pavilion: deeper than the crown, as a cut stone's is, and fallen —
-       three units clear of the plane and two out of register with it, so the
-       two halves no longer line up along the edge they parted on. -->
+  <!-- The pavilion: the diamond below the break, keeping the girdle — the
+       stone's widest points — and tapering to the bottom apex. Deeper than the
+       crown, as a cut stone's is, and fallen: clear of the plane and out of
+       register with it, so the two halves no longer line up along the edge they
+       parted on. This is the half that still reads as the jewel. -->
   <polygon class="pavilion" points={MARK_GEOMETRY.pavilion} />
 
   <!-- The cleavage plane, freshly exposed along the pavilion's cut face.
