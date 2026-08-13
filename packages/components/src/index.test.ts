@@ -81,12 +81,17 @@ describe("the primitive set", () => {
  * rendered. Neither was wrong against `docs/DESIGN.md`, which said only "an
  * eight-sided cut stone": true of both, and therefore no help at all.
  *
- * These tests exist because the fix is a *duplicated string* and duplication is
- * only safe when it is checked. A Svelte `<style>` block cannot interpolate a
- * module constant, and moving the polygon onto an inline `style` attribute
- * would ship it on every jewel on every card page rather than once in a cached
- * stylesheet — so the component keeps its own copy, and this asserts the copies
- * agree. Change one and the suite fails naming the other.
+ * THE DUPLICATION IS GONE RATHER THAN TESTED. The polygon is the
+ * `ornament.cut.jewel` token, which every surface names, and
+ * `scripts/check-tokens.ts` already fails the build on a `var(--of-*)` the theme
+ * does not define — so nothing here needs to compare two copies, because there
+ * is one.
+ *
+ * What is left is the pair of facts that mechanism cannot state: that a literal
+ * has not crept back into the component (a `polygon()` of percentages carries no
+ * colour and no absolute length, so the literal scan would pass it happily), and
+ * that the shape is vertex-up — orientation being exactly what a token's NAME
+ * does not say, and the half of this that drifted.
  */
 /** The y of the line through `a`,`b` at `x`. */
 function yOn(x: number, a: { x: number; y: number }, b: { x: number; y: number }): number {

@@ -53,6 +53,8 @@
   --of-ornament-cut-crown: polygon(var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%, 0 var(--chamfer));
   --of-ornament-cut-side-end: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
   --of-ornament-cut-side-start: polygon(var(--chamfer) 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer));
+  --of-ornament-cut-disc: circle(50% at 50% 50%);
+  --of-ornament-cut-shield: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
   --of-ornament-jewel-small: 1.25rem;
   --of-ornament-jewel-base: 1.75rem;
   --of-ornament-jewel-large: 2.5rem;
@@ -103,6 +105,32 @@
   --of-color-state-verified-ink: #141007;
   --of-color-state-unverified: #8a6a12;
   --of-color-state-unverified-ink: #ffffff;
+  --of-color-stat-power: #d9a520;
+  --of-color-stat-power-ink: #171307;
+  --of-color-stat-defence: #a9a9a9;
+  --of-color-stat-defence-ink: #141414;
+  --of-color-stat-cost: #c62b30;
+  --of-color-stat-cost-ink: #ffffff;
+  --of-color-rarity-common: #6e6e6e;
+  --of-color-rarity-common-ink: #ffffff;
+  --of-color-rarity-rare: #8a6a2f;
+  --of-color-rarity-rare-ink: #ffffff;
+  --of-color-rarity-super: #4a7fa8;
+  --of-color-rarity-super-ink: #ffffff;
+  --of-color-rarity-majestic: #c9971f;
+  --of-color-rarity-majestic-ink: #171307;
+  --of-color-rarity-legendary: #6f5aa6;
+  --of-color-rarity-legendary-ink: #ffffff;
+  --of-color-rarity-fabled: #b0431f;
+  --of-color-rarity-fabled-ink: #ffffff;
+  --of-color-rarity-token: #4a4a4a;
+  --of-color-rarity-token-ink: #ededed;
+  --of-color-rarity-basic: #3f5764;
+  --of-color-rarity-basic-ink: #ffffff;
+  --of-color-rarity-marvel: #2f7d6f;
+  --of-color-rarity-marvel-ink: #ffffff;
+  --of-color-rarity-promo: #8a5a8a;
+  --of-color-rarity-promo-ink: #ffffff;
   --of-bevel-light: rgba(255, 255, 255, 0.09);
   --of-bevel-dark: rgba(0, 0, 0, 0.6);
   --of-ornament-filigree-ink: #3f3f3f;
@@ -155,6 +183,8 @@
   --of-ornament-cut-crown: polygon(var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%, 0 var(--chamfer));
   --of-ornament-cut-side-end: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
   --of-ornament-cut-side-start: polygon(var(--chamfer) 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer));
+  --of-ornament-cut-disc: circle(50% at 50% 50%);
+  --of-ornament-cut-shield: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
   --of-ornament-jewel-small: 1.25rem;
   --of-ornament-jewel-base: 1.75rem;
   --of-ornament-jewel-large: 2.5rem;
@@ -205,6 +235,32 @@
   --of-color-state-verified-ink: #ffffff;
   --of-color-state-unverified: #6f5410;
   --of-color-state-unverified-ink: #ffffff;
+  --of-color-stat-power: #c9971f;
+  --of-color-stat-power-ink: #1a1405;
+  --of-color-stat-defence: #767676;
+  --of-color-stat-defence-ink: #ffffff;
+  --of-color-stat-cost: #a81f25;
+  --of-color-stat-cost-ink: #ffffff;
+  --of-color-rarity-common: #5c5c5c;
+  --of-color-rarity-common-ink: #ffffff;
+  --of-color-rarity-rare: #6f5423;
+  --of-color-rarity-rare-ink: #ffffff;
+  --of-color-rarity-super: #2f5f80;
+  --of-color-rarity-super-ink: #ffffff;
+  --of-color-rarity-majestic: #a87d13;
+  --of-color-rarity-majestic-ink: #1a1405;
+  --of-color-rarity-legendary: #57458a;
+  --of-color-rarity-legendary-ink: #ffffff;
+  --of-color-rarity-fabled: #8f3315;
+  --of-color-rarity-fabled-ink: #ffffff;
+  --of-color-rarity-token: #767676;
+  --of-color-rarity-token-ink: #ffffff;
+  --of-color-rarity-basic: #334855;
+  --of-color-rarity-basic-ink: #ffffff;
+  --of-color-rarity-marvel: #1f6155;
+  --of-color-rarity-marvel-ink: #ffffff;
+  --of-color-rarity-promo: #6d456d;
+  --of-color-rarity-promo-ink: #ffffff;
   --of-bevel-light: rgba(255, 255, 255, 0.85);
   --of-bevel-dark: rgba(0, 0, 0, 0.22);
   --of-ornament-filigree-ink: #9a9a9a;
@@ -258,6 +314,8 @@
     --of-ornament-cut-crown: polygon(var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%, 0 var(--chamfer));
     --of-ornament-cut-side-end: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
     --of-ornament-cut-side-start: polygon(var(--chamfer) 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer));
+    --of-ornament-cut-disc: circle(50% at 50% 50%);
+    --of-ornament-cut-shield: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
     --of-ornament-jewel-small: 1.25rem;
     --of-ornament-jewel-base: 1.75rem;
     --of-ornament-jewel-large: 2.5rem;
@@ -308,6 +366,32 @@
     --of-color-state-verified-ink: #ffffff;
     --of-color-state-unverified: #6f5410;
     --of-color-state-unverified-ink: #ffffff;
+    --of-color-stat-power: #c9971f;
+    --of-color-stat-power-ink: #1a1405;
+    --of-color-stat-defence: #767676;
+    --of-color-stat-defence-ink: #ffffff;
+    --of-color-stat-cost: #a81f25;
+    --of-color-stat-cost-ink: #ffffff;
+    --of-color-rarity-common: #5c5c5c;
+    --of-color-rarity-common-ink: #ffffff;
+    --of-color-rarity-rare: #6f5423;
+    --of-color-rarity-rare-ink: #ffffff;
+    --of-color-rarity-super: #2f5f80;
+    --of-color-rarity-super-ink: #ffffff;
+    --of-color-rarity-majestic: #a87d13;
+    --of-color-rarity-majestic-ink: #1a1405;
+    --of-color-rarity-legendary: #57458a;
+    --of-color-rarity-legendary-ink: #ffffff;
+    --of-color-rarity-fabled: #8f3315;
+    --of-color-rarity-fabled-ink: #ffffff;
+    --of-color-rarity-token: #767676;
+    --of-color-rarity-token-ink: #ffffff;
+    --of-color-rarity-basic: #334855;
+    --of-color-rarity-basic-ink: #ffffff;
+    --of-color-rarity-marvel: #1f6155;
+    --of-color-rarity-marvel-ink: #ffffff;
+    --of-color-rarity-promo: #6d456d;
+    --of-color-rarity-promo-ink: #ffffff;
     --of-bevel-light: rgba(255, 255, 255, 0.85);
     --of-bevel-dark: rgba(0, 0, 0, 0.22);
     --of-ornament-filigree-ink: #9a9a9a;
@@ -362,6 +446,8 @@
 --of-ornament-cut-crown: polygon(var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%, 0 var(--chamfer));
 --of-ornament-cut-side-end: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
 --of-ornament-cut-side-start: polygon(var(--chamfer) 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer));
+--of-ornament-cut-disc: circle(50% at 50% 50%);
+--of-ornament-cut-shield: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
 --of-ornament-jewel-small: 1.25rem;
 --of-ornament-jewel-base: 1.75rem;
 --of-ornament-jewel-large: 2.5rem;
@@ -412,6 +498,32 @@
 --of-color-state-verified-ink: #ffffff;
 --of-color-state-unverified: #6f5410;
 --of-color-state-unverified-ink: #ffffff;
+--of-color-stat-power: #c9971f;
+--of-color-stat-power-ink: #1a1405;
+--of-color-stat-defence: #767676;
+--of-color-stat-defence-ink: #ffffff;
+--of-color-stat-cost: #a81f25;
+--of-color-stat-cost-ink: #ffffff;
+--of-color-rarity-common: #5c5c5c;
+--of-color-rarity-common-ink: #ffffff;
+--of-color-rarity-rare: #6f5423;
+--of-color-rarity-rare-ink: #ffffff;
+--of-color-rarity-super: #2f5f80;
+--of-color-rarity-super-ink: #ffffff;
+--of-color-rarity-majestic: #a87d13;
+--of-color-rarity-majestic-ink: #1a1405;
+--of-color-rarity-legendary: #57458a;
+--of-color-rarity-legendary-ink: #ffffff;
+--of-color-rarity-fabled: #8f3315;
+--of-color-rarity-fabled-ink: #ffffff;
+--of-color-rarity-token: #767676;
+--of-color-rarity-token-ink: #ffffff;
+--of-color-rarity-basic: #334855;
+--of-color-rarity-basic-ink: #ffffff;
+--of-color-rarity-marvel: #1f6155;
+--of-color-rarity-marvel-ink: #ffffff;
+--of-color-rarity-promo: #6d456d;
+--of-color-rarity-promo-ink: #ffffff;
 --of-bevel-light: rgba(255, 255, 255, 0.85);
 --of-bevel-dark: rgba(0, 0, 0, 0.22);
 --of-ornament-filigree-ink: #9a9a9a;
@@ -446,19 +558,24 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 
 /* -- the primitives, drawn from tokens only -- */
 .jewel {
-  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex;
   inline-size: var(--jewel-size); block-size: var(--jewel-size);
-  /* The reserved silhouette, named rather than redrawn. */
-  clip-path: var(--of-ornament-cut-jewel);
   font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-bold);
   --jewel-size: var(--of-ornament-jewel-base);
+  filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
+    drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
+}
+.jewel .stone {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 100%; block-size: 100%;
+  clip-path: var(--of-ornament-cut-jewel);
 }
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
 .jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-base); }
-.jewel.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
-.jewel.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
-.jewel.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
-.jewel.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); }
+.stone.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
+.stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
+.stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
+.stone.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); }
 
 .pill {
   display: inline-block; padding: var(--of-space-tightest) var(--of-space-tight);

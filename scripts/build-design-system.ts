@@ -24,20 +24,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-/**
- * The jewel below names `--of-ornament-cut-jewel` rather than redrawing the
- * silhouette, and that is the fix for how this file went wrong before: its
- * hand-drawn polygon was the ONLY place the pitch diamond existed, while the
- * shipped `PitchJewel.svelte` clipped an edge-up chamfered square. These cards
- * published a shape the product did not render — the "hand-authored markup does
- * not propagate" weakness at the top of this file, realised. A named token
- * cannot drift from the component that names the same one.
- *
- * NOTE FOR ANYONE EDITING THE CSS BELOW: `SHELL` is a template literal, so a
- * CSS comment written inside it is emitted verbatim into all 13 published
- * cards, and a backtick inside it terminates the string. Notes to future
- * editors — this one included — belong out here in JavaScript, not in there.
- */
 import {
   DARK_TOKENS,
   LIGHT_TOKENS,
@@ -55,6 +41,28 @@ const OUT = process.env["OPTFALL_DS_OUT"] ?? join(import.meta.dir, "..", "design
 const TOKENS = themeStylesheet();
 
 const FACE = "https://optfall-images.netlify.app";
+
+/**
+ * A pitch jewel, in the two-element shape `PitchJewel.svelte` renders.
+ *
+ * THE NESTING IS THE BEVEL. Every plate in this system carries a light top edge
+ * and a dark bottom one, and on the diamond that has to be a `drop-shadow()`
+ * filter — an inset shadow meets a vertex-up polygon only in a sliver at the
+ * apex. `filter` is applied before `clip-path` on the same element, so the
+ * shadow has to be declared on a parent of the clipped stone or it is drawn and
+ * immediately clipped away.
+ *
+ * These cards had no bevel on the jewel at all, so they published a flat
+ * diamond against a component that ships a struck one — the same "cards
+ * advertise a rendering the product does not have" gap that let the silhouette
+ * itself drift, one axis over.
+ */
+function jewel(pitch: string | number, size = ""): string {
+  const value = String(pitch);
+  // Zero is an absence and reads as one, exactly as the component renders it.
+  const glyph = value === "0" ? "–" : value;
+  return `<span class="jewel${size ? ` ${size}` : ""}"><span class="stone p${value}">${glyph}</span></span>`;
+}
 
 /**
  * The light palette, scoped so it can apply to a SUBTREE rather than a document.
@@ -79,7 +87,22 @@ ${toCssDeclarations(lightTheme)}
 }
 `;
 
-/** Shared chrome for every card: the token layer plus preview scaffolding. */
+/*
+ * Shared chrome for every card: the token layer plus preview scaffolding.
+ *
+ * THE SILHOUETTES BELOW ARE NAMED, NOT REDRAWN, and that is the fix for how
+ * this file went wrong before: its hand-drawn pitch diamond was the ONLY place
+ * that shape existed, while the shipped `PitchJewel.svelte` clipped an edge-up
+ * chamfered square. These cards published a shape the product did not render —
+ * the "hand-authored markup does not propagate" weakness at the top of this
+ * file, realised. A named token cannot drift from the component naming the same
+ * one, and `scripts/check-tokens.ts` fails on a name the theme does not define.
+ *
+ * NOTE FOR ANYONE EDITING THE CSS BELOW: `SHELL` is a template literal, so a
+ * CSS comment written inside it is emitted verbatim into all 13 published
+ * cards, and a backtick inside it terminates the string. Notes to future
+ * editors — this one included — belong out here in JavaScript, not in there.
+ */
 const SHELL = `
 ${TOKENS}
 ${LIGHT_PANE}
@@ -111,19 +134,24 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 
 /* -- the primitives, drawn from tokens only -- */
 .jewel {
-  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex;
   inline-size: var(--jewel-size); block-size: var(--jewel-size);
-  /* The reserved silhouette, named rather than redrawn. */
-  clip-path: var(--of-ornament-cut-jewel);
   font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-bold);
   --jewel-size: var(--of-ornament-jewel-base);
+  filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
+    drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
+}
+.jewel .stone {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 100%; block-size: 100%;
+  clip-path: var(--of-ornament-cut-jewel);
 }
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
 .jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-base); }
-.jewel.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
-.jewel.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
-.jewel.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
-.jewel.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); }
+.stone.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
+.stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
+.stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
+.stone.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); }
 
 .pill {
   display: inline-block; padding: var(--of-space-tightest) var(--of-space-tight);
@@ -299,8 +327,8 @@ cards.push({
   body: `
   <p class="note">An eight-sided cut stone carrying its numeral. Shape, number and colour state the same fact three times — and the numeral is the <strong>primary</strong> channel, not a fallback.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center">
-    <span class="jewel p0">–</span><span class="jewel p1">1</span><span class="jewel p2">2</span><span class="jewel p3">3</span>
-    <span class="jewel sm p1">1</span><span class="jewel p1">1</span><span class="jewel lg p1">1</span>
+    ${jewel("0")}${jewel("1")}${jewel("2")}${jewel("3")}
+    ${jewel("1", "sm")}${jewel("1")}${jewel("1", "lg")}
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)">Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads. Designing colour as the <em>redundant</em> channel costs nothing and fixes it for everyone downstream. The silhouette is reserved: nothing else in the interface is ever this shape.</p>`,
 });
@@ -464,7 +492,7 @@ cards.push({
         ] as const)
           .map(
             ([name, pitches], i) => `<li style="display:flex;align-items:center;gap:var(--of-space-base);padding-block:var(--of-space-tight);${i === 0 ? "box-shadow:inset var(--of-bevel-width) 0 0 0 var(--of-color-accent);padding-inline-start:var(--of-space-tight);color:var(--of-color-accent)" : ""}">
-              <span style="display:inline-flex;gap:var(--of-space-tightest)">${[...(pitches as string)].map((p) => `<span class="jewel sm p${p}">${p}</span>`).join("")}</span>
+              <span style="display:inline-flex;gap:var(--of-space-tightest)">${[...(pitches as string)].map((p) => jewel(p, "sm")).join("")}</span>
               <span style="font-family:var(--of-type-family-serif);font-size:var(--of-type-size-large)">${name}</span>
             </li>`,
           )
@@ -589,7 +617,7 @@ cards.push({
         <div>
           <p class="eyebrow">Ninja Action - Attack</p>
           <div style="display:flex;align-items:center;gap:var(--of-space-base)">
-            <span class="jewel lg p1">1</span>
+            ${jewel("1", "lg")}
             <h2 style="font-size:var(--of-type-size-display)">Head Jab</h2>
           </div>
         </div>
@@ -599,7 +627,7 @@ cards.push({
             ${[1, 2, 3]
               .map(
                 (p) => `<span style="display:inline-flex;align-items:center;gap:var(--of-space-tight);padding:var(--of-space-tight) var(--of-space-base);border-bottom:var(--of-bevel-width) solid ${p === 1 ? "var(--of-color-accent)" : "transparent"};color:var(--of-color-ink${p === 1 ? "" : "-muted"})">
-                <span class="jewel sm p${p}">${p}</span>
+                ${jewel(p, "sm")}
                 <span class="mono" style="font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase">Pitch ${p}</span>
               </span>`,
               )
@@ -611,7 +639,7 @@ cards.push({
         <div>
           <p class="eyebrow">Stats</p>
           <div style="display:flex;gap:var(--of-space-loose);flex-wrap:wrap">
-            $<div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Pitch</div><span class="jewel p1">1</span></div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Cost</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">0</span></div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Power</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">3</span></div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Defence</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem));box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">2</span></div>
+            $<div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Pitch</div>${jewel("1")}</div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Cost</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">0</span></div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Power</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">3</span></div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Defence</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem));box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">2</span></div>
           </div>
         </div>
 

@@ -21,15 +21,24 @@
    * every plate" is a system rule, and the mechanism is chosen by geometry, not
    * by taste. There are exactly four sanctioned spellings and this is the list:
    *
-   * 1. **Clipped or filled surface** (this jewel, `StatePill`) — an *inset*
-   *    `box-shadow` pair. A border cannot follow a `clip-path`; an inset shadow
-   *    is clipped by the same polygon, so the bevel takes the chamfer with it.
+   * 1. **Clipped surface with a FLAT top and bottom** (`StatePill`) — an
+   *    *inset* `box-shadow` pair. A border cannot follow a `clip-path`; an
+   *    inset shadow is clipped by the same polygon, so the bevel takes the
+   *    chamfer with it. The flatness is the precondition, not a description:
+   *    the band runs along the top of the *box*, so it only lands on an edge
+   *    where the shape has one there.
    * 2. **Bordered plate** (`BevelledPlate`, `BrassSeal`, `Citation`) —
    *    `border-block-start-color` / `border-block-end-color`. The plate already
    *    pays for a border; the bevel is then free, and `BevelledPlate` adds an
    *    inset ring on top only to model *depth*, which is a separate axis.
-   * 3. **Alpha silhouette** (`Mark`) — a paired `drop-shadow()` filter. The
-   *    mark has no box to put a border on; the filter follows the glyph.
+   * 3. **Alpha silhouette** (`Mark`, and THIS JEWEL) — a paired `drop-shadow()`
+   *    filter, the only spelling that traces an arbitrary outline. The mark has
+   *    no box to put a border on; the jewel is a vertex-up diamond, which has
+   *    no flat top for spelling (1) to sit on. It moved here when the shape
+   *    changed, which is this list's own rule working: the mechanism follows
+   *    the geometry. Note the filter must be declared on a PARENT of the
+   *    clipped element — see the style block — because `filter` is applied
+   *    before `clip-path` on the same element.
    * 4. **Hairline** (`OrnamentalRule`) — an *outset* zero-blur `box-shadow`
    *    pair. The special case, and the reason it is one: a rule must stay
    *    exactly one hairline of layout, and borders would make it three.
