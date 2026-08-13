@@ -379,28 +379,105 @@ export interface MarkGeometry {
 }
 
 /**
- * The diamond, cleaved. Read it as a stone rather than as numbers:
+ * The reserved silhouette as points, in the mark's own 32×32 box.
  *
- * - The **crown** runs apex `14,1` → cut corners at `y 5` → the parted edge,
- *   which is off level (`1.5,10` to `27.5,11.5`). A crystal parts along its own
- *   lattice, not along a saw line, and that tilt is most of what stops the mark
- *   reading as a lid on a box.
- * - The **pavilion** keeps the girdle — `1,17.5` and `31,17.5`, the diamond's
- *   widest points — and tapers through its cut corners to the bottom apex at
- *   `16,31`. It is the half that still looks like the jewel, which is why it is
- *   the half that carries `currentColor`.
- * - Between them, 3.5 units of ground. That is the whole idea and the last
- *   thing to disappear: at a 16px favicon it is still 1.75 device pixels.
+ * The same eight vertices `ornament.cut.jewel` names in percentages — apex,
+ * two upper cut corners, the girdle at the widest points, two lower cut
+ * corners, bottom apex — at 32 units instead of 100%.
+ */
+const JEWEL_POINTS: readonly (readonly [number, number])[] = [
+  [16, 0],
+  [27.2, 4.8],
+  [32, 16],
+  [27.2, 27.2],
+  [16, 32],
+  [4.8, 27.2],
+  [0, 16],
+  [4.8, 4.8],
+];
+
+/**
+ * One half of a polygon, cut by a horizontal line. Sutherland–Hodgman, for the
+ * one edge case it needs: a convex shape and a level blade.
+ */
+function cleaveAt(
+  points: readonly (readonly [number, number])[],
+  y: number,
+  keep: "above" | "below",
+): string {
+  const inside = ([, py]: readonly [number, number]) => (keep === "above" ? py <= y : py >= y);
+  const out: [number, number][] = [];
+
+  points.forEach((point, index) => {
+    const previous = points[(index + points.length - 1) % points.length]!;
+    const crosses = inside(previous) !== inside(point);
+
+    if (crosses) {
+      const t = (y - previous[1]) / (point[1] - previous[1]);
+      out.push([Number((previous[0] + t * (point[0] - previous[0])).toFixed(2)), y]);
+    }
+    if (inside(point)) out.push([point[0], point[1]]);
+  });
+
+  return out.map(([x, py]) => `${x},${py}`).join(" ");
+}
+
+/** Where the crown's cut face sits, and where the pavilion's does. */
+const CROWN_BREAK = 9.5;
+const PAVILION_BREAK = 13;
+
+/** How wide the stone is at a given height — the ends of a cut at that line. */
+function cutSpan(y: number): { left: number; right: number } {
+  const crossings = JEWEL_POINTS.flatMap((point, index) => {
+    const previous = JEWEL_POINTS[(index + JEWEL_POINTS.length - 1) % JEWEL_POINTS.length]!;
+    const spans = (previous[1] - y) * (point[1] - y) < 0;
+    if (!spans) return [];
+    const t = (y - previous[1]) / (point[1] - previous[1]);
+    return [Number((previous[0] + t * (point[0] - previous[0])).toFixed(2))];
+  });
+
+  return { left: Math.min(...crossings), right: Math.max(...crossings) };
+}
+
+/**
+ * THE MARK IS THE JEWEL, CUT — DERIVED, NOT DRAWN.
  *
- * The two halves are also ~1.5 units out of register, so they no longer line up
- * along the edge they parted on. Combined they span `1..31` of the 32 box,
- * leaving the margin the bevel's drop-shadow needs.
+ * `docs/DESIGN.md` is unambiguous about what this is: "a cut jewel, cleaved and
+ * falling … **it is the pitch diamond, the same reserved silhouette as the
+ * gem**, which means the logo and the core interface primitive are the same
+ * object". Both halves are now clipped out of {@link JEWEL_POINTS}, the same
+ * eight vertices `ornament.cut.jewel` gives every pitch stone on the site, so
+ * that sentence is true by construction rather than by somebody keeping two
+ * drawings in step.
+ *
+ * They were not in step. The hand-drawn crown put its apex at `14,1` in a box
+ * whose centre is 16, and the pavilion ran `1,17.5` on the left against
+ * `31,17.5` on the right off a girdle that is not level with either — so the
+ * mark read as a lopsided cap on a blob, which is what "an odd hexagon" is a
+ * fair description of. Nothing caught it, because a hand-drawn constant agrees
+ * with itself.
+ *
+ * The crown keeps the apex and its two cut corners. The pavilion keeps the
+ * girdle — the widest points — and the bottom apex, "so the half that falls is
+ * the half still recognisable as the jewel", which is why it is the half that
+ * carries `currentColor`. Between them 3.5 units of ground: the gap is the
+ * whole idea and the last thing to disappear, still over a device pixel at a
+ * 16px favicon.
  */
 export const MARK_GEOMETRY: MarkGeometry = {
   viewBox: "0 0 32 32",
-  crown: "14,1 24.5,5 27.5,11.5 1.5,10 3.5,5",
-  pavilion: "2.5,13.5 1,17.5 5.5,27.5 16,31 26.5,27.5 31,17.5 30,15",
-  cleave: { x1: 2.5, y1: 13.5, x2: 30, y2: 15, width: 1.5 },
+  crown: cleaveAt(JEWEL_POINTS, CROWN_BREAK, "above"),
+  pavilion: cleaveAt(JEWEL_POINTS, PAVILION_BREAK, "below"),
+  /* Drawn along the pavilion's fresh face, edge to edge of the cut — and taken
+     FROM that cut rather than typed beside it, because two hand-kept numbers
+     drifting apart is the whole reason this constant is now derived. */
+  cleave: {
+    x1: cutSpan(PAVILION_BREAK).left,
+    y1: PAVILION_BREAK,
+    x2: cutSpan(PAVILION_BREAK).right,
+    y2: PAVILION_BREAK,
+    width: 1.5,
+  },
 };
 
 /* -------------------------------------------------------------------------- */
