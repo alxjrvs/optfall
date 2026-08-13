@@ -83,6 +83,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* STATED, because nothing states it for us. The site resets `box-sizing` on
+       `body` only, so padding ADDS to a fixed `block-size` — which made the
+       defence shield 1.28x taller than wide, stretched its percentage polygon,
+       and stood it out of line with the discs beside it. The design-system page
+       ships a universal reset and therefore looked right while the real page
+       did not, which is the worst way for the two to disagree. */
+    box-sizing: border-box;
     inline-size: var(--stat-size);
     block-size: var(--stat-size);
     background: var(--of-color-surface-raised);
@@ -153,8 +160,6 @@
     color: var(--of-color-stat-power-ink);
   }
 
-  /* The shield's point eats the bottom third, so the numeral rides above centre
-     to stay inside the metal rather than hanging over the tip. */
   /* CENTRED IN THE BODY, NOT IN THE BOX. The shield's point takes the bottom of
      the square, so `align-items: start` pinned the numeral to the very top and
      it read as a number sitting above a shield rather than struck into one.

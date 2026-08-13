@@ -323,7 +323,12 @@ export const DARK_TOKENS: TokenTable = {
      jewel — the one silhouette this system reserves — stopped being findable on
      the page it heads. The card agrees: its cost plate is dark, and the
      COLOURED circle is the pitch. */
-  "color.stat.cost": "#3a3a3a",
+  /* Lifted off `surface.raised`. At `#3a3a3a` the disc was ~1.2:1 against the
+     plate it sits on, so the SHAPE — one of the three redundant channels this
+     component promises — was gone in the dark theme and only the numeral read.
+     Dark enough to be graphite rather than steel, light enough to have an
+     edge. */
+  "color.stat.cost": "#5e5e5e",
   "color.stat.cost.ink": "#ededed",
 
   /* Rarity. Ten of them, and the honest note is at the top rather than buried:

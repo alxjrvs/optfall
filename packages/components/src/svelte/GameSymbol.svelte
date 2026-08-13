@@ -97,6 +97,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    /* See `StatGlyph`: no universal reset exists, so padding would otherwise
+       grow the box and disturb the inline rhythm `vertical-align` protects. */
+    box-sizing: border-box;
     inline-size: var(--symbol-size);
     block-size: var(--symbol-size);
     /* Sits on a text baseline rather than a grid, which a stat plate never has
@@ -158,7 +161,12 @@
     box-shadow: none;
     clip-path: none;
     align-items: center;
-    padding-block-start: 0;
+    /* BOTH ENDS, and the `-end` half is the one that matters now. This zeroed
+       `padding-block-start` because that is what the shield used at the time; the
+       shield moved to `padding-block-end` and this rule went on neutralising a
+       property nobody sets. Every inline `{d}` — which HAS artwork — was getting
+       28% bottom padding the reset had explicitly opted out of. */
+    padding-block: 0;
   }
 
   .symbol.art img {
