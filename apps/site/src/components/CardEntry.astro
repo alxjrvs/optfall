@@ -1339,14 +1339,10 @@ const pitchTargets = JSON.stringify(
 
   /* -- Printed text -------------------------------------------------------- */
 
-  /* `pre-line` collapses runs of spaces but keeps the newlines, which is the
-     only formatting the printed text carries. Nothing here is reflowed. */
-  .card-text {
-    margin: 0;
-    white-space: pre-line;
-    font-size: var(--of-type-size-large);
-    line-height: var(--of-type-leading-loose);
-  }
+  /* The `.card-text` rule that lived here moved into `PrintedText.astro` along
+     with the markup it styled. It is deleted rather than left behind: a scoped
+     rule matching no element in its own component is dead weight that reads,
+     to the next person, like the styling is still handled here. */
 
   /* -- Attributes ---------------------------------------------------------- */
 

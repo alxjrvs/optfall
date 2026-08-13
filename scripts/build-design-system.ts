@@ -335,6 +335,30 @@ cards.push({
   <p class="note">No LSS symbol is reproduced. These are the system's own plates carrying our numerals — the same move the mark made: take the register, none of the form.</p>`,
 });
 
+/**
+ * A silhouette, read out of the token table rather than copied beside it.
+ *
+ * THE GALLERY IS STATIC HTML, so every earlier primitive page hardcoded its own
+ * `clip-path` — harmless while the prose made no claim about it, and not
+ * harmless on the symbol page, which says the shapes are "read from
+ * `ornament.cut.*` so the two cannot drift". A claim stronger than its
+ * mechanism is worse than no claim: it tells the next reader a guarantee exists
+ * where none does. This makes the mechanism match.
+ *
+ * `--chamfer` is substituted with the notch token's own value, because the
+ * gallery has no component setting it — the shipped components do.
+ */
+function cutValue(id: string): string {
+  const raw = DARK_TOKENS[`ornament.${id}`];
+  const chamfer = DARK_TOKENS["ornament.notch.size"];
+  // A missing token is a renamed or deleted cut, and the gallery should fail
+  // loudly rather than silently render an unclipped square that looks like a
+  // deliberate shape.
+  if (raw === undefined) throw new Error(`no such silhouette token: ornament.${id}`);
+  if (chamfer === undefined) throw new Error("ornament.notch.size is missing");
+  return raw.replaceAll("var(--chamfer)", chamfer);
+}
+
 cards.push({
   path: "primitives/game-symbol.html",
   group: "Primitives",
@@ -343,15 +367,15 @@ cards.push({
   <p class="note">The markers upstream prints inside card text — <code>{p}</code>, <code>{r}</code>, <code>{t}</code> — as struck plates. <strong>The same silhouettes the stat glyph uses</strong>, read from <code>ornament.cut.*</code> in the token layer so the two cannot drift: the plate you meet inline in <code>+1{p}</code> is the plate carrying <code>4</code> in the stat block above it.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:flex-start;gap:var(--of-space-looser);flex-wrap:wrap">
     ${[
-      ["{p}", "P", "power", "polygon(0 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%)"],
-      ["{r}", "R", "resource", "polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)"],
-      ["{d}", "D", "defence", "polygon(0 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem))"],
-      ["{h}", "H", "life", "none"],
-      ["{i}", "I", "intellect", "polygon(.5rem 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%,0 .5rem)"],
-      ["{c}", "C", "chi", "polygon(.5rem 0,calc(100% - .5rem) 0,100% .5rem,100% 100%,0 100%,0 .5rem)"],
-      ["{t}", "T", "tap", "polygon(0 0,calc(100% - .5rem) 0,100% .5rem,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%)"],
-      ["{u}", "U", "untap", "polygon(.5rem 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem),0 .5rem)"],
-    ]
+      ["{p}", "P", "power", "cut.lean.end"],
+      ["{r}", "R", "resource", "cut.hexagon"],
+      ["{d}", "D", "defence", "cut.lean.start"],
+      ["{h}", "H", "life", "cut.plain"],
+      ["{i}", "I", "intellect", "cut.diagonal.start"],
+      ["{c}", "C", "chi", "cut.crown"],
+      ["{t}", "T", "tap", "cut.side.end"],
+      ["{u}", "U", "untap", "cut.side.start"],
+    ].map(([token, letter, name, cut]) => [token, letter, name, cutValue(cut as string)])
       .map(
         ([token, letter, name, clip]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
           <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:${clip};box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">${letter}</span>

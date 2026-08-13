@@ -101,13 +101,6 @@ export interface PitchJewelProps {
  * to mirror the motif. Declared twice, the two sets agreed by coincidence.
  */
 /**
- * The printed stats a card can carry, in the order a card face reads.
- *
- * Closed on purpose: each one owns a silhouette in `StatGlyph`, and a seventh
- * stat would need a seventh shape that is not the pitch jewel's octagon — which
- * is a design decision rather than a type widening.
- */
-/**
  * The symbols the Comprehensive Rules names, at 1.12.4a-h plus 1.12.2.
  *
  * Kept beside `StatKind` deliberately: the two overlap on `power`, `defence`,
@@ -132,6 +125,13 @@ export type SymbolKind =
   | "untap"
   | "x";
 
+/**
+ * The printed stats a card can carry, in the order a card face reads.
+ *
+ * Closed on purpose: each one owns a silhouette in `StatGlyph`, and a seventh
+ * stat would need a seventh shape that is not the pitch jewel's octagon — which
+ * is a design decision rather than a type widening.
+ */
 export type StatKind =
   | "cost"
   | "power"

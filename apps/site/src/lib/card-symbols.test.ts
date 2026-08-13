@@ -128,6 +128,24 @@ function textOf(blocks: readonly Block[]): string {
     .join("\n");
 }
 
+/**
+ * The two normalisations the round-trip allows, stated rather than buried in a
+ * regex soup at the comparison site.
+ *
+ * Every paragraph break collapses to a single `\n`, because one printed block
+ * can legitimately split into a paragraph plus a list. And `* ` bullets are
+ * compared as `- `, because the marker is structure the parser extracted and
+ * upstream spells it both ways.
+ *
+ * Every other character has to survive exactly.
+ */
+function normalise(value: string): string {
+  return value
+    .split(/\n+/)
+    .map((line) => line.replace(/^\* +/, "- "))
+    .join("\n");
+}
+
 describe("parsing card text loses nothing", () => {
   test("every card's parse round-trips to its own printed text", () => {
     // THE ONE TEST THAT MATTERS. A renderer for a reference work is only
@@ -139,17 +157,6 @@ describe("parsing card text loses nothing", () => {
     for (const card of CARDS.cards) {
       const source = card.functional_text.trim();
       if (source === "") continue;
-
-      // Two normalisations, both stated rather than hidden in a regex soup:
-      // every paragraph break collapses to a single `\n` (one printed block can
-      // split into a paragraph plus a list), and `* ` bullets are compared as
-      // `- ` (the marker is structure, and upstream spells it both ways).
-      // Every other character has to survive exactly.
-      const normalise = (value: string): string =>
-        value
-          .split(/\n+/)
-          .map((line) => line.replace(/^\* +/, "- "))
-          .join("\n");
 
       if (normalise(textOf(parseCardText(source))) !== normalise(source)) {
         damaged.push(card.name);
@@ -199,8 +206,14 @@ describe("parsing card text loses nothing", () => {
     expect(parsed[0]?.kind === "paragraph" && parsed[0].children[0]?.kind).toBe("em");
   });
 
-  test("symbolsUsed reports each symbol once, in rules order", () => {
-    const used = symbolsUsed("+1{p} and +1{p} and {r}{r} and {t}");
+  test("symbolsUsed reports each symbol once, in table order not appearance order", () => {
+    // THE INPUT IS DELIBERATELY BACKWARDS. The first version of this test used
+    // `{p}` then `{r}` then `{t}` — already table order — so it passed against
+    // an implementation that returned APPEARANCE order and could not have
+    // caught the bug it was written to catch.
+    //
+    // A test whose input satisfies the property by accident asserts nothing.
+    const used = symbolsUsed("{t} then {r}{r} then +1{p} then +1{p}");
     expect(used.map((symbol) => symbol.token)).toEqual(["{p}", "{r}", "{t}"]);
   });
 });

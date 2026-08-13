@@ -32,7 +32,7 @@
  *    the literal text upstream published. That is the correct degradation for a
  *    reference work: show what is printed, do not repair it, do not drop it.
  */
-import { symbolForToken, type GameSymbol } from "./card-symbols";
+import { SYMBOLS, symbolForToken, type GameSymbol } from "./card-symbols";
 
 /* -------------------------------------------------------------------------- */
 /* The shape                                                                   */
@@ -188,17 +188,24 @@ export function parseCardText(source: string): readonly Block[] {
 }
 
 /**
- * Every symbol this card uses, in the order the rules define them.
+ * Every symbol this card uses, in the order `SYMBOLS` lists them.
  *
  * Drives the per-card legend: a card page lists the symbols ON THAT CARD with
  * the rule that defines each, rather than printing a nine-row table on all
  * 4,941 pages. A legend for symbols a reader is not looking at is furniture.
+ *
+ * A STABLE ORDER RATHER THAN APPEARANCE ORDER, so the legend on one card is
+ * comparable with the legend on the next — a reader who has learnt where the
+ * resource row sits should find it in the same place. This filtered the table
+ * from the start in the doc comment and did not in the code: it returned `Map`
+ * insertion order, which is first-appearance order, so a card printing `{t}`
+ * before `{p}` listed them in that order under a comment promising otherwise.
  */
 export function symbolsUsed(source: string): readonly GameSymbol[] {
-  const seen = new Map<string, GameSymbol>();
+  const seen = new Set<string>();
   for (const match of source.matchAll(SYMBOL)) {
     const symbol = symbolForToken(match[0]);
-    if (symbol !== null) seen.set(symbol.token, symbol);
+    if (symbol !== null) seen.add(symbol.token);
   }
-  return [...seen.values()];
+  return SYMBOLS.filter((symbol) => seen.has(symbol.token));
 }

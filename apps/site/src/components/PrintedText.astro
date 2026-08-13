@@ -211,9 +211,31 @@ const name = `view-${uid}`;
   .card-text,
   .card-list {
     /* Serif is for names and questions; printed rules text is interface copy
-       and keeps the sans voice, at the leading the plate was built for. */
+       and keeps the sans voice, at the leading the plate was built for.
+
+       ONE STEP UP FROM BODY SIZE. This is what the reader came to the page for,
+       so it is set larger than the apparatus around it — a declaration that
+       came across with the markup from `CardEntry` and was briefly lost in the
+       move, which rendered the card's primary content a step smaller than it
+       had been. */
     margin-block: 0 var(--of-space-loose);
+    font-size: var(--of-type-size-large);
     line-height: var(--of-type-leading-loose);
+  }
+
+  /*
+    `pre-line` COLLAPSES RUNS OF SPACES AND KEEPS THE NEWLINES, which is the
+    only formatting the printed text carries — and it is load-bearing rather
+    than inherited habit.
+
+    About 20 cards print a single `\n` inside a paragraph block, and the parser
+    deliberately keeps it in the text node rather than treating it as
+    whitespace. Without this, those breaks render as spaces and the "Text" view
+    quietly reflows a card while the note beside it claims both views are
+    verbatim. Losing it in the move from `CardEntry` did exactly that.
+  */
+  .card-text {
+    white-space: pre-line;
   }
 
   .card-text:last-child,
