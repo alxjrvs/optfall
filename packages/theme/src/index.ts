@@ -260,6 +260,14 @@ export const themes: Readonly<Record<ThemeName, Theme>> = {
   light: lightTheme,
 };
 
+/** Pads every non-empty line of a block, so a nested rule reads as nested. */
+function indentBlock(block: string, pad: string): string {
+  return block
+    .split("\n")
+    .map((line) => (line ? pad + line : line))
+    .join("\n");
+}
+
 /**
  * The complete stylesheet: dark on `:root` because it is the native key, light
  * behind the theme attribute *and* behind `prefers-color-scheme` for readers
@@ -285,14 +293,14 @@ export const themes: Readonly<Record<ThemeName, Theme>> = {
  * three selectors carry both — and every surface that installs this stylesheet
  * gets it without restating it. `docs/PLAN.md`: swapped at the token layer
  * alone.
+ *
+ * EVERY SELECTOR HERE IS `:root`, which is a real limit rather than an
+ * incidental one: this styles a *document*, so it cannot put the light palette
+ * on a subtree. A surface wanting both themes on one page — the design-system
+ * cards, which show dark and light side by side — has to scope
+ * `toCssDeclarations(lightTheme)` itself, and `scripts/build-design-system.ts`
+ * is the worked example.
  */
-function indentBlock(block: string, pad: string): string {
-  return block
-    .split("\n")
-    .map((line) => (line ? pad + line : line))
-    .join("\n");
-}
-
 export function themeStylesheet(): string {
   const indent = indentBlock;
 

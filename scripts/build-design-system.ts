@@ -24,7 +24,14 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { DARK_TOKENS, LIGHT_TOKENS, themeStylesheet } from "../packages/theme/src/index";
+import {
+  DARK_TOKENS,
+  LIGHT_TOKENS,
+  THEME_ATTRIBUTE,
+  lightTheme,
+  themeStylesheet,
+  toCssDeclarations,
+} from "../packages/theme/src/index";
 
 /**
  * Where the bundle is written. Overridable so a scratch run does not clobber
@@ -35,9 +42,33 @@ const TOKENS = themeStylesheet();
 
 const FACE = "https://optfall-images.netlify.app";
 
+/**
+ * The light palette, scoped so it can apply to a SUBTREE rather than a document.
+ *
+ * `themeStylesheet()` keys every block on `:root`, which is correct for a page
+ * that is in one theme at a time and useless to a card showing both at once.
+ * The side-by-side panes were marked up with a `data-theme` attribute that
+ * appears in no stylesheet anywhere — `THEME_ATTRIBUTE` is `data-optfall-theme`
+ * — so the selector matched nothing and BOTH panes rendered the dark palette
+ * under labels reading "Dark" and "Light". A card whose whole subject is the
+ * two themes was showing one of them twice.
+ *
+ * Generated from `lightTheme` by the same function that builds the stylesheet's
+ * own blocks, so this is a re-scoping of the palette and not a second copy of
+ * it. `color-scheme` rides along for the reason it does everywhere else: a pane
+ * with a light ground should get light form controls inside it.
+ */
+const LIGHT_PANE = `
+[${THEME_ATTRIBUTE}="light"] {
+  color-scheme: light;
+${toCssDeclarations(lightTheme)}
+}
+`;
+
 /** Shared chrome for every card: the token layer plus preview scaffolding. */
 const SHELL = `
 ${TOKENS}
+${LIGHT_PANE}
 *, *::before, *::after { box-sizing: border-box; }
 body {
   margin: 0;
@@ -126,14 +157,14 @@ interface Card {
 function page(card: Card): string {
   const inner = card.bothThemes
     ? `<div class="pair">
-         <div class="theme-pane" data-theme="dark"><p class="eyebrow">Dark — the native key</p>${card.body}</div>
-         <div class="theme-pane" data-theme="light"><p class="eyebrow">Light — the printed rulebook</p>${card.body}</div>
+         <div class="theme-pane" ${THEME_ATTRIBUTE}="dark"><p class="eyebrow">Dark — the native key</p>${card.body}</div>
+         <div class="theme-pane" ${THEME_ATTRIBUTE}="light"><p class="eyebrow">Light — the printed rulebook</p>${card.body}</div>
        </div>`
     : card.body;
 
   return `<!-- @dsCard group="${card.group}" -->
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" ${THEME_ATTRIBUTE}="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
