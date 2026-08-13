@@ -34,12 +34,26 @@ const CSS = (compile(SOURCE, { generate: "client" }).css?.code ?? "").replace(
   "",
 );
 
-/** Every selector that sets the given property, in source order. */
+/**
+ * Every selector that sets the given property, in source order.
+ *
+ * SELECTOR LISTS ARE SPLIT. Svelte does emit them — `.a.hash, .b.hash` — and
+ * captured whole, `classCount` would sum the classes on both sides and report a
+ * specificity nothing has. Nothing in this component is grouped today, so the
+ * bug would not have shown up until the first `.resource, .power { … }` anybody
+ * wrote, at which point this test would have failed on a rule that was fine. A
+ * previous version of this comment asserted commas never survive compilation,
+ * which was simply wrong.
+ */
 function rulesSetting(property: string): string[] {
   const found: string[] = [];
   for (const match of CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const [, selector, body] = match;
-    if (new RegExp(`(^|;)\\s*${property}\\s*:`).test(body!)) found.push(selector!.trim());
+    if (!new RegExp(`(^|;)\\s*${property}\\s*:`).test(body!)) continue;
+    for (const one of selector!.split(",")) {
+      const trimmed = one.trim();
+      if (trimmed !== "") found.push(trimmed);
+    }
   }
   return found;
 }
@@ -111,15 +125,15 @@ describe("GameSymbol with ingested artwork", () => {
       coloured ring around it, which reads as a rendering fault.
 
       NO EXEMPTIONS, and the first version of this test had two that were both
-      dead. It skipped selectors containing `.symbol,` — but Svelte rewrites
-      every compound selector individually, so a comma never survives compilation
-      and the base `.symbol` rule (which does set `background`) fell through into
-      the compared set. It passed anyway, on the accident that `.symbol` plus one
-      scoping class counts 2 against the reset's 3. Scope the base rule as
-      `.symbol:not(.art)` — a reasonable thing to want — and the test would have
-      failed on the one rule the exemption was written to excuse. It also skipped
-      selectors with zero classes, which cannot occur because the scoping class
-      is always there.
+      dead. It skipped selectors containing `.symbol,`, which never matched —
+      `rulesSetting` now splits selector lists, so a grouped rule arrives here as
+      its parts and no part carries a trailing comma. The base `.symbol` rule
+      (which does set `background`) therefore fell through into the compared set
+      anyway, and passed on the accident that `.symbol` plus one scoping class
+      counts 2 against the reset's 3. Scope the base rule as `.symbol:not(.art)`
+      — a reasonable thing to want — and the test would have failed on the one
+      rule the exemption was written to excuse. It also skipped selectors with
+      zero classes, which cannot occur because the scoping class is always there.
 
       Comparing everything is both simpler and stricter: the base plate genuinely
       IS a background the artwork must beat, so asserting it is correct rather

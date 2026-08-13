@@ -125,9 +125,26 @@ async function auditFile(
     the bytes. It is not a loophole: it is a positive claim that Optfall drew
     this, which is checkable by reading that script, and it cannot be written by
     accident.
+
+    AND THE SCRIPT HAS TO EXIST. The first cut accepted anything beginning with
+    `first-party:`, including the bare token — so the "checkable by reading that
+    script" in the paragraph above was untrue the moment it was written, and the
+    escape hatch built to stop somebody inventing an origin was itself a
+    one-word way to satisfy the check. The suffix must be non-empty and must
+    name a file in this repository.
   */
-  const generated = entry.url.startsWith("first-party:");
-  if (!generated && !entry.url.startsWith("https://")) {
+  if (entry.url.startsWith("first-party:")) {
+    const script = entry.url.slice("first-party:".length).trim();
+    if (script === "") {
+      return [`::error file=${path}::\`first-party:\` origin does not name a script`];
+    }
+    if (!(await Bun.file(script).exists())) {
+      return [`::error file=${path}::first-party origin names ${script}, which does not exist`];
+    }
+    return [];
+  }
+
+  if (!entry.url.startsWith("https://")) {
     return [
       `::error file=${path}::origin is neither an https URL nor \`first-party:<script>\``,
     ];
@@ -136,14 +153,24 @@ async function auditFile(
   return [];
 }
 
-/** Everything wrong under one governed directory, and a line to report. */
-async function auditDir(dir: string, manifest: string) {
+/**
+ * Everything wrong under one governed directory, and a line to report.
+ *
+ * `key` NAMES THE MANIFEST ARRAY, and it is a parameter because the previous
+ * change added it to `GOVERNED`, wrote a comment explaining why hard-coding it
+ * was a trap, and then went on reading `record.symbols` anyway. The field was
+ * declared, documented and unused — the fix existed only in prose, which is a
+ * worse state than the bug, because the comment tells the next reader the
+ * problem is solved. `manifest-key.test.ts` exercises a manifest whose array is
+ * not called `symbols`, so this cannot go back to being decorative.
+ */
+export async function auditDir(dir: string, manifest: string, key: string) {
   const files = (await walk(dir)).filter((path) => BINARY.test(path));
 
   const record = await Bun.file(manifest)
     .json()
     .catch(() => null);
-  const entries: ManifestEntry[] = record?.symbols ?? [];
+  const entries: ManifestEntry[] = record?.[key] ?? [];
   const byFile = new Map(entries.map((entry) => [entry.file, entry]));
 
   const problems = (
@@ -167,23 +194,31 @@ async function auditDir(dir: string, manifest: string) {
   };
 }
 
-const audits = await Promise.all(
-  GOVERNED.map(({ dir, manifest }) => auditDir(dir, manifest)),
-);
-
-let violations = 0;
-for (const { problems, summary } of audits) {
-  for (const problem of problems) console.error(problem);
-  violations += problems.length;
-  console.log(summary);
-}
-
-if (violations > 0) {
-  console.error(
-    `\n${violations} asset(s) without a verified origin. Every binary under a public directory
-needs an entry naming its URL and SHA-256 — see docs/COMPLIANCE.md §3.`,
+/*
+  GUARDED, so `auditDir` can be imported and tested without the import running
+  the whole check and calling `process.exit`. The key-wiring bug shipped
+  precisely because no test could reach this function; making it reachable is
+  half the fix.
+*/
+if (import.meta.main) {
+  const audits = await Promise.all(
+    GOVERNED.map(({ dir, manifest, key }) => auditDir(dir, manifest, key)),
   );
-  process.exit(1);
-}
 
-console.log("Every committed binary asset has a verified origin. ✔");
+  let violations = 0;
+  for (const { problems, summary } of audits) {
+    for (const problem of problems) console.error(problem);
+    violations += problems.length;
+    console.log(summary);
+  }
+
+  if (violations > 0) {
+    console.error(
+      `\n${violations} asset(s) without a verified origin. Every binary under a public directory
+needs an entry naming its URL and SHA-256 — see docs/COMPLIANCE.md §3.`,
+    );
+    process.exit(1);
+  }
+
+  console.log("Every committed binary asset has a verified origin. ✔");
+}
