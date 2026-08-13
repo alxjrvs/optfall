@@ -37,8 +37,9 @@ const CSS = (compile(SOURCE, { generate: "client" }).css?.code ?? "").replace(
 /**
  * Every selector that sets the given property, in source order.
  *
- * SELECTOR LISTS ARE SPLIT. Svelte does emit them — `.a.hash, .b.hash` — and
- * captured whole, `classCount` would sum the classes on both sides and report a
+ * SELECTOR LISTS ARE SPLIT, at their top-level commas only — see
+ * `splitTopLevel`. Svelte does emit lists (`.a.hash, .b.hash`), and captured
+ * whole, `classCount` would sum the classes on both sides and report a
  * specificity nothing has. Nothing in this component is grouped today, so the
  * bug would not have shown up until the first `.resource, .power { … }` anybody
  * wrote, at which point this test would have failed on a rule that was fine. A
@@ -50,12 +51,45 @@ function rulesSetting(property: string): string[] {
   for (const match of CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const [, selector, body] = match;
     if (!new RegExp(`(^|;)\\s*${property}\\s*:`).test(body!)) continue;
-    for (const one of selector!.split(",")) {
+    for (const one of splitTopLevel(selector!)) {
       const trimmed = one.trim();
       if (trimmed !== "") found.push(trimmed);
     }
   }
   return found;
+}
+
+/**
+ * Split a selector list on its TOP-LEVEL commas only.
+ *
+ * A bare `.split(",")` breaks every functional pseudo-class — and the note
+ * further down this file actively suggests one, `.symbol:not(.art)`, so this is
+ * a trap laid for the next person to read it. `.plate:is(.a, .b).hash` really
+ * has three classes; split naively it becomes `.plate:is(.a` and `.b).hash`,
+ * two apiece, and sails through a `< 3` assertion it should fail. And
+ * `.symbol:not(.art, .plain)` puts the fragment `.symbol:not(.art` into the
+ * RESET bucket, dropping the threshold to 2 and failing a rule that is correct.
+ * A false negative and a false positive from the same missing paren counter, in
+ * the one test whose job is to catch a specificity mistake.
+ */
+function splitTopLevel(selector: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (const character of selector) {
+    if (character === "(") depth += 1;
+    if (character === ")") depth -= 1;
+    if (character === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += character;
+  }
+
+  parts.push(current);
+  return parts;
 }
 
 /**
@@ -66,6 +100,27 @@ function rulesSetting(property: string): string[] {
 function classCount(selector: string): number {
   return (selector.match(/\.[A-Za-z_-][A-Za-z0-9_-]*/g) ?? []).length;
 }
+
+describe("splitTopLevel", () => {
+  test("splits a plain selector list", () => {
+    expect(splitTopLevel(".a.h, .b.h").map((s) => s.trim())).toEqual([".a.h", ".b.h"]);
+  });
+
+  test("keeps a functional pseudo-class intact", () => {
+    /* The case that made the naive split a false NEGATIVE: three classes read
+       as two, passing an assertion it should fail. */
+    const parts = splitTopLevel(".plate:is(.a, .b).h");
+    expect(parts).toHaveLength(1);
+    expect(classCount(parts[0]!)).toBe(4);
+  });
+
+  test("keeps `:not()` with several arguments intact", () => {
+    /* And the false POSITIVE: a fragment landing in the reset bucket and
+       dragging the threshold down onto a correct rule. */
+    const parts = splitTopLevel(".symbol:not(.art, .plain).h");
+    expect(parts).toHaveLength(1);
+  });
+});
 
 describe("GameSymbol with ingested artwork", () => {
   test("renders the image, with an empty alt so the wrapper names it once", () => {

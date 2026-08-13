@@ -24,6 +24,16 @@
 import { readdir } from "node:fs/promises";
 
 /**
+ * The repository root, derived from this file's own location.
+ *
+ * A `first-party:` origin names a path relative to the REPOSITORY, not to
+ * whatever directory the check was invoked from — otherwise the same manifest
+ * verifies differently depending on where you stood when you asked, which is
+ * not a property a provenance record should have.
+ */
+const REPO_ROOT = new URL("../", import.meta.url);
+
+/**
  * Directories served verbatim to the public, and the manifest covering each.
  *
  * EVERY public directory, not just the one that happens to have assets in it
@@ -126,19 +136,39 @@ async function auditFile(
     this, which is checkable by reading that script, and it cannot be written by
     accident.
 
-    AND THE SCRIPT HAS TO EXIST. The first cut accepted anything beginning with
-    `first-party:`, including the bare token — so the "checkable by reading that
-    script" in the paragraph above was untrue the moment it was written, and the
-    escape hatch built to stop somebody inventing an origin was itself a
-    one-word way to satisfy the check. The suffix must be non-empty and must
-    name a file in this repository.
+    AND THE SCRIPT HAS TO EXIST, IN THIS REPOSITORY, AND BE A SCRIPT. Each of
+    those three clauses was added after the previous cut failed to enforce the
+    sentence above it:
+
+      - The first cut accepted anything beginning with `first-party:`, the bare
+        token included — so the escape hatch built to stop somebody inventing an
+        origin was itself a one-word way to satisfy the check.
+      - The second checked only that the path resolved, so
+        `first-party:/etc/hosts`, `first-party:../../elsewhere` and
+        `first-party:README.md` all passed. "Names a script in this repository"
+        was three claims and the code tested none of them. Worse, resolution ran
+        against the working directory, so the same manifest verified differently
+        depending on where the check was invoked.
+
+    A repo-relative path, no escaping it, and a `.ts` or `.js` suffix. Resolved
+    against the repository root rather than the caller's cwd, so the answer does
+    not depend on where you stood when you asked.
   */
   if (entry.url.startsWith("first-party:")) {
     const script = entry.url.slice("first-party:".length).trim();
+
     if (script === "") {
       return [`::error file=${path}::\`first-party:\` origin does not name a script`];
     }
-    if (!(await Bun.file(script).exists())) {
+    if (script.startsWith("/") || script.split("/").includes("..")) {
+      return [
+        `::error file=${path}::first-party origin must be a repository-relative path, got ${script}`,
+      ];
+    }
+    if (!/\.(ts|js|mjs)$/.test(script)) {
+      return [`::error file=${path}::first-party origin must name a script, got ${script}`];
+    }
+    if (!(await Bun.file(new URL(script, REPO_ROOT)).exists())) {
       return [`::error file=${path}::first-party origin names ${script}, which does not exist`];
     }
     return [];
@@ -161,8 +191,10 @@ async function auditFile(
  * was a trap, and then went on reading `record.symbols` anyway. The field was
  * declared, documented and unused — the fix existed only in prose, which is a
  * worse state than the bug, because the comment tells the next reader the
- * problem is solved. `manifest-key.test.ts` exercises a manifest whose array is
- * not called `symbols`, so this cannot go back to being decorative.
+ * problem is solved. `check-asset-provenance.test.ts` exercises a manifest whose array
+ * is not called `symbols`, so this cannot go back to being decorative. (That
+ * sentence named a file that did not exist when it was first written, which is
+ * the same prose-only failure it is describing. Twice in two changes.)
  */
 export async function auditDir(dir: string, manifest: string, key: string) {
   const files = (await walk(dir)).filter((path) => BINARY.test(path));
