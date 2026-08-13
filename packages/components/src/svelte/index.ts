@@ -30,3 +30,4 @@ export { default as CardFaceGroup } from "./CardFaceGroup.svelte";
 export { default as SearchField } from "./SearchField.svelte";
 export { default as ResultRow } from "./ResultRow.svelte";
 export { default as StatGlyph } from "./StatGlyph.svelte";
+export { default as GameSymbol } from "./GameSymbol.svelte";

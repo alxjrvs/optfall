@@ -57,6 +57,8 @@ import Mark from "./Mark.svelte";
 import OrnamentalRule from "./OrnamentalRule.svelte";
 import PitchJewel from "./PitchJewel.svelte";
 import StatePill from "./StatePill.svelte";
+import StatGlyph from "./StatGlyph.svelte";
+import GameSymbol from "./GameSymbol.svelte";
 
 /**
  * One case per meaningfully different rendering, not one per component. A
@@ -118,6 +120,40 @@ const CASES: readonly {
   { name: "OrnamentalRule", component: OrnamentalRule, props: {} },
   { name: "Mark", component: Mark, props: {} },
   { name: "Mark small", component: Mark, props: { size: "sm" } },
+
+  /*
+    THE PLATE FAMILY, every silhouette, both components.
+    
+    `StatGlyph` had no case at all until now — an eight-month-old gap this pass
+    found while adding its pair. Both carry their meaning as `role="img"` plus
+    an `aria-label`, with the visible glyph `aria-hidden`, so a rendering that
+    lost the label would leave a screen reader with nothing at all. That is
+    exactly the failure axe catches and exactly the one worth catching.
+
+    Enumerated rather than sampled: the whole contract is that each `kind` picks
+    a different silhouette, so "one kind passes" says nothing about the other
+    eight.
+  */
+  { name: "StatGlyph cost", component: StatGlyph, props: { kind: "cost", value: "3" } },
+  { name: "StatGlyph power", component: StatGlyph, props: { kind: "power", value: "4" } },
+  { name: "StatGlyph defence", component: StatGlyph, props: { kind: "defence", value: "2" } },
+  { name: "StatGlyph life", component: StatGlyph, props: { kind: "life", value: "20" } },
+  { name: "StatGlyph intellect", component: StatGlyph, props: { kind: "intellect", value: "4" } },
+  { name: "StatGlyph arcane", component: StatGlyph, props: { kind: "arcane", value: "1" } },
+  // `X` and `*` are printed values upstream, which is why `value` is a string.
+  { name: "StatGlyph variable", component: StatGlyph, props: { kind: "cost", value: "XX" } },
+  { name: "StatGlyph meta-static", component: StatGlyph, props: { kind: "power", value: "*" } },
+
+  { name: "GameSymbol power", component: GameSymbol, props: { kind: "power", letter: "P", name: "power" } },
+  { name: "GameSymbol resource", component: GameSymbol, props: { kind: "resource", letter: "R", name: "resource" } },
+  { name: "GameSymbol defence", component: GameSymbol, props: { kind: "defence", letter: "D", name: "defence" } },
+  { name: "GameSymbol life", component: GameSymbol, props: { kind: "life", letter: "H", name: "life" } },
+  { name: "GameSymbol intellect", component: GameSymbol, props: { kind: "intellect", letter: "I", name: "intellect" } },
+  { name: "GameSymbol chi", component: GameSymbol, props: { kind: "chi", letter: "C", name: "chi" } },
+  { name: "GameSymbol tap", component: GameSymbol, props: { kind: "tap", letter: "T", name: "tap" } },
+  { name: "GameSymbol untap", component: GameSymbol, props: { kind: "untap", letter: "U", name: "untap" } },
+  { name: "GameSymbol x", component: GameSymbol, props: { kind: "x", letter: "X", name: "X" } },
+  { name: "GameSymbol inline in a sentence", component: GameSymbol, props: { kind: "power", letter: "P", name: "power" }, wrap: ["<p>Target attack gets +1", "</p>"] },
   // The face carries a real accessible name and a copyright line that no
   // caller can drop. Both orientations, because the landscape box is a
   // different rendering rather than the same one scaled.

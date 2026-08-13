@@ -1,0 +1,300 @@
+---
+/**
+ * The card's printed text, in two views: **Text** and **Raw text**.
+ *
+ * WHY BOTH, rather than the rendered one replacing the raw. Rendering `{p}` as
+ * a power plate is a JOIN — the same kind of claim this site already makes when
+ * it says a keyword is governed by a rule — and a reference work should let you
+ * see the thing a claim was derived from. `CardEntry` refused to interpret the
+ * markers at all for several phases, on the stated grounds that no published
+ * table mapped them to words. One does: the Comprehensive Rules, already in
+ * this repository, at 1.12.4a–h. So the interpretation is now defensible, and
+ * the raw bytes stay one click away so it is also checkable.
+ *
+ * NO JAVASCRIPT. The toggle is two radio inputs and one `:has()` selector, so both
+ * views are in the HTML and switching between them is a CSS state change. A
+ * reader with scripting off gets a working control rather than a dead one, and
+ * a card page ships nothing to run — which is the same argument the header's
+ * plain search form makes.
+ *
+ * THE RADIO NAME IS PER-CARD. A card page can render several versions, and two
+ * radio groups sharing a `name` on one document are ONE group — picking "Raw"
+ * on the pitch-2 tab would silently flip the pitch-1 tab with it.
+ */
+import { BevelledPlate } from "optfall-components/svelte";
+
+import { parseCardText, symbolsUsed } from "../lib/card-text";
+import { INFERRED, ruleTextFor } from "../lib/card-symbols";
+import { hrefForNumber } from "../lib/search";
+import CardTextInline from "./CardTextInline.astro";
+
+interface Props {
+  /** The printed text, exactly as upstream published it. */
+  text: string;
+  /** Distinguishes this card's radio group from every other on the page. */
+  uid: string;
+}
+
+const { text, uid } = Astro.props;
+
+const blocks = parseCardText(text);
+const symbols = symbolsUsed(text).map((symbol) => ({
+  symbol,
+  ruleText: ruleTextFor(symbol),
+  inferred: INFERRED.includes(symbol.kind),
+}));
+
+const name = `view-${uid}`;
+---
+
+<div class="printed">
+  <!--
+    A radio group, not a button pair: this is a choice between two mutually
+    exclusive views, which is what radios mean. `role="radiogroup"` comes free
+    from the fieldset, arrow keys work with no code, and the state is real form
+    state rather than a class somebody has to remember to keep in sync.
+  -->
+  <fieldset class="views">
+    <legend class="sr-only">How to show the printed text</legend>
+    <input type="radio" id={`${name}-rendered`} name={name} value="rendered" checked />
+    <label for={`${name}-rendered`}>Text</label>
+    <input type="radio" id={`${name}-raw`} name={name} value="raw" />
+    <label for={`${name}-raw`}>Raw text</label>
+  </fieldset>
+
+  <BevelledPlate emphasis="raised">
+    <div class="rendered">
+      {
+        blocks.map((block) =>
+          block.kind === "paragraph" ? (
+            <p class="card-text">
+              <CardTextInline nodes={block.children} />
+            </p>
+          ) : (
+            <ul class="card-list">
+              {block.items.map((item) => (
+                <li>
+                  <CardTextInline nodes={item} />
+                </li>
+              ))}
+            </ul>
+          ),
+        )
+      }
+    </div>
+
+    <!--
+      Upstream's bytes. `white-space: pre-wrap` rather than reflowed, because
+      the line breaks are part of what was published — this is the view whose
+      entire purpose is to be unaltered.
+    -->
+    <p class="raw">{text}</p>
+  </BevelledPlate>
+
+  {
+    symbols.length > 0 && (
+      <div class="legend">
+        <!--
+          ONLY THE SYMBOLS ON THIS CARD, with the rule that defines each. A
+          nine-row table on all 4,941 pages would be furniture; four rows on the
+          card you are reading is the rules association this site exists to make.
+        -->
+        <h3 class="legend-heading">Symbols on this card</h3>
+        <dl class="legend-list">
+          {symbols.map(({ symbol, ruleText, inferred }) => (
+            <div class="legend-row">
+              <dt>
+                <code>{symbol.token}</code> {symbol.name}
+              </dt>
+              <dd>
+                <a href={hrefForNumber(symbol.rule)}>{symbol.rule}</a>
+                {ruleText !== null && <span class="legend-rule">{ruleText}</span>}
+                {inferred && (
+                  /*
+                    SAID OUT LOUD, exactly as the keyword list says "via the
+                    general rule" when its join is a resolution rather than a
+                    direct hit. 1.12.4 lists eight symbols and `{x}` is not one
+                    of them; 1.12.2 defines the letter X, which is plainly what
+                    it means here, but that is our reading and not the rules'
+                    own table. A reference work should say which kind of claim
+                    it is making.
+                  */
+                  <span class="legend-inferred">
+                    Not in the rules’ own symbol table — this cites the rule for the letter X.
+                  </span>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  /* -- The toggle ----------------------------------------------------------- */
+
+  .views {
+    display: flex;
+    gap: 0;
+    margin: 0 0 var(--of-space-base);
+    padding: 0;
+    border: none;
+  }
+
+  /* The input is the state; the label is the control. Hidden with `clip` rather
+     than `display: none`, which would take it out of the focus order and leave
+     the pair unreachable from a keyboard. */
+  .views input {
+    position: absolute;
+    inline-size: var(--of-space-hair);
+    block-size: var(--of-space-hair);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .views label {
+    padding: var(--of-space-tight) var(--of-space-loose);
+    border: var(--of-ornament-rule-width) solid var(--of-color-rule);
+    color: var(--of-color-ink-muted);
+    font-size: var(--of-type-size-small);
+    letter-spacing: var(--of-type-tracking-wide);
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .views label + input + label {
+    border-inline-start: none;
+  }
+
+  .views input:checked + label {
+    background: var(--of-color-surface-raised);
+    color: var(--of-color-ink);
+    box-shadow:
+      inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
+      inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+  }
+
+  /* Never `outline: none` — and the ring has to land on the LABEL, since the
+     input it belongs to is clipped to a pixel. */
+  .views input:focus-visible + label {
+    outline: var(--of-bevel-width) solid var(--of-color-focus);
+    outline-offset: var(--of-space-tightest);
+  }
+
+  /* -- The two views -------------------------------------------------------- */
+
+  /*
+    Both views are in the document and CSS picks one.
+
+    Matched from the COMMON ANCESTOR with `:has()` rather than by walking
+    sideways from the inputs. The two views sit inside `BevelledPlate`'s own
+    wrapper, so a sibling combinator would have to traverse an element this
+    component does not own and would break the moment that component gained a
+    layer. `:has()` on `.printed` does not care what is in between.
+  */
+  .rendered,
+  .raw {
+    margin: 0;
+  }
+
+  .printed:has(input[value="rendered"]:checked) .raw {
+    display: none;
+  }
+
+  .printed:has(input[value="raw"]:checked) .rendered {
+    display: none;
+  }
+
+  .card-text,
+  .card-list {
+    /* Serif is for names and questions; printed rules text is interface copy
+       and keeps the sans voice, at the leading the plate was built for. */
+    margin-block: 0 var(--of-space-loose);
+    line-height: var(--of-type-leading-loose);
+  }
+
+  .card-text:last-child,
+  .card-list:last-child {
+    margin-block-end: 0;
+  }
+
+  .card-list {
+    padding-inline-start: var(--of-space-looser);
+  }
+
+  .card-list li {
+    margin-block-end: var(--of-space-tight);
+  }
+
+  .raw {
+    /* The published line breaks ARE the content in this view. */
+    white-space: pre-wrap;
+    font-family: var(--of-type-family-sans);
+    font-size: var(--of-type-size-small);
+    line-height: var(--of-type-leading-loose);
+    color: var(--of-color-ink-muted);
+  }
+
+  /* -- The legend ----------------------------------------------------------- */
+
+  .legend {
+    margin-block-start: var(--of-space-loose);
+  }
+
+  .legend-heading {
+    margin-block: 0 var(--of-space-base);
+    font-family: var(--of-type-family-sans);
+    font-size: var(--of-type-size-micro);
+    font-weight: var(--of-type-weight-bold);
+    letter-spacing: var(--of-type-tracking-wide);
+    text-transform: uppercase;
+    color: var(--of-color-ink-muted);
+  }
+
+  .legend-list {
+    margin: 0;
+    display: grid;
+    gap: var(--of-space-tight);
+  }
+
+  .legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-tight) var(--of-space-base);
+    font-size: var(--of-type-size-micro);
+  }
+
+  .legend-row dt {
+    color: var(--of-color-ink);
+    font-weight: var(--of-type-weight-bold);
+  }
+
+  .legend-row dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--of-space-tight) var(--of-space-base);
+    color: var(--of-color-ink-muted);
+  }
+
+  .legend-rule {
+    color: var(--of-color-ink-faint);
+  }
+
+  .legend-inferred {
+    color: var(--of-color-ink-muted);
+    font-style: italic;
+  }
+
+  .sr-only {
+    position: absolute;
+    inline-size: var(--of-space-hair);
+    block-size: var(--of-space-hair);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

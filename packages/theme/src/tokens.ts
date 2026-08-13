@@ -117,6 +117,50 @@ const STRUCTURE: TokenTable = {
      reserved shape on the card. */
   "ornament.stat.size": "2.25rem",
 
+  /* How far a symbol plate drops below the text baseline when it is set INLINE
+     in a sentence. A stat plate never needs this — it sits in a grid cell — but
+     `+1{p}` mid-paragraph does, and without it a line of six plates opens the
+     paragraph's leading and the text loses its rhythm. Held here because it is
+     an optical constant of the plate against the type, not a component's
+     choice. */
+  "ornament.symbol.shift": "-0.15em",
+
+  /* -- The silhouettes ------------------------------------------------------
+     THE SHAPE TABLE, IN THE TOKEN LAYER, because two components read it.
+
+     `StatGlyph` carries a printed VALUE and `GameSymbol` carries the marker
+     that names it, and the point of the pair is that `+1{p}` inline and `4` in
+     the stat block are recognisably the same plate. Held as two copies of a
+     `clip-path`, that equivalence lasts exactly until somebody adjusts one
+     chamfer — so it is held once, here, and each component reads it.
+
+     Each cut is written against `--chamfer`, which the COMPONENT sets, so one
+     shape serves every size without a second table for small plates.
+
+     NEVER EIGHT-SIDED. `PitchJewel`'s octagon is reserved — "nothing else in
+     the interface is ever this shape" — which is why `chi` takes two corners
+     rather than the four it would naturally want, and why the effect symbols
+     are cut down a side instead. */
+  "ornament.cut.hexagon": "polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)",
+  "ornament.cut.lean.end":
+    "polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)",
+  "ornament.cut.lean.start":
+    "polygon(0 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)))",
+  "ornament.cut.plain": "none",
+  "ornament.cut.diagonal.start":
+    "polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer))",
+  "ornament.cut.diagonal.end":
+    "polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)))",
+  "ornament.cut.crown":
+    "polygon(var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%, 0 var(--chamfer))",
+  /* Cut down a whole side rather than at a corner: the CR distinguishes symbols
+     that represent a VALUE from those that represent an EFFECT, and the
+     silhouettes say which is which before the letter is read. */
+  "ornament.cut.side.end":
+    "polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)",
+  "ornament.cut.side.start":
+    "polygon(var(--chamfer) 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer))",
+
   "ornament.jewel.small": "1.25rem",
   "ornament.jewel.base": "1.75rem",
   "ornament.jewel.large": "2.5rem",

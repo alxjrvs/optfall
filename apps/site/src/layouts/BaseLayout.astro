@@ -122,14 +122,54 @@ const tokens = themeStylesheet();
     color-scheme: dark light;
   }
 
+  /*
+    A STICKY FOOTER, so the compliance notice sits at the foot of the SCREEN
+    when a page is shorter than the viewport, and at the foot of the DOCUMENT
+    when it is longer.
+
+    The front door is where this was visibly wrong — a door is deliberately
+    short, so the disclaimer floated halfway up a tall screen with nothing under
+    it, reading as the end of a section rather than the end of the page. It is
+    fixed here rather than on that page because it is not a property of the
+    front door: any short page had it, `/data-terms` included.
+
+    Not `position: fixed`. A pinned footer would overlay long pages and cost
+    two lines of every screen forever, to solve a problem that only exists on
+    short ones. A min-height flex column where the CONTENT grows pushes the
+    footer down only when there is slack, which is the actual requirement.
+
+    `100svh`, not `100vh`: on iOS, `100vh` is the height WITHOUT the browser
+    chrome, so a footer anchored to it sits below the fold behind the address
+    bar — the exact thing this is meant to prevent.
+  */
   body {
     margin: 0;
     padding: var(--of-space-loosest) var(--of-space-looser);
+    min-block-size: 100svh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     background: var(--of-color-ground);
     color: var(--of-color-ink);
     font-family: var(--of-type-family-sans);
     font-size: var(--of-type-size-base);
     line-height: var(--of-type-leading-base);
+  }
+
+  /*
+    THE SLACK GOES TO THE CONTENT, which is why this is `flex: 1 0 auto` on the
+    shell rather than `margin-block-start: auto` on the footer.
+
+    Two reasons, and the second is the load-bearing one. An auto margin would
+    lose to `ComplianceFooter`'s own scoped `margin-block-start` — Astro's scope
+    class raises that rule's specificity above `body > footer` — so the footer
+    would silently keep its ordinary spacing and the anchoring would not happen
+    at all. Growing the shell instead leaves that token in charge, so the
+    hairline rule keeps the agreed distance from whatever text ends the page,
+    on a short page and a long one alike.
+  */
+  body > .shell {
+    flex: 1 0 auto;
   }
 
   main {

@@ -50,7 +50,8 @@ export type PrimitiveName =
   | "card-face-group"
   | "search-field"
   | "result-row"
-  | "stat-glyph";
+  | "stat-glyph"
+  | "game-symbol";
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
@@ -66,6 +67,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "search-field",
   "result-row",
   "stat-glyph",
+  "game-symbol",
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -105,6 +107,31 @@ export interface PitchJewelProps {
  * stat would need a seventh shape that is not the pitch jewel's octagon — which
  * is a design decision rather than a type widening.
  */
+/**
+ * The symbols the Comprehensive Rules names, at 1.12.4a-h plus 1.12.2.
+ *
+ * Kept beside `StatKind` deliberately: the two overlap on `power`, `defence`,
+ * `life` and `intellect`, and share their silhouettes through `ornament.cut.*`,
+ * so a reader meets one plate for one concept whether it is carrying a printed
+ * value or standing in for the marker that names it.
+ *
+ * They are not the same union, and the differences are the interesting part.
+ * `resource` is a symbol and `cost` is the stat you pay with it. `tap` and
+ * `untap` are effects, so they can never appear in a stat block. `arcane` is a
+ * stat with NO printed symbol. `x` is the one marker the rules' own table does
+ * not list.
+ */
+export type SymbolKind =
+  | "power"
+  | "resource"
+  | "defence"
+  | "life"
+  | "intellect"
+  | "chi"
+  | "tap"
+  | "untap"
+  | "x";
+
 export type StatKind =
   | "cost"
   | "power"
