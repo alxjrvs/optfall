@@ -10,18 +10,35 @@
    * cut can never drift between the place it is defined and the place it is
    * read.
    *
-   * NO LSS SYMBOL IS REPRODUCED, and this is the constraint that decided the
-   * form. `docs/COMPLIANCE.md` bars their logos "and any close semblance", and
-   * the game's own resource and attack pips are not ours to draw — so this is
-   * NOT a redrawn pip. It is the system's own furniture carrying the letter
-   * upstream itself writes between the braces, which is the same move the mark
-   * made and the same one `StatGlyph` made: take the register, none of the form.
+   * IT RENDERS THE REAL SYMBOL WHEN IT IS GIVEN ONE, and the drawn plate is now
+   * the fallback rather than the point.
+   *
+   * This comment used to read "NO LSS SYMBOL IS REPRODUCED … the game's own
+   * resource and attack pips are not ours to draw", which was a wider reading of
+   * `docs/COMPLIANCE.md` than §3 supports: §3 bars FAB and LSS **logos**,
+   * product **set logos** and close semblances of them, says card faces are
+   * fine, and explicitly blesses drawing from a game MECHANIC — the stated
+   * reason this project's own mark is a pitch jewel. `{p}` is defined in the
+   * Comprehensive Rules at 1.12.4d as the notation for a power value. It
+   * identifies no brand.
+   *
+   * The drawn plates were honest and they were a private notation. A reader
+   * meets `{p}` mid-sentence with no label beside it, and a shape they have to
+   * learn is a shape that sends them to a legend; the symbol on the card in
+   * their hand is the one they already know. So when `src` is supplied — see
+   * `assetForSymbol` in the site's `card-symbols.ts`, backed by the ingest
+   * script's provenance record — this renders LSS's own artwork, unmodified.
+   *
+   * THE PLATE REMAINS, FOR THE ONE SYMBOL WITH NO ARTWORK. 1.12.4 names eight
+   * and `{x}` is not among them, so LSS publishes no icon for it and there is
+   * nothing to render. The fallback also keeps this component usable in
+   * Storybook, where the site's `public/` is not mounted.
    *
    * THE LETTER IS UPSTREAM'S, NOT A NICER ONE. Life is `H`, because the marker
-   * is `{h}` — calling it `L` would be tidier and would break the one job this
-   * plate has, which is to let a reader connect what they see rendered to what
-   * they see in the raw view. The accessible name says "life" in full, so
-   * nobody has to decode `H` to read the card.
+   * is `{h}` — calling it `L` would be tidier and would break the one job the
+   * fallback plate has, which is to let a reader connect what they see rendered
+   * to what they see in the raw view. The accessible name says "life" in full,
+   * so nobody has to decode `H` to read the card.
    *
    * THE NUMBER IS NOT ABSORBED. `+1{p}` renders as the text "+1" followed by
    * this plate, not as a plate containing "+1". Two reasons: the card says
@@ -33,23 +50,46 @@
 
   interface Props {
     kind: SymbolKind;
-    /** The letter struck on the plate, from the symbol table. */
+    /** The letter struck on the fallback plate, from the symbol table. */
     letter: string;
     /** How the rules name it — spoken in full, never the letter. */
     name: string;
     size?: "sm" | "md";
+    /**
+     * LSS's own artwork for this symbol, where they publish one.
+     *
+     * Omitted for `{x}`, which the rules' symbol table does not list, and in
+     * Storybook, where the site's `public/` is not mounted. Both fall back to
+     * the drawn plate.
+     */
+    src?: string;
+    /** Intrinsic box of `src`. Required with it, for the reason `CardFace`
+        requires one: an image with no box reflows the paragraph it sits in. */
+    width?: number;
+    height?: number;
   }
 
-  const { kind, letter, name, size = "sm" }: Props = $props();
+  const { kind, letter, name, size = "sm", src, width, height }: Props = $props();
 </script>
 
 <!--
   `role="img"` with the rules' word as the name, so a screen reader says
-  "plus one power" rather than "plus one P". The letter is decorative in the
-  strict sense: it is a second rendering of a fact the label already carries.
+  "plus one power" rather than "plus one P". The letter, and the artwork, are
+  decorative in the strict sense: each is a second rendering of a fact the
+  accessible name already carries.
 -->
-<span class="symbol {kind} {size}" role="img" aria-label={name}>
-  <span class="letter" aria-hidden="true">{letter}</span>
+<span class="symbol {kind} {size}" class:art={src !== undefined} role="img" aria-label={name}>
+  {#if src !== undefined}
+    <!--
+      `alt=""` because the wrapping `role="img"` already owns the accessible
+      name. Announcing both would read the symbol twice, and `loading="lazy"` is
+      deliberately absent: these are inline with the text, so deferring them is
+      how a sentence reflows under the reader's eye.
+    -->
+    <img {src} alt="" {width} {height} decoding="async" />
+  {:else}
+    <span class="letter" aria-hidden="true">{letter}</span>
+  {/if}
 </span>
 
 <style>
@@ -89,6 +129,29 @@
 
   .md .letter {
     font-size: var(--of-type-size-base);
+  }
+
+  /*
+    THE ARTWORK CARRIES ITS OWN SHAPE, so the plate underneath it gets out of
+    the way entirely — no background, no bevel, no clip. The icons are round
+    with their own dark ring; a struck square behind a disc would read as a
+    mounting plate somebody forgot to remove.
+  */
+  .art {
+    background: none;
+    box-shadow: none;
+    clip-path: none;
+  }
+
+  .art img {
+    inline-size: 100%;
+    block-size: 100%;
+    /* The files are square and the box is square, but `contain` is stated
+       rather than assumed: two of the eight are a pixel smaller than the other
+       six, and a symbol that stretched to fit would be the one place on this
+       site where upstream's own artwork got distorted to suit a layout. */
+    object-fit: contain;
+    display: block;
   }
 
   /* -- The silhouettes ------------------------------------------------------

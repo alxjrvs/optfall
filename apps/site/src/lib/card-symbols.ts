@@ -31,6 +31,27 @@
  * derived from. "Raw text" is upstream's bytes, unaltered.
  */
 import { CORPUS as RULES } from "./rules";
+import MANIFEST from "../../../../data/symbols/symbols.json";
+
+/**
+ * Upstream's single-letter filename key, back to our own kind.
+ *
+ * The manifest is keyed by LSS's letter (`d`) and this table by our word
+ * (`defence`), and the two differ in one place on purpose: the CR spells the
+ * stat "defense" and every label on this site is British. Mapping the key
+ * rather than renaming either side keeps that divergence in the one place it is
+ * already documented.
+ */
+const KIND_BY_KEY: Readonly<Record<string, SymbolKind>> = {
+  p: "power",
+  r: "resource",
+  d: "defence",
+  h: "life",
+  i: "intellect",
+  c: "chi",
+  t: "tap",
+  u: "untap",
+};
 
 /**
  * A symbol the Comprehensive Rules names.
@@ -119,6 +140,58 @@ export function symbolForKind(kind: SymbolKind): GameSymbol {
   /* istanbul ignore next -- the map is built from the same closed union */
   if (found === undefined) throw new Error(`no symbol for ${kind}`);
   return found;
+}
+
+/**
+ * THE PRINTED ARTWORK FOR A SYMBOL, WHERE LEGEND STORY STUDIOS PUBLISHES ONE.
+ *
+ * Optfall drew its own plates for these until now, and the plates were honest —
+ * every shape ours, every colour a token, nothing borrowed. They were also a
+ * private notation. A reader meets `{p}` mid-sentence in "this gets +4{p}",
+ * with no label anywhere near it; a shape they have to learn is a shape that
+ * sends them to a legend, and the symbol on the card in their hand is the one
+ * they already know. Rendering the game's notation in a dialect of our own was
+ * asking them to translate twice.
+ *
+ * So these are the real files, ingested from LSS's own rules site — the same
+ * document this table takes its rule numbers from, where the symbols are
+ * published as part of the RULES rather than as part of a brand kit. That
+ * distinction is the whole compliance argument and it is not a technicality:
+ * `docs/COMPLIANCE.md` §3 bars logos, set logos and close semblances of them,
+ * and blesses drawing from a game mechanic. `{p}` is defined at 1.12.4d as the
+ * notation for a power value. It identifies no brand.
+ *
+ * `scripts/ingest-game-symbols.ts` fetches them, records the URL, byte length,
+ * pixel box and SHA-256 of each in `data/symbols/symbols.json`, and
+ * `check:provenance` fails the build if a file under `public/` has no verified
+ * origin. `check:symbols` re-fetches and diffs the hashes, so "has upstream
+ * redrawn these" is answerable rather than assumed.
+ *
+ * Returns `null` for `{x}`, which is not in the 1.12.4 table and therefore has
+ * no published artwork — see {@link INFERRED}. It renders as the letter it is.
+ */
+export interface SymbolAsset {
+  readonly src: string;
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * The pixel box comes from the manifest rather than from a constant here, so
+ * the `width`/`height` on the rendered `<img>` are the real ones and a
+ * paragraph of eight symbols does not reflow as they load. Two of the eight are
+ * 104px rather than 105px — upstream's own inconsistency, carried rather than
+ * rounded, for the same reason every other value on this site is.
+ */
+const ASSETS = new Map<SymbolKind, SymbolAsset>(
+  MANIFEST.symbols.map((entry) => [
+    KIND_BY_KEY[entry.key] as SymbolKind,
+    { src: `/symbols/${entry.file}`, width: entry.width, height: entry.height },
+  ]),
+);
+
+export function assetForSymbol(symbol: GameSymbol): SymbolAsset | null {
+  return ASSETS.get(symbol.kind) ?? null;
 }
 
 /**
