@@ -160,15 +160,49 @@ async function auditFile(
     if (script === "") {
       return [`::error file=${path}::\`first-party:\` origin does not name a script`];
     }
-    if (script.startsWith("/") || script.split("/").includes("..")) {
+    /*
+      RESOLVE FIRST, THEN ASSERT ON THE RESULT.
+
+      The previous guard tested the STRING — no leading slash, no `..` segment,
+      `.ts`/`.js` suffix — and then resolved it. Four spellings walked straight
+      through all three tests and landed outside the repository anyway:
+
+        first-party:file:///tmp/x.js       an absolute file URL; no slash, no ..
+        first-party:..\..\x.js             `file:` is a special scheme, so the URL
+                                           parser treats `\` as a separator while
+                                           `split("/")` never sees a `..` token
+        first-party:%2e%2e/%2e%2e/x.js     `%2e%2e` IS a double dot to the
+                                           normalizer, and is not one to `split`
+        first-party:https://example.com/…  passes every string test, then hands a
+                                           non-file URL to `Bun.file`, which
+                                           throws — the audit crashes instead of
+                                           reporting
+
+      Every one of those is the same mistake: checking a spelling and then
+      trusting a different function's interpretation of it. Resolving first and
+      asserting on the resolved URL cannot be spelled around, because the thing
+      asserted on is the thing that will be opened.
+
+      The string checks stay, in front, purely because "must be a
+      repository-relative path" is a better error than "resolves outside the
+      repository" for the case people actually hit.
+    */
+    if (script.startsWith("/") || script.split(/[/\\]/).includes("..")) {
       return [
         `::error file=${path}::first-party origin must be a repository-relative path, got ${script}`,
       ];
     }
-    if (!/\.(ts|js|mjs)$/.test(script)) {
+
+    const resolved = new URL(script, REPO_ROOT);
+    if (resolved.protocol !== "file:" || !resolved.href.startsWith(REPO_ROOT.href)) {
+      return [
+        `::error file=${path}::first-party origin resolves outside the repository: ${script}`,
+      ];
+    }
+    if (!/\.(ts|js|mjs)$/.test(resolved.pathname)) {
       return [`::error file=${path}::first-party origin must name a script, got ${script}`];
     }
-    if (!(await Bun.file(new URL(script, REPO_ROOT)).exists())) {
+    if (!(await Bun.file(resolved).exists())) {
       return [`::error file=${path}::first-party origin names ${script}, which does not exist`];
     }
     return [];

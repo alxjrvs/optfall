@@ -96,9 +96,73 @@ function splitTopLevel(selector: string): string[] {
  * Class count is specificity here — every selector in this component is
  * classes, and Svelte adds exactly one scoping class to each, so the hash
  * contributes equally to both sides of every comparison below.
+ *
+ * A FUNCTIONAL PSEUDO-CLASS CONTRIBUTES THE MAXIMUM OF ITS ARGUMENTS, NOT THE
+ * SUM. `:is(.a, .b)` is worth one class, not two — CSS takes the most specific
+ * branch, because only one of them can be the reason the selector matched. The
+ * naive count read `.plate:is(.a, .b).hash` as 4 when it is 3, which is
+ * over-counting exactly the selectors `splitTopLevel` was added to keep whole,
+ * and would report a silhouette as more specific than it is. `:where()` is the
+ * documented exception and contributes nothing at all.
  */
 function classCount(selector: string): number {
-  return (selector.match(/\.[A-Za-z_-][A-Za-z0-9_-]*/g) ?? []).length;
+  let total = 0;
+  let rest = "";
+
+  /*
+    OUTERMOST-FIRST, recursing into each argument list.
+
+    An innermost-first flattening looks equivalent and is not: it adds every
+    nested pseudo-class it finds, including ones sitting in a branch that does
+    not win. `.a:is(.b.c.d, .e:not(.f))` is 4 — `.a` plus the dearest branch,
+    `.b.c.d` — but flattening scores the inner `:not` (1), then reads the
+    remaining `:is(.b.c.d, .e)` as 3, and reports 5. Finding the matching close
+    paren and recursing keeps each branch's cost inside its own branch.
+  */
+  for (let index = 0; index < selector.length; index += 1) {
+    const functional = /^:(is|not|has|where|matches)\(/.exec(selector.slice(index));
+    if (functional === null) {
+      rest += selector[index];
+      continue;
+    }
+
+    const open = index + functional[0].length;
+    let depth = 1;
+    let close = open;
+    while (close < selector.length && depth > 0) {
+      if (selector[close] === "(") depth += 1;
+      if (selector[close] === ")") depth -= 1;
+      if (depth > 0) close += 1;
+    }
+
+    const args = selector.slice(open, close);
+    total +=
+      functional[1] === "where"
+        ? 0
+        : Math.max(...splitTopLevel(args).map((argument) => classCount(argument)), 0);
+    index = close;
+  }
+
+  return total + (rest.match(/\.[A-Za-z_-][A-Za-z0-9_-]*/g) ?? []).length;
+}
+
+/**
+ * The part of a selector OUTSIDE any functional pseudo-class.
+ *
+ * Bucketing on `selector.includes(".art")` over the whole string put
+ * `.symbol:not(.art, .plain)` — a rule that excludes `.art`, and therefore can
+ * never style the artwork — into the RESET bucket, which is the opposite of
+ * where it belongs. Fixing the count alone did not fix that: it moved the
+ * threshold and left the misclassification exactly where it was.
+ */
+function outsideFunctional(selector: string): string {
+  let rest = selector;
+  let previous = "";
+  while (rest !== previous) {
+    previous = rest;
+    rest = rest.replace(/:(is|not|has|where|matches)\([^()]*\)/g, "");
+  }
+  return rest;
 }
 
 describe("splitTopLevel", () => {
@@ -111,7 +175,9 @@ describe("splitTopLevel", () => {
        as two, passing an assertion it should fail. */
     const parts = splitTopLevel(".plate:is(.a, .b).h");
     expect(parts).toHaveLength(1);
-    expect(classCount(parts[0]!)).toBe(4);
+    /* THREE, not four: `.plate`, `.h`, and the most specific branch of the
+       `:is()` — CSS takes the maximum of the arguments, never the sum. */
+    expect(classCount(parts[0]!)).toBe(3);
   });
 
   test("keeps `:not()` with several arguments intact", () => {
@@ -119,6 +185,47 @@ describe("splitTopLevel", () => {
        dragging the threshold down onto a correct rule. */
     const parts = splitTopLevel(".symbol:not(.art, .plain).h");
     expect(parts).toHaveLength(1);
+  });
+});
+
+describe("classCount", () => {
+  test("counts plain compounds", () => {
+    expect(classCount(".symbol.art.h")).toBe(3);
+  });
+
+  test("takes the MAXIMUM of a functional pseudo-class, not the sum", () => {
+    /* Only one branch can be the reason the selector matched, so CSS charges
+       for the dearest one. Summing them is how a silhouette gets reported as
+       more specific than the reset it actually loses to. */
+    expect(classCount(".symbol:not(.art, .plain).h")).toBe(3);
+    expect(classCount(".a:is(.b.c, .d)")).toBe(3);
+  });
+
+  test("charges nothing for `:where()`", () => {
+    expect(classCount(".a:where(.b.c.d)")).toBe(1);
+  });
+
+  test("handles nesting", () => {
+    /* `.a` + the dearest `:is` branch, which is `.b:not(.c.d)` at 1 + 2. */
+    expect(classCount(".a:is(.b:not(.c.d), .e)")).toBe(4);
+  });
+
+  test("does not charge for a nested pseudo-class in a losing branch", () => {
+    /* `.b.c.d` (3) beats `.e:not(.f)` (2), so the `:not` costs nothing. An
+       innermost-first flattening scores it anyway and reports 5. */
+    expect(classCount(".a:is(.b.c.d, .e:not(.f))")).toBe(4);
+  });
+});
+
+describe("outsideFunctional", () => {
+  test("keeps a real `.art` compound", () => {
+    expect(outsideFunctional(".symbol.art.h")).toContain(".art");
+  });
+
+  test("drops an `.art` that appears only as a negated argument", () => {
+    /* `.symbol:not(.art)` can never style the artwork — it excludes it — so it
+       belongs in the PLATES bucket, not the reset one. */
+    expect(outsideFunctional(".symbol:not(.art, .plain).h")).not.toContain(".art");
   });
 });
 
@@ -154,8 +261,8 @@ describe("GameSymbol with ingested artwork", () => {
 
   test("the artwork reset outranks every silhouette that would clip it", () => {
     const clippers = rulesSetting("clip-path");
-    const reset = clippers.filter((selector) => selector.includes(".art"));
-    const silhouettes = clippers.filter((selector) => !selector.includes(".art"));
+    const reset = clippers.filter((s) => outsideFunctional(s).includes(".art"));
+    const silhouettes = clippers.filter((s) => !outsideFunctional(s).includes(".art"));
 
     expect(reset.length).toBeGreaterThan(0);
     expect(silhouettes.length).toBeGreaterThan(0);
@@ -195,8 +302,8 @@ describe("GameSymbol with ingested artwork", () => {
       than incidental.
     */
     const painters = rulesSetting("background");
-    const reset = painters.filter((selector) => selector.includes(".art"));
-    const plates = painters.filter((selector) => !selector.includes(".art"));
+    const reset = painters.filter((s) => outsideFunctional(s).includes(".art"));
+    const plates = painters.filter((s) => !outsideFunctional(s).includes(".art"));
 
     expect(reset.length).toBeGreaterThan(0);
     expect(plates.length).toBeGreaterThan(0);
