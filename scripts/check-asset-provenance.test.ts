@@ -109,10 +109,25 @@ describe("auditDir", () => {
   });
 
   test("rejects a first-party origin that escapes the repository", async () => {
-    /* `/etc/hosts` and `../../elsewhere` both resolved happily while the check
-       only asked whether the path existed, which is not what "names a script in
-       this repository" means. */
-    const escapes = ["/etc/hosts", "../../../../etc/hosts"];
+    /*
+      EVERY SPELLING THAT WALKED THROUGH THE STRING-ONLY GUARD. The first four
+      passed "no leading slash, no `..` segment, `.js` suffix" and still landed
+      outside the repository; the last one passed all three and then handed a
+      non-file URL to `Bun.file`, crashing the audit rather than reporting it.
+
+      They are listed individually rather than collapsed, because each is a
+      different mechanism — an absolute file URL, a backslash separator that the
+      URL parser honours and `split("/")` does not, percent-encoded dots that
+      only become `..` during normalization, and a wrong scheme entirely.
+    */
+    const escapes = [
+      "/etc/hosts",
+      "../../../../etc/hosts",
+      "file:///tmp/elsewhere.js",
+      "..\\..\\elsewhere.js",
+      "%2e%2e/%2e%2e/elsewhere.js",
+      "https://example.test/elsewhere.js",
+    ];
     const results = await Promise.all(
       escapes.map(async (escape) => {
         const { dir, manifest } = await fixture({ key: "assets", url: `first-party:${escape}` });
@@ -122,7 +137,12 @@ describe("auditDir", () => {
     );
 
     for (const { escape, problems } of results) {
-      expect(problems.join("\n"), escape).toContain("repository-relative");
+      /* Either message is correct — the string guard catches the obvious
+         spellings with a friendlier error, the resolved-URL guard catches the
+         rest. What must never happen is an empty problem list, or a throw. */
+      expect(problems.join("\n"), escape).toMatch(
+        /repository-relative|resolves outside the repository/,
+      );
     }
   });
 
