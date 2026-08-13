@@ -89,8 +89,27 @@
 
 <style>
   .jewel {
-    /* The reserved silhouette: a regular octagon, cut rather than rounded. */
-    --cut: 30%;
+    /*
+      THE RESERVED SILHOUETTE: the pitch diamond. Vertex up, vertex down,
+      widest across the middle, with all four corners cut — eight sides, and a
+      stone rather than a button.
+
+      IT USED TO BE EDGE-UP, a chamfered square with `--cut: 30%`, and that was
+      drift rather than a decision: `scripts/build-design-system.ts` drew the
+      diamond, this drew the square, and `docs/DESIGN.md` said only "an
+      eight-sided cut stone" — true of both, so nothing ever failed while the
+      published design-system cards advertised a shape the product did not
+      render. Orientation is the whole of the difference and it is what makes
+      the shape read as a gem at a glance, before the numeral is legible.
+
+      The value is duplicated from `JEWEL_SILHOUETTE` in `../index` because a
+      Svelte `<style>` block cannot interpolate a module constant, and putting
+      it on an inline `style` attribute would ship the polygon on every jewel on
+      every card page instead of once in a cached stylesheet. `index.test.ts`
+      asserts the two strings still match, so the duplication is checked rather
+      than trusted — change one and the suite fails naming the other.
+    */
+    --cut: 15%;
 
     position: relative;
     display: inline-flex;
@@ -100,14 +119,14 @@
     inline-size: var(--of-ornament-jewel-base);
     block-size: var(--of-ornament-jewel-base);
     clip-path: polygon(
-      var(--cut) 0%,
-      calc(100% - var(--cut)) 0%,
-      100% var(--cut),
-      100% calc(100% - var(--cut)),
-      calc(100% - var(--cut)) 100%,
-      var(--cut) 100%,
-      0% calc(100% - var(--cut)),
-      0% var(--cut)
+      50% 0%,
+      calc(100% - var(--cut)) var(--cut),
+      100% 50%,
+      calc(100% - var(--cut)) calc(100% - var(--cut)),
+      50% 100%,
+      var(--cut) calc(100% - var(--cut)),
+      0% 50%,
+      var(--cut) var(--cut)
     );
     background: var(--stone);
     color: var(--ink);

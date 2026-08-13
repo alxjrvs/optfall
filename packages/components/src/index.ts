@@ -324,7 +324,39 @@ export interface MarkProps {
 }
 
 /**
+ * THE RESERVED SILHOUETTE, as a `clip-path` polygon — the pitch diamond.
+ *
+ * A vertex-up diamond with its four corners cut: eight sides, point at the top,
+ * point at the bottom, widest across the middle. `docs/DESIGN.md` calls this
+ * shape reserved — nothing else in the interface is ever it — which is what
+ * lets pitch and the blood accent share a hue without ever being confused.
+ *
+ * IT IS WRITTEN DOWN HERE BECAUSE IT WAS WRITTEN DOWN TWICE AND THE TWO
+ * DISAGREED. `PitchJewel.svelte` drew an edge-up octagon — a chamfered square,
+ * flat on top — while `scripts/build-design-system.ts` drew this diamond, and
+ * the published design-system cards therefore advertised a shape the product
+ * did not render. Both are "an eight-sided cut stone", which is all
+ * `docs/DESIGN.md` said, and that is exactly how two drawings of one reserved
+ * silhouette drifted apart without anything failing.
+ *
+ * Orientation is the whole of the difference and it is not a detail: an
+ * edge-up octagon reads as a *button*, a vertex-up one reads as a *gem*. The
+ * diamond is the shape, and `packages/components/src/index.test.ts` now asserts
+ * that the component's own `clip-path` still matches this string.
+ */
+export const JEWEL_SILHOUETTE =
+  "polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%)";
+
+/**
  * The mark's geometry, in `viewBox` units — the one place it is written down.
+ *
+ * THE MARK IS `JEWEL_SILHOUETTE`, CLEAVED. Same diamond, parted just above its
+ * girdle: a shallow crown above the break and a deeper pavilion below it, as a
+ * cut stone has. It cannot literally share the constant above — that one is a
+ * `clip-path` in percentages of a box, this one is two SVG polygons in viewBox
+ * units, and a cleave is precisely the thing a single clipped box cannot
+ * express — so what holds them together is that both are the diamond, stated
+ * here, together, where a change to one is visibly a change beside the other.
  *
  * IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND MUST NOT HAVE TWO DEFINITIONS.
  * `Mark.svelte` draws it on the page; `apps/site/src/pages/favicon.svg.ts`
@@ -345,9 +377,12 @@ export interface MarkProps {
  */
 export interface MarkGeometry {
   readonly viewBox: string;
-  /** The shallow upper third of the cut, holding the top of the frame. */
+  /** The diamond above the break: apex, two cut corners, and the parted edge. */
   readonly crown: string;
-  /** Deeper than the crown, as a cut stone's is, and fallen clear of it. */
+  /**
+   * The diamond below the break — girdle, two cut corners and the bottom apex.
+   * Deeper than the crown, as a cut stone's is, and fallen clear of it.
+   */
   readonly pavilion: string;
   /** The freshly exposed cleavage plane along the pavilion's cut face. */
   readonly cleave: {
@@ -359,11 +394,29 @@ export interface MarkGeometry {
   };
 }
 
+/**
+ * The diamond, cleaved. Read it as a stone rather than as numbers:
+ *
+ * - The **crown** runs apex `14,1` → cut corners at `y 5` → the parted edge,
+ *   which is off level (`1.5,10` to `27.5,11.5`). A crystal parts along its own
+ *   lattice, not along a saw line, and that tilt is most of what stops the mark
+ *   reading as a lid on a box.
+ * - The **pavilion** keeps the girdle — `1,17.5` and `31,17.5`, the diamond's
+ *   widest points — and tapers through its cut corners to the bottom apex at
+ *   `16,31`. It is the half that still looks like the jewel, which is why it is
+ *   the half that carries `currentColor`.
+ * - Between them, 3.5 units of ground. That is the whole idea and the last
+ *   thing to disappear: at a 16px favicon it is still 1.75 device pixels.
+ *
+ * The two halves are also ~1.5 units out of register, so they no longer line up
+ * along the edge they parted on. Combined they span `1..31` of the 32 box,
+ * leaving the margin the bevel's drop-shadow needs.
+ */
 export const MARK_GEOMETRY: MarkGeometry = {
   viewBox: "0 0 32 32",
-  crown: "9,1 20,1 28,9 28,12 1,10 1,9",
-  pavilion: "3,13 30,15 30,22 22,30 11,30 3,22",
-  cleave: { x1: 3, y1: 13, x2: 30, y2: 15, width: 1.5 },
+  crown: "14,1 24.5,5 27.5,11.5 1.5,10 3.5,5",
+  pavilion: "2.5,13.5 1,17.5 5.5,27.5 16,31 26.5,27.5 31,17.5 30,15",
+  cleave: { x1: 2.5, y1: 13.5, x2: 30, y2: 15, width: 1.5 },
 };
 
 /* -------------------------------------------------------------------------- */
