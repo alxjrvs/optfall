@@ -23,8 +23,12 @@
    * mechanic cannot be confused with a trademark. Nothing here is heraldic,
    * bladed or lettered, and nothing here may drift that way later.
    *
-   * IT IS DRAWN AS AN SVG BECAUSE IT HAS TO SURVIVE A FAVICON. Two solids and a
-   * hairline, in that order of importance:
+   * IT IS DRAWN AS AN SVG BECAUSE IT HAS TO SURVIVE A FAVICON — and it now
+   * actually is one. `apps/site/src/pages/favicon.svg.ts` emits the tab icon at
+   * build time from `MARK_GEOMETRY`, the same constant this file draws from, so
+   * the claim below is enforced by there being one set of numbers rather than
+   * asserted by two files agreeing. Two solids and a hairline, in that order of
+   * importance:
    *
    * 1. The **gap** between crown and pavilion is the whole idea, and it is the
    *    last thing to disappear. At a 16px favicon it is still 1.5 device pixels
@@ -62,6 +66,8 @@
    * "presentational" out loud. Name it or hide it — never accidentally both.
    */
 
+  import { MARK_GEOMETRY } from "../index";
+
   interface Props {
     /** Rendered size, in token steps rather than pixels. */
     size?: "sm" | "md" | "lg";
@@ -96,7 +102,7 @@
 
 <svg
   class="mark {size}"
-  viewBox="0 0 32 32"
+  viewBox={MARK_GEOMETRY.viewBox}
   role={decorative ? undefined : "img"}
   aria-hidden={decorative ? "true" : undefined}
   aria-labelledby={decorative ? undefined : titleId}
@@ -110,17 +116,24 @@
        frame. Its lower edge is the cleavage plane, and it is off level — a
        crystal parts along its own lattice, not along a saw line, and that tilt
        is most of what keeps the mark from reading as a lid on a box. -->
-  <polygon class="crown" points="9,1 20,1 28,9 28,12 1,10 1,9" />
+  <polygon class="crown" points={MARK_GEOMETRY.crown} />
 
   <!-- The pavilion: deeper than the crown, as a cut stone's is, and fallen —
        three units clear of the plane and two out of register with it, so the
        two halves no longer line up along the edge they parted on. -->
-  <polygon class="pavilion" points="3,13 30,15 30,22 22,30 11,30 3,22" />
+  <polygon class="pavilion" points={MARK_GEOMETRY.pavilion} />
 
   <!-- The cleavage plane, freshly exposed along the pavilion's cut face.
-       Geometry lives here in viewBox units; only colour comes from the style
-       block. -->
-  <line class="cleave" x1="3" y1="13" x2="30" y2="15" stroke-width="1.5" />
+       Geometry comes from `MARK_GEOMETRY` so the favicon draws the same stone;
+       only colour comes from the style block. -->
+  <line
+    class="cleave"
+    x1={MARK_GEOMETRY.cleave.x1}
+    y1={MARK_GEOMETRY.cleave.y1}
+    x2={MARK_GEOMETRY.cleave.x2}
+    y2={MARK_GEOMETRY.cleave.y2}
+    stroke-width={MARK_GEOMETRY.cleave.width}
+  />
 </svg>
 
 <style>
