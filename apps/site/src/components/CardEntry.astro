@@ -951,12 +951,13 @@ const pitchTargets = JSON.stringify(
         <h2 class="apparatus-heading" id="legality">Legality</h2>
 
         {/*
-          The scope of the claim, stated before the claim. Inline elements stay
-          on the same source line as the text around them: the build drops the
-          whitespace at a line break falling immediately before an inline tag,
-          welding words together in the output.
+          THE SCOPE SENTENCE IS GONE — "present day only, confirmed <date>. A
+          `since` date is when the current state began, not a history." It was
+          true, careful, and read by nobody: a paragraph of qualification above
+          six one-line verdicts. The date it carried is in Source, which is
+          where a fact about the corpus belongs, and the `since` dates in the
+          grid still say what they are.
         */}
-
         <ul class="formats">
           {
             page.verdicts.map((verdict) => (
@@ -1686,10 +1687,8 @@ const pitchTargets = JSON.stringify(
   /* -- The source fold ------------------------------------------------------
      The heading IS the summary, so the disclosure carries no second label and
      the marker sits against the same uppercase micro type every other section
-     head uses. `display: inline-flex` on the summary keeps the platform
-     triangle beside the heading rather than above it, which is what a block
-     `<h2>` inside a `<summary>` would otherwise do. */
-  /*
+     head uses.
+
     `display` IS LEFT ALONE, and that is the whole rule. A `<summary>` is
     `display: list-item`, and its disclosure triangle is the `::marker` of that
     list item — set `inline-flex` (as this did) and Chrome drops the marker
