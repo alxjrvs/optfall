@@ -324,39 +324,23 @@ export interface MarkProps {
 }
 
 /**
- * THE RESERVED SILHOUETTE, as a `clip-path` polygon — the pitch diamond.
- *
- * A vertex-up diamond with its four corners cut: eight sides, point at the top,
- * point at the bottom, widest across the middle. `docs/DESIGN.md` calls this
- * shape reserved — nothing else in the interface is ever it — which is what
- * lets pitch and the blood accent share a hue without ever being confused.
- *
- * IT IS WRITTEN DOWN HERE BECAUSE IT WAS WRITTEN DOWN TWICE AND THE TWO
- * DISAGREED. `PitchJewel.svelte` drew an edge-up octagon — a chamfered square,
- * flat on top — while `scripts/build-design-system.ts` drew this diamond, and
- * the published design-system cards therefore advertised a shape the product
- * did not render. Both are "an eight-sided cut stone", which is all
- * `docs/DESIGN.md` said, and that is exactly how two drawings of one reserved
- * silhouette drifted apart without anything failing.
- *
- * Orientation is the whole of the difference and it is not a detail: an
- * edge-up octagon reads as a *button*, a vertex-up one reads as a *gem*. The
- * diamond is the shape, and `packages/components/src/index.test.ts` now asserts
- * that the component's own `clip-path` still matches this string.
- */
-export const JEWEL_SILHOUETTE =
-  "polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%)";
-
-/**
  * The mark's geometry, in `viewBox` units — the one place it is written down.
  *
- * THE MARK IS `JEWEL_SILHOUETTE`, CLEAVED. Same diamond, parted just above its
- * girdle: a shallow crown above the break and a deeper pavilion below it, as a
- * cut stone has. It cannot literally share the constant above — that one is a
- * `clip-path` in percentages of a box, this one is two SVG polygons in viewBox
- * units, and a cleave is precisely the thing a single clipped box cannot
- * express — so what holds them together is that both are the diamond, stated
- * here, together, where a change to one is visibly a change beside the other.
+ * THE MARK IS THE PITCH DIAMOND, CLEAVED. The silhouette itself is
+ * `ornament.cut.jewel` in `optfall-theme`, which `PitchJewel.svelte` clips
+ * itself with and the design-system cards draw — vertex up, vertex down, widest
+ * across the middle, all four corners cut. This is that same diamond parted
+ * just above its girdle: a shallow crown above the break and a deeper pavilion
+ * below it, as a cut stone has.
+ *
+ * IT CANNOT SHARE THE TOKEN, and the reason is a real one rather than an
+ * excuse. That token is a `clip-path` in percentages of a box; this is two SVG
+ * polygons in viewBox units — and a cleave is precisely what a single clipped
+ * box cannot express, since the whole point is two pieces with ground between
+ * them. So the relationship is documented rather than mechanical, and
+ * `index.test.ts` asserts the properties that make it true: the crown carries
+ * the top apex, the pavilion keeps the girdle and the bottom apex, and the gap
+ * between them survives a favicon.
  *
  * IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND MUST NOT HAVE TWO DEFINITIONS.
  * `Mark.svelte` draws it on the page; `apps/site/src/pages/favicon.svg.ts`

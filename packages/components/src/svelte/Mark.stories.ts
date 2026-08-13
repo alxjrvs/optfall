@@ -109,8 +109,9 @@ export const Large: Story = { args: { size: "lg" } };
  * THE STORY THIS COMPONENT EXISTS TO PASS. Sixteen device pixels, the size a
  * browser draws a tab icon, and the arithmetic is tight enough to check by eye:
  *
- * - The gap between the crown's lower edge (`1,10 → 28,12`) and the pavilion's
- *   upper edge (`3,13 → 30,15`) is about 3 of 32 units — **1.5px of ground**.
+ * - The gap between the crown's parted edge (`1.5,10 → 27.5,11.5`) and the
+ *   pavilion's cut face (`2.5,13.5 → 30,15`) is about 3.4 of 32 units —
+ *   **1.7px of ground**, and never below 3 units anywhere along the cut.
  * - `--of-bevel-width` is a flat `1px` and does not scale, so the crown's dark
  *   drop-shadow is cast 1px *down* into that gap and the pavilion's light one
  *   1px *up* into it. Two fixed pixels of bevel arriving in 1.5px of ground is
@@ -121,9 +122,14 @@ export const Large: Story = { args: { size: "lg" } };
  *   claim holds in exactly one of the two modes the product ships.
  *
  * What "survives" means, precisely: ground still visible across the full width
- * of the cut, and the two halves still two units out of register at their left
- * and right edges. If it reads as a slotted octagon rather than a cleaved one,
- * `docs/DESIGN.md` is wrong and the geometry has to move — not the story.
+ * of the cut, and the two halves still about 1.5 units out of register at their
+ * left and right edges. If it reads as a slotted diamond rather than a cleaved
+ * one, `docs/DESIGN.md` is wrong and the geometry has to move — not the story.
+ *
+ * The shape to judge it against is a DIAMOND: the crown is a narrow cap with
+ * the top apex on it, the pavilion keeps the girdle — the widest points, at
+ * `y 17.5` — and tapers to the bottom apex. If the fallen half no longer reads
+ * as the lower half of a gem, the cleave is in the wrong place.
  */
 export const AtFaviconSize: Story = {
   args: { size: "sm" },

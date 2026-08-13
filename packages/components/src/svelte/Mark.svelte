@@ -39,9 +39,14 @@
    * importance:
    *
    * 1. The **gap** between crown and pavilion is the whole idea, and it is the
-   *    last thing to disappear. At a 16px favicon it is still 1.5 device pixels
-   *    of ground, and the two pieces are two units out of register besides — so
-   *    the mark reads as *cleaved* rather than as a slotted octagon even when
+   *    last thing to disappear. The measurements are NOT restated here — they
+   *    live beside the coordinates in `MARK_GEOMETRY`, because this paragraph
+   *    carried its own copy of them and went on quoting the pre-diamond figures
+   *    after the geometry moved. The same fact written down twice is the exact
+   *    failure the shared constant exists to prevent, and a doc comment is not
+   *    exempt from it. What holds regardless of the numbers: the gap is wide
+   *    enough to survive a 16px favicon, the two halves are out of register, and
+   *    so the mark reads as *cleaved* rather than as a slotted diamond even when
    *    the cut is a single pixel wide.
    * 2. The two solids carry it at every size above that.
    * 3. The hairline along the pavilion's cut face — the exposed cleavage plane —

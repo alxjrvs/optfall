@@ -24,7 +24,20 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { JEWEL_SILHOUETTE } from "../packages/components/src/index";
+/**
+ * The jewel below names `--of-ornament-cut-jewel` rather than redrawing the
+ * silhouette, and that is the fix for how this file went wrong before: its
+ * hand-drawn polygon was the ONLY place the pitch diamond existed, while the
+ * shipped `PitchJewel.svelte` clipped an edge-up chamfered square. These cards
+ * published a shape the product did not render — the "hand-authored markup does
+ * not propagate" weakness at the top of this file, realised. A named token
+ * cannot drift from the component that names the same one.
+ *
+ * NOTE FOR ANYONE EDITING THE CSS BELOW: `SHELL` is a template literal, so a
+ * CSS comment written inside it is emitted verbatim into all 13 published
+ * cards, and a backtick inside it terminates the string. Notes to future
+ * editors — this one included — belong out here in JavaScript, not in there.
+ */
 import {
   DARK_TOKENS,
   LIGHT_TOKENS,
@@ -100,13 +113,8 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 .jewel {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
   inline-size: var(--jewel-size); block-size: var(--jewel-size);
-  /* The reserved silhouette, read from the component library rather than
-     redrawn here. This card's hand-drawn copy was the ONLY place the diamond
-     existed: the shipped PitchJewel drew an edge-up chamfered square, so these
-     published cards advertised a shape the product did not render. Reading the
-     constant is what stops that being possible a second time.
-     (No backticks in this comment - it lives inside a template literal.) */
-  clip-path: ${JEWEL_SILHOUETTE};
+  /* The reserved silhouette, named rather than redrawn. */
+  clip-path: var(--of-ornament-cut-jewel);
   font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-bold);
   --jewel-size: var(--of-ornament-jewel-base);
 }

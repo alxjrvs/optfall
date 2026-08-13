@@ -2,9 +2,10 @@ import { describe, expect, test } from "bun:test";
 
 import { readFileSync } from "node:fs";
 
+import { DARK_TOKENS, LIGHT_TOKENS } from "optfall-theme";
+
 import {
   CARD_IMAGE_COPYRIGHT,
-  JEWEL_SILHOUETTE,
   MARK_GEOMETRY,
   PRIMITIVES,
   VOICE_BY_ROLE,
@@ -87,6 +88,11 @@ describe("the primitive set", () => {
  * stylesheet — so the component keeps its own copy, and this asserts the copies
  * agree. Change one and the suite fails naming the other.
  */
+/** The y of the line through `a`,`b` at `x`. */
+function yOn(x: number, a: { x: number; y: number }, b: { x: number; y: number }): number {
+  return a.y + ((x - a.x) * (b.y - a.y)) / (b.x - a.x);
+}
+
 /** An SVG `points` list, as coordinates. */
 function points(list: string): { x: number; y: number }[] {
   return list.split(" ").map((pair) => {
@@ -96,46 +102,34 @@ function points(list: string): { x: number; y: number }[] {
 }
 
 describe("the reserved silhouette", () => {
-  /*
-   * COMMENTS ARE STRIPPED FIRST, and that is not fastidiousness — the first
-   * draft of this test failed against a correct component because the prose
-   * above the declaration quotes the OLD value (`--cut: 30%`) while explaining
-   * why it changed. A scanner that reads a file's commentary as if it were its
-   * code will keep finding whichever value the prose happens to mention.
-   */
   const jewelSource = readFileSync(
     new URL("./svelte/PitchJewel.svelte", import.meta.url),
     "utf8",
-  ).replaceAll(/\/\*[\s\S]*?\*\//g, "");
+  );
 
-  /** The component's `clip-path`, flattened to one line and `--cut` resolved. */
-  const componentClip = (): string => {
-    const match = /clip-path:\s*(polygon\([^;]*\));/.exec(jewelSource);
-    if (match?.[1] === undefined) throw new Error("no clip-path in PitchJewel.svelte");
-    const cut = /--cut:\s*([\d.]+%)/.exec(jewelSource)?.[1];
-    if (cut === undefined) throw new Error("no --cut in PitchJewel.svelte");
-    return match[1]
-      .replaceAll("var(--cut)", cut)
-      // `calc(100% - 15%)` is the component's spelling of the constant's `85%`.
-      .replaceAll(/calc\(\s*100%\s*-\s*([\d.]+)%\s*\)/g, (_, n: string) => `${100 - Number(n)}%`)
-      .replaceAll(/\s+/g, " ")
-      .replaceAll("( ", "(")
-      .replaceAll(" )", ")");
-  };
+  const silhouette = DARK_TOKENS["ornament.cut.jewel"] ?? "";
 
-  test("the jewel renders the diamond the constant declares", () => {
-    expect(componentClip()).toBe(JEWEL_SILHOUETTE);
+  test("the jewel clips itself with the token, not a drawing of its own", () => {
+    expect(jewelSource).toContain("clip-path: var(--of-ornament-cut-jewel);");
+    // The literal it replaced must not come back. `check-tokens.ts` cannot
+    // catch that one: a raw `polygon()` of percentages contains no colour and
+    // no absolute length, so it passes the literal scan and would sit there
+    // quietly disagreeing with the token again.
+    expect(jewelSource).not.toContain("clip-path: polygon(");
   });
 
   test("is vertex-up, which is the half of it that drifted", () => {
     // An edge-up octagon starts its polygon at a cut corner on the top edge; a
-    // vertex-up one starts at the apex. This is the assertion that would have
-    // caught the drift, so it is worth making separately from the equality
-    // above — that one pins a string, this one pins the shape's orientation.
-    expect(JEWEL_SILHOUETTE.startsWith("polygon(50% 0%")).toBe(true);
-    expect(JEWEL_SILHOUETTE).toContain("100% 50%");
-    expect(JEWEL_SILHOUETTE).toContain("50% 100%");
-    expect(JEWEL_SILHOUETTE).toContain("0% 50%");
+    // vertex-up one starts at the apex and carries the four compass points.
+    // Orientation is exactly what a token's NAME cannot say, so it is said here.
+    expect(silhouette.startsWith("polygon(50% 0%")).toBe(true);
+    expect(silhouette).toContain("100% 50%");
+    expect(silhouette).toContain("50% 100%");
+    expect(silhouette).toContain("0% 50%");
+  });
+
+  test("is structure rather than palette, so both themes state it identically", () => {
+    expect(LIGHT_TOKENS["ornament.cut.jewel"]).toBe(silhouette);
   });
 
   test("the mark is that diamond, cleaved rather than a second shape", () => {
@@ -157,12 +151,38 @@ describe("the reserved silhouette", () => {
     const crownWidest = Math.max(...crown.map((p) => p.x)) - Math.min(...crown.map((p) => p.x));
     expect(widest).toBeGreaterThan(crownWidest);
 
-    // The gap is the whole idea and the last thing to disappear: it must stay
-    // wide enough to survive a 16px favicon, where one viewBox unit is half a
-    // device pixel.
-    const crownLowest = Math.max(...crown.map((p) => p.y));
-    const pavilionHighest = Math.min(...pavilion.map((p) => p.y));
-    expect(pavilionHighest - crownLowest).toBeGreaterThanOrEqual(2);
+    /*
+     * THE GAP IS MEASURED BETWEEN THE PARTED EDGES, NOT BETWEEN BOUNDING BOXES.
+     *
+     * The first version of this compared the crown's lowest point to the
+     * pavilion's highest and asserted `>= 2`, which passed with exactly zero
+     * margin and measured the wrong thing twice over: both edges are tilted, so
+     * box extremes understate the real clearance, and steepening the tilt would
+     * have failed the test without narrowing the cut by a single unit. It also
+     * bounded the gap at 1 device pixel on a 16px favicon while every doc around
+     * it treats 1.5px as the requirement.
+     *
+     * So: walk the cut, sample the vertical distance between the two edges, and
+     * take the worst. One viewBox unit is half a device pixel at 16px, so 3
+     * units is the 1.5px the mark is designed around.
+     */
+    const parted = crown.toSorted((a, b) => b.y - a.y).slice(0, 2).toSorted((a, b) => a.x - b.x);
+    const [pl, pr] = parted;
+    const face = MARK_GEOMETRY.cleave;
+    if (pl === undefined || pr === undefined) throw new Error("no parted edge on the crown");
+
+    const from = Math.max(pl.x, face.x1);
+    const to = Math.min(pr.x, face.x2);
+    let narrowest = Infinity;
+    for (let step = 0; step <= 20; step += 1) {
+      const x = from + ((to - from) * step) / 20;
+      narrowest = Math.min(
+        narrowest,
+        yOn(x, { x: face.x1, y: face.y1 }, { x: face.x2, y: face.y2 }) - yOn(x, pl, pr),
+      );
+    }
+
+    expect(narrowest).toBeGreaterThanOrEqual(3);
   });
 });
 
