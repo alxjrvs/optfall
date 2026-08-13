@@ -118,9 +118,14 @@ const tokens = themeStylesheet();
     Document-level rules only. Anything that is a *component* belongs in
     optfall-components, not here — see the note at the top of this file.
   */
-  :root {
-    color-scheme: dark light;
-  }
+  /*
+    `color-scheme` used to be declared here by hand, as `dark light`. It now
+    arrives with the tokens: `themeStylesheet()` emits it on the same three
+    selectors that carry the palette, so the chrome the browser draws cannot
+    disagree with the ground we draw. `dark light` defers to the OPERATING
+    SYSTEM, which was wrong the moment a page was pinned to a theme the OS did
+    not share — dark ground, light scrollbar.
+  */
 
   /*
     A STICKY FOOTER, so the compliance notice sits at the foot of the SCREEN

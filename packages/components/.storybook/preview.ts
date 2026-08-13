@@ -25,16 +25,20 @@ import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
  * takes the ink of the wordmark it is set beside, which on this canvas meant it
  * inherited *Storybook's* text colour and stopped following the toolbar.
  *
- * Three declarations, matching the product's own in `BaseLayout.astro`.
- * `color-scheme` is there for the same reason as the other two and not as
- * housekeeping: it governs the chrome the browser draws rather than the chrome
- * we draw — scrollbars, form widgets, the canvas behind an overscroll — and
- * painting a dark ground without it is what leaves a light scrollbar down the
- * side of a near-black workbench. Ground, ink and scheme are one fact stated in
- * the three places CSS makes you state it.
+ * Two declarations, matching the product's own in `BaseLayout.astro`.
+ *
+ * `color-scheme` is deliberately NOT among them, and its absence here is the
+ * fix rather than an omission. It briefly was: a dark ground without it leaves
+ * the browser's own chrome light — a pale scrollbar down the side of a
+ * near-black workbench. But spelled by hand it can only be `dark light`, which
+ * defers to the OPERATING SYSTEM, while this canvas is switched by the theme
+ * toolbar; on a light machine at the default dark theme it changed nothing. It
+ * now ships inside `themeStylesheet()`, keyed to the same selectors as the
+ * palette, so the workbench, the site and the a11y harness get a scheme that
+ * matches their ground without any of them restating it.
  *
  * Deliberately still not the layout's typography or padding: those belong to a
- * page, and a story that wants them should ask, whereas these three are what
+ * page, and a story that wants them should ask, whereas ground and ink are what
  * "rendered in both themes" means.
  */
 function installTheme(): void {
@@ -44,10 +48,6 @@ function installTheme(): void {
   style.id = id;
   style.textContent = [
     themeStylesheet(),
-    "",
-    ":root {",
-    "  color-scheme: dark light;",
-    "}",
     "",
     "body {",
     "  background: var(--of-color-ground);",
