@@ -47,7 +47,10 @@
    * The pavilion is `currentColor` rather than a fill of its own, which is what
    * lets the forced-colours fallback at the bottom of the style block collapse
    * the whole mark onto system ink and still leave it legible: the gap survives
-   * with no colour at all, and colour never carried the meaning here.
+   * with no colour at all, and colour never carried the meaning here. It is
+   * also what lets the mark take the ink of the wordmark it is set beside
+   * rather than asserting its own — see the note on `color` below, which is
+   * the half of that arrangement that was wrong at first.
    *
    * The displacement is deliberately physical rather than logical. A mark is
    * not mirrored in RTL — the cleave falls the same way in every writing
@@ -141,7 +144,19 @@
     display: inline-block;
     inline-size: var(--of-ornament-jewel-base);
     block-size: var(--of-ornament-jewel-base);
-    color: var(--of-color-ink);
+
+    /* THE PAVILION TAKES THE INK OF WHATEVER THE MARK IS LOCKED UP WITH.
+       This was `var(--of-color-ink)`, which reads as a harmless default and is
+       not one: an element's own `color` beats an inherited one, so the mark
+       ignored its surroundings. In the header bar — where the wordmark is
+       deliberately quiet, at `--of-color-ink-muted` — that put a full-ink stone
+       beside a muted word and left the mark unchanged on hover, so the lockup
+       lit up in halves. Inheriting is what makes it one object.
+
+       Nothing is lost by dropping the token: `body` sets `--of-color-ink` in
+       the layout, so a mark standing on its own still resolves to exactly the
+       value this line used to name. */
+    color: inherit;
 
     /* Struck, not printed: a light top edge and a dark bottom one, carried on
        the alpha silhouette so the bevel needs no extra geometry and cannot be

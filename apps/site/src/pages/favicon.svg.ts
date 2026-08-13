@@ -100,16 +100,22 @@ export const GET: APIRoute = () => {
 </svg>
 `;
 
-  return new Response(svg, {
-    headers: {
-      "Content-Type": "image/svg+xml",
-      /*
-       * Not `immutable`. The address is fixed and the bytes are not — a palette
-       * change reissues this file at the same URL, and a year-long immutable
-       * cache would leave the old mark in the tab of everyone who had ever
-       * visited, with no way to reach them.
-       */
-      "Cache-Control": "public, max-age=86400",
-    },
-  });
+  /*
+   * THIS FILE DOES NOT SET THE CACHING POLICY, AND CANNOT.
+   *
+   * `astro.config.mjs` is `output: "static"`, so this endpoint runs once at
+   * build time and is written to `dist/favicon.svg`. Everything on the
+   * `Response` except the body is discarded there — a `Cache-Control` reasoned
+   * about here would never be emitted, and the host's default would quietly
+   * govern instead. The header is stated rather than left off because it is
+   * what the dev server answers with when the route is hit on demand, and a
+   * `Response` carrying a body of one type and no `Content-Type` is wrong on
+   * its own terms; it is simply not the mechanism in production.
+   *
+   * Netlify serves the built file with revalidation and an `ETag`, which is
+   * the correct policy for an asset at a fixed address whose bytes change with
+   * the palette. If it ever needs to be something else, it belongs in
+   * `netlify.toml` beside the other header rules, not here.
+   */
+  return new Response(svg, { headers: { "Content-Type": "image/svg+xml" } });
 };

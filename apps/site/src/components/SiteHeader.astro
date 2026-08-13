@@ -109,9 +109,12 @@ const LINKS: readonly { href: string; label: string; key?: Props["section"] }[] 
     flex: 0 0 auto;
   }
 
-  /* The mark's pavilion is `currentColor`, so it takes the muted ink of the
-     resting bar and the full ink on hover along with the word — one object
-     lighting up rather than a logo beside a link that changed. */
+  /* The pavilion is `currentColor` and `.mark` inherits its `color`, so the
+     stone takes the muted ink of the resting bar and the full ink on hover
+     along with the word — one object lighting up rather than a logo beside a
+     link that changed. That inheritance is load-bearing for this rule: give
+     `.mark` a `color` of its own again and the lockup goes back to lighting up
+     in halves, with the stone bright against a muted word at rest. */
   .wordmark:hover {
     color: var(--of-color-ink);
   }
