@@ -370,6 +370,28 @@ const versions = [
 
 const showVersions = versions.length > 1;
 
+/**
+ * `?pitch=N`, as an ALIAS that navigates rather than a switch that renders.
+ *
+ * The asymmetry with `?printing=` is not an inconsistency, it is the difference
+ * between the two things. Printings of one card differ ONLY by image, so one
+ * document with a selection is exactly right. Pitch versions are different
+ * cards — different printed text, different stats, different legality — and
+ * each already has its own statically-rendered page at `/card/<name>-<pitch>`.
+ *
+ * Rendering `?pitch=2` in place would mean shipping every version's text,
+ * stats, keywords and six format verdicts to every card page so a script could
+ * swap them, and would leave a reader with scripting off, and every crawler,
+ * looking at the wrong card. Navigating to the page that already exists costs
+ * one redirect and keeps the static document canonical.
+ *
+ * So the param works — it is linkable, which is what was asked for — and it
+ * resolves to the address that was already the answer.
+ */
+const pitchTargets = JSON.stringify(
+  Object.fromEntries(versions.map((version) => [String(version.pitch), version.href])),
+);
+
 ---
 
 <nav class="lineage" aria-label="Breadcrumb">
@@ -386,6 +408,30 @@ const showVersions = versions.length > 1;
     <li><span class="crumb-current" aria-current="page">{page.label}</span></li>
   </ol>
 </nav>
+
+<!--
+  Inline because it is a redirect rather than a component: an island would ship
+  a runtime to do what four lines of navigation do, and it has to run before the
+  reader reads anything.
+-->
+<script is:inline define:vars={{ pitchTargets }}>
+  {
+    const wanted = new URLSearchParams(window.location.search).get("pitch");
+    if (wanted !== null) {
+      const target = JSON.parse(pitchTargets)[wanted];
+      // Only when it names a DIFFERENT version — `?pitch=1` on the pitch-1 page
+      // must not redirect to itself forever.
+      if (target && target !== window.location.pathname.replace(/\/$/, "")) {
+        const url = new URL(target, window.location.origin);
+        // Everything else the reader asked for travels with them.
+        for (const [key, value] of new URLSearchParams(window.location.search)) {
+          if (key !== "pitch") url.searchParams.set(key, value);
+        }
+        window.location.replace(url.href);
+      }
+    }
+  }
+</script>
 
 <article>
   <!--
@@ -479,7 +525,7 @@ const showVersions = versions.length > 1;
               ))}
             </ul>
             <p class="versions-note">
-              Same name, different card. Each version has its own printed text, stats and legality — the tabs are permanent URLs, so the one you are reading is the one you can paste.
+              Same name, different card — its own text, stats and legality. Each tab is a permanent URL, and <code>?pitch=2</code> resolves to one.
             </p>
           </nav>
         )

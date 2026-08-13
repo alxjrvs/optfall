@@ -62,8 +62,73 @@
 
   const { printings, alt, label }: Props = $props();
 
-  let selected = $state(0);
+  /**
+   * WHICH PRINTING, IN THE URL — so "the rainbow foil one" is a thing you can
+   * paste.
+   *
+   * `docs/DESIGN.md`: "Every view is a URL. Scryfall's real product is the link
+   * you paste into a conversation to settle it." A picker whose selection lived
+   * only in component state was a view with no address: you could find the cold
+   * foil printing and then had no way to show it to anybody.
+   *
+   * THE PARAM IS THE FACE KEY, minus its extension — `?printing=U-WTR098`. It
+   * is upstream's own art filename stem, it is unique per distinct image
+   * (asserted over the corpus in `faces.test.ts`), and it survives a set
+   * printing the same collector number twice: `WTR098` and `U-WTR098` are the
+   * Alpha and Unlimited arts, which `WTR098` alone could not tell apart.
+   *
+   * AN UNKNOWN OR ABSENT PARAM FALLS BACK TO THE DEFAULT rather than erroring.
+   * A stale link from before a re-sync should show the card, not a broken page
+   * — the reader asked for a card and one of its printings is a better answer
+   * than none.
+   */
+  const PARAM = "printing";
+
+  function keyOf(printing: Printing): string {
+    return printing.key.replace(/\.webp$/, "");
+  }
+
+  function selectedFromUrl(): number {
+    if (typeof window === "undefined") return 0;
+    const wanted = new URLSearchParams(window.location.search).get(PARAM);
+    if (wanted === null) return 0;
+    const index = printings.findIndex((printing) => keyOf(printing) === wanted);
+    return index === -1 ? 0 : index;
+  }
+
+  let selected = $state(selectedFromUrl());
   const current = $derived(printings[selected] ?? printings[0]);
+
+  /**
+   * `replaceState`, not `pushState`.
+   *
+   * Clicking through six printings should not put six entries in the back
+   * button — the reader is looking at one card, not visiting six pages. The
+   * address stays correct so it can be copied at any moment, and Back still
+   * returns to wherever they came from.
+   */
+  function remember(index: number): void {
+    selected = index;
+    if (typeof window === "undefined") return;
+    const printing = printings[index];
+    if (printing === undefined) return;
+
+    const url = new URL(window.location.href);
+    // The default printing is not named in the URL: a link should carry what
+    // somebody chose, not restate what they did not.
+    if (index === 0) url.searchParams.delete(PARAM);
+    else url.searchParams.set(PARAM, keyOf(printing));
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+  }
+
+  /** Back and forward have to work, which means listening for them. */
+  $effect(() => {
+    const onPop = () => {
+      selected = selectedFromUrl();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  });
 
   const uid = $props.id();
 </script>
@@ -99,7 +164,7 @@
                   type="radio"
                   name={`${uid}-printing`}
                   checked={index === selected}
-                  onchange={() => (selected = index)}
+                  onchange={() => remember(index)}
                 />
                 <span class="tile-face">
                   <CardFace
