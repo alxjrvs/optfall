@@ -27,11 +27,20 @@
    * out in full — a reader who cannot tell a hexagon from a chamfered square,
    * or who is hearing the page rather than seeing it, loses nothing.
    *
-   * NO LSS SYMBOL IS REPRODUCED. `docs/COMPLIANCE.md` bars their logos and any
-   * close semblance, and the game's own resource and attack pips are not ours
-   * to draw. These are plates — the system's own furniture — carrying our
-   * numerals, which is the same move the mark made: take the register, none of
-   * the form.
+   * NO LSS ASSET IS REPRODUCED, AND THE EARLIER READING OF THAT RULE WAS TOO
+   * WIDE. This comment used to say "the game's own resource and attack pips are
+   * not ours to draw" and treated every printed shape as off limits.
+   * `docs/COMPLIANCE.md` §3 does not say that: it bars FAB and LSS **logos**,
+   * product **set logos** and any close semblance of them — "card faces are
+   * fine; marks are not" — and it explicitly blesses drawing from a game
+   * MECHANIC, which is why the project's own mark is a pitch jewel. A disc
+   * meaning "resource" is a mechanic, not a trademark.
+   *
+   * What stays true is that nothing here is copied. Every shape below is a
+   * `clip-path` in the token layer and every colour is ours: the register, none
+   * of the artwork. Shipping LSS's actual symbol files would be a different
+   * decision, needing the provenance record §3 requires and the copyright line
+   * §5 requires, and it is not what this does.
    */
   import type { StatKind } from "../index";
 
@@ -112,21 +121,46 @@
      Still never eight-sided: that shape belongs to the pitch jewel and to
      nothing else. */
 
-  /* Cost — the hexagon. It is the RESOURCE silhouette, which is the same fact
-     said twice rather than a reuse: CR 1.12.4e makes `{r}` a resource value,
-     and a cost is the resource value you pay. */
+  /* -- The three the card itself draws --------------------------------------
+     COST, POWER AND DEFENCE ARE NOT CHAMFERED PLATES ANY MORE, and the reason
+     is that they were the three a reader already knows by sight.
+
+     The plate vocabulary above is right for the stats the card does not give a
+     shape to. It was wrong for these: a player looking for attack is looking
+     for a yellow disc, and finding a forward-leaning grey square meant reading
+     the label to identify a value the physical card identifies at a glance. The
+     shape was carrying the system's consistency instead of the card's meaning.
+
+     So these three take the card's own geometry and the card's own two inks —
+     a red disc for cost, a yellow disc for power, a steel shield for defence —
+     while the numeral stays the primary channel, the label stays visible and
+     the accessible name still spells the stat out. Three redundant carriers, as
+     before; one of them now agrees with the object being described.
+
+     Drawn by us in tokens from our own palette. Nothing here is an LSS asset,
+     and no set symbol or logo is reproduced: `docs/COMPLIANCE.md` §3 bars those
+     and this takes the register rather than the artwork, which is the same move
+     the mark made. */
   .cost {
-    clip-path: var(--of-ornament-cut-hexagon);
+    clip-path: var(--of-ornament-cut-disc);
+    background: var(--of-color-stat-cost);
+    color: var(--of-color-stat-cost-ink);
   }
 
-  /* Power — chamfered at the leading corner: the plate leans forward. */
   .power {
-    clip-path: var(--of-ornament-cut-lean-end);
+    clip-path: var(--of-ornament-cut-disc);
+    background: var(--of-color-stat-power);
+    color: var(--of-color-stat-power-ink);
   }
 
-  /* Defence — the mirror, so the pair reads as opposed at a glance. */
+  /* The shield's point eats the bottom third, so the numeral rides above centre
+     to stay inside the metal rather than hanging over the tip. */
   .defence {
-    clip-path: var(--of-ornament-cut-lean-start);
+    clip-path: var(--of-ornament-cut-shield);
+    background: var(--of-color-stat-defence);
+    color: var(--of-color-stat-defence-ink);
+    align-items: start;
+    padding-block-start: var(--of-space-tightest);
   }
 
   /* Life — the plain plate. Nothing is cut, which is its own signal in a set

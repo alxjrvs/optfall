@@ -74,7 +74,6 @@ import {
   BevelledPlate,
   CardFace,
   OrnamentalRule,
-  GameSymbol,
   PitchJewel,
   StatGlyph,
   StatePill,
@@ -140,7 +139,7 @@ const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
 
 /**
  * Which glyph each printed stat takes. Pitch is absent deliberately — the jewel
- * owns that one and its octagon is reserved to it.
+ * owns that one and its diamond is reserved to it.
  */
 const GLYPH_FOR: Record<string, "cost" | "power" | "defence" | "life" | "intellect" | "arcane" | undefined> = {
   Cost: "cost",
@@ -245,6 +244,45 @@ const hasStats = page.pitch !== 0 || printedStats.length > 0;
  * re-sorting names would be a claim about billing that the data does not make.
  */
 const artists = [...new Set(card.printings.flatMap((printing) => printing.artists))];
+
+/**
+ * The rarities this card has been printed at, once each.
+ *
+ * AND THERE IS GENUINELY MORE THAN ONE, on 1,259 of the 4,941 cards in the
+ * corpus — a quarter of them. Rarity belongs to a printing, not to a card: the
+ * same card is Common in its starter deck and Majestic in the set it debuted
+ * in, and picking either one to print beside the artist would be choosing a
+ * fact the data does not choose. So all of them render, deduplicated in
+ * encounter order, exactly as the artists on the same line do.
+ *
+ * The upstream single-letter code is not what is shown. `rarityName` maps it
+ * through the published decode table, and the bubble takes the NAME's first
+ * letter rather than the code — they agree for nine of the ten, and the tenth
+ * is `V` for "Marvel", where showing the code would print a letter that is in
+ * no word on the page.
+ */
+const rarities = (() => {
+  const seen = new Set<string>();
+  const found: { name: string; initial: string; rest: string; slug: string }[] = [];
+
+  for (const printing of card.printings) {
+    if (printing.rarity === "" || seen.has(printing.rarity)) continue;
+    seen.add(printing.rarity);
+
+    const name = rarityName(printing.rarity);
+    found.push({
+      name,
+      initial: name.slice(0, 1),
+      rest: name.slice(1),
+      /* "Super Rare" → `super`, which is the token family's own spelling. A
+         rarity upstream adds later falls through to a name with no colour
+         rather than to a broken `var()`; see `.rarity-mark` for the default. */
+      slug: name.toLowerCase().split(" ")[0] ?? "",
+    });
+  }
+
+  return found;
+})();
 
 /**
  * The card's flavour text, WHEN THERE IS ONE OF IT.
@@ -723,30 +761,7 @@ const pitchTargets = JSON.stringify(
               ) : (
                 <dl class="badges badges-end">
                   <div class="badge">
-                    <dt>
-                      {costStat.label}
-                      {/*
-                        The printed marker, beside the word it names. This is
-                        what connects the stat block to the card text below it:
-                        a reader who sees the resource plate here recognises
-                        the same plate in the text, and the pair is the whole
-                        reason `GameSymbol` and `StatGlyph` share a shape
-                        table.
-
-                        `aria-hidden`, because the label already says "Cost"
-                        and a screen reader announcing it twice is worse than
-                        announcing it once.
-                      */}
-                      {costStat.symbol !== null && (
-                        <span class="stat-symbol" aria-hidden="true">
-                          <GameSymbol
-                            kind={costStat.symbol.kind}
-                            letter={costStat.symbol.letter}
-                            name={costStat.symbol.name}
-                          />
-                        </span>
-                      )}
-                    </dt>
+                    <dt>{costStat.label}</dt>
                     <dd>
                       <StatGlyph kind="cost" value={costStat.value} />
                     </dd>
@@ -815,19 +830,7 @@ const pitchTargets = JSON.stringify(
                 <dl class="badges badges-start">
                   {startStats.map((stat) => (
                     <div class="badge">
-                      <dt>
-                        {stat.label}
-                        {/* Same marker, same reason — see the cost badge above. */}
-                        {stat.symbol !== null && (
-                          <span class="stat-symbol" aria-hidden="true">
-                            <GameSymbol
-                              kind={stat.symbol.kind}
-                              letter={stat.symbol.letter}
-                              name={stat.symbol.name}
-                            />
-                          </span>
-                        )}
-                      </dt>
+                      <dt>{stat.label}</dt>
                       <dd>
                         {/*
                           THE SHAPE SAYS WHICH STAT IT IS, as docs/DESIGN.md
@@ -854,18 +857,7 @@ const pitchTargets = JSON.stringify(
                 <dl class="badges badges-end">
                   {endStats.map((stat) => (
                     <div class="badge">
-                      <dt>
-                        {stat.label}
-                        {stat.symbol !== null && (
-                          <span class="stat-symbol" aria-hidden="true">
-                            <GameSymbol
-                              kind={stat.symbol.kind}
-                              letter={stat.symbol.letter}
-                              name={stat.symbol.name}
-                            />
-                          </span>
-                        )}
-                      </dt>
+                      <dt>{stat.label}</dt>
                       <dd>
                         {stat.kind === null ? stat.value : <StatGlyph kind={stat.kind} value={stat.value} />}
                       </dd>
@@ -891,6 +883,25 @@ const pitchTargets = JSON.stringify(
           */}
           <footer class="band band-credits">
             <p class="credit">
+              {/*
+                RARITY LEADS THE CREDIT LINE, initial in a bubble and the rest of
+                the word beside it — "(M)ajestic" as one word rather than a chip
+                and a caption. The letter is the form the card itself prints in
+                its bottom margin; the rest of the word is there because a letter
+                alone is a lookup, and this is a reference work.
+
+                The colour is a grouping and not a claim — nothing upstream
+                publishes a colour for a rarity. See `color.rarity.*`.
+              */}
+              {rarities.map((rarity) => (
+                <span class="rarity" data-rarity={rarity.slug}>
+                  <span class="rarity-mark" aria-hidden="true">{rarity.initial}</span>
+                  {/* The full word for a screen reader, which must not be read
+                      the initial and the remainder as two separate things. */}
+                  <span class="visually-hidden">{rarity.name}</span>
+                  <span class="rarity-rest" aria-hidden="true">{rarity.rest}</span>
+                </span>
+              ))}
               {
                 artists.length === 0
                   ? "No artist is credited in the published dataset."
@@ -1379,20 +1390,37 @@ const pitchTargets = JSON.stringify(
     align-items: center;
   }
 
-  /* Serif — the voice assigned to names. The layout already sets the display
-     size on `h1`; what is added here is the margin reset and the centring the
-     mirrored card asks for. */
+  /*
+    Serif — the voice assigned to names — and the one size on this page that
+    has to be fluid.
+
+    THE NAME IS THE THING THAT BREAKS THE MIRROR ON A PHONE. It sits in the
+    middle column between two corners, so at `type.size.display` on a phone-width
+    viewport "Aether Flare" wraps to two lines and shoulders the jewel and the
+    cost plate to the edges of a band that is mostly gutter. The printed card is
+    no wider and puts all three on one line — it just sets the name
+    smaller when the card is smaller.
+
+    `clamp` between two steps of the scale does the same thing, and it does it
+    without the breakpoint this layout has spent its whole life avoiding: the
+    name is never smaller than `title`, never larger than `display`, and in
+    between it tracks the viewport. The middle term is the only `vw` in this
+    file and it is doing the job a media query would otherwise be hired for.
+  */
   .card-name {
     margin-block: 0;
     overflow-wrap: anywhere;
     text-align: center;
+    font-size: clamp(var(--of-type-size-title), 4.5vw, var(--of-type-size-display));
   }
 
+  /* Same argument, one step down the scale: the type line shares the bottom
+     bar with up to three stat plates, and it is the only elastic thing in it. */
   .type-line {
     margin: 0;
     text-align: center;
     font-family: var(--of-type-family-serif);
-    font-size: var(--of-type-size-large);
+    font-size: clamp(var(--of-type-size-base), 2.5vw, var(--of-type-size-large));
     color: var(--of-color-ink-muted);
   }
 
@@ -1451,6 +1479,93 @@ const pitchTargets = JSON.stringify(
     margin: 0;
     font-size: var(--of-type-size-micro);
     color: var(--of-color-ink-faint);
+  }
+
+  /* -- Rarity -------------------------------------------------------------- */
+
+  .rarity {
+    display: inline-flex;
+    align-items: center;
+    /* No gap: the bubble and the remainder are one word interrupted, not two
+       elements set beside each other. */
+    margin-inline-end: var(--of-space-tight);
+  }
+
+  /*
+    The bubble. A disc, like the stat markers above it and for the same reason —
+    the card prints its rarity as a letter in a coloured dot in the bottom
+    margin, which is where this line sits.
+
+    The `--rarity` custom property defaults to the muted ink of the line it is
+    on, so a rarity upstream adds tomorrow renders as a plain grey bubble rather
+    than as an unset `var()` and no background at all. Each known rarity
+    overrides it below.
+  */
+  .rarity-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--of-ornament-jewel-small);
+    block-size: var(--of-ornament-jewel-small);
+    clip-path: var(--of-ornament-cut-disc);
+    background: var(--rarity, var(--of-color-ink-faint));
+    color: var(--rarity-ink, var(--of-color-ground));
+    font-weight: var(--of-type-weight-bold);
+    line-height: 1;
+  }
+
+  .rarity-rest {
+    color: var(--of-color-ink-muted);
+  }
+
+  .rarity[data-rarity="common"] {
+    --rarity: var(--of-color-rarity-common);
+    --rarity-ink: var(--of-color-rarity-common-ink);
+  }
+
+  .rarity[data-rarity="rare"] {
+    --rarity: var(--of-color-rarity-rare);
+    --rarity-ink: var(--of-color-rarity-rare-ink);
+  }
+
+  .rarity[data-rarity="super"] {
+    --rarity: var(--of-color-rarity-super);
+    --rarity-ink: var(--of-color-rarity-super-ink);
+  }
+
+  .rarity[data-rarity="majestic"] {
+    --rarity: var(--of-color-rarity-majestic);
+    --rarity-ink: var(--of-color-rarity-majestic-ink);
+  }
+
+  .rarity[data-rarity="legendary"] {
+    --rarity: var(--of-color-rarity-legendary);
+    --rarity-ink: var(--of-color-rarity-legendary-ink);
+  }
+
+  .rarity[data-rarity="fabled"] {
+    --rarity: var(--of-color-rarity-fabled);
+    --rarity-ink: var(--of-color-rarity-fabled-ink);
+  }
+
+  .rarity[data-rarity="token"] {
+    --rarity: var(--of-color-rarity-token);
+    --rarity-ink: var(--of-color-rarity-token-ink);
+  }
+
+  .rarity[data-rarity="basic"] {
+    --rarity: var(--of-color-rarity-basic);
+    --rarity-ink: var(--of-color-rarity-basic-ink);
+  }
+
+  .rarity[data-rarity="marvel"] {
+    --rarity: var(--of-color-rarity-marvel);
+    --rarity-ink: var(--of-color-rarity-marvel-ink);
+  }
+
+  .rarity[data-rarity="promo"] {
+    --rarity: var(--of-color-rarity-promo);
+    --rarity-ink: var(--of-color-rarity-promo-ink);
   }
 
   .code-hint {
@@ -1667,14 +1782,17 @@ const pitchTargets = JSON.stringify(
      bands of the panel — the symbols are the same fact in the same place, and
      the selector followed the markup rather than the markup being kept for the
      selector. */
+  /* The letter chip that used to sit here beside each stat's word is gone. It
+     paired the label with the inline marker — "Power {p}" — and earned its
+     place while the marker was an abstract plate that had to be taught. The
+     markers are the card's own disc and shield now, so the chip was teaching
+     what the reader already recognised, twice per card, in the tightest line on
+     the page. `GameSymbol` is unchanged and still renders inline in the text,
+     which is the place a marker is met cold. */
   .badge dt {
     display: flex;
     align-items: center;
     gap: var(--of-space-tighter);
-  }
-
-  .stat-symbol {
-    display: inline-flex;
   }
 
   /* -- Printed text -------------------------------------------------------- */
@@ -1844,12 +1962,42 @@ const pitchTargets = JSON.stringify(
     overflow-x: auto;
   }
 
+  /*
+    A FLOOR, SO WRAPPING DEGRADES INTO SCROLLING RATHER THAN INTO SHREDDING.
+
+    Letting the cells wrap fixed the over-wide table, and then over-fixed it:
+    given a phone and seven columns, the browser dutifully fits by breaking "No
+    specified edition (used for promos, non-set releases, etc.)" one word per
+    line, turning every row into a ten-line ribbon. Narrower is not the same as
+    more readable.
+
+    So the table is never allowed below one measure. On a wide page that floor is
+    slack and the cells wrap where they like; on a phone the table exceeds its
+    box and `.scroller` does what it was always there to do. A seven-column
+    table on a phone has to give up SOMETHING, and a sideways scroll inside one
+    box is a smaller loss than a column of single words.
+  */
   .printings {
     inline-size: 100%;
+    min-inline-size: var(--of-type-measure);
     border-collapse: collapse;
     font-size: var(--of-type-size-small);
   }
 
+  /*
+    NOWRAP WAS ON EVERY CELL, AND ONE CELL IS A SENTENCE.
+
+    `N` decodes to "No specified edition (used for promos, non-set releases,
+    etc.)" — upstream's own gloss, 60 characters of it, and it is the commonest
+    edition in the corpus. Held on one line it made the Edition column wider than a
+    phone and the whole table wider than two of them — a table two and a half
+    screens across with the artist and the other face off the right of it.
+
+    So cells wrap by default and only the identifiers hold their line: a
+    collector number or a set code broken across two lines is no longer a
+    citation, which is the thing nowrap was for. The table still scrolls inside
+    `.scroller` when it has to — it just very rarely has to now.
+  */
   .printings th,
   .printings td {
     padding-block: var(--of-space-tight);
@@ -1857,6 +2005,11 @@ const pitchTargets = JSON.stringify(
     text-align: start;
     vertical-align: baseline;
     border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  }
+
+  .printings thead th,
+  .printings .collector,
+  .printings .code-hint {
     white-space: nowrap;
   }
 

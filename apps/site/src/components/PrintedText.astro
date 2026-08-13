@@ -91,45 +91,25 @@ const name = `view-${uid}`;
     <p class="raw">{text}</p>
   </BevelledPlate>
 
-  {
-    symbols.length > 0 && (
-      <div class="legend">
-        <!--
-          ONLY THE SYMBOLS ON THIS CARD, with the rule that defines each. A
-          nine-row table on all 4,941 pages would be furniture; four rows on the
-          card you are reading is the rules association this site exists to make.
-        -->
-        <h3 class="legend-heading">Symbols on this card</h3>
-        <dl class="legend-list">
-          {symbols.map(({ symbol, ruleText, inferred }) => (
-            <div class="legend-row">
-              <dt>
-                <code>{symbol.token}</code> {symbol.name}
-              </dt>
-              <dd>
-                <a href={hrefForNumber(symbol.rule)}>{symbol.rule}</a>
-                {ruleText !== null && <span class="legend-rule">{ruleText}</span>}
-                {inferred && (
-                  /*
-                    SAID OUT LOUD, exactly as the keyword list says "via the
-                    general rule" when its join is a resolution rather than a
-                    direct hit. 1.12.4 lists eight symbols and `{x}` is not one
-                    of them; 1.12.2 defines the letter X, which is plainly what
-                    it means here, but that is our reading and not the rules'
-                    own table. A reference work should say which kind of claim
-                    it is making.
-                  */
-                  <span class="legend-inferred">
-                    Not in the rules’ own symbol table — this cites the rule for the letter X.
-                  </span>
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    )
-  }
+  {/*
+    THE LEGEND IS GONE, AND THE SYMBOLS ARE WHY.
+
+    It listed every marker on the card with the rule that defines it, and it was
+    the right call while the markers were chamfered plates carrying a letter:
+    nothing about a forward-leaning grey square says "power", so the card needed
+    a key and the key was worth its four rows.
+
+    The markers are now the card's own shapes in the card's own inks — a yellow
+    disc, a steel shield, a red disc — which a reader recognises from the object
+    in their hand without being taught. A key that explains what the reader can
+    already see is furniture, and it was furniture on all 4,941 pages, directly
+    under the text it interrupted.
+
+    The rules join it carried is not lost: every symbol still cites 1.12.4
+    through `card-symbols.ts`, "Raw text" still shows the published bytes, and
+    "Governed by" below still names the rule for every keyword on the card. What
+    went is the table, not the association.
+  */}
 </div>
 
 <style>
