@@ -20,6 +20,7 @@
  */
 import { themeStylesheet } from "optfall-theme";
 
+import SiteHeader from "../components/SiteHeader.astro";
 import ComplianceFooter from "../components/ComplianceFooter.astro";
 
 interface Props {
@@ -33,6 +34,14 @@ interface Props {
    * pick one.
    */
   canonical?: string;
+  /**
+   * Which nav item to mark current, and whether the bar appears at all.
+   *
+   * `"none"` is the front door: that page IS the search field, and a second one
+   * above it would be the same control twice. Scryfall does not carry its bar
+   * on its landing page either.
+   */
+  section?: "cards" | "sets" | "rules" | "none";
   title: string;
   description?: string;
 }
@@ -41,6 +50,7 @@ const {
   title,
   description = "Legality that remembers, and rulings you can cite — a reference tool for Flesh and Blood.",
   canonical,
+  section,
 } = Astro.props;
 
 /**
@@ -78,9 +88,12 @@ const tokens = themeStylesheet();
     <style is:global set:html={tokens}></style>
   </head>
   <body>
-    <main>
-      <slot />
-    </main>
+    <div class="shell">
+      {section === "none" ? null : <SiteHeader section={section === undefined ? undefined : section} />}
+      <main>
+        <slot />
+      </main>
+    </div>
     <ComplianceFooter />
   </body>
 </html>

@@ -143,7 +143,9 @@ const eyebrow =
     : `${LEVEL_LABEL[section.level]} · Chapter ${section.chapter}`;
 ---
 
-<BaseLayout title={titleFor(page)} description={descriptionFor(page)}>
+<BaseLayout title={titleFor(page)} description={descriptionFor(page)}
+  section="rules"
+>
   <nav class="lineage" aria-label="Breadcrumb">
     <ol class="crumbs">
       <li><a class="home" href="/">Optfall</a></li>
