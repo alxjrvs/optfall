@@ -109,13 +109,17 @@ export const Large: Story = { args: { size: "lg" } };
  * THE STORY THIS COMPONENT EXISTS TO PASS. Sixteen device pixels, the size a
  * browser draws a tab icon, and the arithmetic is tight enough to check by eye:
  *
- * - The gap between the crown's parted edge (`1.5,10 → 27.5,11.5`) and the
- *   pavilion's cut face (`2.5,13.5 → 30,15`) is about 3.4 of 32 units —
- *   **1.7px of ground**, and never below 3 units anywhere along the cut.
- * - `--of-bevel-width` is a flat `1px` and does not scale, so the crown's dark
- *   drop-shadow is cast 1px *down* into that gap and the pavilion's light one
- *   1px *up* into it. Two fixed pixels of bevel arriving in 1.5px of ground is
- *   the failure mode, and it is invisible at every larger size.
+ * - The gap between the crown's parted edge and the pavilion's cut face is
+ *   **at least 3 of 32 units everywhere along the cut**, which at this size is
+ *   at least one and a half device pixels of ground. The figure is a bound and
+ *   not a measurement on purpose: the exact numbers live with the coordinates
+ *   in `MARK_GEOMETRY`, `index.test.ts` asserts the bound, and this file went
+ *   through a spell of quoting a third value that agreed with neither.
+ * - `--of-bevel-width` does not scale with the mark, so the crown's dark
+ *   drop-shadow is cast *down* into that gap and the pavilion's light one *up*
+ *   into it — two fixed pixels of bevel arriving in a gap barely wider than
+ *   they are. That is the failure mode, and it is invisible at every larger
+ *   size.
  * - **Check both themes from the toolbar.** In light, `bevel.light` is
  *   `rgba(255, 255, 255, 0.85)` — nearly opaque, cast upward from the pavilion,
  *   directly across the cut. If the gap survives dark but fills in light, the

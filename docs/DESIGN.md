@@ -71,12 +71,11 @@ edge-up chamfered square — and so, for a while, the component drew one of thos
 while the design-system cards drew the diamond, and the logo followed the
 component. Nothing failed, because nothing disagreed with the words. An edge-up
 octagon reads as a *button*; a vertex-up one reads as a *gem*. The exact
-polygon lives in `JEWEL_SILHOUETTE` in `optfall-components`. The design-system
-generator reads it directly; the jewel component keeps a copy, because a Svelte
-`<style>` block cannot interpolate a constant and putting it on an inline style
-would ship the polygon on every jewel on every card page. A test asserts the two
-agree — so what binds them is a check, not a shared read, and that distinction
-is the point: an unchecked copy is how this drifted in the first place.
+polygon is the `ornament.cut.jewel` token in `optfall-theme`, and every surface
+names it rather than drawing it — the component, the design-system cards, all of
+it. `scripts/check-tokens.ts` fails the build on a `var(--of-*)` the theme does
+not define, so the shape cannot be redrawn in one place and not the other. That
+is the actual fix: not a second copy kept honest by a test, but no second copy.
 
 The numeral is the **primary** channel, not an accessibility fallback. Red and
 yellow are the classic deuteranopia confusion pair, pitch is the most-read value
