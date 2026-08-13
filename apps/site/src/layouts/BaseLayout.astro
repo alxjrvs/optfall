@@ -85,6 +85,21 @@ const tokens = themeStylesheet();
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
     <link rel="canonical" href={canonicalUrl.href} />
+    <!--
+      The mark, in the tab. `/favicon.svg` is generated at build time from the
+      same geometry the on-page mark draws from — see `src/pages/favicon.svg.ts`
+      for why it is an endpoint and not a file in `public/`.
+
+      One declaration, not the usual pile of six. An SVG icon is served to every
+      engine that supports one, and browsers that do not fall back to requesting
+      `/favicon.ico` on their own — which we do not ship, and which costs a 404
+      on a static host rather than a wrong icon. The PNG variants an
+      `apple-touch-icon` would need cannot be produced from this pipeline
+      without a rasteriser in the build, so they are absent rather than
+      hand-drawn: a hand-drawn one is the second copy of the mark this whole
+      arrangement exists to avoid.
+    -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style is:global set:html={tokens}></style>
   </head>
   <body>

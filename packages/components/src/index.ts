@@ -296,6 +296,49 @@ export interface MarkProps {
   readonly decorative?: boolean;
 }
 
+/**
+ * The mark's geometry, in `viewBox` units — the one place it is written down.
+ *
+ * IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND MUST NOT HAVE TWO DEFINITIONS.
+ * `Mark.svelte` draws it on the page; `apps/site/src/pages/favicon.svg.ts`
+ * draws it into the tab. `docs/DESIGN.md` stakes the whole idea on those being
+ * the same object — "the thing you see a thousand times a session is the thing
+ * on the tab" — and a second copy of these numbers is exactly how that stops
+ * being true, quietly, the first time one of them is nudged.
+ *
+ * This is the argument `CARD_IMAGE_COPYRIGHT` makes a few lines down and the
+ * one `themeStylesheet()` makes about the palette: the shared fact gets one
+ * declaration, and the surfaces read it.
+ *
+ * COLOUR IS DELIBERATELY ABSENT. Geometry is the part both consumers share;
+ * colour is the part they cannot. A component on the page names tokens and lets
+ * the cascade resolve them, while a favicon is fetched as a standalone document
+ * that never sees the page's stylesheet and must therefore carry literal
+ * values. Putting colour here would force one of those two to be wrong.
+ */
+export interface MarkGeometry {
+  readonly viewBox: string;
+  /** The shallow upper third of the cut, holding the top of the frame. */
+  readonly crown: string;
+  /** Deeper than the crown, as a cut stone's is, and fallen clear of it. */
+  readonly pavilion: string;
+  /** The freshly exposed cleavage plane along the pavilion's cut face. */
+  readonly cleave: {
+    readonly x1: number;
+    readonly y1: number;
+    readonly x2: number;
+    readonly y2: number;
+    readonly width: number;
+  };
+}
+
+export const MARK_GEOMETRY: MarkGeometry = {
+  viewBox: "0 0 32 32",
+  crown: "9,1 20,1 28,9 28,12 1,10 1,9",
+  pavilion: "3,13 30,15 30,22 22,30 11,30 3,22",
+  cleave: { x1: 3, y1: 13, x2: 30, y2: 15, width: 1.5 },
+};
+
 /* -------------------------------------------------------------------------- */
 /* Compliance carried by the component, not the page                           */
 /* -------------------------------------------------------------------------- */

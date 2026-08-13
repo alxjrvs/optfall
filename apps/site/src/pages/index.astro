@@ -26,6 +26,8 @@
  * rather than left pointing at a page that no longer answers queries, because a
  * 301 to a door is worse than the 404 it replaced.
  */
+import { Mark } from "optfall-components/svelte";
+
 import BaseLayout from "../layouts/BaseLayout.astro";
 import NoScriptNotice from "../components/NoScriptNotice.astro";
 import CardTypeahead from "../components/CardTypeahead.svelte";
@@ -50,8 +52,17 @@ const cards = CORPUS.counts.cards.toLocaleString("en-GB");
       `docs/DESIGN.md`: no marketing hero, no illustration above the fold — the
       first thing on the page is the thing you came to do, and the wordmark's
       only job is to say where you are.
+
+      THE MARK IS PART OF THE NAME HERE, not an illustration above it. That
+      distinction is the whole reason it is allowed on this page: a mark set
+      beside the word at the word's own size is a masthead, while the same mark
+      given its own line above the word is the hero the door refuses. It is
+      `lg` — one step up from the header bar's `sm`, because this is the only
+      page where the wordmark is the masthead rather than a way home — and
+      decorative, since the `<h1>` beside it already carries the name and a
+      named mark would make the page's one heading announce itself twice.
     -->
-    <h1 class="wordmark">Optfall</h1>
+    <h1 class="wordmark"><Mark size="lg" decorative />Optfall</h1>
 
     <NoScriptNotice example="/search?q=banned:cc">Every card is addressable without it: <code>/card/command-and-conquer</code> is that card, and a name shared by several cards — <code>/card/head-jab</code> — is that card too, with its pitch versions as tabs.</NoScriptNotice>
 
@@ -133,9 +144,21 @@ const cards = CORPUS.counts.cards.toLocaleString("en-GB");
     tracked label the header bar now carries on every other page — correct
     there, and wrong here, where it is the only thing above the field.
   */
+  /*
+    Centred as a lockup rather than as text. `text-align` centres the line box,
+    which is the wrong unit once the heading holds a mark as well as a word: it
+    would centre the two together and leave the mark's optical weight pulling
+    the pair off centre. A flex row centres the box, and `align-items: center`
+    sets the mark on the word's centre line rather than its baseline — a
+    baseline-aligned octagon reads as having fallen out of the word, which is a
+    joke the mark is already making once and does not need to make twice.
+  */
   .wordmark {
     margin: 0;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--of-space-base);
     font-family: var(--of-type-family-serif);
     font-size: var(--of-type-size-display);
     letter-spacing: var(--of-type-tracking-tight);
