@@ -155,12 +155,15 @@
 
   /* The shield's point eats the bottom third, so the numeral rides above centre
      to stay inside the metal rather than hanging over the tip. */
+  /* CENTRED IN THE BODY, NOT IN THE BOX. The shield's point takes the bottom of
+     the square, so `align-items: start` pinned the numeral to the very top and
+     it read as a number sitting above a shield rather than struck into one.
+     Padding out the point's share and centring normally puts it in the metal. */
   .defence {
     clip-path: var(--of-ornament-cut-shield);
     background: var(--of-color-stat-defence);
     color: var(--of-color-stat-defence-ink);
-    align-items: start;
-    padding-block-start: var(--of-space-tightest);
+    padding-block-end: calc(var(--stat-size) * 0.28);
   }
 
   /* Life — the plain plate. Nothing is cut, which is its own signal in a set
