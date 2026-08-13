@@ -23,9 +23,20 @@
  */
 import { readdir } from "node:fs/promises";
 
-/** Directories served verbatim to the public, and the manifest covering each. */
+/**
+ * Directories served verbatim to the public, and the manifest covering each.
+ *
+ * EVERY public directory, not just the one that happens to have assets in it
+ * today. `apps/images/public` holds only a `robots.txt` and has no manifest —
+ * which is exactly the right state: no manifest means no approved binaries, so
+ * the first PNG dropped there fails this check instead of sailing through a
+ * directory nobody thought to list. `docs/COMPLIANCE.md` §3 claims this job
+ * covers "every binary under a public directory", and that claim should be
+ * true rather than nearly true.
+ */
 const GOVERNED = [
   { dir: "apps/site/public", manifest: "data/symbols/symbols.json" },
+  { dir: "apps/images/public", manifest: "data/images/assets.json" },
 ] as const;
 
 /**
@@ -52,14 +63,25 @@ async function walk(dir: string): Promise<string[]> {
   return nested.flat();
 }
 
-/** Every complaint about one asset, or an empty list when it is accounted for. */
+/**
+ * Every complaint about one asset, or an empty list when it is accounted for.
+ *
+ * KEYED ON THE PATH WITHIN THE DIRECTORY, NOT THE BASENAME. Matching on
+ * basename alone meant a second copy of an approved file at any depth —
+ * `public/icons/icon_p.png` — inherited the approval of the original, and a
+ * file MOVED into a subdirectory was neither flagged as unaccounted-for nor
+ * reported as a stale entry, because the same basename was still present
+ * somewhere. That is a weaker control than "every binary has a recorded
+ * origin", which is the sentence this script exists to make true.
+ */
 async function auditFile(
   path: string,
+  dir: string,
   manifest: string,
   byFile: ReadonlyMap<string, ManifestEntry>,
 ): Promise<string[]> {
-  const name = path.slice(path.lastIndexOf("/") + 1);
-  const entry = byFile.get(name);
+  const relative = path.slice(dir.length + 1);
+  const entry = byFile.get(relative);
 
   if (entry === undefined) {
     return [`::error file=${path}::no provenance entry in ${manifest}`];
@@ -95,12 +117,15 @@ async function auditDir(dir: string, manifest: string) {
   const byFile = new Map(entries.map((entry) => [entry.file, entry]));
 
   const problems = (
-    await Promise.all(files.map((path) => auditFile(path, manifest, byFile)))
+    await Promise.all(files.map((path) => auditFile(path, dir, manifest, byFile)))
   ).flat();
 
   /* A manifest entry whose file has been deleted is stale, and a stale record is
-     how the next reader comes to believe an asset is accounted for. */
-  const onDisk = new Set(files.map((path) => path.slice(path.lastIndexOf("/") + 1)));
+     how the next reader comes to believe an asset is accounted for. Compared on
+     the same directory-relative path the lookup above uses, so a file that has
+     MOVED is reported twice — once as unaccounted-for at its new path, once as
+     a stale entry at its old one — rather than slipping past both. */
+  const onDisk = new Set(files.map((path) => path.slice(dir.length + 1)));
   for (const entry of entries) {
     if (onDisk.has(entry.file)) continue;
     problems.push(`::error file=${manifest}::entry for ${entry.file}, which is not on disk`);

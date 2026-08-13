@@ -233,56 +233,12 @@ const name = `view-${uid}`;
     color: var(--of-color-ink-muted);
   }
 
-  /* -- The legend ----------------------------------------------------------- */
-
-  .legend {
-    margin-block-start: var(--of-space-loose);
-  }
-
-  .legend-heading {
-    margin-block: 0 var(--of-space-base);
-    font-family: var(--of-type-family-sans);
-    font-size: var(--of-type-size-micro);
-    font-weight: var(--of-type-weight-bold);
-    letter-spacing: var(--of-type-tracking-wide);
-    text-transform: uppercase;
-    color: var(--of-color-ink-muted);
-  }
-
-  .legend-list {
-    margin: 0;
-    display: grid;
-    gap: var(--of-space-tight);
-  }
-
-  .legend-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--of-space-tight) var(--of-space-base);
-    font-size: var(--of-type-size-micro);
-  }
-
-  .legend-row dt {
-    color: var(--of-color-ink);
-    font-weight: var(--of-type-weight-bold);
-  }
-
-  .legend-row dd {
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--of-space-tight) var(--of-space-base);
-    color: var(--of-color-ink-muted);
-  }
-
-  .legend-rule {
-    color: var(--of-color-ink-faint);
-  }
-
-  .legend-inferred {
-    color: var(--of-color-ink-muted);
-    font-style: italic;
-  }
+  /* -- The legend, deleted ---------------------------------------------------
+     Ten rules for a block that no longer has markup. The producer went when the
+     symbols became LSS own artwork — a key that explains what the reader can
+     already recognise is furniture — and Astro does not prune unused scoped
+     selectors, so leaving these shipped dead CSS on every one of 4,941 card
+     pages and told the next reader the legend was still styled from here. */
 
   .sr-only {
     position: absolute;

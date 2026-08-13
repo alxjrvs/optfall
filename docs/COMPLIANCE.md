@@ -224,9 +224,18 @@ be independently licensed for webfont embedding (`DESIGN.md`, open questions).
 **How we would find out.** This said "review, and nothing else — **this one is an
 open action**" while the reason given was that "there are no committed binary
 assets to scan yet". There are now, so the action is closed: the `provenance`
-job hashes every binary under a public directory against
-`data/symbols/symbols.json` and fails on anything without a verified origin. It
-runs offline, so it cannot go red because a third-party host is down.
+job walks **every** public directory — `apps/site/public` and
+`apps/images/public` — and fails on any binary whose directory-relative path,
+bytes and https origin are not recorded in that directory's manifest. It runs
+offline, so it cannot go red because a third-party host is down.
+
+Two details that are the difference between a control and a gesture. Assets are
+matched on their **path within the directory**, not their basename, so a copy of
+an approved file at a new depth does not inherit the original's approval and a
+moved file is reported twice rather than zero times. And a public directory with
+**no manifest** is not exempt, it is empty of approved binaries — the first PNG
+dropped into `apps/images/public` fails, rather than sailing through a directory
+nobody remembered to list.
 
 **Be precise about what a green tick buys.** It proves an asset's origin is
 *recorded*, not that the origin was *permitted*. Somebody who ingests a set
