@@ -165,6 +165,27 @@ function outsideFunctional(selector: string): string {
   return rest;
 }
 
+/**
+ * Whether a rule EXCLUDES the artwork, and so cannot apply to it at all.
+ *
+ * Three cases, and the middle one was being got wrong. A rule whose compound
+ * carries `.art` is the reset. A rule that says nothing about `.art` is a plate
+ * and has to lose to the reset. A rule that excludes `.art` —
+ * `.symbol:not(.art)`, which the note further down calls a reasonable thing to
+ * want — can never style the artwork, so it is neither: comparing its
+ * specificity asks a question with no meaning, and it would have FAILED that
+ * comparison, because Svelte emits `.symbol.hash:not(.art)` at 3 against the
+ * reset's 3.
+ *
+ * Dropped from the comparison rather than made to lose it.
+ */
+function excludesArt(selector: string): boolean {
+  for (const match of selector.matchAll(/:not\(([^()]*)\)/g)) {
+    if (splitTopLevel(match[1]!).some((argument) => argument.includes(".art"))) return true;
+  }
+  return false;
+}
+
 describe("splitTopLevel", () => {
   test("splits a plain selector list", () => {
     expect(splitTopLevel(".a.h, .b.h").map((s) => s.trim())).toEqual([".a.h", ".b.h"]);
@@ -217,6 +238,18 @@ describe("classCount", () => {
   });
 });
 
+describe("excludesArt", () => {
+  test("recognises a rule that negates the artwork", () => {
+    expect(excludesArt(".symbol.h:not(.art)")).toBe(true);
+    expect(excludesArt(".symbol.h:not(.art, .plain)")).toBe(true);
+  });
+
+  test("does not confuse the reset itself for an exclusion", () => {
+    expect(excludesArt(".symbol.art.h")).toBe(false);
+    expect(excludesArt(".defence.h")).toBe(false);
+  });
+});
+
 describe("outsideFunctional", () => {
   test("keeps a real `.art` compound", () => {
     expect(outsideFunctional(".symbol.art.h")).toContain(".art");
@@ -262,7 +295,9 @@ describe("GameSymbol with ingested artwork", () => {
   test("the artwork reset outranks every silhouette that would clip it", () => {
     const clippers = rulesSetting("clip-path");
     const reset = clippers.filter((s) => outsideFunctional(s).includes(".art"));
-    const silhouettes = clippers.filter((s) => !outsideFunctional(s).includes(".art"));
+    const silhouettes = clippers.filter(
+      (s) => !outsideFunctional(s).includes(".art") && !excludesArt(s),
+    );
 
     expect(reset.length).toBeGreaterThan(0);
     expect(silhouettes.length).toBeGreaterThan(0);
@@ -303,7 +338,9 @@ describe("GameSymbol with ingested artwork", () => {
     */
     const painters = rulesSetting("background");
     const reset = painters.filter((s) => outsideFunctional(s).includes(".art"));
-    const plates = painters.filter((s) => !outsideFunctional(s).includes(".art"));
+    const plates = painters.filter(
+      (s) => !outsideFunctional(s).includes(".art") && !excludesArt(s),
+    );
 
     expect(reset.length).toBeGreaterThan(0);
     expect(plates.length).toBeGreaterThan(0);
