@@ -51,7 +51,16 @@ import { mkdir, readdir } from "node:fs/promises";
 const ORIGIN = "https://rules.fabtcg.com/en/assets/images";
 
 /** Where the committed PNGs live, served as `/symbols/icon_<key>.png`. */
-const PUBLIC_DIR = "apps/site/public/symbols";
+const PUBLIC_ROOT = "apps/site/public";
+
+/**
+ * Where the icons sit inside it. The manifest records paths RELATIVE TO THE
+ * PUBLIC ROOT — `symbols/icon_p.png`, not `icon_p.png` — because
+ * `check-asset-provenance.ts` keys on the directory-relative path. Keyed on
+ * basename, a second copy of an approved file at another depth would inherit
+ * its approval, which is not what "every binary has a recorded origin" means.
+ */
+const SYMBOL_DIR = `${PUBLIC_ROOT}/symbols`;
 
 /** The provenance record. Committed, human-readable, and checked by CI. */
 const MANIFEST = "data/symbols/symbols.json";
@@ -60,10 +69,19 @@ const MANIFEST = "data/symbols/symbols.json";
  * The eight keys, and the rule that defines each.
  *
  * Hard-coded rather than imported so this script has no dependency on the site
- * package — but `symbols.test.ts` asserts this list equals the non-inferred
- * entries of `SYMBOLS`, so the two cannot drift. `x` is deliberately absent:
- * 1.12.4 names eight symbols and X is not one of them, so LSS publishes no icon
- * for it and Optfall renders it as the letter it is.
+ * package. `x` is deliberately absent: 1.12.4 names eight symbols and X is not
+ * one of them, so LSS publishes no icon for it and Optfall renders it as the
+ * letter it is.
+ *
+ * HOW THIS LIST IS HELD TO THE RULES TABLE, stated precisely because the
+ * "closed set" argument in `docs/COMPLIANCE.md` §3 leans on it and an earlier
+ * version of this comment overstated it. It named a `symbols.test.ts` that does
+ * not exist and claimed a direct assertion that is not made. What is true:
+ * `apps/site/src/lib/symbol-assets.test.ts` binds the generated MANIFEST to
+ * `SYMBOLS`, and this list is what generates the manifest — so a divergence is
+ * caught, but only after a re-ingest, not at the moment this array is edited.
+ * The gap is narrow (an edit here that is never run changes nothing that
+ * ships) and it is a gap rather than a guarantee.
  */
 const SYMBOLS = [
   { key: "p", name: "power", rule: "1.12.4d" },
@@ -138,13 +156,26 @@ async function fetchSymbol(key: string): Promise<{ bytes: Uint8Array; url: strin
 const checkOnly = process.argv.includes("--check");
 
 /*
-  THE DATE IS THE RUN'S, AND IT IS RECORDED ONCE.
+  VALIDATE THE DIRECTORY BEFORE WRITING A BYTE INTO IT.
 
-  Every entry in a single run shares one `retrieved` stamp, because they were
-  retrieved together and eight timestamps a few hundred milliseconds apart would
-  imply a precision the record does not have.
+  NOTHING ELSE MAY LIVE HERE. The provenance rule is only worth having if the
+  directory it governs cannot quietly acquire a ninth file, so the script owns
+  the whole folder rather than just the files it writes.
+
+  This ran at the END, and that ordering had a nasty failure: it exited after
+  the PNGs were written and before the manifest was, leaving new bytes on disk
+  described by a stale record — which then failed `check:provenance` on a hash
+  mismatch and needed a hand-rolled `git checkout` to get back to a clean tree.
+  A precondition belongs before the side effects it guards.
 */
-const retrieved = new Date().toISOString().slice(0, 10);
+const strays = (await readdir(SYMBOL_DIR).catch(() => []))
+  .filter((name) => name.endsWith(".png"))
+  .filter((name) => !SYMBOLS.some((symbol) => `icon_${symbol.key}.png` === name));
+
+if (strays.length > 0) {
+  console.error(`::error::unexpected files in ${SYMBOL_DIR}: ${strays.join(", ")}`);
+  process.exit(1);
+}
 
 /*
   ALL EIGHT AT ONCE, which is a change of shape rather than of manners.
@@ -169,7 +200,7 @@ const downloaded = await Promise.all(
       name: symbol.name,
       rule: symbol.rule,
       token: `{${symbol.key}}`,
-      file: `icon_${symbol.key}.png`,
+      file: `symbols/icon_${symbol.key}.png`,
       url,
       bytes: bytes.length,
       width,
@@ -186,11 +217,11 @@ const downloaded = await Promise.all(
    between runs according to which request happened to land first. */
 const entries: Entry[] = downloaded.map(({ entry }) => entry);
 
-if (!checkOnly) await mkdir(PUBLIC_DIR, { recursive: true });
+if (!checkOnly) await mkdir(SYMBOL_DIR, { recursive: true });
 
 const outcomes = await Promise.all(
   downloaded.map(async ({ entry, bytes }) => {
-    const target = `${PUBLIC_DIR}/${entry.file}`;
+    const target = `${PUBLIC_ROOT}/${entry.file}`;
     const existing = Bun.file(target);
     const same =
       (await existing.exists()) &&
@@ -214,19 +245,25 @@ const outcomes = await Promise.all(
 const changed = outcomes.filter(Boolean).length;
 
 /*
-  NOTHING ELSE MAY LIVE IN THIS DIRECTORY. The provenance rule is only worth
-  having if the directory it governs cannot quietly acquire a ninth file, so the
-  script owns the whole folder rather than just the files it writes.
+  THE DATE IS THE RUN'S ONLY WHEN THE RUN CHANGED SOMETHING.
+
+  It was re-stamped unconditionally, so a re-ingest that fetched eight identical
+  files printed "0 changed" and still produced a one-line diff in the committed
+  manifest. A provenance record that churns on a no-op teaches the next reader
+  to skim past it, which is the opposite of what it is for — and `retrieved`
+  means "when these bytes were obtained", which is not today if today's fetch
+  returned exactly what was already here.
+
+  A single stamp per run, not one per symbol: they were retrieved together, and
+  eight timestamps milliseconds apart would imply a precision the record lacks.
 */
-const present = (await readdir(PUBLIC_DIR).catch(() => [])).filter((name) =>
-  name.endsWith(".png"),
-);
-const expected = new Set(entries.map((entry) => entry.file));
-const strays = present.filter((name) => !expected.has(name));
-if (strays.length > 0) {
-  console.error(`::error::unexpected files in ${PUBLIC_DIR}: ${strays.join(", ")}`);
-  process.exit(1);
-}
+const previous = await Bun.file(MANIFEST)
+  .json()
+  .catch(() => null);
+const retrieved =
+  changed === 0 && typeof previous?.retrieved === "string"
+    ? previous.retrieved
+    : new Date().toISOString().slice(0, 10);
 
 const manifest = {
   $comment:

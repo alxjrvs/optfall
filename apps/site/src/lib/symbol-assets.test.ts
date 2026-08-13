@@ -14,7 +14,9 @@ import { describe, expect, test } from "bun:test";
 import MANIFEST from "../../../../data/symbols/symbols.json";
 import { INFERRED, SYMBOLS, assetForSymbol, symbolForKind } from "./card-symbols";
 
-const PUBLIC_DIR = new URL("../../public/symbols/", import.meta.url);
+/* The public ROOT: manifest paths are relative to it (`symbols/icon_p.png`),
+   which is the key `check-asset-provenance.ts` matches on. */
+const PUBLIC_DIR = new URL("../../public/", import.meta.url);
 
 describe("the ingested game symbols", () => {
   test("cover every symbol the rules table names, except the inferred one", () => {

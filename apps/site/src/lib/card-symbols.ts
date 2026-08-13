@@ -186,7 +186,7 @@ export interface SymbolAsset {
 const ASSETS = new Map<SymbolKind, SymbolAsset>(
   MANIFEST.symbols.map((entry) => [
     KIND_BY_KEY[entry.key] as SymbolKind,
-    { src: `/symbols/${entry.file}`, width: entry.width, height: entry.height },
+    { src: `/${entry.file}`, width: entry.width, height: entry.height },
   ]),
 );
 

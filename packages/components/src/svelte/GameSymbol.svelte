@@ -133,17 +133,35 @@
 
   /*
     THE ARTWORK CARRIES ITS OWN SHAPE, so the plate underneath it gets out of
-    the way entirely — no background, no bevel, no clip. The icons are round
-    with their own dark ring; a struck square behind a disc would read as a
-    mounting plate somebody forgot to remove.
+    the way entirely — no background, no bevel, no clip, and no `align-items`
+    nudge from the shield. The icons are round with their own dark ring; a
+    struck square behind a disc would read as a mounting plate somebody forgot
+    to remove.
+
+    `.symbol.art`, NOT `.art`, AND THAT IS THE WHOLE OF A BUG THAT SHIPPED.
+    Svelte scopes by adding one class to every selector, so `.art` and
+    `.defence` were both single-class rules of equal specificity, and the
+    silhouettes below win on source order. Every ingested icon was therefore
+    drawn clipped by the plate it was supposed to replace, on top of the colour
+    it was supposed to remove: `{d}` lost its bottom corners to the shield cut,
+    `{t}` and `{u}` lost a whole side, `{c}` lost its top.
+
+    It was invisible in review precisely where it was checked hardest — `{p}`
+    and `{r}` clip to `cut.disc`, and a disc-shaped clip on a round icon is a
+    no-op, so the two symbols anybody would screenshot first looked perfect.
+    Raising specificity rather than reordering, because source order is not a
+    thing a future edit can be expected to preserve and this rule has now
+    demonstrated what it costs when it is not.
   */
-  .art {
+  .symbol.art {
     background: none;
     box-shadow: none;
     clip-path: none;
+    align-items: center;
+    padding-block-start: 0;
   }
 
-  .art img {
+  .symbol.art img {
     inline-size: 100%;
     block-size: 100%;
     /* The files are square and the box is square, but `contain` is stated

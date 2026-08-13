@@ -154,6 +154,16 @@ const CASES: readonly {
   { name: "GameSymbol untap", component: GameSymbol, props: { kind: "untap", letter: "U", name: "untap" } },
   { name: "GameSymbol x", component: GameSymbol, props: { kind: "x", letter: "X", name: "X" } },
   { name: "GameSymbol inline in a sentence", component: GameSymbol, props: { kind: "power", letter: "P", name: "power" }, wrap: ["<p>Target attack gets +1", "</p>"] },
+  // WITH THE INGESTED ARTWORK, which is the branch the card pages actually
+  // take and which no case covered until now. The question this asks is the
+  // double-naming one: the wrapper is `role="img"` with the rules' word, and
+  // the `<img>` inside it must therefore be `alt=""` — an image with its own
+  // accessible name nested inside a named `img` role announces the symbol
+  // twice, which is worse in a sentence than in a stat block because it
+  // happens mid-clause.
+  { name: "GameSymbol power, with artwork", component: GameSymbol, props: { kind: "power", letter: "P", name: "power", src: "/symbols/icon_p.png", width: 105, height: 105 } },
+  { name: "GameSymbol defence, with artwork", component: GameSymbol, props: { kind: "defence", letter: "D", name: "defence", src: "/symbols/icon_d.png", width: 105, height: 105 } },
+  { name: "GameSymbol with artwork, inline in a sentence", component: GameSymbol, props: { kind: "resource", letter: "R", name: "resource", src: "/symbols/icon_r.png", width: 105, height: 105 }, wrap: ["<p>Gain 1", "</p>"] },
   // The face carries a real accessible name and a copyright line that no
   // caller can drop. Both orientations, because the landscape box is a
   // different rendering rather than the same one scaled.
