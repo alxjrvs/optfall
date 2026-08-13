@@ -9,6 +9,7 @@
  */
 import { GameSymbol } from "optfall-components/svelte";
 
+import { assetForSymbol } from "../lib/card-symbols";
 import type { Inline } from "../lib/card-text";
 import Self from "./CardTextInline.astro";
 
@@ -23,11 +24,21 @@ const { nodes } = Astro.props;
   nodes.map((node) => {
     if (node.kind === "text") return node.value;
     if (node.kind === "symbol") {
+      /*
+        LSS's own artwork where they publish it, the drawn plate where they do
+        not — which is `{x}` alone, and only because 1.12.4 does not list it.
+        The intrinsic box travels with the source so a paragraph of symbols
+        holds its height before the images land.
+      */
+      const asset = assetForSymbol(node.symbol);
       return (
         <GameSymbol
           kind={node.symbol.kind}
           letter={node.symbol.letter}
           name={node.symbol.name}
+          src={asset?.src}
+          width={asset?.width}
+          height={asset?.height}
         />
       );
     }

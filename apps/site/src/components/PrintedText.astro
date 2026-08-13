@@ -23,9 +23,7 @@
  */
 import { BevelledPlate } from "optfall-components/svelte";
 
-import { parseCardText, symbolsUsed } from "../lib/card-text";
-import { INFERRED, ruleTextFor } from "../lib/card-symbols";
-import { hrefForNumber } from "../lib/search";
+import { parseCardText } from "../lib/card-text";
 import CardTextInline from "./CardTextInline.astro";
 
 interface Props {
@@ -38,11 +36,6 @@ interface Props {
 const { text, uid } = Astro.props;
 
 const blocks = parseCardText(text);
-const symbols = symbolsUsed(text).map((symbol) => ({
-  symbol,
-  ruleText: ruleTextFor(symbol),
-  inferred: INFERRED.includes(symbol.kind),
-}));
 
 const name = `view-${uid}`;
 ---

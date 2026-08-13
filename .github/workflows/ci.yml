@@ -421,6 +421,37 @@ jobs:
       - name: Assert components consume tokens, never literals
         run: bun run check:tokens
 
+  # docs/COMPLIANCE.md §3: "Every binary asset committed under a public
+  # directory needs a recorded origin. An asset with no provenance entry is
+  # treated as non-compliant until it has one." §3 then lists the enforcement as
+  # an OPEN ACTION — "Today: review, and nothing else" — and names the failure
+  # it is most afraid of: set symbols as filter icons, "the single most likely
+  # violation, because it is the obvious UI move and every card site does it".
+  #
+  # This job is that enforcement. It is offline and deterministic: it hashes
+  # what is committed and compares against data/symbols/symbols.json. It does
+  # NOT fetch anything, so it cannot fail because a third-party host is down.
+  #
+  # What it proves is that an asset's origin is RECORDED, not that the origin
+  # was permitted — someone who ingests a set symbol and writes it an entry
+  # passes this and fails the policy. The value is that doing so becomes a
+  # visible diff naming a URL, rather than a PNG in a directory nobody reads.
+  provenance:
+    name: provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Assert every committed binary asset has a verified origin
+        run: bun run check:provenance
+
   disclaimer:
     name: disclaimer
     runs-on: ubuntu-latest
@@ -505,6 +536,7 @@ jobs:
       - build
       - no-llm-dependencies
       - tokens
+      - provenance
       - disclaimer
     steps:
       - name: Checkout

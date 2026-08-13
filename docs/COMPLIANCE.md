@@ -177,10 +177,32 @@ mark, not just borrowed assets.
   even one drawn from scratch.
 - **Asset provenance.** Every binary asset committed under a public directory
   needs a recorded origin. An asset with no provenance entry is treated as
-  non-compliant until it has one.
+  non-compliant until it has one. **Enforced since the game symbols landed** —
+  `scripts/check-asset-provenance.ts`, the `provenance` job, in the gate.
 
-**Status.** Specified in `DESIGN.md` and `PLAN.md`; enforced once Phase 1's
-token package and lint rule land.
+**The game symbols are in, and they are not an exception to this rule.** The
+eight symbols the Comprehensive Rules defines at 1.12.4 — `{p}`, `{r}`, `{d}`,
+`{h}`, `{i}`, `{c}`, `{t}`, `{u}` — are LSS's own artwork, ingested from LSS's
+own rules site and rendered inline in card text. The line this section draws is
+at **marks**: logos, product set logos, and close semblance of either. A symbol
+that the rules define as notation for a power value is a **mechanic**, which is
+the category this very section blesses two bullets up, in the sentence
+explaining why the project's mark is a pitch jewel. `{p}` identifies no brand.
+
+Three things make that argument checkable rather than asserted:
+
+- They come from `rules.fabtcg.com`, where the symbols are published as part of
+  the **rules**, not from `fabtcg.com/resources/marketing-assets/`, which is a
+  brand kit and is off limits. A test asserts the recorded origin is the rules
+  host, so the argument fails loudly if the source ever moves.
+- The set is **closed at eight** and derived from the rules corpus. There is no
+  argument to the ingest script that widens it, and `symbol-assets.test.ts`
+  fails if the manifest and the rules table stop describing the same symbols.
+- `data/symbols/symbols.json` records each file's URL, SHA-256, byte length and
+  pixel box, plus a rights statement naming LSS and disclaiming relicensing.
+
+**Status.** Specified in `DESIGN.md` and `PLAN.md`; the token constraint landed
+with Phase 1, and the asset-provenance half is now enforced in CI.
 
 **What would break it.**
 
@@ -199,13 +221,22 @@ foundries and are not LSS's to sublicense, so community tools bundling "official
 fonts" are not a licence and are not a precedent. Any display face we adopt must
 be independently licensed for webfont embedding (`DESIGN.md`, open questions).
 
-**How we would find out.** Today: review, and nothing else — **this one is an
-open action, not a satisfied requirement.** The intended enforcement is a CI
-check over built output and committed assets that fails on a known set-symbol
-filename pattern, which catches the careless case; it lands with Phase 1's asset
-pipeline, since there are no committed binary assets to scan yet. The deliberate
-case is caught in review either way, which is why the constraint is written into
-the tokens: it makes the deliberate case look deliberate.
+**How we would find out.** This said "review, and nothing else — **this one is an
+open action**" while the reason given was that "there are no committed binary
+assets to scan yet". There are now, so the action is closed: the `provenance`
+job hashes every binary under a public directory against
+`data/symbols/symbols.json` and fails on anything without a verified origin. It
+runs offline, so it cannot go red because a third-party host is down.
+
+**Be precise about what a green tick buys.** It proves an asset's origin is
+*recorded*, not that the origin was *permitted*. Somebody who ingests a set
+symbol and writes it a manifest entry passes this check and still violates the
+policy. That is not a gap to be closed by a cleverer filename pattern — the
+earlier plan here was to match "a known set-symbol filename pattern", which
+catches a careless copy and nothing else. What the check actually changes is
+that adding a governed asset is now a **visible diff naming a URL**, so the
+deliberate case looks deliberate. That is the same argument the token constraint
+makes, applied to bytes; review is still what judges the URL.
 
 ### 4. The verbatim disclaimer
 

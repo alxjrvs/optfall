@@ -1,0 +1,134 @@
+#!/usr/bin/env bun
+/**
+ * Fails the build on a binary asset with no recorded origin.
+ *
+ * `docs/COMPLIANCE.md` §3 requires it in one sentence — "Every binary asset
+ * committed under a public directory needs a recorded origin. An asset with no
+ * provenance entry is treated as non-compliant until it has one" — and then
+ * lists the enforcement as **an open action**: "Today: review, and nothing
+ * else." Review is what let a project ship set symbols as filter icons; §3
+ * calls that "the single most likely violation, because it is the obvious UI
+ * move and every card site does it."
+ *
+ * This is the check that closes it. Every file under a public directory is
+ * either text this repository authored, or a binary with an entry in a
+ * provenance manifest naming its URL and its SHA-256. There is no third case.
+ *
+ * WHAT IT CANNOT DO, said plainly so nobody reads more into a green tick: it
+ * checks that an asset's origin is RECORDED, not that the origin was allowed.
+ * Someone who ingests a set symbol and writes it a provenance entry passes this
+ * and fails the policy. The value is that doing so is now a deliberate, visible,
+ * reviewable diff — a new manifest entry naming a URL — rather than a PNG
+ * appearing in a directory nobody diffs.
+ */
+import { readdir } from "node:fs/promises";
+
+/** Directories served verbatim to the public, and the manifest covering each. */
+const GOVERNED = [
+  { dir: "apps/site/public", manifest: "data/symbols/symbols.json" },
+] as const;
+
+/**
+ * Extensions that are BYTES rather than source. A `.svg` counts: it is an image
+ * whatever its encoding, and "it is technically text" is exactly the argument
+ * that would let a logo in.
+ */
+const BINARY = /\.(png|jpg|jpeg|webp|avif|gif|svg|ico|woff2?|ttf|otf|eot|mp4|webm)$/i;
+
+interface ManifestEntry {
+  readonly file: string;
+  readonly url: string;
+  readonly sha256: string;
+}
+
+async function walk(dir: string): Promise<string[]> {
+  const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  const nested = await Promise.all(
+    items.map(async (item) => {
+      const path = `${dir}/${item.name}`;
+      return item.isDirectory() ? await walk(path) : [path];
+    }),
+  );
+  return nested.flat();
+}
+
+/** Every complaint about one asset, or an empty list when it is accounted for. */
+async function auditFile(
+  path: string,
+  manifest: string,
+  byFile: ReadonlyMap<string, ManifestEntry>,
+): Promise<string[]> {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  const entry = byFile.get(name);
+
+  if (entry === undefined) {
+    return [`::error file=${path}::no provenance entry in ${manifest}`];
+  }
+
+  /*
+    THE HASH IS CHECKED, NOT JUST THE NAME. A manifest that records where a file
+    came from and never verifies the file still IS that download is a note, not
+    a control — it would pass happily after somebody swapped the bytes and kept
+    the filename.
+  */
+  const bytes = new Uint8Array(await Bun.file(path).arrayBuffer());
+  const digest = new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
+  if (digest !== entry.sha256) {
+    return [`::error file=${path}::bytes do not match the recorded SHA-256 in ${manifest}`];
+  }
+
+  if (!entry.url.startsWith("https://")) {
+    return [`::error file=${path}::provenance URL is not an https origin`];
+  }
+
+  return [];
+}
+
+/** Everything wrong under one governed directory, and a line to report. */
+async function auditDir(dir: string, manifest: string) {
+  const files = (await walk(dir)).filter((path) => BINARY.test(path));
+
+  const record = await Bun.file(manifest)
+    .json()
+    .catch(() => null);
+  const entries: ManifestEntry[] = record?.symbols ?? [];
+  const byFile = new Map(entries.map((entry) => [entry.file, entry]));
+
+  const problems = (
+    await Promise.all(files.map((path) => auditFile(path, manifest, byFile)))
+  ).flat();
+
+  /* A manifest entry whose file has been deleted is stale, and a stale record is
+     how the next reader comes to believe an asset is accounted for. */
+  const onDisk = new Set(files.map((path) => path.slice(path.lastIndexOf("/") + 1)));
+  for (const entry of entries) {
+    if (onDisk.has(entry.file)) continue;
+    problems.push(`::error file=${manifest}::entry for ${entry.file}, which is not on disk`);
+  }
+
+  return {
+    problems,
+    summary: `${dir}: ${files.length} binary asset(s), ${entries.length} provenance entr(ies).`,
+  };
+}
+
+const audits = await Promise.all(
+  GOVERNED.map(({ dir, manifest }) => auditDir(dir, manifest)),
+);
+
+let violations = 0;
+for (const { problems, summary } of audits) {
+  for (const problem of problems) console.error(problem);
+  violations += problems.length;
+  console.log(summary);
+}
+
+if (violations > 0) {
+  console.error(
+    `\n${violations} asset(s) without a verified origin. Every binary under a public directory
+needs an entry naming its URL and SHA-256 — see docs/COMPLIANCE.md §3.`,
+  );
+  process.exit(1);
+}
+
+console.log("Every committed binary asset has a verified origin. ✔");
