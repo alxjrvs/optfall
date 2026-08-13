@@ -25,10 +25,17 @@ import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
  * takes the ink of the wordmark it is set beside, which on this canvas meant it
  * inherited *Storybook's* text colour and stopped following the toolbar.
  *
- * Two declarations, matching the product's own in `BaseLayout.astro`.
- * Deliberately not its typography or padding: those belong to a page, and a
- * story that wants them should ask, whereas ground and ink are what "rendered
- * in both themes" means.
+ * Three declarations, matching the product's own in `BaseLayout.astro`.
+ * `color-scheme` is there for the same reason as the other two and not as
+ * housekeeping: it governs the chrome the browser draws rather than the chrome
+ * we draw — scrollbars, form widgets, the canvas behind an overscroll — and
+ * painting a dark ground without it is what leaves a light scrollbar down the
+ * side of a near-black workbench. Ground, ink and scheme are one fact stated in
+ * the three places CSS makes you state it.
+ *
+ * Deliberately still not the layout's typography or padding: those belong to a
+ * page, and a story that wants them should ask, whereas these three are what
+ * "rendered in both themes" means.
  */
 function installTheme(): void {
   const id = "optfall-theme-tokens";
@@ -37,6 +44,10 @@ function installTheme(): void {
   style.id = id;
   style.textContent = [
     themeStylesheet(),
+    "",
+    ":root {",
+    "  color-scheme: dark light;",
+    "}",
     "",
     "body {",
     "  background: var(--of-color-ground);",

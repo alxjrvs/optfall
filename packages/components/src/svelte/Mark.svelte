@@ -153,13 +153,13 @@
        beside a muted word and left the mark unchanged on hover, so the lockup
        lit up in halves. Inheriting is what makes it one object.
 
-       Nothing is lost by dropping the token, but that holds only because both
-       rendering surfaces spend it on the document: `BaseLayout.astro` sets
-       `--of-color-ink` on `body`, and `.storybook/preview.ts` now does the
-       same. A mark standing on its own therefore resolves to exactly the value
-       this line used to name. A surface that sets no `color` at all gets its
-       host's text colour instead — which is what inheriting means, and why the
-       workbench had to stop being such a surface. */
+       Nothing is lost by dropping the token, but that holds only because the
+       surfaces that render this component spend it on the document —
+       `BaseLayout.astro`, `.storybook/preview.ts` and the a11y harness all set
+       `--of-color-ink` on `body` — so a mark standing on its own resolves to
+       exactly the value this line used to name. A surface that sets no `color`
+       at all gets its host's text colour instead, which is what inheriting
+       means and why the workbench had to stop being such a surface. */
     color: inherit;
 
     /* Struck, not printed: a light top edge and a dark bottom one, carried on
