@@ -11,13 +11,38 @@ import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
  * leaving Storybook showing colours the product does not use, which is the one
  * failure a workbench must not have. Importing the same function the product
  * imports means the workbench cannot be wrong about the theme.
+ *
+ * THE TOKENS ARE DECLARED, AND THE DOCUMENT ALSO HAS TO SPEND THEM.
+ * `themeStylesheet()` emits custom properties on `:root` and nothing else — it
+ * defines the palette, it does not apply it — so until this rule existed the
+ * canvas stayed the browser's white with the browser's black text, under a
+ * comment below asserting the workbench "opens in" black. Every story was
+ * rendered on a ground the product does not have, and the theme toolbar moved
+ * the token values while the page around them did not move at all.
+ *
+ * That was a general lie about the theme and a specific bug for anything built
+ * on `currentColor`: `Mark.svelte` inherits its `color` precisely so a mark
+ * takes the ink of the wordmark it is set beside, which on this canvas meant it
+ * inherited *Storybook's* text colour and stopped following the toolbar.
+ *
+ * Two declarations, matching the product's own in `BaseLayout.astro`.
+ * Deliberately not its typography or padding: those belong to a page, and a
+ * story that wants them should ask, whereas ground and ink are what "rendered
+ * in both themes" means.
  */
 function installTheme(): void {
   const id = "optfall-theme-tokens";
   if (document.getElementById(id)) return;
   const style = document.createElement("style");
   style.id = id;
-  style.textContent = themeStylesheet();
+  style.textContent = [
+    themeStylesheet(),
+    "",
+    "body {",
+    "  background: var(--of-color-ground);",
+    "  color: var(--of-color-ink);",
+    "}",
+  ].join("\n");
   document.head.append(style);
 }
 
