@@ -84,7 +84,13 @@
   aria-label={spoken}
   data-pitch={value}
 >
-  <span class="glyph" aria-hidden="true">{glyph}</span>
+  <!-- The stone is its own element so the bevel can be a filter on the parent.
+       `filter` is applied before `clip-path` on the same element, so a
+       drop-shadow declared beside the clip is clipped away by it; on the parent
+       it traces the child's already-clipped alpha instead. See the style block. -->
+  <span class="stone">
+    <span class="glyph" aria-hidden="true">{glyph}</span>
+  </span>
 </span>
 
 <style>
@@ -102,45 +108,61 @@
       render. Orientation is the whole of the difference and it is what makes
       the shape read as a gem at a glance, before the numeral is legible.
 
-      The value is duplicated from `JEWEL_SILHOUETTE` in `../index` because a
-      Svelte `<style>` block cannot interpolate a module constant, and putting
-      it on an inline `style` attribute would ship the polygon on every jewel on
-      every card page instead of once in a cached stylesheet. `index.test.ts`
-      asserts the two strings still match, so the duplication is checked rather
-      than trusted — change one and the suite fails naming the other.
+      The polygon is a TOKEN rather than a literal here, which is the same rule
+      every colour and length in this file already follows and the one that
+      would have prevented the drift outright: `scripts/check-tokens.ts` fails
+      the build on a `var(--of-*)` the theme does not define, so the shape
+      cannot be redrawn in one surface and not the other. `GameSymbol.svelte`
+      takes `--of-ornament-cut-crown` the same way.
     */
-    --cut: 15%;
+    position: relative;
+    display: inline-flex;
+    inline-size: var(--of-ornament-jewel-base);
+    block-size: var(--of-ornament-jewel-base);
 
+    /* Struck, not printed: a light top edge and a dark bottom one, exactly as
+       every plate in the system carries.
+
+       THE MECHANISM CHANGED WITH THE SHAPE, which is this file's own rule —
+       "the mechanism is chosen by geometry, not by taste". It was spelling (1),
+       an inset `box-shadow` pair, and that is correct for an EDGE-UP octagon,
+       where a hairline band along the top of the box lands on a full-width flat
+       edge. On the diamond there is no flat top: that band meets the polygon
+       only in a sliver a few units wide at the apex, so the bevel degenerated
+       into a glint on the one component every other primitive is supposed to
+       follow.
+
+       (Written without a digit-and-unit anywhere, deliberately: this is a
+       `<style>` block, and `scripts/check-tokens.ts` reads prose inside one as
+       CSS. Describing a literal is how you accidentally commit one.)
+
+       So the jewel now takes spelling (3), the paired `drop-shadow()` filter
+       that `Mark` uses — the only one of the four that traces an arbitrary
+       alpha silhouette, which is what the diamond's four diagonal edges need.
+
+       It has to sit on the PARENT. `filter` is applied before `clip-path` on
+       the same element, so a drop-shadow declared next to the clip is drawn and
+       then clipped away by it; on the parent it traces the child's
+       already-clipped shape. That is what the extra span in the markup buys,
+       and it is the whole reason for it. */
+    filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
+      drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
+
+    user-select: none;
+  }
+
+  /* The stone itself: the reserved silhouette, filled, carrying the numeral. */
+  .stone {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    inline-size: var(--of-ornament-jewel-base);
-    block-size: var(--of-ornament-jewel-base);
-    clip-path: polygon(
-      50% 0%,
-      calc(100% - var(--cut)) var(--cut),
-      100% 50%,
-      calc(100% - var(--cut)) calc(100% - var(--cut)),
-      50% 100%,
-      var(--cut) calc(100% - var(--cut)),
-      0% 50%,
-      var(--cut) var(--cut)
-    );
+    inline-size: 100%;
+    block-size: 100%;
+    clip-path: var(--of-ornament-cut-jewel);
     background: var(--stone);
     color: var(--ink);
-
-    /* Struck, not printed: light top edge, dark bottom edge, exactly as every
-       plate in the system carries. Inset rather than bordered because a border
-       cannot follow a `clip-path` — the shadow is clipped by the same polygon,
-       so the bevel takes the chamfers with it instead of drawing a ninth and
-       tenth side across them. This is spelling (1) in the list above. */
-    box-shadow:
-      inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
-      inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
-
-    user-select: none;
   }
 
   .sm {
@@ -168,7 +190,10 @@
      sits on undiluted stone; the lower opacity is headroom, since pitch three
      clears the threshold by only 0.16 before any overlay at all. The crown
      highlight survives both changes, which is the point. */
-  .jewel::before {
+  /* On the stone rather than the jewel, so the highlight is clipped by the
+     silhouette that now lives there. On a diamond the band is cut to a triangle
+     by the two upper edges, which is what a crown facet actually looks like. */
+  .stone::before {
     content: "";
     position: absolute;
     inset-block-start: 0;

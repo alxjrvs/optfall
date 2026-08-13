@@ -141,6 +141,24 @@ const STRUCTURE: TokenTable = {
      the interface is ever this shape" — which is why `chi` takes two corners
      rather than the four it would naturally want, and why the effect symbols
      are cut down a side instead. */
+  /* THE RESERVED SILHOUETTE: the pitch diamond. Vertex up, vertex down, widest
+     across the middle, all four corners cut — the eight-sided shape the note
+     above forbids everything else from taking.
+
+     It is a token because it had been a *drawing*, twice, and the two
+     disagreed: `PitchJewel.svelte` clipped an edge-up chamfered square while
+     `scripts/build-design-system.ts` drew this diamond, so the published
+     design-system cards advertised a shape the product did not render, and the
+     logo — built from the component — inherited the wrong one. Nothing failed,
+     because `docs/DESIGN.md` said only "an eight-sided cut stone", which is
+     true of both.
+
+     Here, it is one value that both surfaces name, and `scripts/check-tokens.ts`
+     fails the build on a surface naming a token that does not exist — so the
+     shape cannot be quietly redrawn in one place ever again. Orientation is the
+     whole of the difference: edge-up reads as a button, vertex-up as a gem. */
+  "ornament.cut.jewel":
+    "polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%)",
   "ornament.cut.hexagon": "polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)",
   "ornament.cut.lean.end":
     "polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)",

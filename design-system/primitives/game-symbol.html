@@ -43,6 +43,7 @@
   --of-ornament-filigree-size: 1.25rem;
   --of-ornament-stat-size: 2.25rem;
   --of-ornament-symbol-shift: -0.15em;
+  --of-ornament-cut-jewel: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%);
   --of-ornament-cut-hexagon: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
   --of-ornament-cut-lean-end: polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
   --of-ornament-cut-lean-start: polygon(0 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)));
@@ -144,6 +145,7 @@
   --of-ornament-filigree-size: 1.25rem;
   --of-ornament-stat-size: 2.25rem;
   --of-ornament-symbol-shift: -0.15em;
+  --of-ornament-cut-jewel: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%);
   --of-ornament-cut-hexagon: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
   --of-ornament-cut-lean-end: polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
   --of-ornament-cut-lean-start: polygon(0 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)));
@@ -246,6 +248,7 @@
     --of-ornament-filigree-size: 1.25rem;
     --of-ornament-stat-size: 2.25rem;
     --of-ornament-symbol-shift: -0.15em;
+    --of-ornament-cut-jewel: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%);
     --of-ornament-cut-hexagon: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
     --of-ornament-cut-lean-end: polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
     --of-ornament-cut-lean-start: polygon(0 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)));
@@ -349,6 +352,7 @@
 --of-ornament-filigree-size: 1.25rem;
 --of-ornament-stat-size: 2.25rem;
 --of-ornament-symbol-shift: -0.15em;
+--of-ornament-cut-jewel: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%);
 --of-ornament-cut-hexagon: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
 --of-ornament-cut-lean-end: polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%);
 --of-ornament-cut-lean-start: polygon(0 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)));
@@ -444,13 +448,8 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 .jewel {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
   inline-size: var(--jewel-size); block-size: var(--jewel-size);
-  /* The reserved silhouette, read from the component library rather than
-     redrawn here. This card's hand-drawn copy was the ONLY place the diamond
-     existed: the shipped PitchJewel drew an edge-up chamfered square, so these
-     published cards advertised a shape the product did not render. Reading the
-     constant is what stops that being possible a second time.
-     (No backticks in this comment - it lives inside a template literal.) */
-  clip-path: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%);
+  /* The reserved silhouette, named rather than redrawn. */
+  clip-path: var(--of-ornament-cut-jewel);
   font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-bold);
   --jewel-size: var(--of-ornament-jewel-base);
 }
