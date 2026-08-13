@@ -258,6 +258,41 @@ describe("the emitted stylesheet", () => {
     expect(css).toContain(`:root:not([${THEME_ATTRIBUTE}="dark"])`);
   });
 
+  /*
+   * `color-scheme` governs the chrome the BROWSER draws — scrollbars, form
+   * widgets, the canvas behind an overscroll — so a theme that swaps the
+   * palette without swapping it renders a near-black ground with a light
+   * scrollbar down the side.
+   *
+   * The assertion is that it is keyed to the SAME selectors as the tokens, and
+   * that is the part with a history: it used to be one hand-written
+   * `color-scheme: dark light` on the site's `:root`, which defers to the
+   * operating system while this theme is switched by an attribute. The two
+   * disagreed precisely when both were in play — a light OS on a page pinned to
+   * dark. One declaration per theme block cannot drift from the palette,
+   * because the block it sits in is the palette.
+   */
+  test("ships a colour scheme with every palette, keyed the same way", () => {
+    // Anchored to the start of a line, so the `@media (prefers-color-scheme:
+    // light)` query — which contains the same substring — is not counted as a
+    // declaration. One per palette block, and no more.
+    const declarations = css.match(/^\s*color-scheme: /gm) ?? [];
+    expect(declarations.length).toBe(3);
+
+    // Dark is the native key and takes the bare `:root`.
+    expect(css).toMatch(/:root \{\n\s*color-scheme: dark;/);
+    // Both routes into light — the attribute, and the unopinionated reader.
+    expect(css).toMatch(
+      new RegExp(`:root\\[${THEME_ATTRIBUTE}="light"\\] \\{\\n\\s*color-scheme: light;`),
+    );
+    expect(css).toMatch(
+      new RegExp(`:root:not\\(\\[${THEME_ATTRIBUTE}="dark"\\]\\) \\{\\n\\s*color-scheme: light;`),
+    );
+
+    // Never the OS-deferring spelling: that is the bug this replaced.
+    expect(css).not.toContain("color-scheme: dark light");
+  });
+
   test("emits every token of both themes", () => {
     const declarations = css.match(/--of-[a-z0-9-]+:/g) ?? [];
     const distinct = new Set(declarations);
