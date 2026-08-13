@@ -161,6 +161,29 @@ const STRUCTURE: TokenTable = {
   "ornament.cut.side.start":
     "polygon(var(--chamfer) 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer))",
 
+  /* -- The three printed shapes ---------------------------------------------
+     THE CARD'S OWN FURNITURE OUTRANKS THE HOUSE RULE, for these three and
+     nothing else.
+
+     "Everything is bevelled, nothing is rounded" is a system rule and
+     `bevel.radius` exists only to be zero. A disc breaks it. It is allowed here
+     because power, defence and cost are not chrome the system invented — they
+     are three values a player reads off a physical card, and on that card they
+     are a disc, a shield and a disc. A chamfered square carrying a `4` is the
+     system being consistent with itself at the reader's expense; the reader has
+     the card in their hand.
+
+     The scope of the exemption is exactly these three tokens. Everything else
+     in the interface stays square, and the pitch diamond stays reserved. */
+  "ornament.cut.disc": "circle(50% at 50% 50%)",
+  /* A shield: square shoulders, a deep body, and a point at the foot that takes
+     the bottom quarter rather than the bottom half. Drawn shallow deliberately —
+     at a half-height point the silhouette stops reading as a shield and starts
+     reading as a downward arrow, which is a different thing to have put next to
+     a number. Percentages, so it holds at every plate size. */
+  "ornament.cut.shield":
+    "polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%)",
+
   "ornament.jewel.small": "1.25rem",
   "ornament.jewel.base": "1.75rem",
   "ornament.jewel.large": "2.5rem",
@@ -254,6 +277,67 @@ export const DARK_TOKENS: TokenTable = {
   "color.state.unverified": "#8a6a12",
   "color.state.unverified.ink": "#ffffff",
 
+  /* Stats. The third place boldness is spent, and the argument is the same one
+     that justified the first two: this is DATA, not decoration — the colour
+     says which stat you are reading, exactly as the pitch stone's does.
+
+     Power takes the game's yellow and cost its red, and those are deliberately
+     the same two inks as `pitch.two` and `pitch.one` rather than two new hues
+     invented to avoid a collision. They are the game's own two colours; a
+     reader who has held a card already reads yellow as attack and red as
+     resource. What is reserved to pitch is the OCTAGON, not the hue, and a disc
+     is not a cut stone.
+
+     Defence is steel — a true neutral, like every other neutral here, because a
+     shield that is faintly blue reads as a website's icon rather than as metal.
+     It carries dark ink in the dark theme and light ink in the light one, which
+     is the opposite of every other chip on this list and is why it needs its
+     own ink token rather than a shared one. */
+  "color.stat.power": "#d9a520",
+  "color.stat.power.ink": "#171307",
+  "color.stat.defence": "#a9a9a9",
+  "color.stat.defence.ink": "#141414",
+  "color.stat.cost": "#c62b30",
+  "color.stat.cost.ink": "#ffffff",
+
+  /* Rarity. Ten of them, and the honest note is at the top rather than buried:
+     THESE ARE OPTFALL'S COLOURS, NOT LEGEND STORY STUDIOS'. Nothing in the
+     published dataset names a colour for a rarity, and this project does not
+     invent facts and print them as though they were read off a record — so the
+     LETTER and the WORD carry the fact ("M" and "ajestic"), and the hue is a
+     grouping the reader can scan, nothing more. Getting the hue wrong costs a
+     glance; it cannot make the page say something false.
+
+     They are also the largest single expansion of the palette so far, against a
+     `DESIGN.md` rule that boldness is spent in two places. The mitigation is
+     size rather than restraint of hue: these appear only as a bubble one
+     character wide, at label size, once per card. A rarity chip is not
+     competing with a pitch stone for attention at any distance.
+
+     BRASS IS NOT AVAILABLE, including to Promo, where it is the obvious choice.
+     "A material used once is a signal; used twice it is a theme", and brass is
+     spent on verified attribution. Promo takes a mauve that is nobody else's. */
+  "color.rarity.common": "#6e6e6e",
+  "color.rarity.common.ink": "#ffffff",
+  "color.rarity.rare": "#8a6a2f",
+  "color.rarity.rare.ink": "#ffffff",
+  "color.rarity.super": "#4a7fa8",
+  "color.rarity.super.ink": "#ffffff",
+  "color.rarity.majestic": "#c9971f",
+  "color.rarity.majestic.ink": "#171307",
+  "color.rarity.legendary": "#6f5aa6",
+  "color.rarity.legendary.ink": "#ffffff",
+  "color.rarity.fabled": "#b0431f",
+  "color.rarity.fabled.ink": "#ffffff",
+  "color.rarity.token": "#4a4a4a",
+  "color.rarity.token.ink": "#ededed",
+  "color.rarity.basic": "#3f5764",
+  "color.rarity.basic.ink": "#ffffff",
+  "color.rarity.marvel": "#2f7d6f",
+  "color.rarity.marvel.ink": "#ffffff",
+  "color.rarity.promo": "#8a5a8a",
+  "color.rarity.promo.ink": "#ffffff",
+
   /* Bevel: light top edge, dark bottom edge, so plates read as struck metal. */
   "bevel.light": "rgba(255, 255, 255, 0.09)",
   "bevel.dark": "rgba(0, 0, 0, 0.6)",
@@ -328,6 +412,45 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.state.verified.ink": "#ffffff",
   "color.state.unverified": "#6f5410",
   "color.state.unverified.ink": "#ffffff",
+
+  /* Power keeps a light stone with dark ink for the same reason `pitch.two`
+     does — driving yellow dark enough for white text turns it olive. Defence
+     inverts between the themes: silver on near-black is a light plate with dark
+     ink, and on an ash ground it has to darken to stay a plate at all, so it
+     takes light ink here. That inversion is why defence carries its own ink
+     token rather than sharing one. */
+  "color.stat.power": "#c9971f",
+  "color.stat.power.ink": "#1a1405",
+  "color.stat.defence": "#767676",
+  "color.stat.defence.ink": "#ffffff",
+  "color.stat.cost": "#a81f25",
+  "color.stat.cost.ink": "#ffffff",
+
+  /* Darkened to hold the same separation against an ash ground, and every one
+     of them re-checked for contrast against its own ink rather than translated
+     by formula from the dark table — which is the rule this whole file follows.
+     See the dark table for why these are ours and not LSS's, and for why brass
+     is unavailable to Promo. */
+  "color.rarity.common": "#5c5c5c",
+  "color.rarity.common.ink": "#ffffff",
+  "color.rarity.rare": "#6f5423",
+  "color.rarity.rare.ink": "#ffffff",
+  "color.rarity.super": "#2f5f80",
+  "color.rarity.super.ink": "#ffffff",
+  "color.rarity.majestic": "#a87d13",
+  "color.rarity.majestic.ink": "#1a1405",
+  "color.rarity.legendary": "#57458a",
+  "color.rarity.legendary.ink": "#ffffff",
+  "color.rarity.fabled": "#8f3315",
+  "color.rarity.fabled.ink": "#ffffff",
+  "color.rarity.token": "#767676",
+  "color.rarity.token.ink": "#ffffff",
+  "color.rarity.basic": "#334855",
+  "color.rarity.basic.ink": "#ffffff",
+  "color.rarity.marvel": "#1f6155",
+  "color.rarity.marvel.ink": "#ffffff",
+  "color.rarity.promo": "#6d456d",
+  "color.rarity.promo.ink": "#ffffff",
 
   "bevel.light": "rgba(255, 255, 255, 0.85)",
   "bevel.dark": "rgba(0, 0, 0, 0.22)",

@@ -97,18 +97,37 @@
      `ornament.cut.*` in `packages/theme/src/tokens.ts` for why each cut is
      the cut it is, and for the rule that none of them may be eight-sided. */
 
-  /* Resource — the hexagon, the same plate `StatGlyph` gives `cost`. They are
-     one concept seen twice: a cost is a resource value, per CR 1.12.4e. */
+  /* -- The three the card itself draws --------------------------------------
+     Resource, power and defence take the disc, the disc and the shield, in the
+     card's own two inks — the same change `StatGlyph` made and for the same
+     reason, held together by the same token table.
+
+     THIS IS THE HALF THAT MATTERS MOST. A stat plate is read once, at the top
+     of a page, beside a word that names it. These are read INLINE, mid-sentence,
+     in "deal 3 {p} damage" — with no label anywhere near them. A marker that
+     needed the legend to be decoded was doing its job only for a reader who had
+     already scrolled to the legend, which is most of why that legend existed.
+
+     Resource keeps `cost`'s red disc rather than getting one of its own: a cost
+     is a resource value (CR 1.12.4e), and one concept gets one shape. */
   .resource {
-    clip-path: var(--of-ornament-cut-hexagon);
+    clip-path: var(--of-ornament-cut-disc);
+    background: var(--of-color-stat-cost);
+    color: var(--of-color-stat-cost-ink);
   }
 
   .power {
-    clip-path: var(--of-ornament-cut-lean-end);
+    clip-path: var(--of-ornament-cut-disc);
+    background: var(--of-color-stat-power);
+    color: var(--of-color-stat-power-ink);
   }
 
   .defence {
-    clip-path: var(--of-ornament-cut-lean-start);
+    clip-path: var(--of-ornament-cut-shield);
+    background: var(--of-color-stat-defence);
+    color: var(--of-color-stat-defence-ink);
+    align-items: start;
+    padding-block-start: var(--of-space-tightest);
   }
 
   /* Life — the plain plate. Nothing is cut, which is its own signal in a set
@@ -122,7 +141,7 @@
   }
 
   /* Chi — cut across the top, distinct from all five above without becoming
-     the reserved octagon. */
+     the reserved pitch diamond. */
   .chi {
     clip-path: var(--of-ornament-cut-crown);
   }
