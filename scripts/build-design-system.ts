@@ -335,6 +335,62 @@ cards.push({
   <p class="note">No LSS symbol is reproduced. These are the system's own plates carrying our numerals — the same move the mark made: take the register, none of the form.</p>`,
 });
 
+/**
+ * A silhouette, read out of the token table rather than copied beside it.
+ *
+ * THE GALLERY IS STATIC HTML, so every earlier primitive page hardcoded its own
+ * `clip-path` — harmless while the prose made no claim about it, and not
+ * harmless on the symbol page, which says the shapes are "read from
+ * `ornament.cut.*` so the two cannot drift". A claim stronger than its
+ * mechanism is worse than no claim: it tells the next reader a guarantee exists
+ * where none does. This makes the mechanism match.
+ *
+ * `--chamfer` is substituted with the notch token's own value, because the
+ * gallery has no component setting it — the shipped components do.
+ */
+function cutValue(id: string): string {
+  const raw = DARK_TOKENS[`ornament.${id}`];
+  const chamfer = DARK_TOKENS["ornament.notch.size"];
+  // A missing token is a renamed or deleted cut, and the gallery should fail
+  // loudly rather than silently render an unclipped square that looks like a
+  // deliberate shape.
+  if (raw === undefined) throw new Error(`no such silhouette token: ornament.${id}`);
+  if (chamfer === undefined) throw new Error("ornament.notch.size is missing");
+  return raw.replaceAll("var(--chamfer)", chamfer);
+}
+
+cards.push({
+  path: "primitives/game-symbol.html",
+  group: "Primitives",
+  title: "Game symbol",
+  body: `
+  <p class="note">The markers upstream prints inside card text — <code>{p}</code>, <code>{r}</code>, <code>{t}</code> — as struck plates. <strong>The same silhouettes the stat glyph uses</strong>, read from <code>ornament.cut.*</code> in the token layer so the two cannot drift: the plate you meet inline in <code>+1{p}</code> is the plate carrying <code>4</code> in the stat block above it.</p>
+  <div class="row" style="margin-block-start:var(--of-space-loose);align-items:flex-start;gap:var(--of-space-looser);flex-wrap:wrap">
+    ${[
+      ["{p}", "P", "power", "cut.lean.end"],
+      ["{r}", "R", "resource", "cut.hexagon"],
+      ["{d}", "D", "defence", "cut.lean.start"],
+      ["{h}", "H", "life", "cut.plain"],
+      ["{i}", "I", "intellect", "cut.diagonal.start"],
+      ["{c}", "C", "chi", "cut.crown"],
+      ["{t}", "T", "tap", "cut.side.end"],
+      ["{u}", "U", "untap", "cut.side.start"],
+    ].map(([token, letter, name, cut]) => [token, letter, name, cutValue(cut as string)])
+      .map(
+        ([token, letter, name, clip]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
+          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:${clip};box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">${letter}</span>
+          <span class="eyebrow" style="margin:0">${name}</span>
+          <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">${token}</code>
+        </div>`,
+      )
+      .join("")}
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>The table is the rules', not ours.</strong> The Comprehensive Rules defines all eight at 1.12.4a&ndash;h — "the power symbol is {p} and represents a power value" — so rendering them is the same join this site already makes between a keyword and the rule that governs it, and every symbol on a card page links to the rule that defines it. A ninth marker, <code>{x}</code>, appears on two cards and is <em>not</em> in that table; it is drawn as a plain italic letter and flagged as inferred rather than filed with the rest.</p>
+  <p class="note"><strong>The last two are cut differently on purpose.</strong> The rules distinguish symbols that represent a <em>value</em> from those that represent an <em>effect</em> — 1.12.4g says tap "represents the tap effect" — so tap and untap are cut down a whole side rather than at a corner, and read as verbs before the letter is read. None is eight-sided: that outline belongs to the pitch jewel, which is why chi takes two corners rather than the four it wants.</p>
+  <p class="note">The letter is upstream's, never a tidier one: life is <strong>H</strong> because the marker is <code>{h}</code>. Calling it L would break the one job the plate has, which is to connect the rendered view to the raw one. The accessible name says "life" in full.</p>
+  <p class="note">No LSS symbol is reproduced. These are not redrawn resource or attack pips — they are the system's own plates carrying the letter upstream itself writes between the braces.</p>`,
+});
+
 cards.push({
   path: "primitives/search-field.html",
   group: "Primitives",

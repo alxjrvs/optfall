@@ -100,70 +100,53 @@
   }
 
   /* -- The silhouettes ------------------------------------------------------
-     One vocabulary: a square plate, chamfered differently. Never eight-sided —
-     that shape belongs to the pitch jewel and to nothing else. */
+     ONE VOCABULARY, AND IT NOW LIVES IN THE TOKEN LAYER as `ornament.cut.*`,
+     because `GameSymbol` reads the same table.
 
-  /* Cost — a hexagonal plate, as the design language names it. */
+     That pairing is the point rather than a tidy-up. A reader meets `+1{p}`
+     inline in the card's printed text and `4` here in the stat block, and they
+     are the same plate — so the notation is legible from the stat block without
+     anyone consulting a legend. Held as two copies of a `clip-path`, that
+     equivalence would last until somebody adjusted one chamfer.
+
+     Still never eight-sided: that shape belongs to the pitch jewel and to
+     nothing else. */
+
+  /* Cost — the hexagon. It is the RESOURCE silhouette, which is the same fact
+     said twice rather than a reuse: CR 1.12.4e makes `{r}` a resource value,
+     and a cost is the resource value you pay. */
   .cost {
-    clip-path: polygon(
-      25% 0,
-      75% 0,
-      100% 50%,
-      75% 100%,
-      25% 100%,
-      0 50%
-    );
+    clip-path: var(--of-ornament-cut-hexagon);
   }
 
   /* Power — chamfered at the leading corner: the plate leans forward. */
   .power {
-    clip-path: polygon(
-      0 0,
-      100% 0,
-      100% calc(100% - var(--chamfer)),
-      calc(100% - var(--chamfer)) 100%,
-      0 100%
-    );
+    clip-path: var(--of-ornament-cut-lean-end);
   }
 
   /* Defence — the mirror, so the pair reads as opposed at a glance. */
   .defence {
-    clip-path: polygon(
-      0 0,
-      100% 0,
-      100% 100%,
-      var(--chamfer) 100%,
-      0 calc(100% - var(--chamfer))
-    );
+    clip-path: var(--of-ornament-cut-lean-start);
   }
 
   /* Life — the plain plate. Nothing is cut, which is its own signal in a set
      where everything else is. */
   .life {
-    clip-path: none;
+    clip-path: var(--of-ornament-cut-plain);
   }
 
   /* Intellect and Arcane — opposed diagonals, so the two hero stats are
-     distinguishable from each other and from the three combat stats. */
+     distinguishable from each other and from the three combat stats.
+
+     ARCANE IS THE ONE STAT WITH NO PRINTED SYMBOL. The CR's table at 1.12.4
+     names eight and arcane is not among them, so this plate has no `GameSymbol`
+     counterpart and never appears inline in card text. The silhouette is ours
+     alone, which is exactly why it is worth saying here. */
   .intellect {
-    clip-path: polygon(
-      var(--chamfer) 0,
-      100% 0,
-      100% calc(100% - var(--chamfer)),
-      calc(100% - var(--chamfer)) 100%,
-      0 100%,
-      0 var(--chamfer)
-    );
+    clip-path: var(--of-ornament-cut-diagonal-start);
   }
 
   .arcane {
-    clip-path: polygon(
-      0 0,
-      calc(100% - var(--chamfer)) 0,
-      100% var(--chamfer),
-      100% 100%,
-      var(--chamfer) 100%,
-      0 calc(100% - var(--chamfer))
-    );
+    clip-path: var(--of-ornament-cut-diagonal-end);
   }
 </style>

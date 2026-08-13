@@ -1,0 +1,47 @@
+---
+/**
+ * One run of parsed card text: emphasis, symbols and the words between them.
+ *
+ * Recursive, because emphasis nests symbols — Cosmo prints
+ * `**Once per Turn Action - {r}: Attack**` with the marker inside the bold run.
+ * Astro has no recursive-component sugar, so this file imports itself; the
+ * recursion terminates on `text` and `symbol` nodes, which have no children.
+ */
+import { GameSymbol } from "optfall-components/svelte";
+
+import type { Inline } from "../lib/card-text";
+import Self from "./CardTextInline.astro";
+
+interface Props {
+  nodes: readonly Inline[];
+}
+
+const { nodes } = Astro.props;
+---
+
+{
+  nodes.map((node) => {
+    if (node.kind === "text") return node.value;
+    if (node.kind === "symbol") {
+      return (
+        <GameSymbol
+          kind={node.symbol.kind}
+          letter={node.symbol.letter}
+          name={node.symbol.name}
+        />
+      );
+    }
+    if (node.kind === "strong") {
+      return (
+        <strong>
+          <Self nodes={node.children} />
+        </strong>
+      );
+    }
+    return (
+      <em>
+        <Self nodes={node.children} />
+      </em>
+    );
+  })
+}

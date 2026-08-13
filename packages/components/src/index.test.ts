@@ -43,13 +43,13 @@ describe("card image compliance contract", () => {
 });
 
 describe("the primitive set", () => {
-  test("is the eight Phase 1 deliverables plus the card layer's two, without duplicates", () => {
+  test("is the eight Phase 1 deliverables plus the card layer's six, without duplicates", () => {
     // The eight are Phase 1's closed list. `card-face` is the ninth and it
     // arrived with the card layer rather than with the design system, which is
     // why the count moved: docs/SCRYFALL-GAP.md §5.1 made images a product
     // surface, and a component that renders a card image is the only place the
     // compliance line can be made unrepresentable-to-omit.
-    expect(PRIMITIVES).toHaveLength(13);
+    expect(PRIMITIVES).toHaveLength(14);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
@@ -58,6 +58,12 @@ describe("the primitive set", () => {
     expect(PRIMITIVES).toContain("result-row");
     expect(PRIMITIVES).toContain("stat-glyph");
     expect(PRIMITIVES).toContain("card-face-group");
+    // `game-symbol` is the fourteenth. It renders the markers the printed text
+    // carries — `{p}`, `{r}`, `{t}` — and it is a PRIMITIVE rather than page
+    // markup because it shares its silhouettes with `stat-glyph` through
+    // `ornament.cut.*`: the plate a reader meets inline in `+1{p}` is the same
+    // plate carrying `4` in the stat block.
+    expect(PRIMITIVES).toContain("game-symbol");
   });
 });
 

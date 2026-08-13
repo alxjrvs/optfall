@@ -74,12 +74,15 @@ import {
   BevelledPlate,
   CardFace,
   OrnamentalRule,
+  GameSymbol,
   PitchJewel,
   StatGlyph,
   StatePill,
 } from "optfall-components/svelte";
 
 import PrintingPicker from "./PrintingPicker.svelte";
+import PrintedText from "./PrintedText.astro";
+import { symbolForKind, type SymbolKind } from "../lib/card-symbols";
 
 import {
   CORPUS,
@@ -156,14 +159,47 @@ const GLYPH_FOR: Record<string, "cost" | "power" | "defence" | "life" | "intelle
   Arcane: "arcane",
 };
 
+/**
+ * THE PRINTED SYMBOL FOR EACH STAT, so the stat block teaches the notation.
+ *
+ * A reader who meets `+1{p}` in the card text below should be able to look up
+ * and see that Power is `{p}` — and after `card-symbols.ts` landed there is a
+ * published table saying exactly that, so the row can carry the marker as fact
+ * rather than as a hint.
+ *
+ * TWO ROWS DELIBERATELY GET NOTHING, and the gaps are the honest part:
+ *
+ *   - **Pitch** has no symbol in the rules. It has the jewel, which is the
+ *     reserved silhouette and already says pitch three ways.
+ *   - **Arcane** has no symbol either. CR 1.12.4 names eight and arcane is not
+ *     among them, so the row shows its plate and no marker. Inventing `{a}` to
+ *     make the column tidy is the exact move this file spent several phases
+ *     refusing to make about `{p}`.
+ *
+ * Cost maps to the RESOURCE symbol, which is not a fudge: CR 1.12.4e makes
+ * `{r}` a resource value, and a cost is the resource value you pay. They share
+ * the hexagonal plate for the same reason.
+ */
+const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
+  Cost: "resource",
+  Power: "power",
+  Defence: "defence",
+  Life: "life",
+  Intellect: "intellect",
+};
+
 const stats = (page.pitch === 0
   ? page.stats
   : [{ label: "Pitch", value: String(page.pitch) }, ...page.stats]
-).map((stat) => ({
-  label: stat.label,
-  value: stat.value,
-  kind: GLYPH_FOR[stat.label] ?? null,
-}));
+).map((stat) => {
+  const kind = SYMBOL_FOR[stat.label];
+  return {
+    label: stat.label,
+    value: stat.value,
+    kind: GLYPH_FOR[stat.label] ?? null,
+    symbol: kind === undefined ? null : symbolForKind(kind),
+  };
+});
 
 const nameHref = hrefForSlug(page.nameSlug);
 
@@ -551,7 +587,29 @@ const pitchTargets = JSON.stringify(
             <dl class="stats">
               {stats.map((stat) => (
                 <div class="stat">
-                  <dt>{stat.label}</dt>
+                  <dt>
+                    {stat.label}
+                    {/*
+                      The printed marker, beside the word it names. This is what
+                      connects the stat block to the card text below it: a
+                      reader who sees the power plate here recognises the same
+                      plate in `+1{p}`, and the pair is the whole reason
+                      `GameSymbol` and `StatGlyph` share a shape table.
+
+                      `aria-hidden`, because the label already says "Power" and
+                      a screen reader announcing "Power power" is worse than
+                      one announcing "Power".
+                    */}
+                    {stat.symbol !== null && (
+                      <span class="stat-symbol" aria-hidden="true">
+                        <GameSymbol
+                          kind={stat.symbol.kind}
+                          letter={stat.symbol.letter}
+                          name={stat.symbol.name}
+                        />
+                      </span>
+                    )}
+                  </dt>
                   <dd>
                     {/*
                       THE SHAPE SAYS WHICH STAT IT IS, as docs/DESIGN.md always
@@ -580,18 +638,25 @@ const pitchTargets = JSON.stringify(
           text === "" ? (
             <p class="void">This card has no rules text in the published dataset.</p>
           ) : (
-            <BevelledPlate emphasis="raised">
-              <p class="card-text">{card.functional_text}</p>
-            </BevelledPlate>
+            <PrintedText text={card.functional_text} uid={page.slug} />
           )
         }
         <!--
-          Reproduced, not interpreted. Upstream writes its own emphasis and
-          symbol markers, and Optfall has no published table mapping those
-          markers to words — so substituting any would be inventing a vocabulary
-          and calling it the card's text.
+          REPRODUCED *AND* INTERPRETED, WITH BOTH ON THE PAGE.
+
+          This note used to say the opposite: "Optfall has no published table
+          mapping those markers to words — so substituting any would be
+          inventing a vocabulary and calling it the card's text." The premise
+          was true of the card corpus and false of this repository. The
+          Comprehensive Rules — already committed, already parsed, already what
+          every keyword on this page cites — defines all of them at 1.12.4a–h.
+
+          So rendering them is not an interpretation, it is the same join this
+          site already makes between a keyword and its rule. "Raw text" keeps
+          upstream's bytes one click away, because a join is a claim and a
+          reference work should let you check it.
         -->
-        <p class="verify">Verbatim, including upstream’s own <code>**</code> and <code>&#123;…&#125;</code> markers. Never rewritten or summarised.</p>
+        <p class="verify">Verbatim in both views. “Text” renders upstream’s own <code>**</code> and <code>&#123;…&#125;</code> markers using the rules’ own symbol table; “Raw text” is the published bytes, unaltered.</p>
       </section>
 
       {
@@ -1261,16 +1326,23 @@ const pitchTargets = JSON.stringify(
     color: var(--of-color-ink);
   }
 
+  /* The marker sits beside its word, at the label's own baseline. */
+  .stat dt {
+    display: flex;
+    align-items: center;
+    gap: var(--of-space-tight);
+  }
+
+  .stat-symbol {
+    display: inline-flex;
+  }
+
   /* -- Printed text -------------------------------------------------------- */
 
-  /* `pre-line` collapses runs of spaces but keeps the newlines, which is the
-     only formatting the printed text carries. Nothing here is reflowed. */
-  .card-text {
-    margin: 0;
-    white-space: pre-line;
-    font-size: var(--of-type-size-large);
-    line-height: var(--of-type-leading-loose);
-  }
+  /* The `.card-text` rule that lived here moved into `PrintedText.astro` along
+     with the markup it styled. It is deleted rather than left behind: a scoped
+     rule matching no element in its own component is dead weight that reads,
+     to the next person, like the styling is still handled here. */
 
   /* -- Attributes ---------------------------------------------------------- */
 
