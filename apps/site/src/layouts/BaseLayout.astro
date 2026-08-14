@@ -161,9 +161,20 @@ const tokens = themeStylesheet();
     chrome, so a footer anchored to it sits below the fold behind the address
     bar — the exact thing this is meant to prevent.
   */
+  /*
+    THE PAGE FRAME IS `looser`/`base`, NOT `loosest`/`looser`. `loosest` is the
+    step for separating unlike things — a section from the section after it —
+    and the edge of the viewport is not one of those. Spending it here bought a
+    margin nobody reads at the cost of a heading's worth of vertical fold on
+    every one of the 7,237 pages.
+
+    The horizontal half matters more than it looks on a phone, where the old
+    value was taking an eighth of the line off the one axis that has none to
+    spare.
+  */
   body {
     margin: 0;
-    padding: var(--of-space-loosest) var(--of-space-looser);
+    padding: var(--of-space-looser) var(--of-space-base);
     min-block-size: 100svh;
     box-sizing: border-box;
     display: flex;
@@ -219,7 +230,19 @@ const tokens = themeStylesheet();
     font-weight: var(--of-type-weight-regular);
     line-height: var(--of-type-leading-tight);
     letter-spacing: var(--of-type-tracking-tight);
-    margin-block: var(--of-space-loosest) var(--of-space-loose);
+
+    /*
+      A HEADING BELONGS TO WHAT FOLLOWS IT, so the space above it separates it
+      from the previous section and the space below it is only the join to its
+      own body. `loosest`/`loose` said the opposite twice over: too much lead-in
+      for a page whose first heading has nothing above it to be separated FROM,
+      and enough trailing space to read as a gap rather than an attachment.
+
+      `looser`/`tight` is the same relationship stated correctly. On /cr/<id> —
+      where the masthead, the rule and the apparatus heading stack — it
+      compounds three times before the reader reaches the sentence they came for.
+    */
+    margin-block: var(--of-space-looser) var(--of-space-tight);
   }
 
   h1 {
