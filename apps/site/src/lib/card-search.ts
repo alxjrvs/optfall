@@ -900,6 +900,8 @@ export interface ParsedCardQuery {
   readonly sort: CardSort;
   /** The level results collapse at. See {@link CardUniqueMode}. */
   readonly unique: CardUniqueMode;
+  /** The shape asked for, or `null` where the query did not say. */
+  readonly display: CardDisplayMode | null;
   /** The whole query, folded — used only for the exact-name tier. */
   readonly folded: string;
   /**
@@ -957,6 +959,39 @@ const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
  * refused: the reader asked for "show me every printing", and every printing
  * this corpus can distinguish is exactly what they get.
  */
+/**
+ * WHICH SHAPE THE ANSWER TAKES.
+ *
+ * `docs/SCRYFALL-GAP.md` §5.2 asked for `display:grid` (default) / `list` /
+ * `text`, "in the URL" — and specifically as a QUERY TERM rather than as UI
+ * chrome, because §5.2's fifth point is that every piece of state is in the
+ * URL and its fourth is that the query is an algebra rather than a filter set.
+ *
+ * - **`grid`** — the card face IS the row. The default, because recognising a
+ *   card by its picture is faster than reading its name.
+ * - **`list`** — the dense row: jewel, name, type line, printed stats. The
+ *   plan is right that this is better than Scryfall's checklist, so it is kept
+ *   exactly as it was and merely given a name that can be typed.
+ * - **`text`** — names, one per line, and nothing else. This is the mode that
+ *   is not a nicer version of the others: it is the one you can SELECT AND
+ *   COPY. A player building a deck list wants forty names, not forty pictures.
+ *
+ * `checklist` is accepted as a spelling of `text` because that is what
+ * Scryfall calls it and a reader arriving with that vocabulary should not have
+ * to discover ours.
+ */
+export type CardDisplayMode = "grid" | "list" | "text";
+
+const DISPLAY_MODES: Readonly<Record<string, CardDisplayMode>> = {
+  grid: "grid",
+  images: "grid",
+  list: "list",
+  rows: "list",
+  text: "text",
+  checklist: "text",
+  names: "text",
+};
+
 export type CardUniqueMode = "names" | "cards" | "art";
 
 const UNIQUE_MODES: Readonly<Record<string, CardUniqueMode>> = {
@@ -1262,13 +1297,19 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
      two are: "one row per name" is not a property a card can have, so it can
      never be a leaf. */
   let unique: CardUniqueMode = "names";
+  /* `null` rather than `"grid"`, and the distinction is load-bearing: the
+     component has to tell "the reader asked for the default" from "the reader
+     said nothing", because only the second may be overridden by the legacy
+     `?display=` parameter that predates this operator. */
+  let display: CardDisplayMode | null = null;
 
   const remaining = tokenise(raw).filter((token) => {
     if (token.kind !== "field") return true;
     if (
       token.field !== "order" &&
       token.field !== "dir" &&
-      token.field !== "unique"
+      token.field !== "unique" &&
+      token.field !== "display"
     ) {
       return true;
     }
@@ -1282,6 +1323,19 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     }
 
     const operand = token.value.toLowerCase();
+
+    if (token.field === "display") {
+      const mode = DISPLAY_MODES[operand];
+      if (mode === undefined) {
+        note(
+          "operand-unknown",
+          `display:${token.value} is not a way to show results. The three are grid, list and text.`,
+        );
+      } else {
+        display = mode;
+      }
+      return false;
+    }
 
     if (token.field === "unique") {
       const mode = UNIQUE_MODES[operand];
@@ -1352,6 +1406,7 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     notices,
     sort: { key: sortKey, direction: sortDirection },
     unique,
+    display,
     folded: fold(raw),
     tree,
   };
@@ -1626,6 +1681,8 @@ export interface CardOutcome {
    * results" needs to know whether that counts cards or pictures.
    */
   readonly unique: CardUniqueMode;
+  /** The shape asked for, or `null`. Resolved by the caller, not here. */
+  readonly display: CardDisplayMode | null;
   readonly results: readonly CardResult[];
   /** Matches found, which may exceed the number returned. */
   readonly total: number;
@@ -1830,7 +1887,7 @@ export function searchCards(
   raw: string,
   limit: number = CARD_RESULT_LIMIT,
 ): CardOutcome {
-  const { terms, filters, notices, sort, unique, folded, tree } =
+  const { terms, filters, notices, sort, unique, display, folded, tree } =
     parseCardQuery(raw);
 
   const ranked: { ordinal: number; field: CardMatchField }[] = [];
@@ -1843,6 +1900,7 @@ export function searchCards(
       notices,
       sort,
       unique,
+      display,
       results: [],
       total: 0,
     };
@@ -2023,6 +2081,7 @@ export function searchCards(
     notices,
     sort,
     unique,
+    display,
     results: rows.slice(0, limit).map((row) => {
       const name = nameOfRow(row.ordinal);
       const pitches =

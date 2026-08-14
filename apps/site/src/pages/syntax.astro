@@ -120,6 +120,15 @@ const ORDERING: readonly Row[] = [
   },
   { example: "order:set", meaning: "Sort by the first set the card appeared in." },
   { example: "dir:desc", meaning: "Reverse the order. The default is ascending." },
+  {
+    example: "unique:art",
+    meaning: "How much one row stands for — names, cards or art. See below.",
+  },
+  {
+    example: "display:text",
+    meaning: "The shape of the results — grid, list or text. See below.",
+    aliases: ["display:checklist"],
+  },
 ];
 
 const LEGALITY: readonly Row[] = [
@@ -206,6 +215,23 @@ const FORMATS: readonly { readonly name: string; readonly aliases: string }[] = 
   <p>
     <strong>Flavour text is a separate index from rules text, and neither reaches the other.</strong> <code>text:blood</code> asks what a card does; <code>ft:blood</code> asks what it says about itself, and they return different cards. A bare word searches names, types, keywords, traits and rules text — never flavour, because a card that merely mentions a thing is not a card that does it.
   </p>
+
+  <h2 id="display">What the answer looks like</h2>
+
+  <p>
+    <code>display:</code> picks the shape of the results, and it is part of the query rather than a setting beside it — so the link you copy shows what you were looking at.
+  </p>
+
+  <dl class="modes">
+    <dt><code>display:grid</code> — the default</dt>
+    <dd>The card face is the row. Recognising a card by its picture is faster than reading its name.</dd>
+
+    <dt><code>display:list</code></dt>
+    <dd>A dense row: pitch, name, type line and the printed stats, plus why the card matched.</dd>
+
+    <dt><code>display:text</code> (also <code>display:checklist</code>)</dt>
+    <dd>Names, one per line, and nothing else — the mode whose output is meant to leave the page. Select it and paste it into a deck list.</dd>
+  </dl>
 
   <h2 id="uniqueness">How much one row stands for</h2>
 
