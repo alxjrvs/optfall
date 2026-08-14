@@ -184,8 +184,58 @@ function undefinedReferences(file: string, source: string): Violation[] {
   return found;
 }
 
+/**
+ * The same dangling-reference rule, applied to token VALUES.
+ *
+ * A token value may itself name other tokens — `layout.page.wide` is
+ * `calc(var(--of-card-face-normal) + …)`, deliberately, so the sum stays a sum
+ * of things the system already committed to rather than a copy of their
+ * numbers. That is the right shape and it opened a hole: `SCANNED` covers
+ * `packages/components/src` and `apps/site/src` and exempts `packages/theme`,
+ * so moving a `calc()` out of a stylesheet and into the token layer moved its
+ * references from checked to unchecked.
+ *
+ * The failure that buys is the worst kind. Rename `card.face.normal` and
+ * `layout.page.wide` becomes an invalid `calc()` at computed-value time, which
+ * CSS discards silently — the card page loses its `max-inline-size` and renders
+ * full-bleed, with no error anywhere. Exactly the argument the component-side
+ * check already makes, one layer down.
+ */
+function danglingTokenValues(): Violation[] {
+  const found: Violation[] = [];
+
+  for (const [label, table] of [
+    ["DARK_TOKENS", DARK_TOKENS],
+    ["LIGHT_TOKENS", LIGHT_TOKENS],
+  ] as const) {
+    for (const [id, value] of Object.entries(table)) {
+      if (typeof value !== "string") continue;
+      for (const match of value.matchAll(/var\(\s*(--of-[a-z0-9-]+)/g)) {
+        const name = match[1]!;
+        if (!DEFINED.has(name)) {
+          found.push({
+            file: "packages/theme/src/tokens.ts",
+            line: 0,
+            text: `${label}["${id}"] = ${value}`,
+            rule: `undefined token ${name}`,
+          });
+        }
+      }
+    }
+  }
+
+  return found;
+}
+
 let failures = 0;
 let staleDeferrals = 0;
+
+for (const v of danglingTokenValues()) {
+  console.log(
+    `::error file=${v.file}::${v.rule} — a token value naming a token that does not exist makes the whole declaration invalid at computed-value time, and CSS drops it silently: ${v.text}`,
+  );
+  failures += 1;
+}
 
 for (const dir of SCANNED) {
   const files = filesUnder(dir);

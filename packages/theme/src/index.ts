@@ -69,7 +69,30 @@ export type TokenNamespace =
    * size would erode it. A card face is stronger still — a surface free to pick
    * its own width would be asking the host for a tier that does not exist.
    */
-  | "card";
+  | "card"
+  /**
+   * How wide a page's content column is allowed to get.
+   *
+   * IT EXISTS BECAUSE `type.measure` WAS DOING TWO JOBS AND ONLY ADMITTED TO
+   * ONE. The measure is a typographic value — the distance an eye can track a
+   * line and find the right next one — and it was also, separately, the
+   * maximum width of `main`. Those agree by coincidence on a page that is a
+   * column of prose and disagree on every page that is not, which is why the
+   * card page had to be given a `width="wide"` escape hatch computing its own
+   * container out of a face, a gutter and the measure, inline, in the layout.
+   *
+   * A container width is not a typographic decision. Naming it here means a
+   * page can be widened without touching the measure — a rail beside the card
+   * face, a results table with more columns — and a reader's line length can be
+   * tuned without silently resizing every page. Neither could move
+   * independently while one token answered for both.
+   *
+   * `layout.page.wide` is deliberately still a sum of things the system already
+   * committed to rather than a chosen number, which is the property the
+   * card-page comment argued for and the reason there is no third value here to
+   * drift from the other two.
+   */
+  | "layout";
 
 /** A dotted token identifier, such as `color.ground` or `space.gutter`. */
 export type TokenId = `${TokenNamespace}.${string}`;

@@ -48,8 +48,9 @@ interface Props {
    * How wide the content column is allowed to get.
    *
    * `"measure"` — the default, and right for every page that is a column of
-   * prose — caps at `type.measure`, the distance an eye can track a line and
-   * find the right next one.
+   * prose — caps at `layout.page.measure`, which is the width of a line an eye
+   * can track and return from. It is its own token rather than `type.measure`
+   * so a page can be widened without changing the site's reading measure.
    *
    * `"wide"` is for the ONE shape that is not prose: a card page, which is a
    * picture with a column of facts beside it. That page has claimed to be two
@@ -59,11 +60,17 @@ interface Props {
    * unsatisfiable and wrapped underneath, every time, at every viewport. The
    * fold that redesign describes did not exist.
    *
-   * A page width is not a typographic value and there is no token for one,
-   * which is the honest signal here: this is not a number anybody chose. It is
-   * a face, a gutter and a measure, added up — so the facts column gets exactly
-   * the reading width every other page gets, and the face gets exactly the
-   * width the face host publishes. Widening either changes this on its own.
+   * A page width is not a typographic value, and it now has a namespace of its
+   * own to say so: `layout.page.wide`. This paragraph used to end "and there is
+   * no token for one", which was true when it was written and became false the
+   * moment the token existed — the two comments below point a reader here, so
+   * it is worth stating what is actually the case rather than what was.
+   *
+   * The property that mattered survives the move: it is still not a number
+   * anybody chose. It is a face, a gutter and a measure, added up — so the
+   * facts column gets exactly the reading width every other page gets, and the
+   * face gets exactly the width the face host publishes. Widening either
+   * changes this on its own.
    */
   width?: "measure" | "wide";
 }
@@ -202,22 +209,28 @@ const tokens = themeStylesheet();
     flex: 1 0 auto;
   }
 
+  /*
+    A CONTAINER WIDTH, NOT A READING MEASURE. These were the same token until
+    now, which meant the site could not widen a page without changing the line
+    length of every page, and could not tune the line length without resizing
+    every container. They agree numerically today and are free to stop.
+  */
   main {
-    max-inline-size: var(--of-type-measure);
+    max-inline-size: var(--of-layout-page-measure);
     margin-inline: auto;
   }
 
   /*
-    A face, a gutter and a measure. See the `width` prop for why this is a sum
-    rather than a chosen width: every term is a value the system already
-    committed to elsewhere, so there is no third number here to drift from the
-    other two. Still a MAXIMUM — a narrow viewport gets whatever it has, and the
-    card page's own grid wraps to one column when it can no longer seat both.
+    A face, a gutter and a measure — see the `width` prop for why it is a sum
+    rather than a chosen width. The sum now lives in the token layer as
+    `layout.page.wide` rather than inline here, because a container width that
+    only one stylesheet can name is a container width nothing else can build
+    against: the card-page rail and the narrow-viewport case both need to know
+    it. Still a MAXIMUM — a narrow viewport gets whatever it has, and the card
+    page's own grid wraps to one column when it can no longer seat both.
   */
   main[data-width="wide"] {
-    max-inline-size: calc(
-      var(--of-card-face-normal) + var(--of-space-loosest) + var(--of-type-measure)
-    );
+    max-inline-size: var(--of-layout-page-wide);
   }
 
   /* Serif for names, questions and headings — one of the three assigned
