@@ -20,10 +20,12 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && bun run --filter './packages/*' --filter './apps/*' typecheck",
-    "lint": "oxlint --deny-warnings",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
     "test": "bun test",
     "build": "bun run --filter './packages/*' --filter './apps/*' build",
-    "check": "bun run typecheck && bun run lint && bun run test",
+    "check": "bun run typecheck && bun run lint && bun run format:check && bun run test",
     "check:disclaimer": "bun scripts/check-disclaimer.ts",
     "check:card-notice": "bun scripts/check-card-notice.ts",
     "check:tokens": "bun scripts/check-tokens.ts",
@@ -39,9 +41,9 @@
     "design-system": "bun scripts/build-design-system.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.7",
     "@netlify/blobs": "10.7.12",
     "@types/bun": "1.3.14",
-    "oxlint": "1.77.0",
     "sharp": "0.35.3",
     "typescript": "7.0.2"
   }

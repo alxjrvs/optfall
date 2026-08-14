@@ -1,109 +1,112 @@
 <script lang="ts">
-  /**
-   * The front door's field: type a name, go somewhere.
-   *
-   * THIS IS A DOOR, NOT A ROOM. `docs/SCRYFALL-GAP.md` §5.2 settled that search
-   * here is submit-driven and that nothing re-ranks a corpus while somebody
-   * types. A typeahead is the one affordance that survives that rule, and it
-   * survives it for a specific reason: every suggestion is a *destination*
-   * rather than a result. Picking one navigates to that card; submitting goes
-   * to the results page. Nothing is rendered in place, so there is no view to
-   * keep in sync, no debounce, and no state that evaporates when the tab
-   * closes.
-   *
-   * IT SHIPS NAMES, NOT AN INDEX. The home page used to mount the full card
-   * search — an inverted index over every card's printed text, plus keyword
-   * memberships and per-format verdict vectors, about 470 KB — in order to
-   * render twenty-four browse links. This mounts `lib/typeahead.ts`'s index,
-   * which is names, slugs and pitches.
-   *
-   * A COMBOBOX, BUILT TO THE PATTERN RATHER THAN APPROXIMATED. The input owns
-   * `role="combobox"`, `aria-expanded`, `aria-controls` and
-   * `aria-activedescendant`; the list is a `listbox` of `option`s. Arrow keys
-   * move the active option without moving the caret, Enter takes it, Escape
-   * closes the list and leaves what you typed. A div that merely looks like this
-   * is unusable with a screen reader, and this is the first control on the site.
-   *
-   * THE SUGGESTIONS ARE LINKS, so the whole thing works with scripting off in
-   * the only way that matters — the form submits to the results page, and every
-   * card remains reachable from there.
-   */
-  import { PitchJewel, SearchField } from "optfall-components/svelte";
+/**
+ * The front door's field: type a name, go somewhere.
+ *
+ * THIS IS A DOOR, NOT A ROOM. `docs/SCRYFALL-GAP.md` §5.2 settled that search
+ * here is submit-driven and that nothing re-ranks a corpus while somebody
+ * types. A typeahead is the one affordance that survives that rule, and it
+ * survives it for a specific reason: every suggestion is a *destination*
+ * rather than a result. Picking one navigates to that card; submitting goes
+ * to the results page. Nothing is rendered in place, so there is no view to
+ * keep in sync, no debounce, and no state that evaporates when the tab
+ * closes.
+ *
+ * IT SHIPS NAMES, NOT AN INDEX. The home page used to mount the full card
+ * search — an inverted index over every card's printed text, plus keyword
+ * memberships and per-format verdict vectors, about 470 KB — in order to
+ * render twenty-four browse links. This mounts `lib/typeahead.ts`'s index,
+ * which is names, slugs and pitches.
+ *
+ * A COMBOBOX, BUILT TO THE PATTERN RATHER THAN APPROXIMATED. The input owns
+ * `role="combobox"`, `aria-expanded`, `aria-controls` and
+ * `aria-activedescendant`; the list is a `listbox` of `option`s. Arrow keys
+ * move the active option without moving the caret, Enter takes it, Escape
+ * closes the list and leaves what you typed. A div that merely looks like this
+ * is unusable with a screen reader, and this is the first control on the site.
+ *
+ * THE SUGGESTIONS ARE LINKS, so the whole thing works with scripting off in
+ * the only way that matters — the form submits to the results page, and every
+ * card remains reachable from there.
+ */
+import { PitchJewel, SearchField } from "optfall-components/svelte";
 
-  import {
-    decodeNameIndex,
-    suggest,
-    type EncodedNameIndex,
-  } from "../lib/typeahead";
+import {
+  decodeNameIndex,
+  suggest,
+  type EncodedNameIndex,
+} from "../lib/typeahead";
 
-  interface Props {
-    index: EncodedNameIndex;
-    /** Where submitting goes. The results page. */
-    action: string;
-  }
+interface Props {
+  index: EncodedNameIndex;
+  /** Where submitting goes. The results page. */
+  action: string;
+}
 
-  const { index, action }: Props = $props();
+const { index, action }: Props = $props();
 
-  const names = $derived(decodeNameIndex(index));
+const names = $derived(decodeNameIndex(index));
 
-  let query = $state("");
-  let field = $state<HTMLInputElement | null>(null);
-  /** -1 means "nothing active"; Enter then submits rather than navigating. */
-  let active = $state(-1);
-  let dismissed = $state(false);
+let query = $state("");
+let field = $state<HTMLInputElement | null>(null);
+/** -1 means "nothing active"; Enter then submits rather than navigating. */
+let active = $state(-1);
+let dismissed = $state(false);
 
-  const suggestions = $derived(dismissed ? [] : suggest(names, query));
-  const open = $derived(suggestions.length > 0);
+const suggestions = $derived(dismissed ? [] : suggest(names, query));
+const open = $derived(suggestions.length > 0);
 
-  const uid = $props.id();
-  const listId = `${uid}-suggestions`;
-  const optionId = (i: number) => `${uid}-option-${i}`;
+const uid = $props.id();
+const listId = `${uid}-suggestions`;
+const optionId = (i: number) => `${uid}-option-${i}`;
 
-  function go(href: string): void {
-    window.location.href = href;
-  }
+function go(href: string): void {
+  window.location.href = href;
+}
 
-  function onKeydown(event: KeyboardEvent): void {
-    if (event.key === "Escape") {
-      // Closes the list and keeps the text. Clearing the field on Escape would
-      // throw away what somebody typed to dismiss a popup they did not ask for.
-      if (open) {
-        event.preventDefault();
-        dismissed = true;
-        active = -1;
-      }
-      return;
-    }
-
-    if (!open) return;
-
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      // preventDefault stops the caret jumping to the ends of the input, which
-      // is what makes arrow keys usable for a list rather than for the text.
+function onKeydown(event: KeyboardEvent): void {
+  if (event.key === "Escape") {
+    // Closes the list and keeps the text. Clearing the field on Escape would
+    // throw away what somebody typed to dismiss a popup they did not ask for.
+    if (open) {
       event.preventDefault();
-      const step = event.key === "ArrowDown" ? 1 : -1;
-      const count = suggestions.length;
-      active = active === -1
-        ? (step === 1 ? 0 : count - 1)
+      dismissed = true;
+      active = -1;
+    }
+    return;
+  }
+
+  if (!open) return;
+
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    // preventDefault stops the caret jumping to the ends of the input, which
+    // is what makes arrow keys usable for a list rather than for the text.
+    event.preventDefault();
+    const step = event.key === "ArrowDown" ? 1 : -1;
+    const count = suggestions.length;
+    active =
+      active === -1
+        ? step === 1
+          ? 0
+          : count - 1
         : (active + step + count) % count;
-      return;
-    }
-
-    if (event.key === "Enter" && active !== -1) {
-      const chosen = suggestions[active];
-      if (chosen) {
-        event.preventDefault();
-        go(chosen.href);
-      }
-    }
+    return;
   }
 
-  function onInput(): void {
-    // Typing reopens a list that Escape closed, and invalidates the selection —
-    // otherwise Enter would navigate to a card the query no longer matches.
-    dismissed = false;
-    active = -1;
+  if (event.key === "Enter" && active !== -1) {
+    const chosen = suggestions[active];
+    if (chosen) {
+      event.preventDefault();
+      go(chosen.href);
+    }
   }
+}
+
+function onInput(): void {
+  // Typing reopens a list that Escape closed, and invalidates the selection —
+  // otherwise Enter would navigate to a card the query no longer matches.
+  dismissed = false;
+  active = -1;
+}
 </script>
 
 <!--

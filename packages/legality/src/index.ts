@@ -397,7 +397,9 @@ function assertDeck(deck: Deck): void {
   const seen = new Set<string>();
   for (const entry of deck.cards) {
     if (typeof entry !== "object" || entry === null) {
-      throw new TypeError(`deck.cards entries must be objects; received ${String(entry)}.`);
+      throw new TypeError(
+        `deck.cards entries must be objects; received ${String(entry)}.`,
+      );
     }
 
     if (typeof entry.cardId !== "string" || entry.cardId.trim().length === 0) {
@@ -429,9 +431,15 @@ function assertTimeline(timeline: LegalityTimeline): void {
   assertIsoDate(timeline.generatedAt, "timeline.generatedAt");
   for (const entry of timeline.entries) {
     assertFormat(entry.format);
-    assertIsoDate(entry.effectiveFrom, `timeline entry ${entry.cardId}.effectiveFrom`);
+    assertIsoDate(
+      entry.effectiveFrom,
+      `timeline entry ${entry.cardId}.effectiveFrom`,
+    );
     if (entry.effectiveUntil !== undefined) {
-      assertIsoDate(entry.effectiveUntil, `timeline entry ${entry.cardId}.effectiveUntil`);
+      assertIsoDate(
+        entry.effectiveUntil,
+        `timeline entry ${entry.cardId}.effectiveUntil`,
+      );
     }
   }
 }

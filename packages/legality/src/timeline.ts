@@ -396,7 +396,9 @@ export function isNoRecord(lookup: TimelineLookup): lookup is NoRecord {
 }
 
 /** Narrows a {@link TimelineLookup} to the contradictory-data branch. */
-export function isConflict(lookup: TimelineLookup): lookup is ConflictingRecords {
+export function isConflict(
+  lookup: TimelineLookup,
+): lookup is ConflictingRecords {
   return lookup.kind === "conflict";
 }
 
@@ -472,7 +474,10 @@ function earlierStart(a: IsoDate, b: IsoDate): IsoDate {
   return compareIsoDates(a, b) <= 0 ? a : b;
 }
 
-function laterEnd(a: IsoDate | undefined, b: IsoDate | undefined): IsoDate | undefined {
+function laterEnd(
+  a: IsoDate | undefined,
+  b: IsoDate | undefined,
+): IsoDate | undefined {
   return compareEnds(a, b) >= 0 ? a : b;
 }
 
@@ -499,7 +504,9 @@ function spanAround(
 ): Span {
   const first = seed[0];
   if (first === undefined) {
-    throw new TimelineDataError("cannot build a span from an empty set of covering entries.");
+    throw new TimelineDataError(
+      "cannot build a span from an empty set of covering entries.",
+    );
   }
 
   let start = first.effectiveFrom;
@@ -516,9 +523,11 @@ function spanAround(
     for (const entry of candidates) {
       if (merged.has(entry) || !isInhabited(entry) || !accept(entry)) continue;
 
-      const startsByEnd = end === undefined || compareIsoDates(entry.effectiveFrom, end) <= 0;
+      const startsByEnd =
+        end === undefined || compareIsoDates(entry.effectiveFrom, end) <= 0;
       const endsAfterStart =
-        entry.effectiveUntil === undefined || compareIsoDates(entry.effectiveUntil, start) >= 0;
+        entry.effectiveUntil === undefined ||
+        compareIsoDates(entry.effectiveUntil, start) >= 0;
       if (!startsByEnd || !endsAfterStart) continue;
 
       merged.add(entry);
@@ -551,8 +560,12 @@ function clipToDisagreement(
   for (const entry of history) {
     if (entry.status === status || !isInhabited(entry)) continue;
 
-    if (entry.effectiveUntil !== undefined && compareIsoDates(entry.effectiveUntil, asOf) <= 0) {
-      if (compareIsoDates(entry.effectiveUntil, start) > 0) start = entry.effectiveUntil;
+    if (
+      entry.effectiveUntil !== undefined &&
+      compareIsoDates(entry.effectiveUntil, asOf) <= 0
+    ) {
+      if (compareIsoDates(entry.effectiveUntil, start) > 0)
+        start = entry.effectiveUntil;
     } else if (compareIsoDates(entry.effectiveFrom, asOf) > 0) {
       if (compareEnds(entry.effectiveFrom, end) < 0) end = entry.effectiveFrom;
     }
@@ -589,7 +602,8 @@ export function historyFor(
   selector: TimelineSelector,
 ): readonly TimelineEntry[] {
   const matches = assertEntries(timeline).filter(
-    (entry) => entry.cardId === selector.cardId && entry.format === selector.format,
+    (entry) =>
+      entry.cardId === selector.cardId && entry.format === selector.format,
   );
   for (const entry of matches) assertEntryDates(entry);
   return matches.toSorted(chronologically);
@@ -627,7 +641,10 @@ export type NextChange =
  * The exclusive end of the contiguous coverage containing `asOf`, of whatever
  * status; `undefined` when `asOf` is uncovered or the coverage is open-ended.
  */
-function coverageEnd(history: readonly TimelineEntry[], asOf: IsoDate): IsoDate | undefined {
+function coverageEnd(
+  history: readonly TimelineEntry[],
+  asOf: IsoDate,
+): IsoDate | undefined {
   const covering = history.filter((entry) => coversDate(entry, asOf));
   if (covering.length === 0) return undefined;
   return spanAround(covering, history, () => true).end;
@@ -656,18 +673,24 @@ function coverageEnd(history: readonly TimelineEntry[], asOf: IsoDate): IsoDate 
  * no-record-becomes-legal conflation this module's header promises never to
  * make.
  */
-export function nextChange(timeline: LegalityTimeline, query: TimelineQuery): NextChange {
+export function nextChange(
+  timeline: LegalityTimeline,
+  query: TimelineQuery,
+): NextChange {
   assertIsoDateArgument(query.asOf, "asOf");
   const history = historyFor(timeline, query);
 
-  const upcoming = history.find((entry) => compareIsoDates(entry.effectiveFrom, query.asOf) > 0);
+  const upcoming = history.find(
+    (entry) => compareIsoDates(entry.effectiveFrom, query.asOf) > 0,
+  );
   const ends = coverageEnd(history, query.asOf);
 
   // When an entry begins exactly where coverage ends, the two abut and the
   // change is the announcement, not a gap. Only a strictly later entry leaves a
   // hole, and then the hole is what happens next.
   const abutsOrPrecedes =
-    ends === undefined || compareIsoDates(upcoming?.effectiveFrom ?? ends, ends) <= 0;
+    ends === undefined ||
+    compareIsoDates(upcoming?.effectiveFrom ?? ends, ends) <= 0;
   if (upcoming !== undefined && abutsOrPrecedes) {
     return { kind: "entry", on: upcoming.effectiveFrom, entry: upcoming };
   }
@@ -690,7 +713,10 @@ export function nextChange(timeline: LegalityTimeline, query: TimelineQuery): Ne
  * @throws {TimelineDataError} When `timeline.generatedAt` or a relevant entry
  *   date is malformed.
  */
-export function statusAsOf(timeline: LegalityTimeline, query: TimelineQuery): TimelineLookup {
+export function statusAsOf(
+  timeline: LegalityTimeline,
+  query: TimelineQuery,
+): TimelineLookup {
   assertIsoDateArgument(query.asOf, "asOf");
   if (!isIsoDate(timeline.generatedAt)) {
     throw new TimelineDataError(
@@ -709,7 +735,12 @@ export function statusAsOf(timeline: LegalityTimeline, query: TimelineQuery): Ti
   const history = historyFor(timeline, query);
 
   if (history.length === 0) {
-    return { ...base, kind: "no-record", reason: "no-entries-for-card", earliestRecord: undefined };
+    return {
+      ...base,
+      kind: "no-record",
+      reason: "no-entries-for-card",
+      earliestRecord: undefined,
+    };
   }
 
   // `history` is chronological, so the first element carries the earliest start.
@@ -718,7 +749,12 @@ export function statusAsOf(timeline: LegalityTimeline, query: TimelineQuery): Ti
   const covering = history.filter((entry) => coversDate(entry, query.asOf));
 
   if (covering.length === 0) {
-    return { ...base, kind: "no-record", reason: gapReason(history, query.asOf), earliestRecord };
+    return {
+      ...base,
+      kind: "no-record",
+      reason: gapReason(history, query.asOf),
+      earliestRecord,
+    };
   }
 
   const statuses: CardStatus[] = [];
@@ -737,7 +773,9 @@ export function statusAsOf(timeline: LegalityTimeline, query: TimelineQuery): Ti
     // Unreachable: `covering.length > 0` was checked above. Kept because
     // `noUncheckedIndexedAccess` is on and a thrown error beats a non-null
     // assertion that a future edit could quietly make wrong.
-    throw new TimelineDataError("timeline lookup found covering entries but no governing entry.");
+    throw new TimelineDataError(
+      "timeline lookup found covering entries but no governing entry.",
+    );
   }
 
   // `since` and `until` describe the STATUS, not the governing entry: a status
@@ -767,7 +805,10 @@ export function statusAsOf(timeline: LegalityTimeline, query: TimelineQuery): Ti
  * Distinguishes the three shapes of "entries exist, but none cover this date".
  * `history` is non-empty, chronological, and already date-validated.
  */
-function gapReason(history: readonly TimelineEntry[], asOf: IsoDate): NoRecordReason {
+function gapReason(
+  history: readonly TimelineEntry[],
+  asOf: IsoDate,
+): NoRecordReason {
   const earliest = history[0]?.effectiveFrom;
   if (earliest !== undefined && compareIsoDates(asOf, earliest) < 0) {
     return "before-first-record";
@@ -779,11 +820,15 @@ function gapReason(history: readonly TimelineEntry[], asOf: IsoDate): NoRecordRe
   let latestEnd: IsoDate | undefined;
   for (const entry of history) {
     if (entry.effectiveUntil === undefined) return "between-records";
-    if (latestEnd === undefined || compareIsoDates(entry.effectiveUntil, latestEnd) > 0) {
+    if (
+      latestEnd === undefined ||
+      compareIsoDates(entry.effectiveUntil, latestEnd) > 0
+    ) {
       latestEnd = entry.effectiveUntil;
     }
   }
-  if (latestEnd !== undefined && compareIsoDates(asOf, latestEnd) >= 0) return "after-last-record";
+  if (latestEnd !== undefined && compareIsoDates(asOf, latestEnd) >= 0)
+    return "after-last-record";
   return "between-records";
 }
 
@@ -880,7 +925,9 @@ export interface TimelineDefect {
  * small — a handful of entries per card at most — so the quadratic term is
  * bounded by the data's shape rather than by the dataset's size.
  */
-export function validateTimeline(timeline: LegalityTimeline): readonly TimelineDefect[] {
+export function validateTimeline(
+  timeline: LegalityTimeline,
+): readonly TimelineDefect[] {
   const defects: TimelineDefect[] = [];
   const entries = assertEntries(timeline);
 
@@ -904,7 +951,10 @@ export function validateTimeline(timeline: LegalityTimeline): readonly TimelineD
       defects.push(defect("malformed-effective-from", "error", entry));
       datesUsable = false;
     }
-    if (entry.effectiveUntil !== undefined && !isIsoDate(entry.effectiveUntil)) {
+    if (
+      entry.effectiveUntil !== undefined &&
+      !isIsoDate(entry.effectiveUntil)
+    ) {
       defects.push(defect("malformed-effective-until", "error", entry));
       datesUsable = false;
     }
@@ -923,7 +973,8 @@ export function validateTimeline(timeline: LegalityTimeline): readonly TimelineD
     if (entry.effectiveUntil !== undefined) {
       const order = compareIsoDates(entry.effectiveUntil, entry.effectiveFrom);
       if (order < 0) defects.push(defect("inverted-interval", "error", entry));
-      else if (order === 0) defects.push(defect("zero-length-interval", "warning", entry));
+      else if (order === 0)
+        defects.push(defect("zero-length-interval", "warning", entry));
     }
 
     const key = `${entry.cardId} ${entry.format}`;
@@ -969,8 +1020,10 @@ export function validateTimeline(timeline: LegalityTimeline): readonly TimelineD
  * end was chosen.
  */
 function overlaps(a: TimelineEntry, b: TimelineEntry): boolean {
-  const aBeforeBEnd = b.effectiveUntil === undefined || a.effectiveFrom < b.effectiveUntil;
-  const bBeforeAEnd = a.effectiveUntil === undefined || b.effectiveFrom < a.effectiveUntil;
+  const aBeforeBEnd =
+    b.effectiveUntil === undefined || a.effectiveFrom < b.effectiveUntil;
+  const bBeforeAEnd =
+    a.effectiveUntil === undefined || b.effectiveFrom < a.effectiveUntil;
   return aBeforeBEnd && bBeforeAEnd;
 }
 
@@ -979,7 +1032,13 @@ function defect(
   severity: TimelineDefectSeverity,
   entry: TimelineEntry,
 ): TimelineDefect {
-  return { kind, severity, cardId: entry.cardId, format: entry.format, entries: [entry] };
+  return {
+    kind,
+    severity,
+    cardId: entry.cardId,
+    format: entry.format,
+    entries: [entry],
+  };
 }
 
 function pairDefect(
@@ -988,5 +1047,11 @@ function pairDefect(
   a: TimelineEntry,
   b: TimelineEntry,
 ): TimelineDefect {
-  return { kind, severity, cardId: a.cardId, format: a.format, entries: [a, b] };
+  return {
+    kind,
+    severity,
+    cardId: a.cardId,
+    format: a.format,
+    entries: [a, b],
+  };
 }

@@ -166,7 +166,10 @@ export interface CaptureResponse {
  * A `fetch`-shaped function. Global `fetch` satisfies it; so does a stub over
  * fixtures, and so does a disk cache in a scheduled job.
  */
-export type FetchLike = (url: string, init?: RequestInit) => Promise<CaptureResponse>;
+export type FetchLike = (
+  url: string,
+  init?: RequestInit,
+) => Promise<CaptureResponse>;
 
 const defaultFetch: FetchLike = (url, init) => globalThis.fetch(url, init);
 
@@ -251,7 +254,9 @@ export function buildCdxUrl(query: CdxQuery = {}): string {
   if (query.fields !== undefined) params.set("fl", query.fields.join(","));
   if (query.limit !== undefined) {
     if (!Number.isInteger(query.limit)) {
-      throw new TypeError(`limit must be an integer; received ${String(query.limit)}.`);
+      throw new TypeError(
+        `limit must be an integer; received ${String(query.limit)}.`,
+      );
     }
     params.set("limit", String(query.limit));
   }
@@ -260,7 +265,9 @@ export function buildCdxUrl(query: CdxQuery = {}): string {
 }
 
 function isStringRow(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((cell) => typeof cell === "string");
+  return (
+    Array.isArray(value) && value.every((cell) => typeof cell === "string")
+  );
 }
 
 /**
@@ -277,7 +284,10 @@ function isStringRow(value: unknown): value is string[] {
  * the header lacks `timestamp` or `original`. Failing loudly here is the point:
  * a silently-empty result would look identical to "there is no archive".
  */
-export function parseCdxResponse(body: string, sourceUrl = WAYBACK_CDX_ENDPOINT): CdxRecord[] {
+export function parseCdxResponse(
+  body: string,
+  sourceUrl = WAYBACK_CDX_ENDPOINT,
+): CdxRecord[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(body) as unknown;
@@ -295,7 +305,10 @@ export function parseCdxResponse(body: string, sourceUrl = WAYBACK_CDX_ENDPOINT)
 
   const header = parsed[0];
   if (!isStringRow(header)) {
-    throw new WaybackError("CDX response header row was not an array of strings.", sourceUrl);
+    throw new WaybackError(
+      "CDX response header row was not an array of strings.",
+      sourceUrl,
+    );
   }
   if (!header.includes("timestamp") || !header.includes("original")) {
     throw new WaybackError(
@@ -308,7 +321,10 @@ export function parseCdxResponse(body: string, sourceUrl = WAYBACK_CDX_ENDPOINT)
   for (let index = 1; index < parsed.length; index += 1) {
     const row = parsed[index];
     if (!isStringRow(row)) {
-      throw new WaybackError(`CDX row ${String(index)} was not an array of strings.`, sourceUrl);
+      throw new WaybackError(
+        `CDX row ${String(index)} was not an array of strings.`,
+        sourceUrl,
+      );
     }
 
     const fields: Record<string, string> = {};
@@ -383,7 +399,11 @@ export function searchAnnouncementCaptures(
     {
       collapse: "urlkey",
       ...query,
-      filters: [ANNOUNCEMENT_URLKEY_FILTER, HTML_MIMETYPE_FILTER, ...(query.filters ?? [])],
+      filters: [
+        ANNOUNCEMENT_URLKEY_FILTER,
+        HTML_MIMETYPE_FILTER,
+        ...(query.filters ?? []),
+      ],
     },
     fetchImpl,
   );
@@ -422,7 +442,9 @@ export interface DedupeOptions {
 /** The part of a URL before any query string or fragment. */
 export function urlWithoutQuery(url: string): string {
   const cut = Math.min(
-    ...[url.indexOf("?"), url.indexOf("#")].map((index) => (index === -1 ? url.length : index)),
+    ...[url.indexOf("?"), url.indexOf("#")].map((index) =>
+      index === -1 ? url.length : index,
+    ),
   );
   return url.slice(0, cut);
 }
@@ -475,7 +497,14 @@ export function dedupeCaptures(
  * by fetching a capture and finding zero occurrences of `archive.org` in the
  * response body.
  */
-export type CaptureModifier = "id_" | "if_" | "im_" | "js_" | "cs_" | "oe_" | "";
+export type CaptureModifier =
+  | "id_"
+  | "if_"
+  | "im_"
+  | "js_"
+  | "cs_"
+  | "oe_"
+  | "";
 
 const TIMESTAMP_PATTERN = /^\d{14}$/;
 
@@ -501,7 +530,10 @@ export interface CaptureRef {
  *
  * @throws {TypeError} When the timestamp is not 14 digits.
  */
-export function captureUrl(capture: CaptureRef, modifier: CaptureModifier = "id_"): string {
+export function captureUrl(
+  capture: CaptureRef,
+  modifier: CaptureModifier = "id_",
+): string {
   assertTimestamp(capture.timestamp);
   return `${WAYBACK_WEB_PREFIX}${capture.timestamp}${modifier}/${capture.original}`;
 }
@@ -629,7 +661,8 @@ export async function fetchCapture(
 
   const html = await response.text();
   const resolvedUrl = response.url;
-  const resolved = resolvedUrl === undefined ? undefined : parseCaptureUrl(resolvedUrl);
+  const resolved =
+    resolvedUrl === undefined ? undefined : parseCaptureUrl(resolvedUrl);
   const resolvedTimestamp = resolved?.timestamp;
 
   return {
@@ -638,7 +671,9 @@ export async function fetchCapture(
     original: capture.original,
     resolvedUrl,
     resolvedTimestamp,
-    redirected: resolvedTimestamp !== undefined && resolvedTimestamp !== capture.timestamp,
+    redirected:
+      resolvedTimestamp !== undefined &&
+      resolvedTimestamp !== capture.timestamp,
     capturedAt: resolvedTimestamp ?? capture.timestamp,
     status: response.status,
     html,
@@ -696,7 +731,10 @@ const NAMED_ENTITIES: Readonly<Record<string, string>> = {
   deg: "°",
 };
 
-function decodeNumericEntity(digits: string, radix: number): string | undefined {
+function decodeNumericEntity(
+  digits: string,
+  radix: number,
+): string | undefined {
   const code = Number.parseInt(digits, radix);
   if (!Number.isFinite(code)) return undefined;
   // Surrogate halves and out-of-range code points are not decodable; leaving
@@ -712,9 +750,18 @@ function decodeNumericEntity(digits: string, radix: number): string | undefined 
  */
 export function decodeHtmlEntities(text: string): string {
   return text
-    .replace(/&#[xX]([0-9a-fA-F]+);/g, (match, hex: string) => decodeNumericEntity(hex, 16) ?? match)
-    .replace(/&#(\d+);/g, (match, digits: string) => decodeNumericEntity(digits, 10) ?? match)
-    .replace(/&([a-zA-Z][a-zA-Z0-9]*);/g, (match, name: string) => NAMED_ENTITIES[name] ?? match)
+    .replace(
+      /&#[xX]([0-9a-fA-F]+);/g,
+      (match, hex: string) => decodeNumericEntity(hex, 16) ?? match,
+    )
+    .replace(
+      /&#(\d+);/g,
+      (match, digits: string) => decodeNumericEntity(digits, 10) ?? match,
+    )
+    .replace(
+      /&([a-zA-Z][a-zA-Z0-9]*);/g,
+      (match, name: string) => NAMED_ENTITIES[name] ?? match,
+    )
     .replace(/&amp;/g, "&");
 }
 

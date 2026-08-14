@@ -89,9 +89,38 @@ export function idForNumber(number: string): string {
  * the same as appearing in none: it cannot separate one section from another.
  */
 const STOPWORDS: ReadonlySet<string> = new Set([
-  "a", "an", "the", "of", "to", "in", "on", "and", "or", "is", "are", "be",
-  "been", "being", "was", "were", "it", "its", "as", "at", "by", "for", "from",
-  "that", "this", "these", "those", "with", "there", "their", "they", "them",
+  "a",
+  "an",
+  "the",
+  "of",
+  "to",
+  "in",
+  "on",
+  "and",
+  "or",
+  "is",
+  "are",
+  "be",
+  "been",
+  "being",
+  "was",
+  "were",
+  "it",
+  "its",
+  "as",
+  "at",
+  "by",
+  "for",
+  "from",
+  "that",
+  "this",
+  "these",
+  "those",
+  "with",
+  "there",
+  "their",
+  "they",
+  "them",
 ]);
 
 /**
@@ -105,8 +134,7 @@ const STOPWORDS: ReadonlySet<string> = new Set([
 export function tokenise(text: string): string[] {
   const raw = text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   return raw.filter(
-    (token) =>
-      !STOPWORDS.has(token) && (token.length > 1 || /\d/.test(token)),
+    (token) => !STOPWORDS.has(token) && (token.length > 1 || /\d/.test(token)),
   );
 }
 
@@ -291,7 +319,9 @@ export function decodeIndex(encoded: EncodedIndex): SearchIndex {
   }
 
   const byNumber = new Map<string, number>();
-  numbers.forEach((number, ordinal) => byNumber.set(number, ordinal));
+  numbers.forEach((number, ordinal) => {
+    byNumber.set(number, ordinal);
+  });
 
   return {
     version: encoded.version,
@@ -338,7 +368,8 @@ const PENDING_OPERATORS: Readonly<Record<string, string>> = {
   banned: "filters cards by present-day legality, which lives at /cards",
   // `legal:` alone is answerable at /cards; `legal:cc@2026-03-14` is not
   // answerable anywhere yet, and that is the half worth naming here.
-  legal: "filters cards by present-day legality at /cards; legality as of a date is not published yet",
+  legal:
+    "filters cards by present-day legality at /cards; legality as of a date is not published yet",
   format: "answers legality as of a date, which is not published yet",
   is: "filters judge-verified rulings, which are not published yet",
   changed: "lists what a rules version touched, which is not published yet",
@@ -372,7 +403,9 @@ export interface ParsedQuery {
 }
 
 /** Splits on whitespace, keeping `"quoted groups"` whole. */
-function chunk(raw: string): { readonly value: string; readonly quoted: boolean }[] {
+function chunk(
+  raw: string,
+): { readonly value: string; readonly quoted: boolean }[] {
   const out: { value: string; quoted: boolean }[] = [];
   for (const match of raw.matchAll(/"([^"]*)"|(\S+)/g)) {
     const quoted = match[1] !== undefined;
@@ -749,7 +782,10 @@ export function search(
           if (isExact) {
             hit.weights[position] = weight;
             hit.exactAt[position] = true;
-          } else if (!hit.exactAt[position] && weight > (hit.weights[position] ?? -1)) {
+          } else if (
+            !hit.exactAt[position] &&
+            weight > (hit.weights[position] ?? -1)
+          ) {
             hit.weights[position] = weight;
           }
         }
@@ -769,7 +805,10 @@ export function search(
             ),
           );
         const field: MatchField = inTitle ? "title" : "text";
-        const shown = title === "" ? (index.ledes[hit.ordinal] ?? "") : `${title} ${index.ledes[hit.ordinal] ?? ""}`;
+        const shown =
+          title === ""
+            ? (index.ledes[hit.ordinal] ?? "")
+            : `${title} ${index.ledes[hit.ordinal] ?? ""}`;
         return {
           hit,
           field,

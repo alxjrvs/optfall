@@ -18,7 +18,10 @@
  * decoration.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { readCanonicalDisclaimer, normalizeHtmlWhitespace } from "./canonical-disclaimer";
+import {
+  readCanonicalDisclaimer,
+  normalizeHtmlWhitespace,
+} from "./canonical-disclaimer";
 
 const outputDirectory = process.argv[2] ?? "apps/site/dist";
 
@@ -69,12 +72,14 @@ console.log(`Checked ${pages.length} built page(s) under ${outputDirectory}:`);
 for (const page of pages) console.log(`  ${page}`);
 
 if (missing.length === 0) {
-  console.log("Every page carries the Legend Story Studios disclaimer, verbatim. ✔");
+  console.log(
+    "Every page carries the Legend Story Studios disclaimer, verbatim. ✔",
+  );
   process.exit(0);
 }
 
 console.log("");
-console.log("The expected text, from docs/PLAN.md (\"Required disclaimer\"):");
+console.log('The expected text, from docs/PLAN.md ("Required disclaimer"):');
 console.log(`  ${expected}`);
 console.log("");
 console.log(

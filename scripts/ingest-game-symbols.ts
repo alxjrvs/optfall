@@ -139,7 +139,9 @@ function pngBox(bytes: Uint8Array): { width: number; height: number } {
   return { width: view.getUint32(16), height: view.getUint32(20) };
 }
 
-async function fetchSymbol(key: string): Promise<{ bytes: Uint8Array; url: string }> {
+async function fetchSymbol(
+  key: string,
+): Promise<{ bytes: Uint8Array; url: string }> {
   const url = `${ORIGIN}/icon_${key}.png`;
   const response = await fetch(url, {
     headers: {
@@ -170,10 +172,14 @@ const checkOnly = process.argv.includes("--check");
 */
 const strays = (await readdir(SYMBOL_DIR).catch(() => []))
   .filter((name) => name.endsWith(".png"))
-  .filter((name) => !SYMBOLS.some((symbol) => `icon_${symbol.key}.png` === name));
+  .filter(
+    (name) => !SYMBOLS.some((symbol) => `icon_${symbol.key}.png` === name),
+  );
 
 if (strays.length > 0) {
-  console.error(`::error::unexpected files in ${SYMBOL_DIR}: ${strays.join(", ")}`);
+  console.error(
+    `::error::unexpected files in ${SYMBOL_DIR}: ${strays.join(", ")}`,
+  );
   process.exit(1);
 }
 
@@ -237,7 +243,9 @@ const outcomes = await Promise.all(
     }
 
     await Bun.write(target, bytes);
-    console.log(`wrote ${target} (${entry.bytes}B, ${entry.width}×${entry.height})`);
+    console.log(
+      `wrote ${target} (${entry.bytes}B, ${entry.width}×${entry.height})`,
+    );
     return true;
   }),
 );
@@ -286,5 +294,7 @@ if (checkOnly) {
 } else {
   await mkdir("data/symbols", { recursive: true });
   await Bun.write(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`\n${entries.length} symbols, ${changed} changed. Provenance → ${MANIFEST}`);
+  console.log(
+    `\n${entries.length} symbols, ${changed} changed. Provenance → ${MANIFEST}`,
+  );
 }

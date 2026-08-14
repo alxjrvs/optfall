@@ -120,7 +120,9 @@ function contents(
       const slots = [...element.querySelectorAll("[data-specimen]")];
       const mounted = specimens.flatMap((specimen, index) => {
         const target = slots[index];
-        return target ? [mount(BevelledPlate, { target, props: specimen.props })] : [];
+        return target
+          ? [mount(BevelledPlate, { target, props: specimen.props })]
+          : [];
       });
       return () => {
         for (const instance of mounted) void unmount(instance);
@@ -140,16 +142,19 @@ function contents(
  * the failure the shared `PlateCorner` type exists to make impossible, and it
  * is only visible if a story actually renders all four.
  */
-const filigree: Snippet<[PlateCorner]> = createRawSnippet<[PlateCorner]>((id) => ({
-  render: () => `<span style="display:block;inline-size:100%;block-size:100%"></span>`,
-  setup: (element) => {
-    const instance = mount(FiligreeCorner, {
-      target: element,
-      props: { role: "panel-corner", corner: id() },
-    });
-    return () => void unmount(instance);
-  },
-}));
+const filigree: Snippet<[PlateCorner]> = createRawSnippet<[PlateCorner]>(
+  (id) => ({
+    render: () =>
+      `<span style="display:block;inline-size:100%;block-size:100%"></span>`,
+    setup: (element) => {
+      const instance = mount(FiligreeCorner, {
+        target: element,
+        props: { role: "panel-corner", corner: id() },
+      });
+      return () => void unmount(instance);
+    },
+  }),
+);
 
 /* -------------------------------------------------------------------------- */
 /* Meta                                                                        */
@@ -186,7 +191,7 @@ const meta = {
     corner: {
       control: false,
       description:
-        "Rendered once per slot when `ornament=\"panel-corner\"`, receiving the `PlateCorner` id. Intended for `FiligreeCorner role=\"panel-corner\" corner={id}`.",
+        'Rendered once per slot when `ornament="panel-corner"`, receiving the `PlateCorner` id. Intended for `FiligreeCorner role="panel-corner" corner={id}`.',
     },
   },
   // `typeof BevelledPlate`, not `BevelledPlate`. Under Svelte 5 a component is a
@@ -250,7 +255,9 @@ export const Depth: Story = {
           caption: "flat",
           props: {
             emphasis: "flat",
-            children: contents("The substrate. One hairline deep, no inner ring."),
+            children: contents(
+              "The substrate. One hairline deep, no inner ring.",
+            ),
           },
         },
         {
@@ -286,19 +293,31 @@ export const Edges: Story = {
       [
         {
           caption: "top + bottom",
-          props: { edges: ["top", "bottom"], children: contents("The default.") },
+          props: {
+            edges: ["top", "bottom"],
+            children: contents("The default."),
+          },
         },
         {
           caption: "top",
-          props: { edges: ["top"], children: contents("Lit above, ruled below.") },
+          props: {
+            edges: ["top"],
+            children: contents("Lit above, ruled below."),
+          },
         },
         {
           caption: "bottom",
-          props: { edges: ["bottom"], children: contents("Ruled above, dark below.") },
+          props: {
+            edges: ["bottom"],
+            children: contents("Ruled above, dark below."),
+          },
         },
         {
           caption: "none",
-          props: { edges: [], children: contents("Four hairlines. Still a plate.") },
+          props: {
+            edges: [],
+            children: contents("Four hairlines. Still a plate."),
+          },
         },
       ],
     ),
@@ -323,21 +342,31 @@ export const Edges: Story = {
 export const Nested: Story = {
   args: {
     emphasis: "raised",
-    children: contents("A ruling, with the rule it rests on quoted inside it.", "column", [
-      {
-        props: {
-          emphasis: "sunken",
-          children: contents("A sunken region reads as quoted material.", "column", [
-            {
-              props: {
-                emphasis: "flat",
-                children: contents("And flat inside that costs exactly one more rule."),
-              },
-            },
-          ]),
+    children: contents(
+      "A ruling, with the rule it rests on quoted inside it.",
+      "column",
+      [
+        {
+          props: {
+            emphasis: "sunken",
+            children: contents(
+              "A sunken region reads as quoted material.",
+              "column",
+              [
+                {
+                  props: {
+                    emphasis: "flat",
+                    children: contents(
+                      "And flat inside that costs exactly one more rule.",
+                    ),
+                  },
+                },
+              ],
+            ),
+          },
         },
-      },
-    ]),
+      ],
+    ),
   },
 };
 
@@ -407,31 +436,29 @@ export const SlotsOnly: Story = {
 export const RightToLeft: Story = {
   args: {
     emphasis: "flat",
-    children: contents(
-      "The bevel does not flip. The ornament does.",
-      "row",
-      [
-        {
-          caption: "dir=ltr",
-          props: {
-            emphasis: "raised",
-            ornament: "panel-corner",
-            corner: filigree,
-            children: contents("Scrollwork curls in from the inline-start corners."),
-          },
+    children: contents("The bevel does not flip. The ornament does.", "row", [
+      {
+        caption: "dir=ltr",
+        props: {
+          emphasis: "raised",
+          ornament: "panel-corner",
+          corner: filigree,
+          children: contents(
+            "Scrollwork curls in from the inline-start corners.",
+          ),
         },
-        {
-          caption: "dir=rtl",
-          dir: "rtl",
-          lang: "ar",
-          props: {
-            emphasis: "raised",
-            ornament: "panel-corner",
-            corner: filigree,
-            children: contents("الزخرفة تنعكس مع اتجاه الكتابة."),
-          },
+      },
+      {
+        caption: "dir=rtl",
+        dir: "rtl",
+        lang: "ar",
+        props: {
+          emphasis: "raised",
+          ornament: "panel-corner",
+          corner: filigree,
+          children: contents("الزخرفة تنعكس مع اتجاه الكتابة."),
         },
-      ],
-    ),
+      },
+    ]),
   },
 };

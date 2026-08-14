@@ -300,7 +300,10 @@ const LEGALITY_EXTRA_FLAGS = ["ll_restricted_affects_full_cycle"] as const;
  * in the envelope as `legalityFlags` so the compact encoding is legible without
  * this file.
  */
-const SEARCH_FLAG_FIELDS = [...LEGALITY_FLAGS, ...LEGALITY_EXTRA_FLAGS] as const;
+const SEARCH_FLAG_FIELDS = [
+  ...LEGALITY_FLAGS,
+  ...LEGALITY_EXTRA_FLAGS,
+] as const;
 
 /* -------------------------------------------------------------------------- */
 /* The committed shape                                                         */
@@ -517,7 +520,9 @@ function describe(value: unknown): string {
 function text(record: JsonRecord, key: string, where: string): string {
   const value = record[key];
   if (typeof value === "string") return value;
-  throw new Error(`${where}: expected a string at "${key}", found ${describe(value)}`);
+  throw new Error(
+    `${where}: expected a string at "${key}", found ${describe(value)}`,
+  );
 }
 
 /**
@@ -528,7 +533,11 @@ function text(record: JsonRecord, key: string, where: string): string {
  * second field starts arriving null, {@link text} throws and somebody decides
  * about it, which is the behaviour that caught this one.
  */
-function nullableText(record: JsonRecord, key: string, where: string): string | null {
+function nullableText(
+  record: JsonRecord,
+  key: string,
+  where: string,
+): string | null {
   if (record[key] === null) return null;
   return text(record, key, where);
 }
@@ -536,36 +545,56 @@ function nullableText(record: JsonRecord, key: string, where: string): string | 
 function flag(record: JsonRecord, key: string, where: string): boolean {
   const value = record[key];
   if (typeof value === "boolean") return value;
-  throw new Error(`${where}: expected a boolean at "${key}", found ${describe(value)}`);
+  throw new Error(
+    `${where}: expected a boolean at "${key}", found ${describe(value)}`,
+  );
 }
 
 function count(record: JsonRecord, key: string, where: string): number {
   const value = record[key];
   if (typeof value === "number") return value;
-  throw new Error(`${where}: expected a number at "${key}", found ${describe(value)}`);
+  throw new Error(
+    `${where}: expected a number at "${key}", found ${describe(value)}`,
+  );
 }
 
-function list(record: JsonRecord, key: string, where: string): readonly string[] {
+function list(
+  record: JsonRecord,
+  key: string,
+  where: string,
+): readonly string[] {
   const value = record[key];
   if (!Array.isArray(value)) {
-    throw new Error(`${where}: expected an array at "${key}", found ${describe(value)}`);
+    throw new Error(
+      `${where}: expected an array at "${key}", found ${describe(value)}`,
+    );
   }
   return value.map((entry, index) => {
     if (typeof entry === "string") return entry;
-    throw new Error(`${where}: expected a string at "${key}[${String(index)}]", found ${describe(entry)}`);
+    throw new Error(
+      `${where}: expected a string at "${key}[${String(index)}]", found ${describe(entry)}`,
+    );
   });
 }
 
-function records(record: JsonRecord, key: string, where: string): readonly JsonRecord[] {
+function records(
+  record: JsonRecord,
+  key: string,
+  where: string,
+): readonly JsonRecord[] {
   const value = record[key];
   if (!Array.isArray(value)) {
-    throw new Error(`${where}: expected an array at "${key}", found ${describe(value)}`);
+    throw new Error(
+      `${where}: expected an array at "${key}", found ${describe(value)}`,
+    );
   }
   return value.map((entry, index) => {
     if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
       return entry as JsonRecord;
     }
-    throw new Error(`${where}: expected an object at "${key}[${String(index)}]", found ${describe(entry)}`);
+    throw new Error(
+      `${where}: expected an object at "${key}[${String(index)}]", found ${describe(entry)}`,
+    );
   });
 }
 
@@ -585,7 +614,8 @@ function records(record: JsonRecord, key: string, where: string): readonly JsonR
  */
 function toLegality(card: JsonRecord, where: string): CorpusLegality {
   const legality: Record<string, boolean | string> = {};
-  for (const field of LEGALITY_FLAGS) legality[field] = flag(card, field, where);
+  for (const field of LEGALITY_FLAGS)
+    legality[field] = flag(card, field, where);
   for (const field of LEGALITY_EXTRA_FLAGS) {
     if (field in card) legality[field] = flag(card, field, where);
   }
@@ -612,9 +642,12 @@ function toFace(face: JsonRecord, where: string): DoubleSidedFace {
  * 16,502 records and produce a diff that looks like a data change.
  */
 function toCorpusPrinting(printing: JsonRecord, where: string): CorpusPrinting {
-  const faces = "double_sided_card_info" in printing
-    ? records(printing, "double_sided_card_info", where).map((face) => toFace(face, where))
-    : undefined;
+  const faces =
+    "double_sided_card_info" in printing
+      ? records(printing, "double_sided_card_info", where).map((face) =>
+          toFace(face, where),
+        )
+      : undefined;
 
   const copy: CorpusPrinting = {
     unique_id: text(printing, "unique_id", where),
@@ -651,7 +684,11 @@ function toCorpusCard(card: JsonRecord, where: string): CorpusCard {
     traits: list(card, "traits", where),
     card_keywords: list(card, "card_keywords", where),
     abilities_and_effects: list(card, "abilities_and_effects", where),
-    ability_and_effect_keywords: list(card, "ability_and_effect_keywords", where),
+    ability_and_effect_keywords: list(
+      card,
+      "ability_and_effect_keywords",
+      where,
+    ),
     granted_keywords: list(card, "granted_keywords", where),
     removed_keywords: list(card, "removed_keywords", where),
     interacts_with_keywords: list(card, "interacts_with_keywords", where),
@@ -661,7 +698,8 @@ function toCorpusCard(card: JsonRecord, where: string): CorpusCard {
     // Present on 1,423 of 4,941 cards upstream; written as `[]` on the rest so
     // every record has the same shape and a consumer never has to test for the
     // key. The inverse relation is not written at all — see DROPPED_CARD_FIELDS.
-    referenced_cards: "referenced_cards" in card ? list(card, "referenced_cards", where) : [],
+    referenced_cards:
+      "referenced_cards" in card ? list(card, "referenced_cards", where) : [],
     legality: toLegality(card, where),
     printings: records(card, "printings", where).map((printing) =>
       toCorpusPrinting(printing, `${where} printing`),
@@ -713,9 +751,15 @@ function toSearchCard(card: JsonRecord, where: string): SearchCard {
     card_keywords: list(card, "card_keywords", where),
     type_text: text(card, "type_text", where),
     text: text(card, "functional_text_plain", where),
-    sets: distinct(printings.map((printing) => text(printing, "set_id", where))),
-    rarities: distinct(printings.map((printing) => text(printing, "rarity", where))),
-    flags: SEARCH_FLAG_FIELDS.filter((field) => field in card && flag(card, field, where)),
+    sets: distinct(
+      printings.map((printing) => text(printing, "set_id", where)),
+    ),
+    rarities: distinct(
+      printings.map((printing) => text(printing, "rarity", where)),
+    ),
+    flags: SEARCH_FLAG_FIELDS.filter(
+      (field) => field in card && flag(card, field, where),
+    ),
     ...(Object.keys(since).length === 0 ? {} : { since }),
   };
   return copy;
@@ -756,7 +800,8 @@ function unknownFields(cards: readonly JsonRecord[]): readonly Warning[] {
   for (const card of cards) {
     const name = typeof card["name"] === "string" ? card["name"] : "(unnamed)";
     for (const key of Object.keys(card)) {
-      if (!KNOWN_CARD_FIELDS.has(key) && !cardKeys.has(key)) cardKeys.set(key, name);
+      if (!KNOWN_CARD_FIELDS.has(key) && !cardKeys.has(key))
+        cardKeys.set(key, name);
     }
     const printings = card["printings"];
     if (!Array.isArray(printings)) continue;
@@ -824,7 +869,8 @@ function countCorpus(cards: readonly CorpusCard[]): CorpusCounts {
     printings += card.printings.length;
     for (const printing of card.printings) sets.add(printing.set_id);
     for (const field of LEGALITY_FLAGS) {
-      if (card.legality[field] === true) legality[field] = (legality[field] ?? 0) + 1;
+      if (card.legality[field] === true)
+        legality[field] = (legality[field] ?? 0) + 1;
     }
   }
 
@@ -865,7 +911,9 @@ async function resolveCommit(ref: string | undefined): Promise<UpstreamCommit> {
     headers: {
       accept: "application/vnd.github+json",
       "user-agent": "optfall-card-corpus",
-      ...(token === undefined || token === "" ? {} : { authorization: `Bearer ${token}` }),
+      ...(token === undefined || token === ""
+        ? {}
+        : { authorization: `Bearer ${token}` }),
     },
   });
   if (!response.ok) {
@@ -894,7 +942,9 @@ async function resolveCommit(ref: string | undefined): Promise<UpstreamCommit> {
       : undefined;
 
   if (typeof sha !== "string" || typeof date !== "string") {
-    throw new Error("GitHub's commit payload carried no sha or no date; refusing to write an unpinned corpus.");
+    throw new Error(
+      "GitHub's commit payload carried no sha or no date; refusing to write an unpinned corpus.",
+    );
   }
   return { sha, committedAt: date };
 }
@@ -994,21 +1044,31 @@ const source: CorpusSource = {
 
 const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes));
 if (!Array.isArray(parsed)) {
-  throw new Error(`${url} is not a JSON array of cards; it is ${describe(parsed)}.`);
+  throw new Error(
+    `${url} is not a JSON array of cards; it is ${describe(parsed)}.`,
+  );
 }
 
 const upstream: readonly JsonRecord[] = parsed.map((entry, index) => {
   if (typeof entry === "object" && entry !== null && !Array.isArray(entry)) {
     return entry as JsonRecord;
   }
-  throw new Error(`card ${String(index)} is ${describe(entry)}, not an object.`);
+  throw new Error(
+    `card ${String(index)} is ${describe(entry)}, not an object.`,
+  );
 });
 
 const cards = upstream.map((card, index) =>
-  toCorpusCard(card, `card ${String(index)} (${String(card["name"] ?? "unnamed")})`),
+  toCorpusCard(
+    card,
+    `card ${String(index)} (${String(card["name"] ?? "unnamed")})`,
+  ),
 );
 const searchCards = upstream.map((card, index) =>
-  toSearchCard(card, `card ${String(index)} (${String(card["name"] ?? "unnamed")})`),
+  toSearchCard(
+    card,
+    `card ${String(index)} (${String(card["name"] ?? "unnamed")})`,
+  ),
 );
 
 const counts = countCorpus(cards);
@@ -1029,14 +1089,17 @@ log.push(
   ),
   "",
   "dropped from cards.json:",
-  ...Object.entries(DROPPED_CARD_FIELDS).map(([field, why]) => `  ${field} — ${why}`),
+  ...Object.entries(DROPPED_CARD_FIELDS).map(
+    ([field, why]) => `  ${field} — ${why}`,
+  ),
   ...Object.entries(DROPPED_PRINTING_FIELDS).map(
     ([field, why]) => `  printings[].${field} — ${why}`,
   ),
   "",
   `warnings  ${String(warnings.length)}`,
 );
-for (const warning of warnings) log.push(`  [${warning.kind}] ${warning.detail}`);
+for (const warning of warnings)
+  log.push(`  [${warning.kind}] ${warning.detail}`);
 
 if (warnings.length > 0 && !allowWarnings) {
   log.push(
@@ -1057,7 +1120,10 @@ if (warnings.length > 0 && !allowWarnings) {
   };
 
   const outputs: readonly { readonly path: string; readonly body: string }[] = [
-    { path: join(outDirectory, FULL_FILE), body: serialise({ ...envelope, cards }) },
+    {
+      path: join(outDirectory, FULL_FILE),
+      body: serialise({ ...envelope, cards }),
+    },
     {
       path: join(outDirectory, SEARCH_FILE),
       body: serialise({ ...envelope, cards: searchCards }),
@@ -1078,7 +1144,9 @@ if (warnings.length > 0 && !allowWarnings) {
       }
 
       if (committed === null) {
-        log.push(`MISSING ${shown} — run \`bun run corpus:cards\` and commit the result.`);
+        log.push(
+          `MISSING ${shown} — run \`bun run corpus:cards\` and commit the result.`,
+        );
         process.exitCode = 1;
       } else if (committed === output.body) {
         log.push(`up to date  ${shown} (${String(output.body.length)} bytes)`);

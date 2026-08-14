@@ -35,12 +35,12 @@ const meta = {
     href: {
       control: "text",
       description:
-        "Permalink to the addressable section. Required, and it is a real `href` on a real `<a>` — middle click, ⌘-click, browser focus order and \"copy link address\" all come from that and are unrecoverable without it.",
+        'Permalink to the addressable section. Required, and it is a real `href` on a real `<a>` — middle click, ⌘-click, browser focus order and "copy link address" all come from that and are unrecoverable without it.',
     },
     version: {
       control: "text",
       description:
-        "Optional document version the citation was read from. Rendered as a subordinate segment after a `·` separator, with a visually hidden \"version\" so it survives a screen reader. Omitted — or set to `\"\"` / whitespace — the separator and the segment are not rendered at all.",
+        'Optional document version the citation was read from. Rendered as a subordinate segment after a `·` separator, with a visually hidden "version" so it survives a screen reader. Omitted — or set to `""` / whitespace — the separator and the segment are not rendered at all.',
     },
   },
 } satisfies Meta<typeof Citation>;

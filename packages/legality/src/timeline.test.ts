@@ -15,7 +15,12 @@
 
 import { describe, expect, test } from "bun:test";
 
-import type { CardStatus, LegalityTimeline, RuleCitation, TimelineEntry } from "./index";
+import type {
+  CardStatus,
+  LegalityTimeline,
+  RuleCitation,
+  TimelineEntry,
+} from "./index";
 import { CARD_STATUSES } from "./index";
 import {
   compareIsoDates,
@@ -50,10 +55,20 @@ function entry(
 ): TimelineEntry {
   return effectiveUntil === undefined
     ? { cardId, format: "blitz", status, effectiveFrom, citation: CITATION }
-    : { cardId, format: "blitz", status, effectiveFrom, effectiveUntil, citation: CITATION };
+    : {
+        cardId,
+        format: "blitz",
+        status,
+        effectiveFrom,
+        effectiveUntil,
+        citation: CITATION,
+      };
 }
 
-function timelineOf(entries: readonly TimelineEntry[], generatedAt = "2030-01-01"): LegalityTimeline {
+function timelineOf(
+  entries: readonly TimelineEntry[],
+  generatedAt = "2030-01-01",
+): LegalityTimeline {
   return {
     version: "fixture",
     generatedAt,
@@ -180,16 +195,18 @@ describe("coversDate — impossible intervals cover nothing", () => {
 
 describe("coversDate — malformed input", () => {
   test("a malformed query date is the caller's error", () => {
-    expect(() => coversDate(entry(CARD, "banned", "2026-03-14"), "2026-02-31")).toThrow(TypeError);
+    expect(() =>
+      coversDate(entry(CARD, "banned", "2026-03-14"), "2026-02-31"),
+    ).toThrow(TypeError);
   });
 
   test("a malformed entry date is the dataset's error, and it is loud", () => {
-    expect(() => coversDate(entry(CARD, "banned", "March 14"), "2026-03-14")).toThrow(
-      TimelineDataError,
-    );
-    expect(() => coversDate(entry(CARD, "banned", "2026-03-14", "soon"), "2026-03-14")).toThrow(
-      TimelineDataError,
-    );
+    expect(() =>
+      coversDate(entry(CARD, "banned", "March 14"), "2026-03-14"),
+    ).toThrow(TimelineDataError);
+    expect(() =>
+      coversDate(entry(CARD, "banned", "2026-03-14", "soon"), "2026-03-14"),
+    ).toThrow(TimelineDataError);
   });
 });
 
@@ -205,7 +222,11 @@ describe("statusAsOf — a recorded status", () => {
   ]);
 
   test("answers with the interval that covers the date", () => {
-    const result = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-04-01" });
+    const result = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-04-01",
+    });
     expect(result.kind).toBe("recorded");
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.status).toBe("banned");
@@ -217,16 +238,29 @@ describe("statusAsOf — a recorded status", () => {
   });
 
   test("the day a ban takes effect answers banned, not legal", () => {
-    const onTheDay = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-03-14" });
-    const dayBefore = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-03-13" });
-    if (!isRecorded(onTheDay) || !isRecorded(dayBefore)) throw new Error("expected records");
+    const onTheDay = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-03-14",
+    });
+    const dayBefore = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-03-13",
+    });
+    if (!isRecorded(onTheDay) || !isRecorded(dayBefore))
+      throw new Error("expected records");
     expect(onTheDay.status).toBe("banned");
     expect(dayBefore.status).toBe("legal");
     expect(dayBefore.legal).toBe(true);
   });
 
   test("an explicitly recorded legal status is a record, not an absence", () => {
-    const result = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2025-06-01" });
+    const result = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2025-06-01",
+    });
     expect(result.kind).toBe("recorded");
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.status).toBe("legal");
@@ -234,7 +268,11 @@ describe("statusAsOf — a recorded status", () => {
   });
 
   test("an open-ended interval reports no end boundary", () => {
-    const result = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2027-01-01" });
+    const result = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2027-01-01",
+    });
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.status).toBe("living-legend");
     expect(result.until).toBeUndefined();
@@ -251,7 +289,11 @@ describe("statusAsOf — a recorded status", () => {
         citation: CITATION,
       },
     ]);
-    const result = statusAsOf(mixed, { cardId: CARD, format: "blitz", asOf: "2026-04-01" });
+    const result = statusAsOf(mixed, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-04-01",
+    });
     expect(result.kind).toBe("no-record");
     if (!isNoRecord(result)) throw new Error("expected no record");
     expect(result.reason).toBe("no-entries-for-card");
@@ -263,10 +305,16 @@ describe("statusAsOf — a recorded status", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("statusAsOf — unknown is never legal", () => {
-  const timeline = timelineOf([entry(CARD, "banned", "2026-03-14", "2026-09-01")]);
+  const timeline = timelineOf([
+    entry(CARD, "banned", "2026-03-14", "2026-09-01"),
+  ]);
 
   test("a date before any entry is no-record, NOT legal", () => {
-    const result = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2025-01-01" });
+    const result = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2025-01-01",
+    });
     expect(result.kind).toBe("no-record");
     if (!isNoRecord(result)) throw new Error("expected no record");
     expect(result.reason).toBe("before-first-record");
@@ -277,21 +325,33 @@ describe("statusAsOf — unknown is never legal", () => {
     // The type system forbids reading them; this asserts the runtime shape
     // matches, so a structural check or a JSON round-trip cannot resurrect the
     // conflation the types were designed to prevent.
-    const result = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2025-01-01" });
+    const result = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2025-01-01",
+    });
     expect("status" in result).toBe(false);
     expect("legal" in result).toBe(false);
     expect(Object.keys(result)).not.toContain("status");
   });
 
   test("a card with no entries at all is no-record, with no coverage floor", () => {
-    const result = statusAsOf(timeline, { cardId: OTHER, format: "blitz", asOf: "2026-04-01" });
+    const result = statusAsOf(timeline, {
+      cardId: OTHER,
+      format: "blitz",
+      asOf: "2026-04-01",
+    });
     if (!isNoRecord(result)) throw new Error("expected no record");
     expect(result.reason).toBe("no-entries-for-card");
     expect(result.earliestRecord).toBeUndefined();
   });
 
   test("an empty timeline answers no-record rather than legal", () => {
-    const result = statusAsOf(timelineOf([]), { cardId: CARD, format: "blitz", asOf: "2026-04-01" });
+    const result = statusAsOf(timelineOf([]), {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-04-01",
+    });
     if (!isNoRecord(result)) throw new Error("expected no record");
     expect(result.reason).toBe("no-entries-for-card");
   });
@@ -301,28 +361,46 @@ describe("statusAsOf — unknown is never legal", () => {
       entry(CARD, "banned", "2024-01-01", "2024-06-01"),
       entry(CARD, "banned", "2026-01-01", "2026-06-01"),
     ]);
-    const result = statusAsOf(gapped, { cardId: CARD, format: "blitz", asOf: "2025-01-01" });
+    const result = statusAsOf(gapped, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2025-01-01",
+    });
     if (!isNoRecord(result)) throw new Error("expected no record");
     expect(result.reason).toBe("between-records");
     expect(result.earliestRecord).toBe("2024-01-01");
   });
 
   test("a date after every closed interval is no-record", () => {
-    const result = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-09-01" });
+    const result = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-09-01",
+    });
     if (!isNoRecord(result)) throw new Error("expected no record");
     expect(result.reason).toBe("after-last-record");
   });
 
   test("an open-ended interval means the record never ends, only gaps", () => {
     const openEnded = timelineOf([entry(CARD, "banned", "2026-03-14")]);
-    const before = statusAsOf(openEnded, { cardId: CARD, format: "blitz", asOf: "2026-03-13" });
+    const before = statusAsOf(openEnded, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-03-13",
+    });
     if (!isNoRecord(before)) throw new Error("expected no record");
     expect(before.reason).toBe("before-first-record");
   });
 
   test("a zero-length interval yields no record, never a status", () => {
-    const zero = timelineOf([entry(CARD, "banned", "2026-03-14", "2026-03-14")]);
-    const result = statusAsOf(zero, { cardId: CARD, format: "blitz", asOf: "2026-03-14" });
+    const zero = timelineOf([
+      entry(CARD, "banned", "2026-03-14", "2026-03-14"),
+    ]);
+    const result = statusAsOf(zero, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-03-14",
+    });
     expect(result.kind).toBe("no-record");
   });
 });
@@ -369,7 +447,11 @@ describe("statusAsOf — overlapping entries", () => {
       entry(CARD, "banned", "2026-01-01", "2026-12-01"),
       entry(CARD, "banned", "2026-03-01"),
     ]);
-    const result = statusAsOf(redundant, { cardId: CARD, format: "blitz", asOf: "2026-04-01" });
+    const result = statusAsOf(redundant, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-04-01",
+    });
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.status).toBe("banned");
     expect(result.entries).toHaveLength(2);
@@ -389,22 +471,41 @@ describe("statusAsOf — overlapping entries", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("statusAsOf — a verdict about the future is marked provisional", () => {
-  const timeline = timelineOf([entry(CARD, "banned", "2026-03-14")], "2026-06-30");
+  const timeline = timelineOf(
+    [entry(CARD, "banned", "2026-03-14")],
+    "2026-06-30",
+  );
 
   test("a date at or before generatedAt is settled", () => {
-    const past = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-04-01" });
-    const sameDay = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-06-30" });
+    const past = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-04-01",
+    });
+    const sameDay = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-06-30",
+    });
     expect(past.provisional).toBe(false);
     expect(sameDay.provisional).toBe(false);
   });
 
   test("a date after generatedAt is provisional, because a later announcement can change it", () => {
-    const future = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-07-01" });
+    const future = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-07-01",
+    });
     expect(future.provisional).toBe(true);
   });
 
   test("provisionality is reported on a no-record answer too", () => {
-    const future = statusAsOf(timeline, { cardId: OTHER, format: "blitz", asOf: "2027-01-01" });
+    const future = statusAsOf(timeline, {
+      cardId: OTHER,
+      format: "blitz",
+      asOf: "2027-01-01",
+    });
     expect(future.kind).toBe("no-record");
     expect(future.provisional).toBe(true);
   });
@@ -414,30 +515,40 @@ describe("statusAsOf — malformed input", () => {
   const timeline = timelineOf([entry(CARD, "banned", "2026-03-14")]);
 
   test("a malformed asOf is a TypeError", () => {
-    expect(() => statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: "2026-02-31" })).toThrow(
-      TypeError,
-    );
+    expect(() =>
+      statusAsOf(timeline, {
+        cardId: CARD,
+        format: "blitz",
+        asOf: "2026-02-31",
+      }),
+    ).toThrow(TypeError);
   });
 
   test("a malformed generatedAt is a dataset error", () => {
-    const broken = timelineOf([entry(CARD, "banned", "2026-03-14")], "sometime");
-    expect(() => statusAsOf(broken, { cardId: CARD, format: "blitz", asOf: "2026-04-01" })).toThrow(
-      TimelineDataError,
+    const broken = timelineOf(
+      [entry(CARD, "banned", "2026-03-14")],
+      "sometime",
     );
+    expect(() =>
+      statusAsOf(broken, { cardId: CARD, format: "blitz", asOf: "2026-04-01" }),
+    ).toThrow(TimelineDataError);
   });
 
   test("a malformed entry date stops the query rather than losing the entry", () => {
     const broken = timelineOf([entry(CARD, "banned", "2026-3-14")]);
-    expect(() => statusAsOf(broken, { cardId: CARD, format: "blitz", asOf: "2026-04-01" })).toThrow(
-      TimelineDataError,
-    );
+    expect(() =>
+      statusAsOf(broken, { cardId: CARD, format: "blitz", asOf: "2026-04-01" }),
+    ).toThrow(TimelineDataError);
   });
 
   test("a non-array entries field is a TypeError", () => {
-    const broken = { ...timelineOf([]), entries: undefined } as unknown as LegalityTimeline;
-    expect(() => statusAsOf(broken, { cardId: CARD, format: "blitz", asOf: "2026-04-01" })).toThrow(
-      TypeError,
-    );
+    const broken = {
+      ...timelineOf([]),
+      entries: undefined,
+    } as unknown as LegalityTimeline;
+    expect(() =>
+      statusAsOf(broken, { cardId: CARD, format: "blitz", asOf: "2026-04-01" }),
+    ).toThrow(TypeError);
   });
 });
 
@@ -462,7 +573,9 @@ describe("historyFor", () => {
   });
 
   test("returns an empty array for a card it has never heard of", () => {
-    expect(historyFor(timelineOf([]), { cardId: CARD, format: "blitz" })).toHaveLength(0);
+    expect(
+      historyFor(timelineOf([]), { cardId: CARD, format: "blitz" }),
+    ).toHaveLength(0);
   });
 });
 
@@ -474,28 +587,48 @@ describe("nextChange", () => {
   ]);
 
   test("finds the next entry strictly after the query date", () => {
-    const change = nextChange(timeline, { cardId: CARD, format: "blitz", asOf: "2026-01-01" });
+    const change = nextChange(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-01-01",
+    });
     expect(change.kind).toBe("entry");
     expect(change.kind === "none" ? undefined : change.on).toBe("2026-03-14");
   });
 
   test("an entry taking effect ON the query date is already in force, not a future change", () => {
-    const change = nextChange(timeline, { cardId: CARD, format: "blitz", asOf: "2026-03-14" });
+    const change = nextChange(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-03-14",
+    });
     expect(change.kind === "none" ? undefined : change.on).toBe("2026-09-01");
   });
 
   test("open-ended coverage with nothing after it is 'none'", () => {
-    expect(nextChange(timeline, { cardId: CARD, format: "blitz", asOf: "2027-01-01" }).kind).toBe(
-      "none",
-    );
+    expect(
+      nextChange(timeline, {
+        cardId: CARD,
+        format: "blitz",
+        asOf: "2027-01-01",
+      }).kind,
+    ).toBe("none");
   });
 
   test("previousDay of the next change is the inclusive last day of the current answer", () => {
-    const change = nextChange(timeline, { cardId: CARD, format: "blitz", asOf: "2026-01-01" });
+    const change = nextChange(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2026-01-01",
+    });
     if (change.kind !== "entry") throw new Error("expected an entry change");
     const lastDay = previousDay(change.on);
     expect(lastDay).toBe("2026-03-13");
-    const stillLegal = statusAsOf(timeline, { cardId: CARD, format: "blitz", asOf: lastDay });
+    const stillLegal = statusAsOf(timeline, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: lastDay,
+    });
     if (!isRecorded(stillLegal)) throw new Error("expected a recorded status");
     expect(stillLegal.status).toBe("legal");
   });
@@ -512,7 +645,11 @@ describe("nextChange", () => {
     ]);
     expect(validateTimeline(holed)).toEqual([]);
 
-    const change = nextChange(holed, { cardId: CARD, format: "blitz", asOf: "2020-06-01" });
+    const change = nextChange(holed, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2020-06-01",
+    });
     expect(change.kind).toBe("record-ends");
     expect(change.kind === "none" ? undefined : change.on).toBe("2021-01-01");
 
@@ -521,13 +658,23 @@ describe("nextChange", () => {
     if (change.kind === "none") throw new Error("expected a change");
     const lastDay = previousDay(change.on);
     expect(lastDay).toBe("2020-12-31");
-    const dayAfter = statusAsOf(holed, { cardId: CARD, format: "blitz", asOf: "2021-01-01" });
+    const dayAfter = statusAsOf(holed, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2021-01-01",
+    });
     expect(dayAfter.kind).toBe("no-record");
   });
 
   test("a suspension that demonstrably ends is a change, not 'nothing further recorded'", () => {
-    const suspension = timelineOf([entry(CARD, "suspended", "2024-01-01", "2024-07-01")]);
-    const change = nextChange(suspension, { cardId: CARD, format: "blitz", asOf: "2024-02-01" });
+    const suspension = timelineOf([
+      entry(CARD, "suspended", "2024-01-01", "2024-07-01"),
+    ]);
+    const change = nextChange(suspension, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2024-02-01",
+    });
     expect(change.kind).toBe("record-ends");
     expect(change.kind === "none" ? undefined : change.on).toBe("2024-07-01");
   });
@@ -537,22 +684,33 @@ describe("nextChange", () => {
       entry(CARD, "legal", "2020-01-01", "2021-01-01"),
       entry(CARD, "banned", "2021-01-01"),
     ]);
-    const change = nextChange(abutting, { cardId: CARD, format: "blitz", asOf: "2020-06-01" });
+    const change = nextChange(abutting, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2020-06-01",
+    });
     expect(change.kind).toBe("entry");
     expect(change.kind === "none" ? undefined : change.on).toBe("2021-01-01");
   });
 
   test("a date already past every closed interval reports no further change", () => {
-    const ended = timelineOf([entry(CARD, "banned", "2024-01-01", "2024-07-01")]);
-    expect(nextChange(ended, { cardId: CARD, format: "blitz", asOf: "2025-01-01" }).kind).toBe(
-      "none",
-    );
+    const ended = timelineOf([
+      entry(CARD, "banned", "2024-01-01", "2024-07-01"),
+    ]);
+    expect(
+      nextChange(ended, { cardId: CARD, format: "blitz", asOf: "2025-01-01" })
+        .kind,
+    ).toBe("none");
   });
 
   test("a card with no entries at all has no next change", () => {
-    expect(nextChange(timeline, { cardId: OTHER, format: "blitz", asOf: "2026-01-01" }).kind).toBe(
-      "none",
-    );
+    expect(
+      nextChange(timeline, {
+        cardId: OTHER,
+        format: "blitz",
+        asOf: "2026-01-01",
+      }).kind,
+    ).toBe("none");
   });
 
   test("from inside a hole, the next recorded entry is the change", () => {
@@ -560,7 +718,11 @@ describe("nextChange", () => {
       entry(CARD, "legal", "2020-01-01", "2021-01-01"),
       entry(CARD, "banned", "2023-01-01"),
     ]);
-    const change = nextChange(holed, { cardId: CARD, format: "blitz", asOf: "2022-01-01" });
+    const change = nextChange(holed, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2022-01-01",
+    });
     expect(change.kind).toBe("entry");
     expect(change.kind === "none" ? undefined : change.on).toBe("2023-01-01");
   });
@@ -581,7 +743,11 @@ describe("statusAsOf — since and until span the whole run of one status", () =
     ]);
     expect(validateTimeline(restated)).toEqual([]);
 
-    const result = statusAsOf(restated, { cardId: CARD, format: "blitz", asOf: "2020-06-01" });
+    const result = statusAsOf(restated, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2020-06-01",
+    });
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.since).toBe("2020-01-01");
     expect(result.until).toBeUndefined();
@@ -592,8 +758,17 @@ describe("statusAsOf — since and until span the whole run of one status", () =
       entry(CARD, "legal", "2020-01-01"),
       entry(CARD, "legal", "2021-01-01", "2021-02-01"),
     ]);
-    for (const asOf of ["2020-06-01", "2021-01-15", "2021-06-01", "2030-01-01"]) {
-      const result = statusAsOf(nested, { cardId: CARD, format: "blitz", asOf });
+    for (const asOf of [
+      "2020-06-01",
+      "2021-01-15",
+      "2021-06-01",
+      "2030-01-01",
+    ]) {
+      const result = statusAsOf(nested, {
+        cardId: CARD,
+        format: "blitz",
+        asOf,
+      });
       if (!isRecorded(result)) throw new Error("expected a recorded status");
       expect(result.since).toBe("2020-01-01");
       expect(result.until).toBeUndefined();
@@ -606,7 +781,11 @@ describe("statusAsOf — since and until span the whole run of one status", () =
       entry(CARD, "legal", "2021-01-01", "2022-01-01"),
       entry(CARD, "banned", "2022-01-01"),
     ]);
-    const result = statusAsOf(changing, { cardId: CARD, format: "blitz", asOf: "2020-06-01" });
+    const result = statusAsOf(changing, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2020-06-01",
+    });
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.since).toBe("2020-01-01");
     expect(result.until).toBe("2022-01-01");
@@ -618,7 +797,11 @@ describe("statusAsOf — since and until span the whole run of one status", () =
       entry(CARD, "legal", "2020-01-01", "2021-01-01"),
       entry(CARD, "legal", "2023-01-01"),
     ]);
-    const result = statusAsOf(holed, { cardId: CARD, format: "blitz", asOf: "2020-06-01" });
+    const result = statusAsOf(holed, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2020-06-01",
+    });
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.until).toBe("2021-01-01");
   });
@@ -628,11 +811,17 @@ describe("statusAsOf — since and until span the whole run of one status", () =
       entry(CARD, "legal", "2020-01-01"),
       entry(CARD, "banned", "2021-01-01", "2021-02-01"),
     ]);
-    const result = statusAsOf(contested, { cardId: CARD, format: "blitz", asOf: "2020-06-01" });
+    const result = statusAsOf(contested, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2020-06-01",
+    });
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.until).toBe("2021-01-01");
     // ...and the dataset defect is still reported rather than absorbed.
-    expect(validateTimeline(contested).map((item) => item.kind)).toContain("contradictory-overlap");
+    expect(validateTimeline(contested).map((item) => item.kind)).toContain(
+      "contradictory-overlap",
+    );
   });
 
   test("the governing entry's own boundaries stay readable on `entry`", () => {
@@ -640,7 +829,11 @@ describe("statusAsOf — since and until span the whole run of one status", () =
       entry(CARD, "banned", "2020-01-01", "2021-01-01"),
       entry(CARD, "banned", "2021-01-01"),
     ]);
-    const result = statusAsOf(restated, { cardId: CARD, format: "blitz", asOf: "2022-01-01" });
+    const result = statusAsOf(restated, {
+      cardId: CARD,
+      format: "blitz",
+      asOf: "2022-01-01",
+    });
     if (!isRecorded(result)) throw new Error("expected a recorded status");
     expect(result.entry.effectiveFrom).toBe("2021-01-01");
     expect(result.since).toBe("2020-01-01");
@@ -672,13 +865,18 @@ describe("validateTimeline", () => {
 
   test("flags a malformed generatedAt", () => {
     const defects = validateTimeline(timelineOf([], "2026-3-1"));
-    expect(defects.map((defect) => defect.kind)).toEqual(["malformed-generated-at"]);
+    expect(defects.map((defect) => defect.kind)).toEqual([
+      "malformed-generated-at",
+    ]);
     expect(defects[0]?.severity).toBe("error");
   });
 
   test("flags malformed entry dates without throwing, so the whole file gets checked", () => {
     const defects = validateTimeline(
-      timelineOf([entry(CARD, "banned", "March 14"), entry(OTHER, "banned", "2026-01-01", "later")]),
+      timelineOf([
+        entry(CARD, "banned", "March 14"),
+        entry(OTHER, "banned", "2026-01-01", "later"),
+      ]),
     );
     expect(defects.map((defect) => defect.kind)).toEqual([
       "malformed-effective-from",
@@ -724,9 +922,9 @@ describe("validateTimeline", () => {
       effectiveFrom: "2026-01-01",
       citation: CITATION,
     } as unknown as TimelineEntry;
-    expect(validateTimeline(timelineOf([broken])).map((defect) => defect.kind)).toEqual([
-      "unknown-status",
-    ]);
+    expect(
+      validateTimeline(timelineOf([broken])).map((defect) => defect.kind),
+    ).toEqual(["unknown-status"]);
   });
 
   test("accepts every status the package publishes, so the check cannot drift from the type", () => {
@@ -750,7 +948,9 @@ describe("validateTimeline", () => {
     const defects = validateTimeline(
       timelineOf([entry(CARD, "banned", "2026-03-14", "2026-03-14")]),
     );
-    expect(defects.map((defect) => defect.kind)).toEqual(["zero-length-interval"]);
+    expect(defects.map((defect) => defect.kind)).toEqual([
+      "zero-length-interval",
+    ]);
     expect(defects[0]?.severity).toBe("warning");
   });
 

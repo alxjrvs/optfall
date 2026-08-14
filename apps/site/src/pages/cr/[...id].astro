@@ -122,7 +122,10 @@ const CARDS_BY_RULE = cardsByRule(
   CARD_PAGES.map((card) => ({
     label: card.label,
     href: card.href,
-    keywords: [...card.card.card_keywords, ...card.card.ability_and_effect_keywords],
+    keywords: [
+      ...card.card.card_keywords,
+      ...card.card.ability_and_effect_keywords,
+    ],
   })),
 );
 
@@ -137,7 +140,8 @@ const CARDS_BY_RULE = cardsByRule(
 const CARD_LIST_LIMIT = 24;
 
 const { page } = Astro.props;
-const { section, ancestors, children, references, previous, next, ordinal } = page;
+const { section, ancestors, children, references, previous, next, ordinal } =
+  page;
 
 const governedCards = CARDS_BY_RULE.get(section.number) ?? [];
 const governedShown = governedCards.slice(0, CARD_LIST_LIMIT);

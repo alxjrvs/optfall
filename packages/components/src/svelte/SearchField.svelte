@@ -1,101 +1,101 @@
 <script lang="ts">
+/**
+ * The search field — the hero control, and the one both search surfaces owe.
+ *
+ * WHY THIS EXISTS. `RulesSearch.svelte` and `CardSearch.svelte` each carried
+ * their own copy of this form and its styles, and both files carried a comment
+ * saying so: "the two primitives `RulesSearch.svelte` records the library as
+ * missing (`SearchField` and `ResultRow`), kept byte-identical here on purpose
+ * so the eventual extraction is a cut and a paste rather than a redesign."
+ * Measured before the cut: 89 identical CSS lines across 14 shared selectors.
+ * This is that extraction, and `docs/PLAN.md`'s rule is what compels it — "a
+ * screen that needs new CSS is a signal the library is missing a primitive;
+ * add it there, not in the page."
+ *
+ * IT IS A FORM, NOT A TEXT BOX, and that is the load-bearing part. The
+ * `<form method="get">` is what makes the no-JS path work on both surfaces:
+ * submitting reaches a real URL carrying `?q=`, so a reader with no islands
+ * running still produces a shareable address. A primitive that rendered only
+ * the input would have left each caller to remember the form, the method, the
+ * search role and the accessible name — four things, twice, and the second
+ * copy would drift.
+ *
+ * WHAT IT DOES NOT OWN. Ranking, notices, results and the URL contract stay
+ * with the caller. This draws a control and reports what happened to it; a
+ * primitive that knew what a query meant would be a search engine with a
+ * stylesheet.
+ *
+ * THE HINT IS A SNIPPET RATHER THAN A STRING. Each surface teaches a different
+ * grammar — Card Vault's operators here, `cr:` identifiers there — and both
+ * hints carry markup (`<code>`, `<kbd>`). Passing prose through a prop would
+ * have meant either escaping markup out of it or letting a caller inject HTML,
+ * and the hint is wired to the field by `aria-describedby` so it has to be
+ * rendered here rather than beside the component.
+ */
+import type { Snippet } from "svelte";
+
+import BevelledPlate from "./BevelledPlate.svelte";
+
+interface Props {
+  /** The visible label above the field. */
+  label: string;
   /**
-   * The search field — the hero control, and the one both search surfaces owe.
-   *
-   * WHY THIS EXISTS. `RulesSearch.svelte` and `CardSearch.svelte` each carried
-   * their own copy of this form and its styles, and both files carried a comment
-   * saying so: "the two primitives `RulesSearch.svelte` records the library as
-   * missing (`SearchField` and `ResultRow`), kept byte-identical here on purpose
-   * so the eventual extraction is a cut and a paste rather than a redesign."
-   * Measured before the cut: 89 identical CSS lines across 14 shared selectors.
-   * This is that extraction, and `docs/PLAN.md`'s rule is what compels it — "a
-   * screen that needs new CSS is a signal the library is missing a primitive;
-   * add it there, not in the page."
-   *
-   * IT IS A FORM, NOT A TEXT BOX, and that is the load-bearing part. The
-   * `<form method="get">` is what makes the no-JS path work on both surfaces:
-   * submitting reaches a real URL carrying `?q=`, so a reader with no islands
-   * running still produces a shareable address. A primitive that rendered only
-   * the input would have left each caller to remember the form, the method, the
-   * search role and the accessible name — four things, twice, and the second
-   * copy would drift.
-   *
-   * WHAT IT DOES NOT OWN. Ranking, notices, results and the URL contract stay
-   * with the caller. This draws a control and reports what happened to it; a
-   * primitive that knew what a query meant would be a search engine with a
-   * stylesheet.
-   *
-   * THE HINT IS A SNIPPET RATHER THAN A STRING. Each surface teaches a different
-   * grammar — Card Vault's operators here, `cr:` identifiers there — and both
-   * hints carry markup (`<code>`, `<kbd>`). Passing prose through a prop would
-   * have meant either escaping markup out of it or letting a caller inject HTML,
-   * and the hint is wired to the field by `aria-describedby` so it has to be
-   * rendered here rather than beside the component.
+   * The accessible name of the search landmark — what is being searched,
+   * "Flesh and Blood cards" rather than "Search". Required, because two
+   * search regions on one site with the same name are indistinguishable in a
+   * landmark list.
    */
-  import type { Snippet } from "svelte";
+  region: string;
+  /** Where the form submits with scripting off. A real URL, never `#`. */
+  action: string;
+  /** The query. Bindable. */
+  value: string;
+  placeholder?: string;
+  /** The field element, for callers that focus it — the `/` shortcut. */
+  element?: HTMLInputElement | null;
+  onsubmit?: (event: SubmitEvent) => void;
+  onkeydown?: (event: KeyboardEvent) => void;
+  /** One line, wired to the field by `aria-describedby`. */
+  hint?: Snippet;
+  /**
+   * COMBOBOX WIRING, for a caller that renders a suggestion list beside this
+   * field.
+   *
+   * The list itself is emphatically NOT this component's job — a primitive
+   * that rendered a popup would be deciding for every caller that a search
+   * field has one, and two of the three fields in this product do not. But
+   * the ARIA that makes a list usable lives on the INPUT, and the input lives
+   * here, so a caller physically cannot supply it from outside. Passing it
+   * through is the only arrangement in which a typeahead can be accessible at
+   * all.
+   *
+   * Omitted, none of these attributes render — an `aria-expanded` on a field
+   * with nothing to expand is a promise to a screen reader that is never kept.
+   */
+  listboxId?: string;
+  expanded?: boolean;
+  /** The id of the active option, or `undefined` when none is active. */
+  activeDescendant?: string;
+}
 
-  import BevelledPlate from "./BevelledPlate.svelte";
+let {
+  label,
+  region,
+  action,
+  value = $bindable(),
+  placeholder,
+  element = $bindable(null),
+  onsubmit,
+  onkeydown,
+  hint,
+  listboxId,
+  expanded = false,
+  activeDescendant,
+}: Props = $props();
 
-  interface Props {
-    /** The visible label above the field. */
-    label: string;
-    /**
-     * The accessible name of the search landmark — what is being searched,
-     * "Flesh and Blood cards" rather than "Search". Required, because two
-     * search regions on one site with the same name are indistinguishable in a
-     * landmark list.
-     */
-    region: string;
-    /** Where the form submits with scripting off. A real URL, never `#`. */
-    action: string;
-    /** The query. Bindable. */
-    value: string;
-    placeholder?: string;
-    /** The field element, for callers that focus it — the `/` shortcut. */
-    element?: HTMLInputElement | null;
-    onsubmit?: (event: SubmitEvent) => void;
-    onkeydown?: (event: KeyboardEvent) => void;
-    /** One line, wired to the field by `aria-describedby`. */
-    hint?: Snippet;
-    /**
-     * COMBOBOX WIRING, for a caller that renders a suggestion list beside this
-     * field.
-     *
-     * The list itself is emphatically NOT this component's job — a primitive
-     * that rendered a popup would be deciding for every caller that a search
-     * field has one, and two of the three fields in this product do not. But
-     * the ARIA that makes a list usable lives on the INPUT, and the input lives
-     * here, so a caller physically cannot supply it from outside. Passing it
-     * through is the only arrangement in which a typeahead can be accessible at
-     * all.
-     *
-     * Omitted, none of these attributes render — an `aria-expanded` on a field
-     * with nothing to expand is a promise to a screen reader that is never kept.
-     */
-    listboxId?: string;
-    expanded?: boolean;
-    /** The id of the active option, or `undefined` when none is active. */
-    activeDescendant?: string;
-  }
-
-  let {
-    label,
-    region,
-    action,
-    value = $bindable(),
-    placeholder,
-    element = $bindable(null),
-    onsubmit,
-    onkeydown,
-    hint,
-    listboxId,
-    expanded = false,
-    activeDescendant,
-  }: Props = $props();
-
-  const uid = $props.id();
-  const fieldId = `${uid}-query`;
-  const hintId = `${uid}-hint`;
+const uid = $props.id();
+const fieldId = `${uid}-query`;
+const hintId = `${uid}-hint`;
 </script>
 
 <form class="search" role="search" aria-label={region} {action} method="get" {onsubmit}>

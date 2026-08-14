@@ -19,11 +19,16 @@ describe("token identifiers", () => {
 
   test("are referenced through var(), with an optional fallback", () => {
     expect(cssValue("color.ground")).toBe("var(--of-color-ground)");
-    expect(cssValue("color.ground", "#000")).toBe("var(--of-color-ground, #000)");
+    expect(cssValue("color.ground", "#000")).toBe(
+      "var(--of-color-ground, #000)",
+    );
   });
 
   test("render as a declaration block", () => {
-    const tokens: TokenTable = { "color.ground": "#0b0b0c", "space.gutter": "1rem" };
+    const tokens: TokenTable = {
+      "color.ground": "#0b0b0c",
+      "space.gutter": "1rem",
+    };
     expect(toCssDeclarations({ name: "dark", tokens })).toBe(
       "--of-color-ground: #0b0b0c;\n--of-space-gutter: 1rem;",
     );

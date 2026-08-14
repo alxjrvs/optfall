@@ -87,7 +87,8 @@ function withSymbols(source: string): readonly Inline[] {
     const symbol = symbolForToken(m[0]);
     // An unknown `{q}` is text. Nothing is dropped and nothing is guessed at.
     if (symbol === null) continue;
-    if (m.index > at) out.push({ kind: "text", value: source.slice(at, m.index) });
+    if (m.index > at)
+      out.push({ kind: "text", value: source.slice(at, m.index) });
     out.push({ kind: "symbol", symbol });
     at = m.index + m[0].length;
   }
@@ -167,7 +168,10 @@ export function parseCardText(source: string): readonly Block[] {
       if (run.length === 0) return;
       out.push(
         inList
-          ? { kind: "list", items: run.map((line) => parseInline(line.replace(BULLET, ""))) }
+          ? {
+              kind: "list",
+              items: run.map((line) => parseInline(line.replace(BULLET, ""))),
+            }
           : { kind: "paragraph", children: parseInline(run.join("\n")) },
       );
       run = [];

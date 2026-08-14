@@ -1,267 +1,268 @@
 <script lang="ts">
-  /**
-   * The card search field, and the results under it — the surface `docs/PLAN.md`
-   * Phase 2 calls the product.
+/**
+ * The card search field, and the results under it — the surface `docs/PLAN.md`
+ * Phase 2 calls the product.
+ *
+ * `docs/DESIGN.md`: "The search field is the hero. No marketing hero, no
+ * illustration above the fold. The first thing on the page is the thing you
+ * came to do." This is `RulesSearch.svelte`'s sibling and follows it
+ * deliberately and closely — same URL contract, same degradation story, same
+ * live-region timing, same row idiom — because two search fields on one site
+ * that behave differently are two things to learn.
+ *
+ * FOUR THINGS IT HAS TO GET RIGHT.
+ *
+ * 1. **Every view is a URL.** `/search?q=banned:cc` is a real address that
+ *    renders those results: the query is read from the URL on load, written
+ *    back as you type (`replaceState`, so the back button is not filled with
+ *    keystrokes) and pushed on submit.
+ * 2. **The form degrades to a static browse; live results need JavaScript.**
+ *    The form is a real `GET` to `/cards`, so a browser with no islands
+ *    running still produces a shareable URL and still reaches every
+ *    `/card/<slug>` page. What it cannot do is answer the query — the ranking
+ *    runs here, and a static build has no server. The page says so in a
+ *    `NoScriptNotice` above the field rather than letting a submitted query
+ *    vanish in silence.
+ * 3. **Nothing here composes prose.** Every string a reader sees is either a
+ *    verbatim card value, an identifier, or interface wording written by a
+ *    person and checked in. `docs/PLAN.md`: no language model in the shipped
+ *    product.
+ * 4. **NO LEGALITY VERDICT APPEARS ON A ROW.** A pill reading "Banned" needs a
+ *    format attached to mean anything, and a row has six of them. The verdict
+ *    is per-format, dated and evidenced, and it lives on the card page — which
+ *    is the page the reader is choosing between anyway. `legal:cc` and
+ *    `banned:cc` filter *by* it, so the question is answerable without the
+ *    surface making an unqualified claim.
+ *
+ * COMPOSED, NOT RESTYLED. The field, the jewel on every row, the plate and the
+ * rule under it are all `optfall-components` primitives. This file used to
+ * carry its own copy of the search form and its styles, alongside a note that
+ * they were being kept byte-identical against the day somebody extracted them;
+ * `SearchField` is that extraction, and the styles were lifted verbatim rather
+ * than rewritten so the reasoning attached to each rule came with it. What is
+ * left here is the rhythm of a result row and the grid — `ResultRow` and
+ * `ResultGrid` are the primitives this file now records as missing.
+ *
+ * A NOTE FOR THE NEXT PERSON EDITING THIS COMMENT: do not write the literal
+ * opening style tag anywhere in this script, in prose or in backticks. Astro's
+ * Svelte tooling locates the style block by scanning for that tag rather than
+ * by parsing, so a mention of it inside a comment makes it treat the rest of
+ * the file as CSS — and `astro check` then reports the component as
+ * unparseable from the pages that import it, with no indication that a comment
+ * is the cause.
+ */
+import {
+  BevelledPlate,
+  CardFace,
+  OrnamentalRule,
+  PitchJewel,
+  /*
+   * IT WAS USED AND NEVER IMPORTED, AND THAT SHIPPED.
    *
-   * `docs/DESIGN.md`: "The search field is the hero. No marketing hero, no
-   * illustration above the fold. The first thing on the page is the thing you
-   * came to do." This is `RulesSearch.svelte`'s sibling and follows it
-   * deliberately and closely — same URL contract, same degradation story, same
-   * live-region timing, same row idiom — because two search fields on one site
-   * that behave differently are two things to learn.
+   * `<ResultRow>` has been in this template since list mode existed, with no
+   * import to resolve it, so hydrating `/search?display=list` threw
+   * `ReferenceError: ResultRow is not defined` and the island rendered
+   * nothing at all — on the live site, not only here.
    *
-   * FOUR THINGS IT HAS TO GET RIGHT.
+   * Nothing in the pipeline was going to say so. `astro check` reports on
+   * `.astro` files and does not resolve identifiers inside a Svelte
+   * template; `astro build` compiles the island rather than mounting it, so
+   * an undefined component is a runtime lookup that never runs at build
+   * time; and the test suite exercises `card-search.ts`, which is the engine
+   * and not the view. Every gate was green over a view that could not mount.
    *
-   * 1. **Every view is a URL.** `/search?q=banned:cc` is a real address that
-   *    renders those results: the query is read from the URL on load, written
-   *    back as you type (`replaceState`, so the back button is not filled with
-   *    keystrokes) and pushed on submit.
-   * 2. **The form degrades to a static browse; live results need JavaScript.**
-   *    The form is a real `GET` to `/cards`, so a browser with no islands
-   *    running still produces a shareable URL and still reaches every
-   *    `/card/<slug>` page. What it cannot do is answer the query — the ranking
-   *    runs here, and a static build has no server. The page says so in a
-   *    `NoScriptNotice` above the field rather than letting a submitted query
-   *    vanish in silence.
-   * 3. **Nothing here composes prose.** Every string a reader sees is either a
-   *    verbatim card value, an identifier, or interface wording written by a
-   *    person and checked in. `docs/PLAN.md`: no language model in the shipped
-   *    product.
-   * 4. **NO LEGALITY VERDICT APPEARS ON A ROW.** A pill reading "Banned" needs a
-   *    format attached to mean anything, and a row has six of them. The verdict
-   *    is per-format, dated and evidenced, and it lives on the card page — which
-   *    is the page the reader is choosing between anyway. `legal:cc` and
-   *    `banned:cc` filter *by* it, so the question is answerable without the
-   *    surface making an unqualified claim.
-   *
-   * COMPOSED, NOT RESTYLED. The field, the jewel on every row, the plate and the
-   * rule under it are all `optfall-components` primitives. This file used to
-   * carry its own copy of the search form and its styles, alongside a note that
-   * they were being kept byte-identical against the day somebody extracted them;
-   * `SearchField` is that extraction, and the styles were lifted verbatim rather
-   * than rewritten so the reasoning attached to each rule came with it. What is
-   * left here is the rhythm of a result row and the grid — `ResultRow` and
-   * `ResultGrid` are the primitives this file now records as missing.
-   *
-   * A NOTE FOR THE NEXT PERSON EDITING THIS COMMENT: do not write the literal
-   * opening style tag anywhere in this script, in prose or in backticks. Astro's
-   * Svelte tooling locates the style block by scanning for that tag rather than
-   * by parsing, so a mention of it inside a comment makes it treat the rest of
-   * the file as CSS — and `astro check` then reports the component as
-   * unparseable from the pages that import it, with no indication that a comment
-   * is the cause.
+   * It was found by opening the page. That is the whole lesson, and it is
+   * the same one `check-dev-server.ts` was written for: a build that
+   * succeeds is not evidence that anything renders.
    */
-  import {
-    BevelledPlate,
-    CardFace,
-    OrnamentalRule,
-    PitchJewel,
-    /*
-     * IT WAS USED AND NEVER IMPORTED, AND THAT SHIPPED.
-     *
-     * `<ResultRow>` has been in this template since list mode existed, with no
-     * import to resolve it, so hydrating `/search?display=list` threw
-     * `ReferenceError: ResultRow is not defined` and the island rendered
-     * nothing at all — on the live site, not only here.
-     *
-     * Nothing in the pipeline was going to say so. `astro check` reports on
-     * `.astro` files and does not resolve identifiers inside a Svelte
-     * template; `astro build` compiles the island rather than mounting it, so
-     * an undefined component is a runtime lookup that never runs at build
-     * time; and the test suite exercises `card-search.ts`, which is the engine
-     * and not the view. Every gate was green over a view that could not mount.
-     *
-     * It was found by opening the page. That is the whole lesson, and it is
-     * the same one `check-dev-server.ts` was written for: a build that
-     * succeeds is not evidence that anything renders.
-     */
-    ResultRow,
-    SearchField,
-  } from "optfall-components/svelte";
+  ResultRow,
+  SearchField,
+} from "optfall-components/svelte";
 
-  import { boxFor, faceUrl, placeholderUrl } from "../lib/faces";
+import { boxFor, faceUrl, placeholderUrl } from "../lib/faces";
 
-  import {
-    CARD_RESULT_LIMIT,
-    decodeCardIndex,
-    searchCards,
-    type CardDisplayMode,
-    type CardMatchField,
-    type EncodedCardIndex,
-  } from "../lib/card-search";
+import {
+  CARD_RESULT_LIMIT,
+  decodeCardIndex,
+  searchCards,
+  type CardDisplayMode,
+  type CardMatchField,
+  type EncodedCardIndex,
+} from "../lib/card-search";
 
-  interface Props {
-    /** Built at build time by `buildCardIndex`; see `card-search.ts`. */
-    index: EncodedCardIndex;
-    /** Spend the screen's one filigree on this component's section rule. */
-    ornament?: boolean;
-  }
+interface Props {
+  /** Built at build time by `buildCardIndex`; see `card-search.ts`. */
+  index: EncodedCardIndex;
+  /** Spend the screen's one filigree on this component's section rule. */
+  ornament?: boolean;
+}
 
-  const { index, ornament = false }: Props = $props();
+const { index, ornament = false }: Props = $props();
 
-  /**
-   * Decoded once — `$derived`, not `$state` and not a bare call. Same reasoning
-   * as `RulesSearch.svelte`: the index is immutable data, so making it reactive
-   * would put a hundred thousand strings through a proxy for nothing, and
-   * reading a prop during initialisation captures its value at that instant.
-   */
-  const cards = $derived(decodeCardIndex(index));
+/**
+ * Decoded once — `$derived`, not `$state` and not a bare call. Same reasoning
+ * as `RulesSearch.svelte`: the index is immutable data, so making it reactive
+ * would put a hundred thousand strings through a proxy for nothing, and
+ * reading a prop during initialisation captures its value at that instant.
+ */
+const cards = $derived(decodeCardIndex(index));
 
-  function queryFromUrl(): string {
-    if (typeof window === "undefined") return "";
-    return new URLSearchParams(window.location.search).get("q") ?? "";
-  }
+function queryFromUrl(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("q") ?? "";
+}
 
-  /**
-   * TWO PIECES OF STATE, AND THE SPLIT IS THE WHOLE INTERACTION MODEL.
-   *
-   * `query` is what is in the box. `submitted` is what has been asked. Results
-   * derive from `submitted`, so nothing re-ranks while somebody is still
-   * typing — `docs/SCRYFALL-GAP.md` §5.2, which settled that search here is
-   * submit-driven rather than live, for reasons beyond imitating Scryfall:
-   *
-   * - A grid of card faces reflowing under the cursor on every keystroke is
-   *   noise, and it makes the image layer fight the search layer for bandwidth.
-   * - The URL is the product, and a submit is the moment a query becomes a link
-   *   worth pasting. Live filtering blurs the point at which that happens.
-   * - It deletes the debounce, the race handling and the partial-query ranking
-   *   path outright, rather than tuning them.
-   * - The no-JS path stops being a special case: the form is a real GET to this
-   *   same address, so the difference between scripting on and off narrows to
-   *   who renders the list rather than whether the page works.
-   */
-  let query = $state(queryFromUrl());
-  let submitted = $state(queryFromUrl());
-  let field = $state<HTMLInputElement | null>(null);
+/**
+ * TWO PIECES OF STATE, AND THE SPLIT IS THE WHOLE INTERACTION MODEL.
+ *
+ * `query` is what is in the box. `submitted` is what has been asked. Results
+ * derive from `submitted`, so nothing re-ranks while somebody is still
+ * typing — `docs/SCRYFALL-GAP.md` §5.2, which settled that search here is
+ * submit-driven rather than live, for reasons beyond imitating Scryfall:
+ *
+ * - A grid of card faces reflowing under the cursor on every keystroke is
+ *   noise, and it makes the image layer fight the search layer for bandwidth.
+ * - The URL is the product, and a submit is the moment a query becomes a link
+ *   worth pasting. Live filtering blurs the point at which that happens.
+ * - It deletes the debounce, the race handling and the partial-query ranking
+ *   path outright, rather than tuning them.
+ * - The no-JS path stops being a special case: the form is a real GET to this
+ *   same address, so the difference between scripting on and off narrows to
+ *   who renders the list rather than whether the page works.
+ */
+let query = $state(queryFromUrl());
+let submitted = $state(queryFromUrl());
+let field = $state<HTMLInputElement | null>(null);
 
-  const outcome = $derived(searchCards(cards, submitted));
-  const asked = $derived(submitted.trim() !== "");
-  const truncated = $derived(outcome.total > outcome.results.length);
+const outcome = $derived(searchCards(cards, submitted));
+const asked = $derived(submitted.trim() !== "");
+const truncated = $derived(outcome.total > outcome.results.length);
 
-  /**
-   * How results are shown. In the URL like everything else, so a pasted link
-   * carries the view its sender was looking at.
-   *
-   * The grid is the default because the face is the fastest way to recognise a
-   * card. The list is the dense row this component already had — it is not
-   * thrown away, it is a mode, and it stays better than Scryfall's checklist
-   * because it carries the stat line and the reason the row matched.
-   */
-  function displayFromUrl(): CardDisplayMode | null {
-    if (typeof window === "undefined") return null;
-    const wanted = new URLSearchParams(window.location.search).get("display");
-    if (wanted === "list") return "list";
-    if (wanted === "text" || wanted === "checklist") return "text";
-    if (wanted === "grid") return "grid";
-    return null;
-  }
+/**
+ * How results are shown. In the URL like everything else, so a pasted link
+ * carries the view its sender was looking at.
+ *
+ * The grid is the default because the face is the fastest way to recognise a
+ * card. The list is the dense row this component already had — it is not
+ * thrown away, it is a mode, and it stays better than Scryfall's checklist
+ * because it carries the stat line and the reason the row matched.
+ */
+function displayFromUrl(): CardDisplayMode | null {
+  if (typeof window === "undefined") return null;
+  const wanted = new URLSearchParams(window.location.search).get("display");
+  if (wanted === "list") return "list";
+  if (wanted === "text" || wanted === "checklist") return "text";
+  if (wanted === "grid") return "grid";
+  return null;
+}
 
-  /**
-   * `display:` IS A QUERY TERM NOW, AND THE PARAMETER IS WHAT IT REPLACED.
-   *
-   * §5.2: every piece of state is in the URL, and `display:` belongs in the
-   * query "rather than as UI chrome". So the mode is read off the parsed query
-   * first — and only where the query says nothing does the old `?display=`
-   * parameter get a vote.
-   *
-   * That order is the whole of the backwards compatibility story. Links shared
-   * before this existed carry `?display=list` and keep working; links shared
-   * after carry it in `q` and win over a stale parameter if somehow both are
-   * present. Neither case needs the reader to know which era their link is
-   * from.
-   */
-  let paramDisplay = $state(displayFromUrl());
-  const display = $derived(outcome.display ?? paramDisplay ?? "grid");
+/**
+ * `display:` IS A QUERY TERM NOW, AND THE PARAMETER IS WHAT IT REPLACED.
+ *
+ * §5.2: every piece of state is in the URL, and `display:` belongs in the
+ * query "rather than as UI chrome". So the mode is read off the parsed query
+ * first — and only where the query says nothing does the old `?display=`
+ * parameter get a vote.
+ *
+ * That order is the whole of the backwards compatibility story. Links shared
+ * before this existed carry `?display=list` and keep working; links shared
+ * after carry it in `q` and win over a stale parameter if somehow both are
+ * present. Neither case needs the reader to know which era their link is
+ * from.
+ */
+let paramDisplay = $state(displayFromUrl());
+const display = $derived(outcome.display ?? paramDisplay ?? "grid");
 
-  /** Wording for the live region and the count line. Written, never generated. */
-  function summarise(): string {
-    if (!asked) return "";
-    if (outcome.total === 0) return `Nothing matches ${submitted.trim()}.`;
-    const found = `${outcome.total} card${outcome.total === 1 ? "" : "s"}`;
-    const shown = truncated ? `, showing the first ${CARD_RESULT_LIMIT}` : "";
-    return `${found} match${outcome.total === 1 ? "es" : ""}${shown}.`;
-  }
+/** Wording for the live region and the count line. Written, never generated. */
+function summarise(): string {
+  if (!asked) return "";
+  if (outcome.total === 0) return `Nothing matches ${submitted.trim()}.`;
+  const found = `${outcome.total} card${outcome.total === 1 ? "" : "s"}`;
+  const shown = truncated ? `, showing the first ${CARD_RESULT_LIMIT}` : "";
+  return `${found} match${outcome.total === 1 ? "es" : ""}${shown}.`;
+}
 
-  const summary = $derived(summarise());
+const summary = $derived(summarise());
 
-  /**
-   * The live region can speak immediately now, and that is a direct dividend of
-   * the submit-driven model above.
-   *
-   * This used to debounce by 600ms, because results changed on every keystroke
-   * and announcing each one would make a screen reader unusable — every
-   * interruption cancels the last. Results now change only when somebody asks,
-   * so there is exactly one announcement per query and nothing to settle. The
-   * timer is gone rather than tuned.
-   */
-  const announcement = $derived(summary);
+/**
+ * The live region can speak immediately now, and that is a direct dividend of
+ * the submit-driven model above.
+ *
+ * This used to debounce by 600ms, because results changed on every keystroke
+ * and announcing each one would make a screen reader unusable — every
+ * interruption cancels the last. Results now change only when somebody asks,
+ * so there is exactly one announcement per query and nothing to settle. The
+ * timer is gone rather than tuned.
+ */
+const announcement = $derived(summary);
 
-  /**
-   * `written` is what the URL should say, and it is NOT always the box.
-   *
-   * A submit writes what was just asked; switching Grid/List writes what is
-   * *currently answered*. Both were writing `query`, so typing a new query
-   * without submitting and then toggling the view pushed a URL carrying the
-   * un-submitted text while the screen showed results for the old one —
-   * reloading or sharing that link then showed something different from what
-   * was on screen.
-   */
-  function syncUrl(mode: "replace" | "push", written: string = submitted): void {
-    if (typeof window === "undefined") return;
-    const url = new URL(window.location.href);
-    const trimmed = written.trim();
-    if (trimmed === "") url.searchParams.delete("q");
-    else url.searchParams.set("q", written);
-    /* THE PARAMETER IS NEVER WRITTEN AGAIN, only read. The mode travels inside
+/**
+ * `written` is what the URL should say, and it is NOT always the box.
+ *
+ * A submit writes what was just asked; switching Grid/List writes what is
+ * *currently answered*. Both were writing `query`, so typing a new query
+ * without submitting and then toggling the view pushed a URL carrying the
+ * un-submitted text while the screen showed results for the old one —
+ * reloading or sharing that link then showed something different from what
+ * was on screen.
+ */
+function syncUrl(mode: "replace" | "push", written: string = submitted): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  const trimmed = written.trim();
+  if (trimmed === "") url.searchParams.delete("q");
+  else url.searchParams.set("q", written);
+  /* THE PARAMETER IS NEVER WRITTEN AGAIN, only read. The mode travels inside
        `q` now, so writing it in both places would produce URLs that can
        disagree with themselves — and a stale `?display=list` beside a
        `display:text` query is exactly the ambiguity this operator removed. Any
        parameter already in the address is dropped as soon as the query says
        anything, which is what the delete below does. */
-    if (outcome.display !== null) url.searchParams.delete("display");
-    const target = `${url.pathname}${url.search}`;
-    if (target === `${window.location.pathname}${window.location.search}`) return;
-    if (mode === "push") window.history.pushState({}, "", target);
-    else window.history.replaceState({}, "", target);
-  }
+  if (outcome.display !== null) url.searchParams.delete("display");
+  const target = `${url.pathname}${url.search}`;
+  if (target === `${window.location.pathname}${window.location.search}`) return;
+  if (mode === "push") window.history.pushState({}, "", target);
+  else window.history.replaceState({}, "", target);
+}
 
-  /** Back and forward have to work, which means listening for them. */
-  $effect(() => {
-    const onPop = () => {
-      query = queryFromUrl();
-      submitted = query;
-      paramDisplay = displayFromUrl();
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  });
-
-  /**
-   * `/` focuses the field, the way every reference tool worth using does.
-   * Ignored while the caret is already in a control, so it can never eat a
-   * character somebody meant to type.
-   */
-  $effect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
-      const target = event.target as HTMLElement | null;
-      const tag = target?.tagName.toLowerCase();
-      if (tag === "input" || tag === "textarea" || tag === "select") return;
-      if (target?.isContentEditable) return;
-      event.preventDefault();
-      field?.focus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
-
-  function onSubmit(event: SubmitEvent): void {
-    event.preventDefault();
+/** Back and forward have to work, which means listening for them. */
+$effect(() => {
+  const onPop = () => {
+    query = queryFromUrl();
     submitted = query;
-    syncUrl("push", query);
-    field?.blur();
+    paramDisplay = displayFromUrl();
+  };
+  window.addEventListener("popstate", onPop);
+  return () => window.removeEventListener("popstate", onPop);
+});
 
-    /*
+/**
+ * `/` focuses the field, the way every reference tool worth using does.
+ * Ignored while the caret is already in a control, so it can never eat a
+ * character somebody meant to type.
+ */
+$effect(() => {
+  const onKey = (event: KeyboardEvent) => {
+    if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey)
+      return;
+    const target = event.target as HTMLElement | null;
+    const tag = target?.tagName.toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select") return;
+    if (target?.isContentEditable) return;
+    event.preventDefault();
+    field?.focus();
+  };
+  window.addEventListener("keydown", onKey);
+  return () => window.removeEventListener("keydown", onKey);
+});
+
+function onSubmit(event: SubmitEvent): void {
+  event.preventDefault();
+  submitted = query;
+  syncUrl("push", query);
+  field?.blur();
+
+  /*
       ONE RESULT IS NOT A RESULT SET, IT IS THE ANSWER — the same behaviour
       Scryfall has, and for the same reason: a page whose entire content is a
       single row asking to be clicked has made the reader press twice for one
@@ -273,52 +274,52 @@
       pushed first, so the back button returns to the results rather than to
       whatever came before them.
     */
-    const only = outcome.total === 1 ? outcome.results[0] : undefined;
-    if (only) window.location.assign(only.href);
+  const only = outcome.total === 1 ? outcome.results[0] : undefined;
+  if (only) window.location.assign(only.href);
+}
+
+/**
+ * Switching view rewrites the QUERY, because the view is part of the query.
+ *
+ * The control and the syntax are two ways of saying one thing, so clicking
+ * "Text" has to leave the box reading `dominate display:text` — otherwise
+ * the reader copies what is on screen and gets a link that does not
+ * reproduce what they were looking at.
+ *
+ * Any existing `display:` term is replaced rather than appended: a query
+ * carrying two of them would apply the last and silently ignore the first.
+ * The default is written out rather than left implicit, because a reader who
+ * deliberately clicked back to Grid on a `display:text` query has made a
+ * choice, and dropping the term would restore text on reload.
+ */
+function show(next: CardDisplayMode): void {
+  const withoutMode = submitted.replace(/(^|\s)display:\S+/gi, "$1").trim();
+  const written = `${withoutMode} display:${next}`.trim();
+  query = written;
+  submitted = written;
+  paramDisplay = null;
+  syncUrl("push", written);
+}
+
+function onKeydown(event: KeyboardEvent): void {
+  if (event.key === "Escape" && query !== "") {
+    event.preventDefault();
+    query = "";
   }
+}
 
-  /**
-   * Switching view rewrites the QUERY, because the view is part of the query.
-   *
-   * The control and the syntax are two ways of saying one thing, so clicking
-   * "Text" has to leave the box reading `dominate display:text` — otherwise
-   * the reader copies what is on screen and gets a link that does not
-   * reproduce what they were looking at.
-   *
-   * Any existing `display:` term is replaced rather than appended: a query
-   * carrying two of them would apply the last and silently ignore the first.
-   * The default is written out rather than left implicit, because a reader who
-   * deliberately clicked back to Grid on a `display:text` query has made a
-   * choice, and dropping the term would restore text on reload.
-   */
-  function show(next: CardDisplayMode): void {
-    const withoutMode = submitted.replace(/(^|\s)display:\S+/gi, "$1").trim();
-    const written = `${withoutMode} display:${next}`.trim();
-    query = written;
-    submitted = written;
-    paramDisplay = null;
-    syncUrl("push", written);
-  }
+/** Why a row is on the page, in the words of the ranking that put it there. */
+const WHY: Record<CardMatchField, string> = {
+  "name-exact": "exact name",
+  "name-prefix": "name starts with",
+  name: "name",
+  type: "type line",
+  keyword: "keyword",
+  text: "card text",
+  filter: "filter",
+};
 
-  function onKeydown(event: KeyboardEvent): void {
-    if (event.key === "Escape" && query !== "") {
-      event.preventDefault();
-      query = "";
-    }
-  }
-
-  /** Why a row is on the page, in the words of the ranking that put it there. */
-  const WHY: Record<CardMatchField, string> = {
-    "name-exact": "exact name",
-    "name-prefix": "name starts with",
-    name: "name",
-    type: "type line",
-    keyword: "keyword",
-    text: "card text",
-    filter: "filter",
-  };
-
-  const uid = $props.id();
+const uid = $props.id();
 </script>
 
 <SearchField

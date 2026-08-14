@@ -18,7 +18,8 @@ import {
   type Sourced,
 } from "./formats";
 
-const everyFormat = (): readonly FormatRules[] => FORMATS.map((format) => getFormatRules(format));
+const everyFormat = (): readonly FormatRules[] =>
+  FORMATS.map((format) => getFormatRules(format));
 
 /** Every sourced constraint on a format, so a structural rule can sweep them all. */
 const everySourced = (rules: FormatRules): readonly Sourced<unknown>[] => {
@@ -35,16 +36,20 @@ const everySourced = (rules: FormatRules): readonly Sourced<unknown>[] => {
     rules.equipment.startOfGameSlotCounts,
     ...rules.rarity,
   ];
-  if (rules.deckSize.maximum.kind === "stated") all.push(rules.deckSize.maximum.cards);
+  if (rules.deckSize.maximum.kind === "stated")
+    all.push(rules.deckSize.maximum.cards);
   if (rules.hero.rarity !== null) all.push(rules.hero.rarity);
-  if (rules.equipment.registrationLimit !== null) all.push(rules.equipment.registrationLimit);
+  if (rules.equipment.registrationLimit !== null)
+    all.push(rules.equipment.registrationLimit);
   if (rules.equipment.rarity !== null) all.push(rules.equipment.rarity);
   if (rules.status.kind === "retired") all.push(rules.status.since);
   return all;
 };
 
 /** Every rarity restriction on a format, wherever it is attached. */
-const everyRarity = (rules: FormatRules): readonly Sourced<RarityRestriction>[] => [
+const everyRarity = (
+  rules: FormatRules,
+): readonly Sourced<RarityRestriction>[] => [
   ...rules.rarity,
   ...(rules.hero.rarity === null ? [] : [rules.hero.rarity]),
   ...(rules.equipment.rarity === null ? [] : [rules.equipment.rarity]),
@@ -85,7 +90,9 @@ describe("coverage", () => {
     expect(commoner.status.kind).toBe("retired");
     if (commoner.status.kind === "retired") {
       // Retirement is a fact with a source like any other.
-      expect(requireVerified(commoner.status.since, "commoner.status.since")).toBe("2026-01-01");
+      expect(
+        requireVerified(commoner.status.since, "commoner.status.since"),
+      ).toBe("2026-01-01");
       expect(commoner.status.replacedBy).toBe("silver-age");
     }
 
@@ -128,9 +135,11 @@ describe("the honesty contract", () => {
   test("every source document records how its version was determined", () => {
     for (const document of SOURCE_DOCUMENTS) {
       expect(document.retrievedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      expect(["printed-in-document", "http-last-modified", "page-last-updated-line"]).toContain(
-        document.versionProvenance,
-      );
+      expect([
+        "printed-in-document",
+        "http-last-modified",
+        "page-last-updated-line",
+      ]).toContain(document.versionProvenance);
       // Anything whose version is not printed on the document itself must say
       // where the date came from, or the date is just a number in a file.
       if (document.versionProvenance !== "printed-in-document") {
@@ -187,14 +196,21 @@ describe("the honesty contract", () => {
 
   test("requireVerified returns the value when the constraint is verified", () => {
     const cc = getFormatRules("classic-constructed");
-    expect(requireVerified(cc.deckSize.minimum, "classic-constructed.deckSize.minimum")).toBe(60);
+    expect(
+      requireVerified(
+        cc.deckSize.minimum,
+        "classic-constructed.deckSize.minimum",
+      ),
+    ).toBe(60);
   });
 
   test("unverifiedConstraints is the visible inventory of what is unconfirmed", () => {
     // Locked deliberately. This list growing is a regression in what Optfall
     // can assert, and it should show up in a diff rather than in a wrong
     // verdict.
-    expect(unverifiedConstraints(getFormatRules("classic-constructed"))).toEqual([]);
+    expect(
+      unverifiedConstraints(getFormatRules("classic-constructed")),
+    ).toEqual([]);
     expect(unverifiedConstraints(getFormatRules("living-legend"))).toEqual([]);
 
     // Blitz is fully confirmed: LSS's own format page answers the living
@@ -217,12 +233,14 @@ describe("the honesty contract", () => {
     // Ultimate Pit Fight's two sources agree on the card-pool maximum and the
     // deck size and disagree only about the hero and the copy limit, so only
     // the latter are unevaluable.
-    expect(unverifiedConstraints(getFormatRules("ultimate-pit-fight"))).toEqual([
-      "ultimate-pit-fight.copyLimit.perUniqueCard",
-      "ultimate-pit-fight.hero.subtype",
-      "ultimate-pit-fight.hero.excludedSubtypes",
-      "ultimate-pit-fight.hero.livingLegendHeroesLegal",
-    ]);
+    expect(unverifiedConstraints(getFormatRules("ultimate-pit-fight"))).toEqual(
+      [
+        "ultimate-pit-fight.copyLimit.perUniqueCard",
+        "ultimate-pit-fight.hero.subtype",
+        "ultimate-pit-fight.hero.excludedSubtypes",
+        "ultimate-pit-fight.hero.livingLegendHeroesLegal",
+      ],
+    );
   });
 
   test("a recorded conflict names the constraints it poisons", () => {
@@ -233,7 +251,9 @@ describe("the honesty contract", () => {
     if (conflict === undefined) return;
 
     // Both sides of the disagreement are cited, not just the one we followed.
-    const documents = new Set(conflict.citations.map((citation) => citation.document));
+    const documents = new Set(
+      conflict.citations.map((citation) => citation.document),
+    );
     expect(documents.size).toBeGreaterThan(1);
 
     const unconfirmed = new Set(unverifiedConstraints(upf));
@@ -246,7 +266,9 @@ describe("the honesty contract", () => {
 describe("deck size", () => {
   test("Classic Constructed: minimum 60, no stated maximum", () => {
     const cc = getFormatRules("classic-constructed");
-    expect(requireVerified(cc.deckSize.minimum, "cc.deckSize.minimum")).toBe(60);
+    expect(requireVerified(cc.deckSize.minimum, "cc.deckSize.minimum")).toBe(
+      60,
+    );
     expect(cc.deckSize.exact).toBe(false);
     // trp:7.1 states a minimum only. The deck is capped by the card-pool less
     // the arena-cards registered, and that ceiling is not a published number.
@@ -274,13 +296,24 @@ describe("deck size", () => {
     // the same 40 independently, so the number is corroborated rather than
     // contested. It was previously excluded on the strength of a conflict that
     // did not cover it.
-    for (const format of ["blitz", "silver-age", "commoner", "ultimate-pit-fight"] as const) {
+    for (const format of [
+      "blitz",
+      "silver-age",
+      "commoner",
+      "ultimate-pit-fight",
+    ] as const) {
       const rules = getFormatRules(format);
       expect(rules.deckSize.exact).toBe(true);
       expect(rules.deckSize.maximum.kind).toBe("stated");
       if (rules.deckSize.maximum.kind !== "stated") continue;
-      const minimum = requireVerified(rules.deckSize.minimum, `${format}.deckSize.minimum`);
-      const maximum = requireVerified(rules.deckSize.maximum.cards, `${format}.deckSize.maximum`);
+      const minimum = requireVerified(
+        rules.deckSize.minimum,
+        `${format}.deckSize.minimum`,
+      );
+      const maximum = requireVerified(
+        rules.deckSize.maximum.cards,
+        `${format}.deckSize.maximum`,
+      );
       expect(minimum).toBe(40);
       expect(maximum).toBe(40);
     }
@@ -300,25 +333,37 @@ describe("deck size", () => {
 
 describe("card-pool size", () => {
   test("the published card-pool maxima", () => {
-    expect(verifiedValue(getFormatRules("classic-constructed").cardPoolMaximum)).toBe(80);
-    expect(verifiedValue(getFormatRules("living-legend").cardPoolMaximum)).toBe(80);
+    expect(
+      verifiedValue(getFormatRules("classic-constructed").cardPoolMaximum),
+    ).toBe(80);
+    expect(verifiedValue(getFormatRules("living-legend").cardPoolMaximum)).toBe(
+      80,
+    );
     expect(verifiedValue(getFormatRules("blitz").cardPoolMaximum)).toBe(52);
     // Silver Age is 55, not 52. It is the number most likely to be assumed
     // wrong by analogy with Blitz, so it is pinned here on its own.
-    expect(verifiedValue(getFormatRules("silver-age").cardPoolMaximum)).toBe(55);
+    expect(verifiedValue(getFormatRules("silver-age").cardPoolMaximum)).toBe(
+      55,
+    );
     expect(verifiedValue(getFormatRules("commoner").cardPoolMaximum)).toBe(52);
-    expect(verifiedValue(getFormatRules("ultimate-pit-fight").cardPoolMaximum)).toBe(52);
+    expect(
+      verifiedValue(getFormatRules("ultimate-pit-fight").cardPoolMaximum),
+    ).toBe(52);
   });
 
   test("Ultimate Pit Fight's two sources corroborate the pool and the deck, and are both cited", () => {
     const upf = getFormatRules("ultimate-pit-fight");
-    const documents = new Set(upf.cardPoolMaximum.citations.map((citation) => citation.document));
+    const documents = new Set(
+      upf.cardPoolMaximum.citations.map((citation) => citation.document),
+    );
     expect(documents.size).toBe(2);
 
     // The corroborating sentence is the format page's own start-of-game
     // procedure. Quoting only the part of that page that disagreed is what
     // turned a narrow conflict into three unevaluable constraints.
-    const quotes = upf.cardPoolMaximum.citations.map((citation) => citation.quote ?? "").join(" ");
+    const quotes = upf.cardPoolMaximum.citations
+      .map((citation) => citation.quote ?? "")
+      .join(" ");
     expect(quotes).toContain("52 card-pool");
     expect(quotes).toContain("52 arena-cards and deck-cards");
   });
@@ -333,11 +378,23 @@ describe("card-pool size", () => {
 
 describe("copy limits", () => {
   test("the published per-unique-card limits", () => {
-    expect(verifiedValue(getFormatRules("classic-constructed").copyLimit.perUniqueCard)).toBe(3);
-    expect(verifiedValue(getFormatRules("living-legend").copyLimit.perUniqueCard)).toBe(3);
-    expect(verifiedValue(getFormatRules("blitz").copyLimit.perUniqueCard)).toBe(1);
-    expect(verifiedValue(getFormatRules("silver-age").copyLimit.perUniqueCard)).toBe(2);
-    expect(verifiedValue(getFormatRules("commoner").copyLimit.perUniqueCard)).toBe(2);
+    expect(
+      verifiedValue(
+        getFormatRules("classic-constructed").copyLimit.perUniqueCard,
+      ),
+    ).toBe(3);
+    expect(
+      verifiedValue(getFormatRules("living-legend").copyLimit.perUniqueCard),
+    ).toBe(3);
+    expect(verifiedValue(getFormatRules("blitz").copyLimit.perUniqueCard)).toBe(
+      1,
+    );
+    expect(
+      verifiedValue(getFormatRules("silver-age").copyLimit.perUniqueCard),
+    ).toBe(2);
+    expect(
+      verifiedValue(getFormatRules("commoner").copyLimit.perUniqueCard),
+    ).toBe(2);
   });
 
   test("every format records the overrides its single number cannot express", () => {
@@ -353,16 +410,23 @@ describe("copy limits", () => {
   });
 
   test("the four Tournament Rules and Policy constructed formats carry the restricted-card override", () => {
-    for (const format of ["classic-constructed", "living-legend", "blitz", "silver-age"] as const) {
-      const kinds = getFormatRules(format).copyLimit.overrides.map((override) => override.kind);
+    for (const format of [
+      "classic-constructed",
+      "living-legend",
+      "blitz",
+      "silver-age",
+    ] as const) {
+      const kinds = getFormatRules(format).copyLimit.overrides.map(
+        (override) => override.kind,
+      );
       expect(kinds).toContain("restricted-card");
     }
     // Commoner never appeared in that document, so it cannot borrow its
     // preamble. Its only sourced override is the meta-static one printed on the
     // Commoner page itself.
-    expect(getFormatRules("commoner").copyLimit.overrides.map((o) => o.kind)).toEqual([
-      "meta-static-ability",
-    ]);
+    expect(
+      getFormatRules("commoner").copyLimit.overrides.map((o) => o.kind),
+    ).toEqual(["meta-static-ability"]);
   });
 
   test("Blitz's restricted-card override records that the list it governs was abolished", () => {
@@ -374,20 +438,27 @@ describe("copy limits", () => {
     );
     expect(override).toBeDefined();
     expect(override?.note ?? "").toContain("abolished");
-    const quotes = (override?.citations ?? []).map((citation) => citation.quote ?? "").join(" ");
-    expect(quotes).toContain("Banned and Restricted list has also been abolished");
+    const quotes = (override?.citations ?? [])
+      .map((citation) => citation.quote ?? "")
+      .join(" ");
+    expect(quotes).toContain(
+      "Banned and Restricted list has also been abolished",
+    );
   });
 });
 
 describe("heroes", () => {
   test("Classic Constructed excludes young and pit-fighter heroes", () => {
     const cc = getFormatRules("classic-constructed");
-    expect(requireVerified(cc.hero.subtype, "cc.hero.subtype")).toBe("young-excluded");
-    expect(requireVerified(cc.hero.excludedSubtypes, "cc.hero.excludedSubtypes")).toEqual([
-      "Young",
-      "Pit-Fighter",
-    ]);
-    expect(requireVerified(cc.hero.livingLegendHeroesLegal, "cc.hero.ll")).toBe(false);
+    expect(requireVerified(cc.hero.subtype, "cc.hero.subtype")).toBe(
+      "young-excluded",
+    );
+    expect(
+      requireVerified(cc.hero.excludedSubtypes, "cc.hero.excludedSubtypes"),
+    ).toEqual(["Young", "Pit-Fighter"]);
+    expect(requireVerified(cc.hero.livingLegendHeroesLegal, "cc.hero.ll")).toBe(
+      false,
+    );
   });
 
   test("Living Legend differs from Classic Constructed in exactly one hero rule", () => {
@@ -396,17 +467,24 @@ describe("heroes", () => {
     expect(requireVerified(ll.hero.subtype, "ll.hero.subtype")).toBe(
       requireVerified(cc.hero.subtype, "cc.hero.subtype"),
     );
-    expect(requireVerified(ll.hero.excludedSubtypes, "ll.hero.excludedSubtypes")).toEqual(
+    expect(
+      requireVerified(ll.hero.excludedSubtypes, "ll.hero.excludedSubtypes"),
+    ).toEqual(
       requireVerified(cc.hero.excludedSubtypes, "cc.hero.excludedSubtypes"),
     );
-    expect(requireVerified(ll.hero.livingLegendHeroesLegal, "ll.hero.ll")).toBe(true);
+    expect(requireVerified(ll.hero.livingLegendHeroesLegal, "ll.hero.ll")).toBe(
+      true,
+    );
   });
 
   test("the young-hero formats require a young hero", () => {
     for (const format of ["blitz", "silver-age", "commoner"] as const) {
-      expect(requireVerified(getFormatRules(format).hero.subtype, `${format}.hero.subtype`)).toBe(
-        "young-required",
-      );
+      expect(
+        requireVerified(
+          getFormatRules(format).hero.subtype,
+          `${format}.hero.subtype`,
+        ),
+      ).toBe("young-required");
     }
   });
 
@@ -414,7 +492,11 @@ describe("heroes", () => {
     // Silver Age, Commoner and Ultimate Pit Fight: nothing retrieved says
     // either way, and the Card Legality Policy that governs it has not been
     // read.
-    for (const format of ["silver-age", "commoner", "ultimate-pit-fight"] as const) {
+    for (const format of [
+      "silver-age",
+      "commoner",
+      "ultimate-pit-fight",
+    ] as const) {
       const sourced = getFormatRules(format).hero.livingLegendHeroesLegal;
       expect(isVerified(sourced)).toBe(false);
       expect(verifiedValue(sourced)).toBeUndefined();
@@ -430,7 +512,9 @@ describe("heroes", () => {
     // Constructed threshold would reject every hero on LSS's own archive table.
     const blitz = getFormatRules("blitz");
     const sourced = blitz.hero.livingLegendHeroesLegal;
-    expect(requireVerified(sourced, "blitz.hero.livingLegendHeroesLegal")).toBe(true);
+    expect(requireVerified(sourced, "blitz.hero.livingLegendHeroesLegal")).toBe(
+      true,
+    );
 
     // It is a *dated* fact. Before 2026-01-01 the answer was the opposite, and
     // this package's whole wedge is answering "was it legal on the day of that
@@ -462,7 +546,9 @@ describe("rarity", () => {
     const restricted = everyFormat()
       .filter(
         (rules) =>
-          rules.rarity.length > 0 || rules.hero.rarity !== null || rules.equipment.rarity !== null,
+          rules.rarity.length > 0 ||
+          rules.hero.rarity !== null ||
+          rules.equipment.rarity !== null,
       )
       .map((rules) => rules.format);
     expect(restricted.toSorted()).toEqual(["commoner", "silver-age"]);
@@ -481,14 +567,20 @@ describe("rarity", () => {
 
     expect(commoner.equipment.rarity).not.toBeNull();
     if (commoner.equipment.rarity !== null) {
-      const arena = requireVerified(commoner.equipment.rarity, "commoner.equipment.rarity");
+      const arena = requireVerified(
+        commoner.equipment.rarity,
+        "commoner.equipment.rarity",
+      );
       expect(arena.scope).toBe("arena-cards");
       expect(arena.allowed).toContain("rare");
     }
 
     expect(commoner.hero.rarity).not.toBeNull();
     if (commoner.hero.rarity !== null) {
-      const hero = requireVerified(commoner.hero.rarity, "commoner.hero.rarity");
+      const hero = requireVerified(
+        commoner.hero.rarity,
+        "commoner.hero.rarity",
+      );
       expect(hero.scope).toBe("hero");
       expect(hero.allowed).toContain("rare");
     }
@@ -565,14 +657,26 @@ describe("equipment and weapons", () => {
         rules.equipment.startOfGameSlots,
         `${rules.format}.equipment.startOfGameSlots`,
       );
-      expect(slots.toSorted()).toEqual(["arms", "chest", "head", "legs", "weapon"]);
+      expect(slots.toSorted()).toEqual([
+        "arms",
+        "chest",
+        "head",
+        "legs",
+        "weapon",
+      ]);
 
       const counts = requireVerified(
         rules.equipment.startOfGameSlotCounts,
         `${rules.format}.equipment.startOfGameSlotCounts`,
       );
       // cr:3.0.2 — one of each equipment zone, and two weapon zones.
-      expect(counts).toEqual({ arms: 1, chest: 1, head: 1, legs: 1, weapon: 2 });
+      expect(counts).toEqual({
+        arms: 1,
+        chest: 1,
+        head: 1,
+        legs: 1,
+        weapon: 2,
+      });
 
       const ruleIds = rules.equipment.startOfGameSlotCounts.citations.map(
         (citation) => citation.ruleId,

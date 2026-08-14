@@ -145,7 +145,10 @@ interface StubOptions {
   readonly url?: string | undefined;
 }
 
-function stubResponse(body: string, options: StubOptions = {}): CaptureResponse {
+function stubResponse(
+  body: string,
+  options: StubOptions = {},
+): CaptureResponse {
   const status = options.status ?? 200;
   return {
     ok: status >= 200 && status < 300,
@@ -183,7 +186,9 @@ describe("buildCdxUrl", () => {
 
   test("the HTTP 200 filter comes first, and extra filters are appended in order", () => {
     const params = new URL(
-      buildCdxUrl({ filters: [ANNOUNCEMENT_URLKEY_FILTER, HTML_MIMETYPE_FILTER] }),
+      buildCdxUrl({
+        filters: [ANNOUNCEMENT_URLKEY_FILTER, HTML_MIMETYPE_FILTER],
+      }),
     ).searchParams;
     expect(params.getAll("filter")).toEqual([
       "statuscode:200",
@@ -237,7 +242,9 @@ describe("parseCdxResponse", () => {
     expect(first?.statuscode).toBe("200");
     expect(first?.digest).toBe("QFRUWS7UFLRXWP3ZMGA4PT6E6ZM5ND2Q");
     expect(first?.length).toBe("7438");
-    expect(first?.urlkey).toBe("com,fabtcg)/articles/banned-and-restricted-announcement-sept21");
+    expect(first?.urlkey).toBe(
+      "com,fabtcg)/articles/banned-and-restricted-announcement-sept21",
+    );
   });
 
   test("maps by header name, so a narrowed fl cannot shift the columns", () => {
@@ -251,7 +258,9 @@ describe("parseCdxResponse", () => {
       "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
     );
     expect(records[0]?.mimetype).toBeUndefined();
-    expect(records[0]?.fields["digest"]).toBe("QFRUWS7UFLRXWP3ZMGA4PT6E6ZM5ND2Q");
+    expect(records[0]?.fields["digest"]).toBe(
+      "QFRUWS7UFLRXWP3ZMGA4PT6E6ZM5ND2Q",
+    );
   });
 
   test("a query that matches nothing parses to no records, not an error", () => {
@@ -259,17 +268,21 @@ describe("parseCdxResponse", () => {
   });
 
   test("throws on a body that is not JSON", () => {
-    expect(() => parseCdxResponse("<html>429 Too Many Requests</html>")).toThrow(WaybackError);
+    expect(() =>
+      parseCdxResponse("<html>429 Too Many Requests</html>"),
+    ).toThrow(WaybackError);
   });
 
   test("throws when the header names no timestamp or original", () => {
-    expect(() => parseCdxResponse('[["urlkey","digest"],["a","b"]]')).toThrow(WaybackError);
+    expect(() => parseCdxResponse('[["urlkey","digest"],["a","b"]]')).toThrow(
+      WaybackError,
+    );
   });
 
   test("throws on a row that is not an array of strings", () => {
-    expect(() => parseCdxResponse('[["timestamp","original"],[20210921012416,"u"]]')).toThrow(
-      WaybackError,
-    );
+    expect(() =>
+      parseCdxResponse('[["timestamp","original"],[20210921012416,"u"]]'),
+    ).toThrow(WaybackError);
   });
 });
 
@@ -280,8 +293,13 @@ describe("parseCdxResponse", () => {
 describe("searchCaptures", () => {
   test("requests the URL buildCdxUrl produced and parses the response", async () => {
     const fetchImpl = recordingFetch(CDX_SEPT21);
-    const records = await searchCaptures({ url: "fabtcg.com", matchType: "domain" }, fetchImpl);
-    expect(fetchImpl.calls).toEqual([buildCdxUrl({ url: "fabtcg.com", matchType: "domain" })]);
+    const records = await searchCaptures(
+      { url: "fabtcg.com", matchType: "domain" },
+      fetchImpl,
+    );
+    expect(fetchImpl.calls).toEqual([
+      buildCdxUrl({ url: "fabtcg.com", matchType: "domain" }),
+    ]);
     expect(records).toHaveLength(5);
   });
 
@@ -314,7 +332,10 @@ describe("searchAnnouncementCaptures", () => {
 
   test("caller filters are added, never substituted for the announcement ones", async () => {
     const fetchImpl = recordingFetch(CDX_SEPT21);
-    await searchAnnouncementCaptures({ filters: ["urlkey:.*sept21.*"] }, fetchImpl);
+    await searchAnnouncementCaptures(
+      { filters: ["urlkey:.*sept21.*"] },
+      fetchImpl,
+    );
     const params = new URL(fetchImpl.calls[0] ?? "").searchParams;
     expect(params.getAll("filter")).toEqual([
       "statuscode:200",
@@ -361,7 +382,9 @@ describe("dedupeCaptures", () => {
   });
 
   test("a custom key function is honoured", () => {
-    const deduped = dedupeCaptures(records, { by: (record) => record.digest ?? "" });
+    const deduped = dedupeCaptures(records, {
+      by: (record) => record.digest ?? "",
+    });
     expect(deduped).toHaveLength(5);
   });
 
@@ -369,7 +392,9 @@ describe("dedupeCaptures", () => {
     const shuffled: CdxRecord[] = [records[2], records[0], records[4]].filter(
       (record): record is CdxRecord => record !== undefined,
     );
-    expect(dedupeCaptures(shuffled, { by: "url-without-query" })).toHaveLength(1);
+    expect(dedupeCaptures(shuffled, { by: "url-without-query" })).toHaveLength(
+      1,
+    );
     expect(dedupeCaptures(shuffled).map((record) => record.original)).toEqual([
       "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
       "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/?fbclid=IwAR27aZmzK4NvnUqw0w8iwS9ZWyfDKhiK4FrD4MQWkFlmaKdut_lRh5ot_vw",
@@ -405,7 +430,8 @@ describe("urlWithoutQuery", () => {
 describe("captureUrl", () => {
   const capture = {
     timestamp: "20210921012416",
-    original: "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
+    original:
+      "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
   };
 
   test("builds the id_ form, which is what suppresses the Wayback toolbar", () => {
@@ -419,8 +445,12 @@ describe("captureUrl", () => {
   });
 
   test("rejects a timestamp that is not 14 digits", () => {
-    expect(() => captureUrl({ ...capture, timestamp: "20210921" })).toThrow(TypeError);
-    expect(() => captureUrl({ ...capture, timestamp: "2021-09-21T01:24:16Z" })).toThrow(TypeError);
+    expect(() => captureUrl({ ...capture, timestamp: "20210921" })).toThrow(
+      TypeError,
+    );
+    expect(() =>
+      captureUrl({ ...capture, timestamp: "2021-09-21T01:24:16Z" }),
+    ).toThrow(TypeError);
   });
 });
 
@@ -429,7 +459,8 @@ describe("parseCaptureUrl", () => {
     expect(parseCaptureUrl(SEPT21_CAPTURE_URL)).toEqual({
       timestamp: "20210921012416",
       modifier: "id_",
-      original: "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
+      original:
+        "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
     });
   });
 
@@ -462,13 +493,19 @@ describe("captureTimestampToIsoDate", () => {
   });
 
   test("rejects a timestamp naming a date that does not exist", () => {
-    expect(() => captureTimestampToIsoDate("20260231000000")).toThrow(TypeError);
-    expect(() => captureTimestampToIsoDate("20261301000000")).toThrow(TypeError);
+    expect(() => captureTimestampToIsoDate("20260231000000")).toThrow(
+      TypeError,
+    );
+    expect(() => captureTimestampToIsoDate("20261301000000")).toThrow(
+      TypeError,
+    );
   });
 
   test("rejects anything that is not 14 digits", () => {
     expect(() => captureTimestampToIsoDate("2021092101241")).toThrow(TypeError);
-    expect(() => captureTimestampToIsoDate("202109210124160")).toThrow(TypeError);
+    expect(() => captureTimestampToIsoDate("202109210124160")).toThrow(
+      TypeError,
+    );
     expect(() => captureTimestampToIsoDate("")).toThrow(TypeError);
   });
 
@@ -483,12 +520,18 @@ describe("captureTimestampToIsoDate", () => {
 
 describe("captureTimestampToIsoInstant", () => {
   test("normalises to a UTC instant", () => {
-    expect(captureTimestampToIsoInstant("20210921012416")).toBe("2021-09-21T01:24:16Z");
+    expect(captureTimestampToIsoInstant("20210921012416")).toBe(
+      "2021-09-21T01:24:16Z",
+    );
   });
 
   test("rejects an impossible time of day", () => {
-    expect(() => captureTimestampToIsoInstant("20210921256000")).toThrow(TypeError);
-    expect(() => captureTimestampToIsoInstant("20210921017700")).toThrow(TypeError);
+    expect(() => captureTimestampToIsoInstant("20210921256000")).toThrow(
+      TypeError,
+    );
+    expect(() => captureTimestampToIsoInstant("20210921017700")).toThrow(
+      TypeError,
+    );
   });
 });
 
@@ -499,11 +542,14 @@ describe("captureTimestampToIsoInstant", () => {
 describe("fetchCapture", () => {
   const capture = {
     timestamp: "20210921012416",
-    original: "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
+    original:
+      "https://fabtcg.com/articles/banned-and-restricted-announcement-sept21/",
   };
 
   test("requests the id_ URL and returns the bytes verbatim", async () => {
-    const fetchImpl = recordingFetch(CAPTURE_SEPT21, { url: SEPT21_CAPTURE_URL });
+    const fetchImpl = recordingFetch(CAPTURE_SEPT21, {
+      url: SEPT21_CAPTURE_URL,
+    });
     const fetched = await fetchCapture(capture, fetchImpl);
 
     expect(fetchImpl.calls).toEqual([SEPT21_CAPTURE_URL]);
@@ -518,8 +564,13 @@ describe("fetchCapture", () => {
     // Verified real behaviour: requesting 19990101000000 for this article
     // 302s to 20210921012416, keeping the id_ modifier. The bytes are from a
     // different capture than the one asked for, and provenance must say so.
-    const fetchImpl = recordingFetch(CAPTURE_SEPT21, { url: SEPT21_CAPTURE_URL });
-    const fetched = await fetchCapture({ ...capture, timestamp: "19990101000000" }, fetchImpl);
+    const fetchImpl = recordingFetch(CAPTURE_SEPT21, {
+      url: SEPT21_CAPTURE_URL,
+    });
+    const fetched = await fetchCapture(
+      { ...capture, timestamp: "19990101000000" },
+      fetchImpl,
+    );
 
     expect(fetched.requestedTimestamp).toBe("19990101000000");
     expect(fetched.resolvedTimestamp).toBe("20210921012416");
@@ -557,7 +608,9 @@ describe("htmlToText", () => {
   const text = htmlToText(CAPTURE_SEPT21);
 
   test("keeps the announcement's own words, verbatim", () => {
-    expect(text).toContain("Seeds of Agony is banned (Effective September 24, 2021)");
+    expect(text).toContain(
+      "Seeds of Agony is banned (Effective September 24, 2021)",
+    );
     expect(text).toContain(
       "We believe that removing Seeds of Agony from the Classic Constructed format",
     );
@@ -599,7 +652,9 @@ describe("htmlToText", () => {
     const lines = text.split("\n");
     expect(lines).toContain("Classic Constructed:");
     expect(lines).toContain("Blitz:");
-    expect(lines).toContain("Seeds of Agony is banned (Effective September 24, 2021)");
+    expect(lines).toContain(
+      "Seeds of Agony is banned (Effective September 24, 2021)",
+    );
   });
 
   test("never runs more than one blank line together", () => {
@@ -620,7 +675,9 @@ describe("htmlToText", () => {
   });
 
   test("markup written as text in the prose survives as text", () => {
-    expect(htmlToText("<p>use &lt;b&gt; for bold</p>")).toBe("use <b> for bold");
+    expect(htmlToText("<p>use &lt;b&gt; for bold</p>")).toBe(
+      "use <b> for bold",
+    );
   });
 });
 
@@ -670,7 +727,9 @@ describe("the retrieval pipeline, end to end", () => {
 
     expect(capture.calls).toEqual([SEPT21_CAPTURE_URL]);
     expect(captureTimestampToIsoDate(fetched.capturedAt)).toBe("2021-09-21");
-    expect(fetched.text).toContain("Seeds of Agony is banned (Effective September 24, 2021)");
+    expect(fetched.text).toContain(
+      "Seeds of Agony is banned (Effective September 24, 2021)",
+    );
     // The raw bytes are retained alongside the text, because a reviewer
     // checking an extracted claim must be able to read the source.
     expect(fetched.html).toBe(CAPTURE_SEPT21);
@@ -696,6 +755,8 @@ describe("the retrieval pipeline, end to end", () => {
       decodeHtmlEntities,
       urlWithoutQuery,
     });
-    expect(exported.some((name) => /ban|card|format|extract/i.test(name))).toBe(false);
+    expect(exported.some((name) => /ban|card|format|extract/i.test(name))).toBe(
+      false,
+    );
   });
 });

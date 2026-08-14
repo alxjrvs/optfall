@@ -66,7 +66,11 @@ const { section, field = true } = Astro.props;
  * the field on it. It is the most-linked page on the site this one is measured
  * against, for the same reason.
  */
-const LINKS: readonly { href: string; label: string; key?: Props["section"] }[] = [
+const LINKS: readonly {
+  href: string;
+  label: string;
+  key?: Props["section"];
+}[] = [
   { href: "/search", label: "Cards", key: "cards" },
   { href: "/sets", label: "Sets", key: "sets" },
   { href: "/cr", label: "Rules", key: "rules" },

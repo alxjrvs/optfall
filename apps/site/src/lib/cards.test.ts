@@ -130,7 +130,9 @@ describe("exclusions are read before the legal flag", () => {
     // If this ever stops being true the trap has gone away and the assertion
     // above stops proving anything, so the premise is pinned too.
     const banned = cardsWithFlag("cc_banned");
-    const alsoLegal = banned.filter((card) => card.legality["cc_legal"] === true);
+    const alsoLegal = banned.filter(
+      (card) => card.legality["cc_legal"] === true,
+    );
     expect(alsoLegal.length).toBe(51);
   });
 
@@ -183,7 +185,10 @@ describe("more than one state can be true at once, and none is discarded", () =>
     expect(card.legality["cc_living_legend"]).toBe(true);
 
     const verdict = verdictFor(card, formatById("classic-constructed"));
-    expect(verdict.states.map((state) => state.tone)).toEqual(["banned", "living-legend"]);
+    expect(verdict.states.map((state) => state.tone)).toEqual([
+      "banned",
+      "living-legend",
+    ]);
     // Severity order, and each state carries its own start date rather than
     // sharing one — they began eighteen months apart.
     expect(verdict.states[0]?.since).toBe("2023-01-30");
@@ -225,7 +230,9 @@ describe("a flag the dataset does not publish is never read as false", () => {
     const verdict = verdictFor(card, formatById("ultimate-pit-fight"));
     expect(verdict.unknown).toBe(true);
     expect(verdict.states).toEqual([]);
-    expect(verdict.states.map((state) => state.tone)).not.toContain("not-in-format");
+    expect(verdict.states.map((state) => state.tone)).not.toContain(
+      "not-in-format",
+    );
   });
 
   test("Ultimate Pit Fight is unknown on 4,939 cards and Banned on 2", () => {
@@ -234,12 +241,15 @@ describe("a flag the dataset does not publish is never read as false", () => {
     );
     expect(verdicts.filter((verdict) => verdict.unknown).length).toBe(4939);
     expect(
-      verdicts.filter((verdict) => verdict.states.some((state) => state.tone === "banned"))
-        .length,
+      verdicts.filter((verdict) =>
+        verdict.states.some((state) => state.tone === "banned"),
+      ).length,
     ).toBe(2);
-    expect(verdicts.some((verdict) => verdict.states.some((s) => s.tone === "legal"))).toBe(
-      false,
-    );
+    expect(
+      verdicts.some((verdict) =>
+        verdict.states.some((s) => s.tone === "legal"),
+      ),
+    ).toBe(false);
   });
 
   test("a false legal flag IS Not in format, which is a different claim", () => {
@@ -255,8 +265,14 @@ describe("a flag the dataset does not publish is never read as false", () => {
       pageNamed("Command and Conquer").card,
       formatById("ultimate-pit-fight"),
     );
-    const start = verdict.evidence.find((fact) => fact.key === "upf_banned_start");
-    expect(start).toEqual({ key: "upf_banned_start", value: "—", present: false });
+    const start = verdict.evidence.find(
+      (fact) => fact.key === "upf_banned_start",
+    );
+    expect(start).toEqual({
+      key: "upf_banned_start",
+      value: "—",
+      present: false,
+    });
   });
 
   test("every format's evidence covers every key that format claims", () => {
@@ -452,9 +468,15 @@ describe("links to same-named cards are distinguishable by their text alone", ()
   });
 
   test("a link's label matches the label on the page it points at", () => {
-    const labelByHref = new Map(CARD_PAGES.map((page) => [page.href, page.label]));
+    const labelByHref = new Map(
+      CARD_PAGES.map((page) => [page.href, page.label]),
+    );
     for (const page of CARD_PAGES) {
-      for (const link of [...page.variants, ...page.references, ...page.referencedBy]) {
+      for (const link of [
+        ...page.variants,
+        ...page.references,
+        ...page.referencedBy,
+      ]) {
         expect(labelByHref.get(link.href)).toBe(link.label);
       }
     }
@@ -465,7 +487,9 @@ describe("links to same-named cards are distinguishable by their text alone", ()
     expect(variantSuffix(0, true)).toBe(" (no pitch)");
     expect(variantSuffix(2, false)).toBe("");
     expect(labelFor("Head Jab", 2, true)).toBe("Head Jab (pitch 2)");
-    expect(labelFor("Command and Conquer", 1, false)).toBe("Command and Conquer");
+    expect(labelFor("Command and Conquer", 1, false)).toBe(
+      "Command and Conquer",
+    );
 
     for (const page of CARD_PAGES) {
       expect(page.label).toBe(
@@ -476,13 +500,17 @@ describe("links to same-named cards are distinguishable by their text alone", ()
   });
 
   test("every link resolves to a page this build emits", () => {
-    const emitted = new Set(CARD_ROUTES.map((route) => hrefForSlug(route.slug)));
+    const emitted = new Set(
+      CARD_ROUTES.map((route) => hrefForSlug(route.slug)),
+    );
     for (const page of CARD_PAGES) {
       for (const link of [
         ...page.variants,
         ...page.references,
         ...page.referencedBy,
-        ...page.printings.flatMap(({ otherFace }) => (otherFace === null ? [] : [otherFace])),
+        ...page.printings.flatMap(({ otherFace }) =>
+          otherFace === null ? [] : [otherFace],
+        ),
       ]) {
         expect(emitted.has(link.href)).toBe(true);
       }
@@ -499,21 +527,31 @@ describe("stats", () => {
     const zeroPower = CORPUS.cards.filter((card) => card.power === "0");
     expect(zeroPower.length).toBe(13);
     for (const card of zeroPower) {
-      const page = CARD_PAGES.find((candidate) => candidate.card.unique_id === card.unique_id);
-      expect(page?.stats.some((stat) => stat.label === "Power" && stat.value === "0")).toBe(
-        true,
+      const page = CARD_PAGES.find(
+        (candidate) => candidate.card.unique_id === card.unique_id,
       );
+      expect(
+        page?.stats.some(
+          (stat) => stat.label === "Power" && stat.value === "0",
+        ),
+      ).toBe(true);
     }
     // And a card with no power carries no Power row at all.
     const noPower = pageNamed("Command and Conquer");
-    expect(noPower.stats.map((stat) => stat.label)).toEqual(["Cost", "Power", "Defence"]);
+    expect(noPower.stats.map((stat) => stat.label)).toEqual([
+      "Cost",
+      "Power",
+      "Defence",
+    ]);
     expect(noPower.stats.some((stat) => stat.label === "Life")).toBe(false);
   });
 
   test("upstream's non-numeric values survive verbatim", () => {
     const x = CORPUS.cards.find((card) => card.cost === "XX");
     expect(x).toBeDefined();
-    const page = CARD_PAGES.find((candidate) => candidate.card.unique_id === x?.unique_id);
+    const page = CARD_PAGES.find(
+      (candidate) => candidate.card.unique_id === x?.unique_id,
+    );
     expect(page?.stats.find((stat) => stat.label === "Cost")?.value).toBe("XX");
   });
 });

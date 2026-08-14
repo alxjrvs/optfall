@@ -82,7 +82,9 @@ export interface CardsSource {
  * a partial record rather than a fixed shape — and why {@link FormatVerdict}
  * reports an absent key as absent rather than as `false`.
  */
-export type CardLegality = Readonly<Record<string, boolean | string | undefined>>;
+export type CardLegality = Readonly<
+  Record<string, boolean | string | undefined>
+>;
 
 /** One printing, with upstream's field names kept verbatim. */
 export interface CardPrinting {
@@ -197,16 +199,24 @@ export const LAST_CONFIRMED = dateOf(CORPUS.source.committedAt);
  * a permalink to fix.
  */
 const TRANSLITERATIONS: Readonly<Record<string, string>> = {
-  æ: "ae", Æ: "ae",
-  œ: "oe", Œ: "oe",
-  ø: "o", Ø: "o",
-  ð: "d", Ð: "d",
-  đ: "d", Đ: "d",
-  þ: "th", Þ: "th",
+  æ: "ae",
+  Æ: "ae",
+  œ: "oe",
+  Œ: "oe",
+  ø: "o",
+  Ø: "o",
+  ð: "d",
+  Ð: "d",
+  đ: "d",
+  Đ: "d",
+  þ: "th",
+  Þ: "th",
   ß: "ss",
-  ł: "l", Ł: "l",
+  ł: "l",
+  Ł: "l",
   ı: "i",
-  "’": "", "'": "",
+  "’": "",
+  "'": "",
 };
 
 /**
@@ -265,7 +275,13 @@ function pitchSegment(card: Card): string {
 
 /** `0`, `1`, `2` or `3` — the jewel's own vocabulary. */
 export function pitchValueOf(card: Card): PitchValue {
-  return card.pitch === "1" ? 1 : card.pitch === "2" ? 2 : card.pitch === "3" ? 3 : 0;
+  return card.pitch === "1"
+    ? 1
+    : card.pitch === "2"
+      ? 2
+      : card.pitch === "3"
+        ? 3
+        : 0;
 }
 
 /**
@@ -283,7 +299,10 @@ export function pitchValueOf(card: Card): PitchValue {
  * either — it is outside the link's accessible name unless it is placed inside
  * the anchor.
  */
-export function variantSuffix(pitch: PitchValue, disambiguated: boolean): string {
+export function variantSuffix(
+  pitch: PitchValue,
+  disambiguated: boolean,
+): string {
   if (!disambiguated) return "";
   return pitch === 0 ? " (no pitch)" : ` (pitch ${pitch})`;
 }
@@ -615,7 +634,8 @@ export function verdictFor(card: Card, format: Format): FormatVerdict {
     format,
     states,
     unknown,
-    affectsFullCycle: card.legality["ll_restricted_affects_full_cycle"] === true,
+    affectsFullCycle:
+      card.legality["ll_restricted_affects_full_cycle"] === true,
     evidence,
   };
 }
@@ -834,13 +854,18 @@ const SLUG_BY_ID: ReadonlyMap<string, string> = (() => {
       owners.get(nameSlug)?.push(`(disambiguation page for ${group[0]?.name})`);
     }
   }
-  const collisions = [...owners.entries()].filter(([, names]) => names.length > 1);
+  const collisions = [...owners.entries()].filter(
+    ([, names]) => names.length > 1,
+  );
   if (collisions.length > 0) {
     throw new Error(
       `apps/site/src/lib/cards.ts: ${collisions.length} card slug collision(s) — ` +
         `one card would be unreachable. ` +
         collisions
-          .map(([slug, names]) => `/card/${slug} claimed by ${names.join(" and ")}`)
+          .map(
+            ([slug, names]) =>
+              `/card/${slug} claimed by ${names.join(" and ")}`,
+          )
           .join("; "),
     );
   }
@@ -942,57 +967,62 @@ function faceOf(card: Card): CardFaceRef {
 }
 
 /** Every card page, in corpus order — which is upstream's, name-sorted. */
-export const CARD_PAGES: readonly CardPage[] = CORPUS.cards.map((card, index) => {
-  const nameSlug = slugify(card.name);
-  const slug = SLUG_BY_ID.get(card.unique_id) ?? nameSlug;
-  const group = BY_NAME_SLUG.get(nameSlug) ?? [card];
-  const disambiguated = slug !== nameSlug;
+export const CARD_PAGES: readonly CardPage[] = CORPUS.cards.map(
+  (card, index) => {
+    const nameSlug = slugify(card.name);
+    const slug = SLUG_BY_ID.get(card.unique_id) ?? nameSlug;
+    const group = BY_NAME_SLUG.get(nameSlug) ?? [card];
+    const disambiguated = slug !== nameSlug;
 
-  return {
-    card,
-    slug,
-    label: labelFor(card.name, pitchValueOf(card), disambiguated),
-    href: hrefForSlug(slug),
-    nameSlug,
-    disambiguated,
-    variants: group
-      .filter((sibling) => sibling.unique_id !== card.unique_id)
-      .toSorted(byPitch)
-      .map(linkTo),
-    pitch: pitchValueOf(card),
-    stats: statsOf(card),
-    face: faceOf(card),
-    verdicts: FORMATS.map((format) => verdictFor(card, format)),
-    printings: card.printings.map((printing) => {
-      const otherId = printing.double_sided_card_info?.[0]?.other_face_unique_id;
-      const other = otherId === undefined ? undefined : CARD_BY_PRINTING_ID.get(otherId);
-      return {
-        printing,
-        otherFace: other === undefined || other.unique_id === card.unique_id
-          ? null
-          : linkTo(other),
-      };
-    }),
-    /**
-     * DEDUPLICATED, AND THE DUPLICATES ARE REAL. Upstream lists an id more than
-     * once when a card names the same card twice in its text — Maxx Nitro names
-     * each of the four Hyper Drivers twice, Aurora names Embodiment of Lightning
-     * twice, and 23 lists in this corpus were affected. Rendering that verbatim
-     * gives a page two anchors with the same text pointing at the same URL,
-     * which reads as a bug in the tool rather than as a property of the card.
-     *
-     * `new Set` preserves first-insertion order, so this drops repeats without
-     * reordering anything. It is applied to the inverse map above for the same
-     * reason: a card that names this one twice appeared in `referencedBy` twice.
-     */
-    references: [...new Set(card.referenced_cards)]
-      .map((id) => CARD_BY_ID.get(id))
-      .filter((referenced): referenced is Card => referenced !== undefined)
-      .map(linkTo),
-    referencedBy: (REFERENCED_BY.get(card.unique_id) ?? []).map(linkTo),
-    ordinal: index + 1,
-  };
-});
+    return {
+      card,
+      slug,
+      label: labelFor(card.name, pitchValueOf(card), disambiguated),
+      href: hrefForSlug(slug),
+      nameSlug,
+      disambiguated,
+      variants: group
+        .filter((sibling) => sibling.unique_id !== card.unique_id)
+        .toSorted(byPitch)
+        .map(linkTo),
+      pitch: pitchValueOf(card),
+      stats: statsOf(card),
+      face: faceOf(card),
+      verdicts: FORMATS.map((format) => verdictFor(card, format)),
+      printings: card.printings.map((printing) => {
+        const otherId =
+          printing.double_sided_card_info?.[0]?.other_face_unique_id;
+        const other =
+          otherId === undefined ? undefined : CARD_BY_PRINTING_ID.get(otherId);
+        return {
+          printing,
+          otherFace:
+            other === undefined || other.unique_id === card.unique_id
+              ? null
+              : linkTo(other),
+        };
+      }),
+      /**
+       * DEDUPLICATED, AND THE DUPLICATES ARE REAL. Upstream lists an id more than
+       * once when a card names the same card twice in its text — Maxx Nitro names
+       * each of the four Hyper Drivers twice, Aurora names Embodiment of Lightning
+       * twice, and 23 lists in this corpus were affected. Rendering that verbatim
+       * gives a page two anchors with the same text pointing at the same URL,
+       * which reads as a bug in the tool rather than as a property of the card.
+       *
+       * `new Set` preserves first-insertion order, so this drops repeats without
+       * reordering anything. It is applied to the inverse map above for the same
+       * reason: a card that names this one twice appeared in `referencedBy` twice.
+       */
+      references: [...new Set(card.referenced_cards)]
+        .map((id) => CARD_BY_ID.get(id))
+        .filter((referenced): referenced is Card => referenced !== undefined)
+        .map(linkTo),
+      referencedBy: (REFERENCED_BY.get(card.unique_id) ?? []).map(linkTo),
+      ordinal: index + 1,
+    };
+  },
+);
 
 const PAGE_BY_ID: ReadonlyMap<string, CardPage> = new Map(
   CARD_PAGES.map((page) => [page.card.unique_id, page]),
@@ -1267,6 +1297,8 @@ export function descriptionFor(page: CardPage): string {
       DESCRIPTION_BUDGET,
     );
   }
-  return truncateAtWord(head === "" ? body : `${head}. ${body}`, DESCRIPTION_BUDGET);
+  return truncateAtWord(
+    head === "" ? body : `${head}. ${body}`,
+    DESCRIPTION_BUDGET,
+  );
 }
-

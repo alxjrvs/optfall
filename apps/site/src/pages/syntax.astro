@@ -59,7 +59,11 @@ const FIELDS: readonly Row[] = [
     aliases: ["class:"],
   },
   { example: "trait:mechanologist", meaning: "The card carries this trait." },
-  { example: "keyword:go-again", meaning: "The card has this keyword.", aliases: ["kw:"] },
+  {
+    example: "keyword:go-again",
+    meaning: "The card has this keyword.",
+    aliases: ["kw:"],
+  },
   {
     example: "artist:fikri",
     meaning: "An artist credited on any printing of the card.",
@@ -71,7 +75,10 @@ const FIELDS: readonly Row[] = [
     aliases: ["flavour:", "flavor:"],
   },
   { example: "set:wtr", meaning: "The card was printed in this set." },
-  { example: "rarity:majestic", meaning: "The card was printed at this rarity." },
+  {
+    example: "rarity:majestic",
+    meaning: "The card was printed at this rarity.",
+  },
   { example: "pitch:3", meaning: "The card's pitch value." },
   { example: "cost:2", meaning: "The printed resource cost." },
   { example: "power:6", meaning: "The printed attack power." },
@@ -85,18 +92,24 @@ const FIELDS: readonly Row[] = [
 const BOOLEANS: readonly Row[] = [
   {
     example: "dash dagger",
-    meaning: "Two words next to each other both have to match. There is no need to type AND.",
+    meaning:
+      "Two words next to each other both have to match. There is no need to type AND.",
   },
   { example: "dash or dagger", meaning: "Either one matches." },
   {
     example: "-type:attack",
-    meaning: "Negation. It composes with every operator, not only with bare words.",
+    meaning:
+      "Negation. It composes with every operator, not only with bare words.",
   },
   {
     example: "(dash or dagger) pitch:1",
-    meaning: "Parentheses group, so an either-or can be narrowed by something else.",
+    meaning:
+      "Parentheses group, so an either-or can be narrowed by something else.",
   },
-  { example: '"head jab"', meaning: "Quotes match a phrase rather than two separate words." },
+  {
+    example: '"head jab"',
+    meaning: "Quotes match a phrase rather than two separate words.",
+  },
   {
     example: '!"Head Jab"',
     meaning: "The exact-name operator: this card and no other.",
@@ -105,7 +118,10 @@ const BOOLEANS: readonly Row[] = [
 ];
 
 const ORDERING: readonly Row[] = [
-  { example: "order:cost", meaning: "Sort by printed cost instead of by relevance." },
+  {
+    example: "order:cost",
+    meaning: "Sort by printed cost instead of by relevance.",
+  },
   { example: "order:name", meaning: "Sort alphabetically." },
   { example: "order:pitch", meaning: "Sort by pitch value." },
   { example: "order:power", meaning: "Sort by printed attack power." },
@@ -118,8 +134,14 @@ const ORDERING: readonly Row[] = [
     example: "order:rarity",
     meaning: "Sort by the scarcest rarity the card was ever printed at.",
   },
-  { example: "order:set", meaning: "Sort by the first set the card appeared in." },
-  { example: "dir:desc", meaning: "Reverse the order. The default is ascending." },
+  {
+    example: "order:set",
+    meaning: "Sort by the first set the card appeared in.",
+  },
+  {
+    example: "dir:desc",
+    meaning: "Reverse the order. The default is ascending.",
+  },
   {
     example: "unique:art",
     meaning: "How much one row stands for — names, cards or art. See below.",
@@ -144,14 +166,18 @@ const LEGALITY: readonly Row[] = [
  * guessing at an alias gets a notice rather than results, and guessing is the
  * only alternative to writing them down.
  */
-const FORMATS: readonly { readonly name: string; readonly aliases: string }[] = [
-  { name: "Classic Constructed", aliases: "cc, classic-constructed, classic, constructed" },
-  { name: "Blitz", aliases: "blitz" },
-  { name: "Living Legend", aliases: "ll, living-legend, livinglegend" },
-  { name: "Commoner", aliases: "commoner" },
-  { name: "Silver Age", aliases: "silver-age, silverage, silver" },
-  { name: "Ultimate Pit Fight", aliases: "upf, ultimate-pit-fight" },
-];
+const FORMATS: readonly { readonly name: string; readonly aliases: string }[] =
+  [
+    {
+      name: "Classic Constructed",
+      aliases: "cc, classic-constructed, classic, constructed",
+    },
+    { name: "Blitz", aliases: "blitz" },
+    { name: "Living Legend", aliases: "ll, living-legend, livinglegend" },
+    { name: "Commoner", aliases: "commoner" },
+    { name: "Silver Age", aliases: "silver-age, silverage, silver" },
+    { name: "Ultimate Pit Fight", aliases: "upf, ultimate-pit-fight" },
+  ];
 ---
 
 <BaseLayout

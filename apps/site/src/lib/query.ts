@@ -49,7 +49,12 @@ export type QueryNode =
 
 export type Token =
   | { readonly kind: "term"; readonly value: string; readonly quoted: boolean }
-  | { readonly kind: "field"; readonly field: string; readonly value: string; readonly compare?: QueryLeaf["compare"] }
+  | {
+      readonly kind: "field";
+      readonly field: string;
+      readonly value: string;
+      readonly compare?: QueryLeaf["compare"];
+    }
   | { readonly kind: "exact"; readonly value: string }
   | { readonly kind: "or" }
   | { readonly kind: "not" }
@@ -109,7 +114,10 @@ export function tokenise(raw: string): readonly Token[] {
     ] = match;
 
     if (exactQuoted !== undefined || exactBare !== undefined) {
-      out.push({ kind: "exact", value: (exactQuoted ?? exactBare ?? "").trim() });
+      out.push({
+        kind: "exact",
+        value: (exactQuoted ?? exactBare ?? "").trim(),
+      });
       continue;
     }
     if (quotedField !== undefined) {
@@ -138,7 +146,8 @@ export function tokenise(raw: string): readonly Token[] {
       continue;
     }
     if (phrase !== undefined) {
-      if (phrase.trim() !== "") out.push({ kind: "term", value: phrase, quoted: true });
+      if (phrase.trim() !== "")
+        out.push({ kind: "term", value: phrase, quoted: true });
       continue;
     }
     if (paren !== undefined) {
@@ -203,7 +212,10 @@ export type LeafFactory = (token: Token) => QueryNode | null;
  * need — and it fails in ways that can be explained to a reader, which matters
  * more here than generality.
  */
-export function parse(tokens: readonly Token[], leaf: LeafFactory): QueryNode | null {
+export function parse(
+  tokens: readonly Token[],
+  leaf: LeafFactory,
+): QueryNode | null {
   let position = 0;
 
   const peek = (): Token | undefined => tokens[position];
@@ -230,7 +242,8 @@ export function parse(tokens: readonly Token[], leaf: LeafFactory): QueryNode | 
 
     for (;;) {
       const token = peek();
-      if (token === undefined || token.kind === "close" || token.kind === "or") break;
+      if (token === undefined || token.kind === "close" || token.kind === "or")
+        break;
       const node = parsePrimary();
       if (node !== null) children.push(node);
       // parsePrimary always consumes, so this cannot spin.
@@ -281,7 +294,11 @@ export function parse(tokens: readonly Token[], leaf: LeafFactory): QueryNode | 
 /** Whether one card satisfies one leaf. Supplied by the caller. */
 export type LeafTest = (leaf: QueryLeaf, ordinal: number) => boolean;
 
-export function evaluate(node: QueryNode, ordinal: number, test: LeafTest): boolean {
+export function evaluate(
+  node: QueryNode,
+  ordinal: number,
+  test: LeafTest,
+): boolean {
   switch (node.kind) {
     case "leaf":
       return test(node, ordinal);

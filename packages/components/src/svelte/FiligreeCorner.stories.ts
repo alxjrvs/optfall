@@ -68,7 +68,9 @@ const meta = {
       options: ORNAMENT_ROLES,
       description:
         "Which of the three sanctioned roles this is. Required, with no default: 'wherever you happen to have dropped it' is not one of the three. Panel and card draw the same motif with fewer members and a thinner stroke on the card; section-rule is a different figure entirely.",
-      table: { type: { summary: '"panel-corner" | "card-corner" | "section-rule"' } },
+      table: {
+        type: { summary: '"panel-corner" | "card-corner" | "section-rule"' },
+      },
     },
     corner: {
       control: { type: "inline-radio" },
@@ -122,7 +124,8 @@ function frame<P extends Record<string, any>>(
  * string carries a length, the story has started making the layout decisions
  * the component is being tested for not making.
  */
-const SLOT_FILL = '<span style="display:block;inline-size:100%;block-size:100%"></span>';
+const SLOT_FILL =
+  '<span style="display:block;inline-size:100%;block-size:100%"></span>';
 
 /**
  * One ornament per corner slot, mirrored by the id the host passes in.
@@ -176,13 +179,14 @@ const PANEL_BODY =
 function cardFrame(role: OrnamentRole) {
   const size = cssValue("ornament.filigree.size");
   const slots = PLATE_CORNERS.map((id) => {
-    const [block, inline] = id === "start-start"
-      ? ["start", "start"]
-      : id === "start-end"
-        ? ["start", "end"]
-        : id === "end-start"
-          ? ["end", "start"]
-          : ["end", "end"];
+    const [block, inline] =
+      id === "start-start"
+        ? ["start", "start"]
+        : id === "start-end"
+          ? ["start", "end"]
+          : id === "end-start"
+            ? ["end", "start"]
+            : ["end", "end"];
     return (
       `<span data-slot style="position:absolute;inset-block-${block}:0;` +
       `inset-inline-${inline}:0;inline-size:${size};block-size:${size}"></span>`
@@ -211,7 +215,8 @@ function cardFrame(role: OrnamentRole) {
       const mounted = card.querySelectorAll("[data-slot]");
       PLATE_CORNERS.forEach((id, index) => {
         const slot = mounted[index];
-        if (slot) mount(FiligreeCorner, { target: slot, props: { role, corner: id } });
+        if (slot)
+          mount(FiligreeCorner, { target: slot, props: { role, corner: id } });
       });
     },
   }));

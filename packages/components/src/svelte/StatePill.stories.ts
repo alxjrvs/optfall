@@ -59,7 +59,7 @@ const meta = {
     label: {
       control: "text",
       description:
-        "The visible text, which IS the accessible name — one string, no `aria-label` shadowing it. Must name the state (`\"Banned\"`, not `\"Blitz\"`): the corpus owns the wording, but a label that names something other than the state hands the verdict back to colour alone. Required, and a blank or whitespace-only value falls back to the tone spoken in full rather than rendering an empty swatch.",
+        'The visible text, which IS the accessible name — one string, no `aria-label` shadowing it. Must name the state (`"Banned"`, not `"Blitz"`): the corpus owns the wording, but a label that names something other than the state hands the verdict back to colour alone. Required, and a blank or whitespace-only value falls back to the tone spoken in full rather than rendering an empty swatch.',
       table: { type: { summary: "string" } },
     },
   },
@@ -122,7 +122,9 @@ export const LivingLegend: Story = {
 };
 
 /** The one place brass is allowed to appear. */
-export const Verified: Story = { args: { tone: "verified", label: "Verified" } };
+export const Verified: Story = {
+  args: { tone: "verified", label: "Verified" },
+};
 
 /* -------------------------------------------------------------------------- */
 /* The claims that only a rendered pill can falsify                            */

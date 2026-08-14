@@ -23,17 +23,23 @@ import { CORPUS } from "./cards";
 describe("faceKeyFor", () => {
   test("takes the basename and restates the extension as webp", () => {
     expect(
-      faceKeyFor("https://storage.googleapis.com/fabmaster/cardfaces/2024-MST/EN/MST131.png"),
+      faceKeyFor(
+        "https://storage.googleapis.com/fabmaster/cardfaces/2024-MST/EN/MST131.png",
+      ),
     ).toBe("MST131.webp");
     expect(
-      faceKeyFor("https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN243.webp"),
+      faceKeyFor(
+        "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN243.webp",
+      ),
     ).toBe("OMN243.webp");
   });
 
   test("keeps a meaningful suffix that is part of the name", () => {
     // `-RF` is rainbow foil — a different piece of art, not a rendition.
     expect(
-      faceKeyFor("https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/LGS282-RF.webp"),
+      faceKeyFor(
+        "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/LGS282-RF.webp",
+      ),
     ).toBe("LGS282-RF.webp");
   });
 
@@ -42,10 +48,14 @@ describe("faceKeyFor", () => {
     // into the file name. Carrying it through would put somebody else's build
     // artefact in our URL space forever.
     expect(
-      faceKeyFor("https://dhhim4ltzu1pj.cloudfront.net/media/images/OUT183.width-450.png"),
+      faceKeyFor(
+        "https://dhhim4ltzu1pj.cloudfront.net/media/images/OUT183.width-450.png",
+      ),
     ).toBe("OUT183.webp");
     expect(
-      faceKeyFor("https://storage.googleapis.com/fabmaster/media/images/1HP001.width-450.png"),
+      faceKeyFor(
+        "https://storage.googleapis.com/fabmaster/media/images/1HP001.width-450.png",
+      ),
     ).toBe("1HP001.webp");
   });
 
@@ -100,11 +110,19 @@ describe("faceUrl and placeholderUrl", () => {
 
 describe("orientation and boxes", () => {
   test("a rotated or horizontally-played printing is landscape", () => {
-    expect(orientationOf({ playedHorizontally: false, rotationDegrees: 0 })).toBe("portrait");
-    expect(orientationOf({ playedHorizontally: true, rotationDegrees: 0 })).toBe("landscape");
-    expect(orientationOf({ playedHorizontally: false, rotationDegrees: 90 })).toBe("landscape");
+    expect(
+      orientationOf({ playedHorizontally: false, rotationDegrees: 0 }),
+    ).toBe("portrait");
+    expect(
+      orientationOf({ playedHorizontally: true, rotationDegrees: 0 }),
+    ).toBe("landscape");
+    expect(
+      orientationOf({ playedHorizontally: false, rotationDegrees: 90 }),
+    ).toBe("landscape");
     // 180° is upside down, not sideways — still a portrait box.
-    expect(orientationOf({ playedHorizontally: false, rotationDegrees: 180 })).toBe("portrait");
+    expect(
+      orientationOf({ playedHorizontally: false, rotationDegrees: 180 }),
+    ).toBe("portrait");
   });
 
   test("a landscape box is the portrait box transposed", () => {
@@ -128,7 +146,8 @@ describe("over the whole corpus", () => {
 
   test("every printing either resolves to a key or genuinely has no image", () => {
     const unresolved = printings.filter(
-      (printing) => printing.image_url !== null && faceKeyFor(printing.image_url) === null,
+      (printing) =>
+        printing.image_url !== null && faceKeyFor(printing.image_url) === null,
     );
     // A printing with an image URL the rule cannot key is a card that would
     // silently show NO IMAGE forever, so it is named rather than counted.
@@ -136,7 +155,9 @@ describe("over the whole corpus", () => {
   });
 
   test("printings with no image are exactly the four upstream publishes as null", () => {
-    const withoutImage = printings.filter((printing) => printing.image_url === null);
+    const withoutImage = printings.filter(
+      (printing) => printing.image_url === null,
+    );
     expect(withoutImage).toHaveLength(4);
   });
 
@@ -168,7 +189,9 @@ describe("over the whole corpus", () => {
     // The dedupe is the reason the basename is the key rather than the
     // printing id: foiling variants are distinct printings sharing one face.
     const keys = new Set(
-      printings.map((printing) => faceKeyFor(printing.image_url)).filter(Boolean),
+      printings
+        .map((printing) => faceKeyFor(printing.image_url))
+        .filter(Boolean),
     );
     expect(printings.length).toBe(16502);
     expect(keys.size).toBe(11376);

@@ -46,14 +46,18 @@ async function fixture(options: {
   const manifest = join(root, "manifest.json");
   await writeFile(
     manifest,
-    JSON.stringify({ [options.key]: [{ file: recorded, url: options.url, sha256 }] }),
+    JSON.stringify({
+      [options.key]: [{ file: recorded, url: options.url, sha256 }],
+    }),
   );
 
   return { dir: join(root, "public"), manifest };
 }
 
 afterAll(async () => {
-  await Promise.all(roots.map((root) => rm(root, { recursive: true, force: true })));
+  await Promise.all(
+    roots.map((root) => rm(root, { recursive: true, force: true })),
+  );
 });
 
 describe("auditDir", () => {
@@ -92,7 +96,10 @@ describe("auditDir", () => {
   test("rejects a bare `first-party:` with no script named", async () => {
     /* The escape hatch built to stop somebody inventing an origin must not
        itself be a one-token way to satisfy the check. */
-    const { dir, manifest } = await fixture({ key: "assets", url: "first-party:" });
+    const { dir, manifest } = await fixture({
+      key: "assets",
+      url: "first-party:",
+    });
 
     const { problems } = await auditDir(dir, manifest, "assets");
     expect(problems.join("\n")).toContain("does not name a script");
@@ -129,18 +136,21 @@ describe("auditDir", () => {
       "https://example.test/elsewhere.js",
     ];
     const results = await Promise.all(
-      escapes.map(async (escape) => {
-        const { dir, manifest } = await fixture({ key: "assets", url: `first-party:${escape}` });
+      escapes.map(async (candidate) => {
+        const { dir, manifest } = await fixture({
+          key: "assets",
+          url: `first-party:${candidate}`,
+        });
         const audit = await auditDir(dir, manifest, "assets");
-        return { escape, problems: audit.problems };
+        return { candidate, problems: audit.problems };
       }),
     );
 
-    for (const { escape, problems } of results) {
+    for (const { candidate, problems } of results) {
       /* Either message is correct — the string guard catches the obvious
          spellings with a friendlier error, the resolved-URL guard catches the
          rest. What must never happen is an empty problem list, or a throw. */
-      expect(problems.join("\n"), escape).toMatch(
+      expect(problems.join("\n"), candidate).toMatch(
         /repository-relative|resolves outside the repository/,
       );
     }
@@ -153,7 +163,10 @@ describe("auditDir", () => {
     const unparseable = ["https://", "http://["];
     const results = await Promise.all(
       unparseable.map(async (bad) => {
-        const { dir, manifest } = await fixture({ key: "assets", url: `first-party:${bad}` });
+        const { dir, manifest } = await fixture({
+          key: "assets",
+          url: `first-party:${bad}`,
+        });
         const audit = await auditDir(dir, manifest, "assets");
         return { bad, problems: audit.problems };
       }),
@@ -165,7 +178,10 @@ describe("auditDir", () => {
   });
 
   test("rejects a first-party origin naming something that is not a script", async () => {
-    const { dir, manifest } = await fixture({ key: "assets", url: "first-party:README.md" });
+    const { dir, manifest } = await fixture({
+      key: "assets",
+      url: "first-party:README.md",
+    });
 
     const { problems } = await auditDir(dir, manifest, "assets");
     expect(problems.join("\n")).toContain("must name a script");

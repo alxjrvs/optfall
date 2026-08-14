@@ -114,8 +114,12 @@ async function main(): Promise<void> {
         name: set.name,
         released: dates[0] ?? null,
         /** True only when EVERY printing is out of print. */
-        outOfPrint: set.printings.length > 0 && set.printings.every((p) => p.out_of_print),
-        editions: [...new Set(set.printings.map((p) => p.edition))].filter((e) => e !== ""),
+        outOfPrint:
+          set.printings.length > 0 &&
+          set.printings.every((p) => p.out_of_print),
+        editions: [...new Set(set.printings.map((p) => p.edition))].filter(
+          (e) => e !== "",
+        ),
       };
     })
     // Sorted by id so the artifact is a function of the data rather than of
@@ -125,10 +129,17 @@ async function main(): Promise<void> {
 
   const corpus = {
     schemaVersion: SCHEMA_VERSION,
-    source: { repository: REPOSITORY, commit: COMMIT, files: ["set.json", "rarity.json", "edition.json", "foiling.json"] },
+    source: {
+      repository: REPOSITORY,
+      commit: COMMIT,
+      files: ["set.json", "rarity.json", "edition.json", "foiling.json"],
+    },
     rights:
       "Set names are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. Only Optfall's structural work over this data — the field selection, the upstream pin and this envelope — is openly licensed.",
-    counts: { sets: shaped.length, dated: shaped.filter((s) => s.released !== null).length },
+    counts: {
+      sets: shaped.length,
+      dated: shaped.filter((s) => s.released !== null).length,
+    },
     decode: {
       rarity: decodeTable(rarity),
       edition: decodeTable(edition),

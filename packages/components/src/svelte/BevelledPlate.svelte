@@ -1,107 +1,107 @@
 <script lang="ts">
+/**
+ * The struck plate — the substrate every other primitive sits on.
+ *
+ * `docs/DESIGN.md`: "Everything is bevelled, nothing is rounded. A light top
+ * edge and a dark bottom edge on every plate, so surfaces read as struck
+ * metal." That sentence is the entire component. Density without clutter
+ * means the separation between one region and the next is carried by a
+ * hairline and a bevel rather than by a shadow, a radius and 24px of padding
+ * — so this plate is the thing that replaces the card, and it has to be
+ * cheap enough to nest without the page turning into a stack of boxes.
+ *
+ * Conventions inherited from `PitchJewel.svelte`, the reference component:
+ *
+ * - **Styles name tokens and nothing else.** Not one literal colour or
+ *   length; `scripts/check-tokens.ts` fails the build otherwise. Every local
+ *   `--plate-*` property below is composed from `var(--of-*)`.
+ * - **Square corners.** `border-radius` is stated rather than omitted, and it
+ *   resolves to `bevel.radius`, which exists only to be zero. Saying it out
+ *   loud is what stops a host stylesheet rounding the substrate of the whole
+ *   interface.
+ * - **Logical properties throughout**, so the bevel's "top" stays the top and
+ *   the inline edges follow writing direction.
+ *
+ * WHY THERE IS NO `label` PROP. The jewel is an image with a meaning, so its
+ * accessible name is a prop with a default. A plate is the opposite: it is
+ * chrome, it carries no information, and `emphasis` is a material property
+ * rather than a state. So it renders a plain `<div>` with no role and no
+ * name — the correct accessible rendering for a generic container is to be
+ * invisible to assistive technology and let the semantics come from the
+ * content inside it. A landmark, heading or list belongs in `children`; a
+ * `role` invented here would be a name nobody asked for on every panel in the
+ * product. Colour is likewise never the sole carrier of meaning here for the
+ * simplest possible reason: nothing about `emphasis` is meaning. It is depth,
+ * and depth is decoration.
+ *
+ * THE ORNAMENT HOOK. Filigree earns exactly three roles and `panel-corner` is
+ * one of them — "never on a control, never on a list, never twice on one
+ * screen". `ornament="panel-corner"` therefore does not draw scrollwork
+ * itself; it opens four correctly-placed, ornament-sized slots
+ * (`.of-panel-corner`) and renders the `corner` snippet into each, passing
+ * which corner it is. The caller composes `FiligreeCorner` in, which keeps
+ * the ornament rationed by the call site that can see the whole screen rather
+ * than by a plate that can only see itself.
+ *
+ * **THE PLATE OWNS PLACEMENT AND SIZE; THE ORNAMENT OWNS THE DRAWING.** That
+ * split is the contract, it is recorded in `FiligreeProps` in
+ * `packages/components/src/index.ts`, and it is the reason the id passed to
+ * the snippet has somewhere to go:
+ *
+ * ```svelte
+ * <BevelledPlate ornament="panel-corner">
+ *   {#snippet corner(id)}
+ *     <FiligreeCorner role="panel-corner" corner={id} />
+ *   {/snippet}
+ * </BevelledPlate>
+ * ```
+ *
+ * `PlateCorner` is imported from the contract layer rather than declared here
+ * so that these four ids and `FiligreeCorner`'s four mirrorings agree by
+ * construction instead of by coincidence.
+ */
+import type { Snippet } from "svelte";
+import type { BevelEdge } from "optfall-theme";
+import type { PlateCorner } from "../index";
+
+interface Props {
+  /** Depth of the strike. `raised` and `sunken` invert each other's bevel. */
+  emphasis?: "flat" | "raised" | "sunken";
+  /** Which edges carry the bevel highlight. Defaults to both. */
+  edges?: readonly BevelEdge[];
+  /** Feature panels may carry filigree at their corners; nothing else may. */
+  ornament?: "panel-corner";
+  /** Plate contents. The semantics of the region live in here, not out here. */
+  children?: Snippet;
   /**
-   * The struck plate — the substrate every other primitive sits on.
-   *
-   * `docs/DESIGN.md`: "Everything is bevelled, nothing is rounded. A light top
-   * edge and a dark bottom edge on every plate, so surfaces read as struck
-   * metal." That sentence is the entire component. Density without clutter
-   * means the separation between one region and the next is carried by a
-   * hairline and a bevel rather than by a shadow, a radius and 24px of padding
-   * — so this plate is the thing that replaces the card, and it has to be
-   * cheap enough to nest without the page turning into a stack of boxes.
-   *
-   * Conventions inherited from `PitchJewel.svelte`, the reference component:
-   *
-   * - **Styles name tokens and nothing else.** Not one literal colour or
-   *   length; `scripts/check-tokens.ts` fails the build otherwise. Every local
-   *   `--plate-*` property below is composed from `var(--of-*)`.
-   * - **Square corners.** `border-radius` is stated rather than omitted, and it
-   *   resolves to `bevel.radius`, which exists only to be zero. Saying it out
-   *   loud is what stops a host stylesheet rounding the substrate of the whole
-   *   interface.
-   * - **Logical properties throughout**, so the bevel's "top" stays the top and
-   *   the inline edges follow writing direction.
-   *
-   * WHY THERE IS NO `label` PROP. The jewel is an image with a meaning, so its
-   * accessible name is a prop with a default. A plate is the opposite: it is
-   * chrome, it carries no information, and `emphasis` is a material property
-   * rather than a state. So it renders a plain `<div>` with no role and no
-   * name — the correct accessible rendering for a generic container is to be
-   * invisible to assistive technology and let the semantics come from the
-   * content inside it. A landmark, heading or list belongs in `children`; a
-   * `role` invented here would be a name nobody asked for on every panel in the
-   * product. Colour is likewise never the sole carrier of meaning here for the
-   * simplest possible reason: nothing about `emphasis` is meaning. It is depth,
-   * and depth is decoration.
-   *
-   * THE ORNAMENT HOOK. Filigree earns exactly three roles and `panel-corner` is
-   * one of them — "never on a control, never on a list, never twice on one
-   * screen". `ornament="panel-corner"` therefore does not draw scrollwork
-   * itself; it opens four correctly-placed, ornament-sized slots
-   * (`.of-panel-corner`) and renders the `corner` snippet into each, passing
-   * which corner it is. The caller composes `FiligreeCorner` in, which keeps
-   * the ornament rationed by the call site that can see the whole screen rather
-   * than by a plate that can only see itself.
-   *
-   * **THE PLATE OWNS PLACEMENT AND SIZE; THE ORNAMENT OWNS THE DRAWING.** That
-   * split is the contract, it is recorded in `FiligreeProps` in
-   * `packages/components/src/index.ts`, and it is the reason the id passed to
-   * the snippet has somewhere to go:
-   *
-   * ```svelte
-   * <BevelledPlate ornament="panel-corner">
-   *   {#snippet corner(id)}
-   *     <FiligreeCorner role="panel-corner" corner={id} />
-   *   {/snippet}
-   * </BevelledPlate>
-   * ```
-   *
-   * `PlateCorner` is imported from the contract layer rather than declared here
-   * so that these four ids and `FiligreeCorner`'s four mirrorings agree by
-   * construction instead of by coincidence.
+   * Rendered once per corner when `ornament="panel-corner"`, receiving the
+   * corner id. Intended for `FiligreeCorner role="panel-corner"`.
    */
-  import type { Snippet } from "svelte";
-  import type { BevelEdge } from "optfall-theme";
-  import type { PlateCorner } from "../index";
+  corner?: Snippet<[PlateCorner]>;
+}
 
-  interface Props {
-    /** Depth of the strike. `raised` and `sunken` invert each other's bevel. */
-    emphasis?: "flat" | "raised" | "sunken";
-    /** Which edges carry the bevel highlight. Defaults to both. */
-    edges?: readonly BevelEdge[];
-    /** Feature panels may carry filigree at their corners; nothing else may. */
-    ornament?: "panel-corner";
-    /** Plate contents. The semantics of the region live in here, not out here. */
-    children?: Snippet;
-    /**
-     * Rendered once per corner when `ornament="panel-corner"`, receiving the
-     * corner id. Intended for `FiligreeCorner role="panel-corner"`.
-     */
-    corner?: Snippet<[PlateCorner]>;
-  }
+const {
+  emphasis = "flat",
+  edges = ["top", "bottom"],
+  ornament,
+  children,
+  corner,
+}: Props = $props();
 
-  const {
-    emphasis = "flat",
-    edges = ["top", "bottom"],
-    ornament,
-    children,
-    corner,
-  }: Props = $props();
+const CORNERS: readonly PlateCorner[] = [
+  "start-start",
+  "start-end",
+  "end-start",
+  "end-end",
+];
 
-  const CORNERS: readonly PlateCorner[] = [
-    "start-start",
-    "start-end",
-    "end-start",
-    "end-end",
-  ];
-
-  /**
-   * An edge left out of `edges` does not lose its border — it falls back to the
-   * hairline rule. A plate with no boundary at all is a div, and the system
-   * separates regions with rules rather than with whitespace.
-   */
-  const bevelsBlockStart = $derived(edges.includes("top"));
-  const bevelsBlockEnd = $derived(edges.includes("bottom"));
+/**
+ * An edge left out of `edges` does not lose its border — it falls back to the
+ * hairline rule. A plate with no boundary at all is a div, and the system
+ * separates regions with rules rather than with whitespace.
+ */
+const bevelsBlockStart = $derived(edges.includes("top"));
+const bevelsBlockEnd = $derived(edges.includes("bottom"));
 </script>
 
 <div

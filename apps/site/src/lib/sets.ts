@@ -99,10 +99,12 @@ export function hrefForSet(id: string): string {
  * The tiebreak is the set id, so the order is total and two builds cannot
  * disagree.
  */
-export const SETS_BY_RELEASE: readonly SetRecord[] = SETS.sets.toSorted((a, b) => {
-  if (a.released === null && b.released === null) return a.id < b.id ? -1 : 1;
-  if (a.released === null) return 1;
-  if (b.released === null) return -1;
-  if (a.released !== b.released) return a.released < b.released ? 1 : -1;
-  return a.id < b.id ? -1 : 1;
-});
+export const SETS_BY_RELEASE: readonly SetRecord[] = SETS.sets.toSorted(
+  (a, b) => {
+    if (a.released === null && b.released === null) return a.id < b.id ? -1 : 1;
+    if (a.released === null) return 1;
+    if (b.released === null) return -1;
+    if (a.released !== b.released) return a.released < b.released ? 1 : -1;
+    return a.id < b.id ? -1 : 1;
+  },
+);

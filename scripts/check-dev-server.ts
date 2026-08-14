@@ -74,7 +74,6 @@
  * fixed order, and firing six requests at a cold Vite dev server concurrently
  * trades that legibility for contention on the thing being measured.
  */
-/* eslint-disable no-await-in-loop */
 
 /*
  * THE SAME LIST THE ROUTE ITSELF USES. A dynamic route runs `getStaticPaths` on
@@ -121,7 +120,9 @@ if (!slug) {
  * holds in a static build and fails in dev's on-demand resolver — which is the
  * asymmetry this whole file exists to catch.
  */
-const printingSlug = CARD_ROUTES.find((route) => route.kind === "printing")?.slug;
+const printingSlug = CARD_ROUTES.find(
+  (route) => route.kind === "printing",
+)?.slug;
 
 if (!printingSlug) {
   console.log(
@@ -191,8 +192,16 @@ void drain(server.stderr);
  * text a human sees, and it makes the failure dump at the bottom readable too.
  */
 function plain(text: string): string {
-  // eslint-disable-next-line no-control-regex
-  return text.replaceAll(/\[[0-9;]*m/g, "");
+  /*
+   * THE CONTROL CHARACTER IS THE POINT. This strips ANSI colour codes out of
+   * the dev server's output so the origin can be parsed from it, and an SGR
+   * sequence begins with a literal ESC. Written `\u001B` rather than pasted
+   * raw so it survives an editor, a copy-paste and a diff viewer intact — the
+   * previous form held the byte itself, which is invisible in every one of
+   * those.
+   */
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI is the function.
+  return text.replaceAll(/\u001B\[[0-9;]*m/g, "");
 }
 
 /**

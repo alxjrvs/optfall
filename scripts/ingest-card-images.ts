@@ -38,7 +38,11 @@ import { join } from "node:path";
 import { getStore } from "@netlify/blobs";
 import sharp from "sharp";
 
-import { FACE_TIERS, faceKeyFor, type FaceTier } from "../apps/site/src/lib/faces";
+import {
+  FACE_TIERS,
+  faceKeyFor,
+  type FaceTier,
+} from "../apps/site/src/lib/faces";
 
 /** The site the store belongs to — `optfall-images`. Public, not a secret. */
 const SITE_ID = "4ffb1b7a-8fb6-4c07-a83e-4641202b50e8";
@@ -177,7 +181,10 @@ async function sha256(bytes: Uint8Array): Promise<string> {
  * invent pixels — a card face that has been enlarged is asserting detail the
  * publisher never printed.
  */
-async function transcode(source: Uint8Array, tier: FaceTier): Promise<Uint8Array> {
+async function transcode(
+  source: Uint8Array,
+  tier: FaceTier,
+): Promise<Uint8Array> {
   const { width, height } = FACE_TIERS[tier];
   const out = await sharp(source)
     .rotate() // Honour EXIF orientation before measuring anything.
@@ -247,12 +254,17 @@ async function main(): Promise<void> {
   if (!force) {
     const listed = await store.list();
     present = new Set(listed.blobs.map((blob) => blob.key));
-    console.log(`store: ${present.size.toLocaleString("en-GB")} keys already present`);
+    console.log(
+      `store: ${present.size.toLocaleString("en-GB")} keys already present`,
+    );
   }
 
   const tiers = Object.keys(FACE_TIERS) as FaceTier[];
   const pending = faces
-    .filter((face) => force || tiers.some((tier) => !present.has(`${tier}/${face.key}`)))
+    .filter(
+      (face) =>
+        force || tiers.some((tier) => !present.has(`${tier}/${face.key}`)),
+    )
     .slice(0, limit === Number.POSITIVE_INFINITY ? undefined : limit);
 
   console.log(
@@ -264,7 +276,8 @@ async function main(): Promise<void> {
     return;
   }
   if (dryRun) {
-    for (const face of pending.slice(0, 10)) console.log(`  ${face.key}  ←  ${face.url}`);
+    for (const face of pending.slice(0, 10))
+      console.log(`  ${face.key}  ←  ${face.url}`);
     if (pending.length > 10) console.log(`  … and ${pending.length - 10} more`);
     return;
   }

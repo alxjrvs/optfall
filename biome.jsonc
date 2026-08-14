@@ -1,0 +1,177 @@
+// Biome is the formatter and the linter. It replaces oxlint, and it adds the
+// half this repo never had: there was no formatter at all.
+//
+// WHY IT CHANGED, AND IT IS NOT THAT BIOME IS NICER. `docs/PLAN.md` Phase 6
+// moves this project off Astro, and the tooling has to go first because of
+// what oxlint cannot see. Measured with an identical duplicate-declaration in
+// three files: oxlint reports it in `.ts`, reports it in `.svelte`, and says
+// NOTHING for `.astro`.
+//
+// That is **5,531 lines across 17 files with no lint coverage at all** — forty
+// per cent of the view layer, unchecked, while `bun run lint` reported success.
+// SU-SRD hit the same thing and recorded the same number for its own Astro
+// migration (2,034 lines across 17 files).
+//
+// THE SETTINGS BELOW ARE THIS REPO'S EXISTING STYLE, MEASURED RATHER THAN
+// IMPORTED. Copying SU-SRD's Biome config verbatim would have reformatted
+// every file in the repository, because that project writes single quotes and
+// omits semicolons. Counted over 17,023 lines of source here: 7,071 double
+// quotes against 97 single, semicolons throughout, and a 90th-percentile line
+// length of 79. So: double, always, 80. The point of adopting a formatter now
+// is to stop future diffs arguing about whitespace, not to open one enormous
+// argument about it today.
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "root": true,
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "apps/**",
+      "packages/**",
+      "scripts/**",
+      // Agent worktrees are full checkouts, each carrying its own copy of this
+      // file with `"root": true`, and Biome 2.5+ hard-errors on a nested root
+      // config. The discovery walk is independent of the includes above, so
+      // without this line `bun run lint` exits 1 from the repo root for anyone
+      // who has ever used the worktree workflow — which is how all of this
+      // project's agent work is done. CI would never have seen it.
+      "!.claude",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.astro",
+      "!**/coverage",
+      // Committed build artefacts. Formatting them would make the checked-in
+      // copy differ from what the generator emits, which is the one thing
+      // their drift checks exist to catch.
+      "!data",
+      "!**/*-snapshots"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      // The three oxlint categories this repo ran at "error" were correctness,
+      // suspicious and perf. Biome's recommended set covers correctness and
+      // suspicious; these are the specific rules that CAUGHT SOMETHING here
+      // during stack E and would otherwise be lost in the swap.
+      "suspicious": {
+        "noExplicitAny": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error"
+      },
+      "complexity": {
+        // OFF, BECAUSE THE BRACKETS ARE CARRYING INFORMATION HERE.
+        //
+        // All 36 findings were `card.legality["ll_restricted_affects_full_cycle"]`
+        // and its siblings: UPSTREAM's field names, snake_case, read off types
+        // that are index signatures (`CardLegality` is a
+        // `Record<string, …>`). This repo states in several places that
+        // upstream's names are "kept verbatim", and the bracket is the visual
+        // mark of a key we did not choose and cannot rename.
+        //
+        // Rewriting them as `.ll_restricted_affects_full_cycle` is 36 edits
+        // that make the code marginally shorter and lose the one signal
+        // distinguishing a foreign key from one of ours.
+        "useLiteralKeys": "off"
+      },
+      "style": {
+        // OFF, AND EVERY REMAINING USE IS GUARDED ONE LINE ABOVE ITSELF.
+        //
+        // The shape is `children.length === 1 ? children[0]! : …`, where the
+        // ternary's own condition is the proof the index exists and TypeScript
+        // cannot narrow through it. Writing a fallback there would mean
+        // inventing a value for a branch that cannot be reached, which is a
+        // worse claim than the assertion.
+        //
+        // This is not a licence for `!` generally — see `card/[...slug].astro`,
+        // which writes the unreachable branch out longhand precisely because a
+        // `!` there "would be a claim about another module's invariant". The
+        // rule cannot tell those two cases apart; a reader can.
+        "noNonNullAssertion": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        // OFF, AND IT WAS ON FOR ABOUT TEN MINUTES.
+        //
+        // It sorts imports alphabetically and hoists them above whatever sits
+        // between them — which in this repo is the file's explanatory docblock.
+        // Applied once, it moved `import CardEntry` above the 35-line header of
+        // `card/[...slug].astro`, leaving the comment that explains the file
+        // stranded underneath an import statement. Several other files the
+        // same way.
+        //
+        // In a codebase where the prose IS most of the value, a formatter that
+        // relocates prose to sort identifiers has the trade backwards. Import
+        // order here is maintained by hand and has never been the problem.
+        "organizeImports": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      // BIOME SEES THE SCRIPT AND NOT THE TEMPLATE, so "unused" is a lie here.
+      //
+      // In a `.astro` or `.svelte` file the bindings declared up top are
+      // consumed by the markup below, which Biome does not parse. Turned on,
+      // these two rules reported 202 findings across those files and every
+      // single one was wrong — `const { example } = Astro.props` flagged as
+      // unused on the line before the template that renders it.
+      //
+      // They stay ERRORS everywhere else, which is where they work. This is a
+      // limitation of the parser, so the exemption is scoped to exactly the two
+      // extensions that have it rather than the rules being weakened globally.
+      // Phase 6 deletes the `.astro` half of this override by deleting the
+      // files; `tsc` and the Svelte compiler still catch genuinely dead code in
+      // the meantime.
+      "includes": ["**/*.astro", "**/*.svelte"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    },
+    {
+      // A TEST TABLE OVER HETEROGENEOUS COMPONENTS IS NOT TYPABLE, and that is
+      // the whole of this exemption. `a11y.test.ts` walks every component in
+      // the library through one `render(component, { props })` call; the
+      // components have different prop types by definition, so the parameter
+      // is either `any` or a fourteen-arm union that has to be edited whenever
+      // a component is added — a union whose only function would be to be
+      // widened. `FiligreeCorner.stories.ts` is the same shape.
+      //
+      // `noExplicitAny` stays an ERROR in source, where it reports nothing.
+      "includes": ["**/*.test.ts", "**/*.stories.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ]
+}

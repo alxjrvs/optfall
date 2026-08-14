@@ -171,7 +171,10 @@ export function buildKeywordVocabulary(
  * separately would produce two citations to the same paragraph.
  */
 export function baseKeyword(keyword: string): string {
-  return keyword.replace(/\s+(\d+|X{1,2})$/i, "").toLowerCase().trim();
+  return keyword
+    .replace(/\s+(\d+|X{1,2})$/i, "")
+    .toLowerCase()
+    .trim();
 }
 
 /**
@@ -317,7 +320,10 @@ export function keywordCoverage(
     direct,
     viaFamily,
     unmatched,
-    percent: baseForms.length === 0 ? 0 : Math.round((matched / baseForms.length) * 100),
+    percent:
+      baseForms.length === 0
+        ? 0
+        : Math.round((matched / baseForms.length) * 100),
   };
 }
 
@@ -370,7 +376,11 @@ export function cardsByRule(
       if (resolved === null || seen.has(resolved.number)) continue;
       seen.add(resolved.number);
 
-      const entry = { label: card.label, href: card.href, keyword: resolved.keyword };
+      const entry = {
+        label: card.label,
+        href: card.href,
+        keyword: resolved.keyword,
+      };
       const existing = index.get(resolved.number);
       if (existing) existing.push(entry);
       else index.set(resolved.number, [entry]);

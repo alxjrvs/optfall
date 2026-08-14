@@ -66,7 +66,9 @@ describe("the package presents one entry point", () => {
    */
   test("format rules are reachable from the package root", () => {
     expect(FORMAT_RULES.blitz.format).toBe("blitz");
-    expect(legality.getFormatRules("silver-age").cardPoolMaximum.value).toBe(55);
+    expect(legality.getFormatRules("silver-age").cardPoolMaximum.value).toBe(
+      55,
+    );
     expect(typeof legality.requireVerified).toBe("function");
   });
 
@@ -124,12 +126,19 @@ describe("isIsoDate", () => {
 
 describe("isLegal", () => {
   test("validates its arguments before deferring", () => {
-    expect(() => isLegal(deck, "draft" as FormatId, "2026-03-14")).toThrow(TypeError);
+    expect(() => isLegal(deck, "draft" as FormatId, "2026-03-14")).toThrow(
+      TypeError,
+    );
     expect(() => isLegal(deck, "blitz", "2026-02-31")).toThrow(TypeError);
-    expect(() => isLegal({ hero: "", cards: [] }, "blitz", "2026-03-14")).toThrow(TypeError);
+    expect(() =>
+      isLegal({ hero: "", cards: [] }, "blitz", "2026-03-14"),
+    ).toThrow(TypeError);
     expect(() =>
       isLegal(
-        { hero: "dorinthea-ironsong", cards: [{ cardId: "dawnblade", quantity: 0 }] },
+        {
+          hero: "dorinthea-ironsong",
+          cards: [{ cardId: "dawnblade", quantity: 0 }],
+        },
         "blitz",
         "2026-03-14",
       ),

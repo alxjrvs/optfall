@@ -469,7 +469,10 @@ const centreOf = (index: number): readonly [number, number] => [
 ];
 
 /** One link's four corners after rotation — the input to the bounding box. */
-function cornersOf(index: number, angle = angleOf(index)): readonly (readonly [number, number])[] {
+function cornersOf(
+  index: number,
+  angle = angleOf(index),
+): readonly (readonly [number, number])[] {
   const [cx, cy] = centreOf(index);
   const a = radians(angle);
   return (
@@ -486,7 +489,10 @@ function cornersOf(index: number, angle = angleOf(index)): readonly (readonly [n
 }
 
 /** The smallest box holding the given links, with a unit of air around it. */
-function boxOf(indices: readonly number[], angle?: number): {
+function boxOf(
+  indices: readonly number[],
+  angle?: number,
+): {
   readonly minX: number;
   readonly minY: number;
   readonly width: number;
@@ -635,7 +641,10 @@ export interface CardImageProps {
  * names and questions, sans for everything else.
  */
 export const VOICE_BY_ROLE: Readonly<
-  Record<"card-name" | "question" | "heading" | "interface" | "label" | "citation", Voice>
+  Record<
+    "card-name" | "question" | "heading" | "interface" | "label" | "citation",
+    Voice
+  >
 > = {
   "card-name": "serif",
   question: "serif",

@@ -51,11 +51,42 @@ const DEFERRED: Readonly<Record<string, string>> = {
 };
 
 const NAMED_COLOURS = [
-  "aqua", "beige", "black", "blue", "brown", "coral", "crimson", "cyan", "gold",
-  "gray", "grey", "green", "indigo", "ivory", "khaki", "lime", "magenta",
-  "maroon", "navy", "olive", "orange", "orchid", "pink", "plum", "purple",
-  "red", "salmon", "sienna", "silver", "tan", "teal", "tomato", "violet",
-  "wheat", "white", "yellow",
+  "aqua",
+  "beige",
+  "black",
+  "blue",
+  "brown",
+  "coral",
+  "crimson",
+  "cyan",
+  "gold",
+  "gray",
+  "grey",
+  "green",
+  "indigo",
+  "ivory",
+  "khaki",
+  "lime",
+  "magenta",
+  "maroon",
+  "navy",
+  "olive",
+  "orange",
+  "orchid",
+  "pink",
+  "plum",
+  "purple",
+  "red",
+  "salmon",
+  "sienna",
+  "silver",
+  "tan",
+  "teal",
+  "tomato",
+  "violet",
+  "wheat",
+  "white",
+  "yellow",
 ];
 
 interface Violation {
@@ -72,7 +103,10 @@ interface Violation {
  * blocks — markup and script may legitimately contain, say, a version string
  * that looks like a length.
  */
-function styleRegions(file: string, source: string): { line: number; text: string }[] {
+function styleRegions(
+  file: string,
+  source: string,
+): { line: number; text: string }[] {
   const lines = source.split("\n");
   if (file.endsWith(".css")) {
     return lines.map((text, index) => ({ line: index + 1, text }));
@@ -111,13 +145,23 @@ function violationsIn(file: string, source: string): Violation[] {
 
   for (const { line, text } of styleRegions(file, source)) {
     const code = text.replace(/\/\*.*?\*\//g, "");
-    if (!code.trim() || code.trim().startsWith("/*") || code.trim().startsWith("*")) continue;
+    if (
+      !code.trim() ||
+      code.trim().startsWith("/*") ||
+      code.trim().startsWith("*")
+    )
+      continue;
 
     if (/#[0-9a-fA-F]{3,8}\b/.test(code)) {
       found.push({ file, line, text: text.trim(), rule: "raw hex colour" });
     }
     if (/\b(?:rgba?|hsla?)\s*\(/.test(code)) {
-      found.push({ file, line, text: text.trim(), rule: "raw colour function" });
+      found.push({
+        file,
+        line,
+        text: text.trim(),
+        rule: "raw colour function",
+      });
     }
     // Lengths that a token could have supplied. `%`, `fr`, `vh`, `vw` and
     // `auto` are deliberately absent: they express layout relationships rather
@@ -125,7 +169,10 @@ function violationsIn(file: string, source: string): Violation[] {
     if (/(?:^|[\s:(,])-?\d*\.?\d+(?:px|rem|em|pt|ch)\b/.test(code)) {
       found.push({ file, line, text: text.trim(), rule: "raw length" });
     }
-    const named = new RegExp(`(?::|\\s)(${NAMED_COLOURS.join("|")})\\s*(?:;|\\)|$)`, "i");
+    const named = new RegExp(
+      `(?::|\\s)(${NAMED_COLOURS.join("|")})\\s*(?:;|\\)|$)`,
+      "i",
+    );
     if (named.test(code)) {
       found.push({ file, line, text: text.trim(), rule: "named CSS colour" });
     }
@@ -143,7 +190,12 @@ function violationsIn(file: string, source: string): Violation[] {
  * here than skipping build output, which the ignore list handles anyway.
  */
 function filesUnder(dir: string): string[] {
-  return [...new Bun.Glob("**/*.{svelte,astro,css}").scanSync({ cwd: dir, dot: false })]
+  return [
+    ...new Bun.Glob("**/*.{svelte,astro,css}").scanSync({
+      cwd: dir,
+      dot: false,
+    }),
+  ]
     .map((path) => `${dir}/${path.replaceAll("\\", "/")}`)
     .filter((path) => !/(?:^|\/)(?:node_modules|dist|\.astro)\//.test(path))
     .toSorted();
@@ -251,7 +303,9 @@ for (const dir of SCANNED) {
     undefinedReferences(file, readFileSync(file, "utf8")),
   );
   for (const v of dangling) {
-    console.log(`::error file=${v.file},line=${v.line}::${v.rule} — resolves to nothing at runtime: ${v.text}`);
+    console.log(
+      `::error file=${v.file},line=${v.line}::${v.rule} — resolves to nothing at runtime: ${v.text}`,
+    );
     failures += 1;
   }
 
@@ -275,7 +329,9 @@ for (const dir of SCANNED) {
     console.log(`::error file=${v.file},line=${v.line}::${v.rule}: ${v.text}`);
     failures += 1;
   }
-  console.log(`${dir}: ${files.length} file(s) scanned, ${violations.length} violation(s).`);
+  console.log(
+    `${dir}: ${files.length} file(s) scanned, ${violations.length} violation(s).`,
+  );
 }
 
 if (failures > 0 || staleDeferrals > 0) {
@@ -286,7 +342,9 @@ if (failures > 0 || staleDeferrals > 0) {
   console.log(
     "or add the value to packages/theme/src/tokens.ts if the system genuinely lacks it.",
   );
-  console.log("See docs/PLAN.md, Phase 1 — 'Tokens are the only source of truth'.");
+  console.log(
+    "See docs/PLAN.md, Phase 1 — 'Tokens are the only source of truth'.",
+  );
   process.exit(1);
 }
 

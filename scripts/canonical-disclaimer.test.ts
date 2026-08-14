@@ -38,13 +38,15 @@ describe("the canonical disclaimer", () => {
   });
 
   test("appears in README.md", () => {
-    expect(normalizeProse(readFileSync("README.md", "utf8"))).toContain(expected);
+    expect(normalizeProse(readFileSync("README.md", "utf8"))).toContain(
+      expected,
+    );
   });
 
   test("appears in docs/COMPLIANCE.md", () => {
-    expect(normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8"))).toContain(
-      expected,
-    );
+    expect(
+      normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8")),
+    ).toContain(expected);
   });
 
   // docs/DATA-TERMS.md carries two copies, and one of them is the text this
@@ -76,12 +78,12 @@ describe("the card-image copyright line", () => {
   const MANDATED_NOTICE = "© Legend Story Studios";
 
   test("is mandated in the same words by both compliance documents", () => {
-    expect(normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8"))).toContain(
-      MANDATED_NOTICE,
-    );
-    expect(normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8"))).toContain(
-      MANDATED_NOTICE,
-    );
+    expect(
+      normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8")),
+    ).toContain(MANDATED_NOTICE);
+    expect(
+      normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8")),
+    ).toContain(MANDATED_NOTICE);
   });
 
   test("is contained in the constant the card component renders", () => {

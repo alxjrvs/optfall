@@ -24,10 +24,14 @@ const corpus = JSON.parse(corpusJson) as RulesCorpus;
 const index = buildIndex(corpus);
 
 const sections = corpus.sections.length.toLocaleString("en-GB");
-const published = new Date(`${corpus.publishedDateIso}T00:00:00Z`).toLocaleDateString(
-  "en-GB",
-  { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" },
-);
+const published = new Date(
+  `${corpus.publishedDateIso}T00:00:00Z`,
+).toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
 ---
 
 <BaseLayout

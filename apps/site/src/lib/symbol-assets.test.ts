@@ -12,7 +12,12 @@
 import { describe, expect, test } from "bun:test";
 
 import MANIFEST from "../../../../data/symbols/symbols.json";
-import { INFERRED, SYMBOLS, assetForSymbol, symbolForKind } from "./card-symbols";
+import {
+  INFERRED,
+  SYMBOLS,
+  assetForSymbol,
+  symbolForKind,
+} from "./card-symbols";
 
 /* The public ROOT: manifest paths are relative to it (`symbols/icon_p.png`),
    which is the key `check-asset-provenance.ts` matches on. */
@@ -20,7 +25,9 @@ const PUBLIC_DIR = new URL("../../public/", import.meta.url);
 
 describe("the ingested game symbols", () => {
   test("cover every symbol the rules table names, except the inferred one", () => {
-    const published = SYMBOLS.filter((symbol) => !INFERRED.includes(symbol.kind));
+    const published = SYMBOLS.filter(
+      (symbol) => !INFERRED.includes(symbol.kind),
+    );
 
     expect(published.length).toBe(MANIFEST.symbols.length);
     for (const symbol of published) {
@@ -39,7 +46,9 @@ describe("the ingested game symbols", () => {
 
   test("each cite the rule that defines them, matching the rules table", () => {
     for (const entry of MANIFEST.symbols) {
-      const symbol = SYMBOLS.find((candidate) => candidate.token === entry.token);
+      const symbol = SYMBOLS.find(
+        (candidate) => candidate.token === entry.token,
+      );
       expect(symbol, `no table entry for ${entry.token}`).toBeDefined();
       expect(symbol?.rule).toBe(entry.rule);
     }
@@ -50,7 +59,9 @@ describe("the ingested game symbols", () => {
       MANIFEST.symbols.map(async (entry) => {
         const file = Bun.file(new URL(entry.file, PUBLIC_DIR));
         const exists = await file.exists();
-        const bytes = exists ? new Uint8Array(await file.arrayBuffer()) : new Uint8Array();
+        const bytes = exists
+          ? new Uint8Array(await file.arrayBuffer())
+          : new Uint8Array();
         return { entry, exists, bytes };
       }),
     );
@@ -58,7 +69,9 @@ describe("the ingested game symbols", () => {
     for (const { entry, exists, bytes } of read) {
       expect(exists, `${entry.file} is missing`).toBe(true);
       expect(bytes.length).toBe(entry.bytes);
-      expect(new Bun.CryptoHasher("sha256").update(bytes).digest("hex")).toBe(entry.sha256);
+      expect(new Bun.CryptoHasher("sha256").update(bytes).digest("hex")).toBe(
+        entry.sha256,
+      );
     }
   });
 

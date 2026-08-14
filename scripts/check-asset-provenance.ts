@@ -55,8 +55,16 @@ const REPO_ROOT = new URL("../", import.meta.url);
  * from the table instead of from this script's internals.
  */
 const GOVERNED = [
-  { dir: "apps/site/public", manifest: "data/symbols/symbols.json", key: "symbols" },
-  { dir: "apps/images/public", manifest: "data/images/assets.json", key: "assets" },
+  {
+    dir: "apps/site/public",
+    manifest: "data/symbols/symbols.json",
+    key: "symbols",
+  },
+  {
+    dir: "apps/images/public",
+    manifest: "data/images/assets.json",
+    key: "assets",
+  },
 ] as const;
 
 /**
@@ -64,7 +72,8 @@ const GOVERNED = [
  * whatever its encoding, and "it is technically text" is exactly the argument
  * that would let a logo in.
  */
-const BINARY = /\.(png|jpg|jpeg|webp|avif|gif|svg|ico|woff2?|ttf|otf|eot|mp4|webm)$/i;
+const BINARY =
+  /\.(png|jpg|jpeg|webp|avif|gif|svg|ico|woff2?|ttf|otf|eot|mp4|webm)$/i;
 
 interface ManifestEntry {
   readonly file: string;
@@ -116,7 +125,9 @@ async function auditFile(
   const bytes = new Uint8Array(await Bun.file(path).arrayBuffer());
   const digest = new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
   if (digest !== entry.sha256) {
-    return [`::error file=${path}::bytes do not match the recorded SHA-256 in ${manifest}`];
+    return [
+      `::error file=${path}::bytes do not match the recorded SHA-256 in ${manifest}`,
+    ];
   }
 
   /*
@@ -159,7 +170,9 @@ async function auditFile(
     const script = entry.url.slice("first-party:".length).trim();
 
     if (script === "") {
-      return [`::error file=${path}::\`first-party:\` origin does not name a script`];
+      return [
+        `::error file=${path}::\`first-party:\` origin does not name a script`,
+      ];
     }
     /*
       RESOLVE FIRST, THEN ASSERT ON THE RESULT.
@@ -204,19 +217,28 @@ async function auditFile(
     try {
       resolved = new URL(script, REPO_ROOT);
     } catch {
-      return [`::error file=${path}::first-party origin is not a usable path: ${script}`];
+      return [
+        `::error file=${path}::first-party origin is not a usable path: ${script}`,
+      ];
     }
 
-    if (resolved.protocol !== "file:" || !resolved.href.startsWith(REPO_ROOT.href)) {
+    if (
+      resolved.protocol !== "file:" ||
+      !resolved.href.startsWith(REPO_ROOT.href)
+    ) {
       return [
         `::error file=${path}::first-party origin resolves outside the repository: ${script}`,
       ];
     }
     if (!/\.(ts|js|mjs)$/.test(resolved.pathname)) {
-      return [`::error file=${path}::first-party origin must name a script, got ${script}`];
+      return [
+        `::error file=${path}::first-party origin must name a script, got ${script}`,
+      ];
     }
     if (!(await Bun.file(resolved).exists())) {
-      return [`::error file=${path}::first-party origin names ${script}, which does not exist`];
+      return [
+        `::error file=${path}::first-party origin names ${script}, which does not exist`,
+      ];
     }
 
     /*
@@ -268,7 +290,9 @@ export async function auditDir(dir: string, manifest: string, key: string) {
   const byFile = new Map(entries.map((entry) => [entry.file, entry]));
 
   const problems = (
-    await Promise.all(files.map((path) => auditFile(path, dir, manifest, byFile)))
+    await Promise.all(
+      files.map((path) => auditFile(path, dir, manifest, byFile)),
+    )
   ).flat();
 
   /* A manifest entry whose file has been deleted is stale, and a stale record is
@@ -279,7 +303,9 @@ export async function auditDir(dir: string, manifest: string, key: string) {
   const onDisk = new Set(files.map((path) => path.slice(dir.length + 1)));
   for (const entry of entries) {
     if (onDisk.has(entry.file)) continue;
-    problems.push(`::error file=${manifest}::entry for ${entry.file}, which is not on disk`);
+    problems.push(
+      `::error file=${manifest}::entry for ${entry.file}, which is not on disk`,
+    );
   }
 
   return {

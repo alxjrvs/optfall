@@ -24,9 +24,12 @@ export function getStaticPaths() {
   */
   const bySet = new Map<string, typeof CARD_PAGES>();
   for (const page of CARD_PAGES) {
-    for (const id of new Set(page.card.printings.map((printing) => printing.set_id))) {
+    for (const id of new Set(
+      page.card.printings.map((printing) => printing.set_id),
+    )) {
       const existing = bySet.get(id);
-      if (existing) (existing as unknown as (typeof CARD_PAGES)[number][]).push(page);
+      if (existing)
+        (existing as unknown as (typeof CARD_PAGES)[number][]).push(page);
       else bySet.set(id, [page] as unknown as typeof CARD_PAGES);
     }
   }
