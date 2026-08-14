@@ -80,24 +80,30 @@ fraction of. Item 5 we do correctly.
 
 ## 3. Side by side
 
+*Audited against the code on 2026-08-14. Ten rows moved that day — most of this
+table had been written before the search grammar, the set pages, `/random`, the
+typeahead and the card faces landed, and a stale capability table is worse than
+no table: it is a list of things we believe about ourselves. Re-audit it when a
+row's subject changes, not when someone notices.*
+
 | Capability | Scryfall | Optfall today | |
 |---|---|---|---|
-| Card search on the homepage | yes | `/` is rules search | **gap** |
-| Card images | six variants | none rendered | **gap** |
-| Image grid results | default view | text rows only | **gap** |
-| Display modes | `display:grid/checklist/text/full` | one fixed list | **gap** |
+| Card search on the homepage | yes | typeahead on `/` | **have** |
+| Card images | six variants | two tiers, rendered | **narrowed** |
+| Image grid results | default view | grid is the default | **have** |
+| Display modes | `display:grid/checklist/text/full` | `display=grid/list` | **partial** |
 | Sort control | `order:` × 15, `dir:` | corpus order only | **gap** |
 | Printing-level URLs | `/card/<set>/<num>/<name>` | name-level only | **gap** |
 | Duplicate collapsing | `unique:cards/prints/art` | n/a | **gap** |
-| Negation, `OR`, parentheses | yes | none — flat AND only | **gap** |
-| Numeric comparison | `cmc>=3`, `pow>tou` | refused by design | **partial** |
-| Exact name | `!"Lightning Bolt"` | ranked tier, no operator | **partial** |
+| Negation, `OR`, parentheses | yes | all three, documented at `/syntax` | **have** |
+| Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, numeric values only | **partial** |
+| Exact name | `!"Lightning Bolt"` | `!"Head Jab"`, quoted or bare | **have** |
 | Artist / flavour search | `a:`, `ft:` | declared pending; data present | **gap** |
-| Set index and set pages | `/sets` | none | **gap** |
+| Set index and set pages | `/sets` | `/sets` and a page per set | **have** |
 | Rulings on the card | official rulings, dated | none | **gap** |
-| Random card | `/random` | none | **gap** |
-| Name autocomplete | yes | none | **declined** — §5.2 |
-| `/` focuses search | yes | yes (rules search) | **have** |
+| Random card | `/random` | `/random` | **have** |
+| Name autocomplete | yes | typeahead on `/` | **have** |
+| `/` focuses search | yes | yes | **have** |
 | Related cards | tokens, meld, combo | `references` / `referencedBy` | **have, better** |
 | Legality table | ~12 formats, one state each | 6 formats, **multi-state, with the upstream evidence printed** | **have, better** |
 | Every view is a URL | yes | yes | **have** |
@@ -361,7 +367,7 @@ makes printings first-class is the pass that indexes them.
 a short row of explainer links, and the results.** Nothing else above the fold,
 and no fourth element earning its way in later.
 
-**Search is submit-driven, not live.** The field does not re-rank on every
+**Search is submit-driven, not live.** The RESULTS do not re-rank on every
 keystroke and the page is not a single-page app. You type, you submit, the
 address becomes `/?q=…`, and the results render below the hero. This is how
 Scryfall behaves, and it is the better model here for reasons beyond imitation:
@@ -401,10 +407,16 @@ and on load from `?q=`, rather than on input.
 - **`/sets` and `/sets/<code>`** — the browsable spine, typographic only, no set
   symbols (compliance: product set logos count as FAB logos).
 
-**Dropped from this plan:** name autocomplete. It was on the list as
-Scryfall parity, and a submit-driven field does not need it — it is live search
-wearing a different hat, and the empty-state browse already covers "I do not
-know what to type."
+**Dropped from this plan, then built anyway:** name autocomplete. The argument
+here was that it is live search wearing a different hat, and the empty-state
+browse already covers "I do not know what to type."
+
+`CardTypeahead` shipped on the front door regardless, and the distinction that
+makes it defensible is one this paragraph did not draw: **every suggestion is a
+destination, not a result.** It completes a NAME and takes you to that card's
+page; it does not re-rank results as you type, so the objection above — that
+autocomplete smuggles live search in — does not apply to what was built. The
+capability table in §3 records it as shipped.
 
 ### 5.3 Second and third corpora — cheap, high yield
 

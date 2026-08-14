@@ -46,24 +46,48 @@ const CANONICAL =
     So a dataset from Optfall carries two things at once: an open licence over the structure, and LSS's conditions over the game content inside it. Redistributing one without the other is not something this project can authorise.
   </p>
 
-  <h2>The copyright line, and why no card faces are shown</h2>
+  <h2>The copyright line, and how it is guaranteed</h2>
 
   <!--
-    THIS SECTION USED TO DESCRIBE A COMPONENT THAT DOES NOT EXIST. It said the
-    copyright notice "is rendered by the component itself rather than passed
-    in, so it cannot be omitted" — which is the *contract*
-    (`CARD_IMAGE_COPYRIGHT` and `CardImageProps` in
-    `packages/components/src/index.ts`), not an implementation: there is no
-    `CardImage.svelte`. A compliance page asserting a guarantee that is only
-    prose is the exact failure the rest of this site is built to avoid, so it
-    now says what is true, and the card pages render no faces at all.
+    THIS SECTION HAS NOW BEEN WRONG IN BOTH DIRECTIONS, which is worth recording
+    because the failure mode is identical each time: a compliance page whose
+    claim is prose rather than a description of the code.
+
+    First it described a component that did not exist — it said the notice "is
+    rendered by the component itself", which was the CONTRACT
+    (`CARD_IMAGE_COPYRIGHT` and `CardImageProps`) and not an implementation.
+    That was corrected to "Optfall shows no card faces today", which was true
+    when written.
+
+    It stopped being true when `CardFace.svelte` and `CardFaceGroup.svelte`
+    landed and the card pages began rendering artwork. So this page went on
+    telling anyone checking our compliance position that we show no card images,
+    on a site that shows a hero face and a printings rail on every card page —
+    up to 22 images on one of them — eight on the front door, and a thumbnail
+    per result in the search grid. A page whose whole job is to be accurate
+    about exactly this.
+
+    The lesson both times: state what the code does and name the file, so the
+    claim is checkable rather than remembered.
 
     Inline elements stay on the same source line as the text around them: the
     build compresses this HTML and drops the whitespace at a line break falling
     immediately before an inline tag.
   -->
   <p>
-    Wherever card images are shown, the notice <code>© Legend Story Studios</code> must accompany them. <strong>Optfall shows no card faces today.</strong> The component contract that would carry that notice exists — it is deliberately not a prop, so a caller cannot omit or empty it — but the component itself is not built, and rather than write a bare image tag that satisfies neither the contract nor the condition, the card pages cite each printing by its collector number, set and artist and show no artwork.
+    Wherever card images are shown, the notice <code>© Legend Story Studios</code> must accompany them. <strong>Optfall shows card faces, and the notice is emitted by the component that renders them rather than by the page.</strong> <code>CardFace</code> writes the line itself on every render — there is deliberately no <code>copyright</code> prop, so a caller cannot omit it, empty it or reword it. Where several faces are shown together on one screen, <code>CardFaceGroup</code> carries one notice for the group and suppresses the per-face line, so one line accompanies the images rather than repeating beneath each of them.
+  </p>
+
+  <p>
+    That is the difference between a contract and a convention: a requirement a caller can satisfy incorrectly is a convention. <strong>No arrangement of these components renders a card image with no notice at all</strong> — that part is structural, and it is the claim this page is making. Two things are <em>not</em> mechanically checked, and both are judgements a page can get wrong.
+  </p>
+
+  <p>
+    The first is whether a group is a reasonable one. Grouping asserts that the faces are seen together, and a caller who grouped faces a reader would have to scroll between would produce a notice that accompanies fewer images than it covers. The rule and its reasoning are written where the component is defined — and one grouping on this site, the long printings rail on a card page, currently sits on the wrong side of it. It is recorded as open rather than described as fine.
+  </p>
+
+  <p>
+    The second is that a page's own layout can hide a notice the component correctly emitted — and this has happened here. The card fan on the front door was first built with its crop on the outer element, which cut the hoisted line in half; it was caught by looking at the page. Nothing in the markup was wrong, which is the point: the guarantee is that the notice is <em>rendered</em>, and a stylesheet can still put it somewhere nobody reads it.
   </p>
 
   <h2>The card data</h2>
