@@ -274,19 +274,28 @@
   onkeydown={onKeydown}
 >
   <!--
-    THE PAGE'S ONE HINT LINE. `docs/DESIGN.md` Screen 1: it pairs an operator
-    people already know from Card Vault with ours, so the extension is
-    discovered where fluency already exists. The inherited half is stated first
-    and the limits are attached rather than left to be found by typing — a hint
-    advertising something the build cannot answer is the lie "degrade visibly"
-    prohibits.
+    THE PAGE'S ONE HINT LINE, AND IT IS NOW THREE EXAMPLES AND A LINK.
+
+    `docs/DESIGN.md` Screen 1 asks it to pair an operator people already know
+    from Card Vault with one of ours, so the extension is discovered where
+    fluency already exists. Three examples still do that — the first is Card
+    Vault's, the second is ours, the third is the one nobody guesses.
+
+    What it stopped doing is teaching the grammar in a paragraph. The old line
+    also carried the dated-legality limit and the `/` shortcut, which made it
+    the longest single block of preamble above the results and still left every
+    other operator undocumented. Those facts did not become less true; they
+    moved to `/syntax`, which can hold all of them, and the limit in particular
+    is stated there in its own section rather than as a clause. A hint is a
+    doorway, not a manual — and there was no manual to point at until now, which
+    is exactly why this line had grown into one.
 
     Inline elements stay on the same source line as the text around them: the
     build compresses this HTML and drops the whitespace at a line break falling
     immediately before an inline tag, welding words together in the output.
   -->
   {#snippet hint()}
-    <code>pitch:3 class:guardian</code> is Card Vault's own syntax · <code>banned:cc</code> and <code>legal:blitz</code> are ours · <code>text:dominate</code> searches printed text · <kbd>/</kbd> returns here. Legality here is today's; <code>legal:cc@2026-03-14</code> is not answerable yet and says so rather than guessing.
+    <code>pitch:3 class:guardian</code> · <code>banned:cc</code> · <code>text:dominate</code> — <a href="/syntax">all operators</a>
   {/snippet}
 </SearchField>
 

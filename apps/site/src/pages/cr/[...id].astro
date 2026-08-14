@@ -28,8 +28,22 @@
  * links the whole ancestor chain, the children are listed with their text
  * rather than merely their numbers, and previous/next let the corpus be read in
  * document order. `docs/DESIGN.md` calls this density without clutter, and the
- * mechanism it prescribes is hairline rules rather than cards — which is
- * `OrnamentalRule`, used plain and used repeatedly.
+ * mechanism it prescribes is hairline rules rather than cards.
+ *
+ * **THE HAIRLINES ARE GONE FROM THIS PAGE, AND THAT IS NOT A RETREAT FROM
+ * THAT.** This page carried four `<OrnamentalRule>`s and every one of them sat
+ * directly above a heading saying the same word — a rule labelled "Contents"
+ * above `<h2>Contents</h2>`, "Source" above `<h2>Source</h2>`. A labelled
+ * separator announcing what the next heading is about to announce is not
+ * density; it is the same break marked twice, once in a `role="separator"` with
+ * an accessible name and once in the heading, so a screen reader read it aloud
+ * both times. On a page that renders 1,278 times it was also about 96px of
+ * first screen spent restating the structure rather than showing the rule.
+ *
+ * The headings do the work now — A2 gave them the space above to do it with.
+ * The ornament is still the right mechanism where a break has no heading to
+ * carry it, which is why `RulesSearch` keeps one between the field and the
+ * results: there, the rule marks something nothing else marks.
  *
  * **NO `StatePill` ON THIS PAGE, DELIBERATELY.** The pill is for something that
  * *carries state* — `Legal`, `Banned`, `Not in format`, `Unverified` — and a
@@ -53,7 +67,7 @@
  * are layout and voice assignment only, and every value in them is a
  * `var(--of-*)`; `bun run check:tokens` fails the build otherwise.
  */
-import { BevelledPlate, Citation, OrnamentalRule } from "optfall-components/svelte";
+import { BevelledPlate, Citation } from "optfall-components/svelte";
 
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import cardsJson from "../../../../../data/rules/cr-2.14.0.json";
@@ -216,7 +230,6 @@ const eyebrow =
   {
     governedCards.length > 0 && (
       <>
-        <OrnamentalRule label="Cards" />
         <section class="apparatus" aria-labelledby="governs">
           <h2 class="apparatus-heading" id="governs">Cards this rule governs</h2>
           <p class="scope">
@@ -244,7 +257,6 @@ const eyebrow =
   {
     children.length > 0 && (
       <>
-        <OrnamentalRule label="Contents" />
         <section class="apparatus" aria-labelledby="contents">
           <h2 class="apparatus-heading" id="contents">Contents</h2>
           <ul class="entries">
@@ -260,7 +272,6 @@ const eyebrow =
     )
   }
 
-  <OrnamentalRule label="Source" />
 
   <section class="apparatus" aria-labelledby="source">
     <h2 class="apparatus-heading" id="source">Source</h2>
@@ -285,7 +296,6 @@ const eyebrow =
     <p class="verify">Hash the PDF at that URL yourself and compare. The text above is parsed from those exact bytes by deterministic code — no language model reads, rewrites or summarises any part of this corpus.</p>
   </section>
 
-  <OrnamentalRule label="Document order" />
 
   <nav class="sequence" aria-label="Document order">
     {/*
