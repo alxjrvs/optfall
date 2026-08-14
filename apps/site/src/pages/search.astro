@@ -22,7 +22,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import NoScriptNotice from "../components/NoScriptNotice.astro";
 import CardSearch from "../components/CardSearch.svelte";
 import { buildCardIndex } from "../lib/card-search";
-import { CARD_PAGES, CORPUS, LAST_CONFIRMED, NAME_PAGES } from "../lib/cards";
+import { CARD_PAGES, CARD_ROUTES, CORPUS, LAST_CONFIRMED } from "../lib/cards";
 import rulesJson from "../../../../data/rules/cr-2.14.0.json";
 import { buildKeywordVocabulary, keywordCoverage } from "../lib/keywords";
 import type { RulesCorpus } from "../lib/search";
@@ -40,7 +40,20 @@ const index = buildCardIndex(CARD_PAGES, {
 
 const cards = CORPUS.counts.cards.toLocaleString("en-GB");
 const printings = CORPUS.counts.printings.toLocaleString("en-GB");
-const permalinks = (CARD_PAGES.length + NAME_PAGES.length).toLocaleString("en-GB");
+/*
+ * EVERY ROUTE, NOT EVERY CARD ROUTE — because the sentence this feeds names
+ * the printings in the same breath.
+ *
+ * It read `CARD_PAGES + NAME_PAGES`, which was right while a printing had no
+ * address of its own. It stopped being right the moment 6,437 of them got one:
+ * "16,502 printings at 5,841 permanent URLs" invites exactly the conclusion
+ * that the printings are not addressable, which is now false and is a claim
+ * this page makes about itself.
+ *
+ * `CARD_ROUTES` is the list the route actually emits, so the number cannot
+ * drift from the site again.
+ */
+const permalinks = CARD_ROUTES.length.toLocaleString("en-GB");
 const upstream = `https://github.com/${CORPUS.source.repository}`;
 
 /**
