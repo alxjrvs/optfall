@@ -571,6 +571,120 @@ observable.
 
 ---
 
+## Phase 6 — Off Astro
+
+**The goal, in the words it was asked in: Optfall should be an installable PWA
+running TypeScript 7, built on the stack SU-SRD already uses.** This phase is
+last because nothing above it depends on it and everything above it survives it.
+
+### The premise had a factual error in it, and finding it changed the target
+
+The ask was to steal "a tanstack stack that is ssg and static with offline"
+from SU-SRD. Read directly, that repository does not contain one. It contains
+**two frontends with two stacks**, and the properties are split across them:
+
+| App | Stack | Static? | Offline? | TanStack? |
+|---|---|---|---|---|
+| `apps/srd` | React 19 + a **hand-written SSG**, Vite for the client bundle only, Workbox `generateSW` | ~1,039 prerendered pages | yes | **no — none at all** |
+| `apps/itun` | **TanStack Router + Query**, Vite SPA, `vite-plugin-pwa` | no — pure SPA, `index.html` fallback | yes | yes |
+
+TanStack Start is in neither. Neither app prerenders through TanStack.
+
+So "the TanStack one" and "the SSG, static, offline one" are different
+programs, and only one of them can be copied here.
+
+**IT IS `apps/srd`, AND THE DECIDING ARGUMENT IS OPTFALL'S OWN THESIS.** "Every
+view is a URL" is the first line of Phase 2 and the reason 13,675 pages are
+emitted at build time. A SPA cannot serve those: a pasted card link has to
+arrive as HTML carrying that card's `<title>`, description and canonical,
+because the thing reading it is a chat client's unfurler that runs no
+JavaScript. Adopting the SPA half would trade the product's central claim for a
+router.
+
+There is a second argument, and it is the stronger one: **`apps/srd` IS this
+migration, already performed once, by the same author. It was an Astro site.**
+The target is not a design; it is a working precedent with 1,039 pages on it.
+
+If TanStack Router is wanted later it belongs *inside* a client island — the
+card search is the only surface with enough state to justify one — and that is
+a decision this phase deliberately does not make.
+
+### The receipt this phase exists for
+
+Recorded under "Rules that hold": `astro check` **cannot run under TypeScript
+7**, and `svelte-check` needs a 6.x install alongside. "Optfall runs TypeScript
+7" and "Optfall is an Astro site" are mutually exclusive as measured. SU-SRD is
+the existence proof of the other side — `typescript: 7.0.2`, checked with plain
+`tsc --noEmit`, with a `typescript-classic: npm:typescript@6.0.3` alias kept
+only for two tools that call the TS 6 compiler API.
+
+### What survives, which is most of it
+
+The valuable half of this codebase does not know Astro exists:
+
+- **`apps/site/src/lib/*.ts` — 6,064 lines.** The search engine, the query
+  grammar, the corpus shaping, the legality derivation, the face keys, the
+  keyword↔CR join. Framework-free, and it moves by changing an import path.
+- **`packages/theme`, `packages/rules`, `packages/legality`** — untouched.
+- **The tests.** 551 of them, almost all against the libraries.
+- **Every URL.** This is a rendering change, not a routing change.
+
+What is rewritten is the view layer: **17 `.astro` files (5,531 lines) and 33
+Svelte components (2,339 in the app, the rest in `packages/components`)**.
+
+### Why the port is mechanical rather than a redesign
+
+`apps/srd`'s SSG kept **Astro's own page contract** on purpose:
+
+```ts
+export type PageModule<Params, Props> = {
+  pattern: string                                  // '/card/[slug]'
+  getStaticPaths?: () => StaticPath<Params, Props>[]
+  page: (ctx: RouteContext<Params, Props>) => PageResult
+}
+```
+
+That is `getStaticPaths` with a different spelling, so each Astro page maps to
+one page module of the same shape, and `CARD_ROUTES` — which already returns
+`{ params, props }` — feeds it unchanged. The renderer is Bun importing TSX
+directly; there is no SSR Vite build at all.
+
+### The order, and what each step is worth on its own
+
+Each is a stack layer that leaves the site shippable.
+
+| # | Step | Standing value if the phase stops here |
+|---|---|---|
+| **1** | Biome replaces the current lint/format toolchain | One formatter, and it is what SU-SRD uses |
+| **2** | The SSG harness — `ssg/{build,routes,render,document,outputPath}.ts`, rendering ONE trivial page beside Astro | A second renderer proven against the real build |
+| **3** | Port `packages/components` Svelte → React, keeping every token and the `CardFaceGroup` compliance contract | The library stops being framework-bound |
+| **4** | Port the pages, cheapest first: `/data-terms`, `/syntax`, `/sets`, `/cr`, `/card`, `/search`, `/` | Each page is one reviewable PR |
+| **5** | Delete Astro; `tsc --noEmit` replaces `astro check`; **TypeScript 7 lands here** | The receipt above is paid |
+| **6** | Workbox `generateSW` + a web app manifest — installable, offline | The PWA the ask named |
+
+### Two decisions taken up front, because they are cheap now and expensive later
+
+**Precache the shell, never the pages.** `apps/srd` globs
+`**/*.{js,css,woff2,svg}` and deliberately excludes HTML and images, with
+`navigateFallback: null` — an unvisited page should 404 offline rather than
+resolve to a stale shell that lies. Optfall has **13,675 pages**, so this is not
+a preference here, it is the only option: visited pages get
+`StaleWhileRevalidate`, and nothing else is promised.
+
+**Card images are never precached.** `docs/COMPLIANCE.md` §5 — the licence is
+revocable, and a service worker that has already stored the art is a cache we
+cannot recall. Faces stay network-fetched, and losing them offline costs a
+rendering layer exactly as "Survive revocation" says it should.
+
+### Exit criteria
+
+`bun run typecheck` passes on TypeScript 7 with no Astro in the dependency
+tree; all 13,675 URLs still resolve with their titles and canonicals intact;
+the site installs to a home screen and a card page visited once opens again
+with the network off.
+
+---
+
 ## Rules that hold across every phase
 
 Three Flesh and Blood tools have now died or decayed, none of them from lack of
