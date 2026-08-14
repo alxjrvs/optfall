@@ -42,34 +42,46 @@ const names = buildNameIndex(CARD_PAGES);
 const cards = CORPUS.counts.cards.toLocaleString("en-GB");
 
 /**
- * THE EIGHT ARE NOT A RANDOM SELECTION.
+ * THE SIX ARE NOT A RANDOM SELECTION. THEY ARE THE JOKE.
  *
- * Homage to Ancestors, Preserve Tradition, Path Well Traveled, Retrace the
- * Past, Pilfer the Tomb, Semblance, Mask of Many Faces — every one of them is
- * about memory, precedent, or copying something that came before. That is what
- * a rules reference IS, and the door is the one place the project gets to say
- * what it thinks it is doing without writing a sentence about it.
+ * Optfall is a tonal copy of Scryfall and does not pretend otherwise —
+ * `docs/SCRYFALL-GAP.md` is a document about taking that site's address
+ * grammar, its query syntax, its layout and its name. These six card names are
+ * that admission, said in the game's own words on the one surface where the
+ * project gets to have a voice:
  *
- * THEY ARE NAMED, NOT SAMPLED, and that is deliberate. A random eight would
- * change on every build, which makes the front page a thing that cannot be
- * reviewed — and would eventually deal a hand of eight equipment cards, or
- * eight of the same colour, or something with art nobody chose to put on the
- * front of the site.
+ *   Homage to Ancestors   — an homage, stated outright
+ *   Preserve Tradition    — keeping the form we were handed
+ *   Path Well Traveled    — walking a route somebody else laid
+ *   Retrace the Past      — going back over it line by line
+ *   Light Fingers         — taking what is not ours
+ *   Semblance             — and looking like the thing we took it from
+ *
+ * The door is the one place a reference tool gets to say what it thinks it is
+ * doing without writing a sentence about it, and this is cheaper and truer
+ * than a paragraph claiming originality nobody would believe.
+ *
+ * SIX RATHER THAN EIGHT because the row has to keep every card's NAME legible —
+ * each overlaps its neighbour, so the count and the band width together decide
+ * how much of each name survives, and eight left the last two captioned by
+ * fragments. Which means the joke has a hard constraint: a seventh card cannot
+ * be added without taking one out.
+ *
+ * THEY ARE NAMED, NOT SAMPLED. A random six would change on every build, which
+ * makes the front page a thing that cannot be reviewed — and would lose the
+ * joke entirely the first time it dealt six equipment cards.
  *
  * A NAME THAT STOPS RESOLVING FAILS THE BUILD rather than dropping a card.
- * Seven cards in a fan built for eight is a gap, and a gap that appears at the
+ * Five cards in a row built for six is a gap, and a gap that appears at the
  * next corpus sync with nothing to explain it is worse than a red build now.
- * The upstream corpus is versioned and pinned, so this cannot break unnoticed.
  */
 const FAN_NAMES = [
   "Homage to Ancestors",
   "Preserve Tradition",
   "Path Well Traveled",
   "Retrace the Past",
-  "Pilfer the Tomb",
   "Light Fingers",
   "Semblance",
-  "Mask of Many Faces",
 ] as const;
 
 const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
@@ -77,7 +89,7 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
 
   if (matches.length !== 1) {
     throw new Error(
-      `index.astro: "${name}" resolves to ${matches.length} card pages, not 1. The front-door fan names its eight cards so the page is reviewable; fix the name or replace it rather than letting the fan render short.`,
+      `index.astro: "${name}" resolves to ${matches.length} card pages, not 1. The front-door row names its six cards so the page is reviewable; fix the name or replace it rather than letting the row render short.`,
     );
   }
 
@@ -92,7 +104,7 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
   */
   if (page.face === null || page.face.key === null) {
     throw new Error(
-      `index.astro: "${name}" has no face in the corpus, so the fan would render a placeholder on the front page. Replace it with a card that has art.`,
+      `index.astro: "${name}" has no face in the corpus, so the row would render a placeholder on the front page. Replace it with a card that has art.`,
     );
   }
 
@@ -164,8 +176,8 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
   <!--
     BELOW THE FIELD AND BELOW THE LINKS, in the empty half of the screen the
     door already had. It is rendered without a `client:` directive on purpose:
-    Astro builds it to markup on the build machine, so the fan costs the page
-    eight images and no JavaScript at all.
+    Astro builds it to markup on the build machine, so the row costs the page
+    six images and no JavaScript at all.
   -->
   <CardFan cards={fan} />
 
