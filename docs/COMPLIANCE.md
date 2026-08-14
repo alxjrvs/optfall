@@ -373,13 +373,14 @@ tempting — sixty separate notices look like a cost — and closing it needs a
 rendered-DOM check. The check covers server-rendered faces, which is where the
 incident happened, and not every face the site can show.
 
-**And one shipped grouping is on the wrong side of our own rule.**
-`PrintingPicker` groups the whole printings rail under one hoisted notice: up to
-22 tiles in a wrapping four-up grid, with the notice last. `CardFaceGroup`'s
-rule is that faces may share a notice when a reader sees the notice with them,
-and explicitly excludes the scrolling case — which a six-row rail is. This
-predates the rule being written down that precisely; it is named here rather
-than left for the next audit to find.
+**The one grouping that was on the wrong side of our own rule has been fixed.**
+`PrintingPicker` grouped the whole printings rail under one hoisted notice as a
+wrapping four-up grid — up to 22 tiles, six rows, notice last — which is exactly
+the scrolling case `CardFaceGroup`'s rule excludes. The rail is now a single row
+that scrolls inside its own box, one tile tall at every width, so the notice is
+adjacent to the strip at any scroll position. The rule was written down first
+and the caller corrected second, which is the order that makes a rule worth
+having.
 
 *(This line previously said "enforced when Phase 1 … and Phase 3 … land". Both
 landed. `/data-terms` defers to this document where the two differ, so a stale

@@ -191,13 +191,36 @@
     display: flex;
     flex-direction: column;
     gap: var(--of-space-loose);
-    max-inline-size: fit-content;
+
+    /* `max-inline-size: min(fit-content, 100%)` WAS INVALID AND SILENTLY
+       DROPPED. `min()` takes numeric terms; `fit-content` is a sizing keyword,
+       not a length, so every browser discarded the declaration at parse time —
+       leaving `none`, which lost the shrink-wrap this column had BEFORE the
+       change as well as the cap it was meant to gain. Nothing in CI notices:
+       `check-tokens.ts` looks for raw colours, raw lengths and dangling
+       `var()`s, and a well-formed property with an unparseable value is none of
+       those.
+
+       `100%` is what was actually wanted. The strip inside is `inline-size:
+       100%` and scrolls its own overflow, so this column no longer needs to
+       shrink-wrap anything to stay inside its parent — it needs to not exceed
+       it. */
+    max-inline-size: 100%;
   }
 
   .rail {
     margin: 0;
     padding: 0;
     border: 0;
+
+    /* A `fieldset` defaults to `min-inline-size: min-content`, which is a UA
+       rule with no equivalent on any other element and the reason the scroller
+       inside it did not scroll: the fieldset refused to be narrower than seven
+       tiles, so the strip escaped its column and took the page sideways at 390
+       even with the `<ul>` correctly set to `inline-size: 100%`. The fieldset
+       is here for the radio group's semantics, not for its layout, so it gives
+       that default up. */
+    min-inline-size: 0;
   }
 
   /* Named for assistive technology, unnamed on screen: the tiles say what they
@@ -223,22 +246,77 @@
     own text. The rail was outgrowing the page it sits on.
 
     Half the published width is still large enough to tell one piece of art from
-    another — which is the only question this control asks — and it packs four
-    to a row, so the average card's 3.3 printings are one row and the worst case
-    is three. Asking the host for the `thumb` tier and drawing it smaller also
-    costs nothing and hands a high-DPI screen a sharper picture; the tier is
-    what the host publishes, and the size is what this surface needs.
+    another — which is the only question this control asks. Asking the host for
+    the `thumb` tier and drawing it smaller costs nothing and hands a high-DPI
+    screen a sharper picture; the tier is what the host publishes, and the size
+    is what this surface needs.
+
+    THE ROW-COUNT ARGUMENT THAT USED TO END THIS PARAGRAPH IS GONE, because the
+    rule it described is gone. It said the tiles "pack four to a row, so the
+    average card's 3.3 printings are one row and the worst case is three" —
+    true of the wrapping grid, false of the strip that replaced it, and sitting
+    directly above the comment that explains the replacement. Two adjacent
+    blocks contradicting each other about the same rule is exactly what the
+    next comment warns against.
+  */
+  /*
+    ONE ROW THAT SCROLLS, NOT A WRAPPING GRID — and this is the second time this
+    control has been shortened, for the same reason in a different direction.
+
+    The auto-fill grid packs four to a row against a desktop column and two to a
+    row against a phone's, where the tiles also grow to fill it: measured on a
+    phone, four printings became two rows of oversized thumbs, half a screen of
+    rail, and the card's own NAME landed below the fold. A6 capped the hero face
+    for exactly that reason and the rail beneath it undid the fix.
+
+    A single row is width-independent in the way the grid was not. The tiles
+    keep one size, the strip is one tile tall on every screen, and a card with
+    more printings than fit scrolls sideways inside its own box rather than
+    growing downwards through the page. No breakpoint: the same declaration
+    seats four on a desktop and scrolls nine on a phone.
+
+    IT ALSO SETTLES A COMPLIANCE QUESTION, which is why it is worth the second
+    pass. `CardFaceGroup` hoists one copyright notice for faces "seen together",
+    and explicitly excludes the scrolling case — a reader cannot be said to see
+    a notice with a face six rows above it. As a wrapping grid this rail was
+    that case: 22 tiles, roughly six rows, notice last. As a strip the notice
+    sits directly under a band one tile tall, on screen with it at any scroll
+    position, which is the condition the rule actually states. The exact figures
+    are in the commit; this comment keeps the reasoning and not the pixels,
+    because a comment that carries measurements goes stale the first time
+    anybody changes a token.
   */
   .rail-list {
     display: grid;
-    grid-template-columns: repeat(
-      auto-fill,
-      minmax(min(calc(var(--of-card-face-thumb) / 2), 100%), 1fr)
-    );
-    gap: var(--of-space-base) var(--of-space-tight);
+    grid-auto-flow: column;
+    grid-auto-columns: min(calc(var(--of-card-face-thumb) / 2), 100%);
+    gap: var(--of-space-tight);
     margin: 0;
-    padding: 0;
     list-style: none;
+    overflow-x: auto;
+
+    /* FILL THE COLUMN, DO NOT SIZE TO THE TILES. A scrolling grid's automatic
+       size is its whole content, so a seven-printing strip made this box wider
+       than the column holding it and took the page sideways. Being told
+       to be exactly the width it was given is what makes the overflow scroll
+       instead of escape; `min-inline-size: 0` is the other half, because a grid
+       item's automatic minimum is its content and would otherwise refuse. */
+    inline-size: 100%;
+    min-inline-size: 0;
+
+    /* ROOM FOR THE FOCUS RING, which is an `outline` with an offset and is
+       therefore drawn OUTSIDE the tile's border box. Setting `overflow-x`
+       computes `overflow-y` to `auto` as well, so this box clips on both axes
+       now — and the first tile is flush with the block-start and inline-start
+       edges, so its ring was cut on two sides. The padding is the offset plus
+       the ring's own width. */
+    padding: calc(var(--of-space-tightest) + var(--of-bevel-width) * 2);
+    /* The scroll stops on a tile rather than between two of them. */
+    scroll-snap-type: inline proximity;
+  }
+
+  .rail-list > * {
+    scroll-snap-align: start;
   }
 
   .tile {
@@ -253,7 +331,28 @@
 
   /* The input is the control and the label is the target, so the radio itself
      is removed from view rather than from the accessibility tree — it still
-     takes focus, still answers arrow keys, still announces its state. */
+     takes focus, still answers arrow keys, still announces its state.
+
+     `position: relative` ON THE TILE IS LOAD-BEARING, and its absence is what
+     made the strip leak. An absolutely positioned box takes its containing
+     block from the nearest POSITIONED ancestor, and `overflow` does not create
+     one — so with every ancestor unpositioned these radios resolved against the
+     initial containing block. They were neither clipped nor scrolled by the new
+     scroller: each sat at its unscrolled static position, far to the right of
+     the column on a long strip, and contributed that box to the DOCUMENT's
+     scrollable overflow. That is the page-level sideways scroll this change
+     exists to remove, reintroduced through the one box the old wrapping grid
+     never pushed out of bounds.
+
+     It also fixes arrow keys. The browser scrolls the FOCUSED element into
+     view, and a radio parked at its ICB position is already "in view", so
+     arrowing along the strip scrolled the document sideways instead of
+     revealing the next tile. Positioned, the radio scrolls and clips with the
+     strip it belongs to. */
+  .tile {
+    position: relative;
+  }
+
   .tile input {
     position: absolute;
     opacity: 0;

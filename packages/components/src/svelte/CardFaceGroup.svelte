@@ -57,12 +57,14 @@
    * say for certain that every face in the group is visible with the notice,
    * do not group them.
    *
-   * ONE CALLER IS CURRENTLY ON THE WRONG SIDE OF THIS. `PrintingPicker` groups
-   * the whole printings rail — up to 22 tiles in a wrapping four-up grid, six
-   * rows deep, notice last — which is the scrolling case above. It predates the
-   * rule being stated this precisely, and it is named here and in
-   * `docs/COMPLIANCE.md` §5 rather than quietly permitted by a rule written
-   * loosely enough to admit it.
+   * `PrintingPicker` WAS ON THE WRONG SIDE OF THIS AND IS NOT ANY MORE. It
+   * grouped the whole printings rail as a wrapping four-up grid — up to 22
+   * tiles, six rows deep, notice last — which is precisely the scrolling case
+   * above. The rail is now a single row that scrolls sideways inside its own
+   * box, one tile tall at every width, so the notice sits directly beneath a
+   * band the reader can see in full whatever it is scrolled to. Recorded
+   * because the rule was written down first and the caller was fixed second,
+   * which is the right order and worth being able to point at.
    */
   import type { Snippet } from "svelte";
 
