@@ -499,6 +499,42 @@ jobs:
       - name: Assert the token layer reaches every built page
         run: bun run check:built-tokens
 
+  # The `build` job above does NOT cover this, and the gap is not a small one.
+  #
+  # `astro build` resolves SSR modules through Rollup and `astro dev` hands the
+  # ones it externalises to Node's own ESM loader, so a module that only one of
+  # them can resolve makes the two disagree completely. That is not theoretical:
+  # the build was emitting 7,237 correct pages while every single dev route —
+  # pages, islands and /favicon.svg alike — answered 500, and CI was green
+  # throughout, because nothing here had ever started the dev server.
+  #
+  # It is a smoke test by design. Six routes, one per kind of page plus the
+  # generated favicon endpoint, asserting only that they render at all.
+  dev-server:
+    name: dev-server
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          # No fallback branch. bun.lock is committed, so the only thing an
+          # `else` could ever do is let a pull request that DELETES the lockfile
+          # silently downgrade every job to an unpinned install and still go
+          # green — which is the one case where failing loudly is the point.
+          bun install --frozen-lockfile
+
+      - name: Assert the dev server serves every kind of route
+        run: bun run check:dev-server
+
   # NOTE: the repository-settings drift check deliberately does NOT live here.
   # It runs on a schedule, in .github/workflows/repo-settings-check.yml.
   #
@@ -538,6 +574,7 @@ jobs:
       - tokens
       - provenance
       - disclaimer
+      - dev-server
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
