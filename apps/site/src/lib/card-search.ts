@@ -140,11 +140,28 @@ export interface EncodedCardIndex {
   readonly setDict: string;
   /** Rarity-code vocabulary, one per line. */
   readonly rarityDict: string;
+  readonly artistDict: string;
   /**
    * Per-card membership lists, one line each, base-36 ids dot-separated and
    * the four groups tab-separated: keywords, traits, sets, rarities.
    */
   readonly memberships: string;
+  /**
+   * A SECOND POSTINGS INDEX, over flavour text rather than rules text.
+   *
+   * Separate rather than folded into `postings` because the two answer
+   * different questions and must not bleed: `text:blood` is a claim about what
+   * a card DOES, and a card whose flavour mentions blood does not do anything
+   * of the sort. Merging them would make every `text:` search quietly wrong on
+   * 864 cards.
+   *
+   * Postings rather than the strings themselves, which is a payload decision
+   * with a measurement behind it: the corpus carries 206 KB of flavour prose,
+   * and storing it verbatim would have grown a 665 KB index by 31% for one
+   * operator. Tokenised and delta-encoded it is a fraction of that, and the
+   * search page already pays for exactly this shape.
+   */
+  readonly flavour: string;
   /**
    * Distinct legality vectors, one per line: six comma-separated bitmasks in
    * {@link FORMATS} order, each a base-36 sum of {@link TONE_BIT}.
@@ -302,6 +319,28 @@ function assertFormatsAgree(pages: readonly CardPage[]): void {
  * derivation is the product, and deriving it twice is how a search result comes
  * to disagree with the page it links to.
  */
+/**
+ * One postings map, as sorted delta-encoded lines.
+ *
+ * Shared by the rules-text and flavour-text indexes. They are two indexes for a
+ * reason — a card whose flavour mentions blood does not DO anything with
+ * blood — but they are the same shape, and one encoder means a change to the
+ * format cannot land on one of them and not the other.
+ */
+function encodePostings(map: ReadonlyMap<string, readonly number[]>): string[] {
+  return [...map.entries()]
+    .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([term, docs]) => {
+      let previous = 0;
+      const deltas = docs.map((doc) => {
+        const delta = doc - previous;
+        previous = doc;
+        return delta.toString(36);
+      });
+      return `${term} ${deltas.join(".")}`;
+    });
+}
+
 export function buildCardIndex(
   pages: readonly CardPage[],
   source: { readonly commit: string; readonly confirmed: string },
@@ -317,6 +356,7 @@ export function buildCardIndex(
   const stats: string[] = [];
   const memberships: string[] = [];
   const postings = new Map<string, number[]>();
+  const flavourPostings = new Map<string, number[]>();
 
   const types = dictionary(pages.map((page) => page.card.type_text));
   const keywords = dictionary(pages.flatMap((page) => page.card.card_keywords));
@@ -326,6 +366,15 @@ export function buildCardIndex(
   );
   const rarities = dictionary(
     pages.flatMap((page) => page.card.printings.map((printing) => printing.rarity)),
+  );
+  /* 311 distinct names across every printing in the corpus, so a dictionary
+     and a membership list — the same shape sets and rarities already use, and
+     for the same reason: a small closed vocabulary repeated thousands of
+     times. */
+  const artists = dictionary(
+    pages.flatMap((page) =>
+      page.card.printings.flatMap((printing) => printing.artists ?? []),
+    ),
   );
 
   const typeAt: string[] = [];
@@ -355,6 +404,10 @@ export function buildCardIndex(
           page.card.printings.map((printing) => printing.rarity),
           rarities.idOf,
         ),
+        membershipIds(
+          page.card.printings.flatMap((printing) => printing.artists ?? []),
+          artists.idOf,
+        ),
       ].join("\t"),
     );
 
@@ -379,22 +432,27 @@ export function buildCardIndex(
       if (list) list.push(ordinal);
       else postings.set(term, [ordinal]);
     }
+
+    /* Every printing's flavour, as one bag of words per card. A card whose
+       reprint carries different flavour is findable by either — which is the
+       same rule `set:` and `artist:` follow, because all three are
+       printing-level facts hanging off a card-level row. */
+    const flavourText = page.card.printings
+      .map((printing) => printing.flavor_text ?? "")
+      .filter((text) => text !== "")
+      .join(" ");
+    for (const term of new Set(tokeniseCard(flavourText))) {
+      const list = flavourPostings.get(term);
+      if (list) list.push(ordinal);
+      else flavourPostings.set(term, [ordinal]);
+    }
   });
 
   // Sorted so the artifact is a function of the corpus alone, exactly as the
   // rules index is: an index whose byte order tracks the corpus is an index
   // whose diff is unreadable the first time a card moves.
-  const postingLines = [...postings.entries()]
-    .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(([term, docs]) => {
-      let previous = 0;
-      const deltas = docs.map((doc) => {
-        const delta = doc - previous;
-        previous = doc;
-        return delta.toString(36);
-      });
-      return `${term} ${deltas.join(".")}`;
-    });
+  const postingLines = encodePostings(postings);
+  const flavourLines = encodePostings(flavourPostings);
 
   /**
    * The empty state's browse: the commonest printed type lines, counted.
@@ -444,10 +502,12 @@ export function buildCardIndex(
     traitDict: traits.list.join("\n"),
     setDict: sets.list.join("\n"),
     rarityDict: rarities.list.join("\n"),
+    artistDict: artists.list.join("\n"),
     memberships: memberships.join("\n"),
     verdictDict: verdictList.join("\n"),
     verdictAt: verdictAt.join(""),
     postings: postingLines.join("\n"),
+    flavour: flavourLines.join("\n"),
     browse,
   };
 }
@@ -486,10 +546,15 @@ export interface CardIndex {
   readonly traits: readonly (readonly string[])[];
   readonly sets: readonly (readonly string[])[];
   readonly rarities: readonly (readonly string[])[];
+  /** Every artist credited on any printing of the card. */
+  readonly artists: readonly (readonly string[])[];
   /** Six bitmasks per card, in {@link FORMATS} order. */
   readonly verdicts: readonly (readonly number[])[];
   readonly postings: ReadonlyMap<string, readonly number[]>;
   readonly terms: readonly string[];
+  /** The flavour-text index, kept apart from the rules-text one on purpose. */
+  readonly flavourPostings: ReadonlyMap<string, readonly number[]>;
+  readonly flavourTerms: readonly string[];
   readonly browse: readonly (readonly [string, number])[];
   readonly size: number;
 }
@@ -500,6 +565,30 @@ function splitIds(field: string, dict: readonly string[]): readonly string[] {
     .split(".")
     .map((id) => dict[Number.parseInt(id, 36)])
     .filter((value): value is string => value !== undefined);
+}
+
+/**
+ * The inverse of {@link encodePostings}. Shared for the same reason.
+ */
+function decodePostings(encoded: string): Map<string, number[]> {
+  const postings = new Map<string, number[]>();
+  if (encoded === "") return postings;
+
+  for (const line of encoded.split("\n")) {
+    const gap = line.indexOf(" ");
+    const term = line.slice(0, gap);
+    let running = 0;
+    const docs = line
+      .slice(gap + 1)
+      .split(".")
+      .map((delta) => {
+        running += Number.parseInt(delta, 36);
+        return running;
+      });
+    postings.set(term, docs);
+  }
+
+  return postings;
 }
 
 export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
@@ -514,6 +603,7 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const traitDict = encoded.traitDict === "" ? [] : encoded.traitDict.split("\n");
   const setDict = encoded.setDict === "" ? [] : encoded.setDict.split("\n");
   const rarityDict = encoded.rarityDict === "" ? [] : encoded.rarityDict.split("\n");
+  const artistDict = encoded.artistDict === "" ? [] : encoded.artistDict.split("\n");
   const verdictDict = encoded.verdictDict === "" ? [] : encoded.verdictDict.split("\n");
   const statLines = encoded.stats === "" ? [] : encoded.stats.split("\n");
   const membershipLines =
@@ -526,6 +616,7 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const traits: string[][] = [];
   const sets: string[][] = [];
   const rarities: string[][] = [];
+  const artists: string[][] = [];
   const stats: (readonly [string, string, string])[] = [];
 
   labels.forEach((_, ordinal) => {
@@ -546,29 +637,18 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
     const [cost = "", power = "", defence = ""] = (statLines[ordinal] ?? "").split("\t");
     stats.push([cost, power, defence] as const);
 
-    const [k = "", t = "", s = "", r = ""] = (membershipLines[ordinal] ?? "").split("\t");
+    const [k = "", t = "", s = "", r = "", a = ""] = (membershipLines[ordinal] ?? "").split(
+      "\t",
+    );
     keywords.push([...splitIds(k, keywordDict)]);
     traits.push([...splitIds(t, traitDict)]);
     sets.push([...splitIds(s, setDict)]);
     rarities.push([...splitIds(r, rarityDict)]);
+    artists.push([...splitIds(a, artistDict)]);
   });
 
-  const postings = new Map<string, number[]>();
-  if (encoded.postings !== "") {
-    for (const line of encoded.postings.split("\n")) {
-      const gap = line.indexOf(" ");
-      const term = line.slice(0, gap);
-      let running = 0;
-      const docs = line
-        .slice(gap + 1)
-        .split(".")
-        .map((delta) => {
-          running += Number.parseInt(delta, 36);
-          return running;
-        });
-      postings.set(term, docs);
-    }
-  }
+  const postings = decodePostings(encoded.postings);
+  const flavourPostings = decodePostings(encoded.flavour);
 
   const browse: (readonly [string, number])[] =
     encoded.browse === ""
@@ -606,9 +686,12 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
     traits,
     sets,
     rarities,
+    artists,
     verdicts,
     postings,
     terms: [...postings.keys()],
+    flavourPostings,
+    flavourTerms: [...flavourPostings.keys()],
     browse,
     size: labels.length,
   };
@@ -685,6 +768,8 @@ export interface CardFilter {
   readonly field:
     | "name"
     | "text"
+    | "artist"
+    | "flavour"
     | "type"
     | "trait"
     | "keyword"
@@ -812,6 +897,15 @@ const FIELD_OPERATORS: Readonly<Record<string, CardFilter["field"]>> = {
   name: "name",
   text: "text",
   o: "text",
+  /* PRINTING-LEVEL, UNLIKE EVERY OPERATOR ABOVE IT, and the page says so.
+     A card matches when ANY of its printings does — the same rule `set:` and
+     `rarity:` already follow, because all of them are facts about a printing
+     hanging off a card-level row. */
+  artist: "artist",
+  a: "artist",
+  flavour: "flavour",
+  flavor: "flavour",
+  ft: "flavour",
   // `class:` is an alias of `type:` because the upstream dataset publishes
   // classes and card types in ONE list — "Guardian", "Action" and "Attack" are
   // all entries in `types`. Separating them would need a class vocabulary
@@ -843,6 +937,10 @@ const WORD_VALUED: ReadonlySet<CardFilter["field"]> = new Set([
   "type",
   "trait",
   "keyword",
+  /* Both are prose. `a:faizal fikri` has to ask for both words rather than for
+     the literal string, or a reader who types a full name gets nothing. */
+  "artist",
+  "flavour",
 ]);
 
 /**
@@ -1020,7 +1118,7 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
 
     note(
       "operator-unknown",
-      `${name}: is not an operator here. Supported: name, text (o), type (class), trait, keyword, set, rarity, pitch, cost, power, defence, and legal/banned/suspended/restricted with a format.`,
+      `${name}: is not an operator here. Supported: name, text (o), type (class), trait, keyword, artist (a), flavour (ft), set, rarity, pitch, cost, power, defence, order, dir, and legal/banned/suspended/restricted with a format.`,
     );
     return toLeaf({ kind: "term", value: operandRaw, quoted: false });
   };
@@ -1181,6 +1279,8 @@ function passesFilter(index: CardIndex, ordinal: number, filter: CardFilter): bo
       return valuesMatch(index.traits[ordinal] ?? [], filter.value);
     case "keyword":
       return valuesMatch(index.keywords[ordinal] ?? [], filter.value);
+    case "artist":
+      return valuesMatch(index.artists[ordinal] ?? [], filter.value);
     case "set":
       return (index.sets[ordinal] ?? []).some(
         (code) => code.toLowerCase() === filter.value,
@@ -1259,6 +1359,16 @@ function positiveFreeTerms(node: QueryNode, negated = false): readonly string[] 
     default:
       return node.children.flatMap((child) => positiveFreeTerms(child, negated));
   }
+}
+
+/** Cards whose flavour text contains the term, whole word or by prefix. */
+function flavourMatches(index: CardIndex, term: string): ReadonlySet<number> {
+  const out = new Set<number>();
+  for (const candidate of index.flavourTerms) {
+    if (candidate !== term && !candidate.startsWith(term)) continue;
+    for (const ordinal of index.flavourPostings.get(candidate) ?? []) out.add(ordinal);
+  }
+  return out;
 }
 
 /** Cards whose printed text contains the term, whole word or by prefix. */
@@ -1557,9 +1667,14 @@ export function searchCards(
     value becomes a set here, and the leaf test is a membership check.
   */
   const textSets = new Map<string, ReadonlySet<number>>();
+  const flavourSets = new Map<string, ReadonlySet<number>>();
   for (const leaf of leaves(tree)) {
-    if (leaf.field !== "text" && leaf.field !== "any") continue;
-    if (!textSets.has(leaf.value)) textSets.set(leaf.value, textMatches(index, leaf.value));
+    if (leaf.field === "text" || leaf.field === "any") {
+      if (!textSets.has(leaf.value)) textSets.set(leaf.value, textMatches(index, leaf.value));
+    }
+    if (leaf.field === "flavour" && !flavourSets.has(leaf.value)) {
+      flavourSets.set(leaf.value, flavourMatches(index, leaf.value));
+    }
   }
 
   /** Whether one card satisfies one leaf. The corpus half of the grammar. */
@@ -1578,6 +1693,13 @@ export function searchCards(
     }
 
     if (leaf.field === "text") return textSets.get(leaf.value)?.has(ordinal) === true;
+
+    /* NOT FOLDED INTO THE FREE-WORD BRANCH ABOVE, deliberately. A bare word
+       searches what a card DOES; flavour is what it says about itself, and a
+       reader looking for cards that mention blood in their rules text is not
+       asking for the one whose flavour quotes a poem about it. `ft:` is opt-in
+       for that reason. */
+    if (leaf.field === "flavour") return flavourSets.get(leaf.value)?.has(ordinal) === true;
 
     if (leaf.field === "name-exact") {
       // AGAINST THE BARE NAME, not the disambiguated label. `index.folded`
