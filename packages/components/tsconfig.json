@@ -1,7 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "$comment": "src/svelte is excluded from tsc and covered by svelte-check instead. tsc cannot resolve a `.svelte` import at all, and the usual workaround — an ambient `declare module '*.svelte'` — types every component as `any`, which is worse than not checking them: it would silently accept a wrong prop on every call site in the product. svelte-check understands the real component types, so the split is by capability rather than by preference. Both run in this package's `typecheck` script.",
+  "$comment_react": "`src/react` is the Phase 6 port and IS covered by tsc — that is the point of it. It needs `jsx` and the DOM lib, neither of which the base config sets, because until this directory existed nothing in this package was a `.tsx` file and nothing rendered to a browser DOM from plain TypeScript. `react-jsx` rather than `react`, so components do not have to import React to use JSX.",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
   "exclude": ["dist", "node_modules", "src/svelte"]
 }

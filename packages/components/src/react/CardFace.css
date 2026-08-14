@@ -1,0 +1,124 @@
+/*
+ * `CardFace`'s styles, ported verbatim from the Svelte component's scoped
+ * block. Every declaration and every comment is the original's; only the
+ * scoping mechanism changed.
+ *
+ * EXPLICIT PREFIXED CLASS NAMES, NOT CSS MODULES, AND THE REASON IS A
+ * MEASUREMENT. The first attempt used `CardFace.module.css` with
+ * `styles["face"]`, which is the idiomatic React answer. Rendered under
+ * `bun test` it produced this:
+ *
+ *     <figure style="--face-ratio:180 / 251"><span><img …
+ *
+ * No `class` attribute anywhere. Bun's runner resolves a `.module.css` import
+ * to an empty object, so every lookup was `undefined` and every element
+ * rendered unstyled — while the compliance tests beside it passed, because
+ * they count copyright notices and a notice needs no class.
+ *
+ * That is the exact failure the module's own type declaration warned about:
+ * `Record<string, string>` makes a missing key `undefined` at runtime and
+ * silent at compile time. The warning was written and then walked into
+ * anyway, which is worth recording.
+ *
+ * Literal class names cannot be `undefined`. They are greppable — `of-card-face`
+ * finds every use across the repo, which a hashed name does not — and the `of-`
+ * prefix plus a component-scoped name gives the same practical isolation Svelte's
+ * hashing did. `scripts/check-tokens.ts` already scans `.css`, so every
+ * declaration below is held to the same token vocabulary either way.
+ */
+
+.of-card-face {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-hair);
+  margin: 0;
+}
+
+/*
+  The frame is what the jewel is positioned against, and it shrink-wraps the
+  image so the overlay cannot drift into the caption's box.
+*/
+.of-card-face__frame {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+/*
+  DESCENDANT-SELECTED RATHER THAN CLASSED, and it is the one place the port had
+  to make a choice. Svelte scoped `img { … }` to the component automatically; a
+  CSS module hashes CLASS names and leaves element selectors global, so a bare
+  `img` here would style every image on the site. Scoping it under `.frame`
+  keeps the markup identical to the Svelte version — no class on the `<img>` —
+  while confining the rule to this component's subtree.
+*/
+.of-card-face__frame img {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  /*
+    THE BOX IS HELD BY THE PROPS, NOT BY WHAT LOADS INTO IT.
+    `block-size: auto` alone lets the LOADED image's own ratio drive the height,
+    which is fine until the thing that loads is not the shape the caller
+    promised. The face host answers a miss with a portrait placeholder whatever
+    was asked for, so the 15 horizontally-played cards would resolve a portrait
+    SVG inside a landscape box and shift the layout the intrinsic attributes
+    exist to hold still. `aspect-ratio` comes from the same `width`/`height` the
+    caller already had to supply, and `object-fit` letterboxes anything that
+    disagrees rather than distorting it.
+  */
+  aspect-ratio: var(--face-ratio);
+  object-fit: contain;
+  /* Stated rather than omitted, exactly as BevelledPlate does it: the token
+     exists only to be zero, and saying it out loud is what stops a host
+     stylesheet rounding a card face. */
+  border-radius: var(--of-bevel-radius);
+  /* A face is a struck object like everything else in the system: a light top
+     edge and a dark bottom one, so it sits in the page rather than floating on
+     it. */
+  border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
+  border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
+  border-inline: var(--of-bevel-width) solid var(--of-color-rule);
+  /* Holds the box before the bytes land, and keeps a landscape face from being
+     squeezed into a portrait cell. */
+  background: var(--of-color-sunken);
+}
+
+/*
+  Top-left, which is where the game's own furniture puts it — docs/DESIGN.md
+  describes the card face as "jewel top-left". Inset by a hairline so it
+  overlaps the frame's edge rather than sitting outside it.
+*/
+.of-card-face__jewel {
+  position: absolute;
+  inset-block-start: var(--of-space-tight);
+  inset-inline-start: var(--of-space-tight);
+  line-height: normal;
+}
+
+/*
+  LEGALESE, AND SET LIKE IT.
+
+  This carried `tracking.wide` — the label treatment — which was right while it
+  was the monospace label voice and wrong the moment that voice was retired.
+  Wide-tracked sans at the top of a card reads as a heading, so the one line on
+  the page that should recede was the one shouting. Fine print is small, tight
+  and quiet; it is not a label, and it is not announcing itself.
+
+  Still never hidden and never conditional. `docs/COMPLIANCE.md` §5 requires the
+  notice accompany the image, and this component emits it with no prop and no
+  variant that can drop it — but "present" was never the same as "loud", and the
+  requirement asks for the first.
+*/
+.of-card-face__copyright {
+  font-family: var(--of-type-family-sans);
+  /* The smallest step in the scale, and the only thing that uses it. */
+  font-size: var(--of-type-size-legal);
+  /* Tight rather than tracked: the opposite of the label treatment above. */
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink-faint);
+  line-height: var(--of-type-leading-tight);
+  /* Never wider than the face it belongs to, so a thumbnail's notice cannot
+     widen the cell it sits in. */
+  max-inline-size: 100%;
+}
