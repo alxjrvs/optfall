@@ -1,5 +1,5 @@
 /**
- * The card corpus, shaped once for the 5,841 pages that serve it.
+ * The card corpus, shaped once for the 12,278 pages that serve it.
  *
  * `docs/PLAN.md` Phase 2: **cards are what people arrive for**, and "every view
  * is a URL" — `/card/command-and-conquer` is the product, not decoration on it.
