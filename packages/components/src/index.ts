@@ -295,16 +295,31 @@ export interface OrnamentalRuleProps {
 }
 
 /**
- * The mark — a cut jewel, cleaved and falling. The same octagonal silhouette
- * as the pitch jewel, because the logo and the core interface primitive are
- * the same object.
+ * The mark — three interlocked links.
  *
- * It is drawn from a game *mechanic* rather than from Legend Story Studios'
- * visual identity, which is what keeps it clear of the policy's prohibition on
- * any close semblance to their logos.
+ * It says what the tool DOES rather than what the game is: Optfall's whole
+ * claim is the joins it makes, and a chain is that drawn. `docs/DESIGN.md`
+ * records why the cut jewel it replaced was retired.
+ *
+ * It is drawn from a game *mechanic* and from plain geometry rather than from
+ * Legend Story Studios' visual identity, which is what keeps it clear of the
+ * policy's prohibition on any close semblance to their logos.
  */
 export interface MarkProps {
   readonly size?: "sm" | "md" | "lg";
+  /**
+   * Which fill set.
+   *
+   * `pitch` is canonical — one link per pitch value — and is the one place this
+   * system spends the pitch palette on something that is not a pitch value; see
+   * `docs/DESIGN.md`. `ink` fills the outer links with `currentColor`, so a
+   * lockup takes the colour of the word beside it and lights up as one object.
+   *
+   * It is on the published type because it was missing from it: the component
+   * accepted `variant` and this interface did not, so a consumer typing against
+   * the package could not express `variant="ink"` at all.
+   */
+  readonly variant?: "pitch" | "ink";
   /**
    * Accessible name, defaulting to the product's own. A blank falls back to
    * that default rather than through it — `title=""` must not be able to strip
@@ -326,157 +341,222 @@ export interface MarkProps {
 /**
  * The mark's geometry, in `viewBox` units — the one place it is written down.
  *
- * THE MARK IS THE PITCH DIAMOND, CLEAVED. The silhouette itself is
- * `ornament.cut.jewel` in `optfall-theme`, which `PitchJewel.svelte` clips
- * itself with and the design-system cards draw — vertex up, vertex down, widest
- * across the middle, all four corners cut. This is that same diamond parted
- * just above its girdle: a shallow crown above the break and a deeper pavilion
- * below it, as a cut stone has.
- *
- * IT CANNOT SHARE THE TOKEN, and the reason is a real one rather than an
- * excuse. That token is a `clip-path` in percentages of a box; this is two SVG
- * polygons in viewBox units — and a cleave is precisely what a single clipped
- * box cannot express, since the whole point is two pieces with ground between
- * them. So the relationship is documented rather than mechanical, and
- * `index.test.ts` asserts the properties that make it true: the crown carries
- * the top apex, the pavilion keeps the girdle and the bottom apex, and the gap
- * between them survives a favicon.
+ * THE MARK IS A CHAIN OF THREE INTERLOCKED LINKS. What it replaced was the
+ * pitch diamond, cleaved, on the argument that the logo and the core interface
+ * primitive should be the same object; `docs/DESIGN.md` records why that
+ * argument was retired. The jewel is still the interface primitive and still
+ * has its own token, `ornament.cut.jewel`, which `PitchJewel.svelte` clips
+ * itself with — the mark simply stopped being it.
  *
  * IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND MUST NOT HAVE TWO DEFINITIONS.
- * `Mark.svelte` draws it on the page; `apps/site/src/pages/favicon.svg.ts`
- * draws it into the tab. `docs/DESIGN.md` stakes the whole idea on those being
- * the same object — "the thing you see a thousand times a session is the thing
- * on the tab" — and a second copy of these numbers is exactly how that stops
- * being true, quietly, the first time one of them is nudged.
+ * `Mark.svelte` draws the chain and `apps/site/src/pages/favicon.svg.ts` draws
+ * one link of it at build time. A second copy of these numbers is a second
+ * drawing, and a second drawing drifts — which is the failure the previous mark
+ * had, in this same file, before it was rewritten as a derivation.
  *
- * This is the argument `CARD_IMAGE_COPYRIGHT` makes a few lines down and the
- * one `themeStylesheet()` makes about the palette: the shared fact gets one
- * declaration, and the surfaces read it.
- *
- * COLOUR IS DELIBERATELY ABSENT. Geometry is the part both consumers share;
- * colour is the part they cannot. A component on the page names tokens and lets
- * the cascade resolve them, while a favicon is fetched as a standalone document
- * that never sees the page's stylesheet and must therefore carry literal
- * values. Putting colour here would force one of those two to be wrong.
+ * The favicon's link is not a variant of the geometry: it is `link` under
+ * `single.placement`, so there is nothing to keep in step.
  */
 export interface MarkGeometry {
+  /** The box the whole chain sits in, at its own aspect. */
   readonly viewBox: string;
-  /** The diamond above the break: apex, two cut corners, and the parted edge. */
-  readonly crown: string;
   /**
-   * The diamond below the break — girdle, two cut corners and the bottom apex.
-   * Deeper than the crown, as a cut stone's is, and fallen clear of it.
+   * One link, as a single path: the outer ring followed by the window it
+   * encloses. Drawn with `fill-rule="evenodd"` so the window is a hole rather
+   * than a second shape in a second colour.
    */
-  readonly pavilion: string;
-  /** The freshly exposed cleavage plane along the pavilion's cut face. */
-  readonly cleave: {
-    readonly x1: number;
-    readonly y1: number;
-    readonly x2: number;
-    readonly y2: number;
+  readonly link: string;
+  /**
+   * Where each link sits, in paint order, as a ready-made SVG `transform`.
+   * Ready-made because two consumers draw this — the component and the favicon
+   * endpoint — and a transform composed twice is a transform that can differ.
+   */
+  readonly placements: readonly string[];
+  /**
+   * The clips that make the chain interlock.
+   *
+   * Paint order alone settles both of a pair's crossings the same way, which
+   * reads as one link lying wholly over its neighbour. Each entry names a link
+   * to redraw and the rectangle to redraw it inside, which puts it back on top
+   * at one crossing and nowhere else.
+   */
+  readonly scopes: readonly {
+    /** Index into {@link placements}. */
+    readonly link: number;
+    readonly x: number;
+    readonly y: number;
     readonly width: number;
+    readonly height: number;
+  }[];
+  /**
+   * One link alone, upright, in its own box — what the favicon draws.
+   *
+   * NOT A SECOND DRAWING. It is the same `link` path under a different
+   * transform, because three links at this aspect are a smudge at 16px and one
+   * ring is still a ring. Measured, not assumed.
+   */
+  readonly single: {
+    readonly viewBox: string;
+    readonly placement: string;
   };
 }
 
 /**
- * The reserved silhouette as points, in the mark's own 32×32 box.
+ * THE MARK IS A CHAIN OF THREE LINKS, AND EVERY NUMBER BELOW IS DERIVED.
  *
- * The same eight vertices `ornament.cut.jewel` names in percentages — apex,
- * two upper cut corners, the girdle at the widest points, two lower cut
- * corners, bottom apex — at 32 units instead of 100%.
+ * `docs/DESIGN.md` had the mark as a cut jewel — the pitch diamond, cleaved —
+ * on the argument that the logo and the core interface primitive should be one
+ * object. The chain replaces it and makes a different argument: what Optfall
+ * does is JOIN things. A card to the rule that governs it, a rule to the cards
+ * it governs, a printing to its legality and the flags that produced it. The
+ * jewel said "Flesh and Blood"; the chain says what this tool is for.
+ *
+ * THREE LINKS BECAUSE THE INTERLOCK NEEDS THREE. Two links can be drawn
+ * interlocking, but three is where the pattern is visibly a CHAIN rather than
+ * two rings that happen to overlap — and three is also what carries the pitch
+ * palette, one link per value.
+ *
+ * NOTHING HERE IS HAND-PLACED. The step between links is the run of a rotated
+ * link minus the overlap that makes them interlock; the box is the union of
+ * their rotated corners; the clips are the empty band between each pair's two
+ * crossings. Change the angle and everything else follows, which is the whole
+ * reason the previous mark was rewritten as a derivation rather than left as
+ * coordinates somebody typed.
  */
-const JEWEL_POINTS: readonly (readonly [number, number])[] = [
-  [16, 0],
-  [27.2, 4.8],
-  [32, 16],
-  [27.2, 27.2],
-  [16, 32],
-  [4.8, 27.2],
-  [0, 16],
-  [4.8, 4.8],
+
+/** How far a link leans off the horizontal. Shallow: the chain lies flat. */
+const LINK_ANGLE = 25;
+
+/** One link's box, before rotation. */
+const LINK_WIDTH = 20;
+const LINK_HEIGHT = 12;
+
+/**
+ * How far two neighbouring links reach into one another.
+ *
+ * This is the only chosen number in the file and it is chosen against one
+ * constraint: the links must overlap enough that neither can be lifted away,
+ * and little enough that both windows stay open. Everything else is arithmetic.
+ */
+const LINK_OVERLAP = 8;
+
+/** Where the middle link sits. The other two are placed relative to it. */
+const CHAIN_CENTRE_X = 32;
+const CHAIN_CENTRE_Y = 16;
+
+/** The links, left to right. Paint order, and the order `placements` is in. */
+const LINK_ORDER = [-1, 0, 1] as const;
+
+const radians = (degrees: number): number => (degrees * Math.PI) / 180;
+const round = (value: number): number => Number(value.toFixed(2));
+
+/**
+ * The horizontal step between link centres.
+ *
+ * A rotated link's run is `width × cos(angle)`; the links interlock by giving
+ * `LINK_OVERLAP` of that back. Derived rather than measured off a drawing,
+ * which is what keeps the chain evenly spaced at any angle.
+ */
+const LINK_STEP = LINK_WIDTH * Math.cos(radians(LINK_ANGLE)) - LINK_OVERLAP;
+
+/** Alternating lean, so the chain zigzags rather than shearing one way. */
+const angleOf = (index: number): number =>
+  Math.abs(index % 2) === 0 ? LINK_ANGLE : -LINK_ANGLE;
+
+const centreOf = (index: number): readonly [number, number] => [
+  CHAIN_CENTRE_X + index * LINK_STEP,
+  CHAIN_CENTRE_Y,
 ];
 
-/**
- * One half of a polygon, cut by a horizontal line. Sutherland–Hodgman, for the
- * one edge case it needs: a convex shape and a level blade.
- */
-function cleaveAt(
-  points: readonly (readonly [number, number])[],
-  y: number,
-  keep: "above" | "below",
-): string {
-  const inside = ([, py]: readonly [number, number]) => (keep === "above" ? py <= y : py >= y);
-  const out: [number, number][] = [];
-
-  points.forEach((point, index) => {
-    const previous = points[(index + points.length - 1) % points.length]!;
-    const crosses = inside(previous) !== inside(point);
-
-    if (crosses) {
-      const t = (y - previous[1]) / (point[1] - previous[1]);
-      out.push([Number((previous[0] + t * (point[0] - previous[0])).toFixed(2)), y]);
-    }
-    if (inside(point)) out.push([point[0], point[1]]);
-  });
-
-  return out.map(([x, py]) => `${x},${py}`).join(" ");
+/** One link's four corners after rotation — the input to the bounding box. */
+function cornersOf(index: number, angle = angleOf(index)): readonly (readonly [number, number])[] {
+  const [cx, cy] = centreOf(index);
+  const a = radians(angle);
+  return (
+    [
+      [-LINK_WIDTH / 2, -LINK_HEIGHT / 2],
+      [LINK_WIDTH / 2, -LINK_HEIGHT / 2],
+      [LINK_WIDTH / 2, LINK_HEIGHT / 2],
+      [-LINK_WIDTH / 2, LINK_HEIGHT / 2],
+    ] as const
+  ).map(([dx, dy]) => [
+    cx + dx * Math.cos(a) - dy * Math.sin(a),
+    cy + dx * Math.sin(a) + dy * Math.cos(a),
+  ]);
 }
 
-/** Where the crown's cut face sits, and where the pavilion's does. */
-const CROWN_BREAK = 9.5;
-const PAVILION_BREAK = 13;
+/** The smallest box holding the given links, with a unit of air around it. */
+function boxOf(indices: readonly number[], angle?: number): {
+  readonly minX: number;
+  readonly minY: number;
+  readonly width: number;
+  readonly height: number;
+} {
+  const pad = 1;
+  const points = indices.flatMap((index) => cornersOf(index, angle));
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  const minX = Math.min(...xs) - pad;
+  const minY = Math.min(...ys) - pad;
 
-/** How wide the stone is at a given height — the ends of a cut at that line. */
-function cutSpan(y: number): { left: number; right: number } {
-  const crossings = JEWEL_POINTS.flatMap((point, index) => {
-    const previous = JEWEL_POINTS[(index + JEWEL_POINTS.length - 1) % JEWEL_POINTS.length]!;
-    const spans = (previous[1] - y) * (point[1] - y) < 0;
-    if (!spans) return [];
-    const t = (y - previous[1]) / (point[1] - previous[1]);
-    return [Number((previous[0] + t * (point[0] - previous[0])).toFixed(2))];
-  });
-
-  return { left: Math.min(...crossings), right: Math.max(...crossings) };
+  return {
+    minX: round(minX),
+    minY: round(minY),
+    width: round(Math.max(...xs) + pad - minX),
+    height: round(Math.max(...ys) + pad - minY),
+  };
 }
 
+const placementOf = (index: number, angle = angleOf(index)): string => {
+  const [cx, cy] = centreOf(index);
+  return (
+    `rotate(${round(angle)},${round(cx)},${round(cy)}) ` +
+    `translate(${round(cx - LINK_WIDTH / 2)},${round(cy - LINK_HEIGHT / 2)})`
+  );
+};
+
 /**
- * THE MARK IS THE JEWEL, CUT — DERIVED, NOT DRAWN.
+ * One link: an elongated octagon, and the smaller one it encloses.
  *
- * `docs/DESIGN.md` is unambiguous about what this is: "a cut jewel, cleaved and
- * falling … **it is the pitch diamond, the same reserved silhouette as the
- * gem**, which means the logo and the core interface primitive are the same
- * object". Both halves are now clipped out of {@link JEWEL_POINTS}, the same
- * eight vertices `ornament.cut.jewel` gives every pitch stone on the site, so
- * that sentence is true by construction rather than by somebody keeping two
- * drawings in step.
- *
- * They were not in step. The hand-drawn crown put its apex at `14,1` in a box
- * whose centre is 16, and the pavilion ran `1,17.5` on the left against
- * `31,17.5` on the right off a girdle that is not level with either — so the
- * mark read as a lopsided cap on a blob, which is what "an odd hexagon" is a
- * fair description of. Nothing caught it, because a hand-drawn constant agrees
- * with itself.
- *
- * The crown keeps the apex and its two cut corners. The pavilion keeps the
- * girdle — the widest points — and the bottom apex, "so the half that falls is
- * the half still recognisable as the jewel", which is why it is the half that
- * carries `currentColor`. Between them 3.5 units of ground: the gap is the
- * whole idea and the last thing to disappear, still over a device pixel at a
- * 16px favicon.
+ * Eight sides rather than a rounded rectangle because `docs/DESIGN.md` allows
+ * no rounded corners anywhere in this system — the chamfer is how this project
+ * spells "not a rectangle", on the jewel, on every plate, and here.
  */
+const LINK_PATH =
+  "M4,0 L16,0 L20,4 L20,8 L16,12 L4,12 L0,8 L0,4 Z " +
+  "M5,3 L15,3 L17,5 L17,7 L15,9 L5,9 L3,7 L3,5 Z";
+
+const CHAIN_BOX = boxOf([...LINK_ORDER]);
+const SINGLE_BOX = boxOf([0], 0);
+
 export const MARK_GEOMETRY: MarkGeometry = {
-  viewBox: "0 0 32 32",
-  crown: cleaveAt(JEWEL_POINTS, CROWN_BREAK, "above"),
-  pavilion: cleaveAt(JEWEL_POINTS, PAVILION_BREAK, "below"),
-  /* Drawn along the pavilion's fresh face, edge to edge of the cut — and taken
-     FROM that cut rather than typed beside it, because two hand-kept numbers
-     drifting apart is the whole reason this constant is now derived. */
-  cleave: {
-    x1: cutSpan(PAVILION_BREAK).left,
-    y1: PAVILION_BREAK,
-    x2: cutSpan(PAVILION_BREAK).right,
-    y2: PAVILION_BREAK,
-    width: 1.5,
+  viewBox: `${CHAIN_BOX.minX} ${CHAIN_BOX.minY} ${CHAIN_BOX.width} ${CHAIN_BOX.height}`,
+  link: LINK_PATH,
+  placements: LINK_ORDER.map((index) => placementOf(index)),
+
+  /*
+    ONE SCOPE PER PAIR, and the rectangle is the empty band between that pair's
+    two crossings rather than a shape cut around either of them.
+
+    Two links leaning opposite ways about the same row of centres cross twice,
+    symmetrically above and below that row — so the row itself is the boundary
+    with the most clearance on both sides, and a rectangle from the top of the
+    box down to it contains exactly one crossing. Redrawing the left link there
+    puts it over its neighbour at the upper crossing while paint order leaves
+    the neighbour on top at the lower one. No subtraction, no mask, no cut
+    edges: the interlock is entirely a question of what is drawn last where.
+  */
+  scopes: LINK_ORDER.slice(0, -1).map((index, position) => ({
+    link: position,
+    x: round(centreOf(index)[0]),
+    y: CHAIN_BOX.minY,
+    width: round(LINK_STEP),
+    height: round(CHAIN_CENTRE_Y - CHAIN_BOX.minY),
+  })),
+
+  single: {
+    viewBox: `${SINGLE_BOX.minX} ${SINGLE_BOX.minY} ${SINGLE_BOX.width} ${SINGLE_BOX.height}`,
+    placement: placementOf(0, 0),
   },
 };
 

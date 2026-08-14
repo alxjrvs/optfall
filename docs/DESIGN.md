@@ -19,7 +19,7 @@ move; each expression of it does not.
 |---|---|
 | **The search field is the hero.** No marketing hero, no illustration above the fold. The first thing on the page is the thing you came to do. | **The grammar is inherited, not invented.** LSS's own Card Vault already has a syntax. We adopt it verbatim and extend it to rules and interactions, so a query someone already knows keeps working. |
 | **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on anything carrying state. The chrome should feel struck from metal, not laid out in a design tool. |
-| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch appears only as a cut jewel; the interface never uses that form for anything else. |
+| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch appears only as a cut jewel; the interface never uses that form for anything else. The mark is the single sanctioned exception, and it is argued below. |
 | **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Two voices, strictly assigned.** A serif for names and questions, a sans for everything else. ~~a wide-tracked mono for labels and anything citable~~ — see below. |
 | **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the card**, and the rules and rulings attach to it. Card pages are the shareable object; `/cr/…` sections are addressable too and a card links into them. ~~The unit is the verdict, not the card.~~ — see below. |
 | **Dark mode is not an inversion.** It is designed, and for many users it is the only mode they will ever see. | **Black is the native key.** Near-black ground, blood accent, brass for anything authoritative. Light mode is the printed-rulebook translation — ash and iron, not paper white. |
@@ -28,22 +28,66 @@ move; each expression of it does not.
 
 ## The mark
 
-A cut jewel, cleaved and falling — the crown separating from the pavilion. It is
-the pitch diamond, the same reserved silhouette as the gem, which means **the
-logo and the core interface primitive are the same object**: the thing you see a
-thousand times a session is the thing on the tab. The pavilion keeps the girdle
-and the bottom apex, so the half that falls is the half still recognisable as
-the jewel.
+**Three interlocked links, leaning at 25°, in the three pitch colours.**
 
-Two solids and a hairline, so it survives a favicon. The gap between crown and
-pavilion is the whole idea and it is the last thing to disappear at small sizes.
+The mark used to be a cut jewel — the pitch diamond, cleaved — on the argument
+that the logo and the core interface primitive should be the same object. That
+was a good argument for a mark that says *Flesh and Blood*. It is the wrong
+argument for this one, because what the jewel says is what the GAME is, and what
+this tool does is **join things**.
+
+A card to the rule that governs it. A rule back to every card that prints its
+keyword. A printing to its legality, and that verdict to the upstream flags it
+was derived from. `docs/SCRYFALL-GAP.md` calls the card↔rules cross-reference
+"the join nothing currently makes", and it is the one thing here no other tool
+has. A chain is that, drawn.
+
+Three links rather than two, because two rings that overlap are two rings; three
+is where it reads as a chain — and three is what carries one pitch value each.
+
+**The interlock is paint order and nothing else.** Each link crosses its
+neighbour twice, and a real chain is over at one crossing and under at the
+other. No mask, no subtraction, no cut edges: a link is redrawn inside a
+rectangle containing only its upper crossing, and the rectangle sits in the
+empty band between the two — so nothing is ever clipped through a link's own
+edge. Earlier attempts cut the shapes instead and produced angled bites out of
+the rings, which is the failure this arrangement is designed against.
+
+### The one place pitch colour is spent on something that is not pitch
+
+The system's rule is that **colour is data**: the pitch palette means a pitch
+value and nothing else, and boldness is rationed. A three-colour mark reads
+against that, so the exception is argued here rather than left as an
+inconsistency somebody finds later.
+
+**The mark is not a card.** Its links are not a pitch *value* — there is no card
+here to have one. They are the three-value system itself, spent once, as
+identity. That is the same shape of argument the jewel already made for putting
+the reserved silhouette on a logo, and it holds for exactly one object.
+
+An **Ink** alternate exists for surfaces that cannot take three colours: ink on
+the outside links, blood in the middle. It is the more legible of the two when
+small, which is worth knowing before choosing one.
+
+### It has to survive a favicon, and at three links it does not
+
+The chain is about twice as wide as it is tall. Measured at 16, 32, 48 and
+128px: at 16 in a square box the three rings are a smudge, and **one link
+upright is still legibly a ring**. So the tab icon is one link.
+
+That is not a second drawing. `MARK_GEOMETRY.single` is the same path under a
+different transform, in a box derived from the same corners, so the favicon
+cannot drift from the mark — there is nothing to keep in step. The endpoint at
+`apps/site/src/pages/favicon.svg.ts` generates it at build time from that
+constant, and one link has no value to carry, so it takes the accent rather than
+the pitch palette: the ordinary rule, not the exception above.
 
 **One compliance constraint shaped this.** LSS's policy does not merely prohibit
 using their logos in third-party applications — it prohibits creating any *close
 semblance* to them. So the mark takes the register (angular, chiselled, struck
-from metal) and nothing of the form. Working from the game's own furniture rather
-than its branding turned out to be the better idea anyway: a jewel is a mechanic,
-and a mechanic cannot be confused with a trademark.
+from metal) and nothing of the form. Nothing here is heraldic, bladed or
+lettered, and the chamfered links carry the system's own rule that there are no
+rounded corners anywhere.
 
 ---
 
@@ -232,7 +276,10 @@ that knows about time.
   game about hitting people with axes. Pitch and chrome can share a hue because
   they never share a *shape*: pitch appears only as a cut jewel, and nothing else
   in the interface is ever that silhouette. It is exactly why coloured mana pips
-  coexist with coloured UI.
+  coexist with coloured UI. The mark is the one object that spends the pitch
+  PALETTE without being a pitch value — see "The mark" above for why that is an
+  identity rather than a datum, and note that it does not touch this rule, since
+  a chain link is not the jewel's silhouette.
 - **Brass is rationed to one job.** Verified judge attribution, and nothing else.
 - **Filigree earns three roles and no more.** Feature-panel corners, card-frame
   corners, and the section rule. Scrollwork is how the game's frames signal that

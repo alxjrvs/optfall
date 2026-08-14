@@ -93,17 +93,92 @@ describe("the primitive set", () => {
  * that the shape is vertex-up — orientation being exactly what a token's NAME
  * does not say, and the half of this that drifted.
  */
-/** The y of the line through `a`,`b` at `x`. */
-function yOn(x: number, a: { x: number; y: number }, b: { x: number; y: number }): number {
-  return a.y + ((x - a.x) * (b.y - a.y)) / (b.x - a.x);
-}
+/** `rotate(a,cx,cy) translate(tx,ty)` — the format `placementOf` emits. */
+const transformOf = (index: number) => {
+  const placement = MARK_GEOMETRY.placements[index]!;
+  const [angle, cx, cy] = /rotate\(([-\d.]+),([-\d.]+),([-\d.]+)\)/
+    .exec(placement)!
+    .slice(1)
+    .map(Number) as [number, number, number];
+  const [tx, ty] = /translate\(([-\d.]+),([-\d.]+)\)/
+    .exec(placement)!
+    .slice(1)
+    .map(Number) as [number, number];
+  const r = (angle * Math.PI) / 180;
+  return ([x, y]: [number, number]): [number, number] => {
+    const px = x + tx - cx;
+    const py = y + ty - cy;
+    return [
+      cx + px * Math.cos(r) - py * Math.sin(r),
+      cy + px * Math.sin(r) + py * Math.cos(r),
+    ];
+  };
+};
 
-/** An SVG `points` list, as coordinates. */
-function points(list: string): { x: number; y: number }[] {
-  return list.split(" ").map((pair) => {
-    const [x, y] = pair.split(",").map(Number);
-    return { x: x ?? 0, y: y ?? 0 };
-  });
+const contains = (ring: [number, number][], x: number, y: number) => {
+  let hit = false;
+  for (let i = 0; i < ring.length; i += 1) {
+    const [x1, y1] = ring[i]!;
+    const [x2, y2] = ring[(i + 1) % ring.length]!;
+    if (y1 > y !== y2 > y) {
+      if (x < x1 + ((y - y1) * (x2 - x1)) / (y2 - y1)) hit = !hit;
+    }
+  }
+  return hit;
+};
+
+/**
+ * The two places where a pair of links actually overlaps.
+ *
+ * Computed from the PUBLISHED geometry rather than from the module's private
+ * constants: the link path is parsed out of `MARK_GEOMETRY.link` and each
+ * placement out of `MARK_GEOMETRY.placements`, so this measures what a
+ * consumer draws. It is slow and it is worth it — the interlock is the whole
+ * mark, it is produced entirely by where a scope rectangle falls, and nothing
+ * else in the suite would notice it inverting.
+ */
+function overlapBands(a: number, b: number): { lo: number; hi: number }[] {
+  const [outer, inner] = MARK_GEOMETRY.link
+    .split("M")
+    .filter((part) => part.trim() !== "")
+    .map((part) =>
+      part
+        .replace(/[LZ]/g, " ")
+        .trim()
+        .split(/\s+/)
+        .map((pair) => pair.split(",").map(Number) as [number, number]),
+    );
+
+  const place = (index: number, ring: [number, number][]) =>
+    ring.map(transformOf(index));
+
+  const rings = [a, b].map((index) => ({
+    outer: place(index, outer!),
+    inner: place(index, inner!),
+  }));
+  const inRing = (index: 0 | 1, x: number, y: number) =>
+    contains(rings[index]!.outer, x, y) && !contains(rings[index]!.inner, x, y);
+
+  const [, minY, , height] = MARK_GEOMETRY.viewBox.split(" ").map(Number);
+  const step = 0.1;
+  const rows: number[] = [];
+
+  for (let y = minY!; y <= minY! + height!; y += step) {
+    for (let x = 0; x <= 64; x += step) {
+      if (inRing(0, x, y) && inRing(1, x, y)) {
+        rows.push(y);
+        break;
+      }
+    }
+  }
+
+  const bands: { lo: number; hi: number }[] = [];
+  for (const y of rows) {
+    const last = bands.at(-1);
+    if (last && y - last.hi <= step * 2) last.hi = y;
+    else bands.push({ lo: y, hi: y });
+  }
+  return bands;
 }
 
 describe("the reserved silhouette", () => {
@@ -137,57 +212,125 @@ describe("the reserved silhouette", () => {
     expect(LIGHT_TOKENS["ornament.cut.jewel"]).toBe(silhouette);
   });
 
-  test("the mark is that diamond, cleaved rather than a second shape", () => {
-    const crown = points(MARK_GEOMETRY.crown);
-    const pavilion = points(MARK_GEOMETRY.pavilion);
+  test("the mark is a chain of three interlocked links", () => {
+    const { placements, scopes, link } = MARK_GEOMETRY;
 
-    // The crown holds the top apex and the pavilion holds the bottom one, which
-    // is what makes the pair a diamond rather than two lozenges.
-    const apex = crown.reduce((a, b) => (a.y <= b.y ? a : b));
-    const base = pavilion.reduce((a, b) => (a.y >= b.y ? a : b));
-    expect(apex.x).toBeGreaterThan(12);
-    expect(apex.x).toBeLessThan(20);
-    expect(base.x).toBeGreaterThan(12);
-    expect(base.x).toBeLessThan(20);
+    // Three links, and the scopes are the pairs between them. Two links would
+    // be two rings overlapping; three is where it reads as a chain.
+    expect(placements).toHaveLength(3);
+    expect(scopes).toHaveLength(2);
 
-    // The girdle — the stone's widest points — survives on the pavilion, so the
-    // fallen half is the one that still reads as the jewel.
-    const widest = Math.max(...pavilion.map((p) => p.x)) - Math.min(...pavilion.map((p) => p.x));
-    const crownWidest = Math.max(...crown.map((p) => p.x)) - Math.min(...crown.map((p) => p.x));
-    expect(widest).toBeGreaterThan(crownWidest);
-
-    /*
-     * THE GAP IS MEASURED BETWEEN THE PARTED EDGES, NOT BETWEEN BOUNDING BOXES.
-     *
-     * The first version of this compared the crown's lowest point to the
-     * pavilion's highest and asserted `>= 2`, which passed with exactly zero
-     * margin and measured the wrong thing twice over: both edges are tilted, so
-     * box extremes understate the real clearance, and steepening the tilt would
-     * have failed the test without narrowing the cut by a single unit. It also
-     * bounded the gap at 1 device pixel on a 16px favicon while every doc around
-     * it treats 1.5px as the requirement.
-     *
-     * So: walk the cut, sample the vertical distance between the two edges, and
-     * take the worst. One viewBox unit is half a device pixel at 16px, so 3
-     * units is the 1.5px the mark is designed around.
-     */
-    const parted = crown.toSorted((a, b) => b.y - a.y).slice(0, 2).toSorted((a, b) => a.x - b.x);
-    const [pl, pr] = parted;
-    const face = MARK_GEOMETRY.cleave;
-    if (pl === undefined || pr === undefined) throw new Error("no parted edge on the crown");
-
-    const from = Math.max(pl.x, face.x1);
-    const to = Math.min(pr.x, face.x2);
-    let narrowest = Infinity;
-    for (let step = 0; step <= 20; step += 1) {
-      const x = from + ((to - from) * step) / 20;
-      narrowest = Math.min(
-        narrowest,
-        yOn(x, { x: face.x1, y: face.y1 }, { x: face.x2, y: face.y2 }) - yOn(x, pl, pr),
-      );
+    // Each link is a ring: an outer octagon and the window it encloses, in one
+    // path so `fill-rule="evenodd"` can make the middle a hole. A ring drawn as
+    // two shapes in two colours would look identical on a dark ground and be
+    // wrong on any other, so "one path, two subpaths" is the thing to hold.
+    //
+    // Eight vertices each: the `M` that opened the subpath — consumed by the
+    // split — plus seven `L`s. Eight because `docs/DESIGN.md` allows no rounded
+    // corners anywhere, and the chamfer is how this system spells "not a
+    // rectangle".
+    const subpaths = link.split("M").filter((part) => part.trim() !== "");
+    expect(subpaths).toHaveLength(2);
+    for (const subpath of subpaths) {
+      expect(subpath.match(/L/g) ?? []).toHaveLength(7);
+      expect(subpath.trim().endsWith("Z")).toBe(true);
     }
 
-    expect(narrowest).toBeGreaterThanOrEqual(3);
+    // THE LINKS ALTERNATE THEIR LEAN. A chain that sheared one way would be a
+    // row of parallel rings; the zigzag is what makes each pair cross twice.
+    const angles = placements.map((placement) => {
+      const match = /rotate\((-?[\d.]+)/.exec(placement);
+      return Number(match?.[1] ?? 0);
+    });
+    expect(angles[0]).toBe(-angles[1]!);
+    expect(angles[2]).toBe(angles[0]);
+    expect(Math.abs(angles[0]!)).toBeGreaterThan(0);
+  });
+
+  test("each pair of links crosses in exactly two places", () => {
+    // TWO CROSSINGS IS WHAT MAKES AN INTERLOCK POSSIBLE. One would be a lap,
+    // three would mean the links have slid far enough through each other to
+    // meet again, and either way the "over here, under there" the mark is built
+    // on stops being expressible.
+    for (const [a, b] of [
+      [0, 1],
+      [1, 2],
+    ] as const) {
+      expect(overlapBands(a, b)).toHaveLength(2);
+    }
+  });
+
+  test("every scope cuts the gap between the crossings, not a crossing", () => {
+    /*
+     * THE ASSERTION THE INTERLOCK ACTUALLY RESTS ON.
+     *
+     * A scope redraws the left link of a pair over its right neighbour, and it
+     * must contain exactly ONE of the pair's two crossings. If its lower edge
+     * landed inside a crossing it would clip through a link's own ring — the
+     * angled bites earlier attempts produced — and if it cleared both, the pair
+     * would go back to one link lying flat over the other.
+     *
+     * So the cut is checked against the MEASURED bands rather than against the
+     * reasoning that produced it. That reasoning was wrong when it was written:
+     * the comment claimed the two crossings "sit symmetrically about the row of
+     * centres", and they do not. A pair is mirror-symmetric about the VERTICAL
+     * bisector between its centres — mirroring x flips the lean, which is what
+     * maps one link onto the other — and a vertical mirror says nothing about
+     * where the bands land in y. Measured, they straddle the centre row
+     * unevenly, and the cut clears the nearer one by about a unit.
+     *
+     * A unit of viewBox is half a device pixel at a 16px favicon. It holds, and
+     * it is thin enough that it should fail here rather than be re-derived by
+     * eye if anyone changes the angle or the overlap.
+     */
+    const pairs = [
+      [0, 1],
+      [1, 2],
+    ] as const;
+
+    MARK_GEOMETRY.scopes.forEach((scope, index) => {
+      const [a, b] = pairs[index]!;
+      const [upper, lower] = overlapBands(a, b);
+      const cut = scope.y + scope.height;
+
+      expect(upper!.hi).toBeLessThan(cut);
+      expect(lower!.lo).toBeGreaterThan(cut);
+
+      // AND IT HAS TO SIT OVER THE RIGHT PAIR. `x` and `width` are what decide
+      // WHICH crossings a rectangle captures, and asserting only the vertical
+      // cut would pass a scope slid sideways onto a different join entirely.
+      const centres = MARK_GEOMETRY.placements.map((placement) =>
+        Number(/rotate\([-\d.]+,([-\d.]+),/.exec(placement)![1]),
+      );
+      expect(scope.x).toBeCloseTo(centres[a]!, 1);
+      expect(scope.x + scope.width).toBeCloseTo(centres[b]!, 1);
+    });
+  });
+
+  test("the favicon's single link is the same path, not a second drawing", () => {
+    const { single, link, placements } = MARK_GEOMETRY;
+
+    // THE PROPERTY THAT MATTERS. The tab icon draws one link because three at
+    // this aspect are a smudge at 16px — measured — but it must not become a
+    // second drawing of the mark, because a second drawing is a thing that
+    // drifts. There is no `single.link`: the endpoint renders `link` under
+    // `single.placement`, so there is nothing to keep in step.
+    expect(single.placement).toContain("rotate(0,");
+    expect(link).toBeTruthy();
+
+    // Upright, unlike every link in the chain.
+    for (const placement of placements) {
+      expect(placement).not.toContain("rotate(0,");
+    }
+
+    // Its box is its own, and it is close to square — which is the entire
+    // reason the favicon is one link rather than three.
+    const [, , width, height] = single.viewBox.split(" ").map(Number);
+    const chainAspect = (() => {
+      const [, , w, h] = MARK_GEOMETRY.viewBox.split(" ").map(Number);
+      return w! / h!;
+    })();
+    expect(width! / height!).toBeLessThan(chainAspect);
   });
 });
 

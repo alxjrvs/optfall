@@ -26,11 +26,11 @@
  *   exactly that clip, where a 1px edge is both uncuttable and mud. The bevel
  *   is the "struck metal" reading, and it is the right thing to lose first.
  * - **`currentColor`.** There is no inherited colour in a document nobody
- *   styles, so the pavilion gets a literal ink — see the theme note below.
+ *   styles, so the link gets a literal accent — see the theme note below.
  *
- * WHAT IT KEEPS is the order of importance the mark was designed around: the
- * gap between crown and pavilion first, the two solids second, the hairline
- * along the cut face last.
+ * WHAT IT KEEPS is the one thing that has to survive: a ring with an open
+ * window. The window is what makes it a link rather than a lozenge, and it is
+ * the last thing to close as the icon gets smaller.
  */
 import type { APIRoute } from "astro";
 
@@ -59,14 +59,14 @@ function literal(tokens: TokenTable, id: TokenId): string {
 /**
  * THE FAVICON IS THEMED, AND IT HAS TO BE, because it is composited against
  * furniture we do not own. A tab strip is the browser's chrome, not our ground,
- * so the mark sits on near-black in a dark browser and on light grey in a light
- * one — and the pavilion is the ink token precisely so it stays the *opposite*
- * of whatever it is sitting on.
+ * so the link sits on near-black in a dark browser and on light grey in a light
+ * one, and has to hold against both.
  *
- * The crown and the cleave stay blood in both, as on the page: `docs/DESIGN.md`
- * rations boldness to two places and a logo is one of them. The light palette
- * darkens its accent rather than reusing the dark one, which is a decision the
- * theme already made and this file only has to not undo.
+ * It is the accent in either: `docs/DESIGN.md` rations boldness to two places
+ * and a logo is one of them, and a single link has no pitch value to carry, so
+ * it takes blood rather than a third of a palette. The light palette darkens
+ * its accent rather than reusing the dark one, which is a decision the theme
+ * already made and this file only has to not undo.
  *
  * `prefers-color-scheme` inside the SVG's own `<style>` is what carries this.
  * A referenced SVG gets no page CSS but does get its own media queries, so this
@@ -78,25 +78,21 @@ const dark = themes.dark.tokens;
 const light = themes.light.tokens;
 
 export const GET: APIRoute = () => {
-  const { viewBox, crown, pavilion, cleave } = MARK_GEOMETRY;
+  const { single, link } = MARK_GEOMETRY;
 
   /*
    * Presentation attributes rather than a fill on each element, so the media
    * query below has something to override — an inline `fill` would win against
    * a stylesheet rule and pin the mark to one palette.
    */
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${single.viewBox}">
 <style>
-.crown, .cleave { color: ${literal(dark, "color.accent")} }
-.pavilion { color: ${literal(dark, "color.ink")} }
+.link { color: ${literal(dark, "color.accent")} }
 @media (prefers-color-scheme: light) {
-.crown, .cleave { color: ${literal(light, "color.accent")} }
-.pavilion { color: ${literal(light, "color.ink")} }
+.link { color: ${literal(light, "color.accent")} }
 }
 </style>
-<polygon class="crown" points="${crown}" fill="currentColor"/>
-<polygon class="pavilion" points="${pavilion}" fill="currentColor"/>
-<line class="cleave" x1="${cleave.x1}" y1="${cleave.y1}" x2="${cleave.x2}" y2="${cleave.y2}" stroke="currentColor" stroke-width="${cleave.width}"/>
+<g transform="${single.placement}"><path class="link" d="${link}" fill-rule="evenodd" fill="currentColor"/></g>
 </svg>
 `;
 
