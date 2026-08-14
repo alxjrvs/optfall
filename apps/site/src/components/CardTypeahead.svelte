@@ -138,7 +138,7 @@
     activeDescendant={active === -1 ? undefined : optionId(active)}
   >
     {#snippet hint()}
-      <code>pitch:3 class:guardian</code> is Card Vault's own syntax · <code>banned:cc</code> is ours · <kbd>/</kbd> returns here.
+      <code>pitch:3 class:guardian</code> · <code>banned:cc</code> — <a href="/syntax">all operators</a>
     {/snippet}
   </SearchField>
 
