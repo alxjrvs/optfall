@@ -589,6 +589,36 @@ demand. This is the part of the plan that is not about features.
 - **Compose, never restyle.** Every surface is assembled from the component
   library. A screen that needs new CSS is a signal the library is missing a
   primitive — add it there, not in the page.
+- **Mobile is a number, not an adjective.** "Looks good on mobile" is not a
+  check anybody can fail, so these are the widths every surface is verified at,
+  and the measured facts that make them the interesting ones:
+
+  | CSS px | What it is | What it costs us |
+  |---|---|---|
+  | **320** | The narrowest viewport still in use (SE-class). The floor. | The card face overflows by 130px. Nothing may scroll sideways here. |
+  | **360** | The common Android width. | Face overflows by 90px. |
+  | **390** | The common iPhone width — the single most likely visitor. | Face overflows by 60px. |
+  | **430** | Large phones, and small tablets in portrait. | Face overflows by 20px. |
+  | **1226** | `layout.page.wide` — the two-column threshold. | Below it the card page is one column, and that is the majority case. |
+
+  **THE FACE IS WIDER THAN THE PHONE, AND THAT IS THE WHOLE MOBILE PROBLEM.**
+  `card.face.normal` is 28.125rem — 450px — because that is a width the image
+  host actually publishes, and it exceeds *every* viewport in the table above.
+  So a card page on a phone is never the desktop page made smaller: the face
+  must scale below its published width, the two-column layout can never apply,
+  and any element sized from the face rather than from the viewport is a
+  horizontal scrollbar waiting for a visitor. Every horizontal-overflow bug
+  found while landing the mobile work was some version of a box that knew its
+  own width but not the window's.
+
+  **These are widths to TEST at, never widths to branch on.** `check-tokens.ts`
+  rejects raw `px`/`rem` in component CSS and a media condition cannot take a
+  custom property, so a breakpoint is not expressible here at all. That
+  constraint is kept rather than worked around, because every time it has forced
+  the intrinsic answer — `clamp`, `minmax`, `fit-content`, container queries —
+  the intrinsic answer has also been the one that holds at widths nobody
+  enumerated. The numbers above are where the browser is pointed to confirm it,
+  not values any stylesheet may name.
 - **Tokens or nothing.** No component may name a colour or a size directly. The
   lint rule is what makes this real; a design system defended by prose lasts
   about six weeks.
