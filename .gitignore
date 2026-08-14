@@ -12,6 +12,9 @@ out/
 # --- Astro ----------------------------------------------------------------
 .astro/
 apps/*/dist/
+# The Phase 6 generator's output. It sits beside `dist/` rather than replacing
+# it while both renderers exist; layer 5 deletes Astro and this becomes `dist/`.
+apps/*/dist-next/
 
 # --- Netlify --------------------------------------------------------------
 .netlify/
