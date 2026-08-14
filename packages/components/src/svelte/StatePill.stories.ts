@@ -9,7 +9,11 @@ import StatePill from "./StatePill.svelte";
  * **Claim one: the eight tones are mutually distinguishable.** `docs/DESIGN.md`
  * gives the notch to "anything carrying state" and `tokens.test.ts` asserts
  * numerically that no two state fills are the same colour — but "not identical"
- * is a much weaker property than "tellable apart at 0.6875rem under a bevel".
+ * is a much weaker property than "tellable apart at `type.size.micro` under a
+ * bevel". Named as the token rather than as its value on purpose: this sentence
+ * carried the literal `0.6875rem` and went on asserting it after the type floor
+ * moved, which is the same drift the token layer exists to prevent — a doc
+ * comment is not exempt from it.
  * So all eight get a story and the autodocs page is the deliverable: it stacks
  * them in one scroll, which is the only view in which the question can actually
  * be answered. The export order below is chosen to put the dangerous
