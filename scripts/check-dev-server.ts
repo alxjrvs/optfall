@@ -229,13 +229,30 @@ async function readOrigin(): Promise<string> {
   );
 }
 
+/**
+ * NO REQUEST HERE MAY BLOCK WITHOUT A BOUND, and that is a diagnostic
+ * requirement rather than politeness. `fetch` has no default timeout, so a
+ * server that accepts the connection and then never answers — Vite holding a
+ * request through a stuck dependency optimise, a route that never resolves —
+ * parks the script indefinitely. The deadline checks in the loops below cannot
+ * help: they are only consulted *between* attempts. The run would then die at
+ * the CI job's timeout, and because the transcript dump lives after the loop,
+ * it would die with none of the dev-server output that explains why — losing
+ * exactly the diagnostic this file exists to produce.
+ */
+const REQUEST_TIMEOUT_MS = 30_000;
+
+function get(url: string): Promise<Response> {
+  return fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+}
+
 /** Polls until the server answers anything at all — even a 500 counts as up. */
 async function waitUntilListening(origin: string): Promise<void> {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
     try {
-      await fetch(origin);
+      await get(origin);
       return;
     } catch {
       await Bun.sleep(200);
@@ -247,45 +264,61 @@ async function waitUntilListening(origin: string): Promise<void> {
   );
 }
 
-function stop(): void {
-  /*
-   * `bun run` is a PARENT of the Astro process rather than Astro itself, so
-   * this is a tree to take down, not a process — and the two spellings below
-   * are both attempted unconditionally rather than one falling back to the
-   * other.
-   *
-   * The earlier version tried the process group first and only reached
-   * `server.kill()` if that threw, on the reasoning that `Bun.spawn` puts a
-   * child in its own group. Bun does not document that and exposes no
-   * `detached` option, so it is unspecified behaviour: if the child in fact
-   * shares this process's group, the group signal succeeds — it just does not
-   * mean what the code assumed — nothing throws, the fallback never runs, and
-   * `astro dev` is orphaned still holding the port. Trying both costs one
-   * redundant signal to an already-dead process, which is free.
-   */
-  for (const kill of [
-    () => process.kill(-server.pid, "SIGTERM"),
-    () => server.kill(),
-  ]) {
-    try {
-      kill();
-    } catch {
-      /* already gone, or never a group — the other spelling covers it */
-    }
+/**
+ * TEARDOWN RESTS ON `bun run` FORWARDING THE SIGNAL, and this says so rather
+ * than pretending otherwise.
+ *
+ * `bun run` is a PARENT of the Astro process, so the obvious move is to signal
+ * the process group — and two earlier versions of this function did. It does
+ * not work: `Bun.spawn` exposes no `detached` option and does not make the
+ * child a group leader, so `process.kill(-pid)` names a group that does not
+ * exist and throws `ESRCH` every time. Keeping it was worse than useless,
+ * because it read as the mechanism that takes the tree down while the thing
+ * actually doing the work was the fallback.
+ *
+ * So: signal the child, then CHECK. Forwarding is observed to work here, but it
+ * is somebody else's implementation detail, and the failure it would produce —
+ * an orphaned `astro dev` holding port 4399 — is silent and outlives the run.
+ * A warning naming the port turns a leak nobody notices into one a developer
+ * can act on.
+ */
+async function stop(origin: string | undefined): Promise<void> {
+  try {
+    server.kill();
+  } catch {
+    /* already gone */
   }
+
+  if (!origin) return;
+
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    try {
+      await get(origin);
+    } catch {
+      return; // refused the connection: it is down
+    }
+    await Bun.sleep(200);
+  }
+
+  console.log(
+    `::warning::${origin} is still answering after teardown, so an astro dev process was orphaned. Kill it before the next run.`,
+  );
 }
 
 let failures = 0;
+/** Hoisted so `finally` can tell teardown where to look for a leak. */
+let origin: string | undefined;
 
 try {
-  const origin = await readOrigin();
+  origin = await readOrigin();
   await waitUntilListening(origin);
 
   for (const { path, contentType } of checks) {
     let response: Response;
 
     try {
-      response = await fetch(`${origin}${path}`);
+      response = await get(`${origin}${path}`);
     } catch (error) {
       console.log(
         `::error::${path} — the dev server did not answer at all (${String(error)}).`,
@@ -323,7 +356,7 @@ try {
   console.log(`::error::The dev server never came up — ${String(error)}.`);
   failures += 1;
 } finally {
-  stop();
+  await stop(origin);
 }
 
 if (failures > 0) {
