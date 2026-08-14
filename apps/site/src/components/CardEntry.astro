@@ -1314,6 +1314,28 @@ const pitchTargets = JSON.stringify(
        face down rather than clipping it. */
     flex: 0 1 var(--of-card-face-normal);
     min-inline-size: min(var(--of-card-face-thumb), 100%);
+
+    /*
+      THE FACE MAY NOT TAKE THE WHOLE WIDTH WHEN THE COLUMNS WRAP, and this is
+      the one line that fixes the card page on a phone.
+
+      Measured on a phone: the face went full-bleed, which at a 63:88 ratio is
+      well over half a screen of image, and the card's NAME — with its pitch,
+      cost and type — landed within a few lines of the bottom of the viewport.
+      Everything the card page adds on top of the printed face was below the
+      fold, on the page that is the whole point of the site.
+
+      A PERCENTAGE, NOT A BREAKPOINT, and that is deliberate rather than
+      squeamish. The comment below this one already argues that a behaviour
+      needing a media query's worth of arbitrary number is not worth having, and
+      the same reasoning applies here — so the cap is expressed as a
+      relationship that is simply slack when there is room. On a wide page the
+      flex basis binds at `card.face.normal` and this is never reached; once the
+      columns wrap and the column is the width of the screen, it binds instead
+      and the face gives back the space the facts need. One declaration, no
+      threshold, no number anybody chose.
+    */
+    max-inline-size: min(var(--of-card-face-normal), 72%);
   }
 
   /*
