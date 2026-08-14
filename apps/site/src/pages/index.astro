@@ -31,6 +31,8 @@ import { Mark } from "optfall-components/svelte";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import NoScriptNotice from "../components/NoScriptNotice.astro";
 import CardTypeahead from "../components/CardTypeahead.svelte";
+import CardFan from "../components/CardFan.svelte";
+import type { FanCard } from "../components/CardFan.svelte";
 import { buildNameIndex } from "../lib/typeahead";
 import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../lib/cards";
 
@@ -38,6 +40,71 @@ const names = buildNameIndex(CARD_PAGES);
 
 /** Stated rather than typed into prose, so it cannot rot at the next sync. */
 const cards = CORPUS.counts.cards.toLocaleString("en-GB");
+
+/**
+ * THE EIGHT ARE NOT A RANDOM SELECTION.
+ *
+ * Homage to Ancestors, Preserve Tradition, Path Well Traveled, Retrace the
+ * Past, Pilfer the Tomb, Semblance, Mask of Many Faces — every one of them is
+ * about memory, precedent, or copying something that came before. That is what
+ * a rules reference IS, and the door is the one place the project gets to say
+ * what it thinks it is doing without writing a sentence about it.
+ *
+ * THEY ARE NAMED, NOT SAMPLED, and that is deliberate. A random eight would
+ * change on every build, which makes the front page a thing that cannot be
+ * reviewed — and would eventually deal a hand of eight equipment cards, or
+ * eight of the same colour, or something with art nobody chose to put on the
+ * front of the site.
+ *
+ * A NAME THAT STOPS RESOLVING FAILS THE BUILD rather than dropping a card.
+ * Seven cards in a fan built for eight is a gap, and a gap that appears at the
+ * next corpus sync with nothing to explain it is worse than a red build now.
+ * The upstream corpus is versioned and pinned, so this cannot break unnoticed.
+ */
+const FAN_NAMES = [
+  "Homage to Ancestors",
+  "Preserve Tradition",
+  "Path Well Traveled",
+  "Retrace the Past",
+  "Pilfer the Tomb",
+  "Light Fingers",
+  "Semblance",
+  "Mask of Many Faces",
+] as const;
+
+const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
+  const matches = CARD_PAGES.filter((page) => page.card.name === name);
+
+  if (matches.length !== 1) {
+    throw new Error(
+      `index.astro: "${name}" resolves to ${matches.length} card pages, not 1. The front-door fan names its eight cards so the page is reviewable; fix the name or replace it rather than letting the fan render short.`,
+    );
+  }
+
+  const page = matches[0]!;
+
+  /*
+    BOTH HALVES, because they are two different absences. `face` is null when
+    the page has no printing to show at all; `face.key` is null when there is a
+    printing and upstream publishes no image for it. Either one renders a
+    placeholder where the front page expects art, so either one is a build
+    failure rather than a card quietly missing from the hand.
+  */
+  if (page.face === null || page.face.key === null) {
+    throw new Error(
+      `index.astro: "${name}" has no face in the corpus, so the fan would render a placeholder on the front page. Replace it with a card that has art.`,
+    );
+  }
+
+  return {
+    slug: page.slug,
+    label: page.label,
+    /* Nullable upstream — four cards publish no type line, and an alt text
+       reading "Semblance — null" is worse than one that is just the name. */
+    typeLine: page.card.type_text ?? "",
+    faceKey: page.face.key,
+  };
+});
 ---
 
 <BaseLayout
@@ -87,6 +154,14 @@ const cards = CORPUS.counts.cards.toLocaleString("en-GB");
       <a href="/cr/1.0.1a">A rules permalink</a>
     </nav>
   </div>
+
+  <!--
+    BELOW THE FIELD AND BELOW THE LINKS, in the empty half of the screen the
+    door already had. It is rendered without a `client:` directive on purpose:
+    Astro builds it to markup on the build machine, so the fan costs the page
+    eight images and no JavaScript at all.
+  -->
+  <CardFan cards={fan} />
 
   <!--
     Degrade visibly — one line, at the foot, in the quiet voice. The full
