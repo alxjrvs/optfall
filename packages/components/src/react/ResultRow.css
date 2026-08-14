@@ -1,0 +1,61 @@
+/*
+ * `ResultRow`'s styles, ported from the Svelte component's scoped block.
+ * Every value names a token; `scripts/check-tokens.ts` fails the build on a raw
+ * hex or length in component source, and it scans `.css`.
+ */
+
+/*
+  Density without clutter: rows are separated by one hairline and nothing else —
+  no card, no shadow, no padding a reader has to look past. The row wraps
+  intrinsically rather than at a breakpoint, since the theme publishes no
+  breakpoint tokens and a raw one is not available to write.
+*/
+.of-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-tight);
+  padding-block: var(--of-space-base);
+  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
+.of-result__body {
+  flex: 1 1 60%;
+  min-inline-size: 0;
+}
+
+.of-result__line {
+  margin: 0;
+}
+
+/* Serif — the voice assigned to names. */
+.of-result__name {
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-large);
+  letter-spacing: var(--of-type-tracking-tight);
+}
+
+.of-result__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--of-space-tight);
+  margin-block: var(--of-space-tightest) 0;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+/*
+  A PLAIN DESCENDANT SELECTOR, WHERE SVELTE NEEDED `:global()`.
+
+  In the Svelte original the metadata's markup was authored in the CALLER, so it
+  carried the caller's scope hash and `.meta span` compiled to nothing — the
+  rule had to be written `:global(span)` to reach it at all. There are no scope
+  hashes here, so the obvious selector is also the correct one. Kept scoped
+  under the row so its reach stays inside this component.
+*/
+.of-result__meta span {
+  color: var(--of-color-ink-muted);
+}

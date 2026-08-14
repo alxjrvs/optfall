@@ -1,0 +1,133 @@
+/*
+ * `BevelledPlate`'s styles, ported from the Svelte component's scoped block.
+ * Every declaration and every comment is the original's.
+ *
+ * The class names gained an `of-plate` prefix and the emphasis variants became
+ * modifiers rather than bare words — `.flat` scoped to a component by Svelte
+ * is fine; `.flat` in a global sheet is a landmine. See `CardFace.css` for why
+ * this port uses explicit names rather than CSS Modules.
+ */
+
+.of-plate {
+  /* Both edges start as the hairline rule; `edges` promotes one or both to the
+     bevel. Depth is a separate axis, set by the emphasis classes. */
+  --plate-edge-block-start: var(--of-color-rule);
+  --plate-edge-block-end: var(--of-color-rule);
+  --plate-pad: var(--of-space-loose);
+
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  padding: var(--plate-pad);
+  border-style: solid;
+  border-width: var(--of-bevel-width);
+  /* Stated, not omitted. The token exists only to be zero. */
+  border-radius: var(--of-bevel-radius);
+  border-block-start-color: var(--plate-edge-block-start);
+  border-block-end-color: var(--plate-edge-block-end);
+  border-inline-color: var(--of-color-rule);
+  background: var(--plate-face);
+  color: var(--of-color-ink);
+  box-shadow: var(--plate-depth);
+}
+
+/* Flat is the default substrate: surface tone, and the bevel is exactly one
+   hairline deep. No inner ring, so nesting a flat plate inside a flat plate
+   costs a single rule rather than a visible step. */
+.of-plate--flat {
+  --plate-face: var(--of-color-surface);
+  --plate-bevel-block-start: var(--of-bevel-light);
+  --plate-bevel-block-end: var(--of-bevel-dark);
+  --plate-depth: none;
+}
+
+/* Raised: lit from above, which is where light comes from. The inner ring is
+   what separates it from flat — the edge is modelled rather than merely
+   coloured, so the plate reads as proud of the ground at a glance and does not
+   depend on the tone difference alone. */
+.of-plate--raised {
+  --plate-face: var(--of-color-surface-raised);
+  --plate-bevel-block-start: var(--of-bevel-light);
+  --plate-bevel-block-end: var(--of-bevel-dark);
+  --plate-depth:
+    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
+    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+}
+
+/* Sunken is raised with the light source unchanged and the surface below the
+   ground: the shadow falls on the near edge and the far edge catches the light.
+   Inverting the bevel is the whole of it — the face darkens to `color.sunken`
+   to agree with the geometry, never to replace it. */
+.of-plate--sunken {
+  --plate-face: var(--of-color-sunken);
+  --plate-bevel-block-start: var(--of-bevel-dark);
+  --plate-bevel-block-end: var(--of-bevel-light);
+  --plate-depth:
+    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-dark),
+    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light);
+}
+
+/* Declared after `.of-plate` so equal specificity resolves in favour of the
+   opt-in. An omitted edge keeps the hairline set above. */
+.of-plate--bevel-block-start {
+  --plate-edge-block-start: var(--plate-bevel-block-start);
+}
+
+.of-plate--bevel-block-end {
+  --plate-edge-block-end: var(--plate-bevel-block-end);
+}
+
+/* Filigree sits inside the padding box, so the padding has to clear it —
+   otherwise the first line of a feature panel collides with its own
+   scrollwork. `space.loosest` is the smallest step that clears a panel corner
+   at the emphatic size set below. */
+.of-plate--ornamented {
+  --plate-pad: var(--of-space-loosest);
+}
+
+/* The hook. Positioned AND sized here; drawn by whatever the caller renders
+   into the `corner` render prop, because rationing filigree is the call site's
+   job and placing it is the frame's. `aria-hidden` is on the markup: ornament
+   is never content.
+
+   A feature panel is the one place in the system allowed to be emphatic, so its
+   corners are two steps of the ornament token where a card frame takes one.
+   Both are computed from the token — neither is a length. Sizing the slot
+   rather than the drawing is what lets `FiligreeCorner` be a pure drawing that
+   fills whatever it is given. */
+.of-panel-corner {
+  position: absolute;
+  inline-size: calc(var(--of-ornament-filigree-size) * 2);
+  block-size: calc(var(--of-ornament-filigree-size) * 2);
+  color: var(--of-ornament-filigree-ink);
+  pointer-events: none;
+}
+
+.of-panel-corner[data-corner="start-start"] {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+
+.of-panel-corner[data-corner="start-end"] {
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+
+.of-panel-corner[data-corner="end-start"] {
+  inset-block-end: 0;
+  inset-inline-start: 0;
+}
+
+.of-panel-corner[data-corner="end-end"] {
+  inset-block-end: 0;
+  inset-inline-end: 0;
+}
+
+/* Honour a reduced-motion preference by never introducing motion here at all;
+   the plate is static by design. Declared so the intent is explicit rather than
+   accidental. */
+@media (prefers-reduced-motion: reduce) {
+  .of-plate {
+    transition: none;
+  }
+}

@@ -1,0 +1,164 @@
+/*
+ * `PitchJewel`'s styles, ported from the Svelte component's scoped block. Every
+ * declaration and every comment is the original's; the class names gained an
+ * `of-jewel` prefix and the size/tone variants became modifiers, because `.sm`
+ * and `.lg` in a global sheet are landmines where Svelte's scoping made them
+ * safe.
+ */
+
+.of-jewel {
+  /*
+    THE RESERVED SILHOUETTE: the pitch diamond. Vertex up, vertex down, widest
+    across the middle, with all four corners cut — eight sides, and a stone
+    rather than a button.
+
+    IT USED TO BE EDGE-UP, a chamfered square, and that was drift rather than a
+    decision: `scripts/build-design-system.ts` drew the diamond, this drew the
+    square, and `docs/DESIGN.md` said only "an eight-sided cut stone" — true of
+    both, so nothing ever failed while the published design-system cards
+    advertised a shape the product did not render. Orientation is the whole of
+    the difference and it is what makes the shape read as a gem at a glance,
+    before the numeral is legible.
+
+    The polygon is a TOKEN rather than a literal here, which is the same rule
+    every colour and length in this file already follows and the one that would
+    have prevented the drift outright: `scripts/check-tokens.ts` fails the build
+    on a `var(--of-*)` the theme does not define, so the shape cannot be redrawn
+    in one surface and not the other.
+  */
+  position: relative;
+  display: inline-flex;
+  inline-size: var(--of-ornament-jewel-base);
+  block-size: var(--of-ornament-jewel-base);
+
+  /* Struck, not printed: a light top edge and a dark bottom one, exactly as
+     every plate in the system carries.
+
+     THE MECHANISM CHANGED WITH THE SHAPE, which is the component's own rule —
+     "the mechanism is chosen by geometry, not by taste". It was an inset
+     `box-shadow` pair, correct for an EDGE-UP octagon where a hairline band
+     along the top of the box lands on a full-width flat edge. On the diamond
+     there is no flat top: that band meets the polygon only in a sliver at the
+     apex, so the bevel degenerated into a glint on the one component every
+     other primitive is supposed to follow.
+
+     (Written without a digit-and-unit anywhere, deliberately: `check-tokens.ts`
+     reads prose inside a stylesheet as CSS. Describing a literal is how you
+     accidentally commit one.)
+
+     So the jewel takes the paired `drop-shadow()` filter that `Mark` uses — the
+     only one of the four spellings that traces an arbitrary alpha silhouette,
+     which is what the diamond's four diagonal edges need.
+
+     It has to sit on the PARENT. `filter` is applied before `clip-path` on the
+     same element, so a drop-shadow declared next to the clip is drawn and then
+     clipped away by it; on the parent it traces the child's already-clipped
+     shape. That is what the extra span in the markup buys, and it is the whole
+     reason for it. */
+  filter: drop-shadow(
+      0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light)
+    )
+    drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
+
+  user-select: none;
+}
+
+/* The stone itself: the reserved silhouette, filled, carrying the numeral. */
+.of-jewel__stone {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  clip-path: var(--of-ornament-cut-jewel);
+  background: var(--stone);
+  color: var(--ink);
+}
+
+.of-jewel--sm {
+  inline-size: var(--of-ornament-jewel-small);
+  block-size: var(--of-ornament-jewel-small);
+}
+
+.of-jewel--lg {
+  inline-size: var(--of-ornament-jewel-large);
+  block-size: var(--of-ornament-jewel-large);
+}
+
+/* The facet highlight. A cut stone catches light on its crown, which is what
+   separates it from a coloured hexagon — and the reason the shape reads as a
+   jewel at a glance, before the numeral is legible.
+
+   THE CROWN STOPS ABOVE THE GLYPH, AND THAT IS A CONTRAST FIX RATHER THAN A
+   TASTE ONE. The numeral paints above this overlay, but the overlay lightens
+   the stone BEHIND it, so a white wash reaching the cap-height line reduces the
+   very channel `docs/DESIGN.md` calls primary. At half the block size and a
+   higher opacity the residual alpha under the top of the glyph took pitch three
+   from 4.66:1 to about 4.00:1 in dark mode — a 1.4.3 failure — and pitch one
+   from 5.53:1 to about 4.91:1. A third of the block size ends the gradient at
+   the cap line at every one of the three sizes, so the numeral sits on
+   undiluted stone; the lower opacity is headroom, since pitch three clears the
+   threshold by only 0.16 before any overlay at all. The crown highlight
+   survives both changes, which is the point.
+
+   On the stone rather than the jewel, so the highlight is clipped by the
+   silhouette that lives there. On a diamond the band is cut to a triangle by
+   the two upper edges, which is what a crown facet actually looks like. */
+.of-jewel__stone::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 33%;
+  background: linear-gradient(var(--of-color-pitch-facet) 0%, transparent 100%);
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.of-jewel__glyph {
+  position: relative;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-small);
+  font-weight: var(--of-type-weight-bold);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-normal);
+}
+
+.of-jewel--lg .of-jewel__glyph {
+  font-size: var(--of-type-size-large);
+}
+
+.of-jewel--sm .of-jewel__glyph {
+  font-size: var(--of-type-size-micro);
+}
+
+.of-jewel--tone-none {
+  --stone: var(--of-color-pitch-none);
+  --ink: var(--of-color-pitch-none-ink);
+}
+
+.of-jewel--tone-one {
+  --stone: var(--of-color-pitch-one);
+  --ink: var(--of-color-pitch-one-ink);
+}
+
+.of-jewel--tone-two {
+  --stone: var(--of-color-pitch-two);
+  --ink: var(--of-color-pitch-two-ink);
+}
+
+.of-jewel--tone-three {
+  --stone: var(--of-color-pitch-three);
+  --ink: var(--of-color-pitch-three-ink);
+}
+
+/* Honour a reduced-motion preference by never introducing motion here at all;
+   the jewel is static by design. Declared so the intent is explicit rather than
+   accidental. */
+@media (prefers-reduced-motion: reduce) {
+  .of-jewel {
+    transition: none;
+  }
+}

@@ -13,10 +13,14 @@
  * That is what keeps the two ports from drifting on the things that actually
  * matter: there is one copyright string, not two.
  *
- * WHAT IS EXPORTED HERE IS DELIBERATELY THE COMPLIANCE PAIR AND NOTHING ELSE.
- * They are ported first because they are the only two whose failure is silent:
- * every other primitive in this library is wrong in a way you can see.
+ * THE COMPLIANCE PAIR WAS PORTED FIRST AND ALONE, because they are the only
+ * two whose failure is silent: every other primitive in this library is wrong
+ * in a way you can see. The rest follow here.
  */
 
+export { BevelledPlate, type BevelledPlateProps } from "./BevelledPlate";
 export { CardFace, type CardFaceProps } from "./CardFace";
 export { CardFaceGroup, type CardFaceGroupProps } from "./CardFaceGroup";
+export { OrnamentalRule, type OrnamentalRuleProps } from "./OrnamentalRule";
+export { PitchJewel, type PitchJewelProps } from "./PitchJewel";
+export { ResultRow, type ResultRowProps } from "./ResultRow";
