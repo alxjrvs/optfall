@@ -619,6 +619,31 @@ demand. This is the part of the plan that is not about features.
   the intrinsic answer has also been the one that holds at widths nobody
   enumerated. The numbers above are where the browser is pointed to confirm it,
   not values any stylesheet may name.
+- **One TypeScript, and right now it cannot be TypeScript 7.** Three compilers
+  were installed and running against this repo at once — 7.0.2 at the root,
+  6.0.3 for the site, 5.9.3 for the components package — so "does it typecheck"
+  had three different answers depending on which directory asked. The two
+  framework workspaces are now both on 6.0.3.
+
+  **Six, not seven, and the reason is a measurement rather than caution.**
+  TypeScript 7 is the native compiler, and it does not expose the programmatic
+  API that the framework checkers are built on:
+
+  - `astro check` refuses outright — *"TypeScript's native compiler (7.0 and
+    later) does not ship this API yet … run `astro check` with a TypeScript
+    version that still provides it (6.x)"* (withastro/roadmap#1321).
+  - `svelte-check` can use it, but only alongside a 6.x install and behind
+    `--tsgo`, so **6 remains the primary compiler either way**.
+
+  The root stays on 7.0.2, because the packages it checks are plain TypeScript
+  and the native compiler handles them — so the direction of travel is real
+  rather than aspirational; it simply stops at the framework boundary.
+
+  **THIS IS THE ARGUMENT FOR LEAVING ASTRO, AND IT IS EVIDENCE RATHER THAN
+  PREFERENCE.** "Optfall should run TypeScript 7" and "Optfall is an Astro site"
+  are not two goals to sequence — measured today, they are mutually exclusive.
+  Whatever replaces Astro must typecheck under the native compiler, and TS 7
+  becomes an OUTCOME of that move rather than a prerequisite for it.
 - **Tokens or nothing.** No component may name a colour or a size directly. The
   lint rule is what makes this real; a design system defended by prose lasts
   about six weeks.
