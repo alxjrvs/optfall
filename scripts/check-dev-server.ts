@@ -167,6 +167,37 @@ void drain(server.stdout);
 void drain(server.stderr);
 
 /**
+ * Astro's banner is colourised, and the escape codes sit between the label and
+ * the URL. Stripping them is what lets the patterns below be written as the
+ * text a human sees, and it makes the failure dump at the bottom readable too.
+ */
+function plain(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replaceAll(/\[[0-9;]*m/g, "");
+}
+
+/**
+ * ASTRO SAYS "ALREADY RUNNING" IN TWO OPPOSITE SITUATIONS, and telling them
+ * apart is the whole of this function's care.
+ *
+ * When `--ignore-lock` does exactly what it is asked to, Astro announces
+ * `Starting a new dev server alongside the one already running at <url> (pid
+ * N)` — a SUCCESS notice, and one that quotes the OTHER server's URL. So the
+ * naive reading of that output is wrong twice over: a substring test for
+ * "already running" aborts a run that worked, and the first
+ * `http://localhost:<port>` in the transcript is somebody else's port, which
+ * would send every route check at a server this script did not start and cannot
+ * control. Dropping that line is what removes both mistakes at once.
+ *
+ * The genuine refusal is `Another astro dev server is already running.`, on the
+ * path where the lock is honoured. `--ignore-lock` cannot reach it today, so
+ * this is insurance rather than a live case — kept because the failure it
+ * catches is silent, and the cost is one string comparison.
+ */
+const ATTACHED = "Another astro dev server is already running.";
+const ALONGSIDE = "alongside the one already running";
+
+/**
  * The origin the server actually bound, read from its own output — Astro moves
  * to a free port when the requested one is in use, and a check that assumed
  * `PORT` would then poll nothing and time out with a misleading message.
@@ -175,18 +206,20 @@ async function readOrigin(): Promise<string> {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
-    /*
-     * Belt and braces on the isolation above. If Astro ever attaches to an
-     * existing server despite `--ignore-lock`, this check would silently start
-     * grading somebody else's process — so say so and stop instead.
-     */
-    if (transcript.includes("already running")) {
+    const output = plain(transcript);
+
+    if (output.includes(ATTACHED)) {
       throw new Error(
         "Astro attached to a dev server this check did not start, so it would be testing another process. Stop it with `bun run --cwd apps/site dev stop` and re-run",
       );
     }
 
-    const found = /http:\/\/localhost:(\d+)/.exec(transcript);
+    const ours = output
+      .split("\n")
+      .filter((line) => !line.includes(ALONGSIDE))
+      .join("\n");
+
+    const found = /http:\/\/localhost:(\d+)/.exec(ours);
     if (found) return `http://localhost:${found[1]}`;
     await Bun.sleep(200);
   }
@@ -216,22 +249,28 @@ async function waitUntilListening(origin: string): Promise<void> {
 
 function stop(): void {
   /*
-   * `bun run` is a parent of the Astro process rather than Astro itself, so
-   * this is a tree to take down, not a process. `Bun.spawn` puts the child in
-   * its own group, so a negative pid signals the group and reaches Astro too —
-   * killing only the parent orphans a dev server holding the port, which the
-   * next run would then attach to or trip over.
+   * `bun run` is a PARENT of the Astro process rather than Astro itself, so
+   * this is a tree to take down, not a process — and the two spellings below
+   * are both attempted unconditionally rather than one falling back to the
+   * other.
    *
-   * Both spellings are attempted because a process that has already exited
-   * throws, and that is not a failure of the check.
+   * The earlier version tried the process group first and only reached
+   * `server.kill()` if that threw, on the reasoning that `Bun.spawn` puts a
+   * child in its own group. Bun does not document that and exposes no
+   * `detached` option, so it is unspecified behaviour: if the child in fact
+   * shares this process's group, the group signal succeeds — it just does not
+   * mean what the code assumed — nothing throws, the fallback never runs, and
+   * `astro dev` is orphaned still holding the port. Trying both costs one
+   * redundant signal to an already-dead process, which is free.
    */
-  try {
-    process.kill(-server.pid, "SIGTERM");
-  } catch {
+  for (const kill of [
+    () => process.kill(-server.pid, "SIGTERM"),
+    () => server.kill(),
+  ]) {
     try {
-      server.kill();
+      kill();
     } catch {
-      /* already gone */
+      /* already gone, or never a group — the other spelling covers it */
     }
   }
 }
@@ -295,7 +334,7 @@ if (failures > 0) {
    * websocket, so an HTTP body is worth nothing here and the server's own
    * output is the only place the cause appears.
    */
-  console.log(transcript.trim() || "(the server printed nothing)");
+  console.log(plain(transcript).trim() || "(the server printed nothing)");
   console.log("--- end ---");
   console.log("");
   console.log(
@@ -309,3 +348,15 @@ if (failures > 0) {
 }
 
 console.log(`The dev server serves all ${checks.length} routes. ✔`);
+
+/*
+ * EXPLICIT, BECAUSE FALLING OFF THE END IS NOT ENOUGH HERE. The two `drain()`
+ * promises are deliberately never awaited and stay pending until the server's
+ * pipes close. If `stop()` fails to reach the Astro process — an orphan holding
+ * the inherited stdout and stderr — those pipes never close, and the runtime
+ * keeps the process alive on them. The script would print this success line and
+ * then hang until the CI job's timeout killed it: a red job for a passing
+ * check, with the verdict already on screen. Exiting says the work is finished
+ * rather than leaving it to be inferred from an empty event loop.
+ */
+process.exit(0);
