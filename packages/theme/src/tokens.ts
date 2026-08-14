@@ -235,6 +235,33 @@ const STRUCTURE: TokenTable = {
   "card.face.thumb": "11.25rem",
   "card.face.normal": "28.125rem",
 
+  /* The two container widths, separated from the measure they used to borrow.
+
+     `page.measure` is the same number as `type.measure` and that is not a
+     redundancy — it is the whole point. A page of prose wants a container the
+     width of a line because it holds nothing but lines; a page holding a card
+     face and a column of facts does not. Stating them as two tokens that happen
+     to agree is what lets one move without dragging the other, and until they
+     were separate every attempt to widen a page was a proposal to change the
+     reading measure of the entire site.
+
+     `page.wide` is a face, a gutter and a measure, added up — and it is written
+     as references rather than as numbers so it stays that way. Every term is a
+     value the system already committed to elsewhere, so there is no chosen
+     number here to drift from the other two, which is the property the card
+     page's inline `calc()` had and could not share with anything else.
+
+     NOTE THE ASYMMETRY, WHICH IS DELIBERATE. `page.wide` refers to
+     `type.measure` and `page.measure` does not, even though they agree today.
+     The wide page genuinely IS a face beside a column of prose, so its width
+     should follow the measure wherever the measure goes. The narrow page is a
+     container that happens to be measure-sized right now and must be free to
+     stop being — if it referred to `type.measure` the two would be one token
+     again under a second name, and this whole layer would have bought nothing. */
+  "layout.page.measure": "46rem",
+  "layout.page.wide":
+    "calc(var(--of-card-face-normal) + var(--of-space-loosest) + var(--of-type-measure))",
+
   /* Quick enough not to be noticed, slow enough not to flicker. */
   "motion.fast": "120ms",
   "motion.base": "180ms",
