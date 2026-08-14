@@ -106,6 +106,21 @@ export interface KeywordRule {
   /** The rule's number, for the permalink — `8.3.8`. */
   readonly number: string;
   /**
+   * The defining rule's text, verbatim.
+   *
+   * THIS IS THE REMINDER TEXT, AND CARRYING IT IS THE WHOLE POINT OF THE JOIN.
+   * A card printing nothing but `Arcane Barrier 1` — and 138 cards print nothing
+   * but keywords — tells a reader who already knows what Arcane Barrier is
+   * exactly what they already knew. The rules define it, this module already
+   * resolves the card's keyword to the paragraph that does, and until now the
+   * page spent that resolution on a citation and stopped there.
+   *
+   * Verbatim, never composed. It is the published sentence or it is absent;
+   * nothing here paraphrases a rule, and the rendering shows it as a quotation
+   * of a numbered rule rather than as Optfall's own words about the card.
+   */
+  readonly text: string;
+  /**
    * How the match was made. `direct` is an exact hit on the vocabulary;
    * `family` resolved through a parameterised head term. Reported rather than
    * hidden, because "Briar Specialization is governed by the Specialization
@@ -159,6 +174,52 @@ export function baseKeyword(keyword: string): string {
   return keyword.replace(/\s+(\d+|X{1,2})$/i, "").toLowerCase().trim();
 }
 
+/**
+ * A section's text, or the empty string.
+ *
+ * `buildKeywordVocabulary` only admits sections whose text is a non-empty
+ * string, so this cannot actually return `""` for anything in the vocabulary.
+ * It is written total anyway rather than asserted, because the alternative is a
+ * cast that would be load-bearing for a rendering that quotes the published
+ * document — and the one failure worth designing out is quoting a rule that is
+ * not there.
+ */
+function textOf(section: CorpusSection): string {
+  const text = typeof section.text === "string" ? section.text : "";
+  return withoutLeadingHeading(text);
+}
+
+/**
+ * Drop the repeated heading the corpus concatenates onto a keyword's rule.
+ *
+ * The published document writes a HEADING and then a SENTENCE, and the PDF
+ * parser joins them, so `cr:8.3.8` arrives as:
+ *
+ *     "Arcane Barrier Arcane Barrier is a static ability. …"
+ *
+ * That doubling is exactly what {@link LEADING_REPEAT} detects to build the
+ * vocabulary in the first place — the extractor and this stripper are reading
+ * the same artefact for opposite reasons. Rendered as-is it looks like a bug on
+ * the card page, and it is not: it is a heading, printed once, that the reader
+ * can already see as the keyword beside it.
+ *
+ * IT IS STILL VERBATIM, and the distinction matters on a page that quotes rules.
+ * Nothing is reworded, summarised or joined; one duplicated heading token is
+ * removed from the front, and the sentence that follows is the published one,
+ * character for character. Where the pattern does not match — any rule the
+ * parser did not concatenate — the text is returned untouched rather than
+ * trimmed on a guess.
+ */
+function withoutLeadingHeading(text: string): string {
+  const match = LEADING_REPEAT.exec(text);
+  if (!match) return text;
+
+  const heading = match[1] ?? "";
+  if (heading === "") return text;
+
+  return text.slice(heading.length).trimStart();
+}
+
 /** Resolve one card keyword to a rule, or `null` where the rules define none. */
 export function ruleForKeyword(
   vocabulary: ReadonlyMap<string, CorpusSection>,
@@ -169,14 +230,26 @@ export function ruleForKeyword(
 
   const direct = vocabulary.get(base);
   if (direct) {
-    return { keyword: base, ruleId: idOf(direct), number: direct.number, via: "direct" };
+    return {
+      keyword: base,
+      ruleId: idOf(direct),
+      number: direct.number,
+      text: textOf(direct),
+      via: "direct",
+    };
   }
 
   for (const family of FAMILIES) {
     if (!family.test.test(base)) continue;
     const head = vocabulary.get(family.head);
     if (head) {
-      return { keyword: base, ruleId: idOf(head), number: head.number, via: "family" };
+      return {
+        keyword: base,
+        ruleId: idOf(head),
+        number: head.number,
+        text: textOf(head),
+        via: "family",
+      };
     }
   }
 

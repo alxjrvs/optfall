@@ -72,10 +72,42 @@ describe("resolving a card keyword", () => {
       keyword: "dominate",
       ruleId: "cr:8.3.4",
       number: "8.3.4",
+      text: "Dominate is a static ability that means \u201cThis can\u2019t be defended by more than one card from hand.\u201d",
       via: "direct",
     });
     // Operand stripped, same rule.
     expect(ruleForKeyword(vocabulary, "Ward 10")?.via).toBe("direct");
+  });
+
+  test("the rule's text comes back with its heading stripped", () => {
+    // THE CORPUS CONCATENATES A HEADING ONTO A SENTENCE. The published document
+    // writes "Dominate" as a heading and then the sentence beneath it, and the
+    // PDF parser joins them, so the raw text opens "Dominate Dominate is a …".
+    // That doubling is the same artefact the vocabulary extractor keys on; it
+    // reads as a bug when rendered, so the resolver removes exactly one leading
+    // heading and nothing else.
+    const dominate = ruleForKeyword(vocabulary, "Dominate");
+
+    expect(dominate?.text.startsWith("Dominate Dominate")).toBe(false);
+    expect(dominate?.text.startsWith("Dominate is")).toBe(true);
+
+    // STILL VERBATIM AFTER THE FIRST WORD. The assertion that matters is not
+    // that something was trimmed but that nothing else was: the remainder has
+    // to be a suffix of what the corpus published, character for character.
+    const published = vocabulary.get("dominate")?.text ?? "";
+    expect(published.endsWith(dominate?.text ?? "")).toBe(true);
+  });
+
+  test("every resolved keyword carries a definition to print", () => {
+    // The reminder text on a card page is this field. A rule that resolves but
+    // arrives with no text would render a citation and an empty quotation —
+    // silently, on some fraction of 3,168 cards — so the invariant is asserted
+    // across the whole vocabulary rather than on one example.
+    for (const keyword of vocabulary.keys()) {
+      const resolved = ruleForKeyword(vocabulary, keyword);
+      expect(resolved).not.toBeNull();
+      expect(resolved?.text.length ?? 0).toBeGreaterThan(0);
+    }
   });
 
   test("a parameterised family resolves to the head term the rules define", () => {

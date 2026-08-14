@@ -92,6 +92,15 @@ import {
 } from "../lib/cards";
 import corpusJson from "../../../../data/rules/cr-2.14.0.json";
 import { buildKeywordVocabulary, rulesForCard } from "../lib/keywords";
+/*
+  THE RULES QUOTE GOES THROUGH THE SAME RENDERER AS THE CARD'S TEXT, because it
+  carries the same markers: `cr:8.3.8` says arcane damage may be prevented by
+  paying `N{r}`, and printing that as a literal `{r}` beside a printed text that
+  renders it as a resource plate would make the two look like different
+  notations rather than one document quoting another.
+*/
+import { parseInline } from "../lib/card-text";
+import CardTextInline from "./CardTextInline.astro";
 import { hrefForNumber, type RulesCorpus } from "../lib/search";
 import {
   editionName,
@@ -1056,10 +1065,35 @@ const pitchTargets = JSON.stringify(
                     */
                     <span class="rules-via">via the general rule</span>
                   )}
+
+                  {/*
+                    THE REMINDER TEXT, WHICH IS THE POINT OF THE JOIN.
+
+                    Flesh and Blood does not print reminder text on cards the way
+                    Magic does: 138 cards in this corpus print nothing but
+                    keyword names — `Arcane Barrier 1` and no more — so the
+                    printed text tells a reader who already knows the keyword
+                    exactly what they already knew. The rules define it, the join
+                    above already resolved which paragraph does, and until now
+                    this page spent that resolution on a citation and stopped.
+
+                    IT IS QUOTED, NOT INLINED INTO THE CARD'S TEXT. Scryfall
+                    shows reminder text inside the oracle text because the
+                    printed card contains it. Here it does not, so writing it
+                    into `Printed text` would be printing something the card does
+                    not say — the one thing a reference work may never do. It
+                    sits under its own citation instead, as a quotation of a
+                    numbered rule, and `Printed text` stays verbatim.
+                  */}
+                  {rule.text !== "" && (
+                    <p class="rules-text">
+                      <CardTextInline nodes={parseInline(rule.text)} />
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
-            <p class="verify">Matched exactly against the vocabulary the rules publish. A keyword the document does not define is absent rather than guessed at.</p>
+            <p class="verify">Matched exactly against the vocabulary the rules publish, and each definition is quoted verbatim from the rule cited beside it. A keyword the document does not define is absent rather than guessed at.</p>
           </section>
         )
       }
@@ -1626,6 +1660,30 @@ const pitchTargets = JSON.stringify(
     align-items: baseline;
     gap: var(--of-space-base);
     flex-wrap: wrap;
+  }
+
+  /*
+    THE DEFINITION, SET AS A QUOTATION RATHER THAN AS THE CARD'S OWN TEXT.
+
+    It takes the full width of the item — `flex-basis: 100%` on a wrapping row —
+    so it sits under its citation rather than beside it, and the serif marks it
+    as prose from the rules document rather than interface text. The left rule
+    is the only ornament: it says "this is quoted" without a box, which is the
+    same argument the rest of this page makes about hairlines.
+
+    Deliberately quieter than `Printed text`. What the card says outranks what
+    the rules say about what the card says, and a reader scanning for the
+    former must not have to sort it out of the latter.
+  */
+  .rules-text {
+    flex-basis: 100%;
+    margin: 0;
+    padding-inline-start: var(--of-space-base);
+    border-inline-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+    font-family: var(--of-type-family-serif);
+    font-size: var(--of-type-size-small);
+    line-height: var(--of-type-leading-loose);
+    color: var(--of-color-ink-muted);
   }
 
   /* Monospaced, because in this system that means you can paste it into an
