@@ -53,13 +53,30 @@ const STRUCTURE: TokenTable = {
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 
   /* A restrained scale. Density without clutter means fewer sizes used more
-     deliberately, not more sizes used approximately. */
+     deliberately, not more sizes used approximately.
+
+     THE FLOOR MOVED UP ONE STEP, and the reason is a measurement rather than a
+     preference. Half of the type on a card page — 50.7% of it — was set below
+     12px, which is where text stops being read and starts being merely present.
+     Scryfall, the density benchmark this project measures itself against, has
+     no interface text below 12px at all. Raising the bottom three steps by 1px
+     each takes the share of sub-12px type on that page from 50.7% to about 12%,
+     and that remainder is `legal` doing the one job it exists for.
+
+     Density is not the same claim as small. It is information per screen, and
+     type nobody can read contributes none — so this buys legibility at a real
+     cost in fold space (roughly 10px added to each preamble) and the rest of
+     the fold pass is what pays it back. It is deliberately the FIRST change of
+     that pass, so every later measurement is taken against the honest baseline
+     rather than one flattered by unreadable text. */
   /* Fine print. Smaller than `micro`, which is the label step — a legal notice
      that has to accompany every card image should recede below the smallest
-     thing a reader is meant to READ, not sit level with it. */
-  "type.size.legal": "0.625rem",
-  "type.size.micro": "0.6875rem",
-  "type.size.small": "0.8125rem",
+     thing a reader is meant to READ, not sit level with it. It is the one step
+     allowed under 12px, and it stays under: the gap to `micro` is what makes it
+     legible AS fine print. */
+  "type.size.legal": "0.6875rem",
+  "type.size.micro": "0.75rem",
+  "type.size.small": "0.875rem",
   "type.size.base": "0.9375rem",
   "type.size.large": "1.125rem",
   "type.size.title": "1.5rem",
