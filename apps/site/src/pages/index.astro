@@ -34,7 +34,7 @@ import CardTypeahead from "../components/CardTypeahead.svelte";
 import CardFan from "../components/CardFan.svelte";
 import type { FanCard } from "../components/CardFan.svelte";
 import { buildNameIndex } from "../lib/typeahead";
-import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../lib/cards";
+import { CARD_PAGES, CORPUS } from "../lib/cards";
 
 const names = buildNameIndex(CARD_PAGES);
 
@@ -182,13 +182,12 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
   <CardFan cards={fan} />
 
   <!--
-    Degrade visibly — one line, at the foot, in the quiet voice. The full
-    provenance (commit, byte count, hash) lives on `/cards`, which is the
-    surface that actually serves the data.
+    NO PROVENANCE STAMP HERE ANY MORE. It said "N cards, last confirmed …,
+    nothing here is summarised" directly under the card row, which is a claim
+    about the corpus rather than about this screen — and the footer beneath it
+    now carries exactly that, on every page. Two lines of the same assurance,
+    one above the other, read as a site protesting its own accuracy.
   -->
-  <p class="stamp">
-    {cards} cards, last confirmed {LAST_CONFIRMED}. Nothing here is summarised, paraphrased or generated.
-  </p>
 </BaseLayout>
 
 <style>
@@ -268,15 +267,6 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
     display: flex;
     flex-wrap: wrap;
     gap: var(--of-space-base) var(--of-space-looser);
-    font-size: var(--of-type-size-small);
-  }
-
-  .stamp {
-    text-align: center;
-    margin-block-start: var(--of-space-loosest);
-    padding-block-start: var(--of-space-loose);
-    border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
-    color: var(--of-color-ink-faint);
     font-size: var(--of-type-size-small);
   }
 </style>
