@@ -94,6 +94,24 @@ const BOOLEANS: readonly Row[] = [
   },
 ];
 
+const ORDERING: readonly Row[] = [
+  { example: "order:cost", meaning: "Sort by printed cost instead of by relevance." },
+  { example: "order:name", meaning: "Sort alphabetically." },
+  { example: "order:pitch", meaning: "Sort by pitch value." },
+  { example: "order:power", meaning: "Sort by printed attack power." },
+  {
+    example: "order:defence",
+    meaning: "Sort by printed defence.",
+    aliases: ["defense", "def"],
+  },
+  {
+    example: "order:rarity",
+    meaning: "Sort by the scarcest rarity the card was ever printed at.",
+  },
+  { example: "order:set", meaning: "Sort by the first set the card appeared in." },
+  { example: "dir:desc", meaning: "Reverse the order. The default is ascending." },
+];
+
 const LEGALITY: readonly Row[] = [
   { example: "legal:cc", meaning: "Legal in Classic Constructed." },
   { example: "banned:blitz", meaning: "Banned in Blitz." },
@@ -171,7 +189,7 @@ const FORMATS: readonly { readonly name: string; readonly aliases: string }[] = 
     honest description of what the engine can answer.
   </p>
 
-  <h2>Comparisons</h2>
+  <h2 id="comparisons">Comparisons</h2>
 
   <p>
     <code>cost</code>, <code>power</code> and <code>defence</code> accept <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>&lt;=</code> and <code>!=</code> — so <code>power&gt;=6</code> is a query. No other field does, because no other field has an order to compare along.
@@ -221,6 +239,39 @@ const FORMATS: readonly { readonly name: string; readonly aliases: string }[] = 
       </tbody>
     </table>
   </div>
+
+  <h2>Ordering</h2>
+
+  <p>
+    Results come back by relevance — an exact name match ahead of a text match — until you ask for something else. <code>order:</code> replaces that ranking rather than refining it, and <code>dir:</code> reverses whatever it chose.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Example</th><th>Sorts by</th></tr>
+      </thead>
+      <tbody>
+        {ORDERING.map((row) => (
+          <tr>
+            <td>
+              <code>{row.example}</code>
+              {(row.aliases ?? []).map((alias) => <code class="alias">{alias}</code>)}
+            </td>
+            <td>{row.meaning}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    <strong>A card with no value for the key sorts last, whichever direction you asked for.</strong> Printed costs include <code>X</code>, <code>XX</code> and blanks, and a card with no defence has no defence rather than zero of it — putting those first under <code>dir:desc</code> would claim they are the largest, and first under <code>asc</code> that they are the smallest. They are neither, so the direction applies to the cards that have a value and the rest go to the end. It is the same refusal <a href="#comparisons">comparisons</a> already make.
+  </p>
+
+  <p>
+    An ordering is an option on the whole query rather than a term in it, so it can be written anywhere and does not change which cards match. <code>order:cost</code> on its own finds nothing — it says how to arrange results, not which to find — and says so rather than returning an empty page.
+  </p>
 
   <h2>Booleans and grouping</h2>
 

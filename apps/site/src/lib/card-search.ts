@@ -704,11 +704,36 @@ export interface CardFilter {
   readonly label: string;
 }
 
+/** What a result set can be ordered by. */
+export type CardSortKey =
+  | "name"
+  | "pitch"
+  | "cost"
+  | "power"
+  | "defence"
+  | "rarity"
+  | "set";
+
+/**
+ * How the reader asked for the results to be ordered.
+ *
+ * `key` is `null` when they did not ask, which is not the same as asking for
+ * name order: the default is RELEVANCE, and relevance is a property of the
+ * query rather than of the cards. Collapsing the two would silently discard the
+ * ranking on every unordered search.
+ */
+export interface CardSort {
+  readonly key: CardSortKey | null;
+  readonly direction: "asc" | "desc";
+}
+
 export interface ParsedCardQuery {
   /** Free terms, deduplicated, in the order typed. */
   readonly terms: readonly string[];
   readonly filters: readonly CardFilter[];
   readonly notices: readonly CardNotice[];
+  /** The requested ordering, or the default. */
+  readonly sort: CardSort;
   /** The whole query, folded — used only for the exact-name tier. */
   readonly folded: string;
   /**
@@ -728,6 +753,58 @@ const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
   banned: "banned",
   suspended: "suspended",
   restricted: "restricted",
+};
+
+/**
+ * What `order:` can sort by, and what a reader may call each one.
+ *
+ * SEVEN KEYS, NOT SCRYFALL'S FIFTEEN, and the gap is honest rather than
+ * unfinished: most of theirs sort on data this corpus does not carry — no
+ * prices, no release date per card, no EDHREC rank, no colour identity. These
+ * are the printed values Optfall actually has, plus the two identifiers a
+ * reader browses by.
+ */
+const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
+  name: "name",
+  pitch: "pitch",
+  cost: "cost",
+  power: "power",
+  defence: "defence",
+  defense: "defence",
+  def: "defence",
+  rarity: "rarity",
+  set: "set",
+};
+
+/**
+ * Rarity in scarcity order, which is the only order a reader means by it.
+ *
+ * The corpus stores upstream's single letters and `data/sets/sets.json` decodes
+ * them to names; neither carries a RANK, because neither needs one until
+ * something sorts by it. This is that rank, and it is stated here rather than
+ * inferred from the decode table's key order — a JSON object's key order is not
+ * a promise, and sorting a reference tool by an accident of serialisation is
+ * the kind of thing nobody notices is wrong.
+ *
+ * Token and Basic sit below Common because they are not pulled from a pack.
+ * Marvel sits at the top, above Fabled, which is where the game puts it.
+ *
+ * PROMO IS NOT A RARITY and is ranked last for that reason rather than as a
+ * scarcity claim: it describes how a card was distributed, not how rare it is,
+ * so it has no place on the ladder and sorting it into the middle would assert
+ * one.
+ */
+const RARITY_RANK: Readonly<Record<string, number>> = {
+  T: 0,
+  B: 1,
+  C: 2,
+  R: 3,
+  S: 4,
+  M: 5,
+  L: 6,
+  F: 7,
+  V: 8,
+  P: 9,
 };
 
 /** Operators that scope a word to one field. `class:` is discussed below. */
@@ -948,7 +1025,73 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     return toLeaf({ kind: "term", value: operandRaw, quoted: false });
   };
 
-  const tree = parse(tokenise(raw), toLeaf);
+  /*
+    `order:` AND `dir:` ARE OPTIONS ON THE QUERY, NOT TERMS IN IT, so they are
+    taken out of the token stream before the tree is built rather than handled
+    as leaves. A leaf has to match or not match a card; "sort by cost" does
+    neither, and leaving it in would make `order:cost` a text search for the
+    literal string on every card that does not carry it.
+
+    Taken out WHEREVER THEY APPEAR, including inside parentheses. `(dominate or
+    order:cost)` is not a meaningful thing to have written — an ordering does
+    not belong to one branch of an or — so it is applied to the whole query and
+    the group is evaluated without it.
+  */
+  let sortKey: CardSortKey | null = null;
+  let sortDirection: CardSort["direction"] = "asc";
+
+  const remaining = tokenise(raw).filter((token) => {
+    if (token.kind !== "field") return true;
+    if (token.field !== "order" && token.field !== "dir") return true;
+
+    if (token.compare !== undefined) {
+      note(
+        "operator-unknown",
+        `${token.field}${token.compare}: names an ordering, so there is nothing to compare. Use ${token.field}:${token.field === "dir" ? "desc" : "cost"}.`,
+      );
+      return false;
+    }
+
+    const operand = token.value.toLowerCase();
+
+    if (token.field === "dir") {
+      if (operand === "asc" || operand === "desc") sortDirection = operand;
+      else {
+        note(
+          "operand-unknown",
+          `dir:${token.value} is not a direction. The two are asc and desc.`,
+        );
+      }
+      return false;
+    }
+
+    const key = SORT_KEYS[operand];
+    if (key === undefined) {
+      note(
+        "operand-unknown",
+        `order:${token.value} names nothing this can sort by. The seven are ${[...new Set(Object.values(SORT_KEYS))].join(", ")}.`,
+      );
+      return false;
+    }
+
+    sortKey = key;
+    return false;
+  });
+
+  const tree = parse(remaining, toLeaf);
+
+  /*
+    AN ORDERING IS NOT A QUERY. `order:cost` on its own leaves nothing to
+    match, so the tree is empty and the page shows no results — which looks
+    identical to a search that found none, and is the silent failure this
+    project's own rules forbid. Said out loud instead.
+  */
+  if (sortKey !== null && tree === null) {
+    note(
+      "operand-unknown",
+      `order:${sortKey} says how to arrange results, not which ones to find. Add something to search for.`,
+    );
+  }
 
   /*
     `terms` and `filters` are DERIVED from the tree rather than collected
@@ -961,7 +1104,14 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     .filter((leaf) => leaf.field !== "any")
     .map((leaf) => toCardFilter(leaf));
 
-  return { terms, filters, notices, folded: fold(raw), tree };
+  return {
+    terms,
+    filters,
+    notices,
+    sort: { key: sortKey, direction: sortDirection },
+    folded: fold(raw),
+    tree,
+  };
 }
 
 /** A leaf, in the shape the interface has always described a filter in. */
@@ -1204,6 +1354,15 @@ export interface CardOutcome {
   readonly terms: readonly string[];
   readonly filters: readonly CardFilter[];
   readonly notices: readonly CardNotice[];
+  /**
+   * The ordering that produced these results.
+   *
+   * Reported rather than kept private because the interface has to be able to
+   * say which order it is showing — a list sorted by cost and a list sorted by
+   * relevance look identical until you read them, and a reader who typed
+   * `order:` deserves to see it acknowledged.
+   */
+  readonly sort: CardSort;
   readonly results: readonly CardResult[];
   /** Matches found, which may exceed the number returned. */
   readonly total: number;
@@ -1276,17 +1435,118 @@ function toResult(
 /**
  * Run a query. Pure: same index and same string, same array, every time.
  */
+/**
+ * The value a card sorts by, for one key.
+ *
+ * Returns a number where the key has an order and a string where it has an
+ * alphabet, plus a flag for "this card has no value here at all". That third
+ * state is the one that matters: a printed cost of `X`, or a card with no
+ * defence, is not a zero and must not sort as one.
+ */
+function sortValue(
+  index: CardIndex,
+  ordinal: number,
+  key: CardSortKey,
+): { readonly text?: string; readonly rank?: number; readonly missing: boolean } {
+  const stat = (position: 0 | 1 | 2) => {
+    const raw = index.stats[ordinal]?.[position] ?? "";
+    if (raw === "") return { missing: true };
+    const numeric = Number(raw);
+    return Number.isFinite(numeric) ? { rank: numeric, missing: false } : { missing: true };
+  };
+
+  switch (key) {
+    case "name":
+      return { text: index.labels[ordinal] ?? "", missing: false };
+    case "pitch": {
+      const pitch = index.pitches[ordinal] ?? 0;
+      return pitch === 0 ? { missing: true } : { rank: pitch, missing: false };
+    }
+    case "cost":
+      return stat(0);
+    case "power":
+      return stat(1);
+    case "defence":
+      return stat(2);
+    case "rarity": {
+      /* A printing-level field on a card-level row: a card sorts by the
+         SCARCEST rarity it was ever printed at, because that is the one a
+         reader means when they call a card rare. */
+      const ranks = (index.rarities[ordinal] ?? [])
+        .map((code) => RARITY_RANK[code.toUpperCase()])
+        .filter((rank): rank is number => rank !== undefined);
+      return ranks.length === 0 ? { missing: true } : { rank: Math.max(...ranks), missing: false };
+    }
+    case "set": {
+      /* And by the FIRST set it appeared in, for the same reason in the other
+         direction: a card belongs to where it came from, not to the most recent
+         reprint that happens to sort last alphabetically. */
+      const sets = (index.sets[ordinal] ?? []).toSorted();
+      const first = sets[0];
+      return first === undefined ? { missing: true } : { text: first, missing: false };
+    }
+  }
+}
+
+/**
+ * Order results by a printed value.
+ *
+ * TWO RULES CARRY THE WHOLE THING, and both are about honesty rather than
+ * ordering.
+ *
+ * A CARD WITH NO VALUE SORTS LAST, IN BOTH DIRECTIONS. Printed costs in this
+ * corpus include `X`, `XX` and blanks; a card with no defence has no defence
+ * rather than zero of it. Sorting those to the front under `dir:desc` would be
+ * asserting they are the largest, and to the front under `asc` that they are
+ * the smallest. They are neither, so they go to the end either way and the
+ * direction applies only to the cards that have a value. It is the same
+ * decision `cost>=3` already makes by not matching them.
+ *
+ * CORPUS ORDER IS THE FINAL TIEBREAK, never relevance. Once a reader has asked
+ * for cost order, two cards costing 2 are equal and the result has to be
+ * STABLE — the same query returning the same page in the same order every time
+ * is worth more here than a second opinion about which of them is a better
+ * match.
+ */
+function compareBySort(
+  index: CardIndex,
+  sort: CardSort,
+  a: number,
+  b: number,
+): number {
+  const key = sort.key;
+  if (key === null) return 0;
+
+  const left = sortValue(index, a, key);
+  const right = sortValue(index, b, key);
+
+  if (left.missing !== right.missing) return left.missing ? 1 : -1;
+  if (left.missing) return a - b;
+
+  const sign = sort.direction === "desc" ? -1 : 1;
+
+  if (left.rank !== undefined && right.rank !== undefined) {
+    const difference = left.rank - right.rank;
+    if (difference !== 0) return sign * difference;
+    return a - b;
+  }
+
+  const compared = (left.text ?? "").localeCompare(right.text ?? "", "en");
+  if (compared !== 0) return sign * compared;
+  return a - b;
+}
+
 export function searchCards(
   index: CardIndex,
   raw: string,
   limit: number = CARD_RESULT_LIMIT,
 ): CardOutcome {
-  const { terms, filters, notices, folded, tree } = parseCardQuery(raw);
+  const { terms, filters, notices, sort, folded, tree } = parseCardQuery(raw);
 
   const ranked: { ordinal: number; field: CardMatchField }[] = [];
 
   if (tree === null) {
-    return { query: raw, terms, filters, notices, results: [], total: 0 };
+    return { query: raw, terms, filters, notices, sort, results: [], total: 0 };
   }
 
   /*
@@ -1368,8 +1628,16 @@ export function searchCards(
     ranked.push({ ordinal, field });
   }
 
-  ranked.sort(
-    (a, b) => FIELD_RANK[a.field] - FIELD_RANK[b.field] || a.ordinal - b.ordinal,
+  /*
+    RELEVANCE UNLESS ASKED OTHERWISE. `order:` replaces the ranking rather than
+    refining it: a reader who has asked for cost order wants cost order, and
+    keeping "name match beats text match" as the primary key would give them a
+    list that is only locally sorted and looks broken.
+  */
+  ranked.sort((a, b) =>
+    sort.key === null
+      ? FIELD_RANK[a.field] - FIELD_RANK[b.field] || a.ordinal - b.ordinal
+      : compareBySort(index, sort, a.ordinal, b.ordinal),
   );
 
   /**
@@ -1409,6 +1677,7 @@ export function searchCards(
     terms,
     filters,
     notices,
+    sort,
     results: collapsed
       .slice(0, limit)
       .map(([name, row]) =>
