@@ -28,6 +28,7 @@
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:repo-settings": "scripts/repo-settings.sh --check",
     "check:built-tokens": "bun scripts/check-built-tokens.ts",
+    "check:dev-server": "bun scripts/check-dev-server.ts",
     "check:provenance": "bun scripts/check-asset-provenance.ts",
     "check:symbols": "bun scripts/ingest-game-symbols.ts --check",
     "symbols": "bun scripts/ingest-game-symbols.ts",
