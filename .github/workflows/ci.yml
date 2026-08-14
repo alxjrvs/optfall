@@ -499,6 +499,19 @@ jobs:
       - name: Assert the token layer reaches every built page
         run: bun run check:built-tokens
 
+      # docs/COMPLIANCE.md §5. The component test proves CardFace and
+      # CardFaceGroup render the notice; it cannot see a page that renders a
+      # face without going through them, which is the incident this project
+      # actually had — 22 printing thumbnails as bare <img> on a page that
+      # still carried one notice.
+      #
+      # So this COUNTS rather than testing presence: every image from the face
+      # host must correspond to a face CardFace rendered. A presence test
+      # passes that page, because one compliant face immunises every unmarked
+      # one beside it.
+      - name: Assert every card face on a built page came from CardFace
+        run: bun run check:card-notice
+
   # The `build` job above does NOT cover this, and the gap is not a small one.
   #
   # `astro build` resolves SSR modules through Rollup and `astro dev` hands the

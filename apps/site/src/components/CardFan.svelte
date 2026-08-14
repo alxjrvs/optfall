@@ -28,6 +28,15 @@
    * notice, correctly, and there is no arrangement of this file that produces a
    * face without one.
    *
+   * A GROUP HERE IS EIGHT DIFFERENT CARDS, which `CardFaceGroup` used to rule
+   * out and now permits. The rule it stated was "a group is one card's faces",
+   * and the reasoning under it was that one line at the bottom of a scrolling
+   * search grid does not accompany the face at the top. That reasoning is
+   * right and the rule was the wrong proxy for it: the fan is one arc on one
+   * screen with the notice directly beneath it, so the line accompanies every
+   * face in it. The contract there now tests visibility rather than counts
+   * cards — see the note in that file, which this fan is the reason for.
+   *
    * NOT HYDRATED. It renders on the build machine and ships as markup; there is
    * no state here and a fan that costs JavaScript on the page whose whole point
    * is to be cheap would be the wrong trade twice over.

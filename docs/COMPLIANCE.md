@@ -330,8 +330,60 @@ disclaimer must be provided: **`© Legend Story Studios`**.
 - A Storybook story per card-rendering component, so removal shows up as a
   visual-regression diff rather than as nothing.
 
-**Status.** Specified as a component contract; enforced when Phase 1's component
-package and Phase 3's card layer land.
+**Status.** **Enforced in the components and in the built output.**
+
+`CardFace` renders `CARD_IMAGE_COPYRIGHT` on every face, with no `copyright`
+prop to omit, empty or reword. `CardFaceGroup` hoists one notice for faces shown
+together and tells the faces inside it — through component context, which markup
+cannot forge — that it has been carried; a face outside a group still emits its
+own. `CardFaceGroup.test.ts` asserts both counts exactly, so zero notices and
+duplicated notices each fail the build.
+
+That is not sufficient on its own, and saying so is the point of listing two
+enforcement points rather than one. **Both failures this project has actually
+had were page-level and no component test could have seen either:** printing
+thumbnails once rendered as bare `<img>` to avoid repeating the line, putting 22
+images under a single notice, and the front-door fan shipped with a crop that
+cut the hoisted notice in half.
+
+`scripts/check-card-notice.ts` runs in the `disclaimer` job and **catches the
+first of those, not the second.** It counts: every `<img>` served from the face
+host must correspond to a face `CardFace` rendered, so a bare `<img>` fails even
+on a page that carries a notice from some other face. A presence test would not
+have — one compliant face immunises any number of unmarked ones beside it, which
+is exactly the shape of the incident, and is how the first draft of that check
+was wrong.
+
+**Still open, and neither is small.** The second failure is not covered by
+anything: the check reads HTML, so it knows the notice is on the page and cannot
+know whether a stylesheet has put it where nobody reads it. That is the
+Storybook visual-regression bullet, still unbuilt. And the serving boundary is
+unbuilt — nothing applies the line at the image host, so a hotlinked face is an
+unmarked face.
+
+The check knows every host a card image can come from — ours plus the four
+upstream ones the corpus carries in `printings[].image_url`, derived from the
+data rather than typed — because `<img src={printing.image_url}>` is one field
+away at any call site and would otherwise have counted as no image at all.
+
+**It also does not reach the search grid.** `/search` server-renders no results,
+so its grid of up to sixty faces is built in the browser and never appears in
+the HTML the check reads. That is the surface where a bare `<img>` is most
+tempting — sixty separate notices look like a cost — and closing it needs a
+rendered-DOM check. The check covers server-rendered faces, which is where the
+incident happened, and not every face the site can show.
+
+**And one shipped grouping is on the wrong side of our own rule.**
+`PrintingPicker` groups the whole printings rail under one hoisted notice: up to
+22 tiles in a wrapping four-up grid, with the notice last. `CardFaceGroup`'s
+rule is that faces may share a notice when a reader sees the notice with them,
+and explicitly excludes the scrolling case — which a six-row rail is. This
+predates the rule being written down that precisely; it is named here rather
+than left for the next audit to find.
+
+*(This line previously said "enforced when Phase 1 … and Phase 3 … land". Both
+landed. `/data-terms` defers to this document where the two differ, so a stale
+status here is a stale claim on the page a recipient would actually read.)*
 
 **What would break it.** Making the line a prop. Adding a `compact` or
 `bare` variant that drops it. A tooltip or hover-preview path that renders the
