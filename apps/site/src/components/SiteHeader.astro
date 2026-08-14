@@ -30,19 +30,26 @@ import { Mark } from "optfall-components/svelte";
 
 interface Props {
   /** The nav item to mark as current, if any. */
-  section?: "cards" | "sets" | "rules";
+  section?: "cards" | "sets" | "rules" | "syntax";
 }
 
 const { section } = Astro.props;
 
 /*
- * Four destinations, which is the whole site. A nav that needs a submenu is a
+ * Five destinations, which is the whole site. A nav that needs a submenu is a
  * nav describing a product with more surfaces than this one has.
+ *
+ * `Syntax` is here rather than only linked from the search hint because the
+ * grammar is the thing a reader needs at the moment they are already looking at
+ * results and cannot narrow them — which is every page, not just the one with
+ * the field on it. It is the most-linked page on the site this one is measured
+ * against, for the same reason.
  */
 const LINKS: readonly { href: string; label: string; key?: Props["section"] }[] = [
   { href: "/search", label: "Cards", key: "cards" },
   { href: "/sets", label: "Sets", key: "sets" },
   { href: "/cr", label: "Rules", key: "rules" },
+  { href: "/syntax", label: "Syntax", key: "syntax" },
   { href: "/random", label: "Random" },
 ];
 ---
