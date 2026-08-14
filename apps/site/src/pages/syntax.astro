@@ -207,6 +207,31 @@ const FORMATS: readonly { readonly name: string; readonly aliases: string }[] = 
     <strong>Flavour text is a separate index from rules text, and neither reaches the other.</strong> <code>text:blood</code> asks what a card does; <code>ft:blood</code> asks what it says about itself, and they return different cards. A bare word searches names, types, keywords, traits and rules text — never flavour, because a card that merely mentions a thing is not a card that does it.
   </p>
 
+  <h2 id="uniqueness">How much one row stands for</h2>
+
+  <p>
+    A search returns ROWS, and a row is not obviously a card. Head Jab is printed at three pitches and reprinted in six sets, so "how many Head Jabs are there" has three defensible answers. <code>unique:</code> picks which one you get.
+  </p>
+
+  <dl class="modes">
+    <dt><code>unique:names</code> — the default</dt>
+    <dd>One row per NAME. The red, yellow and blue Head Jabs are one result, linking to the card page where the versions are tabs. A player calls them one card, and being told "3 cards match" should mean three things to click.</dd>
+
+    <dt><code>unique:cards</code></dt>
+    <dd>One row per CARD. Those three versions separate, because they genuinely are three cards — different text, different legality, and a page each.</dd>
+
+    <dt><code>unique:art</code> (also <code>unique:prints</code>)</dt>
+    <dd>One row per distinct PICTURE, alternate arts included, each linking to that art's own page.</dd>
+  </dl>
+
+  <p>
+    <strong><code>unique:prints</code> resolves to <code>unique:art</code>, and that is a fact about this data rather than a shortcut.</strong> The corpus carries 16,502 printing rows and 11,378 distinct pictures: a card printed Regular, Rainbow Foil and Cold Foil in one set is three rows sharing one image, one collector number and one page. A separate <code>prints</code> level could only have emitted three identical rows pointing at the same URL.
+  </p>
+
+  <p>
+    <strong>Collapsing happens after matching, never before it.</strong> A query only one pitch version satisfies still finds the card under the default, and the row links to the version that actually matched — not to whichever version happens to be first.
+  </p>
+
   <h2 id="comparisons">Comparisons</h2>
 
   <p>
@@ -340,6 +365,27 @@ const FORMATS: readonly { readonly name: string; readonly aliases: string }[] = 
     overflow-x: auto;
     margin-block: var(--of-space-loose) var(--of-space-looser);
     border: var(--of-space-hair) solid var(--of-color-rule);
+  }
+
+  /*
+    The three uniqueness levels. A definition list rather than a table because
+    each answer is a sentence, not a cell — and a table of two columns where
+    one holds prose is a table that scrolls sideways on a phone for no reason.
+  */
+  .modes {
+    margin-block: var(--of-space-loose) var(--of-space-looser);
+    display: grid;
+    gap: var(--of-space-tight);
+  }
+
+  .modes dt {
+    font-weight: var(--of-type-weight-medium);
+    color: var(--of-color-ink);
+  }
+
+  .modes dd {
+    margin: 0 0 var(--of-space-base);
+    color: var(--of-color-ink-muted);
   }
 
   table {

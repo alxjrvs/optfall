@@ -1094,7 +1094,7 @@ export interface PrintingRef {
  * check where these are assembled is what turns that from a silent overwrite
  * into a failed build.
  */
-function numberFor(key: string, setCode: string): string {
+export function numberFor(key: string, setCode: string): string {
   const stem = key.replace(/\.webp$/, "");
   const prefix = setCode.toUpperCase();
   const bare = stem.toUpperCase().startsWith(prefix)

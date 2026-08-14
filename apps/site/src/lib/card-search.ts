@@ -53,7 +53,7 @@ import type { PitchValue, StateTone } from "optfall-theme";
  * added fails the build rather than silently making `legal:cc` filter the wrong
  * column.
  */
-import type { CardPage } from "./cards";
+import { facesOf, numberFor, type CardPage } from "./cards";
 import {
   evaluate,
   leaves,
@@ -116,6 +116,33 @@ export interface EncodedCardIndex {
    * into a grid of card faces.
    */
   readonly faceKeys: string;
+  /**
+   * The card's OTHER arts — one line per card, `\t` between entries, each
+   * entry `<setId> <faceKey>`.
+   *
+   * This is what `unique:art` needs and nothing else does, so it is worth
+   * saying what it deliberately is not. It is NOT every printing: the corpus
+   * has 16,502 printing rows and 11,378 distinct images, because Regular /
+   * Rainbow Foil / Cold Foil in one set are three rows sharing one picture.
+   * And it is NOT every art either — the card's own face is already in
+   * `faceKeys`, so listing it again would be 4,941 duplicated strings to say
+   * something the index already says.
+   *
+   * SO IT IS THE 6,437 NON-DEFAULT FACES, which is exactly the set `cards.ts`
+   * emits a URL for. That is not a coincidence worth leaving implicit: a row
+   * in `unique:art` is a link, the thing it links to is a per-printing page,
+   * and those pages exist for precisely these faces. An index carrying arts
+   * with no address would be offering the reader a result they cannot open.
+   *
+   * The set id rather than the set code, because `setDict` is already shipped
+   * and 112 codes across 6,437 entries is 26 KB of repetition otherwise. The
+   * collector number is not carried at all — it is a pure function of the key
+   * and the code, and deriving it costs nothing next to shipping it.
+   *
+   * Measured: 69 KB on a 732 KB payload. Storing every art instead of the
+   * non-default ones would have been 122 KB for the same feature.
+   */
+  readonly arts: string;
   /**
    * One digit per card: `1` where the face is landscape, `0` where portrait.
    *
@@ -351,6 +378,7 @@ export function buildCardIndex(
   const slugs: string[] = [];
   const nameSlugs: string[] = [];
   const faceKeys: string[] = [];
+  const arts: string[] = [];
   const faceLandscape: string[] = [];
   const pitches: string[] = [];
   const stats: string[] = [];
@@ -387,6 +415,15 @@ export function buildCardIndex(
     slugs.push(page.slug);
     nameSlugs.push(page.nameSlug);
     faceKeys.push(page.face.key ?? "");
+    /* `facesOf` is the router's list (see `cards.ts`), and `.slice(1)` drops
+       the default — the one face that already has an address of its own. So
+       every entry written here has a page waiting for it. */
+    arts.push(
+      facesOf(page.card)
+        .slice(1)
+        .map((ref) => `${sets.idOf.get(ref.printing.set_id) ?? 0} ${ref.key}`)
+        .join("\t"),
+    );
     faceLandscape.push(page.face.orientation === "landscape" ? "1" : "0");
     pitches.push(String(page.pitch));
     typeAt.push(pad2(types.idOf.get(page.card.type_text) ?? 0));
@@ -493,6 +530,7 @@ export function buildCardIndex(
     slugs: slugs.join("\n"),
     nameSlugs: nameSlugs.join("\n"),
     faceKeys: faceKeys.join("\n"),
+    arts: arts.join("\n"),
     faceLandscape: faceLandscape.join(""),
     pitches: pitches.join(""),
     typeDict: types.list.join("\n"),
@@ -537,6 +575,15 @@ export interface CardIndex {
   readonly versionsByName: ReadonlyMap<string, number>;
   /** Face blob key per card; `null` where the card publishes no art. */
   readonly faceKeys: readonly (string | null)[];
+  /**
+   * The card's other arts, decoded — everything a `unique:art` row needs to be
+   * a link and a picture, and nothing else.
+   *
+   * The set CODE rather than the id, because by this point the dictionary has
+   * been read and a row wants to say "Omen", not "37". The collector number is
+   * derived here rather than shipped; see `numberOf`.
+   */
+  readonly arts: readonly (readonly ArtRef[])[];
   readonly faceLandscape: readonly boolean[];
   readonly pitches: readonly PitchValue[];
   readonly typeLines: readonly string[];
@@ -591,10 +638,24 @@ function decodePostings(encoded: string): Map<string, number[]> {
   return postings;
 }
 
+/**
+ * One alternate art of a card, as a result row needs it.
+ *
+ * Deliberately smaller than `PrintingRef` in `cards.ts`: that one carries the
+ * whole printing row, which is a build-time object sitting in a 16 MB corpus
+ * the browser never sees. This is the three fields that survive the wire.
+ */
+export interface ArtRef {
+  readonly key: string;
+  readonly setCode: string;
+  readonly number: string;
+}
+
 export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const labels = encoded.labels === "" ? [] : encoded.labels.split("\n");
   const slugs = encoded.slugs === "" ? [] : encoded.slugs.split("\n");
   const faceKeyLines = encoded.faceKeys === "" ? [] : encoded.faceKeys.split("\n");
+  const artLines = encoded.arts === "" ? [] : encoded.arts.split("\n");
   const nameSlugLines =
     encoded.nameSlugs === "" ? [] : encoded.nameSlugs.split("\n");
   const nameSlugPerCard = labels.map((_, ordinal) => nameSlugLines[ordinal] ?? "");
@@ -673,6 +734,24 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
     faceKeys: labels.map((_, ordinal) => {
       const key = faceKeyLines[ordinal] ?? "";
       return key === "" ? null : key;
+    }),
+    arts: labels.map((_, ordinal) => {
+      const line = artLines[ordinal] ?? "";
+      if (line === "") return [];
+      return line.split("\t").flatMap((entry): ArtRef[] => {
+        const gap = entry.indexOf(" ");
+        if (gap === -1) return [];
+        /* LOWERCASED, BECAUSE THE ROUTE IS. `setDict` holds upstream's
+           spelling — `WTR` — and `facesOf` lowercases when it builds the path,
+           so taking the dictionary's spelling verbatim produced
+           `/card/head-jab-1/WTR/098` for a page emitted at `/wtr/098`. Every
+           `unique:art` row would have been a 404, and every one of them would
+           have looked right. */
+        const setCode = setDict[Number.parseInt(entry.slice(0, gap), 10)]?.toLowerCase();
+        const key = entry.slice(gap + 1);
+        if (setCode === undefined || key === "") return [];
+        return [{ key, setCode, number: numberFor(key, setCode) }];
+      });
     }),
     faceLandscape: labels.map((_, ordinal) => encoded.faceLandscape[ordinal] === "1"),
     folded: labels.map(fold),
@@ -819,6 +898,8 @@ export interface ParsedCardQuery {
   readonly notices: readonly CardNotice[];
   /** The requested ordering, or the default. */
   readonly sort: CardSort;
+  /** The level results collapse at. See {@link CardUniqueMode}. */
+  readonly unique: CardUniqueMode;
   /** The whole query, folded — used only for the exact-name tier. */
   readonly folded: string;
   /**
@@ -849,6 +930,46 @@ const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
  * are the printed values Optfall actually has, plus the two identifiers a
  * reader browses by.
  */
+/**
+ * HOW MUCH OF THE CORPUS ONE ROW STANDS FOR.
+ *
+ * `docs/SCRYFALL-GAP.md` §5.1c asked for `unique:cards|prints|art`. The three
+ * levels are real here, but they do not land where Scryfall's names suggest,
+ * and pretending otherwise would have shipped an operator that lies:
+ *
+ * - **`names`** — one row per NAME. Head Jab's red, yellow and blue versions
+ *   are one result. This is what the search has always done and it stays the
+ *   default; the reasoning is in `searchCards`, and it is good — a reader told
+ *   "3 cards match" should get three things to click.
+ * - **`cards`** — one row per CARD. Those three versions separate, because the
+ *   rest of this site already treats them as three cards: different text,
+ *   different legality, different pages, and a canonical tag that says so.
+ * - **`art`** — one row per distinct PICTURE, including alternate arts, each
+ *   linking to that art's own page.
+ *
+ * `prints` IS AN ALIAS FOR `art`, AND THAT IS A CLAIM ABOUT THE DATA. On
+ * Scryfall the two differ because a printing there is individually addressable.
+ * Here the corpus has 16,502 printing rows and 11,378 distinct pictures — a
+ * card printed Regular, Rainbow Foil and Cold Foil in one set is three rows
+ * sharing one image, one collector number and one page. `unique:prints` as a
+ * separate mode would emit three identical rows pointing at the same URL, which
+ * is not a finer view of anything. So it resolves to `art` rather than being
+ * refused: the reader asked for "show me every printing", and every printing
+ * this corpus can distinguish is exactly what they get.
+ */
+export type CardUniqueMode = "names" | "cards" | "art";
+
+const UNIQUE_MODES: Readonly<Record<string, CardUniqueMode>> = {
+  names: "names",
+  name: "names",
+  cards: "cards",
+  card: "cards",
+  art: "art",
+  arts: "art",
+  prints: "art",
+  printings: "art",
+};
+
 const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
   name: "name",
   pitch: "pitch",
@@ -1137,10 +1258,20 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
   */
   let sortKey: CardSortKey | null = null;
   let sortDirection: CardSort["direction"] = "asc";
+  /* `unique:` is the third option, and it is one for the same reason the other
+     two are: "one row per name" is not a property a card can have, so it can
+     never be a leaf. */
+  let unique: CardUniqueMode = "names";
 
   const remaining = tokenise(raw).filter((token) => {
     if (token.kind !== "field") return true;
-    if (token.field !== "order" && token.field !== "dir") return true;
+    if (
+      token.field !== "order" &&
+      token.field !== "dir" &&
+      token.field !== "unique"
+    ) {
+      return true;
+    }
 
     if (token.compare !== undefined) {
       note(
@@ -1151,6 +1282,19 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     }
 
     const operand = token.value.toLowerCase();
+
+    if (token.field === "unique") {
+      const mode = UNIQUE_MODES[operand];
+      if (mode === undefined) {
+        note(
+          "operand-unknown",
+          `unique:${token.value} is not a level to collapse at. The three are names, cards and art.`,
+        );
+      } else {
+        unique = mode;
+      }
+      return false;
+    }
 
     if (token.field === "dir") {
       if (operand === "asc" || operand === "desc") sortDirection = operand;
@@ -1207,6 +1351,7 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     filters,
     notices,
     sort: { key: sortKey, direction: sortDirection },
+    unique,
     folded: fold(raw),
     tree,
   };
@@ -1473,6 +1618,14 @@ export interface CardOutcome {
    * `order:` deserves to see it acknowledged.
    */
   readonly sort: CardSort;
+  /**
+   * The level these results collapse at.
+   *
+   * Reported for the same reason `sort` is: `unique:art` and the default return
+   * different numbers of rows for the same query, and a reader who is told "62
+   * results" needs to know whether that counts cards or pictures.
+   */
+  readonly unique: CardUniqueMode;
   readonly results: readonly CardResult[];
   /** Matches found, which may exceed the number returned. */
   readonly total: number;
@@ -1494,11 +1647,22 @@ function toResult(
   matchedIn: CardMatchField,
   matchedPitches: readonly PitchValue[],
   totalVersions: number,
+  mode: CardUniqueMode = "names",
+  /** Set when this row stands for one ALTERNATE art rather than for the card. */
+  art?: ArtRef,
 ): CardResult {
   const printed = index.stats[ordinal] ?? ["", "", ""];
   const slug = index.slugs[ordinal] ?? "";
   const nameSlug = index.nameSlugs[ordinal] ?? slug;
-  const collapsed = nameSlug !== slug;
+  /*
+   * ONLY `unique:names` COLLAPSES, WHICH IS WHAT THE OPERATOR MEANS.
+   *
+   * This flag decides both the label and the link, so it is the whole of the
+   * difference between the modes at the row level: collapsed, the row is the
+   * card and wears the bare name; not collapsed, it is one version and wears
+   * the pitch qualifier that tells it from its siblings.
+   */
+  const collapsed = mode === "names" && nameSlug !== slug;
 
   /**
    * A PARTIAL MATCH MUST LAND ON A VERSION THAT MATCHED.
@@ -1527,11 +1691,26 @@ function toResult(
     // anchors differ only in where they point. A row that stands for the card
     // carries the bare name, which is unambiguous — and where the row is
     // partial, the version qualifier beside it does the disambiguating.
-    label: collapsed ? nameOf(index.labels[ordinal] ?? "") : index.labels[ordinal] ?? "",
-    href: `/card/${collapsed && !partial ? nameSlug : slug}`,
+    /*
+     * AN ART ROW SAYS WHICH ART IN ITS LABEL, because two rows for one card
+     * differing only in picture are two identical anchors — the exact failure
+     * the note above describes for pitch versions, arrived at from the other
+     * direction. `ResultRow` takes a plain string for accessibility, so the
+     * qualifier has to be in it rather than beside it.
+     */
+    label:
+      art !== undefined
+        ? `${index.labels[ordinal] ?? ""} · ${art.key.replace(/\.webp$/, "")}`
+        : collapsed
+          ? nameOf(index.labels[ordinal] ?? "")
+          : (index.labels[ordinal] ?? ""),
+    href:
+      art !== undefined
+        ? `/card/${slug}/${art.setCode}/${art.number}`
+        : `/card/${collapsed && !partial ? nameSlug : slug}`,
     matchedPitches,
     totalVersions,
-    faceKey: index.faceKeys[ordinal] ?? null,
+    faceKey: art !== undefined ? art.key : (index.faceKeys[ordinal] ?? null),
     faceLandscape: index.faceLandscape[ordinal] === true,
     pitch: index.pitches[ordinal] ?? 0,
     typeLine: index.typeLines[ordinal] ?? "",
@@ -1651,12 +1830,22 @@ export function searchCards(
   raw: string,
   limit: number = CARD_RESULT_LIMIT,
 ): CardOutcome {
-  const { terms, filters, notices, sort, folded, tree } = parseCardQuery(raw);
+  const { terms, filters, notices, sort, unique, folded, tree } =
+    parseCardQuery(raw);
 
   const ranked: { ordinal: number; field: CardMatchField }[] = [];
 
   if (tree === null) {
-    return { query: raw, terms, filters, notices, sort, results: [], total: 0 };
+    return {
+      query: raw,
+      terms,
+      filters,
+      notices,
+      sort,
+      unique,
+      results: [],
+      total: 0,
+    };
   }
 
   /*
@@ -1792,7 +1981,40 @@ export function searchCards(
     // `ranked` is already in rank order, so the first sighting is the best one.
     if (!bestByName.has(name)) bestByName.set(name, row);
   }
-  const collapsed = [...bestByName.entries()];
+
+  /*
+    THE OTHER TWO MODES EXPAND WHERE THE DEFAULT COLLAPSES, and they are built
+    from `ranked` rather than from `collapsed` — which is the one thing that
+    could have gone quietly wrong here. Collapsing first and expanding after
+    would have kept only the best-ranked version of each name and then shown
+    that one version's arts, so `unique:cards` would have returned exactly as
+    many rows as the default and `unique:art` would have silently dropped every
+    alternate art belonging to a sibling version.
+
+    Rank order carries through untouched. `ranked` is already sorted, so the
+    rows come out in the order the reader asked for, with a card's own picture
+    ahead of its alternates because that is the order `arts` is stored in.
+  */
+  const rows: { ordinal: number; field: CardMatchField; art?: ArtRef }[] = [];
+  if (unique === "names") rows.push(...bestByName.values());
+  else if (unique === "cards") rows.push(...ranked);
+  else {
+    for (const row of ranked) {
+      rows.push(row);
+      for (const art of index.arts[row.ordinal] ?? []) {
+        rows.push({ ordinal: row.ordinal, field: row.field, art });
+      }
+    }
+  }
+
+  /*
+    A ROW STANDS FOR THE WHOLE NAME ONLY IN `unique:names`. In the other two
+    modes it stands for one version, so the "2 of 3 versions matched" note is
+    not merely unnecessary — it would be false, since the row no longer speaks
+    for the versions it is sitting next to.
+  */
+  const nameOfRow = (ordinal: number) =>
+    index.nameSlugs[ordinal] ?? index.slugs[ordinal] ?? "";
 
   return {
     query: raw,
@@ -1800,17 +2022,18 @@ export function searchCards(
     filters,
     notices,
     sort,
-    results: collapsed
-      .slice(0, limit)
-      .map(([name, row]) =>
-        toResult(
-          index,
-          row.ordinal,
-          row.field,
-          (matchedByName.get(name) ?? []).toSorted((a, b) => a - b),
-          index.versionsByName.get(name) ?? 1,
-        ),
-      ),
-    total: collapsed.length,
+    unique,
+    results: rows.slice(0, limit).map((row) => {
+      const name = nameOfRow(row.ordinal);
+      const pitches =
+        unique === "names"
+          ? (matchedByName.get(name) ?? []).toSorted((a, b) => a - b)
+          : [index.pitches[row.ordinal] ?? 0];
+      const versions =
+        unique === "names" ? (index.versionsByName.get(name) ?? 1) : pitches.length;
+
+      return toResult(index, row.ordinal, row.field, pitches, versions, unique, row.art);
+    }),
+    total: rows.length,
   };
 }
