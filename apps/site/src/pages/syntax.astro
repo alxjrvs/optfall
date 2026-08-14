@@ -60,6 +60,16 @@ const FIELDS: readonly Row[] = [
   },
   { example: "trait:mechanologist", meaning: "The card carries this trait." },
   { example: "keyword:go-again", meaning: "The card has this keyword.", aliases: ["kw:"] },
+  {
+    example: "artist:fikri",
+    meaning: "An artist credited on any printing of the card.",
+    aliases: ["a:"],
+  },
+  {
+    example: "ft:blood",
+    meaning: "The flavour text on any printing — never the rules text.",
+    aliases: ["flavour:", "flavor:"],
+  },
   { example: "set:wtr", meaning: "The card was printed in this set." },
   { example: "rarity:majestic", meaning: "The card was printed at this rarity." },
   { example: "pitch:3", meaning: "The card's pitch value." },
@@ -187,6 +197,14 @@ const FORMATS: readonly { readonly name: string; readonly aliases: string }[] = 
     Attack are all entries in it — so separating them would mean inventing a class
     vocabulary Optfall does not have. Documenting them as one operator is the
     honest description of what the engine can answer.
+  </p>
+
+  <p>
+    <strong><code>artist:</code>, <code>ft:</code>, <code>set:</code> and <code>rarity:</code> are facts about a PRINTING, not about a card</strong>, and a card matches when any one of its printings does. A card reprinted with new art is found by either artist; one whose second printing carries different flavour is found by either. That is usually what you want, and it is worth knowing when it is not.
+  </p>
+
+  <p>
+    <strong>Flavour text is a separate index from rules text, and neither reaches the other.</strong> <code>text:blood</code> asks what a card does; <code>ft:blood</code> asks what it says about itself, and they return different cards. A bare word searches names, types, keywords, traits and rules text — never flavour, because a card that merely mentions a thing is not a card that does it.
   </p>
 
   <h2 id="comparisons">Comparisons</h2>
