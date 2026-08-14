@@ -39,9 +39,9 @@
    * WHAT MAY SHARE A NOTICE IS DECIDED BY WHETHER THE NOTICE ACCOMPANIES THE
    * FACES, which is the condition itself rather than a proxy for it. The test
    * is whether a reader can see the line at the same time as the images it
-   * covers. A card page's hero face and its seven printing thumbnails pass. So
-   * does the front door's fan — eight different cards, one arc, one screen,
-   * with the notice directly beneath them.
+   * covers. A card page's hero face and its printing thumbnails pass. So does
+   * the front door's row — six different cards, one band, one screen, with the
+   * notice directly beneath them.
    *
    * A SEARCH GRID DOES NOT, and that is the case this rule exists for: sixty
    * results scroll, so a single line at the bottom does not accompany the face
@@ -49,9 +49,10 @@
    *
    * THIS SAID "A GROUP IS ONE CARD'S FACES" AND THAT WAS THE WRONG LINE TO
    * DRAW. It is a proxy that happens to agree with the real condition on a card
-   * page and disagrees on a fan — which review caught only because the fan
-   * shipped and contradicted this file while citing it. Counting cards was
-   * never what made the notice legible; being on the same screen was.
+   * page and disagrees on the front door's row — which review caught only
+   * because that row shipped and contradicted this file while citing it.
+   * Counting cards was never what made the notice legible; being on the same
+   * screen was.
    *
    * The narrower rule is still the safe default when in doubt: if you cannot
    * say for certain that every face in the group is visible with the notice,
