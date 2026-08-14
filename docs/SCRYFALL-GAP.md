@@ -91,7 +91,7 @@ row's subject changes, not when someone notices.*
 | Card search on the homepage | yes | typeahead on `/` | **have** |
 | Card images | six variants | two tiers, rendered | **narrowed** |
 | Image grid results | default view | grid is the default | **have** |
-| Display modes | `display:grid/checklist/text/full` | `display=grid/list` | **partial** |
+| Display modes | `display:grid/checklist/text/full` | `display:grid/list/text`, a query term | **have** |
 | Sort control | `order:` × 15, `dir:` | `order:` × 9, `dir:`, documented | **have** |
 | Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<name>/<set>/<num>`, 6,437 of them | **have** |
 | Duplicate collapsing | `unique:cards/prints/art` | `unique:names` (default), `cards`, `art` | **have** |

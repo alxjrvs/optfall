@@ -56,6 +56,26 @@
     CardFace,
     OrnamentalRule,
     PitchJewel,
+    /*
+     * IT WAS USED AND NEVER IMPORTED, AND THAT SHIPPED.
+     *
+     * `<ResultRow>` has been in this template since list mode existed, with no
+     * import to resolve it, so hydrating `/search?display=list` threw
+     * `ReferenceError: ResultRow is not defined` and the island rendered
+     * nothing at all — on the live site, not only here.
+     *
+     * Nothing in the pipeline was going to say so. `astro check` reports on
+     * `.astro` files and does not resolve identifiers inside a Svelte
+     * template; `astro build` compiles the island rather than mounting it, so
+     * an undefined component is a runtime lookup that never runs at build
+     * time; and the test suite exercises `card-search.ts`, which is the engine
+     * and not the view. Every gate was green over a view that could not mount.
+     *
+     * It was found by opening the page. That is the whole lesson, and it is
+     * the same one `check-dev-server.ts` was written for: a build that
+     * succeeds is not evidence that anything renders.
+     */
+    ResultRow,
     SearchField,
   } from "optfall-components/svelte";
 
@@ -65,6 +85,7 @@
     CARD_RESULT_LIMIT,
     decodeCardIndex,
     searchCards,
+    type CardDisplayMode,
     type CardMatchField,
     type EncodedCardIndex,
   } from "../lib/card-search";
@@ -126,14 +147,31 @@
    * thrown away, it is a mode, and it stays better than Scryfall's checklist
    * because it carries the stat line and the reason the row matched.
    */
-  function displayFromUrl(): "grid" | "list" {
-    if (typeof window === "undefined") return "grid";
-    return new URLSearchParams(window.location.search).get("display") === "list"
-      ? "list"
-      : "grid";
+  function displayFromUrl(): CardDisplayMode | null {
+    if (typeof window === "undefined") return null;
+    const wanted = new URLSearchParams(window.location.search).get("display");
+    if (wanted === "list") return "list";
+    if (wanted === "text" || wanted === "checklist") return "text";
+    if (wanted === "grid") return "grid";
+    return null;
   }
 
-  let display = $state(displayFromUrl());
+  /**
+   * `display:` IS A QUERY TERM NOW, AND THE PARAMETER IS WHAT IT REPLACED.
+   *
+   * §5.2: every piece of state is in the URL, and `display:` belongs in the
+   * query "rather than as UI chrome". So the mode is read off the parsed query
+   * first — and only where the query says nothing does the old `?display=`
+   * parameter get a vote.
+   *
+   * That order is the whole of the backwards compatibility story. Links shared
+   * before this existed carry `?display=list` and keep working; links shared
+   * after carry it in `q` and win over a stale parameter if somehow both are
+   * present. Neither case needs the reader to know which era their link is
+   * from.
+   */
+  let paramDisplay = $state(displayFromUrl());
+  const display = $derived(outcome.display ?? paramDisplay ?? "grid");
 
   /** Wording for the live region and the count line. Written, never generated. */
   function summarise(): string {
@@ -174,10 +212,13 @@
     const trimmed = written.trim();
     if (trimmed === "") url.searchParams.delete("q");
     else url.searchParams.set("q", written);
-    // Only when it is not the default: a URL should carry what somebody chose,
-    // not restate what they did not.
-    if (display === "grid") url.searchParams.delete("display");
-    else url.searchParams.set("display", display);
+    /* THE PARAMETER IS NEVER WRITTEN AGAIN, only read. The mode travels inside
+       `q` now, so writing it in both places would produce URLs that can
+       disagree with themselves — and a stale `?display=list` beside a
+       `display:text` query is exactly the ambiguity this operator removed. Any
+       parameter already in the address is dropped as soon as the query says
+       anything, which is what the delete below does. */
+    if (outcome.display !== null) url.searchParams.delete("display");
     const target = `${url.pathname}${url.search}`;
     if (target === `${window.location.pathname}${window.location.search}`) return;
     if (mode === "push") window.history.pushState({}, "", target);
@@ -189,7 +230,7 @@
     const onPop = () => {
       query = queryFromUrl();
       submitted = query;
-      display = displayFromUrl();
+      paramDisplay = displayFromUrl();
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -236,10 +277,27 @@
     if (only) window.location.assign(only.href);
   }
 
-  /** Switching view is a navigation too, so it lands in the URL. */
-  function show(next: "grid" | "list"): void {
-    display = next;
-    syncUrl("push");
+  /**
+   * Switching view rewrites the QUERY, because the view is part of the query.
+   *
+   * The control and the syntax are two ways of saying one thing, so clicking
+   * "Text" has to leave the box reading `dominate display:text` — otherwise
+   * the reader copies what is on screen and gets a link that does not
+   * reproduce what they were looking at.
+   *
+   * Any existing `display:` term is replaced rather than appended: a query
+   * carrying two of them would apply the last and silently ignore the first.
+   * The default is written out rather than left implicit, because a reader who
+   * deliberately clicked back to Grid on a `display:text` query has made a
+   * choice, and dropping the term would restore text on reload.
+   */
+  function show(next: CardDisplayMode): void {
+    const withoutMode = submitted.replace(/(^|\s)display:\S+/gi, "$1").trim();
+    const written = `${withoutMode} display:${next}`.trim();
+    query = written;
+    submitted = written;
+    paramDisplay = null;
+    syncUrl("push", written);
   }
 
   function onKeydown(event: KeyboardEvent): void {
@@ -329,7 +387,7 @@
       -->
       <fieldset class="views">
         <legend class="views-legend">Show results as</legend>
-        {#each [["grid", "Grid"], ["list", "List"]] as const as [mode, label] (mode)}
+        {#each [["grid", "Grid"], ["list", "List"], ["text", "Text"]] as const as [mode, label] (mode)}
           <label class="view">
             <input
               type="radio"
@@ -389,7 +447,13 @@
           </li>
         {/each}
       </ul>
-    {:else}
+    {:else if display === "list"}
+    <!--
+      NAMED RATHER THAN LEFT AS `{:else}`, because there are three modes now
+      and "not grid" stopped meaning "list" the moment the third one existed.
+      An open else here rendered the dense row for `display:text` as well —
+      and then the text list rendered underneath it, so the page showed both.
+    -->
     <ol class="results">
       {#each outcome.results as result (result.href)}
         <ResultRow href={result.href} label={result.label}>
@@ -419,6 +483,30 @@
             <span class="why">{WHY[result.matchedIn]}</span>
           {/snippet}
         </ResultRow>
+      {/each}
+    </ol>
+    {/if}
+    {#if display === "text"}
+    <!--
+      NAMES, ONE PER LINE, AND NOTHING ELSE.
+
+      This is the mode that is not a denser version of the other two — it is
+      the one whose output is meant to LEAVE the page. A player writing a deck
+      list wants forty names they can select and paste, and every jewel, stat
+      and type line in the way of that selection is a thing they have to delete
+      afterwards.
+
+      So the markup is deliberately thin: an anchor per line, no lead, no meta,
+      no decoration inside the list. Each name is still a link, because a text
+      list of names that cannot be clicked would be a worse version of both
+      other modes rather than a different one.
+
+      `<ol>` rather than `<ul>` to match the other two views — the order is the
+      ranking, and it means something in every mode.
+    -->
+    <ol class="text-results">
+      {#each outcome.results as result (result.href)}
+        <li><a href={result.href}>{result.label}</a></li>
       {/each}
     </ol>
     {/if}
@@ -620,6 +708,30 @@
     margin-block: 0 var(--of-space-base);
     color: var(--of-color-ink-muted);
     font-size: var(--of-type-size-small);
+  }
+
+  /*
+    A LIST THAT IS MEANT TO BE COPIED. No markers, no padding on the items,
+    tight leading — so a drag-select over it yields the names and nothing that
+    has to be cleaned out of the paste afterwards.
+  */
+  .text-results {
+    list-style: none;
+    margin: var(--of-space-loose) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--of-space-hair);
+    font-size: var(--of-type-size-small);
+  }
+
+  .text-results a {
+    color: var(--of-color-ink);
+    text-decoration: none;
+  }
+
+  .text-results a:hover,
+  .text-results a:focus-visible {
+    text-decoration: underline;
   }
 
   .results {
