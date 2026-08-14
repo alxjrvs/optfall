@@ -40,7 +40,9 @@ describe("the decode tables", () => {
 
 describe("over the real card corpus", () => {
   const setsUsed = new Set(
-    CARDS.cards.flatMap((card) => card.printings.map((printing) => printing.set_id)),
+    CARDS.cards.flatMap((card) =>
+      card.printings.map((printing) => printing.set_id),
+    ),
   );
 
   test("every set a printing references resolves to a named set", () => {
@@ -55,13 +57,22 @@ describe("over the real card corpus", () => {
     const undecoded = new Set<string>();
 
     for (const printing of printings) {
-      if (printing.rarity !== "" && rarityName(printing.rarity) === printing.rarity) {
+      if (
+        printing.rarity !== "" &&
+        rarityName(printing.rarity) === printing.rarity
+      ) {
         undecoded.add(`rarity:${printing.rarity}`);
       }
-      if (printing.edition !== "" && editionName(printing.edition) === printing.edition) {
+      if (
+        printing.edition !== "" &&
+        editionName(printing.edition) === printing.edition
+      ) {
         undecoded.add(`edition:${printing.edition}`);
       }
-      if (printing.foiling !== "" && foilingName(printing.foiling) === printing.foiling) {
+      if (
+        printing.foiling !== "" &&
+        foilingName(printing.foiling) === printing.foiling
+      ) {
         undecoded.add(`foiling:${printing.foiling}`);
       }
     }
@@ -82,8 +93,12 @@ describe("release order", () => {
     // An empty string sorts before every date, which would put an undated set
     // at the top of a newest-first list and assert it is the newest thing
     // published. It is not; it is a set with no published date.
-    const firstUndated = SETS_BY_RELEASE.findIndex((set) => set.released === null);
-    const lastDated = SETS_BY_RELEASE.map((set) => set.released !== null).lastIndexOf(true);
+    const firstUndated = SETS_BY_RELEASE.findIndex(
+      (set) => set.released === null,
+    );
+    const lastDated = SETS_BY_RELEASE.map(
+      (set) => set.released !== null,
+    ).lastIndexOf(true);
     if (firstUndated !== -1) expect(firstUndated).toBeGreaterThan(lastDated);
   });
 

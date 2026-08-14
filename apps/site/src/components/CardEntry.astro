@@ -165,7 +165,10 @@ const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
  * Which glyph each printed stat takes. Pitch is absent deliberately — the jewel
  * owns that one and its diamond is reserved to it.
  */
-const GLYPH_FOR: Record<string, "cost" | "power" | "defence" | "life" | "intellect" | "arcane" | undefined> = {
+const GLYPH_FOR: Record<
+  string,
+  "cost" | "power" | "defence" | "life" | "intellect" | "arcane" | undefined
+> = {
   Cost: "cost",
   Power: "power",
   Defence: "defence",
@@ -254,7 +257,9 @@ const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
 };
 
 const bodyStats = printedStats.filter((stat) => stat.kind !== "cost");
-const startStats = bodyStats.filter((stat) => CORNER_FOR[stat.label] === "start");
+const startStats = bodyStats.filter(
+  (stat) => CORNER_FOR[stat.label] === "start",
+);
 const endStats = bodyStats.filter((stat) => CORNER_FOR[stat.label] !== "start");
 const hasStats = page.pitch !== 0 || printedStats.length > 0;
 
@@ -267,7 +272,9 @@ const hasStats = page.pitch !== 0 || printedStats.length > 0;
  * order rather than sorted: upstream lists printings in its own order and
  * re-sorting names would be a claim about billing that the data does not make.
  */
-const artists = [...new Set(card.printings.flatMap((printing) => printing.artists))];
+const artists = [
+  ...new Set(card.printings.flatMap((printing) => printing.artists)),
+];
 
 /**
  * The rarities this card has been printed at, once each.
@@ -287,7 +294,8 @@ const artists = [...new Set(card.printings.flatMap((printing) => printing.artist
  */
 const rarities = (() => {
   const seen = new Set<string>();
-  const found: { name: string; initial: string; rest: string; slug: string }[] = [];
+  const found: { name: string; initial: string; rest: string; slug: string }[] =
+    [];
 
   for (const printing of card.printings) {
     if (printing.rarity === "" || seen.has(printing.rarity)) continue;
@@ -337,8 +345,16 @@ const nameHref = hrefForSlug(page.nameSlug);
 /** Related-card lists, in the order they answer a question about this card. */
 const related: readonly (readonly [string, string, readonly CardLink[]])[] = [
   ["Other versions", "Same name, different pitch.", page.variants],
-  ["Names these cards", "Cards this card's text refers to by name.", page.references],
-  ["Named by", "Cards whose text refers to this one by name.", page.referencedBy],
+  [
+    "Names these cards",
+    "Cards this card's text refers to by name.",
+    page.references,
+  ],
+  [
+    "Named by",
+    "Cards whose text refers to this one by name.",
+    page.referencedBy,
+  ],
 ];
 const relatedShown = related.filter(([, , links]) => links.length > 0);
 
@@ -503,7 +519,9 @@ const printings = (() => {
   }
 
   for (const entry of entries) {
-    if ((editionsPerNumber.get(`${entry.setCode}/${entry.id}`)?.size ?? 0) > 1) {
+    if (
+      (editionsPerNumber.get(`${entry.setCode}/${entry.id}`)?.size ?? 0) > 1
+    ) {
       entry.id = `${entry.id} · ${editionName(entry.edition)}`;
     }
   }
@@ -594,9 +612,10 @@ const showVersions = versions.length > 1;
  * resolves to the address that was already the answer.
  */
 const pitchTargets = JSON.stringify(
-  Object.fromEntries(versions.map((version) => [String(version.pitch), version.href])),
+  Object.fromEntries(
+    versions.map((version) => [String(version.pitch), version.href]),
+  ),
 );
-
 ---
 
 <nav class="lineage" aria-label="Breadcrumb">

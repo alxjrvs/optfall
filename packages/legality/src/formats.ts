@@ -92,7 +92,9 @@ export interface UnverifiedValue<T> {
 export type Sourced<T> = VerifiedValue<T> | UnverifiedValue<T>;
 
 /** Whether a constraint was confirmed against a retrieved document. */
-export function isVerified<T>(sourced: Sourced<T>): sourced is VerifiedValue<T> {
+export function isVerified<T>(
+  sourced: Sourced<T>,
+): sourced is VerifiedValue<T> {
   return sourced.confidence === "verified";
 }
 
@@ -145,7 +147,9 @@ export function requireVerified<T>(sourced: Sourced<T>, constraint: string): T {
  * historical decklist should treat an undated constraint as unconfirmed for
  * that date rather than assume the current rule ran backwards forever.
  */
-export function sourcedEffectiveFrom<T>(sourced: Sourced<T>): IsoDate | undefined {
+export function sourcedEffectiveFrom<T>(
+  sourced: Sourced<T>,
+): IsoDate | undefined {
   return sourced.effectiveFrom;
 }
 
@@ -340,7 +344,8 @@ function cite(
   };
 }
 
-const TRP_CONSTRUCTED_URL = "https://rules.fabtcg.com/en/trp/07-constructed-formats/";
+const TRP_CONSTRUCTED_URL =
+  "https://rules.fabtcg.com/en/trp/07-constructed-formats/";
 const TRP_SPECIAL_URL = "https://rules.fabtcg.com/en/trp/09-special-formats/";
 
 /*
@@ -468,7 +473,11 @@ const CR_4_1_4A_SLOTS = cite(
   "A player may select up to one arena-card for each of their arms, chest, head, legs, and weapon zones. Each card will start the game equipped in its respective zone, based on its type and/or subtype.",
 );
 
-const CR_4_1_5A_ARENA = cite(CR, "4.1.5a", "Arena-cards cannot be included in a player's deck.");
+const CR_4_1_5A_ARENA = cite(
+  CR,
+  "4.1.5a",
+  "Arena-cards cannot be included in a player's deck.",
+);
 
 const CR_4_1_2A_META_STATIC = cite(
   CR,
@@ -668,7 +677,10 @@ export interface CopyLimitRule {
 }
 
 /** Whether the format requires the hero to have (or not have) the Young subtype. */
-export type HeroSubtypeRule = "young-required" | "young-excluded" | "unrestricted";
+export type HeroSubtypeRule =
+  | "young-required"
+  | "young-excluded"
+  | "unrestricted";
 
 /** Hero rule for a format. */
 export interface HeroRule {
@@ -715,7 +727,9 @@ export interface EquipmentRule {
   /** Slot kinds a player may fill at the start of a game. */
   readonly startOfGameSlots: Sourced<readonly EquipmentSlot[]>;
   /** How many of each slot kind a player has by default. */
-  readonly startOfGameSlotCounts: Sourced<Readonly<Record<EquipmentSlot, number>>>;
+  readonly startOfGameSlotCounts: Sourced<
+    Readonly<Record<EquipmentSlot, number>>
+  >;
   /**
    * Rarity restriction on arena-cards specifically, when the format splits its
    * rarity rule between the deck and the arena. Commoner is the one that does.
@@ -786,10 +800,13 @@ const START_OF_GAME_SLOTS: Sourced<readonly EquipmentSlot[]> = verified(
   [CR_4_1_4A_SLOTS],
 );
 
-const START_OF_GAME_SLOT_COUNTS: Sourced<Readonly<Record<EquipmentSlot, number>>> = verified(
-  { arms: 1, chest: 1, head: 1, legs: 1, weapon: 2 },
-  [CR_3_0_2_ZONES, CR_4_1_4A_SLOTS, CR_4_1_2A_META_STATIC],
-);
+const START_OF_GAME_SLOT_COUNTS: Sourced<
+  Readonly<Record<EquipmentSlot, number>>
+> = verified({ arms: 1, chest: 1, head: 1, legs: 1, weapon: 2 }, [
+  CR_3_0_2_ZONES,
+  CR_4_1_4A_SLOTS,
+  CR_4_1_2A_META_STATIC,
+]);
 
 /**
  * Registration is uncapped for weapons and equipment in every format below.
@@ -863,7 +880,12 @@ const CLASSIC_CONSTRUCTED: FormatRules = {
   },
   rarity: [],
   conflicts: [],
-  citations: [TRP_7_1_POOL, TRP_7_1_COPIES, TRP_7_1_META_STATIC, CR_4_1_5A_ARENA],
+  citations: [
+    TRP_7_1_POOL,
+    TRP_7_1_COPIES,
+    TRP_7_1_META_STATIC,
+    CR_4_1_5A_ARENA,
+  ],
 };
 
 /*
@@ -894,7 +916,10 @@ const LIVING_LEGEND: FormatRules = {
     // trp:7.2 lifts the living legend hero exclusion and nothing else, so the
     // young / pit-fighter exclusions carry over unchanged.
     subtype: verified("young-excluded", [TRP_7_2_INHERITS, TRP_7_1_POOL]),
-    excludedSubtypes: verified(["Young", "Pit-Fighter"], [TRP_7_2_INHERITS, TRP_7_1_POOL]),
+    excludedSubtypes: verified(
+      ["Young", "Pit-Fighter"],
+      [TRP_7_2_INHERITS, TRP_7_1_POOL],
+    ),
     livingLegendHeroesLegal: verified(true, [TRP_7_2_HEROES]),
     rarity: null,
   },
@@ -941,7 +966,11 @@ const BLITZ_LIVING_LEGEND_HEROES_LEGAL_FROM: IsoDate = "2026-01-01";
 const BLITZ_RESTRICTED_OVERRIDE: CopyLimitOverride = {
   kind: "restricted-card",
   maximum: 1,
-  citations: [TRP_7_RESTRICTED, BLITZ_PAGE_LIVING_LEGEND, BLITZ_PAGE_ALL_CARDS_LEGAL],
+  citations: [
+    TRP_7_RESTRICTED,
+    BLITZ_PAGE_LIVING_LEGEND,
+    BLITZ_PAGE_ALL_CARDS_LEGAL,
+  ],
   note:
     "The trp:7 preamble applies to Blitz as a constructed format, but LSS " +
     "abolished the Blitz banned and restricted list on 2026-01-01, so on or " +
@@ -957,7 +986,10 @@ const BLITZ: FormatRules = {
   cardPoolMaximum: verified(52, [TRP_7_3_POOL, BLITZ_PAGE_QUICKSTART]),
   deckSize: {
     minimum: verified(40, [TRP_7_3_COPIES, BLITZ_PAGE_QUICKSTART]),
-    maximum: { kind: "stated", cards: verified(40, [TRP_7_3_COPIES, BLITZ_PAGE_QUICKSTART]) },
+    maximum: {
+      kind: "stated",
+      cards: verified(40, [TRP_7_3_COPIES, BLITZ_PAGE_QUICKSTART]),
+    },
     exact: true,
   },
   copyLimit: {
@@ -1039,7 +1071,11 @@ const SILVER_AGE: FormatRules = {
       [TRP_7_4_POOL],
     ),
     rarity: verified(
-      { scope: "hero", allowed: ["basic", "common", "rare"], everPrinted: true },
+      {
+        scope: "hero",
+        allowed: ["basic", "common", "rare"],
+        everPrinted: true,
+      },
       [TRP_7_4_POOL, TRP_7_4_COMMON, TRP_7_4_RARE],
     ),
   },
@@ -1053,11 +1089,14 @@ const SILVER_AGE: FormatRules = {
   // and cards in the card-poll must be common- or rare-rarity" (the typo is the
   // document's), and its own definition folds basic-rarity into common.
   rarity: [
-    verified({ scope: "card-pool", allowed: ["basic", "common", "rare"], everPrinted: true }, [
-      TRP_7_4_POOL,
-      TRP_7_4_COMMON,
-      TRP_7_4_RARE,
-    ]),
+    verified(
+      {
+        scope: "card-pool",
+        allowed: ["basic", "common", "rare"],
+        everPrinted: true,
+      },
+      [TRP_7_4_POOL, TRP_7_4_COMMON, TRP_7_4_RARE],
+    ),
   ],
   conflicts: [],
   citations: [TRP_7_4_POOL, TRP_7_4_COPIES, TRP_7_4_COMMON, TRP_7_4_RARE],
@@ -1128,11 +1167,14 @@ const COMMONER: FormatRules = {
       null,
       [COMMONER_POOL],
     ),
-    rarity: verified({ scope: "hero", allowed: ["basic", "common", "rare"], everPrinted: true }, [
-      COMMONER_POOL,
-      COMMONER_COMMON,
-      COMMONER_RARE,
-    ]),
+    rarity: verified(
+      {
+        scope: "hero",
+        allowed: ["basic", "common", "rare"],
+        everPrinted: true,
+      },
+      [COMMONER_POOL, COMMONER_COMMON, COMMONER_RARE],
+    ),
   },
   equipment: {
     registrationLimit: NO_REGISTRATION_LIMIT,
@@ -1146,22 +1188,28 @@ const COMMONER: FormatRules = {
     // and COMMONER_RARE, not from the two sentences that say "common or rare".
     // Citing only those two would stamp `basic` with a quotation that never
     // mentions it — the same defect this file corrects elsewhere.
-    rarity: verified({ scope: "arena-cards", allowed: ["basic", "common", "rare"], everPrinted: true }, [
-      COMMONER_POOL,
-      COMMONER_QUICKSTART,
-      COMMONER_COMMON,
-      COMMONER_RARE,
-    ]),
+    rarity: verified(
+      {
+        scope: "arena-cards",
+        allowed: ["basic", "common", "rare"],
+        everPrinted: true,
+      },
+      [COMMONER_POOL, COMMONER_QUICKSTART, COMMONER_COMMON, COMMONER_RARE],
+    ),
   },
   rarity: [
-    verified({ scope: "deck-cards", allowed: ["basic", "common"], everPrinted: true }, [
-      COMMONER_POOL,
-      COMMONER_QUICKSTART,
-      COMMONER_COMMON,
-    ]),
+    verified(
+      { scope: "deck-cards", allowed: ["basic", "common"], everPrinted: true },
+      [COMMONER_POOL, COMMONER_QUICKSTART, COMMONER_COMMON],
+    ),
   ],
   conflicts: [],
-  citations: [COMMONER_RETIRED, COMMONER_POOL, COMMONER_QUICKSTART, COMMONER_COPIES],
+  citations: [
+    COMMONER_RETIRED,
+    COMMONER_POOL,
+    COMMONER_QUICKSTART,
+    COMMONER_COPIES,
+  ],
 };
 
 /*
@@ -1203,7 +1251,7 @@ const UPF_CONFLICT: SourceConflict = {
   description:
     "Tournament Rules and Policy 9.3 requires 1 young hero card and permits up " +
     "to 2 copies of each unique card. LSS's Ultimate Pit Fight format page, " +
-    "last updated 17 December 2025, registers \"1 hero card\", advises against " +
+    'last updated 17 December 2025, registers "1 hero card", advises against ' +
     "using an Adult hero only when everyone else is using Young heroes — which " +
     "presupposes an Adult hero is permitted — and says the copy limit depends " +
     "on the format the game is based on. The two documents agree on the " +
@@ -1244,7 +1292,10 @@ const ULTIMATE_PIT_FIGHT: FormatRules = {
     exact: true,
   },
   copyLimit: {
-    perUniqueCard: unverified(UPF_UNRESOLVED, 2, [TRP_9_3_COPIES, UPF_PAGE_COPIES]),
+    perUniqueCard: unverified(UPF_UNRESOLVED, 2, [
+      TRP_9_3_COPIES,
+      UPF_PAGE_COPIES,
+    ]),
     overrides: [META_STATIC_OVERRIDE],
   },
   hero: {
@@ -1252,8 +1303,15 @@ const ULTIMATE_PIT_FIGHT: FormatRules = {
     // them, so those two are verified even though the subtype is not.
     required: verified(true, [TRP_9_3_POOL, UPF_PAGE_ANY_FORMAT]),
     count: verified(1, [TRP_9_3_POOL, UPF_PAGE_ANY_FORMAT]),
-    subtype: unverified(UPF_UNRESOLVED, "young-required", [TRP_9_3_POOL, UPF_PAGE_ADULT_HERO]),
-    excludedSubtypes: unverified(UPF_UNRESOLVED, [], [TRP_9_3_POOL, UPF_PAGE_ADULT_HERO]),
+    subtype: unverified(UPF_UNRESOLVED, "young-required", [
+      TRP_9_3_POOL,
+      UPF_PAGE_ADULT_HERO,
+    ]),
+    excludedSubtypes: unverified(
+      UPF_UNRESOLVED,
+      [],
+      [TRP_9_3_POOL, UPF_PAGE_ADULT_HERO],
+    ),
     livingLegendHeroesLegal: unverified(
       "Neither trp:9.3 nor the Ultimate Pit Fight format page addresses living " +
         "legend heroes. The format page's claim that “Every card is legal” is " +
@@ -1344,12 +1402,17 @@ export function unverifiedConstraints(rules: FormatRules): readonly string[] {
     record("equipment.registrationLimit", rules.equipment.registrationLimit);
   }
   record("equipment.startOfGameSlots", rules.equipment.startOfGameSlots);
-  record("equipment.startOfGameSlotCounts", rules.equipment.startOfGameSlotCounts);
-  if (rules.equipment.rarity !== null) record("equipment.rarity", rules.equipment.rarity);
+  record(
+    "equipment.startOfGameSlotCounts",
+    rules.equipment.startOfGameSlotCounts,
+  );
+  if (rules.equipment.rarity !== null)
+    record("equipment.rarity", rules.equipment.rarity);
   rules.rarity.forEach((restriction, index) => {
     record(`rarity[${String(index)}]`, restriction);
   });
-  if (rules.status.kind === "retired") record("status.since", rules.status.since);
+  if (rules.status.kind === "retired")
+    record("status.since", rules.status.since);
 
   return paths;
 }
@@ -1379,7 +1442,8 @@ export function formatCitations(rules: FormatRules): readonly RuleCitation[] {
   addAll(rules.citations);
   addSourced(rules.cardPoolMaximum);
   addSourced(rules.deckSize.minimum);
-  if (rules.deckSize.maximum.kind === "stated") addSourced(rules.deckSize.maximum.cards);
+  if (rules.deckSize.maximum.kind === "stated")
+    addSourced(rules.deckSize.maximum.cards);
   addSourced(rules.copyLimit.perUniqueCard);
   for (const override of rules.copyLimit.overrides) addAll(override.citations);
   addSourced(rules.hero.required);
@@ -1388,7 +1452,8 @@ export function formatCitations(rules: FormatRules): readonly RuleCitation[] {
   addSourced(rules.hero.excludedSubtypes);
   addSourced(rules.hero.livingLegendHeroesLegal);
   if (rules.hero.rarity !== null) addSourced(rules.hero.rarity);
-  if (rules.equipment.registrationLimit !== null) addSourced(rules.equipment.registrationLimit);
+  if (rules.equipment.registrationLimit !== null)
+    addSourced(rules.equipment.registrationLimit);
   addSourced(rules.equipment.startOfGameSlots);
   addSourced(rules.equipment.startOfGameSlotCounts);
   if (rules.equipment.rarity !== null) addSourced(rules.equipment.rarity);

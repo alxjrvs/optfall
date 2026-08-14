@@ -3,9 +3,16 @@ import { describe, expect, test } from "bun:test";
 import { CORPUS as CARDS } from "./cards";
 import { CORPUS as RULES } from "./rules";
 import { INFERRED, SYMBOLS, ruleTextFor, symbolForToken } from "./card-symbols";
-import { parseCardText, symbolsUsed, type Block, type Inline } from "./card-text";
+import {
+  parseCardText,
+  symbolsUsed,
+  type Block,
+  type Inline,
+} from "./card-text";
 
-const BY_NUMBER = new Map(RULES.sections.map((section) => [section.number, section]));
+const BY_NUMBER = new Map(
+  RULES.sections.map((section) => [section.number, section]),
+);
 
 describe("the symbol table is the rules', not ours", () => {
   test("every symbol's rule says that symbol is that thing", () => {
@@ -26,12 +33,16 @@ describe("the symbol table is the rules', not ours", () => {
       expect(rule, `${symbol.token} cites ${symbol.rule}`).toBeDefined();
 
       const text = rule?.text ?? "";
-      expect(text, `${symbol.rule} names ${symbol.token}`).toContain(symbol.token);
+      expect(text, `${symbol.rule} names ${symbol.token}`).toContain(
+        symbol.token,
+      );
       // The CR spells defence American; the interface spells it British. The
       // citation is checked against the rules' spelling, which is the one that
       // has to be true.
       const spelled = symbol.name === "defence" ? "defense" : symbol.name;
-      expect(text.toLowerCase(), `${symbol.rule} names "${spelled}"`).toContain(spelled.toLowerCase());
+      expect(text.toLowerCase(), `${symbol.rule} names "${spelled}"`).toContain(
+        spelled.toLowerCase(),
+      );
     }
   });
 
@@ -75,7 +86,9 @@ describe("the table covers what the corpus actually prints", () => {
     // real symbol going unrendered, and the difference between the two cases is
     // exactly what this test is for.
     const KNOWN_TYPO = "{r]{r}";
-    const unknown = [...printed.keys()].filter((token) => symbolForToken(token) === null);
+    const unknown = [...printed.keys()].filter(
+      (token) => symbolForToken(token) === null,
+    );
     expect(unknown).toEqual([KNOWN_TYPO]);
   });
 
@@ -172,13 +185,17 @@ describe("parsing card text loses nothing", () => {
     // brace leaves `{r]` as text and takes only the well-formed `{r}`.
     const parsed = parseCardText("**Action** - {r]{r}: **Attack**");
     expect(textOf(parsed)).toBe("**Action** - {r]{r}: **Attack**");
-    expect(plain(parsed[0]?.kind === "paragraph" ? parsed[0].children : [])).toContain("{r]");
+    expect(
+      plain(parsed[0]?.kind === "paragraph" ? parsed[0].children : []),
+    ).toContain("{r]");
   });
 
   test("a bullet list is a list, and its `*` is not read as italic", () => {
     // Tarantula Toxin. The trap: `\*(.+?)\*` spans from the first bullet to the
     // second and turns two choices into one italic run.
-    const parsed = parseCardText("Choose 1 or both;\n\n* Target attack gets +3{p}.\n* Target card gets -3{d}.");
+    const parsed = parseCardText(
+      "Choose 1 or both;\n\n* Target attack gets +3{p}.\n* Target card gets -3{d}.",
+    );
     expect(parsed).toHaveLength(2);
     expect(parsed[1]?.kind).toBe("list");
     expect(parsed[1]?.kind === "list" && parsed[1].items).toHaveLength(2);
@@ -187,7 +204,9 @@ describe("parsing card text loses nothing", () => {
   test("a block that mixes a lead line with bullets keeps the lead", () => {
     // Annihilator Engine. Treating a mixed block as a list drops the sentence
     // that says what the bullets are conditions ON.
-    const parsed = parseCardText("If you have 1 or more Evos equipped, this gets X,\n- 2 or more, this gets Y");
+    const parsed = parseCardText(
+      "If you have 1 or more Evos equipped, this gets X,\n- 2 or more, this gets Y",
+    );
     expect(parsed[0]?.kind).toBe("paragraph");
     expect(textOf(parsed)).toContain("If you have 1 or more Evos equipped");
   });
@@ -195,15 +214,24 @@ describe("parsing card text loses nothing", () => {
   test("a symbol inside bold is still a symbol", () => {
     // Cosmo bolds a whole ability, symbol included.
     const parsed = parseCardText("**Once per Turn Action - {r}: Attack**");
-    const strong = parsed[0]?.kind === "paragraph" ? parsed[0].children[0] : null;
+    const strong =
+      parsed[0]?.kind === "paragraph" ? parsed[0].children[0] : null;
     expect(strong?.kind).toBe("strong");
     const inner = strong?.kind === "strong" ? strong.children : [];
-    expect(inner.some((node) => node.kind === "symbol" && node.symbol.token === "{r}")).toBe(true);
+    expect(
+      inner.some(
+        (node) => node.kind === "symbol" && node.symbol.token === "{r}",
+      ),
+    ).toBe(true);
   });
 
   test("the italic parentheticals are the only italics", () => {
-    const parsed = parseCardText("*(A player may add a Helio's Mitre to their card pool.)*");
-    expect(parsed[0]?.kind === "paragraph" && parsed[0].children[0]?.kind).toBe("em");
+    const parsed = parseCardText(
+      "*(A player may add a Helio's Mitre to their card pool.)*",
+    );
+    expect(parsed[0]?.kind === "paragraph" && parsed[0].children[0]?.kind).toBe(
+      "em",
+    );
   });
 
   test("symbolsUsed reports each symbol once, in table order not appearance order", () => {

@@ -1,176 +1,176 @@
 <script lang="ts">
-  /**
-   * The alternate printings of one card, as a picker that swaps the face.
+/**
+ * The alternate printings of one card, as a picker that swaps the face.
+ *
+ * WHAT THIS REPLACES. A rail of thumbnails labelled by collector number and
+ * nothing else — not clickable, so the only way to see another printing's art
+ * was to not see it. A card averages 3.3 printings and several are visually
+ * different (rainbow foil, cold foil, alternate art); showing them as
+ * inert tiles was showing that they exist rather than showing them.
+ *
+ * NAMED BY SET AND NUMBER, because `BEN010` alone answers "which printing" for
+ * somebody who already knows the set codes and nobody else. "Bright Lights ·
+ * BEN010" answers it for everybody, and the number is kept because it is the
+ * citable identity of a printing.
+ *
+ * WHY THIS IS AN ISLAND WHEN ALMOST NOTHING HERE IS. `docs/SCRYFALL-GAP.md`
+ * §5.2 rules out live updating for SEARCH — results must not re-rank under a
+ * cursor, because the URL is the product and a submit is what makes a query
+ * worth pasting. A printing picker is the opposite case: it changes which
+ * image is displayed and nothing else. There is no query, no ranking, no
+ * result set, and nothing a reader would want to paste that the card's own
+ * URL does not already carry.
+ *
+ * THE FACE IS SWAPPED, NOT NAVIGATED, and that is the one thing worth arguing
+ * with. Per-printing URLs are still the better long-term answer — they are in
+ * the plan, and they would make an individual printing linkable. Until they
+ * exist, a swap is strictly better than a dead tile: the reader sees the art,
+ * and the card's own permalink still resolves to the card.
+ *
+ * ONE SELECTION, AND IT IS A RADIO GROUP, because that is what "pick exactly
+ * one of these" is. Arrow keys and a group name come free, the current choice
+ * is announced rather than merely outlined, and a reader who cannot see the
+ * accent border still knows which printing they are looking at.
+ */
+import { CardFace, CardFaceGroup } from "optfall-components/svelte";
+
+interface Printing {
+  /** Blob key, already resolved by the build. */
+  readonly key: string;
+  /** Collector number — the citable identity. Carries the edition too
+   *  where set and number alone do not tell two printings apart. */
+  readonly id: string;
+  readonly edition: string;
+  /** The set's published name, or its code where upstream names none. */
+  readonly setName: string;
+  readonly setCode: string;
+  readonly thumb: string;
+  readonly normal: string;
+  readonly width: number;
+  readonly height: number;
+  readonly thumbWidth: number;
+  readonly thumbHeight: number;
+  /** This printing's own page — `/card/<slug>/<set>/<number>`. */
+  readonly href: string;
+}
+
+interface Props {
+  printings: readonly Printing[];
+  /** The accessible name for the card's picture, composed by the caller. */
+  alt: string;
+  /** The card's label, for the group's accessible name. */
+  label: string;
+  /** Which face the server already rendered. See `CardEntry`'s `selected`. */
+  selected?: number;
+}
+
+const { printings, alt, label, selected: initial = 0 }: Props = $props();
+
+/**
+ * WHICH PRINTING, IN THE URL — so "the rainbow foil one" is a thing you can
+ * paste.
+ *
+ * `docs/DESIGN.md`: "Every view is a URL. Scryfall's real product is the link
+ * you paste into a conversation to settle it." A picker whose selection lived
+ * only in component state was a view with no address: you could find the cold
+ * foil printing and then had no way to show it to anybody.
+ *
+ * THE PARAM IS THE FACE KEY, minus its extension — `?printing=U-WTR098`. It
+ * is upstream's own art filename stem, it is unique per distinct image
+ * (asserted over the corpus in `faces.test.ts`), and it survives a set
+ * printing the same collector number twice: `WTR098` and `U-WTR098` are the
+ * Alpha and Unlimited arts, which `WTR098` alone could not tell apart.
+ *
+ * AN UNKNOWN OR ABSENT PARAM FALLS BACK TO THE DEFAULT rather than erroring.
+ * A stale link from before a re-sync should show the card, not a broken page
+ * — the reader asked for a card and one of its printings is a better answer
+ * than none.
+ */
+const PARAM = "printing";
+
+function keyOf(printing: Printing): string {
+  return printing.key.replace(/\.webp$/, "");
+}
+
+/**
+ * WHERE THE SELECTION COMES FROM, IN PRIORITY ORDER.
+ *
+ * 1. The PATH, resolved by the server — `initial`. A per-printing URL is a
+ *    page now, so by the time this component runs the correct face is already
+ *    in the DOM and the only right thing to do is agree with it.
+ * 2. `?printing=`, for links pasted before those pages existed. The param is
+ *    no longer written, but it was, and a reference tool that breaks its own
+ *    old links has failed at the one thing it is for.
+ *
+ * The query form loses to the path form deliberately: if somebody arrives at
+ * `/card/x/omn/243-cf?printing=OMN243`, the URL contradicts itself, and the
+ * half that was *served* is the half that wins.
+ */
+function selectedFromUrl(): number {
+  if (typeof window === "undefined") return initial;
+
+  // The path first, and it is read from the DOCUMENT rather than from
+  // `initial`, because `remember` rewrites the path as the reader clicks.
+  // Reading the prop instead would make Back restore the face the page was
+  // *served* with rather than the one the address currently names.
+  const here = window.location.pathname.replace(/\/$/, "");
+  const byPath = printings.findIndex(
+    (printing) => printing.href.replace(/\/$/, "") === here,
+  );
+  if (byPath !== -1) return byPath;
+
+  const wanted = new URLSearchParams(window.location.search).get(PARAM);
+  if (wanted === null) return initial;
+  const index = printings.findIndex((printing) => keyOf(printing) === wanted);
+  return index === -1 ? initial : index;
+}
+
+let selected = $state(selectedFromUrl());
+const current = $derived(printings[selected] ?? printings[0]);
+
+/**
+ * `replaceState`, not `pushState`.
+ *
+ * Clicking through six printings should not put six entries in the back
+ * button — the reader is looking at one card, not visiting six pages. The
+ * address stays correct so it can be copied at any moment, and Back still
+ * returns to wherever they came from.
+ */
+function remember(index: number): void {
+  selected = index;
+  if (typeof window === "undefined") return;
+  const printing = printings[index];
+  if (printing === undefined) return;
+
+  /*
+   * THE ADDRESS BAR IS SET TO THE PRINTING'S OWN PAGE, NOT TO A QUERY ON
+   * THIS ONE — and the swap still does not navigate.
    *
-   * WHAT THIS REPLACES. A rail of thumbnails labelled by collector number and
-   * nothing else — not clickable, so the only way to see another printing's art
-   * was to not see it. A card averages 3.3 printings and several are visually
-   * different (rainbow foil, cold foil, alternate art); showing them as
-   * inert tiles was showing that they exist rather than showing them.
+   * This is the combination worth having. Clicking a tile changes an image,
+   * so making it a link would be a page load to move one picture. But the URL
+   * it writes has to be one that WORKS on its own: the old `?printing=` form
+   * only resolved in a browser running this component, so pasting it into a
+   * preview-generating chat window produced the default art, and pasting it
+   * to somebody with scripting off produced the default art silently.
    *
-   * NAMED BY SET AND NUMBER, because `BEN010` alone answers "which printing" for
-   * somebody who already knows the set codes and nobody else. "Bright Lights ·
-   * BEN010" answers it for everybody, and the number is kept because it is the
-   * citable identity of a printing.
-   *
-   * WHY THIS IS AN ISLAND WHEN ALMOST NOTHING HERE IS. `docs/SCRYFALL-GAP.md`
-   * §5.2 rules out live updating for SEARCH — results must not re-rank under a
-   * cursor, because the URL is the product and a submit is what makes a query
-   * worth pasting. A printing picker is the opposite case: it changes which
-   * image is displayed and nothing else. There is no query, no ranking, no
-   * result set, and nothing a reader would want to paste that the card's own
-   * URL does not already carry.
-   *
-   * THE FACE IS SWAPPED, NOT NAVIGATED, and that is the one thing worth arguing
-   * with. Per-printing URLs are still the better long-term answer — they are in
-   * the plan, and they would make an individual printing linkable. Until they
-   * exist, a swap is strictly better than a dead tile: the reader sees the art,
-   * and the card's own permalink still resolves to the card.
-   *
-   * ONE SELECTION, AND IT IS A RADIO GROUP, because that is what "pick exactly
-   * one of these" is. Arrow keys and a group name come free, the current choice
-   * is announced rather than merely outlined, and a reader who cannot see the
-   * accent border still knows which printing they are looking at.
+   * `printing.href` is a real page that renders this face server-side. So the
+   * address is now always something the reader can copy at any moment and
+   * hand to anything at all — while the interaction that produced it stayed
+   * instant.
    */
-  import { CardFace, CardFaceGroup } from "optfall-components/svelte";
+  window.history.replaceState({}, "", printing.href);
+}
 
-  interface Printing {
-    /** Blob key, already resolved by the build. */
-    readonly key: string;
-    /** Collector number — the citable identity. Carries the edition too
-     *  where set and number alone do not tell two printings apart. */
-    readonly id: string;
-    readonly edition: string;
-    /** The set's published name, or its code where upstream names none. */
-    readonly setName: string;
-    readonly setCode: string;
-    readonly thumb: string;
-    readonly normal: string;
-    readonly width: number;
-    readonly height: number;
-    readonly thumbWidth: number;
-    readonly thumbHeight: number;
-    /** This printing's own page — `/card/<slug>/<set>/<number>`. */
-    readonly href: string;
-  }
+/** Back and forward have to work, which means listening for them. */
+$effect(() => {
+  const onPop = () => {
+    selected = selectedFromUrl();
+  };
+  window.addEventListener("popstate", onPop);
+  return () => window.removeEventListener("popstate", onPop);
+});
 
-  interface Props {
-    printings: readonly Printing[];
-    /** The accessible name for the card's picture, composed by the caller. */
-    alt: string;
-    /** The card's label, for the group's accessible name. */
-    label: string;
-    /** Which face the server already rendered. See `CardEntry`'s `selected`. */
-    selected?: number;
-  }
-
-  const { printings, alt, label, selected: initial = 0 }: Props = $props();
-
-  /**
-   * WHICH PRINTING, IN THE URL — so "the rainbow foil one" is a thing you can
-   * paste.
-   *
-   * `docs/DESIGN.md`: "Every view is a URL. Scryfall's real product is the link
-   * you paste into a conversation to settle it." A picker whose selection lived
-   * only in component state was a view with no address: you could find the cold
-   * foil printing and then had no way to show it to anybody.
-   *
-   * THE PARAM IS THE FACE KEY, minus its extension — `?printing=U-WTR098`. It
-   * is upstream's own art filename stem, it is unique per distinct image
-   * (asserted over the corpus in `faces.test.ts`), and it survives a set
-   * printing the same collector number twice: `WTR098` and `U-WTR098` are the
-   * Alpha and Unlimited arts, which `WTR098` alone could not tell apart.
-   *
-   * AN UNKNOWN OR ABSENT PARAM FALLS BACK TO THE DEFAULT rather than erroring.
-   * A stale link from before a re-sync should show the card, not a broken page
-   * — the reader asked for a card and one of its printings is a better answer
-   * than none.
-   */
-  const PARAM = "printing";
-
-  function keyOf(printing: Printing): string {
-    return printing.key.replace(/\.webp$/, "");
-  }
-
-  /**
-   * WHERE THE SELECTION COMES FROM, IN PRIORITY ORDER.
-   *
-   * 1. The PATH, resolved by the server — `initial`. A per-printing URL is a
-   *    page now, so by the time this component runs the correct face is already
-   *    in the DOM and the only right thing to do is agree with it.
-   * 2. `?printing=`, for links pasted before those pages existed. The param is
-   *    no longer written, but it was, and a reference tool that breaks its own
-   *    old links has failed at the one thing it is for.
-   *
-   * The query form loses to the path form deliberately: if somebody arrives at
-   * `/card/x/omn/243-cf?printing=OMN243`, the URL contradicts itself, and the
-   * half that was *served* is the half that wins.
-   */
-  function selectedFromUrl(): number {
-    if (typeof window === "undefined") return initial;
-
-    // The path first, and it is read from the DOCUMENT rather than from
-    // `initial`, because `remember` rewrites the path as the reader clicks.
-    // Reading the prop instead would make Back restore the face the page was
-    // *served* with rather than the one the address currently names.
-    const here = window.location.pathname.replace(/\/$/, "");
-    const byPath = printings.findIndex(
-      (printing) => printing.href.replace(/\/$/, "") === here,
-    );
-    if (byPath !== -1) return byPath;
-
-    const wanted = new URLSearchParams(window.location.search).get(PARAM);
-    if (wanted === null) return initial;
-    const index = printings.findIndex((printing) => keyOf(printing) === wanted);
-    return index === -1 ? initial : index;
-  }
-
-  let selected = $state(selectedFromUrl());
-  const current = $derived(printings[selected] ?? printings[0]);
-
-  /**
-   * `replaceState`, not `pushState`.
-   *
-   * Clicking through six printings should not put six entries in the back
-   * button — the reader is looking at one card, not visiting six pages. The
-   * address stays correct so it can be copied at any moment, and Back still
-   * returns to wherever they came from.
-   */
-  function remember(index: number): void {
-    selected = index;
-    if (typeof window === "undefined") return;
-    const printing = printings[index];
-    if (printing === undefined) return;
-
-    /*
-     * THE ADDRESS BAR IS SET TO THE PRINTING'S OWN PAGE, NOT TO A QUERY ON
-     * THIS ONE — and the swap still does not navigate.
-     *
-     * This is the combination worth having. Clicking a tile changes an image,
-     * so making it a link would be a page load to move one picture. But the URL
-     * it writes has to be one that WORKS on its own: the old `?printing=` form
-     * only resolved in a browser running this component, so pasting it into a
-     * preview-generating chat window produced the default art, and pasting it
-     * to somebody with scripting off produced the default art silently.
-     *
-     * `printing.href` is a real page that renders this face server-side. So the
-     * address is now always something the reader can copy at any moment and
-     * hand to anything at all — while the interaction that produced it stayed
-     * instant.
-     */
-    window.history.replaceState({}, "", printing.href);
-  }
-
-  /** Back and forward have to work, which means listening for them. */
-  $effect(() => {
-    const onPop = () => {
-      selected = selectedFromUrl();
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  });
-
-  const uid = $props.id();
+const uid = $props.id();
 </script>
 
 {#if current}

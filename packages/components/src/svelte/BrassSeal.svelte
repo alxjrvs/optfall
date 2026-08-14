@@ -1,86 +1,86 @@
 <script lang="ts">
-  /**
-   * The brass seal — judge attribution on a verified ruling.
-   *
-   * This is the single place brass is allowed to appear. `docs/DESIGN.md`:
-   * "Brass is reserved for authority — the verified seal and nothing else. A
-   * material used once is a signal; used twice it is a theme." So a second
-   * component reaching for `color.brass` is not a styling choice, it is the
-   * signal being spent. Nothing else may consume `--of-color-brass`,
-   * `--of-color-brass-ink` or `--of-color-brass-edge`.
-   *
-   * Conventions inherited from `PitchJewel.svelte`, the reference component:
-   * tokens and nothing else in the style block, square corners, a light top
-   * edge and a dark bottom edge, logical properties throughout.
-   *
-   * **There is no `label` prop, and its absence is the same argument the
-   * reference makes for having one.** `PitchJewel` takes a label because a
-   * jewel is a glyph whose meaning lives outside its markup. Here the three
-   * facts that *are* the accessible name are already required props, so the
-   * name is composed rather than supplied — there is no spelling of
-   * `<BrassSeal />` that renders an unnamed seal, which is strictly better than
-   * a default a caller can override to nothing. `BrassSealProps` in
-   * `../index.ts` is the contract; this adds no prop to it.
-   *
-   * **The rules version is a first-class field, not a parenthetical.**
-   * `docs/PLAN.md` Phase 5: "every entry records the rules version it was
-   * answered under; a bump flags it for review rather than silently serving
-   * stale law". A version that a reader has to hunt for cannot do that job, so
-   * it gets its own struck band across the foot of the plate rather than a
-   * trailing note in small text.
-   *
-   * **Colour never carries the claim.** The word "Verified" is rendered as
-   * text, so the brass says the same thing the plate already says. A reader who
-   * cannot see the material loses nothing.
-   */
+/**
+ * The brass seal — judge attribution on a verified ruling.
+ *
+ * This is the single place brass is allowed to appear. `docs/DESIGN.md`:
+ * "Brass is reserved for authority — the verified seal and nothing else. A
+ * material used once is a signal; used twice it is a theme." So a second
+ * component reaching for `color.brass` is not a styling choice, it is the
+ * signal being spent. Nothing else may consume `--of-color-brass`,
+ * `--of-color-brass-ink` or `--of-color-brass-edge`.
+ *
+ * Conventions inherited from `PitchJewel.svelte`, the reference component:
+ * tokens and nothing else in the style block, square corners, a light top
+ * edge and a dark bottom edge, logical properties throughout.
+ *
+ * **There is no `label` prop, and its absence is the same argument the
+ * reference makes for having one.** `PitchJewel` takes a label because a
+ * jewel is a glyph whose meaning lives outside its markup. Here the three
+ * facts that *are* the accessible name are already required props, so the
+ * name is composed rather than supplied — there is no spelling of
+ * `<BrassSeal />` that renders an unnamed seal, which is strictly better than
+ * a default a caller can override to nothing. `BrassSealProps` in
+ * `../index.ts` is the contract; this adds no prop to it.
+ *
+ * **The rules version is a first-class field, not a parenthetical.**
+ * `docs/PLAN.md` Phase 5: "every entry records the rules version it was
+ * answered under; a bump flags it for review rather than silently serving
+ * stale law". A version that a reader has to hunt for cannot do that job, so
+ * it gets its own struck band across the foot of the plate rather than a
+ * trailing note in small text.
+ *
+ * **Colour never carries the claim.** The word "Verified" is rendered as
+ * text, so the brass says the same thing the plate already says. A reader who
+ * cannot see the material loses nothing.
+ */
 
-  interface Props {
-    /** The judge's name, exactly as they gave it. */
-    judge: string;
-    /** Date the ruling was given, `YYYY-MM-DD`. */
-    date: string;
-    /** The rules version the ruling was answered under. */
-    rulesVersion: string;
-  }
+interface Props {
+  /** The judge's name, exactly as they gave it. */
+  judge: string;
+  /** Date the ruling was given, `YYYY-MM-DD`. */
+  date: string;
+  /** The rules version the ruling was answered under. */
+  rulesVersion: string;
+}
 
-  const { judge, date, rulesVersion }: Props = $props();
+const { judge, date, rulesVersion }: Props = $props();
 
-  const MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ] as const;
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
 
-  /**
-   * `YYYY-MM-DD` expanded to "14 March 2026", by hand.
-   *
-   * Deliberately NOT `new Date(date).toLocaleDateString()`. A bare `YYYY-MM-DD`
-   * is parsed as UTC midnight, so anywhere west of Greenwich that round-trip
-   * renders the *previous day* — a ruling dated the 14th displayed as the 13th
-   * to a reader in Los Angeles. On a surface whose entire value is being
-   * citable, a date that changes with the reader's timezone is not a cosmetic
-   * bug. The `datetime` attribute below still carries the exact machine form,
-   * so nothing is lost by formatting the visible text ourselves.
-   *
-   * An unparseable value renders as given rather than as "Invalid Date": if
-   * upstream data is malformed, showing it is how anyone finds out.
-   */
-  const readable = $derived.by(() => {
-    const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
-    if (!parts) return date;
-    const [, year, month, day] = parts;
-    const name = MONTHS[Number(month) - 1];
-    return name ? `${Number(day)} ${name} ${year}` : date;
-  });
+/**
+ * `YYYY-MM-DD` expanded to "14 March 2026", by hand.
+ *
+ * Deliberately NOT `new Date(date).toLocaleDateString()`. A bare `YYYY-MM-DD`
+ * is parsed as UTC midnight, so anywhere west of Greenwich that round-trip
+ * renders the *previous day* — a ruling dated the 14th displayed as the 13th
+ * to a reader in Los Angeles. On a surface whose entire value is being
+ * citable, a date that changes with the reader's timezone is not a cosmetic
+ * bug. The `datetime` attribute below still carries the exact machine form,
+ * so nothing is lost by formatting the visible text ourselves.
+ *
+ * An unparseable value renders as given rather than as "Invalid Date": if
+ * upstream data is malformed, showing it is how anyone finds out.
+ */
+const readable = $derived.by(() => {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!parts) return date;
+  const [, year, month, day] = parts;
+  const name = MONTHS[Number(month) - 1];
+  return name ? `${Number(day)} ${name} ${year}` : date;
+});
 </script>
 
 <!--

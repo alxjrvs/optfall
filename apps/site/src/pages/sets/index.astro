@@ -39,7 +39,9 @@ for (const card of CARDS.cards) {
 }
 
 /** Sets no card in the corpus belongs to are omitted rather than shown empty. */
-const listed = SETS_BY_RELEASE.filter((set) => (cardsPerSet.get(set.id)?.size ?? 0) > 0);
+const listed = SETS_BY_RELEASE.filter(
+  (set) => (cardsPerSet.get(set.id)?.size ?? 0) > 0,
+);
 ---
 
 <BaseLayout

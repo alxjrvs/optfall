@@ -49,7 +49,7 @@ const meta = {
     title: {
       control: "text",
       description:
-        "Accessible name, exposed via `aria-labelledby` rather than a bare `<title>`. It cannot be emptied: a blank or whitespace-only value falls back to `Optfall` rather than through to an unnamed `role=\"img\"`. This is not a visible label and never renders as text.",
+        'Accessible name, exposed via `aria-labelledby` rather than a bare `<title>`. It cannot be emptied: a blank or whitespace-only value falls back to `Optfall` rather than through to an unnamed `role="img"`. This is not a visible label and never renders as text.',
     },
     decorative: {
       control: "boolean",

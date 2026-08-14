@@ -23,7 +23,9 @@ import { render } from "svelte/server";
 
 import GameSymbol from "./GameSymbol.svelte";
 
-const SOURCE = await Bun.file(new URL("./GameSymbol.svelte", import.meta.url)).text();
+const SOURCE = await Bun.file(
+  new URL("./GameSymbol.svelte", import.meta.url),
+).text();
 
 /* Comments stripped FIRST. They are prose about clip paths, full of things that
    look like class selectors — `.min`, `1.12.4e` — and counting those as
@@ -120,7 +122,9 @@ function classCount(selector: string): number {
     paren and recursing keeps each branch's cost inside its own branch.
   */
   for (let index = 0; index < selector.length; index += 1) {
-    const functional = /^:(is|not|has|where|matches)\(/.exec(selector.slice(index));
+    const functional = /^:(is|not|has|where|matches)\(/.exec(
+      selector.slice(index),
+    );
     if (functional === null) {
       rest += selector[index];
       continue;
@@ -139,7 +143,10 @@ function classCount(selector: string): number {
     total +=
       functional[1] === "where"
         ? 0
-        : Math.max(...splitTopLevel(args).map((argument) => classCount(argument)), 0);
+        : Math.max(
+            ...splitTopLevel(args).map((argument) => classCount(argument)),
+            0,
+          );
     index = close;
   }
 
@@ -181,14 +188,18 @@ function outsideFunctional(selector: string): string {
  */
 function excludesArt(selector: string): boolean {
   for (const match of selector.matchAll(/:not\(([^()]*)\)/g)) {
-    if (splitTopLevel(match[1]!).some((argument) => argument.includes(".art"))) return true;
+    if (splitTopLevel(match[1]!).some((argument) => argument.includes(".art")))
+      return true;
   }
   return false;
 }
 
 describe("splitTopLevel", () => {
   test("splits a plain selector list", () => {
-    expect(splitTopLevel(".a.h, .b.h").map((s) => s.trim())).toEqual([".a.h", ".b.h"]);
+    expect(splitTopLevel(".a.h, .b.h").map((s) => s.trim())).toEqual([
+      ".a.h",
+      ".b.h",
+    ]);
   });
 
   test("keeps a functional pseudo-class intact", () => {
@@ -258,7 +269,9 @@ describe("outsideFunctional", () => {
   test("drops an `.art` that appears only as a negated argument", () => {
     /* `.symbol:not(.art)` can never style the artwork — it excludes it — so it
        belongs in the PLATES bucket, not the reset one. */
-    expect(outsideFunctional(".symbol:not(.art, .plain).h")).not.toContain(".art");
+    expect(outsideFunctional(".symbol:not(.art, .plain).h")).not.toContain(
+      ".art",
+    );
   });
 });
 
@@ -347,7 +360,10 @@ describe("GameSymbol with ingested artwork", () => {
 
     const weakest = Math.min(...reset.map(classCount));
     for (const plate of plates) {
-      expect(classCount(plate), `${plate} would paint behind the artwork`).toBeLessThan(weakest);
+      expect(
+        classCount(plate),
+        `${plate} would paint behind the artwork`,
+      ).toBeLessThan(weakest);
     }
   });
 });

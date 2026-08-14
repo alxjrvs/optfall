@@ -27,7 +27,8 @@ function argumentAfter(flag: string): string | undefined {
 const outPath = argumentAfter("--out");
 const pdfPath = argumentAfter("--pdf");
 
-const source = pdfPath === undefined ? await fetchComprehensiveRulesText() : null;
+const source =
+  pdfPath === undefined ? await fetchComprehensiveRulesText() : null;
 const text = source === null ? extractLocal(pdfPath ?? "") : source.text;
 
 const { document, warnings } = parseComprehensiveRules(text);

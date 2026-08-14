@@ -116,9 +116,16 @@ describe("resolving a card keyword", () => {
     // and `via` says which kind of claim is being made.
     const briar = ruleForKeyword(vocabulary, "Briar Specialization");
     expect(briar?.via).toBe("family");
-    expect(briar?.ruleId).toBe(ruleForKeyword(vocabulary, "Specialization")?.ruleId);
+    expect(briar?.ruleId).toBe(
+      ruleForKeyword(vocabulary, "Specialization")?.ruleId,
+    );
 
-    for (const keyword of ["Ice Fusion", "Earth Bond", "Essence of Earth", "Channel Lightning"]) {
+    for (const keyword of [
+      "Ice Fusion",
+      "Earth Bond",
+      "Essence of Earth",
+      "Channel Lightning",
+    ]) {
       expect(ruleForKeyword(vocabulary, keyword)?.via).toBe("family");
     }
   });

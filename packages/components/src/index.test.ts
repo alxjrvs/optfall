@@ -350,6 +350,8 @@ describe("typographic voice", () => {
     // in the accent, beside the thing it cites.
     expect(VOICE_BY_ROLE.citation).toBe("sans");
     expect(VOICE_BY_ROLE.label).toBe("sans");
-    expect(new Set(Object.values(VOICE_BY_ROLE))).toEqual(new Set(["serif", "sans"]));
+    expect(new Set(Object.values(VOICE_BY_ROLE))).toEqual(
+      new Set(["serif", "sans"]),
+    );
   });
 });

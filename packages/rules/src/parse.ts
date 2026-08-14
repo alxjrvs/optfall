@@ -17,11 +17,18 @@
  * @packageDocumentation
  */
 
-import type { ParseResult, ParseWarning, RuleLevel, RuleSection, RulesDocument } from "./types";
+import type {
+  ParseResult,
+  ParseWarning,
+  RuleLevel,
+  RuleSection,
+  RulesDocument,
+} from "./types";
 import { RULE_ID_NAMESPACE } from "./types";
 
 /** Where the document was retrieved from. Verified reachable: HTTP 200. */
-export const COMPREHENSIVE_RULES_URL = "https://rules.fabtcg.com/pdf/en-fab-cr.pdf";
+export const COMPREHENSIVE_RULES_URL =
+  "https://rules.fabtcg.com/pdf/en-fab-cr.pdf";
 
 /* -------------------------------------------------------------------------- */
 /* Line grammar                                                                */
@@ -45,7 +52,8 @@ const RULE_START = /^[ \t]*(\d+\.\d+\.\d+)\.[ \t]+(\S.*?)[ \t]*$/;
 const SUBRULE_START = /^[ \t]*(\d+\.\d+\.\d+[a-z])[ \t]+(\S.*?)[ \t]*$/;
 
 /** The running header repeated at the top of every continuation page. */
-const RUNNING_HEADER = /^(?:CHAPTER \d+\..*|TABLE OF CONTENTS|GLOSSARY|ACKNOWLEDGMENTS|INDEX|PREFACE)[ \t]*$/;
+const RUNNING_HEADER =
+  /^(?:CHAPTER \d+\..*|TABLE OF CONTENTS|GLOSSARY|ACKNOWLEDGMENTS|INDEX|PREFACE)[ \t]*$/;
 
 /**
  * A centred page number at the foot of a page. The indentation requirement
@@ -169,10 +177,17 @@ interface TitlePage {
  * the only option that cannot mislabel a corpus.
  */
 function readTitlePage(page: Page): TitlePage {
-  const lines = [page.heading, ...page.lines].map((line) => line.trim()).filter((l) => l !== "");
+  const lines = [page.heading, ...page.lines]
+    .map((line) => line.trim())
+    .filter((l) => l !== "");
   const [game, title, date, version] = lines;
 
-  if (game === undefined || title === undefined || date === undefined || version === undefined) {
+  if (
+    game === undefined ||
+    title === undefined ||
+    date === undefined ||
+    version === undefined
+  ) {
     throw new Error(
       `Comprehensive Rules title page has fewer than four lines of text; found ${String(lines.length)}. Refusing to guess the document version.`,
     );
@@ -227,7 +242,10 @@ export interface ParseOptions {
  * @throws {Error} When the title page cannot be read, because a corpus with a
  * guessed version stamp is worse than no corpus.
  */
-export function parseComprehensiveRules(text: string, options?: ParseOptions): ParseResult {
+export function parseComprehensiveRules(
+  text: string,
+  options?: ParseOptions,
+): ParseResult {
   const pages = splitPages(text);
   const first = pages[0];
   if (first === undefined) {
@@ -397,7 +415,8 @@ export function parseComprehensiveRules(text: string, options?: ParseOptions): P
           id: `${RULE_ID_NAMESPACE}:${current.number}`,
           detail: `Unlabelled continuation paragraph: ${JSON.stringify(trimmed.slice(0, 80))}`,
         });
-        current.text = current.text === "" ? trimmed : `${current.text}\n\n${trimmed}`;
+        current.text =
+          current.text === "" ? trimmed : `${current.text}\n\n${trimmed}`;
         sink = "text";
         atParagraphStart = false;
         continue;
@@ -438,14 +457,18 @@ export function parseComprehensiveRules(text: string, options?: ParseOptions): P
 
   const sections: RuleSection[] = drafts.map((draft) => {
     const parentNumber = parentNumberOf(draft.number);
-    const referenceSource = [draft.text, ...draft.bullets, ...draft.examples, ...draft.notes].join(
-      " ",
-    );
+    const referenceSource = [
+      draft.text,
+      ...draft.bullets,
+      ...draft.examples,
+      ...draft.notes,
+    ].join(" ");
     return {
       id: `${RULE_ID_NAMESPACE}:${draft.number}`,
       number: draft.number,
       level: draft.level,
-      parentId: parentNumber === null ? null : `${RULE_ID_NAMESPACE}:${parentNumber}`,
+      parentId:
+        parentNumber === null ? null : `${RULE_ID_NAMESPACE}:${parentNumber}`,
       chapter: draft.chapter,
       title: draft.title,
       text: draft.text,
@@ -509,7 +532,9 @@ export function parseComprehensiveRules(text: string, options?: ParseOptions): P
 /* -------------------------------------------------------------------------- */
 
 /** Index a document by id, for lookup by permalink. */
-export function indexById(document: RulesDocument): ReadonlyMap<string, RuleSection> {
+export function indexById(
+  document: RulesDocument,
+): ReadonlyMap<string, RuleSection> {
   return new Map(document.sections.map((section) => [section.id, section]));
 }
 
@@ -520,14 +545,24 @@ export function indexById(document: RulesDocument): ReadonlyMap<string, RuleSect
  * number (`1.0.1a`), because a judge pasting a citation will type whichever
  * one is in front of them.
  */
-export function sectionById(document: RulesDocument, id: string): RuleSection | undefined {
-  const wanted = id.startsWith(`${RULE_ID_NAMESPACE}:`) ? id : `${RULE_ID_NAMESPACE}:${id}`;
+export function sectionById(
+  document: RulesDocument,
+  id: string,
+): RuleSection | undefined {
+  const wanted = id.startsWith(`${RULE_ID_NAMESPACE}:`)
+    ? id
+    : `${RULE_ID_NAMESPACE}:${id}`;
   return document.sections.find((section) => section.id === wanted);
 }
 
 /** The immediate children of a section, in document order. */
-export function childrenOf(document: RulesDocument, id: string): readonly RuleSection[] {
-  const wanted = id.startsWith(`${RULE_ID_NAMESPACE}:`) ? id : `${RULE_ID_NAMESPACE}:${id}`;
+export function childrenOf(
+  document: RulesDocument,
+  id: string,
+): readonly RuleSection[] {
+  const wanted = id.startsWith(`${RULE_ID_NAMESPACE}:`)
+    ? id
+    : `${RULE_ID_NAMESPACE}:${id}`;
   return document.sections.filter((section) => section.parentId === wanted);
 }
 
@@ -536,7 +571,10 @@ export function childrenOf(document: RulesDocument, id: string): readonly RuleSe
  * be rendered with its context — `1 › 1.0 › 1.0.1 › 1.0.1a`. Returns an empty
  * array when the id is not in the document.
  */
-export function pathOf(document: RulesDocument, id: string): readonly RuleSection[] {
+export function pathOf(
+  document: RulesDocument,
+  id: string,
+): readonly RuleSection[] {
   const index = indexById(document);
   const start = sectionById(document, id);
   if (start === undefined) return [];

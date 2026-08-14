@@ -21,9 +21,7 @@ import {
 function storeWith(keys: readonly string[]): FaceBlobStore {
   return {
     get: async (key) =>
-      keys.includes(key)
-        ? new Response("webp-bytes").body
-        : null,
+      keys.includes(key) ? new Response("webp-bytes").body : null,
   };
 }
 
@@ -98,7 +96,9 @@ describe("parseFacePath", () => {
 describe("parsePlaceholderPath", () => {
   test("matches both orientations and nothing else", () => {
     expect(parsePlaceholderPath("/placeholder/portrait.svg")).toBe("portrait");
-    expect(parsePlaceholderPath("/placeholder/landscape.svg")).toBe("landscape");
+    expect(parsePlaceholderPath("/placeholder/landscape.svg")).toBe(
+      "landscape",
+    );
     expect(parsePlaceholderPath("/placeholder/other.svg")).toBeNull();
     expect(parsePlaceholderPath("/placeholder")).toBeNull();
   });
@@ -150,7 +150,10 @@ describe("the handler", () => {
     expect(response.status).toBe(503);
     expect(response.headers.get("x-optfall-face")).toBe("placeholder-degraded");
     expect(reported).toHaveLength(1);
-    expect(reported[0]).toMatchObject({ key: "normal/MST131.webp", fn: "face" });
+    expect(reported[0]).toMatchObject({
+      key: "normal/MST131.webp",
+      fn: "face",
+    });
   });
 
   test("an ordinary miss is NOT reported", async () => {
@@ -207,7 +210,9 @@ describe("the placeholder itself", () => {
   });
 
   test("names itself for a screen reader", () => {
-    expect(placeholderSvg("portrait")).toContain("<title>No image published</title>");
+    expect(placeholderSvg("portrait")).toContain(
+      "<title>No image published</title>",
+    );
     expect(placeholderSvg("portrait")).toContain('role="img"');
   });
 

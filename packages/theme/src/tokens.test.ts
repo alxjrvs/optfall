@@ -44,7 +44,9 @@ function relativeLuminance(hex: string): number {
 }
 
 function contrastRatio(a: string, b: string): number {
-  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].toSorted((x, y) => y - x);
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].toSorted(
+    (x, y) => y - x,
+  );
   return (hi! + 0.05) / (lo! + 0.05);
 }
 
@@ -283,10 +285,14 @@ describe("the emitted stylesheet", () => {
     expect(css).toMatch(/:root \{\n\s*color-scheme: dark;/);
     // Both routes into light — the attribute, and the unopinionated reader.
     expect(css).toMatch(
-      new RegExp(`:root\\[${THEME_ATTRIBUTE}="light"\\] \\{\\n\\s*color-scheme: light;`),
+      new RegExp(
+        `:root\\[${THEME_ATTRIBUTE}="light"\\] \\{\\n\\s*color-scheme: light;`,
+      ),
     );
     expect(css).toMatch(
-      new RegExp(`:root:not\\(\\[${THEME_ATTRIBUTE}="dark"\\]\\) \\{\\n\\s*color-scheme: light;`),
+      new RegExp(
+        `:root:not\\(\\[${THEME_ATTRIBUTE}="dark"\\]\\) \\{\\n\\s*color-scheme: light;`,
+      ),
     );
 
     // Never the OS-deferring spelling: that is the bug this replaced.

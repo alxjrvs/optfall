@@ -117,15 +117,78 @@ export interface GameSymbol {
 export const INFERRED: readonly SymbolKind[] = ["x"];
 
 export const SYMBOLS: readonly GameSymbol[] = [
-  { token: "{p}", kind: "power", letter: "P", name: "power", rule: "1.12.4d", sense: "value" },
-  { token: "{r}", kind: "resource", letter: "R", name: "resource", rule: "1.12.4e", sense: "value" },
-  { token: "{d}", kind: "defence", letter: "D", name: "defence", rule: "1.12.4a", sense: "value" },
-  { token: "{h}", kind: "life", letter: "H", name: "life", rule: "1.12.4c", sense: "value" },
-  { token: "{i}", kind: "intellect", letter: "I", name: "intellect", rule: "1.12.4b", sense: "value" },
-  { token: "{c}", kind: "chi", letter: "C", name: "chi", rule: "1.12.4f", sense: "value" },
-  { token: "{t}", kind: "tap", letter: "T", name: "tap", rule: "1.12.4g", sense: "effect" },
-  { token: "{u}", kind: "untap", letter: "U", name: "untap", rule: "1.12.4h", sense: "effect" },
-  { token: "{x}", kind: "x", letter: "X", name: "X", rule: "1.12.2", sense: "value" },
+  {
+    token: "{p}",
+    kind: "power",
+    letter: "P",
+    name: "power",
+    rule: "1.12.4d",
+    sense: "value",
+  },
+  {
+    token: "{r}",
+    kind: "resource",
+    letter: "R",
+    name: "resource",
+    rule: "1.12.4e",
+    sense: "value",
+  },
+  {
+    token: "{d}",
+    kind: "defence",
+    letter: "D",
+    name: "defence",
+    rule: "1.12.4a",
+    sense: "value",
+  },
+  {
+    token: "{h}",
+    kind: "life",
+    letter: "H",
+    name: "life",
+    rule: "1.12.4c",
+    sense: "value",
+  },
+  {
+    token: "{i}",
+    kind: "intellect",
+    letter: "I",
+    name: "intellect",
+    rule: "1.12.4b",
+    sense: "value",
+  },
+  {
+    token: "{c}",
+    kind: "chi",
+    letter: "C",
+    name: "chi",
+    rule: "1.12.4f",
+    sense: "value",
+  },
+  {
+    token: "{t}",
+    kind: "tap",
+    letter: "T",
+    name: "tap",
+    rule: "1.12.4g",
+    sense: "effect",
+  },
+  {
+    token: "{u}",
+    kind: "untap",
+    letter: "U",
+    name: "untap",
+    rule: "1.12.4h",
+    sense: "effect",
+  },
+  {
+    token: "{x}",
+    kind: "x",
+    letter: "X",
+    name: "X",
+    rule: "1.12.2",
+    sense: "value",
+  },
 ];
 
 const BY_TOKEN = new Map(SYMBOLS.map((symbol) => [symbol.token, symbol]));
@@ -206,4 +269,6 @@ export function ruleTextFor(symbol: GameSymbol): string | null {
   return BY_NUMBER.get(symbol.rule)?.text ?? null;
 }
 
-const BY_NUMBER = new Map(RULES.sections.map((section) => [section.number, section]));
+const BY_NUMBER = new Map(
+  RULES.sections.map((section) => [section.number, section]),
+);

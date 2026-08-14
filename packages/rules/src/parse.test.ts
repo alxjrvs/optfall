@@ -29,7 +29,12 @@ function parseFixture(): RulesDocument {
 }
 
 function countByLevel(document: RulesDocument): Record<RuleLevel, number> {
-  const counts: Record<RuleLevel, number> = { chapter: 0, section: 0, rule: 0, subrule: 0 };
+  const counts: Record<RuleLevel, number> = {
+    chapter: 0,
+    section: 0,
+    rule: 0,
+    subrule: 0,
+  };
   for (const entry of document.sections) counts[entry.level] += 1;
   return counts;
 }
@@ -55,10 +60,14 @@ describe("the document stamp", () => {
 
   test("refuses to guess when the title page is not the shape it expects", () => {
     expect(() =>
-      parseComprehensiveRules("Flesh and Blood\nComprehensive Rules\nsoon\n2.14.0\n"),
+      parseComprehensiveRules(
+        "Flesh and Blood\nComprehensive Rules\nsoon\n2.14.0\n",
+      ),
     ).toThrow(/publication date/);
     expect(() =>
-      parseComprehensiveRules("Flesh and Blood\nComprehensive Rules\n2026-6-10\nlatest\n"),
+      parseComprehensiveRules(
+        "Flesh and Blood\nComprehensive Rules\n2026-6-10\nlatest\n",
+      ),
     ).toThrow(/document version/);
     expect(() => parseComprehensiveRules("")).toThrow(/fewer than four lines/);
   });
@@ -114,11 +123,12 @@ describe("the published numbering is the identifier", () => {
 
   test("children come back in document order", () => {
     const document = parseFixture();
-    expect(childrenOf(document, "cr:1.0.1").map((entry) => entry.number)).toEqual([
-      "1.0.1a",
-      "1.0.1b",
-    ]);
-    expect(childrenOf(document, "cr:1.0").map((entry) => entry.number)).toEqual(["1.0.1", "1.0.2"]);
+    expect(
+      childrenOf(document, "cr:1.0.1").map((entry) => entry.number),
+    ).toEqual(["1.0.1a", "1.0.1b"]);
+    expect(childrenOf(document, "cr:1.0").map((entry) => entry.number)).toEqual(
+      ["1.0.1", "1.0.2"],
+    );
   });
 
   test("no id is claimed twice", () => {
@@ -134,7 +144,12 @@ describe("the published numbering is the identifier", () => {
 describe("what the fixture yields", () => {
   test("sixty-one entries across four levels", () => {
     const document = parseFixture();
-    expect(countByLevel(document)).toEqual({ chapter: 1, section: 5, rule: 19, subrule: 36 });
+    expect(countByLevel(document)).toEqual({
+      chapter: 1,
+      section: 5,
+      rule: 19,
+      subrule: 36,
+    });
     expect(document.sections).toHaveLength(61);
   });
 
@@ -168,7 +183,9 @@ describe("text fidelity", () => {
     const document = parseFixture();
     const rule = sectionById(document, "cr:1.0.2");
     expect(rule?.examples).toHaveLength(2);
-    expect(rule?.examples[0]).toStartWith("Example: “They can’t defend this with equipment”");
+    expect(rule?.examples[0]).toStartWith(
+      "Example: “They can’t defend this with equipment”",
+    );
     expect(rule?.examples[1]).toEndWith(
       "the player cannot play cards from their banished zone.",
     );
@@ -177,10 +194,16 @@ describe("text fidelity", () => {
 
   test("inline bracketed cross-references become resolvable ids", () => {
     const document = parseFixture();
-    expect(sectionById(document, "cr:1.1.2")?.references).toEqual(["cr:1.3.2a"]);
+    expect(sectionById(document, "cr:1.1.2")?.references).toEqual([
+      "cr:1.3.2a",
+    ]);
     // Chapter- and section-level references appear too: "properties[2] and
     // located in a zone[3] or a player's inventory.[4.1.6]"
-    expect(sectionById(document, "cr:1.2.1")?.references).toEqual(["cr:2", "cr:3", "cr:4.1.6"]);
+    expect(sectionById(document, "cr:1.2.1")?.references).toEqual([
+      "cr:2",
+      "cr:3",
+      "cr:4.1.6",
+    ]);
   });
 
   test("page furniture never reaches the corpus", () => {
@@ -191,7 +214,9 @@ describe("text fidelity", () => {
     }
     // The running header and the page number sit between 1.1.2 and 1.1.2a in
     // the source text. If either leaked, it would land in one of these two.
-    expect(sectionById(document, "cr:1.1.2")?.text).toBe("A player’s hero is a hero-card.[1.3.2a]");
+    expect(sectionById(document, "cr:1.1.2")?.text).toBe(
+      "A player’s hero is a hero-card.[1.3.2a]",
+    );
     expect(sectionById(document, "cr:1.1.2a")?.text).toStartWith(
       "This document distinguishes the player",
     );
@@ -199,7 +224,8 @@ describe("text fidelity", () => {
 });
 
 describe("the extraction traps that fail silently", () => {
-  const titlePage = "Flesh and Blood\nComprehensive Rules\n2026-6-10\n2.14.0\n\f";
+  const titlePage =
+    "Flesh and Blood\nComprehensive Rules\n2026-6-10\n2.14.0\n\f";
 
   test("a compound word broken across lines keeps its hyphen and gains no space", () => {
     const text = `${titlePage}1.     Game Concepts\n\n1.0. General\n     1.0.1. A card can only defend one attack-\n          target at a time.\n`;
@@ -233,12 +259,15 @@ describe("the extraction traps that fail silently", () => {
     // the left margin is prose, and eating it would silently truncate a rule.
     const text = `${titlePage}1.     Game Concepts\n\n1.0. General\n     1.0.1. Its base defense is set to\n          2.\n\n                                                            1\n`;
     const { document } = parseComprehensiveRules(text);
-    expect(sectionById(document, "cr:1.0.1")?.text).toBe("Its base defense is set to 2.");
+    expect(sectionById(document, "cr:1.0.1")?.text).toBe(
+      "Its base defense is set to 2.",
+    );
   });
 });
 
 describe("warnings are how this fails loudly", () => {
-  const titlePage = "Flesh and Blood\nComprehensive Rules\n2026-6-10\n2.14.0\n\f";
+  const titlePage =
+    "Flesh and Blood\nComprehensive Rules\n2026-6-10\n2.14.0\n\f";
 
   test("an unlabelled continuation paragraph is reported, not swallowed", () => {
     const text = `${titlePage}1.     Game Concepts\n\n1.0. General\n     1.0.1. A rule.\n\n          A second paragraph with no label at all.\n`;
@@ -247,7 +276,9 @@ describe("warnings are how this fails loudly", () => {
     expect(warnings[0]?.kind).toBe("unclassified-paragraph");
     expect(warnings[0]?.id).toBe("cr:1.0.1");
     // Reported, and still kept. Dropping text is never the safe default.
-    expect(sectionById(document, "cr:1.0.1")?.text).toContain("A second paragraph");
+    expect(sectionById(document, "cr:1.0.1")?.text).toContain(
+      "A second paragraph",
+    );
   });
 
   test("a subrule whose parent rule is absent is reported", () => {
@@ -260,6 +291,10 @@ describe("warnings are how this fails loudly", () => {
     const text = `${titlePage}1.     Game Concepts\n\n1.0. General\n     1.0.1. A rule.\n\fGlossary\n\n(1H) A subtype of a weapon object.\n`;
     const { document, warnings } = parseComprehensiveRules(text);
     expect(warnings).toEqual([]);
-    expect(document.sections.map((entry) => entry.id)).toEqual(["cr:1", "cr:1.0", "cr:1.0.1"]);
+    expect(document.sections.map((entry) => entry.id)).toEqual([
+      "cr:1",
+      "cr:1.0",
+      "cr:1.0.1",
+    ]);
   });
 });

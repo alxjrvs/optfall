@@ -87,18 +87,62 @@ const CASES: readonly {
   { name: "PitchJewel one", component: PitchJewel, props: { value: 1 } },
   { name: "PitchJewel two", component: PitchJewel, props: { value: 2 } },
   { name: "PitchJewel three", component: PitchJewel, props: { value: 3 } },
-  { name: "PitchJewel small", component: PitchJewel, props: { value: 3, size: "sm" } },
+  {
+    name: "PitchJewel small",
+    component: PitchJewel,
+    props: { value: 3, size: "sm" },
+  },
   { name: "BevelledPlate flat", component: BevelledPlate, props: {} },
-  { name: "BevelledPlate raised", component: BevelledPlate, props: { emphasis: "raised" } },
-  { name: "BevelledPlate sunken", component: BevelledPlate, props: { emphasis: "sunken" } },
-  { name: "StatePill legal", component: StatePill, props: { tone: "legal", label: "Legal" } },
-  { name: "StatePill banned", component: StatePill, props: { tone: "banned", label: "Banned" } },
-  { name: "StatePill suspended", component: StatePill, props: { tone: "suspended", label: "Suspended" } },
-  { name: "StatePill restricted", component: StatePill, props: { tone: "restricted", label: "Restricted" } },
-  { name: "StatePill living-legend", component: StatePill, props: { tone: "living-legend", label: "Living Legend" } },
-  { name: "StatePill not-in-format", component: StatePill, props: { tone: "not-in-format", label: "Not in format" } },
-  { name: "StatePill verified", component: StatePill, props: { tone: "verified", label: "Verified" } },
-  { name: "StatePill unverified", component: StatePill, props: { tone: "unverified", label: "Unverified" } },
+  {
+    name: "BevelledPlate raised",
+    component: BevelledPlate,
+    props: { emphasis: "raised" },
+  },
+  {
+    name: "BevelledPlate sunken",
+    component: BevelledPlate,
+    props: { emphasis: "sunken" },
+  },
+  {
+    name: "StatePill legal",
+    component: StatePill,
+    props: { tone: "legal", label: "Legal" },
+  },
+  {
+    name: "StatePill banned",
+    component: StatePill,
+    props: { tone: "banned", label: "Banned" },
+  },
+  {
+    name: "StatePill suspended",
+    component: StatePill,
+    props: { tone: "suspended", label: "Suspended" },
+  },
+  {
+    name: "StatePill restricted",
+    component: StatePill,
+    props: { tone: "restricted", label: "Restricted" },
+  },
+  {
+    name: "StatePill living-legend",
+    component: StatePill,
+    props: { tone: "living-legend", label: "Living Legend" },
+  },
+  {
+    name: "StatePill not-in-format",
+    component: StatePill,
+    props: { tone: "not-in-format", label: "Not in format" },
+  },
+  {
+    name: "StatePill verified",
+    component: StatePill,
+    props: { tone: "verified", label: "Verified" },
+  },
+  {
+    name: "StatePill unverified",
+    component: StatePill,
+    props: { tone: "unverified", label: "Unverified" },
+  },
   {
     name: "BrassSeal",
     component: BrassSeal,
@@ -107,16 +151,32 @@ const CASES: readonly {
   {
     name: "Citation",
     component: Citation,
-    props: { ruleId: "cr:8.3.4b", href: "https://optfall.com/cr/8.3.4b", version: "2.11.0" },
+    props: {
+      ruleId: "cr:8.3.4b",
+      href: "https://optfall.com/cr/8.3.4b",
+      version: "2.11.0",
+    },
   },
   {
     name: "Citation unversioned",
     component: Citation,
     props: { ruleId: "cr:8.3.4b", href: "https://optfall.com/cr/8.3.4b" },
   },
-  { name: "FiligreeCorner panel", component: FiligreeCorner, props: { role: "panel-corner" } },
-  { name: "FiligreeCorner card", component: FiligreeCorner, props: { role: "card-corner" } },
-  { name: "FiligreeCorner section", component: FiligreeCorner, props: { role: "section-rule" } },
+  {
+    name: "FiligreeCorner panel",
+    component: FiligreeCorner,
+    props: { role: "panel-corner" },
+  },
+  {
+    name: "FiligreeCorner card",
+    component: FiligreeCorner,
+    props: { role: "card-corner" },
+  },
+  {
+    name: "FiligreeCorner section",
+    component: FiligreeCorner,
+    props: { role: "section-rule" },
+  },
   { name: "OrnamentalRule", component: OrnamentalRule, props: {} },
   { name: "Mark", component: Mark, props: {} },
   { name: "Mark small", component: Mark, props: { size: "sm" } },
@@ -134,26 +194,99 @@ const CASES: readonly {
     a different silhouette, so "one kind passes" says nothing about the other
     eight.
   */
-  { name: "StatGlyph cost", component: StatGlyph, props: { kind: "cost", value: "3" } },
-  { name: "StatGlyph power", component: StatGlyph, props: { kind: "power", value: "4" } },
-  { name: "StatGlyph defence", component: StatGlyph, props: { kind: "defence", value: "2" } },
-  { name: "StatGlyph life", component: StatGlyph, props: { kind: "life", value: "20" } },
-  { name: "StatGlyph intellect", component: StatGlyph, props: { kind: "intellect", value: "4" } },
-  { name: "StatGlyph arcane", component: StatGlyph, props: { kind: "arcane", value: "1" } },
+  {
+    name: "StatGlyph cost",
+    component: StatGlyph,
+    props: { kind: "cost", value: "3" },
+  },
+  {
+    name: "StatGlyph power",
+    component: StatGlyph,
+    props: { kind: "power", value: "4" },
+  },
+  {
+    name: "StatGlyph defence",
+    component: StatGlyph,
+    props: { kind: "defence", value: "2" },
+  },
+  {
+    name: "StatGlyph life",
+    component: StatGlyph,
+    props: { kind: "life", value: "20" },
+  },
+  {
+    name: "StatGlyph intellect",
+    component: StatGlyph,
+    props: { kind: "intellect", value: "4" },
+  },
+  {
+    name: "StatGlyph arcane",
+    component: StatGlyph,
+    props: { kind: "arcane", value: "1" },
+  },
   // `X` and `*` are printed values upstream, which is why `value` is a string.
-  { name: "StatGlyph variable", component: StatGlyph, props: { kind: "cost", value: "XX" } },
-  { name: "StatGlyph meta-static", component: StatGlyph, props: { kind: "power", value: "*" } },
+  {
+    name: "StatGlyph variable",
+    component: StatGlyph,
+    props: { kind: "cost", value: "XX" },
+  },
+  {
+    name: "StatGlyph meta-static",
+    component: StatGlyph,
+    props: { kind: "power", value: "*" },
+  },
 
-  { name: "GameSymbol power", component: GameSymbol, props: { kind: "power", letter: "P", name: "power" } },
-  { name: "GameSymbol resource", component: GameSymbol, props: { kind: "resource", letter: "R", name: "resource" } },
-  { name: "GameSymbol defence", component: GameSymbol, props: { kind: "defence", letter: "D", name: "defence" } },
-  { name: "GameSymbol life", component: GameSymbol, props: { kind: "life", letter: "H", name: "life" } },
-  { name: "GameSymbol intellect", component: GameSymbol, props: { kind: "intellect", letter: "I", name: "intellect" } },
-  { name: "GameSymbol chi", component: GameSymbol, props: { kind: "chi", letter: "C", name: "chi" } },
-  { name: "GameSymbol tap", component: GameSymbol, props: { kind: "tap", letter: "T", name: "tap" } },
-  { name: "GameSymbol untap", component: GameSymbol, props: { kind: "untap", letter: "U", name: "untap" } },
-  { name: "GameSymbol x", component: GameSymbol, props: { kind: "x", letter: "X", name: "X" } },
-  { name: "GameSymbol inline in a sentence", component: GameSymbol, props: { kind: "power", letter: "P", name: "power" }, wrap: ["<p>Target attack gets +1", "</p>"] },
+  {
+    name: "GameSymbol power",
+    component: GameSymbol,
+    props: { kind: "power", letter: "P", name: "power" },
+  },
+  {
+    name: "GameSymbol resource",
+    component: GameSymbol,
+    props: { kind: "resource", letter: "R", name: "resource" },
+  },
+  {
+    name: "GameSymbol defence",
+    component: GameSymbol,
+    props: { kind: "defence", letter: "D", name: "defence" },
+  },
+  {
+    name: "GameSymbol life",
+    component: GameSymbol,
+    props: { kind: "life", letter: "H", name: "life" },
+  },
+  {
+    name: "GameSymbol intellect",
+    component: GameSymbol,
+    props: { kind: "intellect", letter: "I", name: "intellect" },
+  },
+  {
+    name: "GameSymbol chi",
+    component: GameSymbol,
+    props: { kind: "chi", letter: "C", name: "chi" },
+  },
+  {
+    name: "GameSymbol tap",
+    component: GameSymbol,
+    props: { kind: "tap", letter: "T", name: "tap" },
+  },
+  {
+    name: "GameSymbol untap",
+    component: GameSymbol,
+    props: { kind: "untap", letter: "U", name: "untap" },
+  },
+  {
+    name: "GameSymbol x",
+    component: GameSymbol,
+    props: { kind: "x", letter: "X", name: "X" },
+  },
+  {
+    name: "GameSymbol inline in a sentence",
+    component: GameSymbol,
+    props: { kind: "power", letter: "P", name: "power" },
+    wrap: ["<p>Target attack gets +1", "</p>"],
+  },
   // WITH THE INGESTED ARTWORK, which is the branch the card pages actually
   // take and which no case covered until now. The question this asks is the
   // double-naming one: the wrapper is `role="img"` with the rules' word, and
@@ -161,9 +294,43 @@ const CASES: readonly {
   // accessible name nested inside a named `img` role announces the symbol
   // twice, which is worse in a sentence than in a stat block because it
   // happens mid-clause.
-  { name: "GameSymbol power, with artwork", component: GameSymbol, props: { kind: "power", letter: "P", name: "power", src: "/symbols/icon_p.png", width: 105, height: 105 } },
-  { name: "GameSymbol defence, with artwork", component: GameSymbol, props: { kind: "defence", letter: "D", name: "defence", src: "/symbols/icon_d.png", width: 105, height: 105 } },
-  { name: "GameSymbol with artwork, inline in a sentence", component: GameSymbol, props: { kind: "resource", letter: "R", name: "resource", src: "/symbols/icon_r.png", width: 105, height: 105 }, wrap: ["<p>Gain 1", "</p>"] },
+  {
+    name: "GameSymbol power, with artwork",
+    component: GameSymbol,
+    props: {
+      kind: "power",
+      letter: "P",
+      name: "power",
+      src: "/symbols/icon_p.png",
+      width: 105,
+      height: 105,
+    },
+  },
+  {
+    name: "GameSymbol defence, with artwork",
+    component: GameSymbol,
+    props: {
+      kind: "defence",
+      letter: "D",
+      name: "defence",
+      src: "/symbols/icon_d.png",
+      width: 105,
+      height: 105,
+    },
+  },
+  {
+    name: "GameSymbol with artwork, inline in a sentence",
+    component: GameSymbol,
+    props: {
+      kind: "resource",
+      letter: "R",
+      name: "resource",
+      src: "/symbols/icon_r.png",
+      width: 105,
+      height: 105,
+    },
+    wrap: ["<p>Gain 1", "</p>"],
+  },
   // The face carries a real accessible name and a copyright line that no
   // caller can drop. Both orientations, because the landscape box is a
   // different rendering rather than the same one scaled.
@@ -309,7 +476,6 @@ describe("every primitive passes axe", () => {
     const theme = THEMES[0]!;
     for (const { name, component, props, wrap } of CASES) {
       test(`${name}`, async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { body } = render(component as any, { props });
         const [open = "", close = ""] = wrap ?? [];
         const violations = await violationsFor(`${open}${body}${close}`, theme);

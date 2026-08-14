@@ -55,8 +55,15 @@ import {
   extractLocal,
   pdfToText,
 } from "../packages/rules/src/extract";
-import { COMPREHENSIVE_RULES_URL, parseComprehensiveRules } from "../packages/rules/src/parse";
-import type { RuleLevel, RuleSection, RulesDocument } from "../packages/rules/src/types";
+import {
+  COMPREHENSIVE_RULES_URL,
+  parseComprehensiveRules,
+} from "../packages/rules/src/parse";
+import type {
+  RuleLevel,
+  RuleSection,
+  RulesDocument,
+} from "../packages/rules/src/types";
 
 /**
  * Format of the envelope around the parsed document.
@@ -198,7 +205,11 @@ let text: string;
 
 if (pdfPath === undefined) {
   const download = await downloadComprehensiveRules();
-  source = { url: download.url, bytes: download.bytes, sha256: download.sha256 };
+  source = {
+    url: download.url,
+    bytes: download.bytes,
+    sha256: download.sha256,
+  };
   text = pdfToText(download.path);
   log.push(`retrieved ${source.url}`);
 } else {
@@ -279,7 +290,10 @@ if (warnings.length > 0 && !allowWarnings) {
     }
 
     if (committed === null) {
-      log.push("", `MISSING ${shown} — run \`bun run corpus:rules\` and commit the result.`);
+      log.push(
+        "",
+        `MISSING ${shown} — run \`bun run corpus:rules\` and commit the result.`,
+      );
       process.exitCode = 1;
     } else if (committed === serialised) {
       log.push("", `up to date  ${shown} (${String(serialised.length)} bytes)`);
@@ -288,7 +302,9 @@ if (warnings.length > 0 && !allowWarnings) {
       log.push(
         "",
         `DRIFT ${shown} — the committed corpus does not match this source.`,
-        line === null ? "  (differs in trailing content)" : `  first difference at line ${String(line)}`,
+        line === null
+          ? "  (differs in trailing content)"
+          : `  first difference at line ${String(line)}`,
         "  Run `bun run corpus:rules` and review the diff: it is the rules changelog.",
       );
       process.exitCode = 1;

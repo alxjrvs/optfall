@@ -61,7 +61,7 @@ const meta = {
     label: {
       control: "text",
       description:
-        "Accessible name for the break, such as the section it introduces. Deliberately absent by default — a separator is already announced by its role, so a default would be invented text read aloud on every rule in the interface. A blank collapses to no name rather than to `aria-label=\"\"`.",
+        'Accessible name for the break, such as the section it introduces. Deliberately absent by default — a separator is already announced by its role, so a default would be invented text read aloud on every rule in the interface. A blank collapses to no name rather than to `aria-label=""`.',
     },
     filigree: {
       // Not a control: a snippet cannot be typed into a text field, and an
@@ -207,7 +207,11 @@ export const OrnamentSpentOnce: Composed = {
       </section>`,
       [
         {},
-        { ornament: true, filigree: sectionFiligree(), label: "Verified rulings" },
+        {
+          ornament: true,
+          filigree: sectionFiligree(),
+          label: "Verified rulings",
+        },
         { decorative: true },
       ],
     ),

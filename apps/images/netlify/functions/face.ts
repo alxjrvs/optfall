@@ -164,10 +164,7 @@ export function parsePlaceholderPath(pathname: string): Orientation | null {
  * that silently turns every card on the site into a grey rectangle.
  */
 export const makeFaceHandler =
-  (
-    openStore: () => FaceBlobStore,
-    report: FaceFailureReporter = () => {},
-  ) =>
+  (openStore: () => FaceBlobStore, report: FaceFailureReporter = () => {}) =>
   async (req: Request): Promise<Response> => {
     const { pathname } = new URL(req.url);
 

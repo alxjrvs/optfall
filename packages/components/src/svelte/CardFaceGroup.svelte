@@ -1,16 +1,16 @@
 <script lang="ts" module>
-  import { getContext, hasContext, setContext } from "svelte";
+import { getContext, hasContext, setContext } from "svelte";
 
-  const KEY = Symbol.for("optfall.card-face-group");
+const KEY = Symbol.for("optfall.card-face-group");
 
-  /** True when a `CardFace` is rendering inside a group that carries the notice. */
-  export function insideCardFaceGroup(): boolean {
-    return hasContext(KEY) && getContext(KEY) === true;
-  }
+/** True when a `CardFace` is rendering inside a group that carries the notice. */
+export function insideCardFaceGroup(): boolean {
+  return hasContext(KEY) && getContext(KEY) === true;
+}
 
-  export function markCardFaceGroup(): void {
-    setContext(KEY, true);
-  }
+export function markCardFaceGroup(): void {
+  setContext(KEY, true);
+}
 </script>
 
 <script lang="ts">

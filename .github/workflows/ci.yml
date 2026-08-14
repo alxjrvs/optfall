@@ -81,6 +81,12 @@ jobs:
       - name: Lint
         run: bun run lint
 
+      # THE FORMATTER IS A GATE, NOT A SUGGESTION. It is new — this repo had no
+      # formatter at all — and a formatter nothing enforces is a formatter that
+      # drifts back out within a month.
+      - name: Format
+        run: bun run format:check
+
   test:
     name: test
     runs-on: ubuntu-latest
@@ -403,8 +409,16 @@ jobs:
   # job because the plan is explicit that the difference between a design
   # language and a folder of screenshots is enforcement rather than intent.
   #
-  # It is a separate job from `lint` because oxlint cannot parse .svelte or
-  # .astro, which is where component styles actually live.
+  # It is a separate job from `lint` because it is a different KIND of check:
+  # `check-tokens.ts` reads the CSS inside `.svelte` and `.astro` files and
+  # asserts against the token vocabulary, which no general-purpose linter
+  # models.
+  #
+  # It previously said this job existed "because oxlint cannot parse .svelte or
+  # .astro". Half of that was wrong — measured against an identical duplicate
+  # declaration in each, oxlint reported the `.svelte` one and stayed silent on
+  # `.astro`. The `.astro` half was true and is why the linter changed; see
+  # `biome.jsonc`. Neither half was ever the reason for THIS job.
   tokens:
     name: tokens
     runs-on: ubuntu-latest

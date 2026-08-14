@@ -48,7 +48,8 @@ const STRUCTURE: TokenTable = {
      citable" had stopped being true long before anyone read it that way. The
      sans carries all of it now, and a citation is marked by BEING a citation —
      a link, in the accent, next to the thing it cites. */
-  "type.family.serif": "Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
+  "type.family.serif":
+    "Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
   "type.family.sans":
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 
@@ -176,7 +177,8 @@ const STRUCTURE: TokenTable = {
      whole of the difference: edge-up reads as a button, vertex-up as a gem. */
   "ornament.cut.jewel":
     "polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%)",
-  "ornament.cut.hexagon": "polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)",
+  "ornament.cut.hexagon":
+    "polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)",
   "ornament.cut.lean.end":
     "polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)",
   "ornament.cut.lean.start":
@@ -216,8 +218,7 @@ const STRUCTURE: TokenTable = {
      at a half-height point the silhouette stops reading as a shield and starts
      reading as a downward arrow, which is a different thing to have put next to
      a number. Percentages, so it holds at every plate size. */
-  "ornament.cut.shield":
-    "polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%)",
+  "ornament.cut.shield": "polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%)",
 
   "ornament.jewel.small": "1.25rem",
   "ornament.jewel.base": "1.75rem",

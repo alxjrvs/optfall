@@ -247,9 +247,34 @@ const TONE_BIT: Readonly<Record<StateTone | "unknown", number>> = {
  * "obvious" stopwords by eye and quietly break `may` and `if`.
  */
 const STOPWORDS: ReadonlySet<string> = new Set([
-  "a", "an", "the", "of", "to", "in", "on", "and", "or", "is", "are", "be",
-  "it", "its", "as", "at", "by", "for", "from", "that", "this", "these",
-  "those", "with", "their", "them", "they", "you",
+  "a",
+  "an",
+  "the",
+  "of",
+  "to",
+  "in",
+  "on",
+  "and",
+  "or",
+  "is",
+  "are",
+  "be",
+  "it",
+  "its",
+  "as",
+  "at",
+  "by",
+  "for",
+  "from",
+  "that",
+  "this",
+  "these",
+  "those",
+  "with",
+  "their",
+  "them",
+  "they",
+  "you",
 ]);
 
 /**
@@ -324,7 +349,9 @@ function membershipIds(
  * order, which is what makes the check possible without a value import.
  */
 function assertFormatsAgree(pages: readonly CardPage[]): void {
-  const actual = (pages[0]?.verdicts ?? []).map((verdict) => verdict.format.name);
+  const actual = (pages[0]?.verdicts ?? []).map(
+    (verdict) => verdict.format.name,
+  );
   const agrees =
     actual.length === FORMAT_NAMES.length &&
     actual.every((name, index) => name === FORMAT_NAMES[index]);
@@ -390,10 +417,14 @@ export function buildCardIndex(
   const keywords = dictionary(pages.flatMap((page) => page.card.card_keywords));
   const traits = dictionary(pages.flatMap((page) => page.card.traits));
   const sets = dictionary(
-    pages.flatMap((page) => page.card.printings.map((printing) => printing.set_id)),
+    pages.flatMap((page) =>
+      page.card.printings.map((printing) => printing.set_id),
+    ),
   );
   const rarities = dictionary(
-    pages.flatMap((page) => page.card.printings.map((printing) => printing.rarity)),
+    pages.flatMap((page) =>
+      page.card.printings.map((printing) => printing.rarity),
+    ),
   );
   /* 311 distinct names across every printing in the corpus, so a dictionary
      and a membership list — the same shape sets and rarities already use, and
@@ -452,7 +483,10 @@ export function buildCardIndex(
       .map((verdict) => {
         const mask = verdict.unknown
           ? TONE_BIT.unknown
-          : verdict.states.reduce((sum, state) => sum + TONE_BIT[state.tone], 0);
+          : verdict.states.reduce(
+              (sum, state) => sum + TONE_BIT[state.tone],
+              0,
+            );
         return mask.toString(36);
       })
       .join(",");
@@ -654,18 +688,26 @@ export interface ArtRef {
 export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const labels = encoded.labels === "" ? [] : encoded.labels.split("\n");
   const slugs = encoded.slugs === "" ? [] : encoded.slugs.split("\n");
-  const faceKeyLines = encoded.faceKeys === "" ? [] : encoded.faceKeys.split("\n");
+  const faceKeyLines =
+    encoded.faceKeys === "" ? [] : encoded.faceKeys.split("\n");
   const artLines = encoded.arts === "" ? [] : encoded.arts.split("\n");
   const nameSlugLines =
     encoded.nameSlugs === "" ? [] : encoded.nameSlugs.split("\n");
-  const nameSlugPerCard = labels.map((_, ordinal) => nameSlugLines[ordinal] ?? "");
+  const nameSlugPerCard = labels.map(
+    (_, ordinal) => nameSlugLines[ordinal] ?? "",
+  );
   const typeDict = encoded.typeDict === "" ? [] : encoded.typeDict.split("\n");
-  const keywordDict = encoded.keywordDict === "" ? [] : encoded.keywordDict.split("\n");
-  const traitDict = encoded.traitDict === "" ? [] : encoded.traitDict.split("\n");
+  const keywordDict =
+    encoded.keywordDict === "" ? [] : encoded.keywordDict.split("\n");
+  const traitDict =
+    encoded.traitDict === "" ? [] : encoded.traitDict.split("\n");
   const setDict = encoded.setDict === "" ? [] : encoded.setDict.split("\n");
-  const rarityDict = encoded.rarityDict === "" ? [] : encoded.rarityDict.split("\n");
-  const artistDict = encoded.artistDict === "" ? [] : encoded.artistDict.split("\n");
-  const verdictDict = encoded.verdictDict === "" ? [] : encoded.verdictDict.split("\n");
+  const rarityDict =
+    encoded.rarityDict === "" ? [] : encoded.rarityDict.split("\n");
+  const artistDict =
+    encoded.artistDict === "" ? [] : encoded.artistDict.split("\n");
+  const verdictDict =
+    encoded.verdictDict === "" ? [] : encoded.verdictDict.split("\n");
   const statLines = encoded.stats === "" ? [] : encoded.stats.split("\n");
   const membershipLines =
     encoded.memberships === "" ? [] : encoded.memberships.split("\n");
@@ -681,26 +723,35 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const stats: (readonly [string, string, string])[] = [];
 
   labels.forEach((_, ordinal) => {
-    const typeId = Number.parseInt(encoded.typeAt.slice(ordinal * 2, ordinal * 2 + 2), 36);
+    const typeId = Number.parseInt(
+      encoded.typeAt.slice(ordinal * 2, ordinal * 2 + 2),
+      36,
+    );
     typeLines.push(typeDict[typeId] ?? "");
 
     const digit = Number(encoded.pitches[ordinal] ?? "0");
-    pitches.push((digit === 1 ? 1 : digit === 2 ? 2 : digit === 3 ? 3 : 0) as PitchValue);
+    pitches.push(
+      (digit === 1 ? 1 : digit === 2 ? 2 : digit === 3 ? 3 : 0) as PitchValue,
+    );
 
     const vectorId = Number.parseInt(
       encoded.verdictAt.slice(ordinal * 2, ordinal * 2 + 2),
       36,
     );
     verdicts.push(
-      (verdictDict[vectorId] ?? "").split(",").map((mask) => Number.parseInt(mask, 36) || 0),
+      (verdictDict[vectorId] ?? "")
+        .split(",")
+        .map((mask) => Number.parseInt(mask, 36) || 0),
     );
 
-    const [cost = "", power = "", defence = ""] = (statLines[ordinal] ?? "").split("\t");
+    const [cost = "", power = "", defence = ""] = (
+      statLines[ordinal] ?? ""
+    ).split("\t");
     stats.push([cost, power, defence] as const);
 
-    const [k = "", t = "", s = "", r = "", a = ""] = (membershipLines[ordinal] ?? "").split(
-      "\t",
-    );
+    const [k = "", t = "", s = "", r = "", a = ""] = (
+      membershipLines[ordinal] ?? ""
+    ).split("\t");
     keywords.push([...splitIds(k, keywordDict)]);
     traits.push([...splitIds(t, traitDict)]);
     sets.push([...splitIds(s, setDict)]);
@@ -747,13 +798,16 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
            `/card/head-jab-1/WTR/098` for a page emitted at `/wtr/098`. Every
            `unique:art` row would have been a 404, and every one of them would
            have looked right. */
-        const setCode = setDict[Number.parseInt(entry.slice(0, gap), 10)]?.toLowerCase();
+        const setCode =
+          setDict[Number.parseInt(entry.slice(0, gap), 10)]?.toLowerCase();
         const key = entry.slice(gap + 1);
         if (setCode === undefined || key === "") return [];
         return [{ key, setCode, number: numberFor(key, setCode) }];
       });
     }),
-    faceLandscape: labels.map((_, ordinal) => encoded.faceLandscape[ordinal] === "1"),
+    faceLandscape: labels.map(
+      (_, ordinal) => encoded.faceLandscape[ordinal] === "1",
+    ),
     folded: labels.map(fold),
     labelTokens: labels.map((label) => tokeniseCard(label)),
     slugs,
@@ -914,7 +968,6 @@ export interface ParsedCardQuery {
    */
   readonly tree: QueryNode | null;
 }
-
 
 const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
   legal: "legal",
@@ -1138,9 +1191,9 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
         );
       }
       const kept = tokeniseCard(token.value);
-      const dropped = (token.value.toLowerCase().match(/[a-z0-9]+/g) ?? []).filter(
-        (word) => !kept.includes(word),
-      );
+      const dropped = (
+        token.value.toLowerCase().match(/[a-z0-9]+/g) ?? []
+      ).filter((word) => !kept.includes(word));
       for (const word of new Set(dropped)) {
         note(
           "term-ignored",
@@ -1151,7 +1204,12 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
       }
       if (kept.length === 0) return null;
       const children = kept.map(
-        (value): QueryNode => ({ kind: "leaf", field: "any", value, label: value }),
+        (value): QueryNode => ({
+          kind: "leaf",
+          field: "any",
+          value,
+          label: value,
+        }),
       );
       return children.length === 1 ? children[0]! : { kind: "and", children };
     }
@@ -1178,7 +1236,10 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     const operand = operandRaw.toLowerCase();
 
     if (operand === "") {
-      note("operand-unknown", `${name}: was typed with nothing after it. Ignored.`);
+      note(
+        "operand-unknown",
+        `${name}: was typed with nothing after it. Ignored.`,
+      );
       return null;
     }
 
@@ -1245,7 +1306,13 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
           "phrase-approximate",
           `${label} matches printed ${field} values that are numeric. ${operandRaw === "" ? "" : ""}Cards printing X, XX or nothing at all have no place in that order and do not match.`,
         );
-        return { kind: "leaf", field, value: operand, compare: token.compare, label };
+        return {
+          kind: "leaf",
+          field,
+          value: operand,
+          compare: token.compare,
+          label,
+        };
       }
 
       if (WORD_VALUED.has(field)) {
@@ -1395,7 +1462,11 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     evaluates cannot describe different queries.
   */
   const all = tree === null ? [] : leaves(tree);
-  const terms = [...new Set(all.filter((leaf) => leaf.field === "any").map((leaf) => leaf.value))];
+  const terms = [
+    ...new Set(
+      all.filter((leaf) => leaf.field === "any").map((leaf) => leaf.value),
+    ),
+  ];
   const filters: CardFilter[] = all
     .filter((leaf) => leaf.field !== "any")
     .map((leaf) => toCardFilter(leaf));
@@ -1464,7 +1535,11 @@ function statMatches(printed: string, wanted: string): boolean {
  * throws rather than quietly answering `false` — a silent `false` on a filter
  * returns an empty result set, which reads exactly like "no cards match".
  */
-function passesFilter(index: CardIndex, ordinal: number, filter: CardFilter): boolean {
+function passesFilter(
+  index: CardIndex,
+  ordinal: number,
+  filter: CardFilter,
+): boolean {
   const [cost = "", power = "", defence = ""] = index.stats[ordinal] ?? [];
   switch (filter.field) {
     case "text":
@@ -1519,7 +1594,11 @@ function passesFilter(index: CardIndex, ordinal: number, filter: CardFilter): bo
  * is strictly better than no answer, and the notice says which one is being
  * given.
  */
-function comparePrinted(index: CardIndex, ordinal: number, leaf: QueryLeaf): boolean {
+function comparePrinted(
+  index: CardIndex,
+  ordinal: number,
+  leaf: QueryLeaf,
+): boolean {
   const [cost = "", power = "", defence = ""] = index.stats[ordinal] ?? [];
   const printed =
     leaf.field === "cost" ? cost : leaf.field === "power" ? power : defence;
@@ -1550,14 +1629,19 @@ function comparePrinted(index: CardIndex, ordinal: number, leaf: QueryLeaf): boo
  * excluded did not put it anywhere — ranking `guardian -attack` by "attack"
  * would report the reason a card was nearly rejected.
  */
-function positiveFreeTerms(node: QueryNode, negated = false): readonly string[] {
+function positiveFreeTerms(
+  node: QueryNode,
+  negated = false,
+): readonly string[] {
   switch (node.kind) {
     case "leaf":
       return !negated && node.field === "any" ? [node.value] : [];
     case "not":
       return positiveFreeTerms(node.child, !negated);
     default:
-      return node.children.flatMap((child) => positiveFreeTerms(child, negated));
+      return node.children.flatMap((child) =>
+        positiveFreeTerms(child, negated),
+      );
   }
 }
 
@@ -1566,7 +1650,8 @@ function flavourMatches(index: CardIndex, term: string): ReadonlySet<number> {
   const out = new Set<number>();
   for (const candidate of index.flavourTerms) {
     if (candidate !== term && !candidate.startsWith(term)) continue;
-    for (const ordinal of index.flavourPostings.get(candidate) ?? []) out.add(ordinal);
+    for (const ordinal of index.flavourPostings.get(candidate) ?? [])
+      out.add(ordinal);
   }
   return out;
 }
@@ -1793,12 +1878,18 @@ function sortValue(
   index: CardIndex,
   ordinal: number,
   key: CardSortKey,
-): { readonly text?: string; readonly rank?: number; readonly missing: boolean } {
+): {
+  readonly text?: string;
+  readonly rank?: number;
+  readonly missing: boolean;
+} {
   const stat = (position: 0 | 1 | 2) => {
     const raw = index.stats[ordinal]?.[position] ?? "";
     if (raw === "") return { missing: true };
     const numeric = Number(raw);
-    return Number.isFinite(numeric) ? { rank: numeric, missing: false } : { missing: true };
+    return Number.isFinite(numeric)
+      ? { rank: numeric, missing: false }
+      : { missing: true };
   };
 
   switch (key) {
@@ -1821,7 +1912,9 @@ function sortValue(
       const ranks = (index.rarities[ordinal] ?? [])
         .map((code) => RARITY_RANK[code.toUpperCase()])
         .filter((rank): rank is number => rank !== undefined);
-      return ranks.length === 0 ? { missing: true } : { rank: Math.max(...ranks), missing: false };
+      return ranks.length === 0
+        ? { missing: true }
+        : { rank: Math.max(...ranks), missing: false };
     }
     case "set": {
       /* And by the FIRST set it appeared in, for the same reason in the other
@@ -1829,7 +1922,9 @@ function sortValue(
          reprint that happens to sort last alphabetically. */
       const sets = (index.sets[ordinal] ?? []).toSorted();
       const first = sets[0];
-      return first === undefined ? { missing: true } : { text: first, missing: false };
+      return first === undefined
+        ? { missing: true }
+        : { text: first, missing: false };
     }
   }
 }
@@ -1917,7 +2012,8 @@ export function searchCards(
   const flavourSets = new Map<string, ReadonlySet<number>>();
   for (const leaf of leaves(tree)) {
     if (leaf.field === "text" || leaf.field === "any") {
-      if (!textSets.has(leaf.value)) textSets.set(leaf.value, textMatches(index, leaf.value));
+      if (!textSets.has(leaf.value))
+        textSets.set(leaf.value, textMatches(index, leaf.value));
     }
     if (leaf.field === "flavour" && !flavourSets.has(leaf.value)) {
       flavourSets.set(leaf.value, flavourMatches(index, leaf.value));
@@ -1939,14 +2035,16 @@ export function searchCards(
       );
     }
 
-    if (leaf.field === "text") return textSets.get(leaf.value)?.has(ordinal) === true;
+    if (leaf.field === "text")
+      return textSets.get(leaf.value)?.has(ordinal) === true;
 
     /* NOT FOLDED INTO THE FREE-WORD BRANCH ABOVE, deliberately. A bare word
        searches what a card DOES; flavour is what it says about itself, and a
        reader looking for cards that mention blood in their rules text is not
        asking for the one whose flavour quotes a poem about it. `ft:` is opt-in
        for that reason. */
-    if (leaf.field === "flavour") return flavourSets.get(leaf.value)?.has(ordinal) === true;
+    if (leaf.field === "flavour")
+      return flavourSets.get(leaf.value)?.has(ordinal) === true;
 
     if (leaf.field === "name-exact") {
       // AGAINST THE BARE NAME, not the disambiguated label. `index.folded`
@@ -1975,11 +2073,15 @@ export function searchCards(
 
     const nameTokens = index.labelTokens[ordinal] ?? [];
     const typeTokens = index.typeTokens[ordinal] ?? [];
-    const vocabulary = (index.keywords[ordinal] ?? []).concat(index.traits[ordinal] ?? []);
+    const vocabulary = (index.keywords[ordinal] ?? []).concat(
+      index.traits[ordinal] ?? [],
+    );
 
     const inName = positiveTerms.every((term) => tokensMatch(nameTokens, term));
     const inType = positiveTerms.every((term) => tokensMatch(typeTokens, term));
-    const inVocabulary = positiveTerms.every((term) => valuesMatch(vocabulary, term));
+    const inVocabulary = positiveTerms.every((term) =>
+      valuesMatch(vocabulary, term),
+    );
 
     const label = index.folded[ordinal] ?? "";
     const field: CardMatchField = !inName
@@ -2028,7 +2130,10 @@ export function searchCards(
    * is the number a reader is told — "3 cards match" has to mean three things
    * they can click, not three rows two of which go to the same page.
    */
-  const bestByName = new Map<string, { ordinal: number; field: CardMatchField }>();
+  const bestByName = new Map<
+    string,
+    { ordinal: number; field: CardMatchField }
+  >();
   const matchedByName = new Map<string, PitchValue[]>();
   for (const row of ranked) {
     const name = index.nameSlugs[row.ordinal] ?? index.slugs[row.ordinal] ?? "";
@@ -2089,9 +2194,19 @@ export function searchCards(
           ? (matchedByName.get(name) ?? []).toSorted((a, b) => a - b)
           : [index.pitches[row.ordinal] ?? 0];
       const versions =
-        unique === "names" ? (index.versionsByName.get(name) ?? 1) : pitches.length;
+        unique === "names"
+          ? (index.versionsByName.get(name) ?? 1)
+          : pitches.length;
 
-      return toResult(index, row.ordinal, row.field, pitches, versions, unique, row.art);
+      return toResult(
+        index,
+        row.ordinal,
+        row.field,
+        pitches,
+        versions,
+        unique,
+        row.art,
+      );
     }),
     total: rows.length,
   };

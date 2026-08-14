@@ -1,85 +1,85 @@
 <script lang="ts">
-  /**
-   * The row of faces along the foot of the front door.
-   *
-   * WHY A DOOR THAT REFUSES DECORATION HAS ONE. `docs/DESIGN.md` rules out a
-   * marketing hero and an illustration above the fold, and this is neither: it
-   * sits BELOW the field, below the links, in the empty half of the screen the
-   * door already had — measured, the page was exactly the height of the fold
-   * with the field at 145px and nothing under it.
-   *
-   * What it buys is the one thing a paragraph cannot: it says *this is a card
-   * database* in the time it takes to look at it, which is the job the five
-   * deleted paragraphs of "what this is" were failing to do. Scryfall puts a
-   * row of art in exactly this slot for exactly this reason, and it is the one
-   * place on that site where decoration is doing work rather than filling
-   * space.
-   *
-   * IT IS A BAND, NOT AN ORNAMENT AT THE END OF THE PAGE. The cards run off the
-   * bottom of their box and the document carries on beneath them, which is what
-   * makes them read as the top of a pile rather than as a finishing flourish.
-   *
-   * EVERY NAME STAYS READABLE, and that constraint drove the layout more than
-   * any other. A card's name is a banner across its top spanning nearly the
-   * full width, so an overlap that hides a third of a card takes half its name
-   * with it. The step across is therefore a quarter of a card and no more, and
-   * the alternating rise is what keeps each name clear of its neighbour's
-   * shoulder rather than a decorative wobble.
-   *
-   * IT IS ALSO SIX REAL LINKS. The door had two content links; a reader who
-   * arrives without a card in mind now has somewhere to go that is a card
-   * rather than a list of cards. Nothing here is a picture OF a card — every
-   * face is the card, and clicking it lands on its page.
-   *
-   * COMPLIANCE IS WHY IT COMPOSES `CardFaceGroup` RATHER THAN WRITING `<img>`.
-   * Card images are permitted on the condition that a copyright line accompanies
-   * them, and `docs/COMPLIANCE.md` §5 designs that so a caller cannot get it
-   * wrong: `CardFace` emits the notice itself unless an ancestor group is
-   * carrying one, and `CardFaceGroup` is the only thing that can say so — via
-   * context, so markup cannot forge it. Six faces under one group is one
-   * notice, correctly, and there is no arrangement of this file that produces a
-   * face without one.
-   *
-   * A GROUP HERE IS SIX DIFFERENT CARDS, which `CardFaceGroup` permits on the
-   * test that matters: the faces are one row on one screen with the notice
-   * directly beneath them, so the line accompanies every image it covers. That
-   * contract tests visibility rather than counting cards, and this row is the
-   * caller it was rewritten for.
-   *
-   * NOT HYDRATED. It renders on the build machine and ships as markup; there is
-   * no state here, and a decoration that costs JavaScript on the page whose
-   * whole point is to be cheap would be the wrong trade twice over.
-   */
-  import { CardFace, CardFaceGroup } from "optfall-components/svelte";
+/**
+ * The row of faces along the foot of the front door.
+ *
+ * WHY A DOOR THAT REFUSES DECORATION HAS ONE. `docs/DESIGN.md` rules out a
+ * marketing hero and an illustration above the fold, and this is neither: it
+ * sits BELOW the field, below the links, in the empty half of the screen the
+ * door already had — measured, the page was exactly the height of the fold
+ * with the field at 145px and nothing under it.
+ *
+ * What it buys is the one thing a paragraph cannot: it says *this is a card
+ * database* in the time it takes to look at it, which is the job the five
+ * deleted paragraphs of "what this is" were failing to do. Scryfall puts a
+ * row of art in exactly this slot for exactly this reason, and it is the one
+ * place on that site where decoration is doing work rather than filling
+ * space.
+ *
+ * IT IS A BAND, NOT AN ORNAMENT AT THE END OF THE PAGE. The cards run off the
+ * bottom of their box and the document carries on beneath them, which is what
+ * makes them read as the top of a pile rather than as a finishing flourish.
+ *
+ * EVERY NAME STAYS READABLE, and that constraint drove the layout more than
+ * any other. A card's name is a banner across its top spanning nearly the
+ * full width, so an overlap that hides a third of a card takes half its name
+ * with it. The step across is therefore a quarter of a card and no more, and
+ * the alternating rise is what keeps each name clear of its neighbour's
+ * shoulder rather than a decorative wobble.
+ *
+ * IT IS ALSO SIX REAL LINKS. The door had two content links; a reader who
+ * arrives without a card in mind now has somewhere to go that is a card
+ * rather than a list of cards. Nothing here is a picture OF a card — every
+ * face is the card, and clicking it lands on its page.
+ *
+ * COMPLIANCE IS WHY IT COMPOSES `CardFaceGroup` RATHER THAN WRITING `<img>`.
+ * Card images are permitted on the condition that a copyright line accompanies
+ * them, and `docs/COMPLIANCE.md` §5 designs that so a caller cannot get it
+ * wrong: `CardFace` emits the notice itself unless an ancestor group is
+ * carrying one, and `CardFaceGroup` is the only thing that can say so — via
+ * context, so markup cannot forge it. Six faces under one group is one
+ * notice, correctly, and there is no arrangement of this file that produces a
+ * face without one.
+ *
+ * A GROUP HERE IS SIX DIFFERENT CARDS, which `CardFaceGroup` permits on the
+ * test that matters: the faces are one row on one screen with the notice
+ * directly beneath them, so the line accompanies every image it covers. That
+ * contract tests visibility rather than counting cards, and this row is the
+ * caller it was rewritten for.
+ *
+ * NOT HYDRATED. It renders on the build machine and ships as markup; there is
+ * no state here, and a decoration that costs JavaScript on the page whose
+ * whole point is to be cheap would be the wrong trade twice over.
+ */
+import { CardFace, CardFaceGroup } from "optfall-components/svelte";
 
-  import { FACE_TIERS, faceUrl } from "../lib/faces";
+import { FACE_TIERS, faceUrl } from "../lib/faces";
 
-  /** One card in the row, resolved on the build machine. */
-  export interface FanCard {
-    readonly slug: string;
-    /** The card's name, verbatim. */
-    readonly label: string;
-    /** The type line, verbatim, or the empty string where there is none. */
-    readonly typeLine: string;
-    /** The blob key for this card's face. */
-    readonly faceKey: string;
-  }
+/** One card in the row, resolved on the build machine. */
+export interface FanCard {
+  readonly slug: string;
+  /** The card's name, verbatim. */
+  readonly label: string;
+  /** The type line, verbatim, or the empty string where there is none. */
+  readonly typeLine: string;
+  /** The blob key for this card's face. */
+  readonly faceKey: string;
+}
 
-  interface Props {
-    cards: readonly FanCard[];
-  }
+interface Props {
+  cards: readonly FanCard[];
+}
 
-  const { cards }: Props = $props();
+const { cards }: Props = $props();
 
-  const tier = FACE_TIERS.thumb;
+const tier = FACE_TIERS.thumb;
 
-  /**
-   * Composed from verbatim fields with a fixed separator, exactly as the card
-   * page composes it. Nothing here writes prose about a picture.
-   */
-  function altFor(card: FanCard): string {
-    return card.typeLine === "" ? card.label : `${card.label} — ${card.typeLine}`;
-  }
+/**
+ * Composed from verbatim fields with a fixed separator, exactly as the card
+ * page composes it. Nothing here writes prose about a picture.
+ */
+function altFor(card: FanCard): string {
+  return card.typeLine === "" ? card.label : `${card.label} — ${card.typeLine}`;
+}
 </script>
 
 <!--

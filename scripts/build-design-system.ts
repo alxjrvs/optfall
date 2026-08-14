@@ -37,7 +37,8 @@ import {
  * Where the bundle is written. Overridable so a scratch run does not clobber
  * the checked-in one.
  */
-const OUT = process.env["OPTFALL_DS_OUT"] ?? join(import.meta.dir, "..", "design-system");
+const OUT =
+  process.env["OPTFALL_DS_OUT"] ?? join(import.meta.dir, "..", "design-system");
 const TOKENS = themeStylesheet();
 
 const FACE = "https://optfall-images.netlify.app";
@@ -299,9 +300,20 @@ cards.push({
   body: `
   <p class="note">A restrained ramp: density without clutter means fewer sizes used deliberately, not more used approximately.</p>
   <div class="stack" style="gap:var(--of-space-tight);margin-block-start:var(--of-space-loose)">
-    ${["hair", "tightest", "tighter", "tight", "base", "loose", "looser", "loosest"]
+    ${[
+      "hair",
+      "tightest",
+      "tighter",
+      "tight",
+      "base",
+      "loose",
+      "looser",
+      "loosest",
+    ]
       .map(
-        (step) => `<div style="display:flex;align-items:center;gap:var(--of-space-base)">
+        (
+          step,
+        ) => `<div style="display:flex;align-items:center;gap:var(--of-space-base)">
           <span class="mono" style="inline-size:5rem;color:var(--of-color-ink-muted)">${step}</span>
           <span style="block-size:var(--of-space-tight);inline-size:var(--of-space-${step});background:var(--of-color-accent);display:inline-block"></span>
         </div>`,
@@ -391,14 +403,34 @@ cards.push({
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:flex-start;gap:var(--of-space-looser)">
     ${[
       ["cost", "0", "polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)"],
-      ["power", "3", "polygon(0 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%)"],
-      ["defence", "2", "polygon(0 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem))"],
+      [
+        "power",
+        "3",
+        "polygon(0 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%)",
+      ],
+      [
+        "defence",
+        "2",
+        "polygon(0 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem))",
+      ],
       ["life", "20", "none"],
-      ["intellect", "4", "polygon(.5rem 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%,0 .5rem)"],
-      ["arcane", "1", "polygon(0 0,calc(100% - .5rem) 0,100% .5rem,100% 100%,.5rem 100%,0 calc(100% - .5rem))"],
+      [
+        "intellect",
+        "4",
+        "polygon(.5rem 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%,0 .5rem)",
+      ],
+      [
+        "arcane",
+        "1",
+        "polygon(0 0,calc(100% - .5rem) 0,100% .5rem,100% 100%,.5rem 100%,0 calc(100% - .5rem))",
+      ],
     ]
       .map(
-        ([kind, value, clip]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
+        ([
+          kind,
+          value,
+          clip,
+        ]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
           <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:${clip};box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">${value}</span>
           <span class="eyebrow" style="margin:0">${kind}</span>
         </div>`,
@@ -428,7 +460,8 @@ function cutValue(id: string): string {
   // A missing token is a renamed or deleted cut, and the gallery should fail
   // loudly rather than silently render an unclipped square that looks like a
   // deliberate shape.
-  if (raw === undefined) throw new Error(`no such silhouette token: ornament.${id}`);
+  if (raw === undefined)
+    throw new Error(`no such silhouette token: ornament.${id}`);
   if (chamfer === undefined) throw new Error("ornament.notch.size is missing");
   return raw.replaceAll("var(--chamfer)", chamfer);
 }
@@ -449,9 +482,20 @@ cards.push({
       ["{c}", "C", "chi", "cut.crown"],
       ["{t}", "T", "tap", "cut.side.end"],
       ["{u}", "U", "untap", "cut.side.start"],
-    ].map(([token, letter, name, cut]) => [token, letter, name, cutValue(cut as string)])
+    ]
+      .map(([token, letter, name, cut]) => [
+        token,
+        letter,
+        name,
+        cutValue(cut as string),
+      ])
       .map(
-        ([token, letter, name, clip]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
+        ([
+          token,
+          letter,
+          name,
+          clip,
+        ]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
           <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:${clip};box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">${letter}</span>
           <span class="eyebrow" style="margin:0">${name}</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">${token}</code>
@@ -486,12 +530,17 @@ cards.push({
         <span style="flex:1;font-family:var(--of-type-family-serif);font-size:var(--of-type-size-title)">head jab</span>
       </div>
       <ul style="list-style:none;margin:var(--of-space-tight) 0 0;padding:0;border-top:1px solid var(--of-color-rule)">
-        ${([
-          ["Head Jab", "123"],
-          ["Sever Head Jab", "12"],
-        ] as const)
+        ${(
+          [
+            ["Head Jab", "123"],
+            ["Sever Head Jab", "12"],
+          ] as const
+        )
           .map(
-            ([name, pitches], i) => `<li style="display:flex;align-items:center;gap:var(--of-space-base);padding-block:var(--of-space-tight);${i === 0 ? "box-shadow:inset var(--of-bevel-width) 0 0 0 var(--of-color-accent);padding-inline-start:var(--of-space-tight);color:var(--of-color-accent)" : ""}">
+            (
+              [name, pitches],
+              i,
+            ) => `<li style="display:flex;align-items:center;gap:var(--of-space-base);padding-block:var(--of-space-tight);${i === 0 ? "box-shadow:inset var(--of-bevel-width) 0 0 0 var(--of-color-accent);padding-inline-start:var(--of-space-tight);color:var(--of-color-accent)" : ""}">
               <span style="display:inline-flex;gap:var(--of-space-tightest)">${[...(pitches as string)].map((p) => jewel(p, "sm")).join("")}</span>
               <span style="font-family:var(--of-type-family-serif);font-size:var(--of-type-size-large)">${name}</span>
             </li>`,
@@ -574,7 +623,11 @@ cards.push({
         ["LGS282-RF", "Enlightened Strike", ""],
       ]
         .map(
-          ([key, name, versions]) => `<div style="display:flex;flex-direction:column;gap:var(--of-space-tight)">
+          ([
+            key,
+            name,
+            versions,
+          ]) => `<div style="display:flex;flex-direction:column;gap:var(--of-space-tight)">
             <figure>
               <img src="${FACE}/thumb/${key}.webp" alt="${name}" width="180" height="251">
               <figcaption class="copyright">Card images © Legend Story Studios.</figcaption>
@@ -605,7 +658,10 @@ cards.push({
         <div style="display:flex;gap:var(--of-space-base);flex-wrap:wrap">
           ${["BEN010", "KAT013", "KSU011"]
             .map(
-              (k, i) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-hair)">
+              (
+                k,
+                i,
+              ) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-hair)">
               <img src="${FACE}/thumb/${k}.webp" alt="${k}" width="64" height="89" style="border:var(--of-bevel-width) solid var(--of-color-${i === 0 ? "accent" : "rule"});border-radius:var(--of-bevel-radius)">
               <span class="mono" style="font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);color:var(--of-color-ink-muted)">${k}</span>
             </div>`,
@@ -627,7 +683,9 @@ cards.push({
           <div style="display:flex;gap:var(--of-space-tight);border-bottom:1px solid var(--of-color-rule)">
             ${[1, 2, 3]
               .map(
-                (p) => `<span style="display:inline-flex;align-items:center;gap:var(--of-space-tight);padding:var(--of-space-tight) var(--of-space-base);border-bottom:var(--of-bevel-width) solid ${p === 1 ? "var(--of-color-accent)" : "transparent"};color:var(--of-color-ink${p === 1 ? "" : "-muted"})">
+                (
+                  p,
+                ) => `<span style="display:inline-flex;align-items:center;gap:var(--of-space-tight);padding:var(--of-space-tight) var(--of-space-base);border-bottom:var(--of-bevel-width) solid ${p === 1 ? "var(--of-color-accent)" : "transparent"};color:var(--of-color-ink${p === 1 ? "" : "-muted"})">
                 ${jewel(p, "sm")}
                 <span class="mono" style="font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase">Pitch ${p}</span>
               </span>`,
@@ -680,4 +738,5 @@ const shipped = Object.keys(DARK_TOKENS).length;
 const light = Object.keys(LIGHT_TOKENS).length;
 console.log(`${cards.length} cards written to ${OUT}`);
 console.log(`tokens inlined: ${shipped} dark, ${light} light`);
-for (const card of cards) console.log(`  ${card.group.padEnd(12)} ${card.path}`);
+for (const card of cards)
+  console.log(`  ${card.group.padEnd(12)} ${card.path}`);

@@ -81,7 +81,8 @@ export const CARD_ASPECT_RATIO = 63 / 88;
  * different claims, and `cards.ts` already keeps them apart upstream of this.
  */
 export function faceKeyFor(imageUrl: string | null | undefined): string | null {
-  if (imageUrl === null || imageUrl === undefined || imageUrl === "") return null;
+  if (imageUrl === null || imageUrl === undefined || imageUrl === "")
+    return null;
 
   let basename: string;
   try {
@@ -118,9 +119,7 @@ export function faceKeyFor(imageUrl: string | null | undefined): string | null {
   // stripping it: 11,376 distinct stems either way, and the only stem reached
   // by two URLs is the byte-identical `LGS387` mirror described above. So this
   // is free.
-  const stem = basename
-    .replace(/\.[^.]+$/, "")
-    .replace(/\.width-\d+$/, "");
+  const stem = basename.replace(/\.[^.]+$/, "").replace(/\.width-\d+$/, "");
   if (stem === "") return null;
 
   // The host's guard accepts this alphabet and no other; anything outside it
