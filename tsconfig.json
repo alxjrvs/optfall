@@ -12,12 +12,14 @@
     "packages/*/*.ts",
     "scripts/**/*.ts"
   ],
+  "$comment_react": "packages/components/src/react is excluded here for the same reason src/svelte is: this config covers loose repository TypeScript and does not set `jsx` or the DOM lib, so it cannot compile a `.tsx`. Reaching `react/index.ts` from `packages/*/src/**/*.ts` pulled its `.tsx` imports in behind it and failed with `--jsx is not set`. That package's own tsconfig sets both and includes `src/**/*.tsx`, so the React port is checked there — by tsc, with real types, which is the whole difference from the Svelte case next door.",
   "$comment_svelte": "packages/components/src/svelte is excluded here for the same reason it is excluded from that package's own tsconfig: tsc cannot resolve a `.svelte` import, and the ambient `declare module '*.svelte'` workaround would type every primitive as `any`. svelte-check covers those files with real component types, via packages/components/tsconfig.svelte.json, and runs as part of that package's typecheck script.",
   "exclude": [
     "**/node_modules",
     "**/dist",
     "**/.astro",
     "**/.netlify",
-    "packages/components/src/svelte"
+    "packages/components/src/svelte",
+    "packages/components/src/react"
   ]
 }

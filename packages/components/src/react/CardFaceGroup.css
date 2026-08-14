@@ -1,0 +1,35 @@
+/*
+ * `CardFaceGroup`'s styles, ported verbatim from the Svelte component's scoped
+ * block.
+ *
+ * Explicit `of-`-prefixed class names rather than a CSS module. The reason is
+ * measured and is written out in full at the top of `CardFace.css`: under
+ * `bun test` a `.module.css` import resolves to an empty object, so every
+ * class silently became `undefined` and the components rendered with no
+ * `class` attribute at all — passing tests included.
+ *
+ * `scripts/check-tokens.ts` already scans `.css`, so every declaration below
+ * is held to the same token vocabulary the Svelte version was. Nothing about
+ * the design-system enforcement changes in the port, which was the
+ * requirement.
+ */
+
+.of-card-face-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-loose);
+}
+
+/*
+  LEGALESE, AND SET LIKE IT — the same treatment `CardFace` uses, and for the
+  same reason. Small, tight and quiet: fine print is not a label and should not
+  be tracked out like one.
+*/
+.of-card-face-group__copyright {
+  margin: 0;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink-faint);
+  line-height: var(--of-type-leading-tight);
+}
