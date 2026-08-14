@@ -31,9 +31,20 @@ import { Mark } from "optfall-components/svelte";
 interface Props {
   /** The nav item to mark as current, if any. */
   section?: "cards" | "sets" | "rules" | "syntax";
+  /**
+   * Whether the bar carries a search field.
+   *
+   * `false` on the two pages that render a search field of their own. The bar
+   * exists so a second lookup does not cost a navigation — on a page that is
+   * already a search field, it is the same control twice, sitting one above the
+   * other, with the top one narrower and unlabelled. That reads as untidy at
+   * 1440 and as a wasted row on a phone, where the bar wraps to two lines to
+   * seat a field the page does not need.
+   */
+  field?: boolean;
 }
 
-const { section } = Astro.props;
+const { section, field = true } = Astro.props;
 
 /*
  * Five destinations, which is the whole site. A nav that needs a submenu is a
@@ -61,19 +72,23 @@ const LINKS: readonly { href: string; label: string; key?: Props["section"] }[] 
     A real GET to the results page, so it works with scripting off and a
     submitted query lands on a shareable address. No island, no index.
   -->
-  <form class="find" role="search" aria-label="Flesh and Blood cards" action="/search" method="get">
-    <label class="sr" for="site-search">Search the cards</label>
-    <input
-      id="site-search"
-      class="field"
-      name="q"
-      type="search"
-      autocomplete="off"
-      spellcheck="false"
-      enterkeyhint="search"
-      placeholder="Search cards"
-    />
-  </form>
+  {
+    field && (
+      <form class="find" role="search" aria-label="Flesh and Blood cards" action="/search" method="get">
+        <label class="sr" for="site-search">Search the cards</label>
+        <input
+          id="site-search"
+          class="field"
+          name="q"
+          type="search"
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="search"
+          placeholder="Search cards"
+        />
+      </form>
+    )
+  }
 
   <nav class="links" aria-label="Sections">
     {

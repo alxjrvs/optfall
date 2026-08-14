@@ -67,8 +67,22 @@ const unmatchedList = coverage.unmatched.join(", ");
   description="Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from."
 
   section="cards"
+  headerSearch={false}
 >
-  <h1 class="heading">Search the cards</h1>
+  <!--
+    NO `<h1>` HERE, AND THAT IS THE POINT OF THIS LAYER. It read "Search the
+    cards", and the field's own visible `<label>` — the one that is `for=` the
+    input, so it is the name a screen reader actually announces — reads "Search
+    the cards" too, immediately beneath it. The nav above says "Cards" and the
+    document title says "Search the cards — Optfall". Four statements of the
+    same fact, and the display-sized one was costing the most fold on the page
+    that can least afford it.
+
+    The label is the better of the two to keep: it names the control rather than
+    the page, it is what a screen reader reads out on focus, and it is already
+    at the size an interface label should be. The `<title>` carries the page's
+    name for anything that needs it.
+  -->
 
   <!--
     THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form submits here, so a
@@ -99,10 +113,6 @@ const unmatchedList = coverage.unmatched.join(", ");
 </BaseLayout>
 
 <style>
-  .heading {
-    margin-block: 0 var(--of-space-looser);
-  }
-
   /* The rights notice is legalese: present, not competing. */
   .legal {
     margin-block-start: var(--of-space-base);

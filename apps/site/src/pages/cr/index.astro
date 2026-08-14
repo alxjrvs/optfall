@@ -35,8 +35,16 @@ const published = new Date(`${corpus.publishedDateIso}T00:00:00Z`).toLocaleDateS
   description="Lexical search over the Flesh and Blood Comprehensive Rules. Every section has a permanent, citable URL."
 
   section="rules"
+  headerSearch={false}
 >
-  <h1>Search the rules</h1>
+  <!--
+    NO `<h1>`, for the reason `/search` has none: it read "Search the rules" and
+    the field's own visible `<label>` — the one that names the control to a
+    screen reader — says the same words directly beneath it, under a nav that
+    says "Rules" and a document title that says "Search the rules — Optfall".
+    The label is the one worth keeping; the display-sized duplicate was pure
+    fold.
+  -->
 
   <!--
     THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form on any surface submits

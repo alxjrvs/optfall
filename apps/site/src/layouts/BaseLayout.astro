@@ -42,6 +42,14 @@ interface Props {
    * on its landing page either.
    */
   section?: "cards" | "sets" | "rules" | "syntax" | "none";
+  /**
+   * Whether the header bar carries its own search field.
+   *
+   * `false` on the two pages that render one themselves. It is a separate
+   * question from `section`, because `section="rules"` covers both `/cr` — which
+   * has a field — and the 1,278 rule pages, which do not.
+   */
+  headerSearch?: boolean;
   title: string;
   description?: string;
   /**
@@ -80,6 +88,7 @@ const {
   description = "Legality that remembers, and rulings you can cite — a reference tool for Flesh and Blood.",
   canonical,
   section,
+  headerSearch = true,
   width = "measure",
 } = Astro.props;
 
@@ -134,7 +143,7 @@ const tokens = themeStylesheet();
   </head>
   <body>
     <div class="shell">
-      {section === "none" ? null : <SiteHeader section={section === undefined ? undefined : section} />}
+      {section === "none" ? null : <SiteHeader section={section === undefined ? undefined : section} field={headerSearch} />}
       <main data-width={width}>
         <slot />
       </main>
