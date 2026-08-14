@@ -3,32 +3,30 @@ import type { Meta, StoryObj } from "@storybook/svelte-vite";
 import Mark from "./Mark.svelte";
 
 /**
- * The mark is the logo and the pitch jewel's silhouette at once, and its stories
- * are written to attack the one sentence in `docs/DESIGN.md` that the whole form
- * rests on:
+ * The mark — three interlocked links.
  *
- * > Two solids and a hairline, so it survives a favicon. The gap between crown
- * > and pavilion is the whole idea and it is the last thing to disappear at
- * > small sizes.
+ * WHAT THESE STORIES ARE FOR. `docs/DESIGN.md` makes three claims about this
+ * object that only a workbench can falsify, and each has a story:
  *
- * Rendered once at the default size that reads as a confident claim, because
- * nothing has been asked to fail yet. Three things below ask:
+ * 1. **It interlocks.** Every link is over its neighbour at one crossing and
+ *    under at the other. That is the difference between a chain and a row of
+ *    overlapping rings, it is produced entirely by paint order, and it is the
+ *    thing most likely to break silently — a scope rectangle drifting a unit
+ *    off, a link redrawn in the wrong order, and the mark quietly becomes two
+ *    rings lying flat on a third. You cannot see it in a diff.
  *
- * - **`AtFaviconSize`** renders it at 16px, which is smaller than the smallest
- *   token step and is the size the claim is actually about.
- * - **`BelowTheFavicon`** goes past the point of failure on purpose, because the
- *   *order* of failure is the claim — hairline first, gap last — and you cannot
- *   see an order at a size where nothing has broken.
- * - **`MonochromeCollapse`** removes colour entirely, which is what a
- *   forced-colours mode does. If the mark stops reading as *cleaved* there, then
- *   colour was carrying the meaning and the accent was never merely marking the
- *   break.
+ * 2. **It survives a favicon — and at three links it does NOT.** That finding
+ *    is the reason the tab icon draws one link, and the two size stories below
+ *    are the evidence rather than an assertion. Judge them at the pixel size
+ *    named, not zoomed.
  *
- * TWO OF THESE STORIES NAME A PIXEL, which nothing else in this library is
- * allowed to do. They set `--of-ornament-jewel-small` on the story's own
- * container and remove it again when the story unmounts, so nothing leaks into
- * the next story. The justification is narrow: 16px is not a design decision to
- * be held in a token, it is the size a browser draws a favicon, and a claim
+ * 3. **Colour is not carrying the meaning.** The interlock has to read with the
+ *    palette replaced wholesale, which is what forced-colours mode does. If it
+ *    stops reading as a chain there, the shape is doing too little work.
+ *
+ * THE SIZE STORIES OVERRIDE A TOKEN, which is normally the one thing a story is
+ * not allowed to do. The justification is narrow: 16px is not a design decision
+ * to be held in a token, it is the size a browser draws a favicon, and a claim
  * about surviving one cannot be tested at 20px.
  */
 const meta = {
@@ -40,7 +38,13 @@ const meta = {
       control: { type: "inline-radio" },
       options: ["sm", "md", "lg"],
       description:
-        "Rendered size, in token steps rather than pixels — `ornament.jewel.small` (1.25rem), `.base` (1.75rem) and `.large` (2.5rem). Only the box changes; the geometry is a `viewBox`, so every proportion below is scale-invariant and the bevel, which is a fixed 1px, is not.",
+        "Rendered size, in token steps rather than pixels — `ornament.mark.small` (0.875rem), `.base` (1.25rem) and `.large` (1.75rem). It is a HEIGHT: the chain is about twice as wide as it is tall, so the width follows from the `viewBox` rather than being a second number to keep in step with the geometry.",
+    },
+    variant: {
+      control: { type: "inline-radio" },
+      options: ["pitch", "ink"],
+      description:
+        "`pitch` is canonical — the three links carry the three pitch values. It is the one place this system spends the pitch palette on something that is not a pitch value, argued in `docs/DESIGN.md`. `ink` is the alternate for surfaces that cannot take three colours, and it is the more legible of the two when small.",
     },
     title: {
       control: "text",
@@ -59,17 +63,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Sets custom properties on the story's own container for the duration of that
- * story, and removes them when it unmounts.
+ * Set custom properties on the story's own container, and take them off again.
  *
- * Storybook mounts every story into the same canvas element, so a property left
- * behind here would silently resize the *next* component a reviewer looks at —
- * a workbench that lies about the theme is the one failure it must not have.
  * The returned cleanup is Storybook's own `beforeEach` teardown, so the removal
- * is not left to remembering.
- *
- * Typed structurally rather than as `StoryContext` so it stays assignable
- * wherever `beforeEach` is accepted; the container is the only thing it needs.
+ * is guaranteed rather than remembered — a token left overridden would leak into
+ * the next story.
  */
 function overriding(properties: Record<string, string>) {
   return (context: { canvasElement: HTMLElement }) => {
@@ -85,118 +83,93 @@ function overriding(properties: Record<string, string>) {
   };
 }
 
-/** The mark as it sits in a header: 1.75rem, named, bevelled. */
 export const Default: Story = { args: { size: "md" } };
 
 /**
- * The smallest token step, 1.25rem — 20px, and the smallest size the library
- * itself will ever render. The gap is ~3 of 32 viewBox units, so it is under two
- * device pixels here, while the bevel above and below it is a fixed 1px that did
- * not scale down with the mark. Everything `AtFaviconSize` tests is already
- * beginning here; this is the last size at which it is comfortable.
- */
-export const Small: Story = { args: { size: "sm" } };
-
-/**
- * 2.5rem, where the hairline along the pavilion's cut face is unambiguous. Worth
- * looking at immediately before the small sizes: it is the reference for what is
- * *supposed* to be visible, and the only story where all three elements — two
- * solids and the hairline — are comfortably legible at once.
+ * THE CLAIM THIS PAGE EXISTS FOR: follow one link across its neighbour.
+ *
+ * Red passes OVER yellow at their upper crossing and UNDER it at the lower one;
+ * yellow does the same across blue. If either pair is over at both, the chain
+ * has become a stack and the scopes in `MARK_GEOMETRY` have drifted.
  */
 export const Large: Story = { args: { size: "lg" } };
 
+export const Small: Story = { args: { size: "sm" } };
+
 /**
- * THE STORY THIS COMPONENT EXISTS TO PASS. Sixteen device pixels, the size a
- * browser draws a tab icon, and the arithmetic is tight enough to check by eye:
+ * The alternate: ink outside, blood in the middle.
  *
- * - The gap between the crown's parted edge and the pavilion's cut face is
- *   **at least 3 of 32 units everywhere along the cut**, which at this size is
- *   at least one and a half device pixels of ground. The figure is a bound and
- *   not a measurement on purpose: the exact numbers live with the coordinates
- *   in `MARK_GEOMETRY`, `index.test.ts` asserts the bound, and this file went
- *   through a spell of quoting a third value that agreed with neither.
- * - `--of-bevel-width` does not scale with the mark, so the crown's dark
- *   drop-shadow is cast *down* into that gap and the pavilion's light one *up*
- *   into it — two fixed pixels of bevel arriving in a gap barely wider than
- *   they are. That is the failure mode, and it is invisible at every larger
- *   size.
- * - **Check both themes from the toolbar.** In light, `bevel.light` is
- *   `rgba(255, 255, 255, 0.85)` — nearly opaque, cast upward from the pavilion,
- *   directly across the cut. If the gap survives dark but fills in light, the
- *   claim holds in exactly one of the two modes the product ships.
+ * Worth comparing against `Large` at the same size. `ink` reads better small —
+ * two near-white links against a dark ground separate further than red against
+ * yellow — which is a real argument for using it on a cramped surface, and not
+ * an argument for making it canonical: the pitch mark says what this project is
+ * about, and the ink one says only that it has a logo.
+ */
+export const Ink: Story = { args: { size: "lg", variant: "ink" } };
+
+/**
+ * SIXTEEN PIXELS TALL — the size a browser draws a favicon, and the story that
+ * settled what the favicon actually is.
  *
- * What "survives" means, precisely: ground still visible across the full width
- * of the cut, and the two halves still about 1.5 units out of register at their
- * left and right edges. If it reads as a slotted diamond rather than a cleaved
- * one, `docs/DESIGN.md` is wrong and the geometry has to move — not the story.
+ * At this height the three links are a smudge. That is not a defect to fix by
+ * thickening the rings; it is a property of a mark twice as wide as it is tall
+ * being asked to fit a square. So `favicon.svg.ts` draws ONE link, upright,
+ * from `MARK_GEOMETRY.single` — the same path under a different transform, so
+ * there is no second drawing to drift.
  *
- * The shape to judge it against is a DIAMOND: the crown is a narrow cap with
- * the top apex on it, the pavilion keeps the girdle — the widest points, at
- * `y 17.5` — and tapers to the bottom apex. If the fallen half no longer reads
- * as the lower half of a gem, the cleave is in the wrong place.
+ * Judge it at 16px. Zooming this story is judging a different question.
  */
 export const AtFaviconSize: Story = {
   args: { size: "sm" },
-  beforeEach: overriding({ "--of-ornament-jewel-small": "16px" }),
+  beforeEach: overriding({ "--of-ornament-mark-small": "16px" }),
 };
 
 /**
- * 10px — below anything that ships, and deliberately so. The claim is an
- * *ordering*: the hairline goes first, the gap goes last. An ordering is only
- * observable past the point where the first thing has failed, so this story
- * renders the mark somewhere it is never asked to work in order to read the
- * order off it.
+ * Below the favicon, where it is allowed to fail.
  *
- * Expected: the cleavage hairline is gone or indistinguishable from the
- * pavilion's top edge, and the gap is still there. Any other outcome — the gap
- * closing while the hairline is still visible — inverts the priority the
- * component's own comments assert, and means the bevel, not the geometry, is
- * deciding what the mark looks like when it is small.
+ * The order of failure is the claim: the windows close before the interlock
+ * becomes unreadable, and the interlock goes before the silhouette does. If the
+ * mark turned into a solid bar here it would mean the ring walls are too thick
+ * relative to the windows they enclose.
  */
 export const BelowTheFavicon: Story = {
   args: { size: "sm" },
-  beforeEach: overriding({ "--of-ornament-jewel-small": "10px" }),
+  beforeEach: overriding({ "--of-ornament-mark-small": "10px" }),
 };
 
 /**
- * The forced-colours case, simulated: the accent is redefined to the ink, so
- * crown, pavilion and cleave are one colour and the mark has exactly the
- * information a Windows High Contrast user gets. (The component's real
- * `@media (forced-colors: active)` block does the same thing with `CanvasText`
- * and additionally drops the bevel; this reproduces it in a mode you can
- * actually toggle on a Mac.)
+ * The palette replaced wholesale, which is what forced-colours mode does.
  *
- * The claim under test is `Mark.svelte`'s: *"the gap survives with no colour at
- * all, and colour never carried the meaning here."* If the mark reads as one
- * solid octagon with a slot in it, the accent was doing structural work rather
- * than marking the break.
+ * Every link collapses to one system ink and the mark still has to read as a
+ * chain — the interlock is geometry, so it survives, and this story is how we
+ * find out if that stops being true. Colour never carried the meaning here.
  */
 export const MonochromeCollapse: Story = {
-  args: { size: "md" },
-  beforeEach: overriding({ "--of-color-accent": "var(--of-color-ink)" }),
+  args: { size: "lg" },
+  beforeEach: overriding({
+    "--of-color-pitch-one": "var(--of-color-ink)",
+    "--of-color-pitch-two": "var(--of-color-ink)",
+    "--of-color-pitch-three": "var(--of-color-ink)",
+  }),
 };
 
 /**
- * The mark beside a visible "Optfall" wordmark, where announcing the name a
- * second time is noise. `aria-hidden`, no `role`, no `<title>` child at all.
+ * Decoration, for the one case where the name is already on the page.
  *
- * This is the story the a11y addon should have *nothing* to say about: a
- * hidden image is not an unnamed one, and `svg-img-alt` must not fire here. It
- * is also the only supported way to silence the mark — `title=""` is not, and
- * the story below is why.
+ * `aria-hidden`, no role, no name. Beside a visible "Optfall" wordmark — the
+ * header bar and the front door both do this — announcing the mark's name would
+ * make the one link home say itself twice.
  */
 export const Decorative: Story = { args: { size: "md", decorative: true } };
 
 /**
- * A whitespace-only name, which is what a caller reaching for "no name" tends to
- * write, and what a template interpolating a missing string produces on its own.
+ * A name that cannot be crushed.
  *
- * It must render as **Optfall**. The failure it guards against type-checked
- * perfectly well: a default parameter fires on `undefined` alone, so a blank
- * string reached `<title></title>` and an `aria-labelledby` resolving to nothing
- * — an unnamed `role="img"`, on the one element in the system that is never
- * allowed to be unnamed. Inspect the accessible name; the rendering is identical
- * either way, which is exactly what made it survivable.
+ * `title="   "` type-checks and would have produced `<title></title>` and an
+ * `aria-labelledby` resolving to the empty string — an unnamed `role="img"`,
+ * which is the violation the default exists to prevent. A default parameter
+ * fires on `undefined` alone, so whitespace falls THROUGH it; the component
+ * trims and falls back instead. To hide the mark, use `decorative`.
  */
 export const NameCannotBeCrushed: Story = {
   args: { size: "md", title: "   " },

@@ -25,6 +25,16 @@
  * section around rendered on no surface at all. It is `sm` and decorative: the
  * link text already says the name, and a `role="img"` repeating it would make
  * the one link home announce itself twice.
+ *
+ * AND IT IS THE `ink` VARIANT HERE, WHICH IS NOT A DOWNGRADE. The canonical
+ * mark is the pitch one and it belongs on the front door, where the wordmark is
+ * the masthead. This bar is chrome: it wants a mark that behaves like the word
+ * beside it, and `ink` fills its outer links with `currentColor`, so the whole
+ * lockup sits at `ink.muted` at rest and lights up together on hover. The pitch
+ * variant cannot do that — its links carry fixed tokens — so using it here
+ * would bring back the exact "lockup lighting up in halves" the hover rule
+ * below was written to prevent. It also reads better at this size, which is a
+ * bonus rather than the reason.
  */
 import { Mark } from "optfall-components/svelte";
 
@@ -66,7 +76,7 @@ const LINKS: readonly { href: string; label: string; key?: Props["section"] }[] 
 ---
 
 <header class="bar">
-  <a class="wordmark" href="/"><Mark size="sm" decorative />Optfall</a>
+  <a class="wordmark" href="/"><Mark size="sm" variant="ink" decorative />Optfall</a>
 
   <!--
     A real GET to the results page, so it works with scripting off and a
@@ -131,12 +141,13 @@ const LINKS: readonly { href: string; label: string; key?: Props["section"] }[] 
     flex: 0 0 auto;
   }
 
-  /* The pavilion is `currentColor` and `.mark` inherits its `color`, so the
-     stone takes the muted ink of the resting bar and the full ink on hover
-     along with the word — one object lighting up rather than a logo beside a
-     link that changed. That inheritance is load-bearing for this rule: give
-     `.mark` a `color` of its own again and the lockup goes back to lighting up
-     in halves, with the stone bright against a muted word at rest. */
+  /* The `ink` variant fills its outer links with `currentColor`, so they take
+     the muted ink of the resting bar and the full ink on hover along with the
+     word — one object lighting up rather than a logo beside a link that
+     changed. That inheritance is load-bearing for this rule, which is why the
+     mark above is `variant="ink"`: the canonical pitch variant carries fixed
+     tokens, and using it here would put the lockup back to lighting up in
+     halves, with a bright chain against a muted word at rest. */
   .wordmark:hover {
     color: var(--of-color-ink);
   }

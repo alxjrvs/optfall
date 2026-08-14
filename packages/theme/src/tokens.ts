@@ -223,6 +223,19 @@ const STRUCTURE: TokenTable = {
   "ornament.jewel.base": "1.75rem",
   "ornament.jewel.large": "2.5rem",
 
+  /* THE MARK IS SIZED BY HEIGHT, NOT BY A SQUARE, because it is no longer a
+     square. The chain is roughly twice as wide as it is tall, so one dimension
+     is set and the other follows from the `viewBox` — asking for a 20×20 box
+     would letterbox it and asking for 20×43 would put a second number here to
+     keep in step with the geometry.
+
+     It borrowed `ornament.jewel.*` while the mark WAS the jewel. That stopped
+     being true, and the jewel steps stayed with the pitch stone they are named
+     for: `PitchJewel` is still square and still the interface primitive. */
+  "ornament.mark.small": "0.875rem",
+  "ornament.mark.base": "1.25rem",
+  "ornament.mark.large": "1.75rem",
+
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and
      nothing else, so a surface free to pick its own width would be asking for a

@@ -1,85 +1,41 @@
 <script lang="ts">
   /**
-   * The mark — a cut jewel, cleaved and falling.
+   * The mark — three interlocked links.
    *
-   * `docs/DESIGN.md`: **the logo and the core interface primitive are the same
-   * object.** This is the pitch diamond — the reserved silhouette, vertex up
-   * and widest across the middle — split along a cleavage plane, so the thing
-   * on the tab is the thing you see a thousand times a session rather than two
-   * shapes that happen to coexist.
+   * WHAT IT REPLACED AND WHY. The mark was a cut jewel: the pitch diamond,
+   * cleaved and falling, on the argument that the logo and the core interface
+   * primitive should be the same object. That was a good argument for a mark
+   * that says *Flesh and Blood*. It is the wrong argument for this one, because
+   * the jewel says what the game is and the chain says what the TOOL does.
    *
-   * THAT CLAIM WAS FALSE FOR A WHILE, WHICH IS WHY IT IS SPELLED OUT NOW. This
-   * file used to say the geometry was "`PitchJewel.svelte`'s `clip-path`
-   * restated in SVG coordinates" while drawing an edge-up octagon — a chamfered
-   * square — and the jewel drew one too, against design-system cards that had
-   * always published the diamond. Two drawings, one reserved silhouette, and
-   * `docs/DESIGN.md` describing only "an eight-sided cut stone", which is true
-   * of both. Nothing failed; the logo was simply not the shape the identity
-   * said it was. Both are the diamond now, declared together in `../index`.
+   * Optfall joins things. A card to the rule that governs it, a rule back to
+   * every card that prints its keyword, a printing to its legality and to the
+   * upstream flags that produced it. `docs/SCRYFALL-GAP.md` calls the card↔rules
+   * cross-reference "the join nothing currently makes", and it is the one thing
+   * here that no other tool has. A chain is that, drawn.
    *
-   * Following `PitchJewel.svelte` in every convention — styles name tokens and
-   * nothing else, square corners, a light top edge and a dark bottom one, and
-   * an accessible name that is a prop with a sensible default rather than
-   * something a caller can forget.
+   * THE INTERLOCK IS PURE PAINT ORDER — no mask, no subtraction, no cut edges.
+   * Each link crosses its neighbour twice, and a real chain is on top at one
+   * crossing and under at the other. Drawing left to right settles both the
+   * same way, which reads as one ring lying flat over another; redrawing a link
+   * inside a rectangle that contains only its UPPER crossing puts it back on
+   * top there and nowhere else. The rectangles come from `MARK_GEOMETRY` and
+   * sit in the empty band between each pair's two crossings, so nothing is ever
+   * clipped through a link's own edge — which is what earlier attempts did, and
+   * why they produced odd angled bites out of the rings.
    *
-   * COMPLIANCE IS WHY IT HAS THIS FORM AT ALL. LSS's policy does not merely
-   * prohibit using their logos — it prohibits creating any *close semblance* to
-   * them, which rules out an angular-chiselled wordmark in their idiom even
-   * drawn from scratch. So this takes the register (angular, chiselled, struck
-   * from metal) and nothing of the form, because it is drawn from a game
-   * MECHANIC rather than from a visual identity: a jewel is a mechanic, and a
-   * mechanic cannot be confused with a trademark. Nothing here is heraldic,
-   * bladed or lettered, and nothing here may drift that way later.
+   * IT IS DRAWN AS AN SVG BECAUSE IT HAS TO SURVIVE A FAVICON — and the honest
+   * finding is that at three links it does NOT. Measured at 16px the chain is a
+   * smudge, so `apps/site/src/pages/favicon.svg.ts` draws ONE link, upright,
+   * from `MARK_GEOMETRY.single`. That is the same path under a different
+   * transform rather than a second drawing: the favicon is a link of this
+   * chain, which is the relationship the geometry constant exists to guarantee.
    *
-   * IT IS DRAWN AS AN SVG BECAUSE IT HAS TO SURVIVE A FAVICON — and it now
-   * actually is one. `apps/site/src/pages/favicon.svg.ts` emits the tab icon at
-   * build time from `MARK_GEOMETRY`, the same constant this file draws from, so
-   * the claim below is enforced by there being one set of numbers rather than
-   * asserted by two files agreeing. Two solids and a hairline, in that order of
-   * importance:
-   *
-   * 1. The **gap** between crown and pavilion is the whole idea, and it is the
-   *    last thing to disappear. The measurements are NOT restated here — they
-   *    live beside the coordinates in `MARK_GEOMETRY`, because this paragraph
-   *    carried its own copy of them and went on quoting the pre-diamond figures
-   *    after the geometry moved. The same fact written down twice is the exact
-   *    failure the shared constant exists to prevent, and a doc comment is not
-   *    exempt from it. What holds regardless of the numbers: the gap is wide
-   *    enough to survive a 16px favicon, the two halves are out of register, and
-   *    so the mark reads as *cleaved* rather than as a slotted diamond even when
-   *    the cut is a single pixel wide.
-   * 2. The two solids carry it at every size above that.
-   * 3. The hairline along the pavilion's cut face — the exposed cleavage plane —
-   *    is the first thing to go, which is the correct order.
-   *
-   * The accent brackets the gap: the crown and the cut face are the parts that
-   * are *new*, so blood marks the break. Blood is chrome rather than data in
-   * this system, and a logo is chrome — this is one of the two places boldness
-   * is allowed to be spent.
-   *
-   * The pavilion is `currentColor` rather than a fill of its own, which is what
-   * lets the forced-colours fallback at the bottom of the style block collapse
-   * the whole mark onto system ink and still leave it legible: the gap survives
-   * with no colour at all, and colour never carried the meaning here. It is
-   * also what lets the mark take the ink of the wordmark it is set beside
-   * rather than asserting its own — see the note on `color` below, which is
-   * the half of that arrangement that was wrong at first.
-   *
-   * The displacement is deliberately physical rather than logical. A mark is
-   * not mirrored in RTL — the cleave falls the same way in every writing
-   * direction, so this is one of the few places `inset-inline` would be wrong.
-   *
-   * NAMING AND HIDING ARE TWO QUESTIONS, AND CONFLATING THEM IS HOW A LOGO
-   * LOSES ITS NAME. A default parameter fires on `undefined` alone, so
-   * `title=""` type-checked its way to `<title></title>` and an
-   * `aria-labelledby` resolving to the empty string — an unnamed `role="img"`,
-   * which is the `svg-img-alt` violation the doc line above claims is designed
-   * out. Worse, `title=""` was the only spelling available to the caller who
-   * legitimately wanted the mark silent: beside a visible "Optfall" wordmark
-   * the name is a duplicate, and the correct rendering there is a decoration.
-   * So `title` is now uncrushable (`?.trim() ||`, the idiom from
-   * `PitchJewel.svelte`) and `decorative` is the supported way to say
-   * "presentational" out loud. Name it or hide it — never accidentally both.
+   * NOT SQUARE, AND THE SIZING FOLLOWS. The chain is about twice as wide as it
+   * is tall, so the component sets a HEIGHT from `ornament.mark.*` and lets the
+   * `viewBox` supply the width. A square box would letterbox it, and writing
+   * both numbers would put a second copy of the aspect ratio somewhere it could
+   * drift from the geometry.
    */
 
   import { MARK_GEOMETRY } from "../index";
@@ -88,21 +44,40 @@
     /** Rendered size, in token steps rather than pixels. */
     size?: "sm" | "md" | "lg";
     /**
+     * Which fill set.
+     *
+     * `pitch` is canonical: the three links carry the three pitch values, red,
+     * yellow and blue. `docs/DESIGN.md` rations colour to data and reserves the
+     * pitch palette for pitch — and this is the one sanctioned exception,
+     * argued there: the mark is not a card, so its links are not a pitch
+     * *value*. They are the three-value system itself, spent once, as identity.
+     *
+     * `ink` is the alternate for surfaces that cannot take three colours — and
+     * it is the more legible of the two when small, which is worth knowing
+     * before choosing.
+     */
+    variant?: "pitch" | "ink";
+    /**
      * Accessible name. The product's name is the right default for a logo, and
      * it cannot be emptied — a blank falls back rather than through. To
      * suppress the name, say so with `decorative`.
      */
     title?: string;
     /**
-     * Render the mark as pure decoration: `aria-hidden`, with no role, no
-     * name and no `<title>` child. For the one case where the name is already
-     * on the page — the mark sitting beside a visible "Optfall" wordmark,
-     * where announcing it twice is noise rather than information.
+     * Render the mark as pure decoration: `aria-hidden`, with no role, no name
+     * and no `<title>` child. For the one case where the name is already on the
+     * page — the mark beside a visible "Optfall" wordmark, where announcing it
+     * twice is noise rather than information.
      */
     decorative?: boolean;
   }
 
-  const { size = "md", title = "Optfall", decorative = false }: Props = $props();
+  const {
+    size = "md",
+    variant = "pitch",
+    title = "Optfall",
+    decorative = false,
+  }: Props = $props();
 
   /** A blank name is a missing name, and a logo's name is never missing. */
   const name = $derived(title?.trim() || "Optfall");
@@ -114,10 +89,22 @@
    * the mark twice — header and footer — does not emit a duplicate id.
    */
   const titleId = $props.id();
+
+  /**
+   * Clip ids have to be unique per instance for the same reason.
+   *
+   * A page rendering the mark twice would otherwise emit two `clipPath`s with
+   * one id, and every reference resolves to the first — so the second mark's
+   * scopes would clip against the first's rectangles. On a page where both are
+   * the same size that is invisible; at two different sizes it is a mark with
+   * its interlock silently inside out.
+   */
+  const scopeId = (index: number): string => `${titleId}-scope-${index}`;
 </script>
 
 <svg
   class="mark {size}"
+  data-variant={variant}
   viewBox={MARK_GEOMETRY.viewBox}
   role={decorative ? undefined : "img"}
   aria-hidden={decorative ? "true" : undefined}
@@ -128,58 +115,46 @@
     <title id={titleId}>{name}</title>
   {/if}
 
-  <!-- The crown: the diamond above the break — its apex, its two upper cut
-       corners, and the parted edge. That edge is off level, because a crystal
-       parts along its own lattice rather than along a saw line, and the tilt is
-       most of what keeps the mark from reading as a lid on a box. -->
-  <polygon class="crown" points={MARK_GEOMETRY.crown} />
+  <defs>
+    {#each MARK_GEOMETRY.scopes as scope, index (index)}
+      <clipPath id={scopeId(index)}>
+        <rect x={scope.x} y={scope.y} width={scope.width} height={scope.height} />
+      </clipPath>
+    {/each}
+  </defs>
 
-  <!-- The pavilion: the diamond below the break, keeping the girdle — the
-       stone's widest points — and tapering to the bottom apex. Deeper than the
-       crown, as a cut stone's is, and fallen: clear of the plane and out of
-       register with it, so the two halves no longer line up along the edge they
-       parted on. This is the half that still reads as the jewel. -->
-  <polygon class="pavilion" points={MARK_GEOMETRY.pavilion} />
+  <!-- Every link, left to right. This settles the LOWER crossing of each pair:
+       the right-hand link is drawn later, so it lies over its neighbour. -->
+  {#each MARK_GEOMETRY.placements as placement, index (index)}
+    <g transform={placement}>
+      <path class="link" data-link={index} d={MARK_GEOMETRY.link} fill-rule="evenodd" />
+    </g>
+  {/each}
 
-  <!-- The cleavage plane, freshly exposed along the pavilion's cut face.
-       Geometry comes from `MARK_GEOMETRY` so the favicon draws the same stone;
-       only colour comes from the style block. -->
-  <line
-    class="cleave"
-    x1={MARK_GEOMETRY.cleave.x1}
-    y1={MARK_GEOMETRY.cleave.y1}
-    x2={MARK_GEOMETRY.cleave.x2}
-    y2={MARK_GEOMETRY.cleave.y2}
-    stroke-width={MARK_GEOMETRY.cleave.width}
-  />
+  <!-- And the UPPER crossing of each pair, by redrawing the left-hand link
+       inside a rectangle that contains only that crossing. Same path, same
+       transform, same fill — the only thing added is where it is allowed to
+       appear. -->
+  {#each MARK_GEOMETRY.scopes as scope, index (index)}
+    <g clip-path="url(#{scopeId(index)})">
+      <g transform={MARK_GEOMETRY.placements[scope.link]}>
+        <path class="link" data-link={scope.link} d={MARK_GEOMETRY.link} fill-rule="evenodd" />
+      </g>
+    </g>
+  {/each}
 </svg>
 
 <style>
   .mark {
     display: inline-block;
-    inline-size: var(--of-ornament-jewel-base);
-    block-size: var(--of-ornament-jewel-base);
 
-    /* THE PAVILION TAKES THE INK OF WHATEVER THE MARK IS LOCKED UP WITH.
-       This was `var(--of-color-ink)`, which reads as a harmless default and is
-       not one: an element's own `color` beats an inherited one, so the mark
-       ignored its surroundings. In the header bar — where the wordmark is
-       deliberately quiet, at `--of-color-ink-muted` — that put a full-ink stone
-       beside a muted word and left the mark unchanged on hover, so the lockup
-       lit up in halves. Inheriting is what makes it one object.
-
-       Nothing is lost by dropping the token, but that holds only because the
-       surfaces that render this component spend it on the document —
-       `BaseLayout.astro`, `.storybook/preview.ts` and the a11y harness all set
-       `--of-color-ink` on `body` — so a mark standing on its own resolves to
-       exactly the value this line used to name. A surface that sets no `color`
-       at all gets its host's text colour instead, which is what inheriting
-       means and why the workbench had to stop being such a surface. */
-    color: inherit;
+    /* Height is set and width follows from the viewBox — see the note at the
+       top of this file for why both would be one number too many. */
+    block-size: var(--of-ornament-mark-base);
+    inline-size: auto;
 
     /* Struck, not printed: a light top edge and a dark bottom one, carried on
-       the alpha silhouette so the bevel needs no extra geometry and cannot be
-       mistaken for a ninth side. */
+       the alpha silhouette so the bevel needs no extra geometry. */
     filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
       drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
 
@@ -189,38 +164,68 @@
   }
 
   .sm {
-    inline-size: var(--of-ornament-jewel-small);
-    block-size: var(--of-ornament-jewel-small);
+    block-size: var(--of-ornament-mark-small);
   }
 
   .lg {
-    inline-size: var(--of-ornament-jewel-large);
-    block-size: var(--of-ornament-jewel-large);
+    block-size: var(--of-ornament-mark-large);
   }
 
-  .crown {
-    fill: var(--of-color-accent);
+  /*
+    THE CANONICAL FILL IS THE PITCH PALETTE, one link per value, in order. It is
+    the one place this system spends pitch colour on something that is not a
+    pitch value — argued in `docs/DESIGN.md`, and the argument is that the mark
+    is not a card: the links are the three-value system itself rather than any
+    one of its values.
+  */
+  .mark[data-variant="pitch"] .link[data-link="0"] {
+    fill: var(--of-color-pitch-one);
   }
 
-  .pavilion {
+  .mark[data-variant="pitch"] .link[data-link="1"] {
+    fill: var(--of-color-pitch-two);
+  }
+
+  .mark[data-variant="pitch"] .link[data-link="2"] {
+    fill: var(--of-color-pitch-three);
+  }
+
+  /*
+    The alternate: ink on the outside, blood in the middle. Blood is chrome in
+    this system and a logo is chrome, so the accent is spent on exactly one
+    link — and the outer two inherit, so the mark takes the ink of whatever it
+    is locked up with rather than asserting its own.
+  */
+  .mark[data-variant="ink"] .link {
     fill: currentColor;
   }
 
-  .cleave {
-    stroke: var(--of-color-accent);
+  .mark[data-variant="ink"] .link[data-link="1"] {
+    fill: var(--of-color-accent);
   }
 
-  /* Forced colours: the palette is replaced wholesale, so the mark is allowed
-     to collapse to a single system ink. It still reads, because the gap — not
-     the colour — is what says "cleaved". */
-  @media (forced-colors: active) {
-    .crown,
-    .pavilion {
-      fill: CanvasText;
-    }
+  /*
+    Forced colours: the palette is replaced wholesale, so the mark collapses to
+    a single system ink. It still reads, because the interlock — not the colour
+    — is what says "chain".
 
-    .cleave {
-      stroke: CanvasText;
+    THE SELECTORS HERE MATCH THE VARIANT RULES ABOVE, AND THEY HAVE TO. The
+    first version of this was `.mark .link` (0-2-0), which the variant rules
+    beat at 0-4-0 — so in Windows High Contrast the mark kept its pitch blues
+    against a forced background and the collapse this block exists to perform
+    never happened. The rules it replaced were the same specificity as the
+    override and lost only to source order, so the attribute selectors turned a
+    working guarantee into a dead one. Written out per variant rather than
+    hoisted behind `:where()`, because the point is to be no less specific than
+    what it is overriding and that is easier to check than to reason about.
+  */
+  @media (forced-colors: active) {
+    .mark[data-variant="pitch"] .link[data-link="0"],
+    .mark[data-variant="pitch"] .link[data-link="1"],
+    .mark[data-variant="pitch"] .link[data-link="2"],
+    .mark[data-variant="ink"] .link,
+    .mark[data-variant="ink"] .link[data-link="1"] {
+      fill: CanvasText;
     }
 
     .mark {
