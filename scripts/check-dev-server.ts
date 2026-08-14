@@ -112,6 +112,24 @@ if (!slug) {
   process.exit(1);
 }
 
+/*
+ * A PRINTING ROUTE TOO, BECAUSE IT IS A DIFFERENT SHAPE OF ROUTE.
+ *
+ * `/card/<slug>` is one path segment matched by `[...slug]`; a printing is
+ * three. Astro's rest parameter is what makes the second work, and "the rest
+ * parameter matches multiple segments" is exactly the kind of assumption that
+ * holds in a static build and fails in dev's on-demand resolver — which is the
+ * asymmetry this whole file exists to catch.
+ */
+const printingSlug = CARD_ROUTES.find((route) => route.kind === "printing")?.slug;
+
+if (!printingSlug) {
+  console.log(
+    "::error::No printing route exists, so the multi-segment card path is unchecked. See PRINTING_ROUTES in cards.ts.",
+  );
+  process.exit(1);
+}
+
 const checks: Check[] = [
   { path: "/", contentType: "text/html" },
   { path: "/search", contentType: "text/html" },
@@ -124,6 +142,7 @@ const checks: Check[] = [
    */
   { path: "/favicon.svg", contentType: "image/svg+xml" },
   { path: `/card/${slug}`, contentType: "text/html" },
+  { path: `/card/${printingSlug}`, contentType: "text/html" },
 ];
 
 /*

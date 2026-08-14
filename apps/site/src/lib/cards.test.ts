@@ -36,6 +36,7 @@ import {
   FORMATS,
   LAST_CONFIRMED,
   NAME_PAGES,
+  facesOf,
   hrefForSlug,
   labelFor,
   pitchValueOf,
@@ -341,15 +342,56 @@ describe("addressing", () => {
   test("every route has a distinct slug, so no card is unreachable", () => {
     const slugs = CARD_ROUTES.map((route) => route.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
-    expect(CARD_ROUTES.length).toBe(CARD_PAGES.length + NAME_PAGES.length);
+
+    const printings = CARD_ROUTES.filter((route) => route.kind === "printing");
+    expect(CARD_ROUTES.length).toBe(
+      CARD_PAGES.length + NAME_PAGES.length + printings.length,
+    );
     expect(CARD_PAGES.length).toBe(4941);
     expect(NAME_PAGES.length).toBe(900);
-    expect(CARD_ROUTES.length).toBe(5841);
+    // One per NON-DEFAULT face: 11,378 distinct arts less the 4,941 that are
+    // already a card page's own picture. See `PRINTING_ROUTES`.
+    expect(printings.length).toBe(6437);
+    expect(CARD_ROUTES.length).toBe(12278);
   });
 
   test("no slug is empty, and none contains anything but a-z, 0-9 and hyphen", () => {
+    /*
+     * THE ALPHABET IS ASSERTED PER SEGMENT, NOT PER SLUG, and it caught
+     * something. A printing route is three segments — `head-jab-1/ksu/011` —
+     * so the old whole-string pattern could only have been satisfied by
+     * loosening it to admit `/`, and a pattern loosened to let a new case pass
+     * stops checking the old ones.
+     *
+     * Splitting first keeps the rule exactly as strict as it was on every
+     * segment while letting the path have more than one. That strictness is
+     * load-bearing: it is what failed on `dtd/009-mv_back` and `out/042.original`,
+     * the 225 addresses where upstream's file-name alphabet had leaked into the
+     * URL space. `numberFor` slugifies because this test refused them.
+     */
     for (const route of CARD_ROUTES) {
-      expect(route.slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      expect(route.slug).not.toBe("");
+      for (const segment of route.slug.split("/")) {
+        expect(segment).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      }
+    }
+  });
+
+  test("a printing route names a face the card's picker actually shows", () => {
+    /*
+     * The invariant that makes these addresses rather than guesses: every
+     * printing route points at a face of the card it hangs off, and never at
+     * face 0 — which has the card's own URL and does not need a second one.
+     */
+    for (const route of CARD_ROUTES) {
+      if (route.kind !== "printing") continue;
+
+      const faces = facesOf(route.page.card);
+      expect(faces[route.index]?.key).toBe(route.ref.key);
+      expect(route.index).toBeGreaterThan(0);
+      expect(route.slug).toBe(
+        `${route.page.slug}/${route.ref.setCode}/${route.ref.number}`,
+      );
     }
   });
 

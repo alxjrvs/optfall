@@ -50,6 +50,8 @@
     readonly height: number;
     readonly thumbWidth: number;
     readonly thumbHeight: number;
+    /** This printing's own page — `/card/<slug>/<set>/<number>`. */
+    readonly href: string;
   }
 
   interface Props {
@@ -58,9 +60,11 @@
     alt: string;
     /** The card's label, for the group's accessible name. */
     label: string;
+    /** Which face the server already rendered. See `CardEntry`'s `selected`. */
+    selected?: number;
   }
 
-  const { printings, alt, label }: Props = $props();
+  const { printings, alt, label, selected: initial = 0 }: Props = $props();
 
   /**
    * WHICH PRINTING, IN THE URL — so "the rainbow foil one" is a thing you can
@@ -88,12 +92,37 @@
     return printing.key.replace(/\.webp$/, "");
   }
 
+  /**
+   * WHERE THE SELECTION COMES FROM, IN PRIORITY ORDER.
+   *
+   * 1. The PATH, resolved by the server — `initial`. A per-printing URL is a
+   *    page now, so by the time this component runs the correct face is already
+   *    in the DOM and the only right thing to do is agree with it.
+   * 2. `?printing=`, for links pasted before those pages existed. The param is
+   *    no longer written, but it was, and a reference tool that breaks its own
+   *    old links has failed at the one thing it is for.
+   *
+   * The query form loses to the path form deliberately: if somebody arrives at
+   * `/card/x/omn/243-cf?printing=OMN243`, the URL contradicts itself, and the
+   * half that was *served* is the half that wins.
+   */
   function selectedFromUrl(): number {
-    if (typeof window === "undefined") return 0;
+    if (typeof window === "undefined") return initial;
+
+    // The path first, and it is read from the DOCUMENT rather than from
+    // `initial`, because `remember` rewrites the path as the reader clicks.
+    // Reading the prop instead would make Back restore the face the page was
+    // *served* with rather than the one the address currently names.
+    const here = window.location.pathname.replace(/\/$/, "");
+    const byPath = printings.findIndex(
+      (printing) => printing.href.replace(/\/$/, "") === here,
+    );
+    if (byPath !== -1) return byPath;
+
     const wanted = new URLSearchParams(window.location.search).get(PARAM);
-    if (wanted === null) return 0;
+    if (wanted === null) return initial;
     const index = printings.findIndex((printing) => keyOf(printing) === wanted);
-    return index === -1 ? 0 : index;
+    return index === -1 ? initial : index;
   }
 
   let selected = $state(selectedFromUrl());
@@ -113,12 +142,23 @@
     const printing = printings[index];
     if (printing === undefined) return;
 
-    const url = new URL(window.location.href);
-    // The default printing is not named in the URL: a link should carry what
-    // somebody chose, not restate what they did not.
-    if (index === 0) url.searchParams.delete(PARAM);
-    else url.searchParams.set(PARAM, keyOf(printing));
-    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    /*
+     * THE ADDRESS BAR IS SET TO THE PRINTING'S OWN PAGE, NOT TO A QUERY ON
+     * THIS ONE — and the swap still does not navigate.
+     *
+     * This is the combination worth having. Clicking a tile changes an image,
+     * so making it a link would be a page load to move one picture. But the URL
+     * it writes has to be one that WORKS on its own: the old `?printing=` form
+     * only resolved in a browser running this component, so pasting it into a
+     * preview-generating chat window produced the default art, and pasting it
+     * to somebody with scripting off produced the default art silently.
+     *
+     * `printing.href` is a real page that renders this face server-side. So the
+     * address is now always something the reader can copy at any moment and
+     * hand to anything at all — while the interaction that produced it stayed
+     * instant.
+     */
+    window.history.replaceState({}, "", printing.href);
   }
 
   /** Back and forward have to work, which means listening for them. */
