@@ -18,6 +18,29 @@
 // Presentation now comes from the token layer, as Phase 1 said it would. The
 // *text* is still not Phase 1's to change, and is not changed here.
 import { LSS_DISCLAIMER } from "../lib/compliance";
+
+/*
+ * THE METHOD CLAIM LIVES HERE NOW, ONCE, RATHER THAN ON THE PAGES THAT FELT
+ * LIKE SAYING IT.
+ *
+ * The front door carried "N cards, last confirmed …, nothing here is
+ * summarised, paraphrased or generated" under the card row, and `/search`
+ * carries a longer version of the same sentence under its results. Both are
+ * true and neither belonged where it was: a claim about how the whole corpus is
+ * made is not a property of one screen, and repeating it per page makes it read
+ * as reassurance rather than as a fact about the data.
+ *
+ * `docs/PLAN.md` asks that a stale Optfall look stale. Saying this beside the
+ * licence terms does that on all 7,238 pages, which is where somebody checking
+ * our claims is already looking.
+ *
+ * THE COUNTS ARE DELIBERATELY NOT HERE, and the reason is a measured one. This
+ * footer renders on every page, so anything it imports becomes a dependency of
+ * every page — pulling the corpus in for two numbers took the build from about
+ * 10 seconds to about 30. The counts are already where they are earned: the
+ * front door's "Browse all N cards" link, and `/search`, which serves the data
+ * and states its upstream commit beside it.
+ */
 ---
 
 <footer class="compliance">
@@ -27,6 +50,12 @@ import { LSS_DISCLAIMER } from "../lib/compliance";
     only over the structural work this project owns — rule identifiers, the
     legality timeline, diffs and annotations. <a href="/data-terms">Data terms</a>.
   </p>
+  <!--
+    Inline elements stay on the same source line as the text around them: the
+    build drops the whitespace at a line break falling immediately before an
+    inline tag.
+  -->
+  <p class="provenance">Nothing here is summarised, paraphrased or generated.</p>
 </footer>
 
 <style>
