@@ -86,6 +86,7 @@ import { symbolForKind, type SymbolKind } from "../lib/card-symbols";
 import {
   CORPUS,
   LAST_CONFIRMED,
+  facesOf,
   hrefForSlug,
   type CardLink,
   type CardPage,
@@ -119,9 +120,23 @@ import {
 
 interface Props {
   page: CardPage;
+  /**
+   * Which face the page arrives showing — an index into the picker's list.
+   *
+   * THIS IS WHAT MAKES THE PER-PRINTING URL A PAGE RATHER THAN A HINT. The
+   * picker has read `?printing=` since it shipped, but it read it in the
+   * browser, so the server sent the default art every time and JavaScript
+   * corrected it afterwards. A reader with scripting off got the wrong picture
+   * with no indication that they had; a link preview got the wrong picture
+   * always, because nothing runs there at all.
+   *
+   * `/card/<slug>/<set>/<number>` is resolved at build time instead, so the
+   * HTML that leaves the server is already the printing that was asked for.
+   */
+  selected?: number;
 }
 
-const { page } = Astro.props;
+const { page, selected = 0 } = Astro.props;
 const { card } = page;
 
 const typeLine = card.type_text.trim();
@@ -393,6 +408,24 @@ const faceAlt = typeLine === "" ? page.label : `${page.label} — ${typeLine}`;
  * Deduplicated by face, because foiling variants share one image and two
  * identical tiles say nothing twice.
  */
+/**
+ * THE ROUTER'S LIST, NOT A SECOND ONE.
+ *
+ * `facesOf` in `cards.ts` is what `CARD_ROUTES` emits a URL from, so taking the
+ * addresses from it — rather than re-deriving them here from the same inputs —
+ * is what makes "every tile has an address and every address has a tile" true
+ * by construction instead of by two functions agreeing today.
+ *
+ * The default face is deliberately absent from this map. It has no per-printing
+ * URL, because the card's own page IS its page; see `PRINTING_ROUTES`.
+ */
+const hrefByFace = new Map(
+  facesOf(card).map((ref, index) => [
+    ref.key,
+    index === 0 ? page.href : `${page.href}/${ref.setCode}/${ref.number}`,
+  ]),
+);
+
 const printings = (() => {
   const seen = new Set<string>();
   const entries: {
@@ -407,6 +440,7 @@ const printings = (() => {
     height: number;
     thumbWidth: number;
     thumbHeight: number;
+    href: string;
   }[] = [];
 
   for (const printing of card.printings) {
@@ -433,6 +467,7 @@ const printings = (() => {
       height: normalBox.height,
       thumbWidth: thumbBox.width,
       thumbHeight: thumbBox.height,
+      href: hrefByFace.get(key) ?? page.href,
     });
   }
 
@@ -637,6 +672,7 @@ const pitchTargets = JSON.stringify(
             printings={printings}
             alt={faceAlt}
             label={page.label}
+            selected={selected}
             client:load
           />
         ) : (

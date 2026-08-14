@@ -92,13 +92,13 @@ row's subject changes, not when someone notices.*
 | Card images | six variants | two tiers, rendered | **narrowed** |
 | Image grid results | default view | grid is the default | **have** |
 | Display modes | `display:grid/checklist/text/full` | `display=grid/list` | **partial** |
-| Sort control | `order:` × 15, `dir:` | corpus order only | **gap** |
-| Printing-level URLs | `/card/<set>/<num>/<name>` | name-level only | **gap** |
+| Sort control | `order:` × 15, `dir:` | `order:` × 9, `dir:`, documented | **have** |
+| Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<name>/<set>/<num>`, 6,437 of them | **have** |
 | Duplicate collapsing | `unique:cards/prints/art` | n/a | **gap** |
 | Negation, `OR`, parentheses | yes | all three, documented at `/syntax` | **have** |
 | Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, numeric values only | **partial** |
 | Exact name | `!"Lightning Bolt"` | `!"Head Jab"`, quoted or bare | **have** |
-| Artist / flavour search | `a:`, `ft:` | declared pending; data present | **gap** |
+| Artist / flavour search | `a:`, `ft:` | `artist:`/`a:`, `flavour:`/`ft:`, separately indexed | **have** |
 | Set index and set pages | `/sets` | `/sets` and a page per set | **have** |
 | Rulings on the card | official rulings, dated | none | **gap** |
 | Random card | `/random` | `/random` | **have** |

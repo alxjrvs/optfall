@@ -1028,10 +1028,165 @@ export const NAME_PAGES: readonly NamePage[] = [...BY_NAME_SLUG.entries()]
       .filter((page): page is CardPage => page !== undefined),
   }));
 
-/** Every URL the `/card/` route emits: the cards, then the shared names. */
+/* -------------------------------------------------------------------------- */
+/* The printing as an address                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One addressable printing of a card: a distinct FACE, and where it lives.
+ *
+ * `docs/SCRYFALL-GAP.md` §5.1c: "Scryfall treats the printing as the
+ * addressable unit; so should we." This is that unit.
+ *
+ * IT IS A FACE, NOT A PRINTING ROW, and the difference is 5,124 of them. The
+ * corpus carries 16,502 printing rows and only 11,376 distinct arts, because a
+ * card printed Regular / Rainbow Foil / Cold Foil in one set is three rows
+ * sharing one image. Giving each row its own URL would mint three addresses
+ * that render the identical page — the definition of a duplicate — so the unit
+ * is the art, and the rows that share it share its address.
+ */
+export interface PrintingRef {
+  /** The face key, `MST131.webp`. Unique per distinct image. */
+  readonly key: string;
+  /** Set code, lowercased: the second path segment. */
+  readonly setCode: string;
+  /** The disambiguated collector number: the third. See {@link numberFor}. */
+  readonly number: string;
+  /** The printing row this face was first reached by. */
+  readonly printing: CardPrinting;
+}
+
+/**
+ * THE COLLECTOR NUMBER ALONE CANNOT NAME AN ART, which is the thing that
+ * decides this URL's shape.
+ *
+ * `/card/<slug>/<set>/<number>` is Scryfall's form and §5.1c asked for it
+ * directly. It does not survive contact with this corpus: measured, **1,842 of
+ * 9,283 card+set+number triples name more than one image**. `OMN243` is both
+ * the regular and the cold-foil art; `ARC123` is both the original and the
+ * Unlimited reprint. On Scryfall a collector number is unique within a set, so
+ * the question never arises; here it is wrong one time in five.
+ *
+ * WHAT UPSTREAM ALREADY DID ABOUT IT is the answer. The image file names carry
+ * the discriminator the collector number omits — `OMN243-CF`, `U-ARC123` — so
+ * the number in the URL is the FACE KEY with its set-code prefix removed:
+ *
+ *     MST131    in MST  ->  131
+ *     OMN243-CF in OMN  ->  243-cf
+ *     U-ARC123  in ARC  ->  u-arc123      (prefix does not match; kept whole)
+ *
+ * The common case reads exactly as the plan wanted, the ambiguous case reads as
+ * the art it names, and no case needs a rule about which printing "wins".
+ *
+ * The prefix is stripped rather than kept because `/card/x/mst/mst131` says
+ * "mst" twice, and it is stripped ONLY when it matches so the rule stays total:
+ * a key that does not start with its set code keeps every character it has.
+ *
+ * AND THEN IT IS SLUGIFIED, because a face key is a FILE NAME and this is a
+ * URL. Upstream's alphabet is wider than the one every other address on this
+ * site uses: measured over the corpus, 224 keys carry an underscore
+ * (`DTD009-MV_BACK`) and one carries an interior dot (`OUT042.original`). Left
+ * alone they would have been the only 225 URLs here spelled differently from
+ * the other 13,450 — and `cards.test.ts` asserts that alphabet on every route,
+ * which is how they were caught rather than shipped.
+ *
+ * Collapsing the alphabet can in principle make two keys agree; the collision
+ * check where these are assembled is what turns that from a silent overwrite
+ * into a failed build.
+ */
+function numberFor(key: string, setCode: string): string {
+  const stem = key.replace(/\.webp$/, "");
+  const prefix = setCode.toUpperCase();
+  const bare = stem.toUpperCase().startsWith(prefix)
+    ? stem.slice(prefix.length)
+    : stem;
+  return bare
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * A card's distinct faces, in corpus order, each with its address.
+ *
+ * SHARED WITH THE PICKER ON PURPOSE. `CardEntry` used to derive this list
+ * itself, and while it was the only consumer that was fine. It is not the only
+ * consumer now: the routes below emit a URL per entry, and a picker working
+ * from a different list than the router would show a printing with no address
+ * or mint an address for a printing that is not shown. One function, so the two
+ * cannot disagree.
+ */
+export function facesOf(card: Card): readonly PrintingRef[] {
+  const seen = new Set<string>();
+  const faces: PrintingRef[] = [];
+
+  for (const printing of card.printings) {
+    const key = faceKeyFor(printing.image_url);
+    if (key === null || seen.has(key)) continue;
+    seen.add(key);
+    faces.push({
+      key,
+      setCode: printing.set_id.toLowerCase(),
+      number: numberFor(key, printing.set_id),
+      printing,
+    });
+  }
+
+  return faces;
+}
+
+/** Every URL the `/card/` route emits: the cards, the shared names, the printings. */
 export type CardRoute =
   | { readonly kind: "card"; readonly slug: string; readonly page: CardPage }
-  | { readonly kind: "name"; readonly slug: string; readonly page: NamePage };
+  | { readonly kind: "name"; readonly slug: string; readonly page: NamePage }
+  | {
+      readonly kind: "printing";
+      readonly slug: string;
+      readonly page: CardPage;
+      readonly ref: PrintingRef;
+      /** Index into the picker's list — what the page renders on arrival. */
+      readonly index: number;
+    };
+
+/**
+ * The per-printing routes, and the assertion that they are addresses.
+ *
+ * ONLY THE NON-DEFAULT FACES GET ONE. A card's first face is what
+ * `/card/<slug>` already shows, so emitting `/card/<slug>/<set>/<number>` for
+ * it would be a second address for a page that has one — 4,941 duplicates, and
+ * every one of them a request to a search engine to pick a winner. 6,437 routes
+ * rather than 11,378.
+ *
+ * THE COLLISION CHECK IS A THROW, NOT A FILTER. Two faces of one card reaching
+ * the same path is a corpus shape this rule did not anticipate, and the two
+ * quiet outcomes are both bad: Astro would emit one page and silently drop the
+ * other, or the reader would get whichever won. A build that stops is the only
+ * honest response, and it stops here — at the point where the rule is written —
+ * rather than in Astro's route table where the message would name a path and
+ * not a reason. Zero collisions across the corpus today.
+ */
+const PRINTING_ROUTES: readonly CardRoute[] = CARD_PAGES.flatMap((page) => {
+  const faces = facesOf(page.card);
+  const taken = new Map<string, string>();
+
+  return faces.flatMap((ref, index): CardRoute[] => {
+    // Face 0 is the card's own page. It is not a second address for it.
+    if (index === 0) return [];
+
+    const slug = `${page.slug}/${ref.setCode}/${ref.number}`;
+    const clash = taken.get(slug);
+    if (clash !== undefined) {
+      throw new Error(
+        `Two faces of ${page.label} both address /card/${slug}: ${clash} and ${ref.key}. ` +
+          `numberFor() in cards.ts derives a printing's path segment from its face key; ` +
+          `this corpus has a shape it does not disambiguate.`,
+      );
+    }
+    taken.set(slug, ref.key);
+
+    return [{ kind: "printing", slug, page, ref, index }];
+  });
+});
 
 export const CARD_ROUTES: readonly CardRoute[] = [
   ...CARD_PAGES.map(
@@ -1040,6 +1195,7 @@ export const CARD_ROUTES: readonly CardRoute[] = [
   ...NAME_PAGES.map(
     (page): CardRoute => ({ kind: "name", slug: page.slug, page }),
   ),
+  ...PRINTING_ROUTES,
 ];
 
 /* -------------------------------------------------------------------------- */

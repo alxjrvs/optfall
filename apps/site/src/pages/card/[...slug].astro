@@ -44,6 +44,7 @@ import {
   titleFor,
   type CardRoute,
 } from "../../lib/cards";
+import { setName } from "../../lib/sets";
 
 /**
  * Every card URL, statically.
@@ -83,7 +84,7 @@ const { route } = Astro.props;
  * written rather than asserted because a `!` here would be a claim about
  * another module's invariant.
  */
-const page = route.kind === "card" ? route.page : route.page.cards[0];
+const page = route.kind === "name" ? route.page.cards[0] : route.page;
 
 /**
  * The bare-name route names the CARD; a `-N` route names a version.
@@ -120,6 +121,29 @@ const canonical = (() => {
   if (page === undefined) return undefined;
   // The name route IS the bare name; it canonicals to itself by default.
   if (route.kind === "name") return hrefForSlug(page.nameSlug);
+  /*
+   * A PRINTING PAGE IS A VIEW OF A CARD, NOT A SECOND CARD.
+   *
+   * `/card/ajani-nacatl-pariah/omn/243-cf` carries the same name, the same
+   * rules text, the same legality and the same rulings as the card's own page.
+   * One image differs. That is a near-duplicate by every measure a search
+   * engine has, and there are 6,437 of them — enough to bury the 4,941 pages
+   * that are the actual index if each one competed on its own.
+   *
+   * So the URL is real, linkable and rendered — §5.1c wanted "the alternate art
+   * one" to be a thing you can paste, and it is — while the page itself says
+   * out loud that the card is the document. Both halves are true at once, which
+   * is the whole reason `rel=canonical` exists.
+   */
+  if (route.kind === "printing") {
+    // Whatever the CARD's address is — the bare name where this is the version
+    // that page renders, its own slug otherwise. Pointing unconditionally at
+    // `page.slug` would have sent every printing of a pitch-2 card to a URL
+    // that itself canonicals elsewhere, which is a redirect chain written as
+    // metadata.
+    const isDefault = DEFAULT_SLUG_BY_NAME.get(page.nameSlug) === page.slug;
+    return hrefForSlug(isDefault ? page.nameSlug : page.slug);
+  }
   // A variant page duplicates the bare name ONLY if it is the version that
   // page renders — the lowest-pitch one. An earlier attempt compared the slug
   // to `<nameSlug>-<pitch>`, which is true of EVERY variant, so pitch 2 and
@@ -130,12 +154,32 @@ const canonical = (() => {
   return isDefault ? hrefForSlug(page.nameSlug) : undefined;
 })();
 
-const title =
-  page === undefined
-    ? ""
-    : route.kind === "name"
-      ? titleFor(page, route.page.name)
-      : titleFor(page);
+/**
+ * A PRINTING PAGE SAYS WHICH PRINTING IN ITS TITLE, and it has to.
+ *
+ * 6,437 of these exist and every one of them shares a name with the card. A
+ * browser with three of them open, a bookmark bar, a pasted link's preview
+ * card — each shows the title and nothing else, so three identical "Ajani,
+ * Nacatl Pariah" entries is the reader losing exactly the distinction they
+ * opened the pages to make.
+ *
+ * SET NAME AND COLLECTOR NUMBER, because between them they are what a player
+ * says out loud: "the Cold Foil one from Omen" is `Omen · OMN243`. The face key
+ * is not used here even though it is what the URL carries — `OMN243-CF` is an
+ * identifier, and a title is read rather than resolved.
+ */
+const title = (() => {
+  if (page === undefined) return "";
+  if (route.kind === "name") return titleFor(page, route.page.name);
+  if (route.kind === "printing") {
+    const { printing } = route.ref;
+    return titleFor(
+      page,
+      `${page.label} · ${setName(printing.set_id)} ${printing.id}`,
+    );
+  }
+  return titleFor(page);
+})();
 ---
 
 {
@@ -144,7 +188,10 @@ const title =
   section="cards"
   width="wide"
 >
-      <CardEntry page={page} />
+      <CardEntry
+        page={page}
+        selected={route.kind === "printing" ? route.index : 0}
+      />
     </BaseLayout>
   )
 }
