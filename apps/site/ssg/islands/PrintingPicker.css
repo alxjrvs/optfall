@@ -1,0 +1,191 @@
+/*
+ * `PrintingPicker`'s styles, ported from the Svelte island's scoped block. Every
+ * declaration and every comment is the original's — including the three that
+ * record bugs, because each one is a rule somebody could undo by accident.
+ */
+
+.of-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-loose);
+  /* `max-inline-size: min(fit-content, 100%)` WAS INVALID AND SILENTLY DROPPED.
+     `min()` takes numeric terms; `fit-content` is a sizing keyword, not a
+     length, so every browser discarded the declaration at parse time — leaving
+     `none`, which lost the shrink-wrap this column had BEFORE the change as well
+     as the cap it was meant to gain. Nothing in CI notices: `check-tokens.ts`
+     looks for raw colours, raw lengths and dangling `var()`s, and a well-formed
+     property with an unparseable value is none of those.
+
+     `100%` is what was actually wanted. The strip inside is `inline-size: 100%`
+     and scrolls its own overflow, so this column no longer needs to shrink-wrap
+     anything to stay inside its parent — it needs to not exceed it. */
+  max-inline-size: 100%;
+}
+
+.of-picker__rail {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+/* The rail is named for assistive technology and not on screen: the tiles say
+   what they are, and a visible "Printings of Head Jab" above them would repeat
+   the heading two rows up. */
+.of-picker__legend {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+  A PICKER, NOT A GALLERY — and the tile size is the whole difference.
+
+  The thumbs rendered at the full published `card.face.thumb` width, which is two
+  per row under a face and therefore five rows for the nine printings of Head
+  Jab: a control four times the height of the image it controls. The rail was
+  outgrowing the page it sits on.
+
+  Half the published width is still large enough to tell one piece of art from
+  another — which is the only question this control asks. Asking the host for the
+  `thumb` tier and drawing it smaller costs nothing and hands a high-DPI screen a
+  sharper picture.
+*/
+
+/*
+  ONE ROW THAT SCROLLS, NOT A WRAPPING GRID — and this is the second time this
+  control has been shortened, for the same reason in a different direction.
+
+  The auto-fill grid packs four to a row against a desktop column and two to a
+  row against a phone's, where the tiles also grow to fill it: measured on a
+  phone, four printings became two rows of oversized thumbs, half a screen of
+  rail, and the card's own NAME landed below the fold. The hero face was capped
+  for exactly that reason and the rail beneath it undid the fix.
+
+  A single row is width-independent in the way the grid was not. The tiles keep
+  one size, the strip is one tile tall on every screen, and a card with more
+  printings than fit scrolls sideways inside its own box rather than growing
+  downwards through the page. No breakpoint: the same declaration seats four on a
+  desktop and scrolls nine on a phone.
+
+  IT ALSO SETTLES A COMPLIANCE QUESTION. `CardFaceGroup` hoists one copyright
+  notice for faces "seen together", and explicitly excludes the scrolling case —
+  a reader cannot be said to see a notice with a face six rows above it. As a
+  wrapping grid this rail was that case: 22 tiles, roughly six rows, notice last.
+  As a strip the notice sits directly under a band one tile tall, on screen with
+  it at any scroll position, which is the condition the rule actually states.
+*/
+.of-picker__list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(calc(var(--of-card-face-thumb) / 2), 100%);
+  gap: var(--of-space-tight);
+  margin: 0;
+  list-style: none;
+  overflow-x: auto;
+  /* FILL THE COLUMN, DO NOT SIZE TO THE TILES. A scrolling grid's automatic size
+     is its whole content, so a seven-printing strip made this box wider than the
+     column holding it and took the page sideways. Being told to be exactly the
+     width it was given is what makes the overflow scroll instead of escape;
+     `min-inline-size: 0` is the other half, because a grid item's automatic
+     minimum is its content and would otherwise refuse. */
+  inline-size: 100%;
+  min-inline-size: 0;
+  /* ROOM FOR THE FOCUS RING, which is an `outline` with an offset and is
+     therefore drawn OUTSIDE the tile's border box. Setting `overflow-x` computes
+     `overflow-y` to `auto` as well, so this box clips on both axes now — and the
+     first tile is flush with the block-start and inline-start edges, so its ring
+     was cut on two sides. The padding is the offset plus the ring's own width. */
+  padding: calc(var(--of-space-tightest) + var(--of-bevel-width) * 2);
+  /* The scroll stops on a tile rather than between two of them. */
+  scroll-snap-type: inline proximity;
+}
+
+.of-picker__list > * {
+  scroll-snap-align: start;
+}
+
+/* The input is the control and the label is the target, so the radio itself is
+   removed from view rather than from the accessibility tree — it still takes
+   focus, still answers arrow keys, still announces its state.
+
+   `position: relative` ON THE TILE IS LOAD-BEARING, and its absence is what made
+   the strip leak. An absolutely positioned box takes its containing block from
+   the nearest POSITIONED ancestor, and `overflow` does not create one — so with
+   every ancestor unpositioned these radios resolved against the initial
+   containing block. They were neither clipped nor scrolled by the scroller: each
+   sat at its unscrolled static position, far to the right of the column on a
+   long strip, and contributed that box to the DOCUMENT's scrollable overflow.
+
+   It also fixes arrow keys. The browser scrolls the FOCUSED element into view,
+   and a radio parked at its ICB position is already "in view", so arrowing along
+   the strip scrolled the document sideways instead of revealing the next tile. */
+.of-picker__tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--of-space-tightest);
+  cursor: pointer;
+  color: var(--of-color-ink-muted);
+  text-align: center;
+}
+
+.of-picker__tile input {
+  position: absolute;
+  opacity: 0;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+}
+
+/* The selected outline goes on the wrapper: `CardFace` owns how a face is drawn,
+   and reaching past it to restyle the image would be the page restyling a
+   primitive. The width goes here too, for the same reason — the image inside is
+   already `max-inline-size: 100%`, so constraining the wrapper scales the face
+   without touching the component that drew it. */
+.of-picker__face {
+  display: block;
+  inline-size: 100%;
+  outline: var(--of-bevel-width) solid var(--of-color-rule);
+}
+
+.of-picker__tile:hover {
+  color: var(--of-color-ink);
+}
+
+/*
+  The selected tile is marked by ink AND an accent edge — two channels, because
+  "which printing am I looking at" is the only question this control exists to
+  answer.
+*/
+.of-picker__tile--current {
+  color: var(--of-color-ink);
+}
+
+.of-picker__tile--current .of-picker__face {
+  outline-color: var(--of-color-accent);
+}
+
+/* Focus lands on the hidden radio, so the ring is drawn on the tile it controls
+   — never removed, only relocated. */
+.of-picker__tile:has(input:focus-visible) .of-picker__face {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: var(--of-space-tightest);
+}
+
+.of-picker__set {
+  font-size: var(--of-type-size-micro);
+  line-height: var(--of-type-leading-tight);
+  max-inline-size: 100%;
+}
+
+.of-picker__id {
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}

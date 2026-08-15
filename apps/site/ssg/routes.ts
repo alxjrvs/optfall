@@ -23,8 +23,10 @@
  */
 
 import { Document } from "./document";
+import { cardPage } from "./pages/card.page";
 import { crPage } from "./pages/cr.page";
 import { dataTermsPage } from "./pages/data-terms.page";
+import { randomPage } from "./pages/random.page";
 import { rulePage } from "./pages/rule.page";
 import { setPage } from "./pages/set.page";
 import { setsPage } from "./pages/sets.page";
@@ -73,4 +75,6 @@ export const routes: readonly RouteRegistration[] = [
   register(setPage),
   register(crPage),
   register(rulePage),
+  register(randomPage),
+  register(cardPage),
 ];

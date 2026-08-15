@@ -1,0 +1,7 @@
+/*
+ * `RandomCard`'s style, ported from the Svelte island's scoped block.
+ */
+
+.of-random__fallback {
+  color: var(--of-color-ink-muted);
+}

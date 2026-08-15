@@ -34,11 +34,27 @@
 import "./document.css";
 import "./SiteHeader.css";
 
-/* Every PAGE's stylesheet, on the same terms as the components' — a page may
-   own CSS that is genuinely its own (an operator table is not a primitive), and
-   collecting them by glob means a new page's sheet is picked up on the day the
-   file is created. */
+/*
+ * Every PAGE's and every SHARED COMPONENT's stylesheet.
+ *
+ * A page may own CSS that is genuinely its own (an operator table is not a
+ * primitive), and so may a component that is the site's rather than the
+ * library's — `CardEntry` is 900 lines of layout for one route.
+ *
+ * THE `components` GLOB WAS MISSING AND THE CARD PAGE SHIPPED UNSTYLED. Pages
+ * are rendered by Bun and never enter Vite's graph, so a stylesheet reaches the
+ * bundle only if something Vite CAN see imports it. `ssg/islands/*` arrives
+ * through `islands.client.ts`, which is an entry; `ssg/components/*` arrives
+ * through nothing at all. `CardEntry.css` was written, correct, imported by its
+ * component, and absent from the build — 12,278 pages of unstyled markup from a
+ * build that reported success.
+ *
+ * Globbed rather than listed, so the next component's sheet is collected on the
+ * day its file is created rather than the day somebody remembers this entry.
+ */
 import.meta.glob("./pages/*.css", { eager: true });
+import.meta.glob("./components/*.css", { eager: true });
+import.meta.glob("./islands/*.css", { eager: true });
 
 /* Every component's stylesheet, collected without a list to maintain. */
 import.meta.glob("../../../packages/components/src/react/*.css", {

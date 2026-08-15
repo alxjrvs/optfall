@@ -50,7 +50,7 @@ import type { ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 
 /** Every island the client bundle knows how to hydrate. */
-export type IslandName = "RulesSearch";
+export type IslandName = "RulesSearch" | "RandomCard" | "PrintingPicker";
 
 export interface IslandProps<P> {
   /** Which component to hydrate. Must be a key of the client registry. */

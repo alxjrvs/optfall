@@ -1,7 +1,8 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
+  "exclude": ["dist", "dist-next"],
+  "$comment_dist_next": "`dist-next` is the Phase 6 generator's output and is NOT covered by `dist` — these are literal directory names, not a prefix match. Without it `astro check` type-checks the minified React bundle the generator emitted, which is 900 kB of machine-written JavaScript and produces pages of errors about code nobody wrote. Biome needed the same line for the same reason.",
   "compilerOptions": {
     // `astro check` is the ONLY thing that type checks apps/site — the
     // repository-root tsconfig covers `packages/*/src` and `scripts`, not this

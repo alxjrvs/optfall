@@ -1,0 +1,965 @@
+/*
+ * `CardEntry`'s styles, ported from the Astro component's scoped block. Every
+ * declaration and every comment is the original's; the class names gained an
+ * `of-card__` prefix because Svelte and Astro both scoped them per component and
+ * a global sheet does not.
+ *
+ * THREE NAMES ARE DELIBERATELY NOT PREFIXED TO THIS COMPONENT. `.of-lineage` is
+ * the breadcrumb `/sets/<code>` defines, and `.of-card__apparatus` /
+ * `.of-apparatus__heading` are `/cr/<id>`'s — all three are reused here on
+ * purpose, and giving them a card-specific name would be a third copy of two
+ * rules that were already shared twice.
+ *
+ * ONE SHARED NAME SURVIVED AND ONE DID NOT, AND THE DIFFERENCE IS MEASURABLE.
+ * `.of-apparatus__heading` is byte-identical to the rules page's, so it is
+ * defined once, there. `.of-apparatus` was NOT: this page set
+ * `margin-block: loose` and the rules page sets `looser`. Scoped per component
+ * by Astro, both were true; merged into one global sheet, whichever loaded last
+ * silently won on both pages. The container is `of-card__apparatus` here.
+ *
+ * That is the hazard of sharing a class name across ported files, and it is
+ * worth stating rather than quietly fixing: the sharing is still right for the
+ * heading, and was wrong for the box around it.
+ */
+
+/* -- The face and its printings rail ------------------------------------- */
+
+/*
+    Layout only. `CardFace` owns everything about how a face is drawn, including
+    the copyright line it will not let a caller omit; this places it and nothing
+    more.
+  */
+/*
+    THE TWO-COLUMN FOLD, WITH NO BREAKPOINT — and that is deliberate rather
+    than clever. There is not one width media query anywhere else in this
+    repository: the system holds pages together with intrinsic sizing, and a
+    chosen pixel width would be the first arbitrary number in a codebase whose
+    lint rule exists to keep arbitrary numbers out. `check:tokens` refuses a raw
+    length here, which is the rule doing its job.
+
+    So the columns wrap when they stop fitting rather than when a designer
+    guessed they would. WHAT WAS WRONG WAS THE THRESHOLD, NOT THE TECHNIQUE.
+    The facts column asked for `card.face.normal` of preferred room beside a
+    face that is itself `card.face.normal` wide — two faces and a gutter of
+    hypothetical width, inside a `main` that every page in the site capped at
+    the prose measure, which is narrower than the two faces alone. Flex wraps
+    on hypothetical size, before shrinking is considered, so the line was over
+    budget at every viewport this site can be opened at and the fold never once
+    rendered. Two columns, in the markup, for months, always stacked.
+
+    `BaseLayout`'s `width="wide"` gives the line room; the basis below now
+    states a rule that can actually be met or missed: TWO COLUMNS WHEN THE PAGE
+    CAN SEAT A FACE BESIDE A COLUMN AT LEAST AS WIDE AS A FACE, one below that.
+    The `min(…, 100%)` is what keeps the unmet case from overflowing a phone
+    instead of wrapping on it.
+  */
+.of-card__page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--of-space-loosest);
+}
+
+.of-card__face-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-base);
+  /* Asks for a face and will give some of it back before it wraps — the
+       image is `max-inline-size: 100%` inside, so a squeezed column scales the
+       face down rather than clipping it. */
+  flex: 0 1 var(--of-card-face-normal);
+  min-inline-size: min(var(--of-card-face-thumb), 100%);
+
+  /*
+      THE FACE MAY NOT TAKE THE WHOLE WIDTH WHEN THE COLUMNS WRAP, and this is
+      the one line that fixes the card page on a phone.
+
+      Measured on a phone: the face went full-bleed, which at a 63:88 ratio is
+      well over half a screen of image, and the card's NAME — with its pitch,
+      cost and type — landed within a few lines of the bottom of the viewport.
+      Everything the card page adds on top of the printed face was below the
+      fold, on the page that is the whole point of the site.
+
+      A PERCENTAGE, NOT A BREAKPOINT, and that is deliberate rather than
+      squeamish. The comment below this one already argues that a behaviour
+      needing a media query's worth of arbitrary number is not worth having, and
+      the same reasoning applies here — so the cap is expressed as a
+      relationship that is simply slack when there is room. On a wide page the
+      flex basis binds at `card.face.normal` and this is never reached; once the
+      columns wrap and the column is the width of the screen, it binds instead
+      and the face gives back the space the facts need. One declaration, no
+      threshold, no number anybody chose.
+    */
+  max-inline-size: min(var(--of-card-face-normal), 72%);
+}
+
+/*
+    NO `position: sticky` ON THE FACE, and it was tried. Following the reader
+    down the legality list is genuinely nice on a wide screen — and the same
+    declaration, once the columns have wrapped, pins the face to the top of a
+    phone screen and scrolls the entire card underneath it. Turning it off for
+    the wrapped case needs the breakpoint this layout exists to avoid, and a
+    behaviour that is pleasant on a desktop and hostile on a phone is not worth
+    a media query's worth of arbitrary number.
+  */
+.of-card__facts-column {
+  /* `min-inline-size: 0` because a flex item's default `auto` minimum refuses
+       to shrink below its content, which a long card name would otherwise use
+       to force a horizontal scroll. */
+  flex: 1 1 min(var(--of-card-face-normal), 100%);
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  /* Tightened from `looser`. Scryfall runs its right column dense — the
+       panel, the legality grid and the rulings sit close enough to be read as
+       one document — and three of the paragraphs that used to need air here
+       have been deleted. */
+  gap: var(--of-space-loose);
+}
+
+/* -- The panel: the card, as an object ----------------------------------- */
+
+/*
+    BANDS, DIVIDED BY HAIRLINES, IN THE ORDER THE PRINTED CARD PUTS THEM.
+
+    The plate around this is a `BevelledPlate`, so the border, the bevel and the
+    padding are the component's; everything here is the division of what sits
+    inside it. A band is separated from the one above by the same hairline the
+    rest of the system separates regions with — no boxes, no shadows, no second
+    background — which is why the panel reads as one object with parts rather
+    than as four stacked cards.
+
+    The rules are inset by the plate's own padding rather than running edge to
+    edge. Full-bleed would mean reaching into `BevelledPlate` to zero its
+    padding and re-adding it per band, and a component's box is the component's
+    business — "compose, never restyle" is the project rule, and an inset rule
+    is a smaller cost than breaking it.
+  */
+.of-card__panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.of-card__band + .of-card__band {
+  margin-block-start: var(--of-space-tight);
+  padding-block-start: var(--of-space-tight);
+  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
+/*
+    THE TWO CORNER BANDS, EACH A THREE-COLUMN GRID.
+
+    A corner, the centred thing, the other corner — which is the geometry of
+    both the top of a Flesh and Blood card (pitch, name, cost) and the bottom of
+    one (attack, type, defence). The columns are `auto 1fr auto` so the corners
+    take exactly what their plates need and the middle takes the rest; the name
+    and the type line are centred inside that middle column rather than by the
+    grid, so a corner that is absent cannot slide them off-axis.
+
+    A corner that is absent renders `.of-card__corner-empty` rather than nothing, because
+    an omitted grid item would let the next one take its column and put the
+    cost where the pitch should be.
+
+    `align-items: center` on the bar and `start` on the title: a name wrapping
+    to three lines should grow downward past a jewel that stays at the top, and
+    a one-line type line should sit level with the plates beside it.
+  */
+.of-card__band--title,
+.of-card__band--bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--of-space-base);
+}
+
+.of-card__band--title {
+  align-items: start;
+}
+
+.of-card__band--bar {
+  align-items: center;
+}
+
+/*
+    Serif — the voice assigned to names — and the one size on this page that
+    has to be fluid.
+
+    THE NAME IS THE THING THAT BREAKS THE MIRROR ON A PHONE. It sits in the
+    middle column between two corners, so at `type.size.display` on a phone-width
+    viewport "Aether Flare" wraps to two lines and shoulders the jewel and the
+    cost plate to the edges of a band that is mostly gutter. The printed card is
+    no wider and puts all three on one line — it just sets the name
+    smaller when the card is smaller.
+
+    `clamp` between two steps of the scale does the same thing, and it does it
+    without the breakpoint this layout has spent its whole life avoiding: the
+    name is never smaller than `title`, never larger than `display`, and in
+    between it tracks the viewport. The middle term is the only `vw` in this
+    file and it is doing the job a media query would otherwise be hired for.
+  */
+.of-card__name {
+  margin-block: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-size: clamp(
+    var(--of-type-size-title),
+    4.5vw,
+    var(--of-type-size-display)
+  );
+}
+
+/* Same argument, one step down the scale: the type line shares the bottom
+     bar with up to three stat plates, and it is the only elastic thing in it. */
+.of-card__type-line {
+  margin: 0;
+  text-align: center;
+  font-family: var(--of-type-family-serif);
+  font-size: clamp(var(--of-type-size-base), 2.5vw, var(--of-type-size-large));
+  color: var(--of-color-ink-muted);
+}
+
+/*
+    The stat cluster. Still a `<dl>` — see the note in the markup — and still
+    labelled, because the glyph's silhouette is the third redundant carrier of
+    which stat it is rather than the only one.
+  */
+.of-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--of-space-base);
+  margin: 0;
+}
+
+.of-card__badges--end {
+  justify-content: flex-end;
+}
+
+.of-card__badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--of-space-tightest);
+}
+
+.of-card__badge dt {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+.of-card__badge dd {
+  margin: 0;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-title);
+  color: var(--of-color-ink);
+}
+
+/*
+    The foot of the panel: attribution and the printing count, in the fine-print
+    register the card-image copyright line already established. Present, never
+    loud — the same argument, and so the same treatment.
+  */
+.of-card__band--credits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--of-space-tight) var(--of-space-base);
+}
+
+.of-card__credit {
+  margin: 0;
+  font-size: var(--of-type-size-micro);
+  color: var(--of-color-ink-faint);
+}
+
+/* -- Rarity -------------------------------------------------------------- */
+
+.of-card__rarity {
+  display: inline-flex;
+  align-items: center;
+  /* No gap: the bubble and the remainder are one word interrupted, not two
+       elements set beside each other. */
+  margin-inline-end: var(--of-space-tight);
+}
+
+/*
+    The bubble. A disc, like the stat markers above it and for the same reason —
+    the card prints its rarity as a letter in a coloured dot in the bottom
+    margin, which is where this line sits.
+
+    The `--rarity` custom property defaults to the muted ink of the line it is
+    on, so a rarity upstream adds tomorrow renders as a plain grey bubble rather
+    than as an unset `var()` and no background at all. Each known rarity
+    overrides it below.
+  */
+.of-card__rarity-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--of-ornament-jewel-small);
+  block-size: var(--of-ornament-jewel-small);
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--rarity, var(--of-color-ink-faint));
+  color: var(--rarity-ink, var(--of-color-ground));
+  font-weight: var(--of-type-weight-bold);
+  line-height: 1;
+}
+
+.of-card__rarity-rest {
+  color: var(--of-color-ink-muted);
+}
+
+.of-card__rarity[data-rarity="common"] {
+  --rarity: var(--of-color-rarity-common);
+  --rarity-ink: var(--of-color-rarity-common-ink);
+}
+
+.of-card__rarity[data-rarity="rare"] {
+  --rarity: var(--of-color-rarity-rare);
+  --rarity-ink: var(--of-color-rarity-rare-ink);
+}
+
+.of-card__rarity[data-rarity="super"] {
+  --rarity: var(--of-color-rarity-super);
+  --rarity-ink: var(--of-color-rarity-super-ink);
+}
+
+.of-card__rarity[data-rarity="majestic"] {
+  --rarity: var(--of-color-rarity-majestic);
+  --rarity-ink: var(--of-color-rarity-majestic-ink);
+}
+
+.of-card__rarity[data-rarity="legendary"] {
+  --rarity: var(--of-color-rarity-legendary);
+  --rarity-ink: var(--of-color-rarity-legendary-ink);
+}
+
+.of-card__rarity[data-rarity="fabled"] {
+  --rarity: var(--of-color-rarity-fabled);
+  --rarity-ink: var(--of-color-rarity-fabled-ink);
+}
+
+.of-card__rarity[data-rarity="token"] {
+  --rarity: var(--of-color-rarity-token);
+  --rarity-ink: var(--of-color-rarity-token-ink);
+}
+
+.of-card__rarity[data-rarity="basic"] {
+  --rarity: var(--of-color-rarity-basic);
+  --rarity-ink: var(--of-color-rarity-basic-ink);
+}
+
+.of-card__rarity[data-rarity="marvel"] {
+  --rarity: var(--of-color-rarity-marvel);
+  --rarity-ink: var(--of-color-rarity-marvel-ink);
+}
+
+.of-card__rarity[data-rarity="promo"] {
+  --rarity: var(--of-color-rarity-promo);
+  --rarity-ink: var(--of-color-rarity-promo-ink);
+}
+
+.of-card__code-hint {
+  margin-inline-start: var(--of-space-tight);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  color: var(--of-color-ink-faint);
+}
+
+/* -- Governed by ---------------------------------------------------------- */
+
+.of-card__rules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-tight);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.of-card__rules-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--of-space-base);
+  flex-wrap: wrap;
+}
+
+/*
+    THE DEFINITION, SET AS A QUOTATION RATHER THAN AS THE CARD'S OWN TEXT.
+
+    It takes the full width of the item — `flex-basis: 100%` on a wrapping row —
+    so it sits under its citation rather than beside it, and the serif marks it
+    as prose from the rules document rather than interface text. The left rule
+    is the only ornament: it says "this is quoted" without a box, which is the
+    same argument the rest of this page makes about hairlines.
+
+    Deliberately quieter than `Printed text`. What the card says outranks what
+    the rules say about what the card says, and a reader scanning for the
+    former must not have to sort it out of the latter.
+  */
+.of-card__rules-text {
+  flex-basis: 100%;
+  margin: 0;
+  padding-inline-start: var(--of-space-base);
+  border-inline-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-small);
+  line-height: var(--of-type-leading-loose);
+  color: var(--of-color-ink-muted);
+}
+
+/* Monospaced, because in this system that means you can paste it into an
+     argument — which is the entire point of a citation. */
+.of-card__rules-citation {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-small);
+  letter-spacing: var(--of-type-tracking-wide);
+  color: var(--of-color-accent);
+}
+
+.of-card__rules-keyword {
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-base);
+  text-transform: capitalize;
+}
+
+.of-card__rules-via {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+/* -- Pitch version tabs --------------------------------------------------- */
+
+.of-card__versions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-tight);
+}
+
+.of-card__version-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--of-space-tight);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* The strip sits on a rule rather than in a box: the system separates
+       regions with hairlines, and a tab row is a region boundary by nature. */
+  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
+.of-card__version-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--of-space-tight);
+  padding: var(--of-space-tight) var(--of-space-base);
+  text-decoration: none;
+  color: var(--of-color-ink-muted);
+  /* Square, never rounded — stated rather than omitted, so a host stylesheet
+       cannot round the one control this page owns. */
+  border-radius: var(--of-bevel-radius);
+  /* Every tab reserves the selected edge, so selecting one moves no pixels. */
+  border-block-end: var(--of-bevel-width) solid transparent;
+}
+
+.of-card__version-tab:hover {
+  color: var(--of-color-ink);
+}
+
+/*
+    The current tab is marked by weight, ink AND a bevelled edge — three
+    channels, because "which version am I reading" is the single most important
+    fact on a page that shows one of three near-identical cards.
+  */
+.of-card__version-tab--current {
+  color: var(--of-color-ink);
+  border-block-end-color: var(--of-color-accent);
+}
+
+.of-card__version-label {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+}
+
+/* -- The source fold ------------------------------------------------------
+     The heading IS the summary, so the disclosure carries no second label and
+     the marker sits against the same uppercase micro type every other section
+     head uses.
+
+    `display` IS LEFT ALONE, and that is the whole rule. A `<summary>` is
+    `display: list-item`, and its disclosure triangle is the `::marker` of that
+    list item — set `inline-flex` (as this did) and Chrome drops the marker
+    entirely, leaving a fold with no affordance at all: a heading that happens
+    to be clickable, which nobody clicks. The `<h2>` inside is made inline
+    instead, which is enough to keep the triangle and the text on one line.
+  */
+.of-card__source-summary {
+  cursor: pointer;
+}
+
+.of-card__source-summary .of-apparatus__heading {
+  display: inline;
+  margin: 0;
+}
+
+.of-card__source-fold[open] .of-card__source-summary {
+  margin-block-end: var(--of-space-base);
+}
+
+/* Layout and voice assignment only. Every value is a token — no literal
+     colour, no literal length — and no media query, because a breakpoint is a
+     length the token layer has nothing to offer. Everything below wraps or
+     scrolls instead. */
+
+/* -- Breadcrumb ---------------------------------------------------------- */
+
+.of-lineage {
+  margin-block-end: var(--of-space-looser);
+}
+
+.of-card__crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-tight);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--of-type-size-small);
+}
+
+/* Generated content, so a separator never lands in copied text. */
+.of-card__crumbs li + li::before {
+  content: "›";
+  color: var(--of-color-ink-muted);
+  margin-inline-end: var(--of-space-tight);
+}
+
+.of-card__crumb-current {
+  color: var(--of-color-ink-muted);
+}
+
+/* -- Shared apparatus ---------------------------------------------------- */
+
+/*
+    Inside the facts column the gap owns the rhythm, so a margin here would be
+    added to it rather than instead of it. The margin stays for the full-width
+    sections below the fold, which are siblings in the document rather than
+    items in a flex column.
+  */
+.of-card__apparatus {
+  margin-block: var(--of-space-loose);
+}
+
+.of-card__facts-column > .of-card__apparatus {
+  margin-block: 0;
+}
+
+/*
+  THE HEADING RULE LIVED HERE TOO AND IS GONE, because it was byte-identical to
+  the one in `rule.css` — a real heading, restyled rather than downgraded to a
+  `<p>`: the level is what a screen reader navigates by, and the micro type is
+  what keeps it from shouting over the card. One definition now, in the file
+  that got there first.
+*/
+
+.of-card__scope {
+  margin-block: 0 var(--of-space-base);
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-small);
+  line-height: var(--of-type-leading-loose);
+}
+
+.of-card__void {
+  margin: 0;
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-small);
+}
+
+/*
+    THE RIGHTS NOTICE IS LEGALESE, NOT APPARATUS. It is 500 characters of
+    licence text that has to be present and does not have to compete — the same
+    argument the card-image copyright line settled, so it gets the same
+    treatment: the smallest step in the scale, tight, faint.
+  */
+.of-card__legal {
+  margin-block-start: var(--of-space-base);
+  font-size: var(--of-type-size-legal);
+  letter-spacing: var(--of-type-tracking-tight);
+  line-height: var(--of-type-leading-base);
+  color: var(--of-color-ink-faint);
+}
+
+.of-card__verify {
+  margin-block: var(--of-space-base) 0;
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-micro);
+  line-height: var(--of-type-leading-loose);
+}
+
+/* The printed marker sits beside its word, at the label’s own baseline.
+     Rehomed from `.stat dt` onto `.of-card__badge dt` when the stat block became two
+     bands of the panel — the symbols are the same fact in the same place, and
+     the selector followed the markup rather than the markup being kept for the
+     selector. */
+/* The letter chip that used to sit here beside each stat's word is gone. It
+     paired the label with the inline marker — "Power {p}" — and earned its
+     place while the marker was an abstract plate that had to be taught. The
+     markers are the card's own disc and shield now, so the chip was teaching
+     what the reader already recognised, twice per card, in the tightest line on
+     the page. `GameSymbol` is unchanged and still renders inline in the text,
+     which is the place a marker is met cold. */
+.of-card__badge dt {
+  display: flex;
+  align-items: center;
+  gap: var(--of-space-tighter);
+}
+
+/* -- Printed text -------------------------------------------------------- */
+
+/* The `.card-text` rule that lived here moved into `PrintedText.astro` along
+     with the markup it styled. It is deleted rather than left behind: a scoped
+     rule matching no element in its own component is dead weight that reads,
+     to the next person, like the styling is still handled here. */
+
+/* -- Attributes ---------------------------------------------------------- */
+
+.of-card__attributes {
+  display: grid;
+  gap: var(--of-space-base);
+  margin: 0;
+}
+
+.of-card__attribute {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-base);
+}
+
+.of-card__attribute dt {
+  flex: 0 0 auto;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-muted);
+}
+
+.of-card__attribute dd {
+  flex: 1 1 60%;
+  margin: 0;
+  font-size: var(--of-type-size-small);
+}
+
+.of-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--of-space-tight);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Not a `StatePill`: a keyword is not a state, and the notch means "this
+     carries state" everywhere else in the system. A hairline outline is the
+     honest weight for a tag. */
+.of-card__tag {
+  padding-block: var(--of-space-tightest);
+  padding-inline: var(--of-space-tight);
+  border: var(--of-bevel-width) solid var(--of-color-rule);
+  border-radius: var(--of-bevel-radius);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  color: var(--of-color-ink-muted);
+}
+
+/* -- Legality ------------------------------------------------------------ */
+
+/*
+    A GRID OF ROWS, WHICH IS WHAT A LEGALITY TABLE IS.
+
+    Each verdict is a format name and one or two pills — a row — and six rows
+    stacked full-width with a serif heading apiece ran the length of a screen
+    to say six short things. Two-up, they are one glance.
+
+    The column minimum is a length the token layer cannot supply, so it is
+    derived from one it can: one and a half thumbs is the width at which the
+    longest format name this corpus has ("Classic Constructed") and the longest
+    pill it can carry ("Living Legend") still sit on one line together. Below
+    that the grid drops to one column on its own, which is the right behaviour
+    in the wrapped layout and on a phone.
+  */
+.of-card__formats {
+  display: grid;
+  grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(calc(var(--of-card-face-thumb) * 1.5), 100%), 1fr)
+    );
+  gap: var(--of-space-tight) var(--of-space-loose);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+    The name and the verdict on one line, pushed to opposite edges — so the
+    pills form a readable column of their own down the right of each grid
+    column, and a reader scanning for "is it banned anywhere" scans one edge
+    rather than six paragraphs.
+  */
+.of-card__format {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--of-space-tight);
+  padding-block: var(--of-space-tighter);
+  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
+/* Demoted from the serif large it used to carry. It is a row label now, not a
+     subsection heading, and the pill beside it is the thing worth reading. */
+.of-card__format-name {
+  margin-block: 0;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-small);
+  letter-spacing: var(--of-type-tracking-normal);
+  color: var(--of-color-ink-muted);
+}
+
+.of-card__states {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: var(--of-space-tight);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.of-card__state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--of-space-tighter);
+}
+
+.of-card__since {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  color: var(--of-color-ink-muted);
+}
+
+/* Not a pill and deliberately quiet: it is the absence of a claim, and it
+     must not read as one of the states beside it. */
+.of-card__unknown {
+  margin: 0;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+/* The full-cycle note belongs to its row rather than to the grid, so it takes
+     the whole of that row's width underneath the pills. */
+.of-card__format .of-card__scope {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--of-type-size-micro);
+}
+
+/* -- Printings ----------------------------------------------------------- */
+
+/* The table is the one thing on this page that can genuinely exceed the
+     measure — 50 printings of seven columns — so it scrolls inside its own box
+     rather than making the document scroll sideways. */
+.of-card__scroller {
+  overflow-x: auto;
+}
+
+/*
+    A FLOOR, SO WRAPPING DEGRADES INTO SCROLLING RATHER THAN INTO SHREDDING.
+
+    Letting the cells wrap fixed the over-wide table, and then over-fixed it:
+    given a phone and seven columns, the browser dutifully fits by breaking "No
+    specified edition (used for promos, non-set releases, etc.)" one word per
+    line, turning every row into a ten-line ribbon. Narrower is not the same as
+    more readable.
+
+    So the table is never allowed below one measure. On a wide page that floor is
+    slack and the cells wrap where they like; on a phone the table exceeds its
+    box and `.of-card__scroller` does what it was always there to do. A seven-column
+    table on a phone has to give up SOMETHING, and a sideways scroll inside one
+    box is a smaller loss than a column of single words.
+  */
+.of-card__printings {
+  inline-size: 100%;
+  min-inline-size: var(--of-type-measure);
+  border-collapse: collapse;
+  font-size: var(--of-type-size-small);
+}
+
+/*
+    NOWRAP WAS ON EVERY CELL, AND ONE CELL IS A SENTENCE.
+
+    `N` decodes to "No specified edition (used for promos, non-set releases,
+    etc.)" — upstream's own gloss, 60 characters of it, and it is the commonest
+    edition in the corpus. Held on one line it made the Edition column wider than a
+    phone and the whole table wider than two of them — a table two and a half
+    screens across with the artist and the other face off the right of it.
+
+    So cells wrap by default and only the identifiers hold their line: a
+    collector number or a set code broken across two lines is no longer a
+    citation, which is the thing nowrap was for. The table still scrolls inside
+    `.of-card__scroller` when it has to — it just very rarely has to now.
+  */
+.of-card__printings th,
+.of-card__printings td {
+  padding-block: var(--of-space-tight);
+  padding-inline-end: var(--of-space-base);
+  text-align: start;
+  vertical-align: baseline;
+  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
+/*
+  `.code` WENT WITH THE PORT, because it had already gone from the markup. It was
+  declared twice — here and beside `.of-card__collector` — and the Astro component
+  used it zero times. Astro does not prune unused scoped selectors, so it shipped
+  on all 4,941 card pages describing an element that did not exist. The same
+  file's own comment about the deleted legend makes exactly this point about
+  exactly this hazard.
+*/
+
+/*
+  The citable identity of a printing, so one click takes all of it.
+
+  DECLARED BEFORE THE COMPOUND SELECTOR BELOW, not after it. Both orders render
+  identically — the compound rule is more specific and wins wherever they
+  overlap, whichever comes first — but a low-specificity rule sitting after a
+  high-specificity one that includes it is a cascade a reader has to simulate
+  rather than read. The original had them the other way round and nothing
+  noticed, because nothing was checking.
+*/
+.of-card__collector {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-small);
+  letter-spacing: var(--of-type-tracking-wide);
+  color: var(--of-color-ink);
+  font-weight: var(--of-type-weight-medium);
+  user-select: all;
+}
+
+.of-card__printings thead th,
+.of-card__printings .of-card__collector,
+.of-card__printings .of-card__code-hint {
+  white-space: nowrap;
+}
+
+.of-card__printings thead th {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-medium);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-muted);
+}
+
+.of-card__flavour {
+  margin-block-start: var(--of-space-looser);
+}
+
+/* Serif, because flavour text is prose rather than data — and italic, which
+     is how it is set on the card itself. */
+.of-card__flavour-text {
+  font-family: var(--of-type-family-serif);
+  font-style: italic;
+  color: var(--of-color-ink-muted);
+}
+
+/* -- Related ------------------------------------------------------------- */
+
+.of-card__related {
+  margin-block-end: var(--of-space-looser);
+}
+
+.of-card__related-name {
+  margin-block: 0 var(--of-space-tight);
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-large);
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink);
+}
+
+.of-card__links {
+  display: grid;
+  gap: var(--of-space-tight);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.of-card__link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--of-space-tight);
+}
+
+/* -- Provenance ---------------------------------------------------------- */
+
+.of-card__provenance {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: var(--of-space-tight) var(--of-space-loose);
+  margin: 0;
+}
+
+.of-card__provenance dt {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-muted);
+  white-space: nowrap;
+}
+
+.of-card__provenance dd {
+  margin: 0;
+  font-size: var(--of-type-size-small);
+}
+
+.of-card__source-url,
+.of-card__hash {
+  overflow-wrap: anywhere;
+}
+
+/* The table caption names the table for a screen reader without repeating the
+     `<h2>` on screen. Sized from `space.hair` rather than collapsed to zero: a
+     zero-area element is skipped by some screen readers. Idiom copied verbatim
+     from `RulesSearch.svelte`. */
+.of-card__visually-hidden {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
