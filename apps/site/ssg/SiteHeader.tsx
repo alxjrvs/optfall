@@ -78,17 +78,16 @@ export function SiteHeader({ section, field = true }: SiteHeaderProps) {
             Search the cards
           </label>
           {/*
-            THE CHAIN, HERE TOO. This bar hand-writes its own form rather than
-            using `SearchField` — a narrower control with a hidden label and no
-            hint, which the primitive does not have a variant for — and the
-            consequence was that the mark appeared inside the search box on the
-            front door and nowhere else. Two implementations of one control is
-            already the thing §6a wanted collapsed; until it is, the two at least
-            look like the same object.
+            NO CHAIN IN THIS FIELD, DELIBERATELY. `SearchField` puts the mark
+            inside the well because there it is the only thing on the page
+            telling you what you are about to search. Here the wordmark's chain
+            is already a few pixels to the left, so a second one says nothing the
+            first has not — two identical marks on one row read as a rendering
+            mistake rather than as branding. The argument for matching the
+            primitive was consistency between two implementations of one control;
+            consistency is not worth a duplicate glyph, and the header's field is
+            the one place the primitive's reason for the mark does not hold.
           */}
-          <span className="of-bar__find-mark" aria-hidden="true">
-            <Mark size="sm" decorative />
-          </span>
           <input
             id="site-search"
             className="of-bar__field"
