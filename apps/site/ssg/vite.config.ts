@@ -15,6 +15,7 @@
 
 import { fileURLToPath } from "node:url";
 
+import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -22,6 +23,13 @@ const appRoot = fileURLToPath(new URL("..", import.meta.url));
 export default defineConfig({
   root: appRoot,
   base: "/",
+  /*
+   * THE ISLAND ENTRY IS TSX, SO THE BUILD NEEDS A JSX PARSER. Without this the
+   * bundle fails with "JSX syntax is disabled" — which is the correct error and
+   * an easy one to misread as a tsconfig problem, since `tsc` compiles the same
+   * files happily. `tsc` reads `jsx` from the tsconfig; the bundler does not.
+   */
+  plugins: [react()],
   build: {
     outDir: fileURLToPath(new URL("../dist-next", import.meta.url)),
     // NEVER TRUE. `build.ts` renders the pages into this directory before this
@@ -33,6 +41,17 @@ export default defineConfig({
     rollupOptions: {
       input: {
         styles: fileURLToPath(new URL("./styles.entry.ts", import.meta.url)),
+        /*
+         * The islands, as ONE bundle rather than one per island. A page
+         * carrying the printing picker downloads the rules search too, which is
+         * a real cost and the right trade at this size: the alternative is a
+         * chunk graph and a manifest lookup per island, to save a few kB on a
+         * site whose largest page ships a 731 kB search index inline.
+         *
+         * Revisit when an island appears that is genuinely heavy and genuinely
+         * rare. Until then, one file, one cache entry, one request.
+         */
+        islands: fileURLToPath(new URL("./islands.client.ts", import.meta.url)),
       },
     },
   },

@@ -23,6 +23,7 @@
  */
 
 import { Document } from "./document";
+import { crPage } from "./pages/cr.page";
 import { dataTermsPage } from "./pages/data-terms.page";
 import { setPage } from "./pages/set.page";
 import { setsPage } from "./pages/sets.page";
@@ -33,7 +34,7 @@ import type { PageModule } from "./types";
 /** One URL, and the bytes to write at it. */
 export interface ResolvedPage {
   readonly route: string;
-  readonly render: (styles: readonly string[]) => string;
+  readonly render: (styles: readonly string[], islandScript?: string) => string;
 }
 
 export interface RouteRegistration {
@@ -50,9 +51,14 @@ function register<Params extends Record<string, string>, Props>(
     resolve: () =>
       resolveRoutes(module).map((resolved) => ({
         route: resolved.route,
-        render: (styles: readonly string[]) =>
+        render: (styles: readonly string[], islandScript?: string) =>
           renderRoute(resolved, (result) =>
-            Document({ result, route: resolved.route, styles }),
+            Document({
+              result,
+              route: resolved.route,
+              styles,
+              islandScript,
+            }),
           ),
       })),
     sitemap: options.sitemap ?? true,
@@ -64,4 +70,5 @@ export const routes: readonly RouteRegistration[] = [
   register(syntaxPage),
   register(setsPage),
   register(setPage),
+  register(crPage),
 ];
