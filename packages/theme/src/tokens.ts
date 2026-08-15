@@ -56,12 +56,15 @@ const STRUCTURE: TokenTable = {
      fantasy choice". Uncommon is worth more than familiar on a mark that has to
      be recognised.
 
-     SIL Open Font License 1.1, which permits webfont embedding and self-hosting
-     — the licence question this token existed to be blocked on. Served from our
-     own origin rather than a font CDN, for the same reason nothing else here
-     depends on a third party staying up, and recorded in `data/fonts/fonts.json`
-     with its URL and hash because `docs/COMPLIANCE.md` §3 wants an origin for
-     every binary we serve.
+     SIL Open Font License 1.1. The grant names `embed` outright — "to use,
+     study, copy, merge, embed, modify, redistribute" — so this does not rest on
+     reading "redistribute" generously; `data/fonts/fonts.json` quotes the clause
+     rather than summarising it, along with condition 2, which obliges us to ship
+     the copyright notice and licence beside the file. That is
+     `apps/site/public/fonts/OFL.txt`.
+
+     Served from our own origin rather than a font CDN, for the same reason
+     nothing else here depends on a third party staying up.
 
      The stack falls back to the serif below, so a blocked or failed font
      download degrades to what the site rendered before rather than to

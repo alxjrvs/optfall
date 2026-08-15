@@ -540,6 +540,6 @@ Carried, not closed. Each needs a human.
 |---|---|---|
 | 1 | Read the LSS terms page end to end and ratify or correct this document — especially the disclaimer wording, the copyright line, and the logo clause | First public deploy |
 | 2 | Decide the affiliate-link question (§2), or decide not to decide it and record that | Any revenue |
-| 3 | ~~Confirm the display typeface is licensed for webfont embedding~~ **Done.** Grenze, SIL OFL 1.1, self-hosted, provenance in `data/fonts/fonts.json` | Phase 1 |
+| 3 | ~~Confirm the display typeface is licensed for webfont embedding~~ **Done.** Grenze, SIL OFL 1.1 — the grant names `embed` outright. The clause is quoted in `data/fonts/fonts.json` rather than summarised, and condition 2's obligation (each copy carries the copyright notice and the licence) is met by `apps/site/public/fonts/OFL.txt` | Phase 1 |
 | 4 | Post the upstream licence request | Phase 2/3 data work |
 | 5 | Write the revocation-drill test once the legality package exists | Phase 2 exit |

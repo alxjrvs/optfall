@@ -1,17 +1,31 @@
 {
   "_comment": "Provenance for the self-hosted webfonts under apps/site/public/fonts. Authored by hand rather than generated, unlike data/symbols/symbols.json — see the GOVERNED table in scripts/check-asset-provenance.ts for why the two cannot be one file. docs/COMPLIANCE.md §3 requires a recorded origin for every binary served publicly; this is that record.",
+  "_licence_note": "The permission is quoted rather than summarised. 'The OFL allows webfont embedding' is a claim about a document, and a claim about a document should be checkable against the document — so the clause that grants it is reproduced verbatim below, and the condition it comes with is reproduced too, because the second is an obligation on us and paraphrasing it is how it gets forgotten.",
   "fonts": [
     {
       "file": "grenze-latin.woff2",
       "url": "https://fonts.gstatic.com/s/grenze/v18/O4ZTFGb7hR12BxqH-GImuA8alw.woff2",
       "sha256": "cc3514851f1f2227ac547019924d20f3e93d2cc1736831c0a6454643da085623",
       "family": "Grenze",
+      "designer": "Omnibus-Type",
+      "source": "https://fonts.google.com/specimen/Grenze",
+      "upstream": "https://github.com/Omnibus-Type/Grenze",
+      "subset": "latin",
+      "note": "The variable file Google serves for the latin subset; one file covers the whole weight range, which is why there is no separate 700.",
+
+      "copyright": "Copyright 2019, The Grenze Project Authors (https://github.com/Omnibus-Type/Grenze)",
       "licence": "SIL Open Font License 1.1",
       "licenceUrl": "https://openfontlicense.org/",
-      "source": "https://fonts.google.com/specimen/Grenze",
-      "designer": "Omnibus-Type",
-      "subset": "latin",
-      "note": "The variable file Google serves for the latin subset; one file covers the whole weight range, which is why there is no separate 700."
+      "licenceFile": "OFL.txt",
+
+      "permission": "Permission is hereby granted, free of charge, to any person obtaining a copy of the Font Software, to use, study, copy, merge, embed, modify, redistribute, and sell modified and unmodified copies of the Font Software, subject to the following conditions:",
+      "permissionNote": "Embedding is named outright — 'use, study, copy, merge, EMBED, modify, redistribute' — so serving this file from our own origin as a webfont is squarely within the grant, and does not rest on an interpretation of 'redistribute'.",
+
+      "condition": "2) Original or Modified Versions of the Font Software may be bundled, redistributed and/or sold with any software, provided that each copy contains the above copyright notice and this license. These can be included either as stand-alone text files, human-readable headers or in the appropriate machine-readable metadata fields within text or binary files as long as those fields can be easily viewed by the user.",
+      "conditionSatisfiedBy": "apps/site/public/fonts/OFL.txt — the upstream licence file, copyright notice included, served as a stand-alone text file beside the font it covers, which is the first of the three forms condition 2 permits. Shipping the woff2 without it was a real omission on the first pass: the grant is conditional, and 'each copy contains the above copyright notice and this license' is an obligation on the redistributor rather than a formality.",
+
+      "reservedFontName": "Grenze",
+      "reservedFontNameNote": "Condition 3 forbids a MODIFIED version using the reserved name. We ship the file unmodified — no subsetting, no re-instancing — so the name is used as published and the restriction is not engaged. Subset it in future and it has to be renamed."
     }
   ]
 }

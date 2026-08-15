@@ -5,16 +5,15 @@
   build time with node:fs), alongside `ABOUT_JRVS.md`. Edit the wording here and
   the site changes; there is no second copy.
 
-  It is deliberately NOT the same statement as SU-SRD's. That project was
-  conceived before these tools existed and says so; this one was not, and
-  copying that sentence across would have made the claim false. What the two
-  share is the position, not the history.
+  Written for this project rather than copied from SU-SRD's. The position is the
+  same; the wording is not, because a statement about how a particular codebase
+  was made has to be true of that codebase. Say nothing here about how any other
+  project was built.
 -->
 
 # LLM Statement
 
-Optfall was built with LLM coding tools, and unlike my older projects it was
-built with them from the first commit. I have used Claude and various open
+Optfall was built with LLM coding tools. I have used Claude and various open
 weight models to produce code, tests, documentation and design here. All of it
 was directed, reviewed and deployed by me. The
 [GitHub](https://github.com/alxjrvs/optfall) shows the full extent of that
