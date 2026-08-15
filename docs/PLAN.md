@@ -659,8 +659,38 @@ Each is a stack layer that leaves the site shippable.
 | **2** | The SSG harness — `ssg/{build,routes,render,document,outputPath}.ts`, rendering ONE trivial page beside Astro | A second renderer proven against the real build |
 | **3** | Port `packages/components` Svelte → React, keeping every token and the `CardFaceGroup` compliance contract | The library stops being framework-bound |
 | **4** | Port the pages, cheapest first: `/data-terms`, `/syntax`, `/sets`, `/cr`, `/card`, `/search`, `/` | Each page is one reviewable PR |
-| **5** | Delete Astro; `tsc --noEmit` replaces `astro check`; **TypeScript 7 lands here** | The receipt above is paid |
+| **5a** | Port the Svelte-only test coverage — the axe suite and the `GameSymbol` cascade guard — to React | The deletion below becomes a move rather than a loss |
+| **5b** | Delete Astro and Svelte; the generator's output becomes `dist/`; `tsc --noEmit` replaces `astro check` | One renderer, one resolver, no framework |
+| **5c** | **TypeScript 7 lands here** | The receipt above is paid |
 | **6** | Workbox `generateSW` + a web app manifest — installable, offline | The PWA the ask named |
+
+Step 5 split into three once it was under way, and the split is worth recording
+rather than smoothing over. 5a exists because deleting `src/svelte` would have
+silently deleted 50 accessibility assertions and the only guard on a CSS cascade
+bug this project actually shipped; porting them first is what makes the deletion
+reviewable. 5c is separate because a compiler swap that lands in the same diff as
+a framework deletion cannot be bisected.
+
+**What 5b found that page-count parity could not see.** The generator had linked
+`/favicon.svg` from every one of its 13,675 pages since layer 2 and never emitted
+it. Astro produced that file from an endpoint route — a `.ts` under `src/pages/`
+exporting `GET` — and the port had no equivalent, so the file was not a page, no
+count included it, and nothing missed it. It is now an explicit
+`GENERATED_ASSETS` registry in `ssg/assets.ts`, deliberately a list rather than a
+directory convention: a convention is precisely the mechanism that produces
+nothing, silently, when it is not followed.
+
+Two checks were rewritten in the same layer and both got stronger for it.
+`check-built-tokens.ts` used to grep every page for the token DEFINITIONS Astro
+inlined into it; the generator links one cached stylesheet instead, so the check
+now asserts three separate facts — every page links a sheet, every href resolves
+to a file that exists, and the sheets together define every token. The middle one
+is new, and it is the failure the move introduced: the sheets are content-hashed,
+so a page can link a stylesheet that no longer exists and look perfectly correct
+in the HTML. `check-dev-server.ts` lost the asymmetry it was written for (there
+is no second module resolver left to disagree with the first) and gained the
+favicon and a `public/` asset, which reach the output by two other mechanisms
+that can each fail in silence.
 
 ### Two decisions taken up front, because they are cheap now and expensive later
 

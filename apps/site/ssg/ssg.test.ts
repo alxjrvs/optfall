@@ -218,12 +218,12 @@ describe("the ported pages", () => {
 
   test("every set that carries a card has a page, and none that does not", () => {
     /*
-     * PARITY WITH ASTRO, ASSERTED FROM THE CORPUS RATHER THAN FROM A NUMBER.
-     * Measured against the real `astro build` when this page was ported: 113
-     * files under `dist/sets`, 113 under `dist-next/sets`. That equality is the
-     * whole claim of the migration — the same route table, fanned out by a
-     * different generator — and it is worth a test that fails when the two
-     * stop agreeing rather than a number in a commit message.
+     * ASSERTED FROM THE CORPUS RATHER THAN FROM A NUMBER. This began as a
+     * parity check: measured against the real `astro build` when the page was
+     * ported, 113 files under `dist/sets` and 113 under `dist-next/sets`. There
+     * is only one generator now, so the claim it defends changed from "the two
+     * agree" to the thing that made agreement meaningful in the first place —
+     * the route table is derived from the corpus and cannot drift from it.
      *
      * Derived here the way the page derives it, so a set gaining or losing its
      * last card moves both sides together.

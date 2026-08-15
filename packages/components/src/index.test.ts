@@ -182,8 +182,12 @@ function overlapBands(a: number, b: number): { lo: number; hi: number }[] {
 }
 
 describe("the reserved silhouette", () => {
+  /* The component's own stylesheet. This read `svelte/PitchJewel.svelte` until
+     Phase 6 layer 5; the port moved the scoped `<style>` block out into a plain
+     sheet beside the component, so the same declaration is now in a `.css` file
+     and the assertions below are unchanged. */
   const jewelSource = readFileSync(
-    new URL("./svelte/PitchJewel.svelte", import.meta.url),
+    new URL("./react/PitchJewel.css", import.meta.url),
     "utf8",
   );
 

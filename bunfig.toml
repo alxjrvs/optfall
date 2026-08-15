@@ -1,24 +1,18 @@
 # Optfall workspace defaults for Bun.
 #
-# Versions are pinned deliberately rather than floating. The build plan calls
-# out Storybook's Svelte integration as the place where "latest of everything"
-# breaks, and a lockfile alone does not stop the next `bun add` from writing a
-# caret range into package.json. Dependabot moves these; nothing else does.
+# Versions are pinned deliberately rather than floating. A lockfile alone does
+# not stop the next `bun add` from writing a caret range into package.json.
+# Dependabot moves these; nothing else does.
+#
+# There was a `[test] preload` here until Phase 6 layer 5: Bun's runtime has no
+# Svelte loader, so `import X from "./X.svelte"` resolved to the file path as a
+# string and failed inside Svelte's renderer with an error that pointed at
+# Svelte rather than at the missing loader. The accessibility suite needed it to
+# render real primitives instead of mocks. It also made `bun test` fail
+# completely when run from anywhere but the repository root, because the preload
+# path was resolved from the working directory. Both the loader and the
+# constraint are gone with the Svelte sources — `bun test` now works from any
+# directory.
 
 [install]
 exact = true
-
-[test]
-# Bun's runtime has no Svelte loader, so `import X from "./X.svelte"` resolves
-# to the file path as a string and fails inside Svelte's renderer with an error
-# that points at Svelte rather than at the missing loader. This preload teaches
-# the test runner to compile Svelte components on import, which is what lets the
-# accessibility suite render the real primitives instead of mocks.
-#
-# THE PATH IS RESOLVED FROM THE WORKING DIRECTORY, so `bun test` must be run
-# from the repository root — which is what `bun run test` does and what CI does.
-# Running `bun test` from inside packages/components fails all 50 accessibility
-# assertions with "component is not a function", which reads like a broken suite
-# rather than a missing preload. If that is ever a real workflow, give the
-# package its own bunfig.toml rather than making this path cleverer.
-preload = ["./packages/components/svelte-loader.ts"]

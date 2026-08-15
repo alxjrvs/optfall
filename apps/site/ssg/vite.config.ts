@@ -31,11 +31,11 @@ export default defineConfig({
    */
   plugins: [react()],
   build: {
-    outDir: fileURLToPath(new URL("../dist-next", import.meta.url)),
+    outDir: fileURLToPath(new URL("../dist", import.meta.url)),
     // NEVER TRUE. `build.ts` renders the pages into this directory before this
     // build would run, and Vite emptying it would delete them — or, run the
     // other way round, would delete the assets the pages link. The generator
-    // owns the lifecycle of `dist-next/` and clears it once, itself.
+    // owns the lifecycle of `dist/` and clears it once, itself.
     emptyOutDir: false,
     manifest: true,
     rollupOptions: {

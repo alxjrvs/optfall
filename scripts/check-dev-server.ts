@@ -3,98 +3,82 @@
  * Asserts `bun run dev` actually serves the site.
  *
  * THIS EXISTS BECAUSE A GREEN BUILD IS NOT EVIDENCE THAT DEV RUNS, and for a
- * while it was not even weak evidence. `astro build` resolves SSR modules
- * through Rollup; `astro dev` hands anything it considers external to the
+ * while it was not even weak evidence. `astro build` resolved SSR modules
+ * through Rollup; `astro dev` handed anything it considered external to the
  * runtime's own ESM loader. Those are different resolvers with different rules,
- * so the two can — and did — disagree completely: the build emitted 7,237
+ * so the two could — and did — disagree completely: the build emitted 7,237
  * correct pages while every single dev route answered 500, including
  * `/favicon.svg`. Nothing in CI was looking, because nothing in CI had ever
  * started the dev server.
  *
- * The specific fault is written up in `apps/site/astro.config.mjs` beside the
- * `ssr.noExternal` that fixes it. What matters here is the shape of it, because
- * that is what this check is aimed at rather than the one instance: the
- * workspace packages ship TypeScript source with no build step, so anything
- * that loads them without bundler resolution fails, and it fails at *render*
- * time. A 500 on every route is as loud a failure as exists — and it was still
- * invisible, because the only thing that would have noticed was a human running
- * the dev server by hand.
+ * WHAT PHASE 6 CHANGED, STATED PLAINLY RATHER THAN LEFT AS AN IMPLICATION. The
+ * two-resolver asymmetry is gone: `bun run dev` builds with the generator and
+ * then serves the files it wrote, so there is exactly one renderer and exactly
+ * one resolver. The specific bug this file was written for cannot recur, and
+ * pretending otherwise would make the check look stronger than it is.
  *
- * IT SPAWNS THE CLI RATHER THAN CALLING ASTRO'S `dev()` IN PROCESS, and that is
- * the whole correctness of the check rather than a style preference. The first
- * draft did import `dev()` directly, and it passed against the broken config —
- * because this script runs under Bun, and Bun's resolver fills in a missing file
- * extension that Node's does not. `bun run dev` does not run Astro under Bun: it
- * executes `node_modules/.bin/astro`, whose shebang is `node`. So an in-process
- * check exercises a resolver no developer and no CI job ever uses, and reports
- * green on a dev server that cannot start. The subprocess is the point — the
- * thing under test is the command a person actually types.
+ * IT IS STILL WORTH RUNNING, for three failures that are all live:
  *
- * IT IS WHY THE ROOT `package.json` CARRIES NO NEW DEPENDENCY. Spawning the CLI
- * means Astro is resolved by `apps/site`, where it is already declared, and this
- * file needs nothing but `fetch`.
+ * - **The server does not start.** A `dev` script wired to the wrong command,
+ *   or a `serve.ts` that throws on a taken port, is invisible to every other
+ *   job here.
+ * - **The route-to-file mapping disagrees with the generator's.** The server
+ *   resolves `/search` to `search/index.html` through the same `outputPathFor`
+ *   the build writes with, and this is what proves the two agree — including
+ *   for the multi-segment printing routes, which are the shape most likely to
+ *   be got wrong.
+ * - **A generated non-page file goes missing.** This is not hypothetical
+ *   either: `document.tsx` linked `/favicon.svg` on all 13,675 pages for four
+ *   layers of the port while nothing emitted it, because a favicon is not a
+ *   page and page-count parity could not see it.
  *
- * IT STARTS ITS OWN SERVER, AND FORCING THAT TAKES TWO UNOBVIOUS FLAGS.
- *
- * Astro 7 keeps a lock file so `astro dev stop|status|logs` can find a running
- * server, and a second `astro dev` attaches to that one instead of starting a
- * new one. An earlier draft of this check did exactly that: it printed "Dev
- * server already running at http://localhost:4346", then ran all six routes
- * against a server started from a *different* checkout of the config — and
- * would have killed a developer's dev server on teardown. A check that tests
- * whatever server happens to be lying around tests nothing. `--ignore-lock` is
- * what makes it start, use, and stop its own.
- *
- * `ASTRO_DEV_BACKGROUND=1` is the second flag, and it does the opposite of what
- * it reads like — it forces the FOREGROUND. Astro backgrounds itself when it
- * detects an agent environment, and it refuses `--ignore-lock` when it does,
- * because the daemon needs the lock to be findable. The detection is skipped
- * entirely when that variable is set (`!process.env.ASTRO_DEV_BACKGROUND &&
- * isRunByAgent()`), and background mode is then requested only by `--background`,
- * which this does not pass. So the variable's real effect here is "decide by the
- * flags, not by sniffing the terminal", which is what a check wants: identical
- * behaviour whether it runs in CI, in a plain shell, or under an agent.
- *
- * The port is still read from the server's own output rather than assumed,
- * because Astro moves to a free one when the requested port is taken.
+ * IT SPAWNS THE SCRIPT RATHER THAN IMPORTING THE SERVER, and that is the whole
+ * correctness of the check rather than a style preference — the thing under
+ * test is the command a person actually types, including the package script
+ * that wires it. An in-process check would exercise a path no developer and no
+ * CI job ever uses.
  *
  * KEEP THIS CHECK CHEAP. It is a smoke test, not a page audit — it asserts that
- * routes render at all, which is exactly the class of failure that survives a
- * green build. Assertions about what is *in* the HTML belong in
+ * routes are served at all, which is exactly the class of failure that survives
+ * a green build. Assertions about what is *in* the HTML belong in
  * `check-built-tokens.ts` and its neighbours, which read the real build output.
  */
 
 /*
  * EVERY LOOP IN THIS FILE IS SEQUENTIAL ON PURPOSE, so the rule's advice —
  * collect the promises and `Promise.all` them — is wrong here in both places it
- * fires. The two polling loops are waiting for a server to come up: their whole
- * job is to check, sleep, and check again, and there is no set of promises to
- * collect because each iteration only exists if the previous one failed. The
- * route loop is deliberately serial too: it reports one line per route in a
- * fixed order, and firing six requests at a cold Vite dev server concurrently
- * trades that legibility for contention on the thing being measured.
+ * fires. The polling loop is waiting for a server to come up: its whole job is
+ * to check, sleep, and check again, and there is no set of promises to collect
+ * because each iteration only exists if the previous one failed. The route loop
+ * is deliberately serial too: it reports one line per route in a fixed order.
  */
 
 /*
- * THE SAME LIST THE ROUTE ITSELF USES. A dynamic route runs `getStaticPaths` on
- * demand in dev, which is a different code path from the static pages and the
- * one most likely to reach a workspace package, so the check would be
- * incomplete without one. Taking the slug from `CARD_ROUTES` rather than naming
- * a card here means an errata that renames or removes a card can never turn
- * this check red on its own — the corpus and the check cannot disagree when
- * there is only one of them.
+ * THE SAME LIST THE ROUTES THEMSELVES USE. Taking the slugs from `CARD_ROUTES`
+ * rather than naming a card here means an errata that renames or removes a card
+ * can never turn this check red on its own — the corpus and the check cannot
+ * disagree when there is only one of them.
  */
 import { CARD_ROUTES } from "../apps/site/src/lib/cards";
 
 /**
- * A port far from Astro's 4321 default, so a developer running the real dev
- * server while this executes does not collide with it. If it is taken anyway,
- * Astro moves and `readOrigin` reads where it landed.
+ * A port far from the 4321 default, so a developer running the real dev server
+ * while this executes does not collide with it.
+ *
+ * IF IT IS TAKEN, `serve.ts` THROWS RATHER THAN MOVING, and that is the better
+ * behaviour for a check: Astro used to slide to a free port, which meant this
+ * file had to parse the banner to discover where the server had actually
+ * landed, and an earlier draft of it ran all six routes against a server
+ * started from a different checkout entirely.
  */
 const PORT = 4399;
 
-/** Generous, because a cold Vite optimise on a first run is not fast. */
-const STARTUP_TIMEOUT_MS = 120_000;
+/**
+ * Generous, because `dev` BUILDS before it serves — 13,675 pages plus a Vite
+ * bundle, on a cold CI runner. The old value was 120s and covered a dev server
+ * that rendered nothing up front.
+ */
+const STARTUP_TIMEOUT_MS = 420_000;
 
 interface Check {
   path: string;
@@ -106,7 +90,7 @@ const slug = CARD_ROUTES[0]?.slug;
 
 if (!slug) {
   console.log(
-    "::error::CARD_ROUTES is empty, so there is no dynamic route to check. That is a broken corpus, not a reason to skip.",
+    "::error::CARD_ROUTES is empty, so there is no card route to check. That is a broken corpus, not a reason to skip.",
   );
   process.exit(1);
 }
@@ -114,11 +98,10 @@ if (!slug) {
 /*
  * A PRINTING ROUTE TOO, BECAUSE IT IS A DIFFERENT SHAPE OF ROUTE.
  *
- * `/card/<slug>` is one path segment matched by `[...slug]`; a printing is
- * three. Astro's rest parameter is what makes the second work, and "the rest
- * parameter matches multiple segments" is exactly the kind of assumption that
- * holds in a static build and fails in dev's on-demand resolver — which is the
- * asymmetry this whole file exists to catch.
+ * `/card/<slug>` is one path segment; a printing is three. "A multi-segment
+ * path resolves to the right file" is exactly the kind of assumption that holds
+ * in the generator's own output map and fails in whatever serves it, which is
+ * the asymmetry this file now exists to catch.
  */
 const printingSlug = CARD_ROUTES.find(
   (route) => route.kind === "printing",
@@ -137,36 +120,28 @@ const checks: Check[] = [
   { path: "/sets", contentType: "text/html" },
   { path: "/cr", contentType: "text/html" },
   /*
-   * The reason this file was written. The favicon is generated by an endpoint
-   * rather than checked into `public/`, which is the right call and also means
-   * it is code — it can break exactly like a page can, and it did.
+   * The reason this entry survives the rewrite. The favicon is DERIVED — from
+   * the mark geometry and the theme's token tables — rather than checked into
+   * `public/`, which is the right call and also means it is code: it can break
+   * exactly like a page can, it did, and it went unnoticed for four layers
+   * because nothing counts a file that is not a page.
    */
   { path: "/favicon.svg", contentType: "image/svg+xml" },
+  /* A file from `public/`, which reaches the output by a third mechanism again
+     — Vite copies it — and would be missing in silence if that ever stopped. */
+  { path: "/symbols/icon_p.png", contentType: "image/png" },
   { path: `/card/${slug}`, contentType: "text/html" },
   { path: `/card/${printingSlug}`, contentType: "text/html" },
 ];
 
 /*
- * `bun run … dev` rather than the `astro` binary directly, so the thing under
+ * `bun run … dev` rather than the server script directly, so the thing under
  * test includes the package script itself — a `dev` script wired to the wrong
  * command is exactly the kind of breakage this is here to catch.
  */
 const server = Bun.spawn(
-  [
-    "bun",
-    "run",
-    "--cwd",
-    "apps/site",
-    "dev",
-    "--port",
-    String(PORT),
-    "--ignore-lock",
-  ],
-  {
-    stdout: "pipe",
-    stderr: "pipe",
-    env: { ...process.env, ASTRO_DEV_BACKGROUND: "1" },
-  },
+  ["bun", "run", "--cwd", "apps/site", "dev", "--port", String(PORT)],
+  { stdout: "pipe", stderr: "pipe" },
 );
 
 /** Everything the server has said, kept so a startup failure can be reported. */
@@ -186,238 +161,93 @@ async function drain(stream: ReadableStream<Uint8Array>): Promise<void> {
 void drain(server.stdout);
 void drain(server.stderr);
 
-/**
- * Astro's banner is colourised, and the escape codes sit between the label and
- * the URL. Stripping them is what lets the patterns below be written as the
- * text a human sees, and it makes the failure dump at the bottom readable too.
- */
-function plain(text: string): string {
-  /*
-   * THE CONTROL CHARACTER IS THE POINT. This strips ANSI colour codes out of
-   * the dev server's output so the origin can be parsed from it, and an SGR
-   * sequence begins with a literal ESC. Written `\u001B` rather than pasted
-   * raw so it survives an editor, a copy-paste and a diff viewer intact — the
-   * previous form held the byte itself, which is invisible in every one of
-   * those.
-   */
-  // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI is the function.
-  return text.replaceAll(/\u001B\[[0-9;]*m/g, "");
-}
+const origin = `http://localhost:${PORT}`;
 
 /**
- * ASTRO SAYS "ALREADY RUNNING" IN TWO OPPOSITE SITUATIONS, and telling them
- * apart is the whole of this function's care.
+ * Waits for the server to answer, or gives up with everything it said.
  *
- * When `--ignore-lock` does exactly what it is asked to, Astro announces
- * `Starting a new dev server alongside the one already running at <url> (pid
- * N)` — a SUCCESS notice, and one that quotes the OTHER server's URL. So the
- * naive reading of that output is wrong twice over: a substring test for
- * "already running" aborts a run that worked, and the first
- * `http://localhost:<port>` in the transcript is somebody else's port, which
- * would send every route check at a server this script did not start and cannot
- * control. Dropping that line is what removes both mistakes at once.
- *
- * The genuine refusal is `Another astro dev server is already running.`, on the
- * path where the lock is honoured. `--ignore-lock` cannot reach it today, so
- * this is insurance rather than a live case — kept because the failure it
- * catches is silent, and the cost is one string comparison.
+ * POLLED BY REQUEST RATHER THAN BY BANNER. The old version parsed Astro's
+ * colourised startup banner to learn the origin, which meant stripping ANSI
+ * escapes and matching on human-facing text that a version bump could reword.
+ * The port is an input here, so the only question is whether anything is
+ * listening on it — and asking is both simpler and a stronger answer than a
+ * line of output claiming it is.
  */
-const ATTACHED = "Another astro dev server is already running.";
-const ALONGSIDE = "alongside the one already running";
-
-/**
- * The origin the server actually bound, read from its own output — Astro moves
- * to a free port when the requested one is in use, and a check that assumed
- * `PORT` would then poll nothing and time out with a misleading message.
- */
-async function readOrigin(): Promise<string> {
+async function waitForServer(): Promise<void> {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
-    const output = plain(transcript);
-
-    if (output.includes(ATTACHED)) {
-      throw new Error(
-        "Astro attached to a dev server this check did not start, so it would be testing another process. Stop it with `bun run --cwd apps/site dev stop` and re-run",
+    if (server.exitCode !== null) {
+      console.log(
+        `::error::\`bun run dev\` exited with code ${server.exitCode} before serving anything.`,
       );
+      console.log(transcript.trim());
+      process.exit(1);
     }
 
-    const ours = output
-      .split("\n")
-      .filter((line) => !line.includes(ALONGSIDE))
-      .join("\n");
-
-    const found = /http:\/\/localhost:(\d+)/.exec(ours);
-    if (found) return `http://localhost:${found[1]}`;
-    await Bun.sleep(200);
-  }
-
-  throw new Error(
-    `the dev server printed no address within ${STARTUP_TIMEOUT_MS / 1000}s`,
-  );
-}
-
-/**
- * NO REQUEST HERE MAY BLOCK WITHOUT A BOUND, and that is a diagnostic
- * requirement rather than politeness. `fetch` has no default timeout, so a
- * server that accepts the connection and then never answers — Vite holding a
- * request through a stuck dependency optimise, a route that never resolves —
- * parks the script indefinitely. The deadline checks in the loops below cannot
- * help: they are only consulted *between* attempts. The run would then die at
- * the CI job's timeout, and because the transcript dump lives after the loop,
- * it would die with none of the dev-server output that explains why — losing
- * exactly the diagnostic this file exists to produce.
- */
-const REQUEST_TIMEOUT_MS = 30_000;
-
-function get(url: string): Promise<Response> {
-  return fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-}
-
-/** Polls until the server answers anything at all — even a 500 counts as up. */
-async function waitUntilListening(origin: string): Promise<void> {
-  const deadline = Date.now() + STARTUP_TIMEOUT_MS;
-
-  while (Date.now() < deadline) {
     try {
-      await get(origin);
+      await fetch(origin, { signal: AbortSignal.timeout(5_000) });
       return;
     } catch {
-      await Bun.sleep(200);
+      await Bun.sleep(500);
     }
-  }
-
-  throw new Error(
-    `${origin} never accepted a connection within ${STARTUP_TIMEOUT_MS / 1000}s`,
-  );
-}
-
-/**
- * TEARDOWN RESTS ON `bun run` FORWARDING THE SIGNAL, and this says so rather
- * than pretending otherwise.
- *
- * `bun run` is a PARENT of the Astro process, so the obvious move is to signal
- * the process group — and two earlier versions of this function did. It does
- * not work: `Bun.spawn` exposes no `detached` option and does not make the
- * child a group leader, so `process.kill(-pid)` names a group that does not
- * exist and throws `ESRCH` every time. Keeping it was worse than useless,
- * because it read as the mechanism that takes the tree down while the thing
- * actually doing the work was the fallback.
- *
- * So: signal the child, then CHECK. Forwarding is observed to work here, but it
- * is somebody else's implementation detail, and the failure it would produce —
- * an orphaned `astro dev` holding port 4399 — is silent and outlives the run.
- * A warning naming the port turns a leak nobody notices into one a developer
- * can act on.
- */
-async function stop(origin: string | undefined): Promise<void> {
-  try {
-    server.kill();
-  } catch {
-    /* already gone */
-  }
-
-  if (!origin) return;
-
-  const deadline = Date.now() + 5_000;
-  while (Date.now() < deadline) {
-    try {
-      await get(origin);
-    } catch {
-      return; // refused the connection: it is down
-    }
-    await Bun.sleep(200);
   }
 
   console.log(
-    `::warning::${origin} is still answering after teardown, so an astro dev process was orphaned. Kill it before the next run.`,
+    `::error::\`bun run dev\` did not serve anything on ${origin} within ${STARTUP_TIMEOUT_MS / 1000}s.`,
   );
-}
-
-let failures = 0;
-/** Hoisted so `finally` can tell teardown where to look for a leak. */
-let origin: string | undefined;
-
-try {
-  origin = await readOrigin();
-  await waitUntilListening(origin);
-
-  for (const { path, contentType } of checks) {
-    let response: Response;
-
-    try {
-      response = await get(`${origin}${path}`);
-    } catch (error) {
-      console.log(
-        `::error::${path} — the dev server did not answer at all (${String(error)}).`,
-      );
-      failures += 1;
-      continue;
-    }
-
-    const actualType = response.headers.get("content-type") ?? "(none)";
-    const body = await response.text();
-
-    if (!response.ok) {
-      console.log(`::error::${path} — HTTP ${response.status}.`);
-      failures += 1;
-      continue;
-    }
-
-    if (!actualType.startsWith(contentType)) {
-      console.log(
-        `::error::${path} — expected Content-Type ${contentType}, got ${actualType}.`,
-      );
-      failures += 1;
-      continue;
-    }
-
-    if (body.trim().length === 0) {
-      console.log(`::error::${path} — answered 200 with an empty body.`);
-      failures += 1;
-      continue;
-    }
-
-    console.log(`  ${path} — ${response.status} ${actualType}`);
-  }
-} catch (error) {
-  console.log(`::error::The dev server never came up — ${String(error)}.`);
-  failures += 1;
-} finally {
-  await stop(origin);
-}
-
-if (failures > 0) {
-  console.log("");
-  console.log("--- dev server output ---");
-  /*
-   * Astro's dev error page is a stub that loads the real message over a
-   * websocket, so an HTTP body is worth nothing here and the server's own
-   * output is the only place the cause appears.
-   */
-  console.log(plain(transcript).trim() || "(the server printed nothing)");
-  console.log("--- end ---");
-  console.log("");
-  console.log(
-    `${failures} of ${checks.length} dev routes failed. A passing \`bun run build\` does not`,
-  );
-  console.log(
-    "cover this: build and dev resolve SSR modules through different resolvers. See",
-  );
-  console.log("the ssr.noExternal note in apps/site/astro.config.mjs.");
+  console.log(transcript.trim());
+  server.kill();
   process.exit(1);
 }
 
-console.log(`The dev server serves all ${checks.length} routes. ✔`);
+await waitForServer();
 
-/*
- * EXPLICIT, BECAUSE FALLING OFF THE END IS NOT ENOUGH HERE. The two `drain()`
- * promises are deliberately never awaited and stay pending until the server's
- * pipes close. If `stop()` fails to reach the Astro process — an orphan holding
- * the inherited stdout and stderr — those pipes never close, and the runtime
- * keeps the process alive on them. The script would print this success line and
- * then hang until the CI job's timeout killed it: a red job for a passing
- * check, with the verdict already on screen. Exiting says the work is finished
- * rather than leaving it to be inferred from an empty event loop.
- */
-process.exit(0);
+let failed = false;
+
+for (const { path, contentType } of checks) {
+  let status = 0;
+  let type = "";
+
+  try {
+    const response = await fetch(`${origin}${path}`, {
+      signal: AbortSignal.timeout(30_000),
+    });
+    status = response.status;
+    type = response.headers.get("content-type") ?? "";
+    // Drained so the connection is not left open across the next iteration.
+    await response.arrayBuffer();
+  } catch (error) {
+    console.log(`::error::${path} — request failed: ${String(error)}`);
+    failed = true;
+    continue;
+  }
+
+  if (status !== 200) {
+    console.log(`::error::${path} — expected 200, got ${status}`);
+    failed = true;
+    continue;
+  }
+
+  if (!type.startsWith(contentType)) {
+    console.log(
+      `::error::${path} — expected ${contentType}, got ${type || "no content-type"}`,
+    );
+    failed = true;
+    continue;
+  }
+
+  console.log(`  ${path} → ${status} ${type}`);
+}
+
+server.kill();
+
+if (failed) {
+  console.log("\nThe dev server did not serve every route. Its output:\n");
+  console.log(transcript.trim());
+  process.exit(1);
+}
+
+console.log(
+  `\n\`bun run dev\` serves all ${checks.length} routes, including the generated favicon. ✔`,
+);

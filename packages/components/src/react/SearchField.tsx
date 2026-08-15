@@ -77,10 +77,10 @@ export interface SearchFieldProps {
    * Omitted, none of these attributes render — an `aria-expanded` on a field
    * with nothing to expand is a promise to a screen reader that is never kept.
    */
-  readonly listboxId?: string;
-  readonly expanded?: boolean;
+  readonly listboxId?: string | undefined;
+  readonly expanded?: boolean | undefined;
   /** The id of the active option, or `undefined` when none is active. */
-  readonly activeDescendant?: string;
+  readonly activeDescendant?: string | undefined;
 }
 
 export function SearchField({

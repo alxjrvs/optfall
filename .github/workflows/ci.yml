@@ -526,17 +526,26 @@ jobs:
       - name: Assert every card face on a built page came from CardFace
         run: bun run check:card-notice
 
-  # The `build` job above does NOT cover this, and the gap is not a small one.
+  # THIS JOB ASSERTS SOMETHING WEAKER THAN IT USED TO, AND SAYS SO.
   #
-  # `astro build` resolves SSR modules through Rollup and `astro dev` hands the
-  # ones it externalises to Node's own ESM loader, so a module that only one of
-  # them can resolve makes the two disagree completely. That is not theoretical:
-  # the build was emitting 7,237 correct pages while every single dev route —
-  # pages, islands and /favicon.svg alike — answered 500, and CI was green
-  # throughout, because nothing here had ever started the dev server.
+  # It was written because `astro build` resolved SSR modules through Rollup
+  # while `astro dev` handed the ones it externalised to Node's own ESM loader,
+  # so a module only one of them could resolve made the two disagree completely.
+  # That was not theoretical: the build emitted 7,237 correct pages while every
+  # single dev route — pages, islands and /favicon.svg alike — answered 500, and
+  # CI was green throughout, because nothing here had ever started the dev
+  # server.
+  #
+  # Phase 6 removed the second resolver. `bun run dev` builds with the generator
+  # and serves the files it wrote, so dev and production cannot disagree about a
+  # module — there is only one of each. What is left to catch is a server that
+  # does not start, a route-to-file mapping that does not match the generator's,
+  # and the generated favicon going missing, which is a real failure this
+  # project shipped: `document.tsx` linked /favicon.svg for four layers while
+  # nothing emitted it.
   #
   # It is a smoke test by design. Six routes, one per kind of page plus the
-  # generated favicon endpoint, asserting only that they render at all.
+  # generated favicon, asserting only that they are served at all.
   dev-server:
     name: dev-server
     runs-on: ubuntu-latest
@@ -561,40 +570,6 @@ jobs:
 
       - name: Assert the dev server serves every kind of route
         run: bun run check:dev-server
-
-  # THE PHASE 6 GENERATOR, HELD TO THE SAME COMPLIANCE GATE AS THE REAL BUILD.
-  #
-  # `docs/PLAN.md` Phase 6 replaces Astro with a static generator this project
-  # owns. It renders one page today and ships nothing — which is exactly when a
-  # second renderer is cheap to keep honest and exactly when it is easiest to
-  # let rot.
-  #
-  # The job runs the generator and then points `check-disclaimer.ts` — the
-  # REAL one, not a copy — at its output. So the harness is not asserted to be
-  # correct by its own tests alone; it has to satisfy the same gate the shipped
-  # build satisfies, from the first page onwards. A generator that can emit a
-  # page without the LSS disclaimer is one that could never be adopted, and
-  # this is where that would be discovered.
-  ssg:
-    name: ssg
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          bun install --frozen-lockfile
-
-      - name: Render with the Phase 6 generator and check compliance
-        run: bun run check:ssg
 
   # NOTE: the repository-settings drift check deliberately does NOT live here.
   # It runs on a schedule, in .github/workflows/repo-settings-check.yml.
@@ -636,7 +611,6 @@ jobs:
       - provenance
       - disclaimer
       - dev-server
-      - ssg
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

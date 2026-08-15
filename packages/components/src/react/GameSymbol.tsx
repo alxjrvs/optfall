@@ -63,13 +63,13 @@ export interface GameSymbolProps {
    * story, where the site's `public/` is not mounted. Both fall back to the
    * drawn plate.
    */
-  readonly src?: string;
+  readonly src?: string | undefined;
   /**
    * Intrinsic box of `src`. Required with it, for the reason `CardFace`
    * requires one: an image with no box reflows the paragraph it sits in.
    */
-  readonly width?: number;
-  readonly height?: number;
+  readonly width?: number | undefined;
+  readonly height?: number | undefined;
 }
 
 export function GameSymbol({

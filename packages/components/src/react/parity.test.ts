@@ -1,51 +1,61 @@
 /**
- * The two entry points export the same components.
+ * The React entry exports exactly the primitives the library says it owes.
  *
  * A PORT THAT FORGETS A COMPONENT IS A PORT THAT LOOKS FINISHED. Everything
- * else in this directory tests a component that exists; nothing tested whether
- * the set was complete, and "did we do all fourteen" is exactly the question a
- * migration answers wrongly — not by porting one badly, but by stopping at
- * twelve and moving on to the pages.
+ * else in this directory tests a component that exists; nothing else tests
+ * whether the SET is complete, and "did we do all fourteen" is exactly the
+ * question a migration answers wrongly — not by porting one badly, but by
+ * stopping at twelve and moving on to the pages.
  *
- * It reads the Svelte entry's source rather than importing it, deliberately.
- * Importing `optfall-components/svelte` from a plain `bun test` pulls in the
- * Svelte compiler for fourteen components to answer a question about names, and
- * this file has no interest in what any of them render. The export list is the
- * contract; the source is where the contract is written down.
+ * IT CHECKS AGAINST `PRIMITIVES`, NOT AGAINST ANOTHER IMPLEMENTATION. This file
+ * used to read `src/svelte/index.ts` and assert the two entries matched, and it
+ * said of itself that it existed "only for the window in which two
+ * implementations have to agree" and should be deleted with the Svelte sources.
+ * Deleting it was wrong: what made it valuable was never the Svelte half but
+ * the completeness question, and `src/index.ts` states the answer directly —
+ * `PRIMITIVES` is described there as "closed on purpose", both the work queue
+ * and the check on the exit criterion that a complete product screen can be
+ * assembled from these with no new CSS.
  *
- * WHEN THIS FAILS AFTER A DELETION, DELETE FROM BOTH. The end state of Phase 6
- * is that `src/svelte` is gone entirely and this file goes with it — it exists
- * only for the window in which two implementations have to agree.
+ * So the comparison got stronger by losing its other half. Two implementations
+ * agreeing proves they agree; either could have been missing the same
+ * component. This compares the shipped entry against the declared contract.
  */
 
 import { describe, expect, test } from "bun:test";
 
+import { PRIMITIVES } from "../index";
 import * as react from "./index";
 
-/** Component names exported by an entry point, ignoring type-only exports. */
-function exportedComponents(source: string): string[] {
-  return [...source.matchAll(/export \{ default as (\w+) \}/g)]
-    .map((match) => match[1] ?? "")
-    .filter((name) => name !== "")
-    .toSorted();
+/**
+ * `pitch-jewel` → `PitchJewel`.
+ *
+ * The two spellings are both correct and neither should move to meet the other:
+ * `PRIMITIVES` is the design system's vocabulary, and those ids appear in
+ * `docs/DESIGN.md`, in the generated design-system page and in the token names,
+ * where kebab-case is the convention. The exports are React components, where
+ * PascalCase is not a preference but a requirement — JSX treats a lowercase tag
+ * as an HTML element. So the mapping is stated here, in the one place that has
+ * to see both.
+ */
+function componentName(id: string): string {
+  return id
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
 }
 
-const svelteEntry = await Bun.file(
-  new URL("../svelte/index.ts", import.meta.url).pathname,
-).text();
-
-describe("React and Svelte entry parity", () => {
-  test("every Svelte primitive has a React counterpart", () => {
-    const svelte = exportedComponents(svelteEntry);
+describe("the React entry against the declared primitive set", () => {
+  test("every primitive the library declares is exported", () => {
     /*
      * Values only. The React entry exports its prop types alongside each
      * component, and a type export is erased at runtime, so `Object.keys` here
      * is already the component list rather than a list needing filtering.
      */
-    const ported = Object.keys(react).toSorted();
+    const exported = Object.keys(react).toSorted();
 
-    expect(svelte.length).toBeGreaterThan(0);
-    expect(ported).toEqual(svelte);
+    expect(PRIMITIVES.length).toBeGreaterThan(0);
+    expect(exported).toEqual(PRIMITIVES.map(componentName).toSorted());
   });
 
   test("every export is callable, so none of them is an empty module", () => {

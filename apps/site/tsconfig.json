@@ -1,24 +1,11 @@
 {
-  "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "dist-next"],
-  "$comment_dist_next": "`dist-next` is the Phase 6 generator's output and is NOT covered by `dist` — these are literal directory names, not a prefix match. Without it `astro check` type-checks the minified React bundle the generator emitted, which is 900 kB of machine-written JavaScript and produces pages of errors about code nobody wrote. Biome needed the same line for the same reason.",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "$comment": "This extended `astro/tsconfigs/strict` until Phase 6 layer 5. It now extends the repository's own base config, which is stricter on every axis Astro's was lenient about — `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` and `noPropertyAccessFromIndexSignature` in particular. The site is checked by `tsc --noEmit` rather than `astro check`, which is what makes TypeScript 7 reachable: `astro check` drives the compiler through its programmatic API, and TypeScript 7 is a native Go binary that has none.",
+  "$comment_jsx": "`react-jsx`, so page modules and islands do not import React to use JSX — the same setting `packages/components` sets, for the same reason. The base config does not set it because most of this repository is plain TypeScript.",
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["dist", "node_modules"],
   "compilerOptions": {
-    // `astro check` is the ONLY thing that type checks apps/site — the
-    // repository-root tsconfig covers `packages/*/src` and `scripts`, not this
-    // directory. So the site's test files are checked here or nowhere, and
-    // without Bun's ambient types `import { describe } from "bun:test"` fails
-    // to resolve and the whole check goes red.
-    //
-    // `@types/bun` is the root workspace's devDependency and is hoisted, so
-    // naming it here costs no manifest change and no lockfile change — which
-    // matters, because CI installs with `--frozen-lockfile`.
-    //
-    // Setting `types` explicitly turns OFF automatic inclusion of every other
-    // `@types/*` package. That is safe here and deliberate: astro, svelte and
-    // the Astro integrations all ship their own types through their package
-    // exports rather than through DefinitelyTyped, and `.astro/types.d.ts` is
-    // already included by path above.
-    "types": ["bun"]
+    "jsx": "react-jsx"
   }
 }
