@@ -14,13 +14,15 @@
  * than `process.cwd()`, so it does not depend on where the build was invoked
  * from.
  *
- * THE SCRYFALL ACKNOWLEDGEMENT IS THE POINT OF THE PAGE, not a footnote on it.
+ * SCRYFALL IS NAMED IN THE FIRST PERSON, AND IT IS NOT A DISCLAIMER.
  * `docs/SCRYFALL-GAP.md` is an entire document about being a tonal copy of
  * Scryfall, the front door is modelled on theirs shape for shape, and the six
- * cards in the fan are a joke about exactly that. None of that is visible to a
- * reader — verified: the string "Scryfall" appears nowhere in the built site —
- * so a debt that obvious in the source and that invisible in the product is one
- * worth paying out loud.
+ * cards in the fan are the joke about exactly that. None of it was visible to a
+ * reader — the string "Scryfall" appeared nowhere in the built site — so the
+ * section exists to say where the ideas came from. It says it the way you would
+ * say it out loud, because the author has used the thing for years and the
+ * influence is a credit rather than an admission. The card names link to their
+ * own pages, so the joke is checkable instead of asserted.
  */
 
 import { readFileSync } from "node:fs";
@@ -29,8 +31,14 @@ import { fileURLToPath } from "node:url";
 import { OrnamentalRule } from "optfall-components/react";
 
 import { CORPUS as RULES } from "../../src/lib/rules";
-import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
+import {
+  CARD_PAGES,
+  CORPUS,
+  LAST_CONFIRMED,
+  hrefForSlug,
+} from "../../src/lib/cards";
 import { SETS } from "../../src/lib/sets";
+import { FAN_NAMES } from "./home.page";
 import type { PageModule, PageResult } from "../types";
 import "./about.css";
 
@@ -127,6 +135,25 @@ function Colophon({ source }: { readonly source: string }) {
   );
 }
 
+/**
+ * The six front-door cards, as links to their own pages.
+ *
+ * IMPORTING `FAN_NAMES` RATHER THAN RETYPING IT is the whole point: this page
+ * makes a claim about what is on the front page, and a second copy of the list
+ * would let that claim go quietly false. `home.page.tsx` already throws if a
+ * name stops resolving to exactly one card, and importing it runs that check.
+ */
+const fanLinks: readonly { readonly name: string; readonly href: string }[] =
+  FAN_NAMES.map((name) => {
+    const match = CARD_PAGES.find((page) => page.card.name === name);
+    if (match === undefined) {
+      throw new Error(
+        `about.page.tsx: "${name}" is named in the Scryfall section but resolves to no card page. Fix the name in home.page.tsx rather than letting the sentence link nowhere.`,
+      );
+    }
+    return { name, href: hrefForSlug(match.slug) };
+  });
+
 const cards = CORPUS.counts.cards.toLocaleString("en-GB");
 const printings = CORPUS.counts.printings.toLocaleString("en-GB");
 const pages = CARD_PAGES.length.toLocaleString("en-GB");
@@ -138,7 +165,7 @@ function page(): PageResult {
   return {
     title: "About — Optfall",
     description:
-      "What Optfall is, where its data comes from, the debt it owes Scryfall, and its position on language models.",
+      "What Optfall is, where its data comes from, what it takes from Scryfall, and its position on language models.",
     /* The header stays. `section: "none"` is for the front door, which is its own
        masthead; every other page needs a way back out of it. No `key` matches
        "about" in the nav, so nothing renders as current, which is correct — it
@@ -165,29 +192,31 @@ function page(): PageResult {
         <OrnamentalRule label="Scryfall" />
 
         <section className="of-about__section">
-          <h2 className="of-about__heading">This is a Scryfall tribute act</h2>
+          <h2 className="of-about__heading">I have used Scryfall for years</h2>
           <p>
             <a href="https://scryfall.com">Scryfall</a> is the card search
             engine for Magic: The Gathering, and it is the best reference tool
-            any trading card game has. Optfall is openly modelled on it — the
-            query grammar, the permanent-URL-per-card thesis, the shape of the
-            front page, the decision that a search should say what it could not
-            answer rather than quietly answering something else. Where I have
-            had a good idea here, it is usually because I read theirs first.
+            any trading card game has. I have typed queries into it for years,
+            and Optfall is built on what it taught me: the query grammar, a
+            permanent URL for every card, the shape of the front page, and the
+            rule that a search should say what it could not answer rather than
+            quietly answering something else.
           </p>
           <p>
-            The grammar is inherited on purpose. People arrive already fluent in{" "}
-            <code>pitch:3 class:guardian</code> because they have typed{" "}
-            <code>c:r t:goblin</code> for years, and inventing a second dialect
-            to prove originality would tax the reader to flatter the author.
-            Even the six cards on the front page are a joke about it: Homage to
-            Ancestors, Preserve Tradition, Path Well Traveled, Retrace the Past,
-            Light Fingers, Semblance.
+            The grammar is inherited on purpose. You arrive already fluent in{" "}
+            <code>pitch:3 class:guardian</code> because you have typed{" "}
+            <code>c:r t:goblin</code> for years, and a second dialect would just
+            be the same thing learned twice.
           </p>
           <p>
-            Scryfall is not affiliated with this project, has not endorsed it,
-            and bears no responsibility for anything I have got wrong. No code
-            or data of theirs is used here.
+            The six cards fanned across the front page say so out loud —{" "}
+            {fanLinks.map(({ name, href }, index) => (
+              <span key={name}>
+                {index > 0 ? ", " : ""}
+                <a href={href}>{name}</a>
+              </span>
+            ))}
+            .
           </p>
         </section>
 
@@ -227,15 +256,14 @@ function page(): PageResult {
             <a href="https://legendstory.com">Legend Story Studios</a>. Card
             names, card text and card images are their property, displayed here
             under their third-party application policy. Optfall is not
-            affiliated with them, does not relicense their content, and would
-            take it down if asked.
+            affiliated with them, and would take it down if asked.
           </p>
           <p>
             What is mine is the structural work over the dataset — the field
             selection, the upstream pin, the derivation of legality from
             published flags, the keyword-to-rules join — and that is openly
             licensed. The upstream card compilation publishes no licence of its
-            own, which is stated rather than papered over.
+            own.
           </p>
         </section>
 
