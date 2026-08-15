@@ -212,8 +212,19 @@ describe("the route registry", () => {
 /* The ported pages                                                            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Every route the registry owns, resolved ONCE for the whole file.
+ *
+ * Two describes below need it, and each used to build its own — 13,676 route
+ * resolutions twice, which walks the 4,941-card corpus twice for an answer that
+ * cannot differ between them. `routes` is a module-scope constant and
+ * `resolve()` is pure over it, so one list is not merely cheaper, it is the
+ * same list.
+ */
+const RESOLVED = routes.flatMap((registration) => [...registration.resolve()]);
+
 describe("the ported pages", () => {
-  const all = routes.flatMap((registration) => [...registration.resolve()]);
+  const all = RESOLVED;
   const paths = all.map((resolved) => resolved.route);
 
   test("every set that carries a card has a page, and none that does not", () => {
@@ -354,7 +365,7 @@ describe("the ported pages", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("a card page shows the combat positions it does not fill", () => {
-  const all = routes.flatMap((registration) => [...registration.resolve()]);
+  const all = RESOLVED;
   const render = (route: string) =>
     all.find((resolved) => resolved.route === route)?.render([], undefined) ??
     "";
@@ -504,7 +515,9 @@ describe("a card page shows the combat positions it does not fill", () => {
       (page) =>
         page.card.health !== "" &&
         page.card.intelligence === "" &&
-        page.card.power !== "",
+        /* A digit, for the reason the weapon probe gives: the assertion below
+           reads `Power \d+`, and upstream prints `X`, `XX` and `*`. */
+        /^\d+$/.test(page.card.power),
     );
     expect(ally).toBeDefined();
 
