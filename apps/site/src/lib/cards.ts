@@ -49,8 +49,20 @@
 import type { PitchValue, StateTone } from "optfall-theme";
 
 import { faceKeyFor, orientationOf } from "./faces";
+/* Imported as well as re-exported: a re-export creates no local binding, and
+   `CARD_ROUTES` below both calls `facesOf` and names `PrintingRef`. */
+import { facesOf, type PrintingRef } from "./printings";
 
 import corpus from "../../../../data/cards/cards.json";
+
+/*
+ * MOVED, NOT DELETED — see `printings.ts` for why. Re-exported here because
+ * every caller in the app and the tests reaches them through `cards.ts`, and
+ * the point of the move was to give ONE importer (`card-search.ts`, which the
+ * island bundle pulls in) a path that does not drag the corpus with it. Making
+ * everyone else change their import would have been churn for nothing.
+ */
+export { facesOf, numberFor, type PrintingRef } from "./printings";
 
 /* -------------------------------------------------------------------------- */
 /* The corpus                                                                  */
@@ -1075,95 +1087,6 @@ export const NAME_PAGES: readonly NamePage[] = [...BY_NAME_SLUG.entries()]
  * that render the identical page — the definition of a duplicate — so the unit
  * is the art, and the rows that share it share its address.
  */
-export interface PrintingRef {
-  /** The face key, `MST131.webp`. Unique per distinct image. */
-  readonly key: string;
-  /** Set code, lowercased: the second path segment. */
-  readonly setCode: string;
-  /** The disambiguated collector number: the third. See {@link numberFor}. */
-  readonly number: string;
-  /** The printing row this face was first reached by. */
-  readonly printing: CardPrinting;
-}
-
-/**
- * THE COLLECTOR NUMBER ALONE CANNOT NAME AN ART, which is the thing that
- * decides this URL's shape.
- *
- * `/card/<slug>/<set>/<number>` is Scryfall's form and §5.1c asked for it
- * directly. It does not survive contact with this corpus: measured, **1,842 of
- * 9,283 card+set+number triples name more than one image**. `OMN243` is both
- * the regular and the cold-foil art; `ARC123` is both the original and the
- * Unlimited reprint. On Scryfall a collector number is unique within a set, so
- * the question never arises; here it is wrong one time in five.
- *
- * WHAT UPSTREAM ALREADY DID ABOUT IT is the answer. The image file names carry
- * the discriminator the collector number omits — `OMN243-CF`, `U-ARC123` — so
- * the number in the URL is the FACE KEY with its set-code prefix removed:
- *
- *     MST131    in MST  ->  131
- *     OMN243-CF in OMN  ->  243-cf
- *     U-ARC123  in ARC  ->  u-arc123      (prefix does not match; kept whole)
- *
- * The common case reads exactly as the plan wanted, the ambiguous case reads as
- * the art it names, and no case needs a rule about which printing "wins".
- *
- * The prefix is stripped rather than kept because `/card/x/mst/mst131` says
- * "mst" twice, and it is stripped ONLY when it matches so the rule stays total:
- * a key that does not start with its set code keeps every character it has.
- *
- * AND THEN IT IS SLUGIFIED, because a face key is a FILE NAME and this is a
- * URL. Upstream's alphabet is wider than the one every other address on this
- * site uses: measured over the corpus, 224 keys carry an underscore
- * (`DTD009-MV_BACK`) and one carries an interior dot (`OUT042.original`). Left
- * alone they would have been the only 225 URLs here spelled differently from
- * the other 13,450 — and `cards.test.ts` asserts that alphabet on every route,
- * which is how they were caught rather than shipped.
- *
- * Collapsing the alphabet can in principle make two keys agree; the collision
- * check where these are assembled is what turns that from a silent overwrite
- * into a failed build.
- */
-export function numberFor(key: string, setCode: string): string {
-  const stem = key.replace(/\.webp$/, "");
-  const prefix = setCode.toUpperCase();
-  const bare = stem.toUpperCase().startsWith(prefix)
-    ? stem.slice(prefix.length)
-    : stem;
-  return bare
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/**
- * A card's distinct faces, in corpus order, each with its address.
- *
- * SHARED WITH THE PICKER ON PURPOSE. `CardEntry` used to derive this list
- * itself, and while it was the only consumer that was fine. It is not the only
- * consumer now: the routes below emit a URL per entry, and a picker working
- * from a different list than the router would show a printing with no address
- * or mint an address for a printing that is not shown. One function, so the two
- * cannot disagree.
- */
-export function facesOf(card: Card): readonly PrintingRef[] {
-  const seen = new Set<string>();
-  const faces: PrintingRef[] = [];
-
-  for (const printing of card.printings) {
-    const key = faceKeyFor(printing.image_url);
-    if (key === null || seen.has(key)) continue;
-    seen.add(key);
-    faces.push({
-      key,
-      setCode: printing.set_id.toLowerCase(),
-      number: numberFor(key, printing.set_id),
-      printing,
-    });
-  }
-
-  return faces;
-}
 
 /** Every URL the `/card/` route emits: the cards, the shared names, the printings. */
 export type CardRoute =
@@ -1208,7 +1131,7 @@ const PRINTING_ROUTES: readonly CardRoute[] = CARD_PAGES.flatMap((page) => {
     if (clash !== undefined) {
       throw new Error(
         `Two faces of ${page.label} both address /card/${slug}: ${clash} and ${ref.key}. ` +
-          `numberFor() in cards.ts derives a printing's path segment from its face key; ` +
+          `numberFor() in printings.ts derives a printing's path segment from its face key; ` +
           `this corpus has a shape it does not disambiguate.`,
       );
     }

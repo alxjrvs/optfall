@@ -23,6 +23,18 @@
 import { MARK_GEOMETRY } from "optfall-components";
 import { type TokenId, type TokenTable, themes } from "optfall-theme";
 
+/**
+ * The colour the platform paints around the app, and the one the browser paints
+ * behind the page before the first byte of CSS lands.
+ *
+ * EXPORTED SO THE `<meta name="theme-color">` AND THE MANIFEST CANNOT DISAGREE.
+ * They are two declarations of one fact read by different consumers — the meta
+ * tag by the browser's own chrome on a live page, the manifest field by the
+ * installer — and a site whose address bar is one colour installed and another
+ * in a tab is exactly the drift that is invisible until somebody installs it.
+ */
+export const THEME_COLOUR: string = literal(themes.dark.tokens, "color.ground");
+
 export interface GeneratedAsset {
   /** Path relative to the output root. No leading slash. */
   readonly path: string;
@@ -122,6 +134,113 @@ function faviconSvg(): string {
 `;
 }
 
+/**
+ * `/icon.svg` — the mark again, at install size.
+ *
+ * SEPARATE FROM `favicon.svg` FOR ONE REASON: `purpose: "maskable"`. An
+ * installed icon is cropped to whatever silhouette the platform uses — a circle
+ * on Android, a squircle on iOS — and the mark is a wide, thin ring. Dropped
+ * into a maskable slot at its own proportions it loses both ends.
+ *
+ * So this is the same path, on a square canvas, inside the **safe zone the spec
+ * defines**: a maskable icon is guaranteed only the centre 80% of each axis, so
+ * the mark is scaled to fit a circle of 40% radius about the centre rather than
+ * to the full square. It also paints the ground, because a maskable icon with a
+ * transparent background gets a platform-chosen fill behind it, and this
+ * project's whole visual key is that the mark sits on near-black.
+ *
+ * IT IS NOT THEMED, unlike the favicon, and that is deliberate rather than an
+ * omission. A favicon composites against browser chrome we do not own, so it has
+ * to hold on both. An installed icon sits on the user's home screen as OUR
+ * surface — one identity, the dark one, which `docs/DESIGN.md` calls the native
+ * key.
+ */
+function iconSvg(): string {
+  const { single, link } = MARK_GEOMETRY;
+  const dark = themes.dark.tokens;
+
+  /*
+   * The viewBox is `x y w h`; the mark is wider than it is tall, so the square
+   * canvas is built from the LONGER side and the shorter one is centred in it.
+   * Read from the geometry rather than restated — the numbers below are
+   * arithmetic on the source of truth, not a second copy of it.
+   */
+  const [vx = 0, vy = 0, vw = 1, vh = 1] = single.viewBox
+    .split(/\s+/)
+    .map(Number);
+
+  /* The safe zone: the centre 80%, so the canvas is the mark's longer side
+     divided by 0.8, with the mark centred inside it. */
+  const side = Math.max(vw, vh) / 0.8;
+  const x = vx + vw / 2 - side / 2;
+  const y = vy + vh / 2 - side / 2;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${side} ${side}">
+<rect x="${x}" y="${y}" width="${side}" height="${side}" fill="${literal(dark, "color.ground")}"/>
+<g transform="${single.placement}"><path d="${link}" fill-rule="evenodd" fill="${literal(dark, "color.accent")}"/></g>
+</svg>
+`;
+}
+
+/**
+ * `/manifest.webmanifest` — what makes the site installable.
+ *
+ * THE ICON IS SVG AND THERE IS NO PNG, which is a real limitation stated rather
+ * than hidden. Producing a raster icon needs a rasteriser in the build, and the
+ * alternative — hand-drawing the mark once more as a PNG — is the second copy
+ * of the geometry that `faviconSvg` exists to avoid, except worse, because a
+ * bitmap cannot be re-derived when the palette moves. Chromium accepts SVG
+ * manifest icons and installs on them; iOS Safari wants a PNG
+ * `apple-touch-icon` and will fall back to a screenshot of the page without one.
+ * That is the cost, and it is paid knowingly: the install prompt works where
+ * most of this site's readers are, and the day a rasteriser is worth adding, the
+ * PNG comes from `iconSvg()` rather than from a designer's export.
+ *
+ * `display: "minimal-ui"` RATHER THAN `"standalone"`, and this one is about what
+ * the site IS. Optfall's thesis is that every view is a URL — 13,675 of them,
+ * each meant to be pasted. `standalone` removes the address bar, which removes
+ * the affordance the product is built around. `minimal-ui` keeps a way to see
+ * and copy the URL while still installing to a home screen.
+ *
+ * `start_url` IS `/search` RATHER THAN `/`. The front door exists to send
+ * somebody who arrived from elsewhere to a card; a reader who has installed the
+ * app has already arrived, every time. `/search` is the room the door opens
+ * onto and the surface with the full index on it.
+ */
+function manifest(): string {
+  const dark = themes.dark.tokens;
+
+  return `${JSON.stringify(
+    {
+      name: "Optfall — Flesh and Blood card search",
+      short_name: "Optfall",
+      description:
+        "Search every Flesh and Blood card. Every card has a permanent, citable URL with its printed text, its printings and its per-format legality.",
+      id: "/",
+      start_url: "/search",
+      scope: "/",
+      display: "minimal-ui",
+      /* The chrome the platform paints around the app, and the colour behind
+         the page before the first paint. Both are the ground rather than the
+         accent: this is furniture, and the accent is rationed. */
+      theme_color: literal(dark, "color.ground"),
+      background_color: literal(dark, "color.ground"),
+      icons: [
+        {
+          src: "/icon.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+          purpose: "any maskable",
+        },
+      ],
+    },
+    null,
+    2,
+  )}\n`;
+}
+
 export const GENERATED_ASSETS: readonly GeneratedAsset[] = [
   { path: "favicon.svg", contents: faviconSvg() },
+  { path: "icon.svg", contents: iconSvg() },
+  { path: "manifest.webmanifest", contents: manifest() },
 ];

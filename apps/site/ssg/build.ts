@@ -43,6 +43,7 @@ import { themeStylesheet } from "optfall-theme";
 import { GENERATED_ASSETS } from "./assets";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
+import { writeServiceWorker } from "./serviceWorker";
 
 const OUT_DIR = new URL("../dist/", import.meta.url).pathname;
 const CONFIG = new URL("./vite.config.ts", import.meta.url).pathname;
@@ -105,6 +106,44 @@ async function assetsFromManifest(): Promise<{
   };
 }
 
+/**
+ * The island bundle's ceiling, and the reason there is one at all.
+ *
+ * **THE BUNDLE WAS 9.28 MB AND NOTHING NOTICED.** `card-search.ts` imported two
+ * pure helpers from `cards.ts`, `cards.ts` imports the 16 MB card corpus at
+ * module scope, and the island entry reaches `card-search.ts` through
+ * `CardSearch.tsx` — so Rollup did exactly what it was asked and put the entire
+ * corpus in the client. Every reader who opened the front page, `/search`, `/cr`
+ * or any card page downloaded it.
+ *
+ * Every check was green while that shipped. The build succeeded, 13,675 pages
+ * rendered, the islands hydrated, the disclaimer was on every page and the
+ * tokens reached all of them. **A bundle nobody measures is a bundle that can be
+ * any size at all**, and it was found only because Workbox refused to precache
+ * a 9.74 MB file and said so.
+ *
+ * So the measurement is now part of the build rather than a thing to remember.
+ * The ceiling is roughly 70% above the current 233 kB — loose enough that
+ * ordinary work never touches it, and two orders of magnitude below a corpus, so
+ * the failure it exists for cannot squeeze under it.
+ */
+const ISLAND_BUDGET_BYTES = 400 * 1024;
+
+async function assertIslandBudget(file: string | undefined): Promise<void> {
+  if (file === undefined) return;
+
+  const bytes = Bun.file(join(OUT_DIR, file)).size;
+  if (bytes <= ISLAND_BUDGET_BYTES) return;
+
+  throw new Error(
+    `The island bundle is ${Math.round(bytes / 1024)} kB, over the ${Math.round(ISLAND_BUDGET_BYTES / 1024)} kB budget.\n` +
+      `This almost always means a module the client imports now reaches the card corpus: ` +
+      `\`cards.ts\` loads 16 MB at module scope, and a VALUE import of anything from it ` +
+      `pulls the whole thing into the bundle. See \`src/lib/printings.ts\`, which exists ` +
+      `for exactly this reason. Use \`import type\` where you only need a shape.`,
+  );
+}
+
 async function main(): Promise<void> {
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(OUT_DIR, { recursive: true });
@@ -156,6 +195,8 @@ async function main(): Promise<void> {
   const islandScript =
     assets.islandScript === undefined ? undefined : `/${assets.islandScript}`;
 
+  await assertIslandBudget(assets.islandScript);
+
   let count = 0;
   const written = new Map<string, string>();
 
@@ -185,10 +226,19 @@ async function main(): Promise<void> {
   // The manifest is how the build talks to itself, not something to publish.
   await rm(join(OUT_DIR, ".vite"), { recursive: true, force: true });
 
+  /*
+   * LAST, AND THAT ORDERING IS LOAD-BEARING. Workbox globs the output directory
+   * to build its precache list, so it has to run after everything it might
+   * precache exists — and after `.vite` is gone, or the build's own manifest
+   * would be shipped inside the service worker's.
+   */
+  const sw = await writeServiceWorker(OUT_DIR);
+
   console.log(
     `[ssg] ${count} page(s), ${GENERATED_ASSETS.length} generated asset(s), ` +
       `${styles.length} stylesheet(s)` +
       `${islandScript === undefined ? ", no islands" : ", islands bundled"}` +
+      `, ${sw.precached} file(s) precached (${Math.round(sw.bytes / 1024)} kB)` +
       ` → dist/`,
   );
 }
