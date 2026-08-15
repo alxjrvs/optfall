@@ -72,12 +72,14 @@
   downwards through the page. No breakpoint: the same declaration seats four on a
   desktop and scrolls nine on a phone.
 
-  IT ALSO SETTLES A COMPLIANCE QUESTION. `CardFaceGroup` hoists one copyright
-  notice for faces "seen together", and explicitly excludes the scrolling case —
-  a reader cannot be said to see a notice with a face six rows above it. As a
-  wrapping grid this rail was that case: 22 tiles, roughly six rows, notice last.
-  As a strip the notice sits directly under a band one tile tall, on screen with
-  it at any scroll position, which is the condition the rule actually states.
+  IT USED TO SETTLE A COMPLIANCE QUESTION TOO, and that half is now history
+  rather than a reason. `CardFaceGroup` hoisted one copyright notice for faces
+  "seen together" and excluded the scrolling case — a reader cannot be said to
+  see a notice with a face six rows above it — so as a wrapping grid this rail
+  was exactly that failure: 22 tiles, roughly six rows, notice last. The notice
+  moved to the universal footer and the group component is gone, so the strip is
+  now kept purely because it is the better layout.
+
 */
 .of-picker__list {
   display: grid;

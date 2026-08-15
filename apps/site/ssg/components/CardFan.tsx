@@ -12,7 +12,7 @@
  * be taking them away.
  */
 
-import { CardFace, CardFaceGroup } from "optfall-components/react";
+import { CardFace } from "optfall-components/react";
 
 import { FACE_TIERS, faceUrl } from "../../src/lib/faces";
 
@@ -38,17 +38,17 @@ function altFor(card: FanCard): string {
 export function CardFan({ cards }: CardFanProps) {
   return (
     <nav className="of-fan" aria-label="Cards to look at">
-      <CardFaceGroup>
+      {/*
+        THE CLIP STAYS ON THIS INNER WRAPPER even though the reason it was put
+        here is gone. `CardFaceGroup` used to emit the copyright notice as a
+        sibling after its children, and a clip on the outer element cropped the
+        one line that was not allowed to be cropped. The notice now lives in the
+        universal footer, so nothing here can crop it — but the window is also
+        simply the right element to clip, and moving the clip outwards would be
+        an unrelated change made because a comment stopped applying.
+      */}
+      <div className="of-fan__window">
         {/*
-          THE CLIP IS ON THIS WRAPPER, NOT ON THE NAV, and that is a compliance
-          detail rather than a layout preference. `CardFaceGroup` emits the
-          copyright notice as a sibling AFTER its children, so a clip on the
-          outer element cropped the one line that is not allowed to be cropped —
-          the notice rendered half-visible under the row. Clipping an inner
-          window leaves the notice outside it, in normal flow, always legible.
-        */}
-        <div className="of-fan__window">
-          {/*
             TWO ELEMENTS FOR TWO AXES, because one element cannot do it. Setting
             `overflow-x: auto` and `overflow-y: clip` on the same box does not
             give a horizontally-scrolling, vertically-cropped band: per CSS
@@ -57,10 +57,10 @@ export function CardFan({ cards }: CardFanProps) {
             vertical crop is scrollable after all. The window crops; the track
             scrolls.
           */}
-          <div className="of-fan__track">
-            <ul className="of-fan__row">
-              {cards.map((card, index) => (
-                /*
+        <div className="of-fan__track">
+          <ul className="of-fan__row">
+            {cards.map((card, index) => (
+              /*
                   Two index-driven properties rather than six hand-written
                   rules, so adding or removing a card cannot leave a gap in the
                   row. `--rise` is the alternating step down that keeps each name
@@ -72,30 +72,29 @@ export function CardFan({ cards }: CardFanProps) {
                   every card pulls left by the same amount, so that is a constant
                   in the stylesheet rather than a number computed per card.
                 */
-                <li
-                  key={card.slug}
-                  style={
-                    {
-                      "--rise": index % 2,
-                      "--z": index + 1,
-                    } as React.CSSProperties
-                  }
-                >
-                  <a href={`/card/${card.slug}`}>
-                    <CardFace
-                      src={faceUrl(card.faceKey, "thumb")}
-                      alt={altFor(card)}
-                      width={tier.width}
-                      height={tier.height}
-                      loading="lazy"
-                    />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+              <li
+                key={card.slug}
+                style={
+                  {
+                    "--rise": index % 2,
+                    "--z": index + 1,
+                  } as React.CSSProperties
+                }
+              >
+                <a href={`/card/${card.slug}`}>
+                  <CardFace
+                    src={faceUrl(card.faceKey, "thumb")}
+                    alt={altFor(card)}
+                    width={tier.width}
+                    height={tier.height}
+                    loading="lazy"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
-      </CardFaceGroup>
+      </div>
     </nav>
   );
 }

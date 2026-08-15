@@ -34,7 +34,7 @@
 
 import { useCallback, useEffect, useId, useState } from "react";
 
-import { CardFace, CardFaceGroup } from "optfall-components/react";
+import { CardFace } from "optfall-components/react";
 
 import "./PrintingPicker.css";
 
@@ -155,52 +155,50 @@ export function PrintingPicker({
       The group carries the notice for all of them, once, because these are
       several pictures of ONE card and the legal fact is the same for each.
     */
-    <CardFaceGroup>
-      <div className="of-picker">
-        <CardFace
-          src={current.normal}
-          alt={alt}
-          width={current.width}
-          height={current.height}
-          loading="eager"
-        />
+    <div className="of-picker">
+      <CardFace
+        src={current.normal}
+        alt={alt}
+        width={current.width}
+        height={current.height}
+        loading="eager"
+      />
 
-        {printings.length > 1 ? (
-          <fieldset className="of-picker__rail">
-            <legend className="of-picker__legend">Printings of {label}</legend>
-            <ul className="of-picker__list">
-              {printings.map((printing, index) => (
-                <li key={printing.key}>
-                  <label
-                    className={
-                      index === selected
-                        ? "of-picker__tile of-picker__tile--current"
-                        : "of-picker__tile"
-                    }
-                  >
-                    <input
-                      type="radio"
-                      name={`${uid}-printing`}
-                      checked={index === selected}
-                      onChange={() => remember(index)}
+      {printings.length > 1 ? (
+        <fieldset className="of-picker__rail">
+          <legend className="of-picker__legend">Printings of {label}</legend>
+          <ul className="of-picker__list">
+            {printings.map((printing, index) => (
+              <li key={printing.key}>
+                <label
+                  className={
+                    index === selected
+                      ? "of-picker__tile of-picker__tile--current"
+                      : "of-picker__tile"
+                  }
+                >
+                  <input
+                    type="radio"
+                    name={`${uid}-printing`}
+                    checked={index === selected}
+                    onChange={() => remember(index)}
+                  />
+                  <span className="of-picker__face">
+                    <CardFace
+                      src={printing.thumb}
+                      alt=""
+                      width={printing.thumbWidth}
+                      height={printing.thumbHeight}
                     />
-                    <span className="of-picker__face">
-                      <CardFace
-                        src={printing.thumb}
-                        alt=""
-                        width={printing.thumbWidth}
-                        height={printing.thumbHeight}
-                      />
-                    </span>
-                    <span className="of-picker__set">{printing.setName}</span>
-                    <span className="of-picker__id">{printing.id}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </fieldset>
-        ) : null}
-      </div>
-    </CardFaceGroup>
+                  </span>
+                  <span className="of-picker__set">{printing.setName}</span>
+                  <span className="of-picker__id">{printing.id}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </fieldset>
+      ) : null}
+    </div>
   );
 }

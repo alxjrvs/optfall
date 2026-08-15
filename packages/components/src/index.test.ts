@@ -48,13 +48,17 @@ describe("card image compliance contract", () => {
 });
 
 describe("the primitive set", () => {
-  test("is the eight Phase 1 deliverables plus the card layer's six, without duplicates", () => {
+  test("is the eight Phase 1 deliverables plus the card layer's five, without duplicates", () => {
     // The eight are Phase 1's closed list. `card-face` is the ninth and it
-    // arrived with the card layer rather than with the design system, which is
-    // why the count moved: docs/SCRYFALL-GAP.md §5.1 made images a product
-    // surface, and a component that renders a card image is the only place the
-    // compliance line can be made unrepresentable-to-omit.
-    expect(PRIMITIVES).toHaveLength(14);
+    // arrived with the card layer rather than with the design system:
+    // docs/SCRYFALL-GAP.md §5.1 made images a product surface.
+    //
+    // THIRTEEN, NOT FOURTEEN. `card-face-group` was the fourteenth and existed
+    // only to hoist one copyright notice over faces shown together. The notice
+    // moved to the universal footer (docs/COMPLIANCE.md §5), which left the
+    // component with no behaviour at all, so it was deleted rather than kept as
+    // a wrapper whose documented reason for existing had gone.
+    expect(PRIMITIVES).toHaveLength(13);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
@@ -62,8 +66,10 @@ describe("the primitive set", () => {
     expect(PRIMITIVES).toContain("search-field");
     expect(PRIMITIVES).toContain("result-row");
     expect(PRIMITIVES).toContain("stat-glyph");
-    expect(PRIMITIVES).toContain("card-face-group");
-    // `game-symbol` is the fourteenth. It renders the markers the printed text
+    // `game-symbol` is the thirteenth — it was the fourteenth until
+    // `card-face-group` was deleted, which happened when the card-image
+    // copyright moved to the universal footer and left that component with
+    // nothing to do. See docs/COMPLIANCE.md §5. It renders the markers the printed text
     // carries — `{p}`, `{r}`, `{t}` — and it is a PRIMITIVE rather than page
     // markup because it shares its silhouettes with `stat-glyph` through
     // `ornament.cut.*`: the plate a reader meets inline in `+1{p}` is the same

@@ -1,22 +1,26 @@
 /**
- * A card face — the printed image, and the copyright line that is the
- * condition of being allowed to show it. The React port.
+ * A card face — the printed image. The React port.
  *
- * THE COPYRIGHT LINE IS NOT A PROP, AND THIS COMPONENT IS THE REASON THAT
- * WORKS. `docs/COMPLIANCE.md` §5 requires the line be "not a prop the caller
- * may omit, not a default that can be overridden to empty, and not the page's
- * responsibility", and it names the ways that could be undone: making it a
- * prop, or "adding a `compact` or `bare` variant that drops it". There is no
- * such variant here and there must never be one. The line is emitted from
- * {@link CARD_IMAGE_COPYRIGHT} on every render, at every tier, and a caller
- * who wants the image gets the line.
+ * THE COPYRIGHT LINE USED TO LIVE HERE, AND MOVING IT WAS A DELIBERATE CHANGE
+ * OF POSTURE RATHER THAN A TIDY-UP. This component rendered
+ * `CARD_IMAGE_COPYRIGHT` on every face, unconditionally, and `CardFaceGroup`
+ * existed only to hoist one notice over a set of them. `docs/COMPLIANCE.md` §5
+ * required exactly that: "not a prop the caller may omit… and not the page's
+ * responsibility".
  *
- * It is small and muted at thumbnail size, and it is genuinely rendered rather
- * than hidden. A grid of sixty faces therefore carries sixty short notices,
- * and that is the correct-looking outcome rather than a cost to engineer
- * around: this is what a compliant card database looks like, and the
- * permission it satisfies is the only reason any of these images may be shown
- * at all.
+ * The requirement it serves is that **the disclaimer be provided wherever card
+ * images are used**, and a per-image line is one way to satisfy it, not the
+ * only one. It is now carried once per page, in the universal footer emitted by
+ * `ssg/document.tsx`, alongside the corpus's own rights notice and the LSS
+ * disclaimer. Every page gets the literal `© Legend Story Studios`, and gets it
+ * whether or not it shows a face.
+ *
+ * WHAT THAT COSTS, STATED PLAINLY. The old arrangement made the line
+ * unforgeable from markup: a caller could not obtain the image without the
+ * notice, because one component emitted both. The new one puts the notice in a
+ * shell the page cannot opt out of but which is a different file from the
+ * image — so `scripts/check-card-notice.ts` is what holds the two together
+ * now, and §5 records that the enforcement moved rather than that it relaxed.
  *
  * WHY IT TAKES BUILT URLS RATHER THAN A KEY. `src`, `srcset` and the box are
  * composed by `apps/site/src/lib/faces.ts`, which owns the URL grammar and is
@@ -49,9 +53,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import type { PitchValue } from "optfall-theme";
 
-import { CARD_IMAGE_COPYRIGHT } from "../index";
 import "./CardFace.css";
-import { useInsideCardFaceGroup } from "./CardFaceGroup";
 
 export interface CardFaceProps {
   /** The face URL at the tier being rendered. */
@@ -94,17 +96,6 @@ export function CardFace({
   loading = "lazy",
   jewel,
 }: CardFaceProps) {
-  /**
-   * A group above us carries the notice for all of its faces.
-   *
-   * READ FROM CONTEXT, NOT FROM A PROP, and that distinction is the whole
-   * guarantee. §5 forbids a prop the caller may omit and a variant that drops
-   * the line — a caller cannot forge this from markup, and the only thing that
-   * sets it is `CardFaceGroup`, which emits the notice itself. The line is
-   * hoisted, never dropped: a face outside a group still carries its own.
-   */
-  const carriedByGroup = useInsideCardFaceGroup();
-
   return (
     <figure
       className="of-card-face"
@@ -126,17 +117,6 @@ export function CardFace({
           <span className="of-card-face__jewel">{jewel(pitch)}</span>
         ) : null}
       </span>
-
-      {/*
-        Not optional, not overridable, not the page's job. See the block comment
-        above and docs/COMPLIANCE.md §5. The only thing that suppresses it here
-        is a `CardFaceGroup` ancestor, which emits it for the whole group.
-      */}
-      {carriedByGroup ? null : (
-        <figcaption className="of-card-face__copyright">
-          {CARD_IMAGE_COPYRIGHT}
-        </figcaption>
-      )}
     </figure>
   );
 }
