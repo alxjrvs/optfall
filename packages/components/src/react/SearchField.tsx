@@ -135,9 +135,14 @@ export function SearchField({
             have typed, on a page that is otherwise a bare box. Decorative,
             because the field's own `<label>` already names it — a mark with an
             accessible name would make the control announce itself twice.
+
+            `md`, not `sm`. The field sets its text at `type.size.title`, and a
+            mark two steps below that read as a smudge rather than as the chain —
+            visible in the markup and not on the page, which is the same as not
+            being there.
           */}
           <span className="of-search__mark" aria-hidden="true">
-            <Mark size="sm" decorative />
+            <Mark size="md" decorative />
           </span>
           {/*
             EVERY COMBOBOX ATTRIBUTE IS CONDITIONAL ON `listboxId`, WHICH IS
