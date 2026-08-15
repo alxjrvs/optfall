@@ -164,6 +164,25 @@ describe("contrast, in both modes equally", () => {
       expect(ratio).toBeGreaterThanOrEqual(3);
     });
 
+    /*
+     * THE FOCUS RING IS A NON-TEXT INDICATOR, so 3:1 is the threshold WCAG
+     * 1.4.11 sets for it rather than 4.5:1 — but it is the only thing telling a
+     * keyboard user where they are, so it is asserted rather than assumed.
+     *
+     * This test exists because a comment claimed it did. `color.focus` moved
+     * from a pale system blue to brass, and the note recording that said the
+     * ratios were computed here while this file had no reference to
+     * `color.focus` at all. A claim about a test is worth exactly as much as the
+     * test.
+     */
+    test(`${mode}: the focus ring is visible against the ground`, () => {
+      const ratio = contrastRatio(
+        token(tokens, "color.focus"),
+        token(tokens, "color.ground"),
+      );
+      expect(ratio).toBeGreaterThanOrEqual(3);
+    });
+
     test(`${mode}: the accent is legible under its own ink`, () => {
       const ratio = contrastRatio(
         token(tokens, "color.accent.ink"),

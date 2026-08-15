@@ -460,8 +460,9 @@ export const DARK_TOKENS: TokenTable = {
      colour on the page that belonged to no part of the palette, and the more
      visible for it on every field and pill. Brass is already the site's second
      metal, it is nothing like the accent so a focused control is never mistaken
-     for a selected or errored one, and it clears contrast against both grounds.
-     `tokens.test.ts` computes the ratios. */
+     for a selected or errored one, and it clears contrast against both grounds
+     — asserted in `tokens.test.ts`, which had no reference to `color.focus` at
+     all when an earlier revision of this comment said it did. */
   "color.focus": "#d8b45f",
 };
 

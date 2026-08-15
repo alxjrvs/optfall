@@ -201,5 +201,9 @@
   horizontal scroll.
 */
 .of-door .of-fan__row {
-  --card: min(var(--of-card-face-thumb), 22vw);
+  /* 18vw, not 22: six cards overlap to about 4.75 card widths, so 22vw put a
+     392px row inside a 343px viewport at 375px wide. The row is clipped rather
+     than scrollable now, so a row that does not fit is a row with cards missing
+     off the end — the width has to be chosen so it fits instead. */
+  --card: min(var(--of-card-face-thumb), 18vw);
 }

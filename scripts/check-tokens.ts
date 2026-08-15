@@ -132,7 +132,47 @@ function styleRegions(
   _file: string,
   source: string,
 ): { line: number; text: string }[] {
-  return source.split("\n").map((text, index) => ({ line: index + 1, text }));
+  /*
+    BLOCK COMMENTS ARE BLANKED, NOT SKIPPED, and this is the whole of the
+    function's cleverness.
+
+    A comment is prose, and prose in this repository talks about pixels
+    constantly — "a 392px row inside a 343px viewport", "the face is 450px" —
+    because the arguments for the token values are made in the units the tokens
+    replace. Scanning it reported those sentences as raw lengths, which is the
+    check calling its own documentation a violation.
+
+    Line-by-line stripping of `/* … *\/` only ever caught single-line comments;
+    every multi-line block in the file went through unfiltered. So the pass
+    below walks the source once, replacing comment CONTENT with spaces and
+    leaving newlines alone — the text stops being scannable while every line
+    keeps its number, which is what the error messages are addressed by.
+  */
+  const blanked: string[] = [];
+  let inComment = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const here = source.slice(i, i + 2);
+    if (!inComment && here === "/*") {
+      inComment = true;
+      blanked.push("  ");
+      i += 1;
+      continue;
+    }
+    if (inComment && here === "*/") {
+      inComment = false;
+      blanked.push("  ");
+      i += 1;
+      continue;
+    }
+    const char = source[i] ?? "";
+    blanked.push(inComment && char !== "\n" ? " " : char);
+  }
+
+  return blanked
+    .join("")
+    .split("\n")
+    .map((text, index) => ({ line: index + 1, text }));
 }
 
 function violationsIn(file: string, source: string): Violation[] {
