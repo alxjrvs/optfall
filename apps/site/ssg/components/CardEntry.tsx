@@ -199,15 +199,20 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * and no power — actions, instants, defence reactions — and gain the empty
    * attack plate.
    *
-   * EQUIPMENT AND WEAPONS ARE IN, DELIBERATELY, and this is the line somebody
-   * will want to move. 525 cards print defence alone and 81 print power alone;
-   * both are permanents, and it is arguable that their printed frames carry no
-   * cost bubble for a socket to stand in. They keep it because "this card has
-   * no cost" is a fact worth stating about a card you never pay for — the same
-   * reason the whole change exists — and because the alternative reads as an
-   * absence of an absence. A permanent that prints LIFE is the one that goes
-   * the other way, above, and the difference is that a hero or an ally has its
-   * own furniture in those corners rather than nothing at all.
+   * EVERY OTHER SHAPE IS IN, DELIBERATELY, and this is the line somebody will
+   * want to move, so here is the whole of it rather than the two cases that
+   * prompted it. 525 cards print defence alone (equipment), 81 print power
+   * alone (weapons), and 409 print cost alone (items, instants, tokens) — the
+   * last being the largest group and the one an earlier draft of this note
+   * never named. All three draw the positions they leave empty.
+   *
+   * They do because "this card has no cost", "no attack", "no defence" are
+   * facts worth stating, which is the whole argument for the change, and
+   * because the alternative renders an absence of an absence. Cards printing
+   * LIFE are the ones that go the other way, above, and the difference is not
+   * how many stats they print: a hero or an ally has its OWN furniture in those
+   * corners, so a socket there would overwrite something rather than report a
+   * gap.
    *
    * Life, intellect and arcane are unchanged and appear only when printed. They
    * have no fixed position on the frame — they are where a card's type puts

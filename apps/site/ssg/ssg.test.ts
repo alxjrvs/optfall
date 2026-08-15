@@ -438,7 +438,13 @@ describe("a card page shows the combat positions it does not fill", () => {
        "No printed cost" with nothing saying it was disqualified by intellect. */
     const weapon = CARD_PAGES.find(
       (page) =>
-        page.card.power !== "" &&
+        /* A DIGIT, not merely non-empty. `Plasma Barrel Shot` prints power `X`
+           and satisfies every other clause; it sorts after a numeric match
+           today, so the `Power \d+` assertion below passes by luck. Upstream
+           prints `X`, `XX` and `*` — that is why `value` is a string — so a
+           resync could turn this red for a reason with nothing to do with
+           sockets. */
+        /^\d+$/.test(page.card.power) &&
         page.card.cost === "" &&
         page.card.defense === "" &&
         page.card.health === "" &&
@@ -451,6 +457,35 @@ describe("a card page shows the combat positions it does not fill", () => {
     expect(html).toContain('aria-label="No printed cost"');
     expect(html).toContain('aria-label="No printed defence"');
     expect(html).toMatch(/aria-label="Power \d+"/);
+  });
+
+  test("a cost-only card draws both of the positions it leaves empty", () => {
+    /*
+     * THE LARGEST GROUP THE RULE ADMITS, and the one an earlier draft of the
+     * rationale never named: 409 cards print a cost and nothing else — items,
+     * instants, tokens. They get an empty attack plate AND an empty defence
+     * shield, which is two sockets from one printed value.
+     *
+     * Pinned as an explicit decision rather than left as a side effect of
+     * "prints a combat stat and no permanent one". It is the same call as
+     * equipment and weapons: the positions exist on the frame and the card
+     * leaves them empty, which is a fact worth drawing.
+     */
+    const costOnly = CARD_PAGES.find(
+      (page) =>
+        page.card.cost !== "" &&
+        page.card.power === "" &&
+        page.card.defense === "" &&
+        page.card.health === "" &&
+        page.card.intelligence === "",
+    );
+    expect(costOnly).toBeDefined();
+
+    const html = render(costOnly?.href ?? "");
+    expect(html).toContain("of-card__name");
+    expect(html).toContain('aria-label="No printed power"');
+    expect(html).toContain('aria-label="No printed defence"');
+    expect(html).not.toContain("No printed cost");
   });
 
   test("an ally gets no sockets either, because its frame is not that frame", () => {
