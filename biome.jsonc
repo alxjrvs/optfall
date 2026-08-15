@@ -38,6 +38,12 @@
       "!.claude",
       "!**/node_modules",
       "!**/dist",
+      // `dist-next` is the Phase 6 generator's output and is NOT covered by
+      // `!**/dist` — that pattern matches the directory name exactly. Without
+      // this line Biome lints generated HTML: it found a `role="search"` in a
+      // rendered page and reported it as a source violation, which is a lint
+      // error nobody can fix in a file nobody wrote.
+      "!**/dist-next",
       "!**/.astro",
       "!**/coverage",
       // Committed build artefacts. Formatting them would make the checked-in

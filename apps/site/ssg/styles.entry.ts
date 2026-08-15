@@ -32,6 +32,7 @@
 /* The document's own rules — layout, type, the shell. Imported by name because
    there is exactly one of them and a glob would be pretending otherwise. */
 import "./document.css";
+import "./SiteHeader.css";
 
 /* Every component's stylesheet, collected without a list to maintain. */
 import.meta.glob("../../../packages/components/src/react/*.css", {
