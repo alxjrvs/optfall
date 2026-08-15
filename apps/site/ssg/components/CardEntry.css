@@ -206,15 +206,14 @@
 
     THAT REPAIR WAS TRIED, SHIPPED AND REVERTED — history, not the rule — so
     here is why it does not work. `minmax(0, auto)` is what lets a corner yield,
-    and dropping the min
-    from min-content to zero also disables the grid item's automatic minimum
-    size, so the corner does not merely fold, it can be sized BELOW its folded
-    content and the label paints outside its column. Measured on the shipped
-    version: at a 360px viewport `DEFENCE` needed 62px in a 61px track, and at
-    320px `POWER` did too. A floor on the middle column is a licence to crush
-    the corners, because at 320px there is genuinely no arrangement of
-    `[label][180px name][label]` that fits a ~260px band — something has to give
-    and the only safe candidate is the name's width.
+    and dropping the min from min-content to zero also disables the grid item's
+    automatic minimum size, so the corner does not merely fold: it can be sized
+    BELOW its folded content, and the label paints outside its column. Measured
+    on the shipped version, `DEFENCE` needed 62px in a 61px track at a 360px
+    viewport, and `POWER` did the same at 320px. A floor on the middle column is
+    a licence to crush the corners, because at 320px there is genuinely no
+    arrangement of `[label][180px name][label]` that fits the band — something
+    has to give, and the only safe candidate is the name's width.
 
     WHAT ACTUALLY BOUNDS THE CORNER IS A CAP, NOT A FLOOR ON ITS NEIGHBOUR, and
     that is the difference between the two attempts. `fit-content(28%)` is
@@ -366,33 +365,33 @@
     degrade into. It is a worse reading of which corner you are in, and that is
     a smaller loss than a name with nowhere to go.
 
-    `safe center` rather than `center`: centring an item that is somehow wider
-    than its box splits the overflow both ways, which on the start corner means
-    spilling outward past the plate's padding and over `BevelledPlate`'s border.
-    The `safe` keyword falls back to start-alignment in exactly that case and is
-    identical in every other.
+    PLAIN `center`, AND `safe center` WAS TRIED AND TAKEN BACK OUT. It was added
+    as a second belt against a badge somehow wider than its box, on the argument
+    that centring such an item splits the overflow both ways and the outward
+    half crosses `BevelledPlate`'s border. Two things were wrong with it.
 
-    IT IS A SECOND BELT, AND ITS FALLBACK IS NOT THE SAME ANSWER — an earlier
-    version of this comment claimed it was, and the claim was wrong on the one
-    corner the keyword exists to protect. A browser that does not understand
-    `safe center` drops the whole declaration to the initial `normal`, which in
-    a flex container behaves as `flex-start`; the start corner is `row-reverse`
-    (below), so `flex-start` there is the RIGHT edge and an overflowing badge
-    would spill LEFT — outward, the direction the paragraph above exists to
-    prevent. `safe`'s own fallback is `start`, which is the left edge whatever
-    `row-reverse` says. The supported and unsupported paths disagree.
+    Its fallback is not the same answer. A browser that does not understand the
+    keyword drops the declaration to the initial `normal`, which behaves as
+    `flex-start` — and the start corner is `row-reverse` (below), so
+    `flex-start` there is the RIGHT edge and the badge would spill LEFT, the
+    very direction the belt was for. `safe`'s own fallback is `start`, the left
+    edge whatever `row-reverse` says, so the two paths disagree.
 
-    That is tolerable only because the guarantee lives elsewhere: the corner
-    track's minimum is `auto`, so a badge wider than its box is not a case that
-    arises. If that track ever loses its automatic minimum again, this keyword
-    is not the thing that will save it — the track is.
+    And it is not neutral on the other corner either: the end badge is plain
+    `row`, so falling back to `start` pins it left and sends the WHOLE overflow
+    outward, where `center` would have spilled half as much.
+
+    So it is a belt that helps one corner, hurts the other, and behaves
+    differently depending on the browser — bought against a case that cannot
+    arise, because the guarantee is the corner track's `auto` minimum. The track
+    is the thing that keeps a badge inside its box; nothing here needs to.
   */
 .of-card__badge {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: safe center;
+  justify-content: center;
   gap: var(--of-space-tight);
 }
 
