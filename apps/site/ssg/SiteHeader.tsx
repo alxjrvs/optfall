@@ -26,7 +26,7 @@ export type HeaderSection = "cards" | "sets" | "rules" | "syntax";
 
 export interface SiteHeaderProps {
   /** Which section is current, for `aria-current`. */
-  readonly section?: HeaderSection;
+  readonly section?: HeaderSection | undefined;
   /** The search field. Off on the page that already has one as its hero. */
   readonly field?: boolean;
 }

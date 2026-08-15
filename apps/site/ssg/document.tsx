@@ -36,7 +36,7 @@ interface DocumentProps {
   /** Emitted stylesheet URLs, from the Vite manifest. */
   readonly styles: readonly string[];
   /** The island bundle's URL, from the same manifest. */
-  readonly islandScript?: string;
+  readonly islandScript?: string | undefined;
 }
 
 export function Document({

@@ -45,16 +45,27 @@ export interface RouteContext<Params, Props> {
  * these fields is asserted somewhere — `check-disclaimer.ts` reads the built
  * HTML, `cards.ts` composes titles and descriptions beside the data so the two
  * cannot drift, and the canonical rules for 6,437 printing pages are a page of
- * reasoning in `card/[...slug].astro`. A page that could emit arbitrary
- * `<head>` markup could emit two canonicals, or none, and nothing would say
- * so. Returning fields means the document shell is the only thing that writes
- * them, once, the same way every time.
+ * reasoning in `pages/card.page.tsx`. A page that could emit arbitrary `<head>`
+ * markup could emit two canonicals, or none, and nothing would say so.
+ * Returning fields means the document shell is the only thing that writes them,
+ * once, the same way every time.
+ *
+ * `?: T | undefined` RATHER THAN `?: T`, HERE AND THROUGHOUT, and the reason is
+ * `exactOptionalPropertyTypes` — which this directory only started obeying when
+ * layer 5 moved it off `astro/tsconfigs/strict` onto the repository's own base
+ * config. Under that flag the two spellings mean genuinely different things:
+ * `?: T` says the key may be ABSENT, and rejects passing it explicitly as
+ * `undefined`. Every caller here computes these fields, so `canonical:
+ * canonicalFor(route)` returning `string | undefined` is the normal shape and
+ * the absent-key spelling would force a conditional spread at every call site
+ * to express something no reader of this type cares about. Where absent and
+ * `undefined` mean the same thing, say so.
  */
 export interface PageResult {
   readonly title: string;
   readonly description: string;
   /** Absolute URL. Omitted where the page is its own canonical. */
-  readonly canonical?: string;
+  readonly canonical?: string | undefined;
   /**
    * Which nav item is current, or `"none"` for a page with no header at all.
    *

@@ -32,7 +32,6 @@
     "check:repo-settings": "scripts/repo-settings.sh --check",
     "check:built-tokens": "bun scripts/check-built-tokens.ts",
     "check:dev-server": "bun scripts/check-dev-server.ts",
-    "check:ssg": "bun run --cwd apps/site build:ssg && bun scripts/check-disclaimer.ts apps/site/dist-next",
     "check:provenance": "bun scripts/check-asset-provenance.ts",
     "check:symbols": "bun scripts/ingest-game-symbols.ts --check",
     "symbols": "bun scripts/ingest-game-symbols.ts",

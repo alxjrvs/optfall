@@ -8,9 +8,10 @@
  * midnight; the rule is the whole difference between a language and a folder of
  * screenshots."
  *
- * This is that rule. `oxlint` cannot parse `.svelte` or `.astro`, so the check
- * is a purpose-built scanner rather than a lint plugin — which is fine, because
- * what it enforces is a project rule rather than a general-purpose one.
+ * This is that rule. It began as a purpose-built scanner because the linter
+ * could not parse `.svelte` or `.astro`; those files are gone, and it stays
+ * purpose-built for the better reason — what it enforces is a project rule
+ * rather than a general-purpose one, and no linter ships it.
  *
  * WHAT IS A VIOLATION: a hex colour, an `rgb()`/`hsl()` function, a named CSS
  * colour, or a length carrying an absolute or typographic unit, appearing in a
@@ -41,12 +42,14 @@ import { DARK_TOKENS, LIGHT_TOKENS } from "../packages/theme/src/index";
  * where it is intent again. Adding a THIRD renderer would need a third line
  * here; that is the cost of the list being explicit, and it is cheaper than a
  * glob that silently starts covering `node_modules`.
+ *
+ * `apps/site/src` WAS THE THIRD ENTRY and is gone with the Astro pages. What is
+ * left under it is `lib/` — the corpus, the query engine, the route derivation —
+ * which contains no stylesheet and never did. Leaving it listed would print
+ * "0 file(s) scanned" beside two real counts, which reads like the check is
+ * broken rather than like the directory is empty of styles.
  */
-const SCANNED = [
-  "packages/components/src",
-  "apps/site/src",
-  "apps/site/ssg",
-] as const;
+const SCANNED = ["packages/components/src", "apps/site/ssg"] as const;
 
 /**
  * Paths not yet migrated, with the reason and the thing that removes them.
@@ -115,47 +118,21 @@ interface Violation {
 }
 
 /**
- * The regions of a file where a literal would be a design decision.
+ * The regions of a file where a literal would be a design decision — now the
+ * whole file, every time.
  *
- * For `.css` that is the whole file. For `.svelte`/`.astro` it is the `<style>`
- * blocks — markup and script may legitimately contain, say, a version string
- * that looks like a length.
+ * IT USED TO BE A `<style>`-BLOCK SCANNER, because a `.svelte` or `.astro` file
+ * is markup and script as well as CSS, and a version string in markup can look
+ * exactly like a length. Both renderers put their styles in separate `.css`
+ * files, so there is no longer a non-style region to skip and the block-tracking
+ * state machine — which had its own subtle bug about a `<style>` that opened and
+ * closed on one line — is gone with the file types that needed it.
  */
 function styleRegions(
-  file: string,
+  _file: string,
   source: string,
 ): { line: number; text: string }[] {
-  const lines = source.split("\n");
-  if (file.endsWith(".css")) {
-    return lines.map((text, index) => ({ line: index + 1, text }));
-  }
-
-  const regions: { line: number; text: string }[] = [];
-  let inStyle = false;
-
-  // Opening and closing are tested INDEPENDENTLY, not as an if/else chain.
-  // A single line can carry both — `<style is:global set:html={tokens}></style>`
-  // in the site layout is exactly that — and an `else if` would set `inStyle`
-  // and never clear it, scanning every following markup line as CSS until the
-  // next `<style>`. That yields no violations today and would misreport the
-  // first literal anyone ever writes in ordinary markup as a style violation,
-  // in a region that is not a style block.
-  lines.forEach((text, index) => {
-    const opens = /<style[\s>]/.test(text);
-    const closes = /<\/style>/.test(text);
-
-    if (opens && closes) return; // self-contained; no CSS body to scan
-    if (opens) {
-      inStyle = true;
-      return;
-    }
-    if (closes) {
-      inStyle = false;
-      return;
-    }
-    if (inStyle) regions.push({ line: index + 1, text });
-  });
-  return regions;
+  return source.split("\n").map((text, index) => ({ line: index + 1, text }));
 }
 
 function violationsIn(file: string, source: string): Violation[] {
@@ -209,13 +186,13 @@ function violationsIn(file: string, source: string): Violation[] {
  */
 function filesUnder(dir: string): string[] {
   return [
-    ...new Bun.Glob("**/*.{svelte,astro,css}").scanSync({
+    ...new Bun.Glob("**/*.css").scanSync({
       cwd: dir,
       dot: false,
     }),
   ]
     .map((path) => `${dir}/${path.replaceAll("\\", "/")}`)
-    .filter((path) => !/(?:^|\/)(?:node_modules|dist|\.astro)\//.test(path))
+    .filter((path) => !/(?:^|\/)(?:node_modules|dist)\//.test(path))
     .toSorted();
 }
 

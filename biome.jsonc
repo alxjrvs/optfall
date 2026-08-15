@@ -2,15 +2,20 @@
 // half this repo never had: there was no formatter at all.
 //
 // WHY IT CHANGED, AND IT IS NOT THAT BIOME IS NICER. `docs/PLAN.md` Phase 6
-// moves this project off Astro, and the tooling has to go first because of
-// what oxlint cannot see. Measured with an identical duplicate-declaration in
-// three files: oxlint reports it in `.ts`, reports it in `.svelte`, and says
-// NOTHING for `.astro`.
+// moved this project off Astro, and the tooling went first because of what
+// oxlint could not see. Measured at the time with an identical
+// duplicate-declaration in three files: oxlint reported it in `.ts`, reported it
+// in `.svelte`, and said NOTHING for `.astro`.
 //
-// That is **5,531 lines across 17 files with no lint coverage at all** — forty
+// That was **5,531 lines across 17 files with no lint coverage at all** — forty
 // per cent of the view layer, unchecked, while `bun run lint` reported success.
 // SU-SRD hit the same thing and recorded the same number for its own Astro
 // migration (2,034 lines across 17 files).
+//
+// Those files are gone now, and the view layer is `.tsx` that Biome lints like
+// everything else. The config stays because the formatter choices below were
+// measured against this repository and remain correct; the blind spot that
+// forced the change is simply no longer the reason to keep it.
 //
 // THE SETTINGS BELOW ARE THIS REPO'S EXISTING STYLE, MEASURED RATHER THAN
 // IMPORTED. Copying SU-SRD's Biome config verbatim would have reformatted
@@ -38,13 +43,6 @@
       "!.claude",
       "!**/node_modules",
       "!**/dist",
-      // `dist-next` is the Phase 6 generator's output and is NOT covered by
-      // `!**/dist` — that pattern matches the directory name exactly. Without
-      // this line Biome lints generated HTML: it found a `role="search"` in a
-      // rendered page and reported it as a source violation, which is a lint
-      // error nobody can fix in a file nobody wrote.
-      "!**/dist-next",
-      "!**/.astro",
       "!**/coverage",
       // Committed build artefacts. Formatting them would make the checked-in
       // copy differ from what the generator emits, which is the one thing
@@ -107,7 +105,7 @@
         // inventing a value for a branch that cannot be reached, which is a
         // worse claim than the assertion.
         //
-        // This is not a licence for `!` generally — see `card/[...slug].astro`,
+        // This is not a licence for `!` generally — see `pages/card.page.tsx`,
         // which writes the unreachable branch out longhand precisely because a
         // `!` there "would be a claim about another module's invariant". The
         // rule cannot tell those two cases apart; a reader can.
@@ -122,10 +120,9 @@
         //
         // It sorts imports alphabetically and hoists them above whatever sits
         // between them — which in this repo is the file's explanatory docblock.
-        // Applied once, it moved `import CardEntry` above the 35-line header of
-        // `card/[...slug].astro`, leaving the comment that explains the file
-        // stranded underneath an import statement. Several other files the
-        // same way.
+        // Applied once, it moved `import CardEntry` above the 35-line header
+        // of the card page, leaving the comment that explains the file stranded
+        // underneath an import statement. Several other files the same way.
         //
         // In a codebase where the prose IS most of the value, a formatter that
         // relocates prose to sort identifiers has the trade backwards. Import
@@ -135,31 +132,6 @@
     }
   },
   "overrides": [
-    {
-      // BIOME SEES THE SCRIPT AND NOT THE TEMPLATE, so "unused" is a lie here.
-      //
-      // In a `.astro` or `.svelte` file the bindings declared up top are
-      // consumed by the markup below, which Biome does not parse. Turned on,
-      // these two rules reported 202 findings across those files and every
-      // single one was wrong — `const { example } = Astro.props` flagged as
-      // unused on the line before the template that renders it.
-      //
-      // They stay ERRORS everywhere else, which is where they work. This is a
-      // limitation of the parser, so the exemption is scoped to exactly the two
-      // extensions that have it rather than the rules being weakened globally.
-      // Phase 6 deletes the `.astro` half of this override by deleting the
-      // files; `tsc` and the Svelte compiler still catch genuinely dead code in
-      // the meantime.
-      "includes": ["**/*.astro", "**/*.svelte"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noUnusedVariables": "off",
-            "noUnusedImports": "off"
-          }
-        }
-      }
-    },
     {
       // A TEST TABLE OVER HETEROGENEOUS COMPONENTS IS NOT TYPABLE, and that is
       // the whole of this exemption. `a11y.test.ts` walks every component in

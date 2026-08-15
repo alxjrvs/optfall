@@ -2,30 +2,26 @@
   "name": "@optfall/site",
   "version": "0.0.0",
   "private": true,
-  "description": "The Optfall website — static Astro build, no server, no runtime bill.",
+  "description": "The Optfall website — static output from the generator in `ssg/`, no server, no runtime bill.",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "build:ssg": "bun ssg/build.ts",
-    "preview": "astro preview",
-    "typecheck": "astro check"
+    "dev": "bun ssg/build.ts && bun ssg/serve.ts",
+    "build": "bun ssg/build.ts",
+    "preview": "bun ssg/serve.ts",
+    "serve": "bun ssg/serve.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@astrojs/svelte": "^9.0.1",
-    "astro": "^7.2.0",
     "optfall-components": "workspace:*",
     "optfall-theme": "workspace:*",
-    "svelte": "^5.56.8"
+    "react": "19",
+    "react-dom": "19"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
     "@types/react": "19",
     "@types/react-dom": "19",
     "@vitejs/plugin-react-swc": "4.3.3",
-    "react": "19",
-    "react-dom": "19",
     "typescript": "~6.0.3",
     "vite": "8"
   }

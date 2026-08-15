@@ -2,21 +2,20 @@
 /**
  * The static generator. `bun ssg/build.ts`.
  *
- * `docs/PLAN.md` Phase 6. It renders alongside Astro rather than replacing it —
- * output goes to `dist-next/`, the shipped build still comes from
- * `astro build`, and the registry currently holds one page. That is the point:
- * a second renderer proven against the real compliance checks before anything
- * depends on it.
+ * `docs/PLAN.md` Phase 6. **This is the build now.** It rendered alongside Astro
+ * into `dist-next/` for four layers, matched it at 13,675 pages, and layer 5
+ * deleted the other one — so the output is `dist/`, which is what Netlify
+ * publishes and what every compliance check reads.
  *
  * THE PIPELINE, IN ORDER, AND THE ORDER MATTERS:
  *
- *   1. Clear `dist-next/`. The generator owns this directory's lifecycle, which
- *      is why the Vite config sets `emptyOutDir: false` — two things clearing
- *      one directory is one of them deleting the other's output.
+ *   1. Clear `dist/`. The generator owns this directory's lifecycle, which is
+ *      why the Vite config sets `emptyOutDir: false` — two things clearing one
+ *      directory is one of them deleting the other's output.
  *   2. `vite build`: the client bundle, whose only real product is a
  *      content-hashed stylesheet collecting all fourteen component sheets.
  *   3. Write the token stylesheet, generated from `packages/theme`.
- *   4. Read `dist-next/.vite/manifest.json` for the emitted CSS urls.
+ *   4. Read `dist/.vite/manifest.json` for the emitted CSS urls.
  *   5. Render every route.
  *   6. Delete the manifest, which is a build artefact and not a page.
  *
@@ -41,23 +40,24 @@ import { dirname, join } from "node:path";
 
 import { themeStylesheet } from "optfall-theme";
 
+import { GENERATED_ASSETS } from "./assets";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
 
-const OUT_DIR = new URL("../dist-next/", import.meta.url).pathname;
+const OUT_DIR = new URL("../dist/", import.meta.url).pathname;
 const CONFIG = new URL("./vite.config.ts", import.meta.url).pathname;
 const VITE_BIN = new URL("../node_modules/.bin/vite", import.meta.url).pathname;
 
 /**
- * THE TOKEN STYLESHEET IS A FILE, WHERE ASTRO INLINES IT INTO EVERY PAGE.
+ * THE TOKEN STYLESHEET IS A FILE, WHERE ASTRO INLINED IT INTO EVERY PAGE.
  *
- * `BaseLayout.astro` renders `themeStylesheet()` into a `<style is:global>` on
- * every page it builds. That is 18 kB, and there are 13,675 pages: **235 MB of
- * the shipped output is the same stylesheet, repeated.** It also cannot be
- * cached separately from the document it lives in, so every navigation
- * re-downloads it — the identical argument that moved Astro's own component CSS
- * out of the page in `astro.config.mjs`, applied to the one sheet that change
- * could not reach.
+ * `BaseLayout.astro` rendered `themeStylesheet()` into a `<style is:global>` on
+ * every page it built. That is 18 kB, and there are 13,675 pages: **235 MB of
+ * the shipped output was the same stylesheet, repeated.** It also could not be
+ * cached separately from the document it lived in, so every navigation
+ * re-downloaded it — the identical argument that had already moved Astro's own
+ * component CSS out of the page, applied to the one sheet that change could not
+ * reach.
  *
  * Written from the generator rather than authored as CSS because the tokens are
  * a typed table in `packages/theme` and the stylesheet is derived from it. There
@@ -131,6 +131,16 @@ async function main(): Promise<void> {
   await writeFile(join(OUT_DIR, TOKENS_PATH), themeStylesheet(), "utf-8");
 
   /*
+   * The non-page files, written before the pages so a failure to derive one
+   * stops the build before it emits 13,675 documents linking it.
+   */
+  for (const asset of GENERATED_ASSETS) {
+    const target = join(OUT_DIR, asset.path);
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, asset.contents, "utf-8");
+  }
+
+  /*
    * TOKENS FIRST, COMPONENTS SECOND. The component sheets consume `--of-*`
    * custom properties and define none of them, so the order is not cosmetic —
    * a custom property is resolved at use, so a later definition still applies,
@@ -176,9 +186,10 @@ async function main(): Promise<void> {
   await rm(join(OUT_DIR, ".vite"), { recursive: true, force: true });
 
   console.log(
-    `[ssg] ${count} page(s), ${styles.length} stylesheet(s)` +
+    `[ssg] ${count} page(s), ${GENERATED_ASSETS.length} generated asset(s), ` +
+      `${styles.length} stylesheet(s)` +
       `${islandScript === undefined ? ", no islands" : ", islands bundled"}` +
-      ` → dist-next/`,
+      ` → dist/`,
   );
 }
 
