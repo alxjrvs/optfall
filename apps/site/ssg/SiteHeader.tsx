@@ -47,7 +47,18 @@ export function SiteHeader({ section, field = true }: SiteHeaderProps) {
   return (
     <header className="of-bar">
       <a className="of-bar__wordmark" href="/">
-        <Mark size="sm" variant="ink" decorative />
+        {/*
+          THE PITCH VARIANT, AND `md` RATHER THAN `sm`. The header used to carry
+          the monochrome mark at the smallest step, on the argument that chrome
+          should be quiet and the door was the one surface where the mark was
+          identity rather than furniture. That is a defensible position and it
+          made every page but one look unbranded — the wordmark reads as text
+          with a grey glyph beside it, and the three-colour mark is the thing
+          people recognise. It is the same object either way; this is a decision
+          about which of the two surfaces gets the recognisable one, and the
+          answer is both.
+        */}
+        <Mark size="md" decorative />
         Optfall
       </a>
 
