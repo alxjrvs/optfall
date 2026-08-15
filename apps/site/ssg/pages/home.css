@@ -161,19 +161,35 @@
   text-transform: uppercase;
 }
 
+/*
+  THE SUPPORT LINK IS ONE OF THE LIST, not a footnote under it. It was a
+  separate block a full `loose` gap below the `NEW` items and underlined, which
+  made it read as a different KIND of thing — an afterthought, or an
+  advertisement. It is neither: it sits with the other things worth clicking, in
+  their type and their colour, at their spacing.
+*/
 .of-door__cause {
-  margin: 0;
+  margin-block: 0;
   text-align: center;
   font-size: var(--of-type-size-small);
 }
 
 .of-door__cause a {
   color: var(--of-color-ink-muted);
+  text-decoration: none;
 }
 
 .of-door__cause a:hover,
 .of-door__cause a:focus-visible {
-  color: var(--of-color-accent);
+  color: var(--of-color-ink);
+}
+
+/* The `NEW` list and the support link are one group with one rhythm. */
+.of-door__notices {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--of-space-tighter);
 }
 
 /*

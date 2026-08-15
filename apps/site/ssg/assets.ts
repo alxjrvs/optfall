@@ -63,73 +63,81 @@ function literal(tokens: TokenTable, id: TokenId): string {
 /**
  * `/favicon.svg` — the mark, in the tab.
  *
- * WHAT THIS FIXES. `docs/DESIGN.md` says of the mark that "the logo and the
- * core interface primitive are the same object: the thing you see a thousand
- * times a session is the thing on the tab", and `Mark.tsx` carries forward the
- * claim that it "IS DRAWN AS AN SVG BECAUSE IT HAS TO SURVIVE A FAVICON" — a
- * claim it justifies down to the device pixel. Without this the constraint that
- * dictated the mark's whole form is paid for and never spent.
+ * IT IS THE CHAIN, NOT ONE LINK, and it used to be one link. The argument for
+ * the single link was that a favicon is rasterised at 16px, three interlocked
+ * rings become mud at that size, and "a ring with an open window" is the last
+ * thing to survive as the icon shrinks. That reasoning is sound and it produced
+ * a tab icon that is not the logo — an unfamiliar lozenge next to every other
+ * tab, where the whole point of the mark is that the thing you see a thousand
+ * times a session is the thing on the tab.
  *
- * IT IS GENERATED RATHER THAN A FILE IN `public/`, and that is the point. A
- * checked-in `favicon.svg` is a second drawing of the mark: it cannot import
- * anything, so it carries its own copy of the geometry and its own copy of the
- * palette, and both drift silently — nothing fails when a hand-copied hex stops
- * matching `color.accent`, because a favicon has no test that looks at it.
+ * So it is the chain, and the 16px case is accepted rather than designed for:
+ * browsers ask for 32px and larger far more often than 16 these days, and an
+ * icon that is slightly dense at the smallest size beats one that is legible
+ * and wrong at every size.
  *
- * WHAT IT DELIBERATELY DROPS FROM THE ON-PAGE MARK:
+ * THE INTERLOCK IS PAINT ORDER, NOT MASKING, and this reproduces `Mark.tsx`
+ * exactly rather than approximating it. Every link is drawn left to right,
+ * which settles the LOWER crossing of each pair — the right-hand link is drawn
+ * later, so it lies over its neighbour. Then each left-hand link is drawn again
+ * inside a clip rectangle containing only that pair's UPPER crossing, which puts
+ * it back on top there. Same path, same transform, same fill; the only thing
+ * added is where it is allowed to appear.
  *
- * - **The bevel.** `Mark` carries a light top edge and a dark bottom one as two
- *   1px drop-shadows, and needs `overflow: visible` so an SVG root does not
- *   shear them off at the viewBox. A favicon is rasterised at 16px inside
- *   exactly that clip, where a 1px edge is both uncuttable and mud. The bevel is
- *   the "struck metal" reading, and it is the right thing to lose first.
- * - **`currentColor`.** There is no inherited colour in a document nobody
- *   styles, so the link gets a literal accent — see the theme note below.
+ * WHAT IT DROPS FROM THE ON-PAGE MARK is the bevel. `Mark` carries a light top
+ * edge and a dark bottom one as two 1px drop-shadows and needs `overflow:
+ * visible` so an SVG root does not shear them off. A favicon is rasterised
+ * inside exactly that clip, where a 1px edge is both uncuttable and mud.
  *
- * WHAT IT KEEPS is the one thing that has to survive: a ring with an open
- * window. The window is what makes it a link rather than a lozenge, and it is
- * the last thing to close as the icon gets smaller.
+ * THE THREE PITCH COLOURS ARE LITERAL HERE. `Mark` fills each link from a token
+ * through a stylesheet; a referenced SVG gets no page CSS, so the values are
+ * read from the theme's own tables at build time and written in. That is the
+ * same trade `themeStylesheet()` makes — no second declaration to drift,
+ * because there is no declaration at all, only a derivation.
  *
- * THE FAVICON IS THEMED, AND IT HAS TO BE, because it is composited against
- * furniture we do not own. A tab strip is the browser's chrome, not our ground,
- * so the link sits on near-black in a dark browser and on light grey in a light
- * one, and has to hold against both.
- *
- * It is the accent in either: `docs/DESIGN.md` rations boldness to two places
- * and a logo is one of them, and a single link has no pitch value to carry, so
- * it takes blood rather than a third of a palette. The light palette darkens its
- * accent rather than reusing the dark one, which is a decision the theme already
- * made and this file only has to not undo.
- *
- * `prefers-color-scheme` inside the SVG's own `<style>` is what carries this. A
- * referenced SVG gets no page CSS but does get its own media queries, so this is
- * the one mechanism available — and where it is unsupported the media block is
- * simply skipped and the dark palette below stands, which is the correct default
- * for a project whose native key is black.
- *
- * CACHING IS NOT SET HERE, AND CANNOT BE. This is a file on disk; Netlify serves
- * it with revalidation and an `ETag`, which is the correct policy for an asset
- * at a fixed address whose bytes change with the palette. If it ever needs to be
- * something else it belongs in `netlify.toml` beside the other header rules.
+ * IT IS NOT THEMED, unlike the version that preceded it. The single link took
+ * the accent and flipped it under `prefers-color-scheme` because one shape had
+ * to hold against both a dark and a light tab strip. The chain carries the pitch
+ * palette, which is the same in both themes — those three colours are the
+ * game's, not the interface's — so there is nothing to swap.
  */
 function faviconSvg(): string {
-  const { single, link } = MARK_GEOMETRY;
+  const { viewBox, link, placements, scopes } = MARK_GEOMETRY;
   const dark = themes.dark.tokens;
-  const light = themes.light.tokens;
 
-  /*
-   * Presentation attributes rather than a fill on each element, so the media
-   * query has something to override — an inline `fill` would win against a
-   * stylesheet rule and pin the mark to one palette.
-   */
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${single.viewBox}">
-<style>
-.link { color: ${literal(dark, "color.accent")} }
-@media (prefers-color-scheme: light) {
-.link { color: ${literal(light, "color.accent")} }
-}
-</style>
-<g transform="${single.placement}"><path class="link" d="${link}" fill-rule="evenodd" fill="currentColor"/></g>
+  const fills = [
+    literal(dark, "color.pitch.one"),
+    literal(dark, "color.pitch.two"),
+    literal(dark, "color.pitch.three"),
+  ];
+
+  const clips = scopes
+    .map(
+      (scope, index) =>
+        `<clipPath id="s${index}"><rect x="${scope.x}" y="${scope.y}" width="${scope.width}" height="${scope.height}"/></clipPath>`,
+    )
+    .join("");
+
+  /* Left to right: settles the lower crossing of every pair. */
+  const chain = placements
+    .map(
+      (placement, index) =>
+        `<g transform="${placement}"><path d="${link}" fill-rule="evenodd" fill="${fills[index] ?? fills[0]}"/></g>`,
+    )
+    .join("");
+
+  /* And the upper crossing, by redrawing the left-hand link inside its scope. */
+  const overs = scopes
+    .map(
+      (scope, index) =>
+        `<g clip-path="url(#s${index})"><g transform="${placements[scope.link] ?? ""}"><path d="${link}" fill-rule="evenodd" fill="${fills[scope.link] ?? fills[0]}"/></g></g>`,
+    )
+    .join("");
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">
+<defs>${clips}</defs>
+${chain}
+${overs}
 </svg>
 `;
 }

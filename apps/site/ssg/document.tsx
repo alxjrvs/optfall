@@ -115,15 +115,42 @@ export function Document({
           HTML to prove it is there — so the only design that cannot fail is one
           where a page has no way to omit it.
         */}
+        {/*
+          THE FOOTER IS A COLUMN, LIKE EVERY OTHER SURFACE. Its text used to run
+          the full width of the window — a 1,400px measure on a desktop, three
+          times what the rest of the site sets, and the legal text was the one
+          thing on the page hardest to read as a result. `.site-footer__inner`
+          gives it the same `layout.page.wide` cap and the same gutters `main`
+          uses, so the footer aligns with the content above it instead of
+          starting where the browser happens to end.
+        */}
         <footer className="site-footer">
-          {/*
+          <div className="site-footer__inner">
+            {/*
+              SITE LINKS, because a footer that is only a legal notice makes the
+              legal notice the only thing a reader ever looks at down here.
+              Repeating the nav costs nothing and gives the bottom of a long card
+              page a way out that is not the back button.
+            */}
+            <nav className="site-footer__links" aria-label="Optfall">
+              <a href="/search">Cards</a>
+              <a href="/sets">Sets</a>
+              <a href="/cr">Rules</a>
+              <a href="/syntax">Syntax</a>
+              <a href="/random">Random</a>
+              <a href="/about">About</a>
+              <a href="/data-terms">Data terms</a>
+              <a href="https://github.com/alxjrvs/optfall">Source</a>
+            </nav>
+
+            {/*
             THE CORPUS'S OWN RIGHTS NOTICE, REPRODUCED RATHER THAN REWORDED.
             It names card names, card text and card images as LSS's property and
             states the policy under which they are displayed, so it is the
             sentence that does the most work of the three.
           */}
-          <p className="legal">{CORPUS.rights}</p>
-          {/*
+            <p className="legal">{CORPUS.rights}</p>
+            {/*
             THE CARD-IMAGE LINE, WHICH USED TO BE RENDERED BY EVERY `CardFace`.
             `docs/COMPLIANCE.md` §5 requires the literal `© Legend Story
             Studios` wherever card images are used; carrying it here gives every
@@ -133,12 +160,13 @@ export function Document({
             editing it to absorb this line would be rewording a notice we do not
             own.
           */}
-          <p className="legal">{CARD_IMAGE_COPYRIGHT}</p>
-          {/*
+            <p className="legal">{CARD_IMAGE_COPYRIGHT}</p>
+            {/*
             Unchanged, and still last: `check-disclaimer.ts` reads this string
             verbatim off all 13,675 built pages.
           */}
-          <p className="legal">{LSS_DISCLAIMER}</p>
+            <p className="legal">{LSS_DISCLAIMER}</p>
+          </div>
         </footer>
         {/*
           THE SCRIPT IS EMITTED ONLY FOR PAGES THAT DECLARE AN ISLAND, which is
