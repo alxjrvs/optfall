@@ -44,10 +44,10 @@
   functions = "apps/images/netlify/functions"
 
 [build.environment]
-  # BUN_VERSION must equal env.BUN_VERSION in .github/workflows/ci.yml EXACTLY,
-  # for the same reason the main site's does: an exact pin against a floating
-  # line means a green gate can attest to a build on a runtime that never
-  # produced the deploy.
+  # BUN_VERSION must equal `.bun-version` at the repository root EXACTLY, for the
+  # same reason the main site's does: a runtime CI never tested on is a green
+  # gate attesting to a build nobody shipped. Netlify reads no version file, so
+  # this copy is hand-maintained and `bun run check:bun-version` fails on drift.
   NODE_VERSION = "22"
   BUN_VERSION = "1.3.14"
 

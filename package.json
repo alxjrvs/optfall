@@ -16,7 +16,7 @@
     "apps/*"
   ],
   "engines": {
-    "bun": ">=1.2.0"
+    "bun": ">=1.3.14"
   },
   "catalog": {
     "@netlify/blobs": "10.7.12",
@@ -38,6 +38,7 @@
     "check:card-notice": "bun scripts/check-card-notice.ts",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:repo-settings": "scripts/repo-settings.sh --check",
+    "check:bun-version": "bun scripts/check-bun-version.ts",
     "check:built-tokens": "bun scripts/check-built-tokens.ts",
     "check:dev-server": "bun scripts/check-dev-server.ts",
     "check:provenance": "bun scripts/check-asset-provenance.ts",
