@@ -22,6 +22,8 @@
 
 import type { ReactNode } from "react";
 
+import type { HeaderSection } from "./SiteHeader";
+
 /** One URL a page owns, with whatever the renderer needs to draw it. */
 export interface StaticPath<Params, Props> {
   readonly params: Params;
@@ -53,8 +55,20 @@ export interface PageResult {
   readonly description: string;
   /** Absolute URL. Omitted where the page is its own canonical. */
   readonly canonical?: string;
-  /** Which nav item is current, if any. */
-  readonly section?: string;
+  /**
+   * Which nav item is current, or `"none"` for a page with no header at all.
+   *
+   * A UNION RATHER THAN A STRING, because a typo in a section name is silent:
+   * the nav renders, nothing is marked current, and the page looks fine. The
+   * five names are the whole site, so enumerating them costs nothing and turns
+   * `section="card"` into a build failure instead of a missing underline.
+   */
+  readonly section?: HeaderSection | "none";
+  /**
+   * The header's search field. Off on the page whose hero IS a search field —
+   * two fields on one screen is two places to type and one of them wrong.
+   */
+  readonly headerSearch?: boolean;
   /** `measure` (prose) or `wide` (a face beside a column). See the tokens. */
   readonly width?: "measure" | "wide";
   readonly children: ReactNode;

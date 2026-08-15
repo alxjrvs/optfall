@@ -18,6 +18,7 @@
 import type { ReactElement } from "react";
 
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
+import { SiteHeader } from "./SiteHeader";
 import type { PageResult } from "./types";
 
 export const SITE_ORIGIN = "https://optfall.com";
@@ -64,6 +65,19 @@ export function Document({
       </head>
       <body>
         <div className="shell">
+          {/*
+            THE HEADER IS THE SHELL'S, NOT A PAGE'S, and `section: "none"` is
+            how a page opts out. Every surface on this site carries the same
+            nav; making each page mount it would mean each page could forget
+            it, and the one that forgot would be the one nobody could navigate
+            away from.
+          */}
+          {result.section === "none" ? null : (
+            <SiteHeader
+              section={result.section}
+              field={result.headerSearch ?? true}
+            />
+          )}
           <main data-width={result.width ?? "measure"}>{result.children}</main>
         </div>
         {/*
