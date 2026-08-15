@@ -1183,6 +1183,34 @@ cards.push({
   <p class="note"><strong>It is an <code>&lt;li&gt;</code>, and the caller owns the list.</strong> A row that wrapped itself in its own <code>&lt;ul&gt;</code> would publish a list of one to a screen reader for every result on the page, which is the same count that tells a reader how much there is to get through.</p>`,
 });
 
+cards.push({
+  path: "primitives/pagination.html",
+  group: "Primitives",
+  title: "Pagination",
+  body: `
+  <p class="note">The control that replaced "N more match. Narrow the query." — a line that counted rows it then refused to show. The count was never the problem and has not moved; what is new is that the rows it counts are reachable.</p>
+  <div class="plate" style="margin-block-start:var(--of-space-loose);padding:var(--of-space-loose)">
+    <p class="note" style="margin:0 0 var(--of-space-base)">Showing 61–120 of 1,204 cards</p>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--of-space-tight)">
+      <span class="mono" style="font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase;color:var(--of-color-ink-muted)">Previous</span>
+      ${[1, 2, 3]
+        .map(
+          (n) =>
+            `<span class="mono" style="min-inline-size:var(--of-ornament-jewel-base);display:inline-flex;align-items:center;justify-content:center;padding:var(--of-space-tighter) var(--of-space-tight);border:var(--of-bevel-width) solid ${n === 2 ? "var(--of-color-ink)" : "var(--of-color-rule)"};border-block-start-color:${n === 2 ? "var(--of-color-ink)" : "var(--of-bevel-light)"};border-block-end-color:${n === 2 ? "var(--of-color-ink)" : "var(--of-bevel-dark)"};background:${n === 2 ? "var(--of-color-ink)" : "var(--of-color-surface)"};color:${n === 2 ? "var(--of-color-surface)" : "var(--of-color-ink-muted)"};font-size:var(--of-type-size-micro)">${n}</span>`,
+        )
+        .join("")}
+      <span style="color:var(--of-color-ink-muted);font-size:var(--of-type-size-micro)">…</span>
+      <span class="mono" style="min-inline-size:var(--of-ornament-jewel-base);display:inline-flex;align-items:center;justify-content:center;padding:var(--of-space-tighter) var(--of-space-tight);border:var(--of-bevel-width) solid var(--of-color-rule);border-block-start-color:var(--of-bevel-light);border-block-end-color:var(--of-bevel-dark);background:var(--of-color-surface);color:var(--of-color-ink-muted);font-size:var(--of-type-size-micro)">21</span>
+      <span class="mono" style="font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase;color:var(--of-color-accent)">Next</span>
+    </div>
+    <p class="note" style="margin-block-start:var(--of-space-base)">Per page &nbsp; <span class="mono" style="font-size:var(--of-type-size-micro)">30 · <strong style="color:var(--of-color-ink)">60</strong> · 120 · 240 · All</span></p>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Every control is a real <code>&lt;a href&gt;</code>.</strong> That is what makes a page of an answer an address somebody can paste, and it is why the pager works before any script has run. A caller may pass <code>onNavigate</code> to take the same links client-side; without it they are ordinary links and the page reloads, which is the correct fallback rather than a degraded one.</p>
+  <p class="note"><strong>The ends are always shown.</strong> A pager rendering <code>‹ 14 15 16 ›</code> inside a 21-page answer has hidden both the size of the answer and the two destinations anybody navigates to directly — the start and the end.</p>
+  <p class="note"><strong><code>All</code> removes the cap rather than raising it.</strong> It resolves to an infinite limit, so a reader who asks for every row gets every row. It is the last step offered because it is the expensive one — the grid is card images.</p>
+  <p class="note"><strong>The current page is marked, not disabled.</strong> A disabled control leaves the tab order, so paging with the keyboard would drop the reader out of the pager every time they landed somewhere.</p>`,
+});
+
 /* -------------------------------------------------------------------- Screens */
 
 cards.push({
