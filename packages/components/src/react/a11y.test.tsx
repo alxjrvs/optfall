@@ -72,6 +72,7 @@ import { Mark } from "./Mark";
 import { OrnamentalRule } from "./OrnamentalRule";
 import { Pagination } from "./Pagination";
 import { PitchJewel } from "./PitchJewel";
+import { PitchRule } from "./PitchRule";
 import { ResultRow } from "./ResultRow";
 import { SearchField } from "./SearchField";
 import { StatePill } from "./StatePill";
@@ -106,6 +107,26 @@ const CASES: readonly Case[] = [
     name: "PitchJewel small",
     component: PitchJewel,
     props: { value: 3, size: "sm" },
+  },
+
+  /*
+   * The rule's whole accessible surface is its name, because a band has no
+   * text node to fall back on. So the cases here are the ones where the name
+   * is the only thing an assistive reader gets: a single pitch, the collapsed
+   * three-version card the card index renders constantly, and the no-pitch
+   * card whose band is grey rather than absent.
+   */
+  { name: "PitchRule one", component: PitchRule, props: { values: [1] } },
+  {
+    name: "PitchRule three versions",
+    component: PitchRule,
+    props: { values: [1, 2, 3] },
+  },
+  { name: "PitchRule none", component: PitchRule, props: { values: [0] } },
+  {
+    name: "PitchRule small",
+    component: PitchRule,
+    props: { values: [2, 3], size: "sm" },
   },
 
   { name: "BevelledPlate flat", component: BevelledPlate, props: {} },

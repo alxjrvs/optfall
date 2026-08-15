@@ -39,6 +39,7 @@ export { Mark, type MarkProps } from "./Mark";
 export { OrnamentalRule, type OrnamentalRuleProps } from "./OrnamentalRule";
 export { Pagination, type PaginationProps } from "./Pagination";
 export { PitchJewel, type PitchJewelProps } from "./PitchJewel";
+export { PitchRule, type PitchRuleProps } from "./PitchRule";
 export { ResultRow, type ResultRowProps } from "./ResultRow";
 export { SearchField, type SearchFieldProps } from "./SearchField";
 export { StatePill, type StatePillProps } from "./StatePill";

@@ -39,11 +39,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  CardFace,
   OrnamentalRule,
   Pagination,
-  PitchJewel,
-  ResultRow,
   SearchField,
 } from "optfall-components/react";
 
@@ -54,7 +51,6 @@ import {
   type EncodedCardIndex,
   searchCards,
 } from "../../src/lib/card-search";
-import { boxFor, faceUrl, placeholderUrl } from "../../src/lib/faces";
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_PARAM,
@@ -68,6 +64,7 @@ import {
   SIZE_PARAM,
   withPageParams,
 } from "../../src/lib/pagination";
+import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
 
 import "./CardSearch.css";
 
@@ -129,9 +126,19 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
   const [paramDisplay, setParamDisplay] = useState<CardDisplayMode | null>(
     null,
   );
+  /*
+    FALSE ON THE SERVER AND ON THE FIRST CLIENT RENDER. The view switch is a
+    radio group and does nothing without JavaScript — a control that looks
+    operable and is not. The PAGER is not gated this way and must not be: it is
+    made of real links, which is what lets a page of a search be an address.
+    Flipping this in an effect keeps the two first renders identical, which is
+    what hydration checks.
+  */
+  const [interactive, setInteractive] = useState(false);
   const field = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setInteractive(true);
     const fromUrl = queryFromUrl();
     if (fromUrl !== "") {
       setQuery(fromUrl);
@@ -177,6 +184,40 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       slice.pages > 1 ? ` Page ${slice.page} of ${slice.pages}.` : "";
     return `${found} match${outcome.total === 1 ? "es" : ""}.${where}`;
   })();
+
+  /**
+   * The rows, in the shape every list of cards on this site is rendered from.
+   *
+   * THE MAPPING IS THE WHOLE OF WHAT SEARCH ADDS. A result knows why it is on
+   * the page and which versions it stands for; a set page's row knows neither
+   * and carries a printing instead. Both are `CardIndexEntry`, which is what
+   * makes them one rendering rather than two that look alike.
+   */
+  const entries: readonly CardIndexEntry[] = outcome.results.map((result) => ({
+    href: result.href,
+    label: result.label,
+    typeLine: result.typeLine,
+    faceKey: result.faceKey,
+    faceLandscape: result.faceLandscape,
+    /*
+      THE MATCHED VERSIONS, NOT EVERY VERSION. A `pitch:1` search that drew
+      three bands under Head Jab would be answering a question about red with a
+      picture of red, yellow and blue.
+    */
+    pitches: result.matchedPitches,
+    stats: result.stats,
+    /*
+      ONLY SOME PITCH VERSIONS MATCHED, AND SAYING SO IS NOT OPTIONAL. Four
+      names in this corpus carry versions whose Classic Constructed ban differs.
+      A `banned:cc` row that named the card and stopped would put a card on a
+      banned list without saying which version was banned.
+    */
+    note:
+      result.matchedPitches.length < result.totalVersions
+        ? versionsMatched(result.matchedPitches)
+        : undefined,
+    why: WHY[result.matchedIn],
+  }));
 
   /**
    * `written` is what the URL should say, and it is NOT always the box.
@@ -434,170 +475,64 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       {asked ? (
         outcome.results.length > 0 ? (
           <>
-            <div className="of-cards__result-head">
-              <p className="of-cards__count">{summary}</p>
-              {/*
-                Two views of the same answer. A radio group rather than a pair of
-                buttons, because that is what "pick exactly one" is, and it gets
-                arrow keys and a group name for free.
-              */}
-              <fieldset className="of-cards__views">
-                <legend className="of-cards__views-legend">
-                  Show results as
-                </legend>
-                {(
-                  [
-                    ["grid", "Grid"],
-                    ["list", "List"],
-                    ["text", "Text"],
-                  ] as const
-                ).map(([mode, label]) => (
-                  <label className="of-cards__view" key={mode}>
-                    <input
-                      type="radio"
-                      name="display"
-                      value={mode}
-                      checked={display === mode}
-                      onChange={() => show(mode)}
-                    />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </fieldset>
-            </div>
-
-            {display === "grid" ? (
-              /*
-                The face is the row. Results are images by default, because
-                recognising a card by its face is faster than reading its name —
-                the single largest difference between this and every text-list
-                card tool in the game.
-
-                `CardFace` carries the copyright line on every one of these, and
-                that is not negotiable: COMPLIANCE.md §5 forbids a variant that
-                drops it.
-              */
-              <ul className="of-cards__grid">
-                {outcome.results.map((result) => {
-                  const box = boxFor(
-                    "thumb",
-                    result.faceLandscape ? "landscape" : "portrait",
-                  );
-                  return (
-                    <li className="of-cards__cell" key={result.href}>
-                      <a className="of-cards__cell-link" href={result.href}>
-                        <CardFace
-                          src={
-                            result.faceKey === null
-                              ? placeholderUrl(
-                                  result.faceLandscape
-                                    ? "landscape"
-                                    : "portrait",
-                                )
-                              : faceUrl(result.faceKey, "thumb")
-                          }
-                          alt={`${result.label} — ${result.typeLine}`}
-                          width={box.width}
-                          height={box.height}
-                        />
-                        <span className="of-cards__cell-name">
-                          {result.label}
-                        </span>
-                        {result.matchedPitches.length < result.totalVersions ? (
-                          /*
-                            ONLY SOME PITCH VERSIONS MATCHED, AND SAYING SO IS
-                            NOT OPTIONAL. Four names in this corpus carry
-                            versions whose Classic Constructed ban differs. A
-                            `banned:cc` row that named the card and stopped would
-                            put a card on a banned list without saying which
-                            version was banned.
-                          */
-                          <span className="of-cards__cell-versions">
-                            {versionsMatched(result.matchedPitches)}
-                          </span>
-                        ) : null}
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : display === "list" ? (
-              <ol className="of-cards__results">
-                {outcome.results.map((result) => (
-                  <ResultRow
-                    key={result.href}
-                    href={result.href}
-                    label={result.label}
-                    lead={<PitchJewel value={result.pitch} size="sm" />}
-                    meta={
-                      <>
-                        <span>{result.typeLine}</span>
-                        {result.stats.map(([label, value]) => (
-                          <span key={label}>
-                            {label} {value}
-                          </span>
-                        ))}
-                        {result.matchedPitches.length < result.totalVersions ? (
-                          <span>{versionsMatched(result.matchedPitches)}</span>
-                        ) : null}
-                        <span className="of-cards__why">
-                          {WHY[result.matchedIn]}
-                        </span>
-                      </>
-                    }
-                  />
-                ))}
-              </ol>
-            ) : (
-              /*
-                NAMES, ONE PER LINE, AND NOTHING ELSE. The mode whose output is
-                meant to LEAVE the page: a player writing a deck list wants forty
-                names they can select and paste. Each name is still a link,
-                because a text list that cannot be clicked would be a worse
-                version of the other modes rather than a different one.
-              */
-              <ol className="of-cards__text-results">
-                {outcome.results.map((result) => (
-                  <li key={result.href}>
-                    <a href={result.href}>{result.label}</a>
-                  </li>
-                ))}
-              </ol>
-            )}
-
             {/*
-              WHERE "N MORE MATCH. NARROW THE QUERY." USED TO BE.
+              EVERY LIST OF CARDS ON THIS SITE IS THIS COMPONENT, and search is
+              one of its two callers rather than the only place a card grid
+              exists. What was a hundred lines of grid, rows and names markup
+              here is a mapping from `CardResult` to `CardIndexEntry` — see
+              `entries` below — and the pager is handed in as a slot, because
+              only this surface knows that a page of a search is
+              `?q=…&page=…&per=…`.
 
-              That line counted rows it then refused to show, which
-              `docs/SCRYFALL-GAP.md` §4 named as the thing to delete: "a refusal
-              where Scryfall paginates. A grid makes it worse — 60 images is
-              under one scroll." The count was never the problem and it has not
-              moved; what is new is that the rows it counts are reachable, and
-              that "all of them" is one of the things a reader can ask for.
-
-              CHANGING THE SIZE GOES BACK TO PAGE ONE, because a page number
-              does not survive the change: page 4 of 60-row pages and page 4 of
-              240-row pages are different rows of the same answer, and there is
-              no reading of "4" that is true of both. Page one is the one page
-              that means the same thing at every size.
+              THE DISPLAY MODE STAYS HERE, because on this page it lives in the
+              QUERY. `display:text` is a search operator, so clicking "Names"
+              has to rewrite the box; a component that owned the mode would have
+              no way to know that and the URL would stop reproducing the screen.
             */}
-            {slice.needed ? (
-              <Pagination
-                from={slice.from}
-                href={(next) => linkTo(next, size)}
-                label="Pages of card results"
-                onNavigate={(next) => goTo(next, size)}
-                onResize={(next) => goTo(1, next)}
-                page={slice.page}
-                pages={slice.pages}
-                size={slice.size}
-                sizeHref={(next) => linkTo(1, next)}
-                sizes={PAGE_SIZES}
-                to={slice.to}
-                total={slice.total}
-                unit="cards"
-              />
-            ) : null}
+            <CardIndex
+              entries={entries}
+              display={display}
+              onDisplayChange={show}
+              summary={summary}
+              controlName="display"
+              interactive={interactive}
+              pagination={
+                /*
+                  WHERE "N MORE MATCH. NARROW THE QUERY." USED TO BE.
+
+                  That line counted rows it then refused to show, which
+                  `docs/SCRYFALL-GAP.md` §4 named as the thing to delete: "a
+                  refusal where Scryfall paginates. A grid makes it worse — 60
+                  images is under one scroll." The count was never the problem
+                  and it has not moved; what is new is that the rows it counts
+                  are reachable, and that "all of them" is one of the things a
+                  reader can ask for.
+
+                  CHANGING THE SIZE GOES BACK TO PAGE ONE, because a page number
+                  does not survive the change: page 4 of 60-row pages and page 4
+                  of 240-row pages are different rows of the same answer, and
+                  there is no reading of "4" that is true of both. Page one is
+                  the one page that means the same thing at every size.
+                */
+                slice.needed ? (
+                  <Pagination
+                    from={slice.from}
+                    href={(next) => linkTo(next, size)}
+                    label="Pages of card results"
+                    onNavigate={(next) => goTo(next, size)}
+                    onResize={(next) => goTo(1, next)}
+                    page={slice.page}
+                    pages={slice.pages}
+                    size={slice.size}
+                    sizeHref={(next) => linkTo(1, next)}
+                    sizes={PAGE_SIZES}
+                    to={slice.to}
+                    total={slice.total}
+                    unit="cards"
+                  />
+                ) : null
+              }
+            />
           </>
         ) : (
           <p className="of-cards__count">

@@ -28,6 +28,7 @@
 import { createElement } from "react";
 import { hydrateRoot } from "react-dom/client";
 
+import { CardList } from "./islands/CardList";
 import { CardSearch } from "./islands/CardSearch";
 import { PrintingPicker } from "./islands/PrintingPicker";
 import { RandomCard } from "./islands/RandomCard";
@@ -43,6 +44,7 @@ import { RulesSearch } from "./islands/RulesSearch";
  */
 // biome-ignore lint/suspicious/noExplicitAny: see the note above.
 const ISLANDS: Record<string, (props: any) => React.ReactNode> = {
+  CardList,
   CardSearch,
   PrintingPicker,
   RandomCard,

@@ -1,134 +1,20 @@
 /*
- * `CardSearch`'s styles, ported from the Svelte island's scoped block.
+ * `CardSearch`'s styles — what is left of them once the results moved out.
  *
- * `.cell` and `.why` are NOT here and were not in the original either: the grid
- * cell carries only a class the anchor inside it is styled through, and `.why`
- * is styled by `ResultRow`'s own `.of-result__meta span` rule. Both are in the
- * markup, which is why the names appear there and not in this file.
+ * THE GRID, THE VIEW SWITCH AND THE NAME LIST ARE GONE FROM HERE, to
+ * `components/CardIndex.css`. They were never styles of the search page: they
+ * described what a list of cards looks like, and a second surface needed the
+ * same thing the moment a set page grew pictures. What remains is genuinely
+ * this island's — the live-region announcement, the parser's notices, the
+ * empty-state browse — and none of it means anything on a page with no query.
  */
 
-/* -- Result head: the count, and the view switch ------------------------- */
-
-.of-cards__result-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--of-space-base);
-}
-
-.of-cards__views {
-  display: flex;
-  align-items: center;
-  gap: var(--of-space-base);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-/* The group needs a name for assistive technology and no name on screen —
-     the two labels beside it already say what it does. */
-.of-cards__views-legend {
-  position: absolute;
-  inline-size: var(--of-space-hair);
-  block-size: var(--of-space-hair);
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.of-cards__view {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--of-space-tight);
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink-muted);
-  cursor: pointer;
-}
-
-.of-cards__view:has(input:checked) {
-  color: var(--of-color-ink);
-}
-
-/* -- The grid ------------------------------------------------------------ */
-
 /*
-    Sized from the thumb tier so a cell is the width of the face it holds, and
-    the track count follows the viewport rather than being chosen. `auto-fill`
-    rather than `auto-fit` so a single result stays card-sized instead of
-    stretching across the row.
-  */
-.of-cards__grid {
-  display: grid;
-  grid-template-columns: repeat(
-      auto-fill,
-      minmax(var(--of-card-face-thumb), 1fr)
-    );
-  gap: var(--of-space-loose);
-  margin-block-start: var(--of-space-loose);
-  padding: 0;
-  list-style: none;
-}
-
-.of-cards__cell-link {
-  display: flex;
-  flex-direction: column;
-  gap: var(--of-space-tight);
-  text-decoration: none;
-  color: inherit;
-}
-
-/*
-    The name is the accessible name of the link along with the face's alt text,
-    and it is visible because recognising art is not the same as being sure —
-    900 names in this corpus belong to more than one card, and the variant
-    suffix is what tells two identical-looking faces apart.
-  */
-.of-cards__cell-name {
-  font-family: var(--of-type-family-serif);
-  font-size: var(--of-type-size-small);
-  line-height: var(--of-type-leading-tight);
-  color: var(--of-color-ink);
-}
-
-.of-cards__cell-versions {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink-muted);
-}
-
-.of-cards__cell-link:hover .of-cards__cell-name,
-.of-cards__cell-link:focus-visible .of-cards__cell-name {
-  color: var(--of-color-accent);
-}
-
-/*
-    THE PRIMITIVES THIS PAGE FOUND MISSING, exactly as `RulesSearch.svelte`
-    records: a text field and a dense list row. Both are real gaps rather than
-    one-off decoration, so they belong in `optfall-components` as `SearchField`
-    and `ResultRow`. Kept identical to the rules search on purpose — every value
-    names a token, so moving them costs a cut and a paste.
-  */
-
-/*
-    Never `outline: none`, and `:focus` rather than `:focus-visible` alone — a
-    text field focused with a mouse is still a text field you are about to type
-    into, and hiding that from the one input on the page would be hiding the
-    state that matters most.
-  */
-
-/*
-    The announcement is for assistive technology; the same words are printed
-    visibly in `.of-cards__count` beside the results, so this one is off-screen rather
-    than duplicated on the page. Sized from `space.hair` rather than collapsed
-    to zero: a zero-area element is skipped by some screen readers.
-  */
+  The announcement is for assistive technology; the same words are printed
+  visibly by `CardIndex` beside the results, so this one is off-screen rather
+  than duplicated on the page. Sized from `space.hair` rather than collapsed to
+  zero: a zero-area element is skipped by some screen readers.
+*/
 .of-cards__announcement {
   position: absolute;
   inline-size: var(--of-space-hair);
@@ -156,50 +42,16 @@
   font-size: var(--of-type-size-small);
 }
 
+/*
+  The prose states — "nothing matches", the pinned-commit line over the browse.
+  `CardIndex` styles the count that sits over a result set; this is the same
+  voice for the cases where there is no result set to sit over.
+*/
 .of-cards__count {
   margin-block: 0 var(--of-space-base);
   color: var(--of-color-ink-muted);
   font-size: var(--of-type-size-small);
 }
-
-/*
-    A LIST THAT IS MEANT TO BE COPIED. No markers, no padding on the items,
-    tight leading — so a drag-select over it yields the names and nothing that
-    has to be cleaned out of the paste afterwards.
-  */
-.of-cards__text-results {
-  list-style: none;
-  margin: var(--of-space-loose) 0 0;
-  padding: 0;
-  display: grid;
-  gap: var(--of-space-hair);
-  font-size: var(--of-type-size-small);
-}
-
-.of-cards__text-results a {
-  color: var(--of-color-ink);
-  text-decoration: none;
-}
-
-.of-cards__text-results a:hover,
-.of-cards__text-results a:focus-visible {
-  text-decoration: underline;
-}
-
-.of-cards__results {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/*
-    Density without clutter: rows are separated by one hairline and nothing else
-    — no card, no shadow, no padding a reader has to look past. The row wraps
-    intrinsically rather than at a breakpoint, since the theme publishes no
-    breakpoint tokens and a raw one is not available to write.
-  */
-
-/* Serif — the voice assigned to names. */
 
 .of-cards__browse {
   display: grid;

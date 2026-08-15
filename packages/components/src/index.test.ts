@@ -48,22 +48,31 @@ describe("card image compliance contract", () => {
 });
 
 describe("the primitive set", () => {
-  test("is the eight Phase 1 deliverables plus the card layer's six, without duplicates", () => {
+  test("is the eight Phase 1 deliverables plus the card layer's seven, without duplicates", () => {
     // The eight are Phase 1's closed list. `card-face` is the ninth and it
     // arrived with the card layer rather than with the design system:
     // docs/SCRYFALL-GAP.md §5.1 made images a product surface.
     //
-    // THIRTEEN, NOT FOURTEEN. `card-face-group` was the fourteenth and existed
-    // only to hoist one copyright notice over faces shown together. The notice
-    // moved to the universal footer (docs/COMPLIANCE.md §5), which left the
-    // component with no behaviour at all, so it was deleted rather than kept as
-    // a wrapper whose documented reason for existing had gone.
+    // THIRTEEN ONCE, AND THE ROUTE BACK UP IS WORTH KEEPING. `card-face-group`
+    // was the fourteenth and existed only to hoist one copyright notice over
+    // faces shown together; the notice moved to the universal footer
+    // (docs/COMPLIANCE.md §5), which left it with no behaviour at all, so it
+    // went rather than being kept as a wrapper whose documented reason for
+    // existing had gone.
     //
-    // FOURTEEN NOW. `pagination` is the newest and the only one that arrived
-    // from a product failure rather than from a plan: docs/SCRYFALL-GAP.md §4
-    // named the hard 60-result cap "a refusal where Scryfall paginates", and
-    // both search surfaces needed the identical control to answer it.
-    expect(PRIMITIVES).toHaveLength(14);
+    // FIFTEEN NOW, AND THE LAST TWO ARRIVED THE SAME WAY — from a product
+    // failure rather than from a plan, which is the opposite of how
+    // `card-face-group` left.
+    //
+    // `pagination`: docs/SCRYFALL-GAP.md §4 named the hard 60-result cap "a
+    // refusal where Scryfall paginates", and both search surfaces needed the
+    // identical control to answer it.
+    //
+    // `pitch-rule`: a rendering the library did not have, for a surface — the
+    // card index — that did not exist when the list was closed. See
+    // `PitchRuleProps` for why it is a second primitive rather than a variant
+    // of the jewel.
+    expect(PRIMITIVES).toHaveLength(15);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
@@ -71,16 +80,44 @@ describe("the primitive set", () => {
     expect(PRIMITIVES).toContain("search-field");
     expect(PRIMITIVES).toContain("result-row");
     expect(PRIMITIVES).toContain("stat-glyph");
-    // `game-symbol` is the thirteenth — it was the fourteenth until
-    // `card-face-group` was deleted, which happened when the card-image
-    // copyright moved to the universal footer and left that component with
-    // nothing to do. See docs/COMPLIANCE.md §5. It renders the markers the printed text
-    // carries — `{p}`, `{r}`, `{t}` — and it is a PRIMITIVE rather than page
-    // markup because it shares its silhouettes with `stat-glyph` through
+    // `game-symbol` ARRIVED thirteenth and now SITS fourteenth, because
+    // `pitch-rule` was inserted beside `pitch-jewel` rather than appended — its
+    // position moved without its history changing, which is why the two numbers
+    // are stated separately. It renders the markers the printed text carries —
+    // `{p}`, `{r}`, `{t}` — and it is a PRIMITIVE rather than page markup
+    // because it shares its silhouettes with `stat-glyph` through
     // `ornament.cut.*`: the plate a reader meets inline in `+1{p}` is the same
     // plate carrying `4` in the stat block.
     expect(PRIMITIVES).toContain("game-symbol");
     expect(PRIMITIVES).toContain("pagination");
+    expect(PRIMITIVES).toContain("pitch-rule");
+  });
+
+  test("the two pitch renderings are both declared, and are not the same one", () => {
+    /*
+     * The failure this pins is a merge, not an omission. `pitch-rule` states
+     * the same value as `pitch-jewel` in a different medium, so the obvious
+     * economy is to make one a `variant` prop of the other — and that would
+     * quietly delete the jewel's guarantee, which is that the NUMERAL is
+     * always rendered. A band cannot carry a numeral; a component that can be
+     * asked for either rendering therefore has a spelling that drops the
+     * primary channel while still being called a jewel.
+     *
+     * Two entries make "there is a rendering with a numeral" a fact about the
+     * library rather than about how somebody calls it.
+     */
+    expect(PRIMITIVES).toContain("pitch-jewel");
+    expect(PRIMITIVES).toContain("pitch-rule");
+    /*
+     * AND THEY ARE TWO ENTRIES, NOT ONE NAME WEARING TWO SPELLINGS. This line
+     * replaces `expect(new Set(["pitch-jewel", "pitch-rule"]).size).toBe(2)`,
+     * which asserted a property of two string literals written in the test
+     * itself and could therefore never fail whatever `PRIMITIVES` said. The
+     * check that carries the claim is against the array.
+     */
+    expect(
+      PRIMITIVES.filter((name) => name.startsWith("pitch-")).toSorted(),
+    ).toEqual(["pitch-jewel", "pitch-rule"]);
   });
 });
 
