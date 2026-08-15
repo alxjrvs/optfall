@@ -174,6 +174,21 @@ export interface EncodedCardIndex {
   readonly traitDict: string;
   /** Set-code vocabulary, one per line. */
   readonly setDict: string;
+  /**
+   * `YYYY-MM-DD` per entry of {@link EncodedCardIndex.setDict}, one per line,
+   * EMPTY where upstream publishes no date for that set.
+   *
+   * Seventeen of the 118 sets are undated — the judge, organised-play and
+   * promo lines — so the empty line is a real state carrying a real meaning
+   * rather than a gap to be filled in later. A card known only from those sets
+   * has no release date, and `order:released`, `year:` and `date:` all have to
+   * say so rather than guess one.
+   *
+   * A parallel array rather than a `code=date` map, because the codes are
+   * already shipped in `setDict` and repeating 101 of them would be most of the
+   * payload. About 1.2 KB.
+   */
+  readonly setReleased: string;
   /** Rarity-code vocabulary, one per line. */
   readonly rarityDict: string;
   readonly artistDict: string;
@@ -404,9 +419,36 @@ function encodePostings(map: ReadonlyMap<string, readonly number[]>): string[] {
     });
 }
 
+/**
+ * What the index needs that the card corpus does not carry.
+ *
+ * `releasedBySet` IS PASSED IN RATHER THAN IMPORTED, and that is a bundling
+ * constraint rather than a style choice. This module is reached from the search
+ * island through `CardSearch.tsx`, so anything it imports ships to the browser —
+ * which is how the entire 16 MB card corpus once ended up in a 9.28 MB client
+ * bundle. `sets.ts` loads a 21 KB corpus to answer a question worth 1.2 KB of
+ * dates, so the build resolves it and hands over the answer. See
+ * `src/lib/printings.ts` for the same rule stated at length.
+ */
+export interface CardIndexSource {
+  /** The upstream commit the corpus was pinned at. */
+  readonly commit: string;
+  /** `YYYY-MM-DD` the corpus was last confirmed against upstream. */
+  readonly confirmed: string;
+  /**
+   * `YYYY-MM-DD` per set code, or `null` where upstream publishes no date.
+   *
+   * REQUIRED, with no default, because the alternative is a build that emits an
+   * index with no dates in it and a `order:released` that answers nothing while
+   * reporting success. A missing argument should be a type error, not a quiet
+   * feature outage.
+   */
+  readonly releasedBySet: ReadonlyMap<string, string | null>;
+}
+
 export function buildCardIndex(
   pages: readonly CardPage[],
-  source: { readonly commit: string; readonly confirmed: string },
+  source: CardIndexSource,
 ): EncodedCardIndex {
   assertFormatsAgree(pages);
 
@@ -582,6 +624,9 @@ export function buildCardIndex(
     keywordDict: keywords.list.join("\n"),
     traitDict: traits.list.join("\n"),
     setDict: sets.list.join("\n"),
+    setReleased: sets.list
+      .map((code) => source.releasedBySet.get(code) ?? "")
+      .join("\n"),
     rarityDict: rarities.list.join("\n"),
     artistDict: artists.list.join("\n"),
     memberships: memberships.join("\n"),
@@ -635,6 +680,26 @@ export interface CardIndex {
   readonly keywords: readonly (readonly string[])[];
   readonly traits: readonly (readonly string[])[];
   readonly sets: readonly (readonly string[])[];
+  /**
+   * Every release date the card has, ascending, one entry per DATED set it was
+   * printed in. Empty where every set it appears in is undated.
+   *
+   * Per card rather than per set because that is the shape both consumers want:
+   * `order:released` takes the first, and `year:`/`date:` ask whether ANY of
+   * them satisfies the test. Resolving the set codes once at decode beats doing
+   * it 4,941 times per query.
+   */
+  readonly released: readonly (readonly string[])[];
+  /**
+   * How many cards have no release date at all — 53 of 4,941.
+   *
+   * Carried so a `year:`/`date:` query can SAY it excluded them. Seventeen of
+   * the 118 sets are undated upstream (the judge, organised-play and promo
+   * lines), and a card printed only there matches no date filter that will ever
+   * be written. Silently returning 4,888 cards for a question asked about 4,941
+   * is the kind of quiet wrongness this engine exists not to do.
+   */
+  readonly undatedCards: number;
   readonly rarities: readonly (readonly string[])[];
   /** Every artist credited on any printing of the card. */
   readonly artists: readonly (readonly string[])[];
@@ -711,6 +776,16 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const traitDict =
     encoded.traitDict === "" ? [] : encoded.traitDict.split("\n");
   const setDict = encoded.setDict === "" ? [] : encoded.setDict.split("\n");
+  const setReleasedLines =
+    encoded.setReleased === "" ? [] : encoded.setReleased.split("\n");
+  /* Code → date, dated sets only. An undated set is absent rather than mapped
+     to the empty string, so a lookup miss and "released on nothing" cannot be
+     confused at the call site. */
+  const releasedBySet = new Map<string, string>();
+  setDict.forEach((code, position) => {
+    const date = setReleasedLines[position] ?? "";
+    if (date !== "") releasedBySet.set(code, date);
+  });
   const rarityDict =
     encoded.rarityDict === "" ? [] : encoded.rarityDict.split("\n");
   const artistDict =
@@ -727,6 +802,7 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const keywords: string[][] = [];
   const traits: string[][] = [];
   const sets: string[][] = [];
+  const released: string[][] = [];
   const rarities: string[][] = [];
   const artists: string[][] = [];
   const stats: (readonly [string, string, string])[] = [];
@@ -763,7 +839,16 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
     ).split("\t");
     keywords.push([...splitIds(k, keywordDict)]);
     traits.push([...splitIds(t, traitDict)]);
-    sets.push([...splitIds(s, setDict)]);
+    const cardSets = [...splitIds(s, setDict)];
+    sets.push(cardSets);
+    released.push(
+      cardSets
+        .flatMap((code) => {
+          const date = releasedBySet.get(code);
+          return date === undefined ? [] : [date];
+        })
+        .toSorted(),
+    );
     rarities.push([...splitIds(r, rarityDict)]);
     artists.push([...splitIds(a, artistDict)]);
   });
@@ -827,6 +912,8 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
     keywords,
     traits,
     sets,
+    released,
+    undatedCards: released.filter((dates) => dates.length === 0).length,
     rarities,
     artists,
     verdicts,
@@ -853,14 +940,20 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
  * the card layer has now answered — and those entries are removed *there* on
  * the same day they land *here*, because a hint advertising an operator the
  * build cannot answer is the lie "degrade visibly" prohibits.
+ *
+ * THAT RULE WAS BROKEN ONCE, IN THE HARMLESS DIRECTION, AND IT IS STILL WORTH
+ * NAMING. `artist`, `flavor` and `flavour` sat here describing themselves as
+ * "not indexed here yet" for as long as they were indexed. Nothing failed —
+ * a field that resolves returns before this table is consulted, so the entries
+ * were unreachable — but "unreachable" is not "correct": this table is read as
+ * the list of what the engine cannot do, and it was overstating that list.
+ * An operator that WORKS is not pending, and saying so is the same obligation
+ * as saying an operator that does not.
  */
 const PENDING_OPERATORS: Readonly<Record<string, string>> = {
   is: "filters judge-verified rulings, which are not published yet",
   changed: "lists what a rules version touched, which is not published yet",
   cr: "searches the Comprehensive Rules — that lives at /search, not here",
-  artist: "is not indexed here yet; artists are listed on each card page",
-  flavor: "is not indexed here yet; flavour text is listed on each card page",
-  flavour: "is not indexed here yet; flavour text is listed on each card page",
 };
 
 /**
@@ -901,7 +994,10 @@ export interface CardNotice {
     | "operator-unknown"
     | "operand-unknown"
     | "term-ignored"
-    | "phrase-approximate";
+    | "phrase-approximate"
+    /* The engine answered, and is telling you what it could not see. Distinct
+       from `operator-pending`, which means it did not answer at all. */
+    | "coverage-partial";
   readonly text: string;
 }
 
@@ -939,7 +1035,8 @@ export type CardSortKey =
   | "power"
   | "defence"
   | "rarity"
-  | "set";
+  | "set"
+  | "released";
 
 /**
  * How the reader asked for the results to be ordered.
@@ -1069,6 +1166,8 @@ const UNIQUE_MODES: Readonly<Record<string, CardUniqueMode>> = {
 
 const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
   name: "name",
+  released: "released",
+  release: "released",
   pitch: "pitch",
   cost: "cost",
   power: "power",
@@ -1286,6 +1385,46 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
       };
     }
 
+    /* ----------------------------------------------------------- released */
+    /*
+      `year:` AND `date:` ARE ONE OPERATOR WITH TWO GRAINS, which is why they
+      normalise to a single `released` leaf here rather than staying two fields
+      the matcher has to tell apart. `year:2024` is `date:2024-01-01 …
+      2024-12-31` said briefly, and a reader who writes one and then the other
+      should get answers that agree.
+
+      A CARD MATCHES IF ANY OF ITS PRINTINGS DOES. The corpus collapses a card
+      across its sets, so "released in 2024" can only mean "printed in 2024 at
+      least once" — the alternative, testing only the first printing, would
+      answer `year:2024` with cards that came out in 2019 and were reprinted,
+      excluded, which is not what anybody means by the question.
+    */
+    if (name === "year" || name === "date") {
+      const grain = name === "year" ? "year" : "date";
+      const pattern = grain === "year" ? /^\d{4}$/ : /^\d{4}-\d{2}-\d{2}$/;
+
+      if (!pattern.test(operand)) {
+        note(
+          "operand-unknown",
+          grain === "year"
+            ? `year:${operandRaw} is not a four-digit year. Use year:2024, or date: for a day.`
+            : `date:${operandRaw} is not a date. Use date:2024-06-21, or year: for a whole year.`,
+        );
+        return null;
+      }
+
+      return {
+        kind: "leaf",
+        field: "released",
+        value: operand,
+        ...(token.compare === undefined ? {} : { compare: token.compare }),
+        label:
+          token.compare === undefined
+            ? `released in ${operand}`
+            : `released ${token.compare} ${operand}`,
+      };
+    }
+
     /* ------------------------------------------------------------ fields */
     const field = FIELD_OPERATORS[name];
     if (field) {
@@ -1350,7 +1489,7 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
 
     note(
       "operator-unknown",
-      `${name}: is not an operator here. Supported: name, text (o), type (class), trait, keyword, artist (a), flavour (ft), set, rarity, pitch, cost, power, defence, order, dir, and legal/banned/suspended/restricted with a format.`,
+      `${name}: is not an operator here. Supported: name, text (o), type (class), trait, keyword, artist (a), flavour (ft), set, rarity, pitch, cost, power, defence, year, date, order, dir, unique, display, and legal/banned/suspended/restricted with a format.`,
     );
     return toLeaf({ kind: "term", value: operandRaw, quoted: false });
   };
@@ -1925,6 +2064,21 @@ function sortValue(
         ? { missing: true }
         : { rank: Math.max(...ranks), missing: false };
     }
+    case "released": {
+      /* THE EARLIEST DATE, which is when the card came out — a reprint is not a
+         release. `released` is stored ascending, so the first entry is it.
+
+         Compared as TEXT rather than parsed: `YYYY-MM-DD` sorts correctly as a
+         string, and a Date would introduce a timezone to a value that has none.
+
+         Missing where every set the card appears in is undated, which is 17 of
+         118 sets — the judge, organised-play and promo lines. Those sort last
+         in both directions, exactly as an unprinted cost does. */
+      const first = index.released[ordinal]?.[0];
+      return first === undefined
+        ? { missing: true }
+        : { text: first, missing: false };
+    }
     case "set": {
       /* And by the FIRST set it appeared in, for the same reason in the other
          direction: a card belongs to where it came from, not to the most recent
@@ -1994,6 +2148,26 @@ export function searchCards(
   const { terms, filters, notices, sort, unique, display, folded, tree } =
     parseCardQuery(raw);
 
+  /*
+    SAID HERE RATHER THAN AT PARSE TIME, because only the index knows how many
+    cards it cannot date and the parser has never seen it. A notice is the
+    engine's way of refusing to answer more confidently than its data allows,
+    and `year:`/`date:` is the one operator whose silent misses are invisible:
+    the reader gets a plausible list and no reason to suspect it is short.
+  */
+  const dateFiltered =
+    tree !== null && leaves(tree).some((leaf) => leaf.field === "released");
+  const withNotices =
+    dateFiltered && index.undatedCards > 0
+      ? [
+          ...notices,
+          {
+            kind: "coverage-partial" as const,
+            text: `${index.undatedCards} cards are printed only in sets upstream publishes no release date for, so no year: or date: filter can match them. They are excluded rather than guessed at.`,
+          },
+        ]
+      : notices;
+
   const ranked: { ordinal: number; field: CardMatchField }[] = [];
 
   if (tree === null) {
@@ -2001,7 +2175,7 @@ export function searchCards(
       query: raw,
       terms,
       filters,
-      notices,
+      notices: withNotices,
       sort,
       unique,
       display,
@@ -2054,6 +2228,37 @@ export function searchCards(
        for that reason. */
     if (leaf.field === "flavour")
       return flavourSets.get(leaf.value)?.has(ordinal) === true;
+
+    /*
+      RELEASE DATES, COMPARED AS TEXT. `YYYY-MM-DD` and `YYYY` both sort
+      correctly as strings, so a comparison needs no parsing and introduces no
+      timezone to a value that has none. The year grain compares the first four
+      characters of each date, which is the same operation the reader means.
+    */
+    if (leaf.field === "released") {
+      const dates = index.released[ordinal] ?? [];
+      if (dates.length === 0) return false;
+
+      const grain = leaf.value.length === 4 ? 4 : 10;
+      const wanted = leaf.value;
+      return dates.some((date) => {
+        const value = date.slice(0, grain);
+        switch (leaf.compare) {
+          case ">":
+            return value > wanted;
+          case ">=":
+            return value >= wanted;
+          case "<":
+            return value < wanted;
+          case "<=":
+            return value <= wanted;
+          case "!=":
+            return value !== wanted;
+          default:
+            return value === wanted;
+        }
+      });
+    }
 
     if (leaf.field === "name-exact") {
       // AGAINST THE BARE NAME, not the disambiguated label. `index.folded`
@@ -2192,7 +2397,7 @@ export function searchCards(
     query: raw,
     terms,
     filters,
-    notices,
+    notices: withNotices,
     sort,
     unique,
     display,

@@ -569,19 +569,27 @@ expression. That is a real rewrite — an AST rather than an array — and it is
 largest engineering item here, so it goes last, after the surfaces that make the
 tool usable.
 
-- **Negation (`-`), `OR`, and parentheses.** The three most-missed operators, and
-  they need the AST. Everything else on this list is additive.
-- **Comparisons, honestly.** The current refusal is well argued — 4,941 printed
+- **Negation (`-`), `OR`, and parentheses.** ✅ The three most-missed operators,
+  and they need the AST. Everything else on this list is additive.
+- **Comparisons, honestly.** ✅ The old refusal was well argued — 4,941 printed
   costs include `X`, `XX`, `X1` and blanks, so there is no total order. But it is
   over-applied. `cost>=3` can mean *"cost is numeric and at least 3"*, with `X`
   and blank simply not matching and a notice saying so. Scryfall does exactly
   this for `*` power. A stated partial order beats a refusal.
-- **`!"exact name"`** — the exact-name tier already exists in the ranker; this
-  exposes it as an operator.
-- **`artist:` and `flavor:`** — index what the corpus already carries.
-- **`year:` / `date:`** — needs `set.json`.
+- **`!"exact name"`** — ✅ the exact-name tier already existed in the ranker;
+  this exposed it as an operator. It matches the BARE name rather than the
+  disambiguated label, so `!"Head Jab"` finds the card rather than nothing.
+- **`artist:` and `flavor:`** — ✅ indexed, `flavour:`/`flavor:`/`ft:`. Flavour
+  is a second postings index rather than a branch of the text one, because a
+  card whose flavour mentions blood does not DO anything of the sort.
+- **`year:` / `date:`** — needs `set.json`. ✅ Both, with comparisons. A card
+  matches if ANY of its printings does, because the corpus collapses a card
+  across its sets and "released in 2024" can only mean "printed in 2024 at least
+  once". Seventeen of the 118 sets carry no upstream date, so 53 cards match no
+  date filter that can ever be written — and the search says so rather than
+  returning a plausible short list.
 - **`is:`** — reserved. It stays pending until the interaction corpus exists, and
-  it should keep saying so.
+  it should keep saying so. It still does.
 
 Keep the two properties the current engine has and Scryfall does not advertise:
 **every result reports which field put it there** (`matchedIn`), and **every
@@ -603,17 +611,37 @@ everything else renders against exists before anything tries to render.
 | **C** ✅ | `CardFace` primitive; card page face, printings rail, per-printing URLs | ~2 days | Cards have faces |
 | **D** ✅ | Card search at `/` — hero, explainer links, results; submit-driven; grid default; `display:`/`order:`/paging; `/cards` → 301 | ~3 days | The front door is right |
 | **E** ✅ | The redesign pass (§6a) — filigree back to one, evidence folded, one search chrome. **The two-column card page in this row was not true when it was ticked**; see the note in §6a | ~2 days | It reads as finished |
-| **F** | The keyword↔CR join, both directions, with published coverage | ~2 days | The thing nobody else has |
-| **G** | `set.json` + decode tables; `/sets`; `unique:`; `order:released` | ~2 days | The corpus gets a spine |
-| **H** | Grammar: AST, negation/`OR`/parens, comparisons, `flavor:` | ~1 week | Search becomes a language |
+| **F** ✅ | The keyword↔CR join, both directions, with published coverage | ~2 days | The thing nobody else has |
+| **G** ✅ | `set.json` + decode tables; `/sets`; `unique:`; `order:released` | ~2 days | The corpus gets a spine |
+| **H** ✅ | Grammar: AST, negation/`OR`/parens, comparisons, `flavor:` | ~1 week | Search becomes a language |
 
 Reconciling `DESIGN.md` with `PLAN.md` folded into **E**, as planned: the
 redesign is where those positions became code.
 
-**A through E have shipped.** One item planned for E is not in it and is now
-listed under G instead — extracting `SearchField`/`ResultRow` into primitives,
-which is a refactor of two working components rather than a change anyone can
-see. F through H is what makes it the reference.
+**Every row has shipped.** One item planned for E landed in G instead —
+extracting `SearchField`/`ResultRow` into primitives, a refactor of two working
+components rather than a change anyone can see.
+
+**F, G and H were ticked late, and the gap between the table and the code is
+worth recording.** All three were finished across Phases 2–6 and this document
+went on describing them as outstanding: the join shipped with its coverage
+published on `/search` (94%, 137 of 145 keywords, with the 8 it cannot resolve
+named rather than hidden), the grammar became a real AST with negation, `OR`,
+parentheses and comparisons, and `artist:`, `ft:` and `!"exact name"` all
+answer. Only three items were genuinely missing when this was audited —
+`order:released`, `year:` and `date:` — and they are in now.
+
+The lesson is the same one the Phase 6 work kept relearning: **a checklist
+nobody re-measures drifts in whichever direction is least visible.** Here it
+drifted toward understating what was built, which is the harmless direction and
+still cost an audit to discover. `card-search.ts`'s own `PENDING_OPERATORS`
+table had drifted the same way and has been corrected — it listed `artist`,
+`flavor` and `flavour` as unbuilt for as long as they were built.
+
+**What is deliberately still open is `is:`**, and it is not schedulable: it
+filters judge-verified rulings, which need the interaction corpus from
+`docs/PLAN.md` Phase 5, which is gated on judges rather than on code. The engine
+says exactly that when anybody types it.
 
 **One thing E gained that was not planned**: pitch versions became one tabbed
 card rather than three pages plus a disambiguation index. That is a model change
