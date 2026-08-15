@@ -96,7 +96,7 @@ row's subject changes, not when someone notices.*
 | Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<name>/<set>/<num>`, 6,437 of them | **have** |
 | Duplicate collapsing | `unique:cards/prints/art` | `unique:names` (default), `cards`, `art` | **have** |
 | Negation, `OR`, parentheses | yes | all three, documented at `/syntax` | **have** |
-| Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, numeric values only | **partial** |
+| Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, against a number **or against each other** | **have** |
 | Exact name | `!"Lightning Bolt"` | `!"Head Jab"`, quoted or bare | **have** |
 | Artist / flavour search | `a:`, `ft:` | `artist:`/`a:`, `flavour:`/`ft:`, separately indexed | **have** |
 | Set index and set pages | `/sets` | `/sets` and a page per set | **have** |

@@ -1170,6 +1170,27 @@ const UNIQUE_MODES: Readonly<Record<string, CardUniqueMode>> = {
   printings: "art",
 };
 
+/**
+ * The three printed values a comparison may name on either side, and what a
+ * reader may call each one.
+ *
+ * `pow` and `tou` are here because Scryfall uses them and this grammar is
+ * inherited on purpose. `tou` maps to defence: Magic's toughness and Flesh and
+ * Blood's defence are the same position on the card, and a reader who types the
+ * word they know should get the value they meant rather than an error telling
+ * them this game uses a different noun.
+ */
+const STAT_FIELDS: Readonly<Record<string, "cost" | "power" | "defence">> = {
+  cost: "cost",
+  power: "power",
+  pow: "power",
+  defence: "defence",
+  defense: "defence",
+  def: "defence",
+  tou: "defence",
+  toughness: "defence",
+};
+
 const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
   name: "name",
   released: "released",
@@ -1244,9 +1265,16 @@ const FIELD_OPERATORS: Readonly<Record<string, CardFilter["field"]>> = {
   pitch: "pitch",
   cost: "cost",
   power: "power",
+  /* `pow` and `tou` for the same reason STAT_FIELDS carries them: the grammar is
+     inherited, and a reader who types the spelling they know should get the
+     value they meant. Both sides of a comparison have to accept them or
+     `pow>tou` resolves on the right and fails on the left. */
+  pow: "power",
   defence: "defence",
   defense: "defence",
   def: "defence",
+  tou: "defence",
+  toughness: "defence",
 };
 
 /**
@@ -1479,10 +1507,40 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
           );
           return null;
         }
+        /*
+          FIELD-TO-FIELD, WHICH IS THE OTHER HALF OF A COMPARISON. `power>defence`
+          asks a question about one card against itself — "is this attack worth
+          more than it blocks" — and there is no number that expresses it.
+          Scryfall spells it `pow>tou`; the aliases below make both spellings
+          work, because a reader arriving from there types theirs.
+
+          Encoded with a `@` prefix rather than as a bare field name so the
+          matcher can tell `power>2` from `power>defence` without inspecting the
+          string's shape. A printed stat is digits or `X`, never a word, so the
+          prefix is belt-and-braces — but the alternative is a matcher that
+          decides what a value means by guessing, and this file has already been
+          bitten once by a comparison whose meaning depended on where it was
+          evaluated.
+        */
+        const against = STAT_FIELDS[operand];
+        if (against !== undefined) {
+          note(
+            "phrase-approximate",
+            `${label} compares two printed values on the same card. Cards where either side is X, XX or blank have no place in that order and do not match.`,
+          );
+          return {
+            kind: "leaf",
+            field,
+            value: `@${against}`,
+            compare: token.compare,
+            label: `${field} ${token.compare} ${against}`,
+          };
+        }
+
         if (!/^\d+$/.test(operand)) {
           note(
             "operand-unknown",
-            `${label} compares against something that is not a number. Ignored.`,
+            `${label} compares against something that is neither a number nor another printed value. Comparisons take a number, or one of ${[...new Set(Object.values(STAT_FIELDS))].join(", ")}.`,
           );
           return null;
         }
@@ -1784,12 +1842,23 @@ function comparePrinted(
   leaf: QueryLeaf,
 ): boolean {
   const [cost = "", power = "", defence = ""] = index.stats[ordinal] ?? [];
-  const printed =
-    leaf.field === "cost" ? cost : leaf.field === "power" ? power : defence;
+  const at = (which: string) =>
+    which === "cost" ? cost : which === "power" ? power : defence;
+
+  const printed = at(leaf.field);
   if (!/^\d+$/.test(printed)) return false;
 
+  /*
+    A `@`-prefixed value names another printed field on the SAME card rather
+    than a literal — `power>defence`. Both sides have to be numeric, for the
+    reason the one-sided case already gives: a card printing X has no place in
+    an order, and answering as though it were zero would be inventing a fact.
+  */
+  const other = leaf.value.startsWith("@") ? at(leaf.value.slice(1)) : null;
+  if (other !== null && !/^\d+$/.test(other)) return false;
+
   const actual = Number(printed);
-  const wanted = Number(leaf.value);
+  const wanted = other === null ? Number(leaf.value) : Number(other);
   switch (leaf.compare) {
     case ">":
       return actual > wanted;

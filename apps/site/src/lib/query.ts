@@ -32,7 +32,7 @@ export interface QueryLeaf {
    * A comparison, where one was written. `cost>=3` parses to
    * `{ field: "cost", value: "3", compare: ">=" }`.
    */
-  readonly compare?: ">" | ">=" | "<" | "<=" | "!=";
+  readonly compare?: ">" | ">=" | "<" | "<=" | "!=" | "=";
   /** How the leaf is described back to the reader. */
   readonly label: string;
 }
@@ -82,7 +82,7 @@ const TOKEN = new RegExp(
   [
     /!(?:"([^"]*)"|([^\s()]+))/, // 1: !exact
     /([a-zA-Z][a-zA-Z-]*):"([^"]*)"/, // 2: field:"quoted"
-    /([a-zA-Z][a-zA-Z-]*)\s*(>=|<=|!=|>|<)\s*([^\s()]+)/, // 3: field>=value
+    /([a-zA-Z][a-zA-Z-]*)\s*(>=|<=|!=|=|>|<)\s*([^\s()]+)/, // 3: field>=value
     /([a-zA-Z][a-zA-Z-]*):([^\s()]*)/, // 4: field:value
     /"([^"]*)"/, // 5: "phrase"
     /([()])/, // 6: parens
