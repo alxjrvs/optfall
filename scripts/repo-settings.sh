@@ -66,11 +66,17 @@ REPO="${OPTFALL_REPO:-alxjrvs/optfall}"
 # entities, so this must stay a personal account. See docs/COMPLIANCE.md §1.
 EXPECTED_OWNER="${REPO%%/*}"
 
-# The sole required status check. This MUST match the name of the aggregate job
-# in .github/workflows/ci.yml exactly. Requiring individual CI jobs instead
-# strands required checks in "pending" forever on path-filtered pull requests,
-# which is the single most common way this configuration is got wrong.
-GATE_JOB="gate"
+# The sole required status check. This MUST match the DISPLAY name of the
+# aggregate job in .github/workflows/ci.yml exactly — that job's `name:`, not
+# its key. GitHub matches a required context against the check-run name, and a
+# job that sets `name:` reports under that string; the key `gate` never appears
+# as a status at all. Requiring individual CI jobs instead strands required
+# checks in "pending" forever on path-filtered pull requests, which is the
+# single most common way this configuration is got wrong.
+#
+# "CI Success" is a cross-repo standard (issue #132), shared with binfinite-app,
+# SU-SRD and randsum so one ruleset checklist covers all four.
+GATE_JOB="CI Success"
 
 RULESET_NAME="default-branch"
 
@@ -370,7 +376,7 @@ fi
 # get it wrong. The rule defaults to enforcing on branch creation, so with an
 # empty bypass list the very first `git push -u origin main` into an empty
 # repository is rejected: it creates the default branch carrying a commit that
-# has no `gate` status, and nobody — owner included — can override it. It
+# has no `CI Success` status, and nobody — owner included — can override it. It
 # relaxes creation only; every subsequent push and merge is fully checked.
 
 echo

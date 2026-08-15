@@ -590,14 +590,24 @@ jobs:
   #
   # This is the ONLY job that may be configured as a required status check on
   # the default branch (the ruleset in scripts/repo-settings.sh requires exactly
-  # the name "gate"). Requiring the individual jobs above would strand them in
-  # "pending" forever whenever a path filter skips one, which blocks auto-merge
-  # permanently.
+  # the name "CI Success"). Requiring the individual jobs above would strand
+  # them in "pending" forever whenever a path filter skips one, which blocks
+  # auto-merge permanently.
+  #
+  # THE JOB KEY AND THE DISPLAY NAME DIFFER, DELIBERATELY. Branch protection
+  # matches on the DISPLAY name — the check-run name, which is `name:` when a
+  # job sets one — so `CI Success` is the string the ruleset requires. The key
+  # stays `gate` because it is what every `needs:` reference, the gate's own
+  # completeness check below, and this repo's prose already call it; renaming
+  # the key too would have been a second, unnecessary change with the same
+  # blast radius. `CI Success` is the cross-repo standard name (issue #132),
+  # shared with binfinite-app, SU-SRD and randsum so one ruleset checklist
+  # applies to all four.
   #
   # It runs with `if: always()` so it reports a verdict even when a needed job
   # failed, was skipped, or the run was cancelled.
   gate:
-    name: gate
+    name: CI Success
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: always()
