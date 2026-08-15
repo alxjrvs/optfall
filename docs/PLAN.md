@@ -784,7 +784,27 @@ demand. This is the part of the plan that is not about features.
   | **360** | The common Android width. | Face overflows by 90px. |
   | **390** | The common iPhone width — the single most likely visitor. | Face overflows by 60px. |
   | **430** | Large phones, and small tablets in portrait. | Face overflows by 20px. |
-  | **1226** | `layout.page.wide` — the two-column threshold. | Below it the card page is one column, and that is the majority case. |
+  | **964** | Where the card page stops being two columns. Measured, not chosen. | Below it the face sits above the details rather than beside them. |
+  | **1226** | `layout.page.wide` — the content column's own maximum. | Above it the page stops widening; the margins take the rest. |
+
+  **964 AND 1226 ARE DIFFERENT KINDS OF NUMBER, and an earlier version of this
+  table said they were the same one.** It listed 1226 as "the two-column
+  threshold — below it the card page is one column", and that is false in both
+  halves. `layout.page.wide` is
+  `card.face.normal + space.loosest + type.measure` = exactly 1226px, and it is
+  a `max-inline-size` on `main[data-width="wide"]` — a ceiling on how wide the
+  CONTENT column may grow, which says nothing about when its two columns stop
+  fitting side by side. Measured on the shipped site, the card page is still two
+  columns at 1225, at 1100, at 1000, and flips to one column between 963 and
+  964.
+
+  That 964 is emergent rather than declared is the point rather than an
+  oversight: the layout is `flex-wrap` over a face with a 450px basis and a
+  details column with `flex: 1 1 min(450px, 100%)`, so the wrap point is
+  whatever those widths plus the gutter add up to. Nothing names it, nothing can
+  drift from it, and it moves on its own if the face token moves. It is written
+  down here because a number nobody has measured is a number nobody can check —
+  not so that anything may branch on it.
 
   **THE FACE IS WIDER THAN THE PHONE, AND THAT IS THE WHOLE MOBILE PROBLEM.**
   `card.face.normal` is 28.125rem — 450px — because that is a width the image
@@ -795,6 +815,31 @@ demand. This is the part of the plan that is not about features.
   horizontal scrollbar waiting for a visitor. Every horizontal-overflow bug
   found while landing the mobile work was some version of a box that knew its
   own width but not the window's.
+
+  ✅ **Verified on the live site after Phase 6.** Six surfaces — a card page,
+  `/search` with results, the door, `/cr`, `/sets` and `/syntax` — rendered at
+  every width in the table plus 1225, and in all **36 combinations
+  `documentElement.scrollWidth === clientWidth`**: nothing scrolls sideways
+  anywhere, which is the one rule the 320 row states as absolute.
+
+  Measured by loading each page in an iframe of the target width rather than by
+  resizing the window, because the window resize available here moves the OS
+  frame without changing the viewport the layout sees — an iframe gets its own
+  layout viewport, so intrinsic sizing and any media condition resolve exactly
+  as they would on a device of that width.
+
+  Two findings worth keeping, both of which look like bugs and are not:
+
+  - **The printings table does scroll sideways — inside its own box.** It is
+    736px wide at every viewport and sits in `.of-card__scroller`, whose
+    `overflow-x: auto` contains it. The page body never moves, which is the
+    distinction the rule turns on: a wide table is allowed to be wide, it is
+    just not allowed to drag the document with it.
+  - **The legality grid drops to one column on its own**, through
+    `repeat(auto-fit, minmax(min(…, 100%), 1fr))`. The `min(…, 100%)` is what
+    makes it safe at 320 — without it the track keeps its declared minimum and
+    overflows the viewport, which is the single most common way this rule gets
+    broken.
 
   **These are widths to TEST at, never widths to branch on.** `check-tokens.ts`
   rejects raw `px`/`rem` in component CSS and a media condition cannot take a
