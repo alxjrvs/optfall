@@ -20,24 +20,28 @@
   display: inline-flex;
   align-items: center;
   gap: var(--of-space-tight);
-  font-size: var(--of-type-size-small);
+  font-size: var(--of-type-size-base);
   font-weight: var(--of-type-weight-medium);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-muted);
+  /* FULL INK AT REST, not muted. The mark beside it is the three-colour one
+     now, and a bright chain against a grey word reads as two objects that do
+     not belong together — which is the exact failure the hover note below was
+     written about, arriving at rest instead. */
+  color: var(--of-color-ink);
   text-decoration: none;
   flex: 0 0 auto;
 }
 
-/* The `ink` variant fills its outer links with `currentColor`, so they take the
-   muted ink of the resting bar and the full ink on hover along with the word —
-   one object lighting up rather than a logo beside a link that changed. That
-   inheritance is load-bearing for this rule, which is why the mark is
-   `variant="ink"`: the canonical pitch variant carries fixed tokens, and using
-   it here would put the lockup back to lighting up in halves, with a bright
-   chain against a muted word at rest. */
+/* THIS RULE DOES LESS THAN IT USED TO, AND THAT IS THE COST OF THE PITCH MARK.
+   The `ink` variant filled the mark's links with `currentColor`, so the whole
+   lockup lit up as one object on hover. The canonical pitch variant carries
+   fixed tokens instead, so only the word can respond — which is why the word
+   now rests at full ink and moves to the accent rather than brightening from
+   muted to full. A smaller change, on a lockup that no longer needs the hover
+   to be the thing that makes it look deliberate. */
 .of-bar__wordmark:hover {
-  color: var(--of-color-ink);
+  color: var(--of-color-accent);
 }
 
 /* Takes the middle and gives it back when the bar wraps on a narrow screen. */

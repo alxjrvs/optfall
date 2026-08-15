@@ -696,13 +696,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   </li>
                 ))}
               </ul>
-              {page.verdicts.some((verdict) => verdict.unknown) ? (
-                <p className="of-card__verify">
-                  Where no flag is published, Optfall has nothing to say about
-                  this card in that format. Upstream publishes only exclusions
-                  there, and none is set on this card.
-                </p>
-              ) : null}
             </section>
 
             {keywordRules.length > 0 ? (
@@ -812,12 +805,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         <h2 className="of-apparatus__heading" id="printings">
           Printings
         </h2>
-        <p className="of-card__scope">
-          {printingCount} printing{printingCount === 1 ? "" : "s"}. The
-          collector number is the citable identity of a printing, which is why
-          this table lists every one of them — including the printings with no
-          published art, which the picker beside the face cannot show.
-        </p>
         <div className="of-card__scroller">
           <table className="of-card__printings">
             <caption className="of-card__visually-hidden">

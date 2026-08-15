@@ -55,7 +55,16 @@
 */
 .of-search__field:focus {
   outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
-  outline-offset: var(--of-space-tighter);
+  /*
+    NO OFFSET, AND THAT IS A FIX RATHER THAN A TIDY-UP. The field sits inside a
+    sunken plate that already draws a border, so an outline pushed outwards from
+    the text drew a SECOND rectangle inside the first — a box within a box that
+    read as a stray dark panel, and one that overshot the submit button beside
+    it and made two equal-height controls look mismatched. On the field's own
+    edge it reads as the field lighting up, which is what it is.
+  */
+  outline-offset: 0;
+  border-radius: var(--of-bevel-radius);
 }
 
 .of-search__submit {
