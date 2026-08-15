@@ -77,6 +77,12 @@ const FIELDS: readonly Row[] = [
   },
   { example: "set:wtr", meaning: "The card was printed in this set." },
   {
+    example: "power>defence",
+    meaning:
+      "Compare two printed values on the same card. Scryfall's pow>tou works too. Cards printing X or nothing have no place in the order and do not match.",
+    aliases: ["pow>tou", "power=defence"],
+  },
+  {
     example: "year:2024",
     meaning:
       "The card was printed at least once that year. Comparisons work: year>=2024.",

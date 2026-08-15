@@ -1042,3 +1042,58 @@ describe("release dates", () => {
     expect(parseCardQuery("dominate order:release").sort.key).toBe("released");
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* Field-to-field comparison                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * `power>defence` — a comparison whose right-hand side is another printed value
+ * on the same card, and the last `partial` row in `docs/SCRYFALL-GAP.md`'s
+ * capability table.
+ */
+describe("comparing two printed values", () => {
+  test("the three comparisons partition the cards that have both", () => {
+    /*
+     * THE STRONGEST AVAILABLE ASSERTION, and the reason it is worth the setup:
+     * every card with two numeric values must satisfy exactly one of >, < and =,
+     * so the three totals have to sum to the population and cannot overlap. A
+     * matcher that read the wrong field, or compared strings, or treated a
+     * missing value as zero breaks this identity immediately — none of which a
+     * spot-check of one card would catch.
+     */
+    const both = total("power>=0 defence>=0 unique:cards");
+    const gt = total("power>defence unique:cards");
+    const lt = total("power<defence unique:cards");
+    const eq = total("power=defence unique:cards");
+
+    expect(both).toBeGreaterThan(0);
+    expect(gt + lt + eq).toBe(both);
+  });
+
+  test("Scryfall's spelling and ours are the same query", () => {
+    // The grammar is inherited on purpose, so a reader arriving from there
+    // types `pow>tou` and must get what `power>defence` gives.
+    const ours = searchCards(index, "power>defence unique:cards", 20000);
+    const theirs = searchCards(index, "pow>tou unique:cards", 20000);
+    expect(ours.total).toBe(theirs.total);
+    expect(ours.results.map((row) => row.href)).toEqual(
+      theirs.results.map((row) => row.href),
+    );
+  });
+
+  test("a card with an unprintable value on either side is excluded", () => {
+    /* Cards printing X, XX or nothing have no place in an order — the same
+       decision `cost>=3` already makes, applied to both sides at once. */
+    expect(total("power>=0 defence>=0 unique:cards")).toBeLessThan(4941);
+  });
+
+  test("an operand that is neither a number nor a field is refused", () => {
+    expect(notices("power>fish")).toContain("operand-unknown");
+    expect(total("power>fish")).toBe(0);
+  });
+
+  test("comparing a field to a literal still works", () => {
+    expect(total("power>2")).toBeGreaterThan(0);
+  });
+});
