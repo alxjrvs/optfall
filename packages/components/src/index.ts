@@ -50,7 +50,8 @@ export type PrimitiveName =
   | "search-field"
   | "result-row"
   | "stat-glyph"
-  | "game-symbol";
+  | "game-symbol"
+  | "pagination";
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
@@ -66,6 +67,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "result-row",
   "stat-glyph",
   "game-symbol",
+  "pagination",
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -146,6 +148,28 @@ export const PLATE_CORNERS: readonly PlateCorner[] = [
   "end-start",
   "end-end",
 ];
+
+/**
+ * How many rows a page of results carries — a count, or every one of them.
+ *
+ * `"all"` IS A MEMBER OF THE UNION RATHER THAN A SENTINEL NUMBER, and that is
+ * the whole reason this type exists instead of a bare `number`. The obvious
+ * spellings are `0` and `Infinity`, and both are values a caller can produce by
+ * accident: `Number.parseInt("")` is `NaN`, a missing parameter is `undefined`
+ * coerced to `0`, and either would silently mean "show 4,941 card images" at
+ * the one place a mistake is most expensive. A string cannot be arrived at by
+ * arithmetic.
+ *
+ * It lives in the framework-free layer because it has two consumers that must
+ * not define it twice: the {@link PrimitiveName | pagination} primitive, which
+ * renders the choice, and the query layer, which turns it into a slice.
+ *
+ * WHICH counts are offered is deliberately NOT here. That is a product
+ * decision about a particular list — a grid of faces and a list of rule
+ * sections do not want the same steps — so the control takes them as a prop and
+ * the surface states them.
+ */
+export type PageSize = number | "all";
 
 /**
  * A struck plate: square corners, light top edge, dark bottom edge.

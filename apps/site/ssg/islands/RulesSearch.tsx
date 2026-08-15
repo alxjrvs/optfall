@@ -41,14 +41,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Citation,
   OrnamentalRule,
+  Pagination,
   SearchField,
 } from "optfall-components/react";
 
 import {
+  DEFAULT_PAGE_SIZE,
+  PAGE_PARAM,
+  PAGE_SIZES,
+  type PageSize,
+  pageHref,
+  paginate,
+  parsePage,
+  parsePageSize,
+  requestFor,
+  SIZE_PARAM,
+  withPageParams,
+} from "../../src/lib/pagination";
+import {
   chapters,
   decodeIndex,
   type EncodedIndex,
-  RESULT_LIMIT,
   search,
   type SearchResult,
 } from "../../src/lib/search";
@@ -80,6 +93,17 @@ const SETTLE = 600;
 function queryFromUrl(): string {
   if (typeof window === "undefined") return "";
   return new URLSearchParams(window.location.search).get("q") ?? "";
+}
+
+/** Which page, and how many rows on it. Read from the URL, like the query. */
+function pagingFromUrl(): { page: number; size: PageSize } {
+  if (typeof window === "undefined")
+    return { page: 1, size: DEFAULT_PAGE_SIZE };
+  const params = new URLSearchParams(window.location.search);
+  return {
+    page: parsePage(params.get(PAGE_PARAM)),
+    size: parsePageSize(params.get(SIZE_PARAM)),
+  };
 }
 
 /** Why a row is on the page, in the words of the ranking that put it there. */
@@ -121,24 +145,63 @@ export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
    * was also server-rendered without one.
    */
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const field = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fromUrl = queryFromUrl();
     if (fromUrl !== "") setQuery(fromUrl);
+    const paging = pagingFromUrl();
+    setPage(paging.page);
+    setSize(paging.size);
   }, []);
 
-  const outcome = useMemo(() => search(rules, query), [rules, query]);
+  /**
+   * TYPING RESETS THE PAGE, AND READING THE URL MUST NOT — which is why this is
+   * a handler on the field rather than an effect on `query`.
+   *
+   * An effect watching `query` cannot tell the two apart. It would fire when
+   * the mount effect lifts `?q=` out of the URL, and reset the page to 1 before
+   * the reader's `?q=dominate&page=3` had finished loading — a pasted link
+   * that silently opens on the wrong page, which is the exact failure paging
+   * exists to fix. The field knows something different: a keystroke is always a
+   * new answer, and a new answer is always page one.
+   */
+  const type = useCallback((next: string): void => {
+    setQuery(next);
+    setPage(1);
+  }, []);
+
+  /**
+   * ONE PASS, EXCEPT FOR A PAGE PAST THE END — see the same note on
+   * `CardSearch`. This one runs on every keystroke, so the ordinary path being
+   * a single ranking pass is not a nicety: the second pass happens only when
+   * the URL asked for a page a shrinking answer no longer has.
+   */
+  const outcome = useMemo(() => {
+    const wanted = requestFor(page, size);
+    const first = search(rules, query, wanted.limit, wanted.offset);
+    if (first.results.length > 0 || first.total === 0) return first;
+    const clamped = paginate(first.total, page, size);
+    return search(rules, query, clamped.limit, clamped.offset);
+  }, [rules, query, page, size]);
+
   const asked = query.trim() !== "";
-  const truncated = outcome.total > outcome.results.length;
+  const slice = paginate(outcome.total, page, size);
 
   /** Wording for the live region and the count line. Written, never generated. */
   const summary = (() => {
     if (!asked) return "";
     if (outcome.total === 0) return `Nothing matches ${query.trim()}.`;
     const sections = `${outcome.total} section${outcome.total === 1 ? "" : "s"}`;
-    const shown = truncated ? `, showing the first ${RESULT_LIMIT}` : "";
-    return `${sections} match${outcome.total === 1 ? "es" : ""}${shown}.`;
+    /* The RANGE is the pager's sentence. This one keeps the total and adds the
+       position, because this string is what the live region announces and a
+       listener told the count but not the page has been told the answer moved
+       without being told where to. */
+    const where =
+      slice.pages > 1 ? ` Page ${slice.page} of ${slice.pages}.` : "";
+    return `${sections} match${outcome.total === 1 ? "es" : ""}.${where}`;
   })();
 
   /**
@@ -165,12 +228,18 @@ export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
    * gets a `pushState` and a real history entry.
    */
   const syncUrl = useCallback(
-    (mode: "replace" | "push", value: string): void => {
+    (
+      mode: "replace" | "push",
+      value: string,
+      nextPage: number,
+      nextSize: PageSize,
+    ): void => {
       if (typeof window === "undefined") return;
       const url = new URL(window.location.href);
       const trimmed = value.trim();
       if (trimmed === "") url.searchParams.delete("q");
       else url.searchParams.set("q", value);
+      withPageParams(url.searchParams, nextPage, nextSize);
       const target = `${url.pathname}${url.search}`;
       if (target === `${window.location.pathname}${window.location.search}`) {
         return;
@@ -191,13 +260,61 @@ export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
   useEffect(() => {
     // Debounced so the browser's own rate limit on history writes is never the
     // thing that decides whether the URL is right.
-    const timer = setTimeout(() => syncUrl("replace", query), SETTLE);
+    const timer = setTimeout(
+      () => syncUrl("replace", query, page, size),
+      SETTLE,
+    );
     return () => clearTimeout(timer);
-  }, [query, syncUrl]);
+  }, [query, page, size, syncUrl]);
+
+  /**
+   * The address of another page of this answer, built off the live URL so that
+   * anything this component does not own survives the click.
+   */
+  const linkTo = useCallback(
+    (nextPage: number, nextSize: PageSize): string => {
+      /* Unreachable in the server render rather than merely unused there: the
+         pager is drawn under results, and there are none without `window`. */
+      if (typeof window === "undefined") {
+        return pageHref("/cr", query, nextPage, nextSize);
+      }
+      const url = new URL(window.location.href);
+      if (query.trim() === "") url.searchParams.delete("q");
+      else url.searchParams.set("q", query);
+      withPageParams(url.searchParams, nextPage, nextSize);
+      return `${url.pathname}${url.search}`;
+    },
+    [query],
+  );
+
+  /**
+   * Turning a page is a deliberate act, so it gets a real history entry and the
+   * top of the list — the pager sits below the results, and a page turned in
+   * place leaves the reader looking at the end of a list they have not seen the
+   * start of.
+   *
+   * `push` rather than the `replace` typing gets, on the same rule the submit
+   * handler follows: a query is one navigation however many letters it took,
+   * and moving through its pages is a series of them.
+   */
+  const goTo = useCallback(
+    (nextPage: number, nextSize: PageSize): void => {
+      setPage(nextPage);
+      setSize(nextSize);
+      syncUrl("push", query, nextPage, nextSize);
+      window.scrollTo({ top: 0 });
+    },
+    [query, syncUrl],
+  );
 
   /** Back and forward have to work, which means listening for them. */
   useEffect(() => {
-    const onPop = () => setQuery(queryFromUrl());
+    const onPop = () => {
+      setQuery(queryFromUrl());
+      const paging = pagingFromUrl();
+      setPage(paging.page);
+      setSize(paging.size);
+    };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
@@ -235,19 +352,19 @@ export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
         action="/cr"
         placeholder="dominate"
         value={query}
-        onValueChange={setQuery}
+        onValueChange={type}
         inputRef={field}
         onSubmit={(event) => {
           // Only once hydrated. Without JavaScript this handler does not exist
           // and the form navigates to the same URL by itself.
           event.preventDefault();
-          syncUrl("push", query);
+          syncUrl("push", query, page, size);
           field.current?.blur();
         }}
         onKeyDown={(event) => {
           if (event.key === "Escape" && query !== "") {
             event.preventDefault();
-            setQuery("");
+            type("");
           }
         }}
         hint={
@@ -321,11 +438,28 @@ export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
                 </li>
               ))}
             </ol>
-            {truncated ? (
-              <p className="of-rules__count">
-                {outcome.total - outcome.results.length} more match. Narrow the
-                query — every word you add has to appear in the section.
-              </p>
+            {/*
+              WHERE "N MORE MATCH. NARROW THE QUERY." USED TO BE. It counted
+              sections it then refused to show; the count has not moved and the
+              sections are now reachable. `?per=all` renders every one of them,
+              which on this corpus is at most 1,278 rows of text.
+            */}
+            {slice.needed ? (
+              <Pagination
+                from={slice.from}
+                href={(next) => linkTo(next, size)}
+                label="Pages of rule results"
+                onNavigate={(next) => goTo(next, size)}
+                onResize={(next) => goTo(1, next)}
+                page={slice.page}
+                pages={slice.pages}
+                size={slice.size}
+                sizeHref={(next) => linkTo(1, next)}
+                sizes={PAGE_SIZES}
+                to={slice.to}
+                total={slice.total}
+                unit="sections"
+              />
             ) : null}
           </>
         ) : (

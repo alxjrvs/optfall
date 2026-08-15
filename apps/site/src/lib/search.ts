@@ -642,7 +642,13 @@ export interface SearchOutcome {
   readonly total: number;
 }
 
-/** Rows rendered at once. The count reported is always the true total. */
+/**
+ * Rows rendered at once, absent a choice. The count reported is always the true
+ * total, and every row it counts is now reachable — see `./pagination.ts`,
+ * which owns the steps a reader can pick and the two URL parameters that carry
+ * them. This constant is the default one of those steps, kept at the number it
+ * has always been.
+ */
 export const RESULT_LIMIT = 60;
 
 interface Accumulator {
@@ -717,11 +723,22 @@ function toResult(
 
 /**
  * Run a query. Pure: same index and same string, same array, every time.
+ *
+ * `limit` AND `offset` ARE APPLIED LAST, AFTER RANKING, and that ordering is
+ * the correctness argument for paging rather than a detail of it: every page
+ * comes off ONE ranked list, so a row cannot appear on two pages, cannot fall
+ * between them, and cannot be ranked differently because of which page it
+ * landed on. `total` counts the list before either is applied, so it stays what
+ * it always was — the true number of matches.
+ *
+ * `limit` accepts `Number.POSITIVE_INFINITY`, which is how "show me all of
+ * them" reaches here. `slice` clamps it to the length, so no cap survives.
  */
 export function search(
   index: SearchIndex,
   raw: string,
   limit: number = RESULT_LIMIT,
+  offset = 0,
 ): SearchOutcome {
   const { terms, ids, notices } = parseQuery(raw);
   const ordered: SearchResult[] = [];
@@ -836,7 +853,7 @@ export function search(
     terms,
     ids,
     notices,
-    results: ordered.slice(0, limit),
+    results: ordered.slice(offset, offset + limit),
     total: ordered.length,
   };
 }

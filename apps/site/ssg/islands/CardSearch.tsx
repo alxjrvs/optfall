@@ -28,6 +28,12 @@
  * `RulesSearch` records at length: the server has no `window`, so initialising
  * from `?q=` renders a different tree than the server did and hydration fails
  * with React error #418.
+ *
+ * THE PAGE IS PART OF THE ADDRESS, not part of this component's state — `?page=`
+ * and `?per=`, read on mount and on `popstate` exactly as `?q=` is, written on
+ * every deliberate act exactly as `?q=` is. There is no cap left anywhere in
+ * the path: `?per=all` resolves to an infinite limit and the reader is looking
+ * at every row that matched. See `../../src/lib/pagination.ts`.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -35,13 +41,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CardFace,
   OrnamentalRule,
+  Pagination,
   PitchJewel,
   ResultRow,
   SearchField,
 } from "optfall-components/react";
 
 import {
-  CARD_RESULT_LIMIT,
   type CardDisplayMode,
   type CardMatchField,
   decodeCardIndex,
@@ -49,6 +55,19 @@ import {
   searchCards,
 } from "../../src/lib/card-search";
 import { boxFor, faceUrl, placeholderUrl } from "../../src/lib/faces";
+import {
+  DEFAULT_PAGE_SIZE,
+  PAGE_PARAM,
+  PAGE_SIZES,
+  type PageSize,
+  pageHref,
+  paginate,
+  parsePage,
+  parsePageSize,
+  requestFor,
+  SIZE_PARAM,
+  withPageParams,
+} from "../../src/lib/pagination";
 
 import "./CardSearch.css";
 
@@ -82,6 +101,17 @@ function displayFromUrl(): CardDisplayMode | null {
   return null;
 }
 
+/** Which page, and how many rows on it. Read from the URL, like the query. */
+function pagingFromUrl(): { page: number; size: PageSize } {
+  if (typeof window === "undefined")
+    return { page: 1, size: DEFAULT_PAGE_SIZE };
+  const params = new URLSearchParams(window.location.search);
+  return {
+    page: parsePage(params.get(PAGE_PARAM)),
+    size: parsePageSize(params.get(SIZE_PARAM)),
+  };
+}
+
 /** The versions that matched, spoken. Written, never generated. */
 function versionsMatched(pitches: readonly number[]): string {
   return pitches
@@ -94,6 +124,8 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
 
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
   const [paramDisplay, setParamDisplay] = useState<CardDisplayMode | null>(
     null,
   );
@@ -105,23 +137,45 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       setQuery(fromUrl);
       setSubmitted(fromUrl);
     }
+    const paging = pagingFromUrl();
+    setPage(paging.page);
+    setSize(paging.size);
     setParamDisplay(displayFromUrl());
   }, []);
 
-  const outcome = useMemo(
-    () => searchCards(cards, submitted),
-    [cards, submitted],
-  );
+  /**
+   * THE QUERY RUNS TWICE ONLY FOR A PAGE PAST THE END, and never otherwise.
+   *
+   * The slice the URL asks for is known before the query runs; how many pages
+   * there are is not. So the common path is one pass at the requested offset,
+   * and the only way to get an empty page out of a non-empty answer is a `?page=`
+   * beyond the last one — a stale link, where a second pass against the clamped
+   * offset is worth a ranking pass to avoid answering with a blank list.
+   */
+  const outcome = useMemo(() => {
+    const wanted = requestFor(page, size);
+    const first = searchCards(cards, submitted, wanted.limit, wanted.offset);
+    if (first.results.length > 0 || first.total === 0) return first;
+    const clamped = paginate(first.total, page, size);
+    return searchCards(cards, submitted, clamped.limit, clamped.offset);
+  }, [cards, submitted, page, size]);
+
   const asked = submitted.trim() !== "";
-  const truncated = outcome.total > outcome.results.length;
+  const slice = paginate(outcome.total, page, size);
   const display = outcome.display ?? paramDisplay ?? "grid";
 
   const summary = (() => {
     if (!asked) return "";
     if (outcome.total === 0) return `Nothing matches ${submitted.trim()}.`;
     const found = `${outcome.total} card${outcome.total === 1 ? "" : "s"}`;
-    const shown = truncated ? `, showing the first ${CARD_RESULT_LIMIT}` : "";
-    return `${found} match${outcome.total === 1 ? "es" : ""}${shown}.`;
+    /* The RANGE is the pager's sentence; this one states the total and, when
+       there is more than one page, where in it the reader is standing. Said
+       here as well as there because this string is what the live region
+       announces, and a screen reader that is told the count but not the page
+       has been told the answer moved without being told where to. */
+    const where =
+      slice.pages > 1 ? ` Page ${slice.page} of ${slice.pages}.` : "";
+    return `${found} match${outcome.total === 1 ? "es" : ""}.${where}`;
   })();
 
   /**
@@ -133,12 +187,19 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
    * un-submitted text while the screen showed results for the old one.
    */
   const syncUrl = useCallback(
-    (mode: "replace" | "push", written: string, dropParam: boolean): void => {
+    (
+      mode: "replace" | "push",
+      written: string,
+      dropParam: boolean,
+      nextPage: number,
+      nextSize: PageSize,
+    ): void => {
       if (typeof window === "undefined") return;
       const url = new URL(window.location.href);
       const trimmed = written.trim();
       if (trimmed === "") url.searchParams.delete("q");
       else url.searchParams.set("q", written);
+      withPageParams(url.searchParams, nextPage, nextSize);
       /* The parameter is never written again, only read. A stale
          `?display=list` beside a `display:text` query is exactly the ambiguity
          the operator removed. */
@@ -153,12 +214,62 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     [],
   );
 
+  /**
+   * The address of another page of THIS answer, built off the live URL.
+   *
+   * Off the URL rather than from `pageHref` so that everything this component
+   * does not own survives the click — `?display=list` in particular, which is
+   * read but never written, and which a from-scratch href would silently drop
+   * and so change the view as a side effect of turning a page.
+   *
+   * `submitted` rather than `query`, for the reason `syncUrl`'s own comment
+   * gives: the box may hold text that has not been asked yet, and a link
+   * carrying it would point at a page of a search nobody has run.
+   */
+  const linkTo = useCallback(
+    (nextPage: number, nextSize: PageSize): string => {
+      /* The pager renders only under results, and results exist only after
+         hydration — so this branch is unreachable in the server render rather
+         than merely unused there. */
+      if (typeof window === "undefined") {
+        return pageHref("/search", submitted, nextPage, nextSize);
+      }
+      const url = new URL(window.location.href);
+      if (submitted.trim() === "") url.searchParams.delete("q");
+      else url.searchParams.set("q", submitted);
+      withPageParams(url.searchParams, nextPage, nextSize);
+      return `${url.pathname}${url.search}`;
+    },
+    [submitted],
+  );
+
+  /**
+   * Turning a page returns the reader to the top of the results.
+   *
+   * The pager is BELOW the list, so a page turned in place leaves the reader
+   * looking at the end of a list they have not seen the start of. No smooth
+   * behaviour: this is a jump between two views of one answer, and animating it
+   * would suggest the intervening rows exist.
+   */
+  const goTo = useCallback(
+    (nextPage: number, nextSize: PageSize): void => {
+      setPage(nextPage);
+      setSize(nextSize);
+      syncUrl("push", submitted, false, nextPage, nextSize);
+      window.scrollTo({ top: 0 });
+    },
+    [submitted, syncUrl],
+  );
+
   /** Back and forward have to work, which means listening for them. */
   useEffect(() => {
     const onPop = () => {
       const next = queryFromUrl();
       setQuery(next);
       setSubmitted(next);
+      const paging = pagingFromUrl();
+      setPage(paging.page);
+      setSize(paging.size);
       setParamDisplay(displayFromUrl());
     };
     window.addEventListener("popstate", onPop);
@@ -197,7 +308,11 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     setQuery(written);
     setSubmitted(written);
     setParamDisplay(null);
-    syncUrl("push", written, true);
+    /* THE PAGE IS KEPT, and that is the point of switching views: the rows are
+       the same rows in a different shape, so a reader six pages into an answer
+       who wants to read the names instead of look at the faces has not asked to
+       start over. */
+    syncUrl("push", written, true, page, size);
   }
 
   return (
@@ -237,8 +352,16 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
             keystroke, and the alternative is caching machinery to save one pass
             over an index the same interaction already pays for once.
           */
-          const next = searchCards(cards, query);
+          const next = searchCards(cards, query, requestFor(1, size).limit);
           setSubmitted(query);
+          /*
+            A NEW QUERY IS PAGE ONE. Keeping the page across a submit would land
+            the reader on page 6 of an answer they have not seen the top of —
+            and on a shorter answer, on a page that does not exist. The SIZE is
+            kept, because that is a preference about how they read rather than a
+            position in one particular answer.
+          */
+          setPage(1);
           /*
             THE LEGACY PARAMETER IS FORGOTTEN EXACTLY WHEN IT IS DROPPED, and
             those two have to be one condition rather than two.
@@ -261,7 +384,7 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
           */
           const droppingParam = next.display !== null;
           if (droppingParam) setParamDisplay(null);
-          syncUrl("push", query, droppingParam);
+          syncUrl("push", query, droppingParam, 1, size);
           field.current?.blur();
 
           const only = next.total === 1 ? next.results[0] : undefined;
@@ -442,11 +565,38 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
               </ol>
             )}
 
-            {truncated ? (
-              <p className="of-cards__count">
-                {outcome.total - outcome.results.length} more match. Narrow the
-                query — every word you add has to appear on the card.
-              </p>
+            {/*
+              WHERE "N MORE MATCH. NARROW THE QUERY." USED TO BE.
+
+              That line counted rows it then refused to show, which
+              `docs/SCRYFALL-GAP.md` §4 named as the thing to delete: "a refusal
+              where Scryfall paginates. A grid makes it worse — 60 images is
+              under one scroll." The count was never the problem and it has not
+              moved; what is new is that the rows it counts are reachable, and
+              that "all of them" is one of the things a reader can ask for.
+
+              CHANGING THE SIZE GOES BACK TO PAGE ONE, because a page number
+              does not survive the change: page 4 of 60-row pages and page 4 of
+              240-row pages are different rows of the same answer, and there is
+              no reading of "4" that is true of both. Page one is the one page
+              that means the same thing at every size.
+            */}
+            {slice.needed ? (
+              <Pagination
+                from={slice.from}
+                href={(next) => linkTo(next, size)}
+                label="Pages of card results"
+                onNavigate={(next) => goTo(next, size)}
+                onResize={(next) => goTo(1, next)}
+                page={slice.page}
+                pages={slice.pages}
+                size={slice.size}
+                sizeHref={(next) => linkTo(1, next)}
+                sizes={PAGE_SIZES}
+                to={slice.to}
+                total={slice.total}
+                unit="cards"
+              />
             ) : null}
           </>
         ) : (

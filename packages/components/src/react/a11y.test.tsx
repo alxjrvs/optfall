@@ -60,6 +60,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
 
+import type { PageSize } from "../index";
+
 import { BevelledPlate } from "./BevelledPlate";
 import { BrassSeal } from "./BrassSeal";
 import { CardFace } from "./CardFace";
@@ -68,6 +70,7 @@ import { FiligreeCorner } from "./FiligreeCorner";
 import { GameSymbol } from "./GameSymbol";
 import { Mark } from "./Mark";
 import { OrnamentalRule } from "./OrnamentalRule";
+import { Pagination } from "./Pagination";
 import { PitchJewel } from "./PitchJewel";
 import { ResultRow } from "./ResultRow";
 import { SearchField } from "./SearchField";
@@ -396,6 +399,84 @@ const CASES: readonly Case[] = [
     component: ResultRow,
     props: { href: "/card/head-jab-1", label: "Head Jab (pitch 1)" },
     wrap: ['<ul class="results">', "</ul>"],
+  },
+
+  /*
+    THE PAGER, AT ITS THREE DIFFERENT MARKUPS rather than once.
+
+    Its ends are the cases that differ structurally: on page one "Previous" is
+    an inert `<span>` where every sibling is an `<a>`, and on the last page
+    "Next" is. In the middle both are links and BOTH ellipses render — the only
+    rendering that has two `aria-hidden` list items inside an `<ol>`, which is
+    the shape axe's `list` rule is entitled to object to.
+
+    The one-page case is not degenerate padding either: it is the rendering with
+    no numbered run at all, where the whole control is a sentence and the
+    rows-per-page links, and it is what most queries actually get.
+  */
+  {
+    name: "Pagination first page",
+    component: Pagination,
+    props: {
+      page: 1,
+      pages: 12,
+      size: 60,
+      sizes: [30, 60, 120, 240, "all"],
+      total: 703,
+      from: 1,
+      to: 60,
+      unit: "cards",
+      href: (page: number) => `/search?q=attack&page=${page}`,
+      sizeHref: (size: PageSize) => `/search?q=attack&per=${size}`,
+    },
+  },
+  {
+    name: "Pagination mid-run, both gaps drawn",
+    component: Pagination,
+    props: {
+      page: 6,
+      pages: 12,
+      size: 60,
+      sizes: [30, 60, 120, 240, "all"],
+      total: 703,
+      from: 301,
+      to: 360,
+      unit: "cards",
+      href: (page: number) => `/search?q=attack&page=${page}`,
+      sizeHref: (size: PageSize) => `/search?q=attack&per=${size}`,
+    },
+  },
+  {
+    name: "Pagination last page",
+    component: Pagination,
+    props: {
+      page: 12,
+      pages: 12,
+      size: 60,
+      sizes: [30, 60, 120, 240, "all"],
+      total: 703,
+      from: 661,
+      to: 703,
+      unit: "cards",
+      href: (page: number) => `/search?q=attack&page=${page}`,
+      sizeHref: (size: PageSize) => `/search?q=attack&per=${size}`,
+    },
+  },
+  {
+    name: "Pagination single page",
+    component: Pagination,
+    props: {
+      page: 1,
+      pages: 1,
+      size: "all",
+      sizes: [30, 60, 120, 240, "all"],
+      total: 9,
+      from: 1,
+      to: 9,
+      unit: "sections",
+      href: (page: number) => `/cr?q=dominate&page=${page}`,
+      sizeHref: (size: PageSize) => `/cr?q=dominate&per=${size}`,
+    },
   },
 ];
 

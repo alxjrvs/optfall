@@ -2026,7 +2026,17 @@ export interface CardOutcome {
   readonly total: number;
 }
 
-/** Rows rendered at once. The count reported is always the true total. */
+/**
+ * Rows rendered at once, absent a choice. The count reported is always the true
+ * total, and every row it counts is now reachable — see `./pagination.ts`,
+ * which owns the steps a reader can pick and the two URL parameters that carry
+ * them. This constant is the default one of those steps, kept at the number it
+ * has always been.
+ *
+ * It used to be a hard cap with "narrow the query" printed under it, which
+ * `docs/SCRYFALL-GAP.md` §4 named for what it was: "a refusal where Scryfall
+ * paginates. A grid makes it worse — 60 images is under one scroll."
+ */
 export const CARD_RESULT_LIMIT = 60;
 
 const STAT_LABELS = ["Cost", "Power", "Defence"] as const;
@@ -2245,10 +2255,28 @@ function compareBySort(
   return a - b;
 }
 
+/**
+ * Run a card query.
+ *
+ * `limit` AND `offset` ARE APPLIED LAST, AFTER RANKING, COLLAPSING AND THE
+ * `unique:` EXPANSION — which is what makes paging safe on this engine in
+ * particular. `unique:names` collapses pitch versions to one row and
+ * `unique:art` expands a row per picture, so the number of ROWS is decided long
+ * after the number of MATCHES is; slicing any earlier would page over a list
+ * that is not the list on screen, and the page boundaries would land in
+ * different places depending on which mode was in force.
+ *
+ * `total` is the length of that final row list, so the count and the pages are
+ * two statements about one number.
+ *
+ * `limit` accepts `Number.POSITIVE_INFINITY`, which is how "show me all of
+ * them" reaches here. `slice` clamps it to the length, so no cap survives.
+ */
 export function searchCards(
   index: CardIndex,
   raw: string,
   limit: number = CARD_RESULT_LIMIT,
+  offset = 0,
 ): CardOutcome {
   const { terms, filters, notices, sort, unique, display, folded, tree } =
     parseCardQuery(raw);
@@ -2512,7 +2540,7 @@ export function searchCards(
     sort,
     unique,
     display,
-    results: rows.slice(0, limit).map((row) => {
+    results: rows.slice(offset, offset + limit).map((row) => {
       const name = nameOfRow(row.ordinal);
       const pitches =
         unique === "names"

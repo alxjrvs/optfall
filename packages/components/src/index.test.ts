@@ -48,7 +48,7 @@ describe("card image compliance contract", () => {
 });
 
 describe("the primitive set", () => {
-  test("is the eight Phase 1 deliverables plus the card layer's five, without duplicates", () => {
+  test("is the eight Phase 1 deliverables plus the card layer's six, without duplicates", () => {
     // The eight are Phase 1's closed list. `card-face` is the ninth and it
     // arrived with the card layer rather than with the design system:
     // docs/SCRYFALL-GAP.md §5.1 made images a product surface.
@@ -58,7 +58,12 @@ describe("the primitive set", () => {
     // moved to the universal footer (docs/COMPLIANCE.md §5), which left the
     // component with no behaviour at all, so it was deleted rather than kept as
     // a wrapper whose documented reason for existing had gone.
-    expect(PRIMITIVES).toHaveLength(13);
+    //
+    // FOURTEEN NOW. `pagination` is the newest and the only one that arrived
+    // from a product failure rather than from a plan: docs/SCRYFALL-GAP.md §4
+    // named the hard 60-result cap "a refusal where Scryfall paginates", and
+    // both search surfaces needed the identical control to answer it.
+    expect(PRIMITIVES).toHaveLength(14);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
@@ -75,6 +80,7 @@ describe("the primitive set", () => {
     // `ornament.cut.*`: the plate a reader meets inline in `+1{p}` is the same
     // plate carrying `4` in the stat block.
     expect(PRIMITIVES).toContain("game-symbol");
+    expect(PRIMITIVES).toContain("pagination");
   });
 });
 
