@@ -25,7 +25,6 @@
 export { BevelledPlate, type BevelledPlateProps } from "./BevelledPlate";
 export { BrassSeal, type BrassSealProps } from "./BrassSeal";
 export { CardFace, type CardFaceProps } from "./CardFace";
-export { CardFaceGroup, type CardFaceGroupProps } from "./CardFaceGroup";
 export { Citation, type CitationProps } from "./Citation";
 export { FiligreeCorner, type FiligreeCornerProps } from "./FiligreeCorner";
 export { GameSymbol, type GameSymbolProps } from "./GameSymbol";

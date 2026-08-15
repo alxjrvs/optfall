@@ -320,31 +320,58 @@ disclaimer must be provided: **`© Legend Story Studios`**.
 
 **Enforced at.**
 
-- **The card component contract.** The component that renders a card image
-  renders the copyright line **itself**. It is not a prop the caller may omit,
-  not a default that can be overridden to empty, and not the page's
-  responsibility. A caller who wants the image gets the line.
+- **The universal footer.** Every built page carries the literal
+  `© Legend Story Studios`, emitted by the document shell in `ssg/document.tsx`
+  beside the corpus's own rights notice and the LSS disclaimer. A page cannot
+  opt out: pages do not render the footer, the shell does.
+- **`scripts/check-card-notice.ts`**, which reads the built HTML and is now the
+  primary enforcement rather than a backstop. See below.
 - The image-serving layer (Phase 3, "own bucket, copyright line, no set logos in
   chrome") applies it at the serving boundary as well, so a hotlinked image is
   not an unmarked image.
-- A Storybook story per card-rendering component, so removal shows up as a
-  visual-regression diff rather than as nothing.
 
-**Status.** **Enforced in the components and in the built output.**
+**THIS CHANGED, AND THE CHANGE IS A TRADE RATHER THAN A TIGHTENING.** The line
+used to be emitted per image, by `CardFace`, with `CardFaceGroup` hoisting one
+notice over faces shown together — the wording of this section demanded exactly
+that: "not a prop the caller may omit… and not the page's responsibility". It
+was moved to one notice per page.
 
-`CardFace` renders `CARD_IMAGE_COPYRIGHT` on every face, with no `copyright`
-prop to omit, empty or reword. `CardFaceGroup` hoists one notice for faces shown
-together and tells the faces inside it — through component context, which markup
-cannot forge — that it has been carried; a face outside a group still emits its
-own. `CardFaceGroup.test.ts` asserts both counts exactly, so zero notices and
-duplicated notices each fail the build.
+*What that bought:* a card grid of sixty faces carried sixty short notices, and
+they read as noise on every surface that shows more than one card — the grid,
+the printings rail, the front-door fan. The requirement is that the disclaimer be
+**provided wherever card images are used**, and a page that states it once,
+unmissably, in the same footer as the rest of the rights position satisfies that.
 
-That is not sufficient on its own, and saying so is the point of listing two
-enforcement points rather than one. **Both failures this project has actually
-had were page-level and no component test could have seen either:** printing
-thumbnails once rendered as bare `<img>` to avoid repeating the line, putting 22
-images under a single notice, and the front-door fan shipped with a crop that
-cut the hoisted notice in half.
+*What it cost, stated plainly:* the old arrangement made the notice
+**unforgeable**. A caller could not obtain the image without the line because one
+component emitted both, and no page-level mistake could separate them. The new
+arrangement puts the notice in a different file from the image. The coupling is
+now an assertion over built HTML rather than a property of the component graph,
+and an assertion can be deleted where a structural impossibility cannot.
+
+*What did not change:* the check still proves **every card face on every page
+came from `CardFace`**, which is the half that caught the real incident. That
+never depended on the notice.
+
+`CardFaceGroup` was deleted with the move. It existed solely to hoist the notice
+— its wrapper and its context had no other behaviour — so keeping it would have
+left a primitive whose documented reason for existing had gone. The closed
+primitive set is thirteen.
+
+**Status.** **Enforced in the built output.**
+
+**Both failures this project has actually had were page-level**, which is why
+the surviving enforcement is a check over built HTML rather than a component
+test: printing thumbnails once rendered as bare `<img>` to avoid repeating the
+line, putting 22 images under a single notice, and the front-door fan shipped
+with a crop that cut the hoisted notice in half.
+
+The second of those is worth re-reading against the current design. A notice in
+the footer cannot be cropped by a card-row stylesheet, so that specific failure
+is now structurally impossible — but a footer is further from the images than a
+caption was, and "provided wherever images are used" is satisfied at page
+granularity rather than at image granularity. That is the trade, and it was made
+deliberately.
 
 `scripts/check-card-notice.ts` runs in the `disclaimer` job and **catches the
 first of those, not the second.** It counts: every `<img>` served from the face

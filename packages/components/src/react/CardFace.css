@@ -110,15 +110,3 @@
   variant that can drop it — but "present" was never the same as "loud", and the
   requirement asks for the first.
 */
-.of-card-face__copyright {
-  font-family: var(--of-type-family-sans);
-  /* The smallest step in the scale, and the only thing that uses it. */
-  font-size: var(--of-type-size-legal);
-  /* Tight rather than tracked: the opposite of the label treatment above. */
-  letter-spacing: var(--of-type-tracking-tight);
-  color: var(--of-color-ink-faint);
-  line-height: var(--of-type-leading-tight);
-  /* Never wider than the face it belongs to, so a thumbnail's notice cannot
-     widen the cell it sits in. */
-  max-inline-size: 100%;
-}

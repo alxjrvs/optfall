@@ -7,7 +7,7 @@
  * accessible names, the semantics (`<hr>` versus a decorative span), and the
  * class names — the last because this library learned the hard way that a
  * component can render with NO classes at all and pass every test that was
- * looking at something else. See `CardFaceGroup.test.tsx`.
+ * looking at something else.
  */
 
 import { describe, expect, test } from "bun:test";

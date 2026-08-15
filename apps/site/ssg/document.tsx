@@ -17,6 +17,9 @@
 
 import type { ReactElement } from "react";
 
+import { CARD_IMAGE_COPYRIGHT } from "optfall-components";
+
+import { CORPUS } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { THEME_COLOUR } from "./assets";
 import { SiteHeader } from "./SiteHeader";
@@ -113,6 +116,28 @@ export function Document({
           where a page has no way to omit it.
         */}
         <footer className="site-footer">
+          {/*
+            THE CORPUS'S OWN RIGHTS NOTICE, REPRODUCED RATHER THAN REWORDED.
+            It names card names, card text and card images as LSS's property and
+            states the policy under which they are displayed, so it is the
+            sentence that does the most work of the three.
+          */}
+          <p className="legal">{CORPUS.rights}</p>
+          {/*
+            THE CARD-IMAGE LINE, WHICH USED TO BE RENDERED BY EVERY `CardFace`.
+            `docs/COMPLIANCE.md` §5 requires the literal `© Legend Story
+            Studios` wherever card images are used; carrying it here gives every
+            page that literal, including the pages that show sixty faces and the
+            pages that show none. It is deliberately NOT folded into the
+            sentence above — that text is the corpus's, reproduced verbatim, and
+            editing it to absorb this line would be rewording a notice we do not
+            own.
+          */}
+          <p className="legal">{CARD_IMAGE_COPYRIGHT}</p>
+          {/*
+            Unchanged, and still last: `check-disclaimer.ts` reads this string
+            verbatim off all 13,675 built pages.
+          */}
           <p className="legal">{LSS_DISCLAIMER}</p>
         </footer>
         {/*

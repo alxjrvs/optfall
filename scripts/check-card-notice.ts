@@ -1,14 +1,22 @@
 #!/usr/bin/env bun
 /**
  * Assert that every card face on a built page was rendered by `CardFace`, and
- * that pages showing faces carry the notice.
+ * that every page carries the card-image notice.
  *
  *   bun scripts/check-card-notice.ts [output-directory]
  *
- * WHY A COMPONENT TEST WAS NOT ENOUGH. `CardFaceGroup.test.ts` proves the
- * components render the notice: a lone face carries its own, faces in a group
- * share exactly one. That is the right test, and it cannot see a page that
- * renders a face without going through the components at all.
+ * THIS FILE IS NOW THE PRIMARY ENFORCEMENT, WHICH IT WAS NOT BEFORE. The notice
+ * used to be emitted by `CardFace` itself, so a caller could not obtain an image
+ * without it and a component test could prove that. `docs/COMPLIANCE.md` §5
+ * moved it to the universal footer: one notice per page, beside the corpus's
+ * rights text and the LSS disclaimer, whether the page shows sixty faces or
+ * none.
+ *
+ * That trades an unforgeable coupling for a page-level one, and this check is
+ * what replaces the guarantee. It asserts BOTH halves that used to be implied
+ * by the component: that the notice is on the page at all, and — the half that
+ * did the real work then and still does — that no face reached the page by any
+ * route other than `CardFace`.
  *
  * THE FIRST DRAFT OF THIS FILE DID NOT CATCH THAT EITHER, and the mistake is
  * worth recording because it is the one this whole layer exists to correct. It
@@ -149,11 +157,27 @@ let failures = 0;
 for (const page of pages) {
   const html = readFileSync(`${outputDirectory}/${page}`, "utf8");
   const images = faceImages(html);
+  const file = `${outputDirectory}/${page}`;
+
+  /*
+   * EVERY PAGE, NOT ONLY THE ONES WITH FACES, which is why this sits ABOVE the
+   * early return rather than below it. The notice is in the shell now, so this
+   * is close to asserting the footer exists — and that is exactly its job. The
+   * footer is one edit away from losing a line, and that edit would otherwise
+   * be invisible: the pages would look right while 12,279 of them showed card
+   * art with no attribution anywhere on them.
+   */
+  if (!html.includes(CARD_IMAGE_COPYRIGHT)) {
+    console.log(
+      `::error file=${file}::${page} does not contain "${CARD_IMAGE_COPYRIGHT}". It is emitted by the universal footer in ssg/document.tsx, so a page missing it has lost the footer.`,
+    );
+    failures += 1;
+  }
+
   if (images === 0) continue;
 
   facePages += 1;
   const rendered = componentFaces(html);
-  const file = `${outputDirectory}/${page}`;
 
   if (images > rendered) {
     console.log(
@@ -166,14 +190,6 @@ for (const page of pages) {
   if (rendered > images) {
     console.log(
       `::error file=${file}::${page} renders ${rendered} CardFace element(s) for ${images} card image(s). A CardFace whose src is not a card image makes this check's arithmetic meaningless — it would mask one bare <img> elsewhere on the page. Either the src is wrong or this check's host list needs the new one.`,
-    );
-    failures += 1;
-    continue;
-  }
-
-  if (!html.includes(CARD_IMAGE_COPYRIGHT)) {
-    console.log(
-      `::error file=${file}::${page} shows ${images} card face(s) and does not contain "${CARD_IMAGE_COPYRIGHT}".`,
     );
     failures += 1;
   }
@@ -189,11 +205,11 @@ if (facePages === 0) {
 if (failures > 0) {
   console.log("");
   console.log(
-    `${failures} of ${facePages} page(s) showing card faces failed. Card images are permitted on the condition that the notice accompanies them; the mechanism is CardFace emitting it, or CardFaceGroup hoisting one for faces shown together. See docs/COMPLIANCE.md §5.`,
+    `${failures} page(s) failed. Card images are permitted on the condition that the notice accompanies them; the mechanism is the universal footer in ssg/document.tsx, and this check is what holds it there. See docs/COMPLIANCE.md §5.`,
   );
   process.exit(1);
 }
 
 console.log(
-  `${facePages} of ${pages.length} built page(s) show a card face; every face came from CardFace and every page carries the notice. ✔`,
+  `${facePages} of ${pages.length} built page(s) show a card face; every face came from CardFace, and all ${pages.length} carry the notice. ✔`,
 );
