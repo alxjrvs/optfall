@@ -77,6 +77,18 @@ export function SiteHeader({ section, field = true }: SiteHeaderProps) {
           <label className="of-bar__sr" htmlFor="site-search">
             Search the cards
           </label>
+          {/*
+            THE CHAIN, HERE TOO. This bar hand-writes its own form rather than
+            using `SearchField` — a narrower control with a hidden label and no
+            hint, which the primitive does not have a variant for — and the
+            consequence was that the mark appeared inside the search box on the
+            front door and nowhere else. Two implementations of one control is
+            already the thing §6a wanted collapsed; until it is, the two at least
+            look like the same object.
+          */}
+          <span className="of-bar__find-mark" aria-hidden="true">
+            <Mark size="sm" decorative />
+          </span>
           <input
             id="site-search"
             className="of-bar__field"

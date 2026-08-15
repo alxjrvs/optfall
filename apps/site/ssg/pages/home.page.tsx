@@ -173,29 +173,35 @@ function page(): PageResult {
           <a href="/random">Random card</a>
         </nav>
 
-        <ul className="of-door__new" aria-label="Recent sets">
-          {RECENT_SETS.map((set) => (
-            <li key={set.id}>
-              <a
-                href={searchHref(`set:${set.id.toLowerCase()} order:released`)}
-              >
-                <span className="of-door__badge">New</span>
-                {set.name}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="of-door__notices">
+          <ul className="of-door__new" aria-label="Recent sets">
+            {RECENT_SETS.map((set) => (
+              <li key={set.id}>
+                <a
+                  href={searchHref(
+                    `set:${set.id.toLowerCase()} order:released`,
+                  )}
+                >
+                  <span className="of-door__badge">New</span>
+                  {set.name}
+                </a>
+              </li>
+            ))}
+          </ul>
 
-        {/*
-          NOT ABOUT CARDS, AND THAT IS WHY IT IS HERE. A reference tool a
-          community relies on has a front page, and what a front page points at
-          is a statement about who it is for.
-        */}
-        <p className="of-door__cause">
-          <a href="https://goodlawproject.org/" rel="noreferrer">
-            Help Good Law Project fight for trans rights
-          </a>
-        </p>
+          {/*
+            NOT ABOUT CARDS, AND THAT IS WHY IT IS HERE. A reference tool a
+            community relies on has a front page, and what a front page points at
+            is a statement about who it is for. Grouped with the set links rather
+            than set apart from them: given its own block it read as a footnote,
+            which is the opposite of the point.
+          */}
+          <p className="of-door__cause">
+            <a href="https://goodlawproject.org/" rel="noreferrer">
+              Help Good Law Project fight for trans rights
+            </a>
+          </p>
+        </div>
 
         <CardFan cards={fan} />
       </div>
