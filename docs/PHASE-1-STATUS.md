@@ -112,9 +112,12 @@ by `svelte-check` rather than inferred at build time.
 
 ## Open, carried into Phase 2
 
-- **The display face.** `docs/DESIGN.md` names Grenze, Cinzel and Eczar as
-  candidates and flags that a licence must be confirmed for webfont embedding.
-  Tokens ship a system serif stack, so this is a one-token change when decided.
+- ~~**The display face.**~~ **Settled: Grenze.** SIL Open Font License 1.1,
+  which permits webfont embedding and self-hosting; served from our own origin
+  as a 38 kB variable woff2 covering the whole weight range, with its URL and
+  hash recorded in `data/fonts/fonts.json`. Applied to `h1`, `h2` and the card
+  name, and no further down: the face is angular and high-contrast, which is
+  what makes it worth having at title size and tiring in a run of subheadings.
 - **Three tokens the primitives wanted and did not get**, composed around rather
   than invented: a named deep-bevel step, a muted brass for de-emphasis inside
   the seal, and an inverted bevel pair for recessed surfaces. None is blocking.

@@ -1,0 +1,17 @@
+{
+  "_comment": "Provenance for the self-hosted webfonts under apps/site/public/fonts. Authored by hand rather than generated, unlike data/symbols/symbols.json — see the GOVERNED table in scripts/check-asset-provenance.ts for why the two cannot be one file. docs/COMPLIANCE.md §3 requires a recorded origin for every binary served publicly; this is that record.",
+  "fonts": [
+    {
+      "file": "grenze-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/grenze/v18/O4ZTFGb7hR12BxqH-GImuA8alw.woff2",
+      "sha256": "cc3514851f1f2227ac547019924d20f3e93d2cc1736831c0a6454643da085623",
+      "family": "Grenze",
+      "licence": "SIL Open Font License 1.1",
+      "licenceUrl": "https://openfontlicense.org/",
+      "source": "https://fonts.google.com/specimen/Grenze",
+      "designer": "Omnibus-Type",
+      "subset": "latin",
+      "note": "The variable file Google serves for the latin subset; one file covers the whole weight range, which is why there is no separate 700."
+    }
+  ]
+}

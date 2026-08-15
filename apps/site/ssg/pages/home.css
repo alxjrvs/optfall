@@ -70,7 +70,7 @@
 .of-door__sentence {
   margin: 0;
   text-align: center;
-  font-family: var(--of-type-family-serif);
+  font-family: var(--of-type-family-display);
   font-size: var(--of-type-size-display);
   font-weight: var(--of-type-weight-regular);
   line-height: var(--of-type-leading-tight);

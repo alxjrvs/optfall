@@ -54,7 +54,25 @@ const REPO_ROOT = new URL("../", import.meta.url);
  * confusing rather than unsafe; naming the key makes the contract discoverable
  * from the table instead of from this script's internals.
  */
+/*
+ * ORDER MATTERS: most specific directory first. A file is audited against the
+ * FIRST entry whose directory contains it, so `apps/site/public/fonts` is
+ * governed by the font manifest and everything else under `apps/site/public`
+ * by the symbol one.
+ *
+ * That nesting exists because the two manifests cannot be merged. The symbol
+ * manifest is GENERATED — `scripts/ingest-game-symbols.ts` writes it, and
+ * `check:symbols` verifies the file on disk matches what the ingest would
+ * produce — so a hand-written font entry added to it would be deleted by the
+ * next sync, silently, and the fonts would be unaccounted-for again. Two
+ * manifests, one generated and one authored, is the honest shape.
+ */
 const GOVERNED = [
+  {
+    dir: "apps/site/public/fonts",
+    manifest: "data/fonts/fonts.json",
+    key: "fonts",
+  },
   {
     dir: "apps/site/public",
     manifest: "data/symbols/symbols.json",
@@ -66,6 +84,20 @@ const GOVERNED = [
     key: "assets",
   },
 ] as const;
+
+/**
+ * Directories governed by a more specific entry than `dir`.
+ *
+ * Without this the symbol audit would walk into `fonts/`, find a woff2 with no
+ * entry in the symbol manifest, and report it as unaccounted-for — while the
+ * font audit passed on the same file. One asset, two verdicts, and the failing
+ * one pointing at the wrong manifest.
+ */
+function nestedUnder(dir: string): readonly string[] {
+  return GOVERNED.map((entry) => entry.dir).filter(
+    (other) => other !== dir && other.startsWith(`${dir}/`),
+  );
+}
 
 /**
  * Extensions that are BYTES rather than source. A `.svg` counts: it is an image
@@ -281,7 +313,10 @@ async function auditFile(
  * the same prose-only failure it is describing. Twice in two changes.)
  */
 export async function auditDir(dir: string, manifest: string, key: string) {
-  const files = (await walk(dir)).filter((path) => BINARY.test(path));
+  const nested = nestedUnder(dir);
+  const files = (await walk(dir))
+    .filter((path) => BINARY.test(path))
+    .filter((path) => !nested.some((other) => path.startsWith(`${other}/`)));
 
   const record = await Bun.file(manifest)
     .json()
