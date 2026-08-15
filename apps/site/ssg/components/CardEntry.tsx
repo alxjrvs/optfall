@@ -653,20 +653,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                       </span>
                     ))}
                     {/*
-                      IN A SPAN, so it is a flex item rather than a bare text
-                      node. The line is a row of rarities followed by an
-                      attribution, and the gap between any two of those things
-                      should be the same gap. A loose text node is not spaced by
-                      `gap` at all, which is why this line used to run its
-                      rarities on a margin and then butt the attribution against
-                      the last of them on whatever the space character happened
-                      to measure.
+                      A BARE TEXT NODE, DELIBERATELY. It was briefly wrapped in a
+                      span on the theory that `gap` only spaces elements — which
+                      is wrong: flexbox wraps each contiguous run of text in an
+                      ANONYMOUS flex item, and the gap applies to it like any
+                      other. The span bought nothing, styled nothing, and left a
+                      class name in the sheet that no rule matched.
                     */}
-                    <span className="of-card__attribution">
-                      {artists.length === 0
-                        ? "No artist is credited in the published dataset."
-                        : `Illustrated by ${artists.join(", ")}`}
-                    </span>
+                    {artists.length === 0
+                      ? "No artist is credited in the published dataset."
+                      : `Illustrated by ${artists.join(", ")}`}
                   </p>
                   <p className="of-card__credit">
                     <a href="#printings">

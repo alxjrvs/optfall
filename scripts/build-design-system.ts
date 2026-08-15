@@ -197,10 +197,18 @@ h1, h2, h3 { font-family: var(--of-type-family-serif); font-weight: 600; margin:
 code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-size-small); }
 
 /* -- the primitives, drawn from tokens only -- */
+/* THE NUMERAL'S SIZE IS PART OF THE JEWEL, and this had been leaving it to the
+   page. \`PitchJewel.css\` sets \`base\` on the stone and \`title\` on \`lg\`; the
+   gallery set nothing on the default and \`base\` on \`lg\`, so the default
+   inherited whatever prose size it landed in and the large stone published a
+   numeral two steps under the component's. Same class of drift the
+   \`statPlate\` helper above exists to end, one primitive over. */
 .jewel {
   display: inline-flex;
   inline-size: var(--jewel-size); block-size: var(--jewel-size);
   font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-bold);
+  font-size: var(--of-type-size-base);
+  line-height: var(--of-type-leading-tight);
   --jewel-size: var(--of-ornament-jewel-base);
   filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
     drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
@@ -211,7 +219,7 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
   clip-path: var(--of-ornament-cut-jewel);
 }
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
-.jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-base); }
+.jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-title); }
 .stone.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
 .stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
 .stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
