@@ -9,7 +9,9 @@
 
 import { describe, expect, test } from "bun:test";
 
+import { CORPUS as CARDS } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
+import { setFor } from "../src/lib/sets";
 import { canonicalFor, Document } from "./document";
 import { outputPathFor } from "./outputPath";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
@@ -203,5 +205,56 @@ describe("the route registry", () => {
         expect(resolved.route).not.toContain("undefined");
       }
     }
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The ported pages                                                            */
+/* -------------------------------------------------------------------------- */
+
+describe("the ported pages", () => {
+  const all = routes.flatMap((registration) => [...registration.resolve()]);
+  const paths = all.map((resolved) => resolved.route);
+
+  test("every set that carries a card has a page, and none that does not", () => {
+    /*
+     * PARITY WITH ASTRO, ASSERTED FROM THE CORPUS RATHER THAN FROM A NUMBER.
+     * Measured against the real `astro build` when this page was ported: 113
+     * files under `dist/sets`, 113 under `dist-next/sets`. That equality is the
+     * whole claim of the migration — the same route table, fanned out by a
+     * different generator — and it is worth a test that fails when the two
+     * stop agreeing rather than a number in a commit message.
+     *
+     * Derived here the way the page derives it, so a set gaining or losing its
+     * last card moves both sides together.
+     */
+    const withCards = new Set<string>();
+    for (const card of CARDS.cards) {
+      for (const printing of card.printings) {
+        if (setFor(printing.set_id) !== undefined) {
+          withCards.add(printing.set_id.toLowerCase());
+        }
+      }
+    }
+
+    const setRoutes = paths
+      .filter((route) => route.startsWith("/sets/"))
+      .map((route) => route.slice("/sets/".length));
+
+    expect(setRoutes.toSorted()).toEqual([...withCards].toSorted());
+  });
+
+  test("a set code in a URL is lowercase, because a URL is not shouted", () => {
+    for (const route of paths) {
+      expect(route).toBe(route.toLowerCase());
+    }
+  });
+
+  test("the pages ported so far are all present", () => {
+    // A registry is an explicit list; this is the assertion that it says what
+    // the migration thinks it says. Grows by one line per ported page.
+    expect(paths).toContain("/data-terms");
+    expect(paths).toContain("/syntax");
+    expect(paths).toContain("/sets");
   });
 });
