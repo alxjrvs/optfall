@@ -421,6 +421,32 @@ describe("a card page shows the combat positions it does not fill", () => {
     expect(html).not.toContain("No printed defence");
   });
 
+  test("a weapon draws cost and defence empty, and that is a decision", () => {
+    /*
+     * 81 cards print power and nothing else. They get the trio for the same
+     * reason the 525 equipment cards do — "this card has no cost" is a fact
+     * worth stating about a card you never pay for — and the case is pinned
+     * here because it is the one somebody will want to move: both are
+     * permanents, and it is arguable their printed frames carry no cost bubble
+     * at all. A card printing LIFE is where the line actually falls; see the
+     * ally test below.
+     */
+    const weapon = CARD_PAGES.find(
+      (page) =>
+        page.card.power !== "" &&
+        page.card.cost === "" &&
+        page.card.defense === "" &&
+        page.card.health === "",
+    );
+    expect(weapon).toBeDefined();
+
+    const html = render(weapon?.href ?? "");
+    expect(html).toContain("of-card__name");
+    expect(html).toContain('aria-label="No printed cost"');
+    expect(html).toContain('aria-label="No printed defence"');
+    expect(html).toMatch(/aria-label="Power \d+"/);
+  });
+
   test("an ally gets no sockets either, because its frame is not that frame", () => {
     /*
      * THE SHAPE THE FIRST VERSION OF THIS RULE MISSED, and the reason the test
@@ -451,10 +477,31 @@ describe("a card page shows the combat positions it does not fill", () => {
 
   test("a printed zero is still a printed zero", () => {
     /*
-     * The same distinction from the other side. 1,648 cards print a cost of 0;
+     * The distinction from the other side. 1,648 cards print a cost of 0, and
      * rendering those as absences would have replaced one wrong answer with
      * another.
+     *
+     * IT HAS TO BE A CARD THAT ACTUALLY PRINTS 0, which the first version was
+     * not: it matched `Cost \d+` against a card costing 1, so it passed however
+     * a zero rendered and could not fail for the regression its own comment
+     * described. Found from the corpus rather than hard-coded, so it cannot
+     * drift onto a card whose printed cost changes under it.
      */
-    expect(render("/card/absorb-in-aether-1")).toMatch(/aria-label="Cost \d+"/);
+    const zero = CARD_PAGES.find(
+      (page) =>
+        page.card.cost === "0" &&
+        page.card.health === "" &&
+        page.card.power === "",
+    );
+    expect(zero).toBeDefined();
+
+    const html = render(zero?.href ?? "");
+    expect(html).toContain("of-card__name");
+    /* The zero is drawn as a zero… */
+    expect(html).toContain('aria-label="Cost 0"');
+    expect(html).not.toContain("No printed cost");
+    /* …on the same page where a real absence is drawn as one, which is exactly
+       the pair this change exists to keep apart. */
+    expect(html).toContain('aria-label="No printed power"');
   });
 });

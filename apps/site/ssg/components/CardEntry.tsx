@@ -197,7 +197,17 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    *
    * What is left is what the change is for: 1,363 cards print cost and defence
    * and no power — actions, instants, defence reactions — and gain the empty
-   * attack plate; 525 print defence alone (equipment) and gain two.
+   * attack plate.
+   *
+   * EQUIPMENT AND WEAPONS ARE IN, DELIBERATELY, and this is the line somebody
+   * will want to move. 525 cards print defence alone and 81 print power alone;
+   * both are permanents, and it is arguable that their printed frames carry no
+   * cost bubble for a socket to stand in. They keep it because "this card has
+   * no cost" is a fact worth stating about a card you never pay for — the same
+   * reason the whole change exists — and because the alternative reads as an
+   * absence of an absence. A permanent that prints LIFE is the one that goes
+   * the other way, above, and the difference is that a hero or an ally has its
+   * own furniture in those corners rather than nothing at all.
    *
    * Life, intellect and arcane are unchanged and appear only when printed. They
    * have no fixed position on the frame — they are where a card's type puts
