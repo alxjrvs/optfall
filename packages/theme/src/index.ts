@@ -37,7 +37,13 @@ export const THEME_ATTRIBUTE = "data-optfall-theme";
 
 /**
  * Prefix on every generated CSS custom property, so tokens cannot collide with
- * a host page's variables when a component is adopted as a custom element.
+ * a host page's variables.
+ *
+ * The original reason was custom-element adoption — a component dropped into
+ * someone else's page. That route was Svelte's and went with it in #107, and
+ * whether it comes back is open as #156, so the prefix currently earns its keep
+ * inside this repo alone: one namespace, no collision with anything the site
+ * itself defines.
  */
 export const TOKEN_PREFIX = "of";
 
