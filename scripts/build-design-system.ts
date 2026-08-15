@@ -746,6 +746,43 @@ cards.push({
   <p class="note" style="margin-block-start:var(--of-space-loose)">Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads. Designing colour as the <em>redundant</em> channel costs nothing and fixes it for everyone downstream. The silhouette is reserved: nothing else in the interface is ever this shape.</p>`,
 });
 
+/**
+ * A pitch band, in the shape `PitchRule` renders — one per value, ascending.
+ *
+ * Struck like every other plate: a light edge above and a dark one below,
+ * carried on a zero-blur shadow so the band stays exactly its own thickness of
+ * layout. Named tokens only, so this card cannot draw a mark the product does
+ * not.
+ */
+function band(pitch: string | number): string {
+  return `<span style="display:block;inline-size:var(--of-ornament-band-base);block-size:calc(var(--of-bevel-width) * 3);background:var(--of-color-pitch-${["none", "one", "two", "three"][Number(pitch)]});border-radius:var(--of-bevel-radius);box-shadow:0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light), 0 var(--of-bevel-width) 0 0 var(--of-bevel-dark)"></span>`;
+}
+
+cards.push({
+  path: "primitives/pitch-rule.html",
+  group: "Primitives",
+  title: "Pitch rule",
+  body: `
+  <p class="note">The same value as the jewel, rendered for under a card face. Not a replacement and not a variant: the jewel goes wherever there is a line of type to sit a stone beside, and this goes in the one place a stone cannot — under a picture.</p>
+  <div class="row" style="margin-block-start:var(--of-space-loose);gap:var(--of-space-loosest);align-items:flex-start">
+    ${[
+      ["Head Jab", ["1"]],
+      ["Head Jab", ["1", "2", "3"]],
+      ["Aether Ironweave", ["0"]],
+    ]
+      .map(
+        ([name, values]) => `<div style="text-align:center">
+          <p style="font-family:var(--of-type-family-serif);font-size:var(--of-type-size-small);color:var(--of-color-ink);margin:0 0 var(--of-space-tighter)">${name}</p>
+          <span style="display:flex;justify-content:center;gap:var(--of-space-tighter)">${(values as string[]).map(band).join("")}</span>
+        </div>`,
+      )
+      .join("")}
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Plural where the jewel is singular.</strong> A card page shows one card and has one pitch; a cell in a card index stands for a NAME, and a name in this game is commonly three cards. One band per value is a fact the jewel has no way to state — and what it replaced was the words "pitch 1, pitch 2", printed only when SOME versions matched, so the ordinary case said nothing and a reader could not tell a single-version card from a collapsed one.</p>
+  <p class="note"><strong>Colour carries more weight here than this system otherwise allows, and that is the stated cost.</strong> A band has no room for a numeral, so the redundancy moves to the accessible layer: the element is a <code>role="img"</code> with a written name, always, spelling the values out — "Pitch 1, 2 and 3". The COUNT of bands and their fixed ascending ORDER are the two non-colour channels that remain, and both text views of the same index carry numbered stones instead.</p>
+  <p class="note">A card with no pitch — equipment, weapons — draws the grey <code>none</code> tone rather than nothing, exactly as the jewel draws a grey stone with a dash. An empty list is the different claim that the pitch is unknown, and draws no mark at all.</p>`,
+});
+
 cards.push({
   path: "primitives/state-pill.html",
   group: "Primitives",
