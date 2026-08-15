@@ -12,14 +12,20 @@ Every symptom below traces back to that one unreconciled edit.
 
 ## 1. The confusion, named
 
-Three concrete contradictions, all cheap to fix and all currently shaping the
-build.
+Three concrete contradictions, all cheap to fix and all shaping the build when
+this document was written. They are ticked here as they close, the same way the
+phase table below does it — a diagnosis nobody re-reads is how a fixed problem
+goes on being described as live.
 
-**The front door serves the wrong thing.** `/` is a *rules* search box
-(`apps/site/src/pages/index.astro` mounts `RulesSearch`). Card search lives at
-`/cards`, reachable from one sentence of body copy eleven rows below the fold.
-Scryfall's homepage is the card search; ours buries it behind the surface the
-plan calls "supporting cast" — except the plan no longer says that.
+**The front door serves the wrong thing.** ✅ Fixed — §6b, phase row D. As
+diagnosed: `/` was a *rules* search box, and card search lived at `/cards`,
+reachable from one sentence of body copy eleven rows below the fold. Scryfall's
+homepage is the card search; ours buried it behind the surface the plan calls
+"supporting cast" — except the plan no longer says that. `/` is now the card
+search door (`apps/site/ssg/pages/home.page.tsx`, shipping no JavaScript at
+all), and `RulesSearch` mounts on `/cr`. The Astro page named here,
+`apps/site/src/pages/index.astro`, no longer exists —
+[#107](https://github.com/alxjrvs/optfall/pull/107) deleted it.
 
 **`docs/DESIGN.md` still encodes the abandoned position, in two named places.**
 

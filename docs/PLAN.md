@@ -125,16 +125,27 @@ in a git repository.
 
 - **TypeScript on Bun.** One workspace across the library, the parsers and the
   site. The legality package publishes with zero runtime dependencies.
-- **Svelte, compiled two ways.** Native components for our own Astro islands,
-  and the same source compiled to custom elements for everyone else. Svelte is
-  uniquely good at this, so the accessible pitch jewel can be dropped into a
-  React or vanilla site without anyone adopting our stack.
-- **Astro** for the site — static output with client islands. The checker is
+- **React 19, rendered statically.** One component library, rendered to HTML at
+  build time and hydrated only on the surfaces that are genuinely interactive.
+- **A static generator this project owns** (`apps/site/ssg/`) — static output
+  with client islands, Vite building the island bundles alone. The checker is
   interactive but needs no server; validation runs in the browser against the
   shipped dataset.
-- **Storybook as the workbench, run locally.** Primitives built and reviewed in
-  isolation, in both themes, with accessibility checks on every story in CI. Not
-  deployed — see Phase 1 for why the public build was dropped.
+- **The committed `design-system/` bundle as the workbench, run locally.**
+  Primitives built and reviewed in isolation, in both themes, with axe-core
+  running over every primitive in CI. Not deployed — see Phase 1 for why the
+  public build was dropped.
+
+  *These three bullets read "Svelte, compiled two ways", "Astro" and "Storybook
+  as the workbench" until Phase 6 deleted all three, and went on reading that
+  way after they were gone — the same drift recorded under "Settled, and still
+  open" below. One half of the Svelte bullet was a capability rather than a
+  spelling, and rewriting it does not restore it: "the same source compiled to
+  custom elements for everyone else… so the accessible pitch jewel can be
+  dropped into a React or vanilla site without anyone adopting our stack" was
+  this project's only route out to other tools, and nothing replaced it. Quoted
+  rather than deleted, and open as*
+  [#156](https://github.com/alxjrvs/optfall/issues/156).
 - **Netlify.** Production from `main`, deploy previews on every pull request.
   Previews matter more than usual here: a legality bug is visible in a preview
   and invisible in a diff.
@@ -289,6 +300,20 @@ is still built there first, in both themes, before it reaches a product surface.
 Revisit if someone actually asks to adopt a primitive. Until then, publishing a
 workbench nobody has asked for is the shape of maintenance that outlives its
 reason.
+
+> **This argument lost the half it rested on, and the loss was not noticed at
+> the time.** The passage above drops the hosted workbench on the grounds that
+> the *published component, compiled to a custom element*, is what carries the
+> accessibility promise past our own edges — so discoverability was the only
+> cost. That compilation was Svelte's. Phase 6 deleted Svelte and nothing
+> replaced it, which retired the stronger half of the argument while leaving the
+> weaker half dropped on its authority. The workbench is now the committed
+> `design-system/` bundle (`bun run design-system`), still local-only, and the
+> reasoning for that is now the second paragraph alone. Whether the component
+> ever ships to other tools is open as
+> [#156](https://github.com/alxjrvs/optfall/issues/156); the a11y coverage
+> itself survived the port intact as
+> `packages/components/src/react/a11y.test.tsx`.
 
 ### Deliverables
 

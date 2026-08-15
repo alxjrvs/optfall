@@ -77,10 +77,12 @@ upright is still legibly a ring**. So the tab icon is one link.
 
 That is not a second drawing. `MARK_GEOMETRY.single` is the same path under a
 different transform, in a box derived from the same corners, so the favicon
-cannot drift from the mark — there is nothing to keep in step. The endpoint at
-`apps/site/src/pages/favicon.svg.ts` generates it at build time from that
-constant, and one link has no value to carry, so it takes the accent rather than
-the pitch palette: the ordinary rule, not the exception above.
+cannot drift from the mark — there is nothing to keep in step. `faviconSvg()` in
+`apps/site/ssg/assets.ts` generates it at build time from that constant (it was
+an Astro endpoint at `apps/site/src/pages/favicon.svg.ts` until
+[#107](https://github.com/alxjrvs/optfall/pull/107)), and one link has no value
+to carry, so it takes the accent rather than the pitch palette: the ordinary
+rule, not the exception above.
 
 **One compliance constraint shaped this.** LSS's policy does not merely prohibit
 using their logos in third-party applications — it prohibits creating any *close
@@ -316,15 +318,50 @@ as its workbench. Tokens are the only source of truth, a lint rule fails the
 build on a raw hex or pixel value inside a component, and axe-core runs over
 every primitive in CI.
 
-**Adoption by other tools is currently unsolved.** This section used to claim
-that "the same component source compiles to custom elements, so the accessible
-pitch jewel can be adopted by other Flesh and Blood tools without them adopting
-our stack" — described as the only mechanism by which the accessibility work
-reaches beyond our own edges. That mechanism was Svelte's, and it went with
-Svelte in Phase 6. Nothing replaces it yet. Recorded rather than deleted,
-because the goal outlived the technique.
-
 See [`PLAN.md`](PLAN.md) Phase 1.
+
+### What the accessibility work covers
+
+**This site, and it is enforced rather than asserted.** All 13 primitives in
+`PRIMITIVES` are rendered through axe-core by
+`packages/components/src/react/a11y.test.tsx`, which runs under `bun run check`
+and in the gate. The table those runs come from, `CASES`, is itself asserted
+against `PRIMITIVES` — so a primitive added without a case **fails the suite**
+rather than being reported green by a run that never rendered it. That
+assertion is the point: a passing count says nothing about the component that
+has no case at all, which is the same "looks like coverage" failure the
+design-system gate catches one layer up.
+
+Two boundaries, stated here so a pass is not read as more than it is. Colour
+contrast is **not** checked by that suite — axe's `color-contrast` rule needs a
+canvas to sample rendered pixels and returns *incomplete* under jsdom, so it is
+disabled explicitly and contrast is asserted numerically instead, from the token
+values themselves, in `packages/theme/src/tokens.test.ts`. And focus order,
+focus-visible styling, element geometry and any media query jsdom does not
+evaluate belong to the visual-regression pass; the harness's own header
+enumerates them.
+
+**Whether that work reaches other Flesh and Blood tools is an open question, not
+a settled retirement.** This document used to claim that "the same component
+source compiles to custom elements, so the accessible pitch jewel can be adopted
+by other Flesh and Blood tools without them adopting our stack" — described as
+*the only mechanism by which the accessibility work reaches beyond our own
+edges*. That mechanism was Svelte's custom-element compilation, and it went with
+Svelte in [#107](https://github.com/alxjrvs/optfall/pull/107). **Nothing
+replaced it.** React does not compile to custom elements without an explicit
+wrapper; no test covered the capability and no check asserted it, which is
+exactly why it could leave with nothing failing.
+
+The claim is quoted rather than deleted because it is the only evidence the
+capability ever existed, and deleting it is how it was lost the first time. Two
+honest outcomes remain open — ship the React primitives as custom elements,
+which is a real feature with a real API surface (which primitives, what props,
+what versioning) and deserves its own scoping; or decide that reaching other
+tools is not a goal and record the retirement deliberately. **That decision has
+not been taken**, and it is tracked as
+[#156](https://github.com/alxjrvs/optfall/issues/156). Until it is, this
+document claims neither: the accessibility work is for this site, and the goal
+of it travelling further is parked rather than abandoned.
 
 ### The design-system bundle
 
@@ -427,6 +464,17 @@ than managing it, and remains the right next step.
   than a crop, so the accessible rendering travels with the component, and the
   copyright line is emitted by `CardFace` itself with no prop and no variant that
   can drop it.
+- **Does the accessibility work leave this repo?** It covers this site
+  completely and is gated (see *What the accessibility work covers* above). What
+  it no longer has is a way *out*: the custom-element export that let another
+  Flesh and Blood tool adopt the accessible pitch jewel was Svelte's, and it
+  went with Svelte in [#107](https://github.com/alxjrvs/optfall/pull/107)
+  unreplaced and unnoticed — a distribution capability riding on a framework
+  rather than part of it, so nothing failed when it left. Restoring it means
+  scoping a real published surface; dropping it means saying so. Tracked as
+  [#156](https://github.com/alxjrvs/optfall/issues/156). **Open**, and it is the
+  one question in this document whose answer changes who the design system is
+  for.
 - **Illustrative content.** Card names in the mockups are real; specific legality
   states, rule numbers, stat lines and ruling text are placeholders chosen to
   exercise the layouts.

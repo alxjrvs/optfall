@@ -41,7 +41,7 @@ import type { PitchValue, StateTone } from "optfall-theme";
  * TYPE-ONLY, AND THAT IS LOAD-BEARING RATHER THAN STYLISTIC.
  *
  * `./cards` imports the 16 MB committed corpus and runs its assertions at
- * module load. This module is imported by an Astro island, so a *value* import
+ * module load. This module is imported by a client island, so a *value* import
  * from `./cards` — even of one small constant — would make the bundler pull the
  * entire corpus into the browser bundle, which is exactly the thing the index
  * below exists to avoid. `import type` is erased before the bundler sees it.
