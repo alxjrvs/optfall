@@ -142,6 +142,9 @@ const checks: Check[] = [
      that covers one of them leaves the other free to stop being emitted. */
   { path: "/icon-maskable.svg", contentType: "image/svg+xml" },
   { path: "/sw.js", contentType: "text/javascript" },
+  /* The worker `importScripts` this at startup, so a worker that registers and a
+     worker that WORKS are different facts if this file stops being emitted. */
+  { path: "/sw-purge.js", contentType: "text/javascript" },
   { path: `/card/${slug}`, contentType: "text/html" },
   { path: `/card/${printingSlug}`, contentType: "text/html" },
 ];

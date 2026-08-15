@@ -14,6 +14,12 @@
  * `NetworkFirst` — network when there is one, cache when there is not — and
  * nothing else is promised.
  *
+ * **AND THE PAGE CACHE IS EMPTIED ON EVERY DEPLOY**, via `sw-purge.js`. Stored
+ * HTML links content-hashed assets, so it stops being renderable the moment a
+ * deploy replaces them; a new worker activating is the exact signal that has
+ * happened. Without that, both the offline path and the network timeout below
+ * can hand a reader a page that cannot paint.
+ *
  * **AND THERE IS NO `navigateFallback`, WHICH IS THE HALF WORTH SPELLING OUT.**
  * The tempting configuration serves a cached shell for any unmatched navigation,
  * so the app "works offline" everywhere. On this site that would be a lie with a
@@ -104,6 +110,11 @@ function assertRoutesEmitted(source: string): void {
   if (!source.includes('"pages"')) {
     problems.push("the NetworkFirst page cache is missing");
   }
+  if (!source.includes("sw-purge.js")) {
+    problems.push(
+      "the page-cache purge is not imported — without it a document cached before a deploy outlives the hashed assets it links, and both the offline path and the network timeout can serve it",
+    );
+  }
   /* The specific shape of the bug: an identifier that existed only in the
      TypeScript module, left dangling in the emitted worker. */
   if (/[^."\w]IMAGE_HOST\b/.test(source)) {
@@ -125,7 +136,7 @@ export async function writeServiceWorker(
   assertHostMatches();
 
   /*
-   * Hashed from the file's own bytes, so a deploy that changes `/search`
+   * Hashed from the file's own bytes, so a deploy that changes the door
    * invalidates the precached copy and one that does not leaves it alone. A
    * constant here would pin readers to the first version they ever cached.
    */
@@ -143,6 +154,12 @@ export async function writeServiceWorker(
      * once for size, once for the licence.
      */
     globPatterns: ["**/*.{js,css,woff2,svg,webmanifest}"],
+    /*
+     * Three lines Workbox has no hook for: drop the page cache whenever a new
+     * worker activates. See `serviceWorkerPurge` in `ssg/assets.ts` for why that
+     * is the deploy signal and why the page cache is unsafe without it.
+     */
+    importScripts: ["/sw-purge.js"],
     /*
      * ONE DOCUMENT, AND IT IS THE ONE THE MANIFEST NAMES. `start_url` is `/`,
      * so an installed app launched offline would otherwise open on the
@@ -221,6 +238,16 @@ export async function writeServiceWorker(
            * waits for the fetch to settle, and a connected-but-dead network
            * never settles quickly — so a reader with a cached copy of the page
            * they are opening would sit on a blank screen rather than see it.
+           *
+           * IT IS ONLY SAFE BECAUSE OF THE PURGE. A timeout falls back to the
+           * cache, which is the same thing being offline does, so on its own it
+           * reopens the deploy-staleness failure `NetworkFirst` was chosen to
+           * close: a slow response on a page cached before the current deploy
+           * would serve HTML linking assets that no longer exist. `sw-purge.js`
+           * empties this cache whenever a new worker activates, so there is no
+           * pre-deploy entry left to fall back to and the timeout can only ever
+           * return a document from the deploy that is live.
+           *
            * Three seconds is longer than any real response to this static site
            * and shorter than anybody's patience.
            */

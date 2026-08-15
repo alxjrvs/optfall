@@ -267,6 +267,42 @@ function manifest(): string {
   )}\n`;
 }
 
+/**
+ * `/sw-purge.js` — imported by the service worker, and the thing that makes the
+ * page cache safe to have at all.
+ *
+ * **THE PROBLEM IT CLOSES.** Every asset this site serves is content-hashed and
+ * Netlify's deploys are atomic, so a stored HTML document stops being renderable
+ * the moment a new deploy lands: it links `/assets/*-<oldhash>.css`, which is
+ * gone from the origin AND absent from the refreshed precache. A page served
+ * from `pages` after a deploy paints unstyled with no islands.
+ *
+ * `NetworkFirst` was chosen to avoid exactly that, and it does — right up until
+ * it falls back to the cache, which is precisely what it is designed to do when
+ * the network is slow or absent. So the handler cannot fix this on its own: the
+ * stale entry has to stop existing.
+ *
+ * **A NEW WORKER ACTIVATING IS THE DEPLOY SIGNAL, and it is exact.** The
+ * precache manifest is part of `sw.js`, so any deploy that changes any hashed
+ * asset produces a different worker, which installs and activates. Dropping the
+ * page cache there means no document ever outlives the assets it references.
+ *
+ * The cost is honest and small: after a deploy, a reader who is offline has lost
+ * the pages they had stored. Those pages could not have rendered anyway, so what
+ * is lost is a blank screen.
+ *
+ * IT IS A SEPARATE FILE BECAUSE `generateSW` HAS NO ACTIVATE HOOK. Workbox
+ * generates the worker; `importScripts` is the supported way to add behaviour to
+ * one, short of switching to `injectManifest` and hand-writing the whole worker
+ * for the sake of three lines.
+ */
+function serviceWorkerPurge(): string {
+  return `self.addEventListener("activate", function (event) {
+  event.waitUntil(caches.delete("pages"));
+});
+`;
+}
+
 export const GENERATED_ASSETS: readonly GeneratedAsset[] = [
   { path: "favicon.svg", contents: faviconSvg() },
   /* Full bleed: nothing crops this one. */
@@ -274,4 +310,5 @@ export const GENERATED_ASSETS: readonly GeneratedAsset[] = [
   /* Inset to the centre 80%, which is all a maskable crop is guaranteed. */
   { path: "icon-maskable.svg", contents: iconSvg(0.8) },
   { path: "manifest.webmanifest", contents: manifest() },
+  { path: "sw-purge.js", contents: serviceWorkerPurge() },
 ];
