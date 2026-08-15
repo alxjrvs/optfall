@@ -34,6 +34,7 @@ import {
   keywordCoverage,
 } from "../../src/lib/keywords";
 import type { RulesCorpus } from "../../src/lib/search";
+import { SETS } from "../../src/lib/sets";
 import { Island } from "../Island";
 import { CardSearch } from "../islands/CardSearch";
 import type { PageModule, PageResult } from "../types";
@@ -45,9 +46,16 @@ import "./search.css";
  * it links to to disagree about a slug, a label, a legality verdict or a face.
  * The 16 MB corpus stays on the build machine.
  */
+/*
+ * THE DATES ARE RESOLVED HERE RATHER THAN INSIDE THE ENGINE, because
+ * `card-search.ts` ships to the browser through the island and `sets.ts` loads a
+ * corpus. The build knows the answer; the client only needs the 1.2 KB of dates
+ * the index encodes. See `CardIndexSource`.
+ */
 const index = buildCardIndex(CARD_PAGES, {
   commit: CORPUS.source.commit,
   confirmed: LAST_CONFIRMED,
+  releasedBySet: new Map(SETS.sets.map((set) => [set.id, set.released])),
 });
 
 const cards = CORPUS.counts.cards.toLocaleString("en-GB");

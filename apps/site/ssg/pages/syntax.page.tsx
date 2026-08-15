@@ -76,6 +76,16 @@ const FIELDS: readonly Row[] = [
   },
   { example: "set:wtr", meaning: "The card was printed in this set." },
   {
+    example: "year:2024",
+    meaning:
+      "The card was printed at least once that year. Comparisons work: year>=2024.",
+  },
+  {
+    example: "date>=2024-06-21",
+    meaning:
+      "The same question by the day rather than the year. Seventeen sets carry no published date and no date filter can match them; the search says so when you use one.",
+  },
+  {
     example: "rarity:majestic",
     meaning: "The card was printed at this rarity.",
   },
@@ -137,6 +147,12 @@ const ORDERING: readonly Row[] = [
   {
     example: "order:set",
     meaning: "Sort by the first set the card appeared in.",
+  },
+  {
+    example: "order:released",
+    meaning:
+      "Sort by when the card first came out — a reprint is not a release. Cards from undated sets sort last.",
+    aliases: ["order:release"],
   },
   {
     example: "dir:desc",
