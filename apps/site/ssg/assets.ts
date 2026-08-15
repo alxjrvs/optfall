@@ -205,10 +205,18 @@ function iconSvg(safeZone: number): string {
  * the affordance the product is built around. `minimal-ui` keeps a way to see
  * and copy the URL while still installing to a home screen.
  *
- * `start_url` IS `/search` RATHER THAN `/`. The front door exists to send
- * somebody who arrived from elsewhere to a card; a reader who has installed the
- * app has already arrived, every time. `/search` is the room the door opens
- * onto and the surface with the full index on it.
+ * `start_url` IS `/`, AND IT WAS `/search` UNTIL THE COST WAS MEASURED. The
+ * argument for `/search` was about routing — the front door exists to send
+ * somebody who arrived from elsewhere to a card, and a reader who installed the
+ * app has already arrived. That argument is real and it loses to a number:
+ * `/search` embeds the full operator index and is **245 kB gzipped**, against
+ * **47 kB** for the door, and the start_url is the one document precached for
+ * every visitor whether they ever install or not.
+ *
+ * The door is also the better cold start on its own terms. It carries the
+ * typeahead, which is what somebody who has just tapped an app icon wants — a
+ * name in, a card page out — while `/search` is the surface for a query with
+ * operators in it. Five times the bytes to skip one hop is the wrong trade.
  */
 function manifest(): string {
   const dark = themes.dark.tokens;
@@ -220,7 +228,7 @@ function manifest(): string {
       description:
         "Search every Flesh and Blood card. Every card has a permanent, citable URL with its printed text, its printings and its per-format legality.",
       id: "/",
-      start_url: "/search",
+      start_url: "/",
       scope: "/",
       display: "minimal-ui",
       /* The chrome the platform paints around the app, and the colour behind

@@ -74,6 +74,8 @@ interface ManifestEntry {
   readonly name?: string;
   /** Manifest KEYS of the chunks this one imports, not file paths. */
   readonly imports?: readonly string[];
+  /** Same, for `import()` — a separate field, and a separate way to smuggle. */
+  readonly dynamicImports?: readonly string[];
 }
 
 /**
@@ -119,7 +121,12 @@ async function assetsFromManifest(): Promise<{
   const walk = (key: string | undefined): void => {
     if (key === undefined || seen.has(key)) return;
     seen.add(key);
-    for (const next of manifest[key]?.imports ?? []) walk(next);
+    const entry = manifest[key];
+    /* BOTH FIELDS. Vite lists `import()` targets separately, so following only
+       `imports` would let a lazily-loaded chunk carry the corpus past the
+       budget in exactly the way the shared chunk did. */
+    for (const next of entry?.imports ?? []) walk(next);
+    for (const next of entry?.dynamicImports ?? []) walk(next);
   };
   walk(islandKey);
 
