@@ -53,7 +53,16 @@ import type { PitchValue, StateTone } from "optfall-theme";
  * added fails the build rather than silently making `legal:cc` filter the wrong
  * column.
  */
-import { facesOf, numberFor, type CardPage } from "./cards";
+/*
+ * TYPE-ONLY FROM `cards.ts`, AND THAT IS LOAD-BEARING RATHER THAN STYLISTIC.
+ * `cards.ts` imports the 16 MB corpus at module scope, and this module is
+ * reached from the island entry through `CardSearch.tsx` — so a VALUE import
+ * here put the entire corpus in the client bundle. It did: 9.28 MB shipped to
+ * every reader who opened a page with an island. `facesOf` and `numberFor` now
+ * live in `printings.ts`, which is pure and corpus-free.
+ */
+import type { CardPage } from "./cards";
+import { facesOf, numberFor } from "./printings";
 import {
   evaluate,
   leaves,

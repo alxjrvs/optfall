@@ -130,6 +130,15 @@ const checks: Check[] = [
   /* A file from `public/`, which reaches the output by a third mechanism again
      — Vite copies it — and would be missing in silence if that ever stopped. */
   { path: "/symbols/icon_p.png", contentType: "image/png" },
+  /*
+   * THE PWA SURFACE, which is a fourth mechanism: the manifest and the install
+   * icon are derived like the favicon, and `sw.js` is written by Workbox after
+   * everything else exists. Every page links the manifest and registers the
+   * worker, so a missing one of these is 13,675 pages pointing at nothing.
+   */
+  { path: "/manifest.webmanifest", contentType: "application/manifest+json" },
+  { path: "/icon.svg", contentType: "image/svg+xml" },
+  { path: "/sw.js", contentType: "text/javascript" },
   { path: `/card/${slug}`, contentType: "text/html" },
   { path: `/card/${printingSlug}`, contentType: "text/html" },
 ];
@@ -249,5 +258,5 @@ if (failed) {
 }
 
 console.log(
-  `\n\`bun run dev\` serves all ${checks.length} routes, including the generated favicon. ✔`,
+  `\n\`bun run dev\` serves all ${checks.length} routes, including every generated non-page file. ✔`,
 );

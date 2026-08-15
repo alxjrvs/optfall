@@ -22,6 +22,7 @@
     "@types/react": "19",
     "@types/react-dom": "19",
     "@vitejs/plugin-react-swc": "4.3.3",
-    "vite": "8"
+    "vite": "8",
+    "workbox-build": "7.4.1"
   }
 }

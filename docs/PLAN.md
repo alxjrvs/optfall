@@ -664,6 +664,28 @@ Each is a stack layer that leaves the site shippable.
 | **5c** | **TypeScript 7 lands here** | The receipt above is paid |
 | **6** | Workbox `generateSW` + a web app manifest — installable, offline | The PWA the ask named |
 
+**What layer 6 found, which was not a service-worker bug at all.** Workbox
+refused to precache a 9.74 MB file and said so, which is the only reason anybody
+looked: **the island bundle was 9.28 MB, and roughly 9.2 MB of it was the card
+corpus.** `card-search.ts` value-imported two pure helpers from `cards.ts`,
+`cards.ts` loads the 16 MB corpus at module scope, and the island entry reaches
+`card-search.ts` through `CardSearch.tsx` — so Rollup did exactly as asked and
+shipped the corpus to every reader who opened the front page, `/search`, `/cr` or
+any card page. Every check was green while that shipped, because **a bundle
+nobody measures is a bundle that can be any size at all**. The helpers moved to
+`src/lib/printings.ts`, which is corpus-free; the bundle is **233 kB**; and
+`build.ts` now fails over a stated ceiling so it cannot come back.
+
+The service worker had its own version of the same lesson. A Workbox
+`urlPattern` callback is serialized with `Function.prototype.toString`, so a
+matcher that referenced a module-scope constant emitted a worker where that
+identifier does not exist — every request threw inside route matching, which
+aborted matching entirely, so **both** the page cache and the COMPLIANCE §5
+guard against caching card art were dead. The build was green, the worker
+registered and activated, and the precache populated correctly; the only visible
+symptom was an empty `pages` cache. The build now reads the emitted worker back
+and asserts the rules are in it.
+
 Step 5 split into three once it was under way, and the split is worth recording
 rather than smoothing over. 5a exists because deleting `src/svelte` would have
 silently deleted 50 accessibility assertions and the only guard on a CSS cascade
@@ -712,6 +734,14 @@ rendering layer exactly as "Survive revocation" says it should.
 tree; all 13,675 URLs still resolve with their titles and canonicals intact;
 the site installs to a home screen and a card page visited once opens again
 with the network off.
+
+✅ **Met.** TypeScript 7.0.2 across every workspace with `astro`, `svelte` and
+`storybook` absent from the lockfile; 13,675 pages built and checked by
+`check-disclaimer`, `check-built-tokens` and `check-card-notice`; the manifest
+parses and the worker activates; and both halves of the offline claim were
+verified by killing the origin server rather than by reading the config — a
+visited card page renders complete, and an unvisited one fails with the
+browser's own network error rather than a shell that pretends to know.
 
 ---
 

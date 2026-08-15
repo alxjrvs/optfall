@@ -18,10 +18,25 @@
 import type { ReactElement } from "react";
 
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
+import { THEME_COLOUR } from "./assets";
 import { SiteHeader } from "./SiteHeader";
 import type { PageResult } from "./types";
 
 export const SITE_ORIGIN = "https://optfall.com";
+
+/**
+ * Registers the worker `ssg/serviceWorker.ts` generates, or does nothing.
+ *
+ * Written as a string rather than as a source file because it is the one script
+ * inlined into every page — see the comment at its use.
+ */
+const SERVICE_WORKER_REGISTRATION = `
+if ("serviceWorker" in navigator) {
+  addEventListener("load", function () {
+    navigator.serviceWorker.register("/sw.js").catch(function () {});
+  });
+}
+`.trim();
 
 /** The absolute, trailing-slashed canonical for a route. */
 export function canonicalFor(route: string, override?: string): string {
@@ -62,6 +77,13 @@ export function Document({
           exists to avoid.
         */}
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        {/*
+          Installability. The manifest names its own icon, so there is no second
+          `<link rel="apple-touch-icon">` here — it would have to be a PNG, and
+          the reason there is no PNG is written down in `ssg/assets.ts`.
+        */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content={THEME_COLOUR} />
         {styles.map((href) => (
           <link key={href} rel="stylesheet" href={href} />
         ))}
@@ -106,6 +128,30 @@ export function Document({
         {result.islands && islandScript !== undefined ? (
           <script type="module" src={islandScript} defer />
         ) : null}
+        {/*
+          THE SERVICE WORKER, REGISTERED INLINE AND ON EVERY PAGE.
+
+          Inline because the alternative — a one-line module fetched from a
+          hashed url — costs a round trip on every one of 13,675 pages to
+          deliver about two hundred bytes, and this is the one script that has
+          to run everywhere rather than only where an island lives.
+
+          AFTER `load`, NOT DURING IT. Registration competes for bandwidth with
+          the page it is on, and the worker is of no use to THIS navigation —
+          it exists for the next one. Deferring it to `load` is the difference
+          between a first visit that is slower for installing an offline cache
+          and one that is not.
+
+          The failure is swallowed on purpose. A service worker is a progressive
+          enhancement here: registration is refused in private windows on some
+          browsers and wherever the origin is not secure, and a console error on
+          a reference site the reader is using perfectly well would be noise
+          about a feature they did not ask for.
+        */}
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the content is this file's own literal, not data — there is no input to escape. A `<script>` child would be JSX-escaped, which corrupts JavaScript.
+          dangerouslySetInnerHTML={{ __html: SERVICE_WORKER_REGISTRATION }}
+        />
       </body>
     </html>
   );
