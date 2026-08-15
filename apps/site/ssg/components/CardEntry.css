@@ -191,31 +191,49 @@
 /*
     THE MIDDLE COLUMN HAS A FLOOR, AND THE CORNERS GIVE WAY TO IT.
 
-    `minmax(0, 1fr)` alone means the corners are sized first and the name gets
-    whatever is left. That was slack while the corners were a bare jewel and a
-    stacked plate — about 65px between them. Putting the label BESIDE the plate
-    roughly trebles that: measured, 87px and 81px, so on a 360px phone the name
-    came down from 237px to 134px and on a 320px one to 94px. Nothing overflows
-    — `overflow-wrap: anywhere` sees to that — but a card's name breaking mid
-    word to keep the word POWER on one line has the priorities backwards.
+    THE CORNERS ARE `auto`, WHICH IS TO SAY THEY HAVE A MIN-CONTENT FLOOR, and
+    that floor is the whole reason the track list is spelled this plainly.
 
-    So the name asks for a thumb's width before the corners may keep their
-    labels. The length is derived rather than chosen, the same move
-    `.of-card__formats` makes below: `card.face.thumb` is a published token, it
-    is the width the corpus's longer names set at `title` without breaking, and
-    `min(…, 100%)` keeps the floor from becoming an overflow on a viewport
-    narrower than the floor itself.
+    Putting the label beside the plate roughly trebles what a corner costs —
+    measured at 87px and 81px against about 65px when the corner was a bare
+    jewel and a stacked plate — and `1fr` is sized last, so the name gets what
+    is left: 134px on a 360px phone, 94px on a 320px one. That is tight, and the
+    obvious repair is to give the middle column a floor and let the corners
+    yield to it.
 
-    What gives, when it has to, is the label's POSITION and never the plate —
-    see `.of-card__badge`.
+    THAT REPAIR WAS TRIED, SHIPPED AND REVERTED, so here is why it does not
+    work. `minmax(0, auto)` is what lets a corner yield — and dropping the min
+    from min-content to zero also disables the grid item's automatic minimum
+    size, so the corner does not merely fold, it can be sized BELOW its folded
+    content and the label paints outside its column. Measured on the shipped
+    version: at a 360px viewport `DEFENCE` needed 62px in a 61px track, and at
+    320px `POWER` did too. A floor on the middle column is a licence to crush
+    the corners, because at 320px there is genuinely no arrangement of
+    `[label][180px name][label]` that fits a ~260px band — something has to give
+    and the only safe candidate is the name's width.
+
+    WHAT ACTUALLY BOUNDS THE CORNER IS A CAP, NOT A FLOOR ON ITS NEIGHBOUR, and
+    that is the difference between the two attempts. `fit-content(28%)` is
+    `minmax(auto, min(max-content, 28%))`: the MIN stays `auto`, so the
+    min-content floor and the item's automatic minimum size both survive and the
+    corner can never be crushed or spill — while the MAX is capped, so once a
+    corner wants more than 28% of the band it stops growing and folds instead
+    (see `.of-card__badge`). Plain `auto` corners never fold at all: `1fr` is
+    sized last, so it surrenders every pixel down to zero before an `auto` track
+    gives up one, and the fold was theatre.
+
+    28% BECAUSE TWO CORNERS MUST NOT OUTWEIGH THE MIDDLE. Capped there, the pair
+    can take at most 56% and the name keeps 44% of the band less its gaps, at
+    every width, which is a relationship rather than a threshold — on a wide
+    panel 28% is far more than either corner wants and this is simply slack.
+    It is the same instrument, and the same argument, as the `72%` on
+    `.of-card__face-column` above: a percentage says what should stay true,
+    where a media query would only say where to stop believing it.
   */
 .of-card__band--title,
 .of-card__band--bar {
   display: grid;
-  grid-template-columns:
-    minmax(0, auto)
-    minmax(min(var(--of-card-face-thumb), 100%), 1fr)
-    minmax(0, auto);
+  grid-template-columns: fit-content(28%) minmax(0, 1fr) fit-content(28%);
   gap: var(--of-space-base);
 }
 
@@ -334,22 +352,28 @@
   */
 /*
     THE WORD WRAPS UNDER THE PLATE WHEN THE BAND RUNS OUT, and never the other
-    way round. `flex-wrap: wrap` is what lets the corner's min-content fall from
-    `plate + gap + label` to `max(plate, label)`, which is what the name
-    column's floor above spends to buy its width back. On a wide panel there is
-    no pressure and this never fires; on a 320px phone the corner folds to the
-    stacked arrangement this band used to have everywhere, which is the right
-    thing to degrade INTO — it is a worse reading of which corner you are in,
-    and that is a smaller loss than a shredded name.
+    way round. `flex-wrap: wrap` drops the corner's min-content from
+    `plate + gap + label` to `max(plate, label)`, so the `auto` track above has
+    somewhere to shrink TO — and, because that is the track's floor rather than
+    a suggestion, somewhere it stops. On a wide panel there is no pressure and
+    this never fires; on a phone the corner folds back to the stacked
+    arrangement this band used to have everywhere, which is the right thing to
+    degrade into. It is a worse reading of which corner you are in, and that is
+    a smaller loss than a name with nowhere to go.
 
-    Centred, so the folded state is a column rather than a ragged edge.
+    `safe center` rather than `center`: centring an item that is somehow wider
+    than its box splits the overflow both ways, which on the start corner means
+    spilling outward past the plate's padding and over `BevelledPlate`'s border.
+    The `safe` keyword falls back to start-alignment in exactly that case and is
+    identical in every other, and a browser that does not know it drops the
+    declaration to `flex-start`, which is the same answer.
   */
 .of-card__badge {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   gap: var(--of-space-tight);
 }
 
