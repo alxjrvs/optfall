@@ -488,7 +488,7 @@ there is nothing to wait for.
 
 ---
 
-## 6b. The front door, specified against the thing it copies
+## 6b. The front door, specified against the thing it copies ✅
 
 The door was ported through Phase 6 unchanged and then measured against
 Scryfall's, and the gap is structural rather than cosmetic. Scryfall's homepage
@@ -540,9 +540,26 @@ decoration and it is not a feature — a reference tool that a community relies 
 has a front page, and what a front page points at is a statement about who it is
 for.
 
-*This is a story rather than a diff: it touches the door's markup, its
-stylesheet, the token layer's ground, and it deletes the typeahead island. It
-does not touch the card layer, the query engine or the rules join.*
+✅ **Shipped**, and two things in it were only found by looking at the page.
+
+The `NEW` list first advertised "Armory Deck - Olympia" and "Dorinthea Demo
+Deck" as the newest things in Flesh and Blood, because they are dated latest.
+Sorting by date is not the same question as "what just came out": the fourteen
+most recent dated sets are either expansions — 272, 482, 681 printings — or
+decks and armory products at 16 to 55, with nothing in between, so the list
+filters on size and the threshold is measured rather than chosen.
+
+And the fan stayed small through two attempts. The card size has to be declared
+on `.of-fan__row`, because that is the element `CardFan.css` sets it on and an
+inherited value loses to a declaration on the element itself — set on the
+ancestor it did nothing at all, silently. The page also had to become `width:
+"wide"`: six readable cards overlap to about 855px against a 736px measure, so
+the last one was clipped by the window's own edge, which is the same defect §6a
+records for the card page arriving from the other direction.
+
+*It touched the door's markup, its stylesheet and the fan's sizing, and deleted
+the typeahead island. It did not touch the card layer, the query engine or the
+rules join.*
 
 ---
 
