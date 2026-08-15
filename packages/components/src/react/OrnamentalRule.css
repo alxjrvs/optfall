@@ -1,0 +1,70 @@
+/*
+ * `OrnamentalRule`'s styles, ported from the Svelte component's scoped block.
+ * Every declaration and every comment is the original's.
+ */
+
+.of-rule {
+  /* The rule owns its vertical rhythm. A divider with no room around it is not
+     a divider, and this system has no cards or padding to supply that room
+     elsewhere. */
+  margin-block: var(--of-space-loose);
+}
+
+.of-rule--ornamented {
+  /* Line, ornament, line. The centre is a real gap rather than a masked
+     overlay, so the ornament never depends on sitting against a surface of a
+     particular colour to hide the line behind it. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: var(--of-space-base);
+  margin-block: var(--of-space-looser);
+}
+
+.of-rule__line {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--of-ornament-rule-width);
+  margin: 0;
+  border: 0;
+  background: var(--of-color-rule);
+
+  /* Struck rather than drawn: a light edge above and a dark edge below, so the
+     hairline reads as the seam between two plates. Carried on a shadow because
+     a shadow takes no space — the rule still occupies exactly one hairline,
+     which is what keeps the vertical rhythm honest. */
+  box-shadow:
+    0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light),
+    0 var(--of-bevel-width) 0 0 var(--of-bevel-dark);
+}
+
+.of-rule__mount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* The occupant inherits its ink from here, so a filigree drawn with
+     `currentColor` lands in the ornament tone without being told. */
+  color: var(--of-ornament-filigree-ink);
+  line-height: var(--of-type-leading-tight);
+}
+
+.of-rule__mark {
+  display: block;
+  inline-size: var(--of-ornament-filigree-size);
+  /* Half height: a flattened lozenge reads as a terminal on the rule rather
+     than as a shape sitting on top of it. */
+  block-size: calc(var(--of-ornament-filigree-size) / 2);
+  background: var(--of-ornament-filigree-ink);
+  /* Cut, never rounded — the system has one radius token and it is none. */
+  border-radius: var(--of-bevel-radius);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+/* Honour a reduced-motion preference by never introducing motion here at all;
+   the rule is static by design. Declared so the intent is explicit rather than
+   accidental. */
+@media (prefers-reduced-motion: reduce) {
+  .of-rule {
+    transition: none;
+  }
+}

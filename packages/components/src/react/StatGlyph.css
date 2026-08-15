@@ -1,0 +1,117 @@
+/*
+ * `StatGlyph`'s styles, ported from the Svelte component's scoped block. Every
+ * declaration and every comment is the original's.
+ */
+
+.of-stat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* STATED, because nothing states it for us. The site resets `box-sizing` on
+     `body` only, so padding ADDS to a fixed `block-size` — which made the
+     defence shield 1.28x taller than wide, stretched its percentage polygon, and
+     stood it out of line with the discs beside it. The design-system page ships
+     a universal reset and therefore looked right while the real page did not,
+     which is the worst way for the two to disagree. */
+  box-sizing: border-box;
+  inline-size: var(--stat-size);
+  block-size: var(--stat-size);
+  background: var(--of-color-surface-raised);
+  color: var(--of-color-ink);
+  /* Struck, like every other surface: light above, dark below. Drawn with a
+     shadow rather than a border because the clip-path below would cut a
+     border's corners off along with the plate's. */
+  box-shadow:
+    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
+    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+  --stat-size: var(--of-ornament-stat-size);
+  --chamfer: var(--of-ornament-notch-size);
+}
+
+.of-stat--sm {
+  --stat-size: calc(var(--of-ornament-stat-size) * 0.75);
+}
+
+.of-stat__value {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-base);
+  font-weight: var(--of-type-weight-bold);
+  line-height: 1;
+}
+
+/* -- The silhouettes --------------------------------------------------------
+   ONE VOCABULARY, AND IT LIVES IN THE TOKEN LAYER as `ornament.cut.*`, because
+   `GameSymbol` reads the same table.
+
+   That pairing is the point rather than a tidy-up. A reader meets `+1{p}` inline
+   in the card's printed text and `4` here in the stat block, and they are the
+   same plate — so the notation is legible from the stat block without anyone
+   consulting a legend. Held as two copies of a `clip-path`, that equivalence
+   would last until somebody adjusted one chamfer.
+
+   Still never eight-sided: that shape belongs to the pitch jewel and to nothing
+   else. */
+
+/* -- The three the card itself draws ----------------------------------------
+   COST, POWER AND DEFENCE ARE NOT CHAMFERED PLATES, and the reason is that they
+   were the three a reader already knows by sight.
+
+   The plate vocabulary above is right for the stats the card does not give a
+   shape to. It was wrong for these: a player looking for attack is looking for a
+   yellow disc, and finding a forward-leaning grey square meant reading the label
+   to identify a value the physical card identifies at a glance. The shape was
+   carrying the system's consistency instead of the card's meaning.
+
+   So these three take the card's own geometry and the card's own two inks — a
+   red disc for cost, a yellow disc for power, a steel shield for defence — while
+   the numeral stays the primary channel, the label stays visible and the
+   accessible name still spells the stat out. Three redundant carriers, as
+   before; one of them now agrees with the object being described.
+
+   Drawn by us in tokens from our own palette. Nothing here is an LSS asset, and
+   no set symbol or logo is reproduced: `docs/COMPLIANCE.md` §3 bars those and
+   this takes the register rather than the artwork, which is the same move the
+   mark made. */
+.of-stat--cost {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-cost);
+  color: var(--of-color-stat-cost-ink);
+}
+
+.of-stat--power {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-power);
+  color: var(--of-color-stat-power-ink);
+}
+
+/* CENTRED IN THE BODY, NOT IN THE BOX. The shield's point takes the bottom of
+   the square, so `align-items: start` pinned the numeral to the very top and it
+   read as a number sitting above a shield rather than struck into one. Padding
+   out the point's share and centring normally puts it in the metal. */
+.of-stat--defence {
+  clip-path: var(--of-ornament-cut-shield);
+  background: var(--of-color-stat-defence);
+  color: var(--of-color-stat-defence-ink);
+  padding-block-end: calc(var(--stat-size) * 0.28);
+}
+
+/* Life — the plain plate. Nothing is cut, which is its own signal in a set where
+   everything else is. */
+.of-stat--life {
+  clip-path: var(--of-ornament-cut-plain);
+}
+
+/* Intellect and Arcane — opposed diagonals, so the two hero stats are
+   distinguishable from each other and from the three combat stats.
+
+   ARCANE IS THE ONE STAT WITH NO PRINTED SYMBOL. The CR's table at 1.12.4 names
+   eight and arcane is not among them, so this plate has no `GameSymbol`
+   counterpart and never appears inline in card text. The silhouette is ours
+   alone, which is exactly why it is worth saying here. */
+.of-stat--intellect {
+  clip-path: var(--of-ornament-cut-diagonal-start);
+}
+
+.of-stat--arcane {
+  clip-path: var(--of-ornament-cut-diagonal-end);
+}
