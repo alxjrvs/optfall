@@ -25,6 +25,7 @@
 import { Document } from "./document";
 import { crPage } from "./pages/cr.page";
 import { dataTermsPage } from "./pages/data-terms.page";
+import { rulePage } from "./pages/rule.page";
 import { setPage } from "./pages/set.page";
 import { setsPage } from "./pages/sets.page";
 import { syntaxPage } from "./pages/syntax.page";
@@ -71,4 +72,5 @@ export const routes: readonly RouteRegistration[] = [
   register(setsPage),
   register(setPage),
   register(crPage),
+  register(rulePage),
 ];
