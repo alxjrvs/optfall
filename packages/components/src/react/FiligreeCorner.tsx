@@ -70,7 +70,7 @@
 
 import type { OrnamentRole } from "optfall-theme";
 
-import type { PlateCorner } from "../index";
+import { FILIGREE_PATHS, type PlateCorner } from "../index";
 import "./FiligreeCorner.css";
 
 export interface FiligreeCornerProps {
@@ -97,78 +97,19 @@ export interface FiligreeCornerProps {
 /* -------------------------------------------------------------------------- */
 
 /*
- * All coordinates below are SVG user units inside a `viewBox`, so they are
- * proportions of the ornament rather than lengths — the rendered size comes from
- * the host slot for a corner and from `--of-ornament-filigree-size` for the rule
- * figure, and nothing here changes when either does.
+ * THE PATHS MOVED TO `src/index.ts`, BESIDE `MARK_GEOMETRY`, AND FOR ITS REASON.
+ *
+ * They gained a second consumer — `scripts/build-design-system.ts` draws this
+ * ornament on the `filigree-corner` design-system card — and that generator's
+ * own header records what happens to a drawing it keeps a private copy of: the
+ * card goes on showing a rendering the product no longer has. One definition,
+ * two renderers.
+ *
+ * What did NOT move is the sizing below. `box`, the stroke weight and the
+ * relief `lift` are presentation, chosen per role by whoever renders; the
+ * scrollwork is the part that has to agree.
  */
-
-/** Stroked paths, drawn for the block-start/inline-start corner only. */
-const PANEL_STROKES: readonly string[] = [
-  /* The angular bracket. Mitred, not curved: the frame is square even where the
-     ornament growing out of it is not. */
-  "M 47 2 L 2 2 L 2 47",
-  /* The volute — a sweep out of the corner that spirals back on itself. This is
-     the shape that makes it scrollwork rather than a chevron. */
-  "M 3 3 C 15.5 5.5 25.6 12.6 28.4 22.4 C 30.4 29.2 26.2 35 19.6 34.6" +
-    " C 14.4 34.3 10.8 29.8 11.9 25.2 C 12.8 21.5 16.9 19.7 20 21.6",
-];
-
-/** Filled paths — crescent leaves and the lozenge at the eye of the scroll. */
-const PANEL_FILLS: readonly string[] = [
-  "M 6.5 3.4 C 13 8.4 20 9.6 27.4 6.6 C 21 10.2 13.6 9.4 7.6 5.2 Z",
-  "M 3.4 6.5 C 8.4 13 9.6 20 6.6 27.4 C 10.2 21 9.4 13.6 5.2 7.6 Z",
-  "M 20 23.6 L 22.4 26 L 20 28.4 L 17.6 26 Z",
-];
-
-/*
- * The card frame gets a lighter hand than the feature panel. Same motif, fewer
- * members and a thinner stroke: a card is one of many on a results page, and
- * filigree at panel weight around each of them would be the "never on a list"
- * failure by another route.
- */
-const CARD_STROKES: readonly string[] = [
-  "M 31 1.5 L 1.5 1.5 L 1.5 31",
-  "M 2.5 2.5 C 10 4 15.6 8.4 17.6 14.6 C 19 19 16 22.8 12 22" +
-    " C 8.8 21.4 7.2 17.8 9.2 15.4 C 10.6 13.7 13.4 13.7 14.6 15.6",
-];
-
-const CARD_FILLS: readonly string[] = [
-  "M 4.6 2.6 C 9 6 13.6 6.8 18.4 4.8 C 14.2 7.2 9.2 6.6 5.2 3.8 Z",
-  "M 13 16.4 L 14.8 18.2 L 13 20 L 11.2 18.2 Z",
-];
-
-/**
- * The section rule's figure, drawn as its left half and mirrored. Symmetry about
- * the centre is the point of a rule ornament, and a mirrored half cannot drift
- * out of true the way two hand-drawn halves can.
- */
-const RULE_STROKES: readonly string[] = [
-  "M 2 12 L 16 12",
-  /* Opposed volutes, above and below the stem — the double scroll. */
-  "M 16 12 C 22.6 12 26 8.4 24.2 5 C 22.7 2.2 18.7 2.4 17.6 5.4" +
-    " C 16.7 7.9 18.9 10.2 21.2 9.4",
-  "M 16 12 C 22.6 12 26 15.6 24.2 19 C 22.7 21.8 18.7 21.6 17.6 18.6" +
-    " C 16.7 16.1 18.9 13.8 21.2 14.6",
-  "M 25.6 12 L 31 12",
-];
-
-const RULE_FILLS: readonly string[] = ["M 9 9.4 L 11.6 12 L 9 14.6 L 6.4 12 Z"];
-
-/** Drawn once, spanning the mirror line, so the centre is a single shape. */
-const RULE_CENTRE = "M 36 5.6 L 40.6 12 L 36 18.4 L 31.4 12 Z";
-
-/**
- * One motif, four placements. Mirroring rather than redrawing guarantees the
- * four corners agree, and keeps the drawing to one set of paths to audit. Only
- * the mirroring lives here — where the ornament *sits* is the host's.
- */
-const MIRROR: Record<PlateCorner, string> = {
-  "start-start": "translate(0 0)",
-  "start-end": "scale(-1 1)",
-  "end-start": "scale(1 -1)",
-  "end-end": "scale(-1 -1)",
-};
+const { panel: PANEL, card: CARD, rule: RULE, mirror: MIRROR } = FILIGREE_PATHS;
 
 export function FiligreeCorner({
   role,
@@ -178,8 +119,8 @@ export function FiligreeCorner({
   const isPanel = role === "panel-corner";
 
   const box = isPanel ? 48 : 32;
-  const strokes = isPanel ? PANEL_STROKES : CARD_STROKES;
-  const fills = isPanel ? PANEL_FILLS : CARD_FILLS;
+  const strokes = isPanel ? PANEL.strokes : CARD.strokes;
+  const fills = isPanel ? PANEL.fills : CARD.fills;
   const weight = isRule ? 1.4 : isPanel ? 1.6 : 1.3;
 
   /**
@@ -204,7 +145,7 @@ export function FiligreeCorner({
       */
       <svg
         className="of-filigree of-filigree--figure"
-        viewBox="0 0 72 24"
+        viewBox={RULE.viewBox}
         aria-hidden="true"
         focusable="false"
         strokeLinecap="butt"
@@ -220,15 +161,15 @@ export function FiligreeCorner({
                   half === 1 ? "translate(0 0)" : "translate(72 0) scale(-1 1)"
                 }
               >
-                {RULE_STROKES.map((d) => (
+                {RULE.strokes.map((d) => (
                   <path key={d} d={d} fill="none" />
                 ))}
-                {RULE_FILLS.map((d) => (
+                {RULE.fills.map((d) => (
                   <path key={d} d={d} stroke="none" />
                 ))}
               </g>
             ))}
-            <path d={RULE_CENTRE} stroke="none" />
+            <path d={RULE.centre} stroke="none" />
           </g>
         ))}
       </svg>

@@ -25,6 +25,12 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
+  FILIGREE_PATHS,
+  MARK_GEOMETRY,
+  type PlateCorner,
+  type PrimitiveName,
+} from "../packages/components/src/index";
+import {
   DARK_TOKENS,
   LIGHT_TOKENS,
   THEME_ATTRIBUTE,
@@ -258,18 +264,212 @@ figure img {
   border-inline: var(--of-bevel-width) solid var(--of-color-rule);
   background: var(--of-color-sunken);
 }
+
+/* -- the seven primitives that had no card of their own until the gate -- */
+/* Each block mirrors the component's own stylesheet rather than approximating
+   it. That is the same discipline the \`statPlate\` and \`.jewel\` blocks above
+   already follow, and for the same reason: a card that invents its own
+   rendering is a card that can disagree with the product without anything
+   noticing. */
+
+.rule-ornamented {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; column-gap: var(--of-space-base);
+}
+.rule-mark {
+  inline-size: var(--of-ornament-filigree-size);
+  block-size: calc(var(--of-ornament-filigree-size) / 2);
+  background: var(--of-ornament-filigree-ink);
+  border-radius: var(--of-bevel-radius);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.citation {
+  display: inline-flex; align-items: baseline; gap: var(--of-space-tighter);
+  padding-block: var(--of-space-tightest); padding-inline: var(--of-space-tight);
+  border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
+  border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
+  border-inline: var(--of-bevel-width) solid var(--of-color-rule);
+  border-radius: var(--of-bevel-radius);
+  background: var(--of-color-surface); color: var(--of-color-ink);
+  font-family: var(--of-type-family-sans); font-size: var(--of-type-size-small);
+  font-weight: var(--of-type-weight-medium);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-decoration: none; white-space: nowrap;
+}
+.citation .version { color: var(--of-color-ink-muted); font-size: var(--of-type-size-micro); }
+.citation.sunk {
+  background: var(--of-color-sunken);
+  border-block-start-color: var(--of-bevel-dark);
+  border-block-end-color: var(--of-bevel-light);
+}
+
+.seal {
+  display: inline-grid; margin: 0;
+  border: var(--of-bevel-width) solid var(--of-color-brass-edge);
+  border-block-start-color: var(--of-bevel-light);
+  border-block-end-color: var(--of-bevel-dark);
+  border-radius: var(--of-bevel-radius);
+  background: var(--of-color-brass); color: var(--of-color-brass-ink);
+}
+.seal .face { display: grid; row-gap: var(--of-space-tightest); padding: var(--of-space-tight) var(--of-space-base); }
+.seal .claim {
+  font-family: var(--of-type-family-sans); font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-bold); letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+}
+.seal .judge {
+  font-family: var(--of-type-family-sans); font-size: var(--of-type-size-base);
+  font-weight: var(--of-type-weight-bold); letter-spacing: var(--of-type-tracking-tight);
+}
+.seal .date {
+  font-family: var(--of-type-family-sans); font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide); text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.seal .band {
+  display: flex; align-items: baseline; justify-content: space-between;
+  column-gap: var(--of-space-loose);
+  padding: var(--of-space-tighter) var(--of-space-base);
+  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-brass-edge);
+  background: var(--of-color-brass-ink); color: var(--of-color-brass);
+}
+.seal .band .label {
+  font-family: var(--of-type-family-sans); font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide); text-transform: uppercase;
+}
+.seal .band .version {
+  font-family: var(--of-type-family-sans); font-size: var(--of-type-size-small);
+  font-weight: var(--of-type-weight-bold); letter-spacing: var(--of-type-tracking-wide);
+  font-variant-numeric: tabular-nums;
+}
+
+.mark {
+  display: inline-block; block-size: var(--of-ornament-mark-base);
+  inline-size: auto; overflow: visible;
+  filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
+    drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
+}
+.mark.sm { block-size: var(--of-ornament-mark-small); }
+.mark.lg { block-size: var(--of-ornament-mark-large); }
+.mark .l0 { fill: var(--of-color-pitch-one); }
+.mark .l1 { fill: var(--of-color-pitch-two); }
+.mark .l2 { fill: var(--of-color-pitch-three); }
+.mark.ink .l0, .mark.ink .l2 { fill: currentColor; }
+.mark.ink .l1 { fill: var(--of-color-accent); }
+
+.result {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--of-space-tight);
+  padding-block: var(--of-space-base);
+  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+.result .body { flex: 1 1 60%; min-inline-size: 0; }
+.result .name {
+  font-family: var(--of-type-family-serif); font-size: var(--of-type-size-large);
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink); text-decoration: none;
+}
+.result .meta {
+  display: flex; flex-wrap: wrap; gap: var(--of-space-tight);
+  margin-block: var(--of-space-tightest) 0;
+  font-family: var(--of-type-family-sans); font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide); text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+.result .meta span { color: var(--of-color-ink-muted); }
+.result .line { margin: 0; }
+ul.results { list-style: none; margin: 0; padding: 0; }
+
+/* The plate's four ornament slots — placed and sized by the plate, drawn by
+   whatever the caller mounts into them. */
+.plate.ornamented { position: relative; padding: var(--of-space-loosest); }
+.corner {
+  position: absolute;
+  inline-size: calc(var(--of-ornament-filigree-size) * 2);
+  block-size: calc(var(--of-ornament-filigree-size) * 2);
+  color: var(--of-ornament-filigree-ink);
+}
+.corner[data-corner="start-start"] { inset-block-start: 0; inset-inline-start: 0; }
+.corner[data-corner="start-end"] { inset-block-start: 0; inset-inline-end: 0; }
+.corner[data-corner="end-start"] { inset-block-end: 0; inset-inline-start: 0; }
+.corner[data-corner="end-end"] { inset-block-end: 0; inset-inline-end: 0; }
+.corner svg { display: block; inline-size: 100%; block-size: 100%; overflow: visible; }
+.filigree-figure {
+  display: block; block-size: var(--of-ornament-filigree-size);
+  inline-size: auto; overflow: visible; color: var(--of-ornament-filigree-ink);
+}
+.filigree-ink { stroke: currentColor; fill: currentColor; }
+/* Light above, dark below: the same bevel the plates use, applied to a line.
+   This is what stops the scrollwork reading as a decal on the surface. */
+.filigree-relief-light { stroke: var(--of-bevel-light); fill: var(--of-bevel-light); }
+.filigree-relief-dark { stroke: var(--of-bevel-dark); fill: var(--of-bevel-dark); }
 `;
 
-interface Card {
+/* -------------------------------------------------------------------------- */
+/* The taxonomy                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * THE SANCTIONED TOP-LEVEL GROUPS, in sidebar order. Closed on purpose.
+ *
+ * `docs/DESIGN.md` is the prose half of this; `design-system-coverage.test.ts`
+ * is the executable one. The vocabulary is three words because the bundle
+ * answers exactly three questions, and a card belongs to whichever one it
+ * answers:
+ *
+ * - **Foundations** — the material the system is made of, before any component
+ *   exists. Tokens: colour, type, spacing. Free-form titles, because these
+ *   document the system rather than living in it.
+ * - **Primitives** — one card per entry in `PRIMITIVES`, and nothing else. The
+ *   leaf IS the primitive id, so the card cannot drift from what it documents.
+ * - **Screens** — whole product surfaces assembled from primitives, which is
+ *   the exit criterion `PRIMITIVES` exists to check. Free-form titles, because
+ *   a screen is named by its route rather than by a component.
+ *
+ * Adding a fourth group is a real decision: put it here with its gloss and
+ * write it into `docs/DESIGN.md`. Do NOT invent one in a card.
+ */
+export const DS_GROUPS = ["Foundations", "Primitives", "Screens"] as const;
+
+export type DsGroup = (typeof DS_GROUPS)[number];
+
+/**
+ * Which directory each group is emitted into.
+ *
+ * The group and the path prefix are two spellings of one fact, so they are
+ * derived from each other here rather than typed twice per card — the bundle
+ * already shipped `group: "Primitives"` beside `path: "primitives/…"` thirteen
+ * times, which is thirteen chances for the two to disagree.
+ */
+export const GROUP_DIR: Readonly<Record<DsGroup, string>> = {
+  Foundations: "foundations",
+  Primitives: "primitives",
+  Screens: "screens",
+};
+
+/**
+ * A primitive id, spelled as the card title: `pitch-jewel` → `Pitch jewel`.
+ *
+ * Sentence case rather than Title Case because that is what the six primitive
+ * cards that predate this check already used, unprompted and unanimously. The
+ * point is not the casing — it is that the title is DERIVED from the id, so
+ * there is no spelling for an author to choose and therefore none to drift.
+ */
+export function primitiveCardTitle(id: PrimitiveName): string {
+  const words = id.replace(/-/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+export interface Card {
   path: string;
-  group: string;
+  group: DsGroup;
   title: string;
   body: string;
   /** Rendered twice, once per theme, when the card is about colour. */
   bothThemes?: boolean;
 }
 
-function page(card: Card): string {
+export function page(card: Card): string {
   const inner = card.bothThemes
     ? `<div class="pair">
          <div class="theme-pane" ${THEME_ATTRIBUTE}="dark"><p class="eyebrow">Dark — the native key</p>${card.body}</div>
@@ -305,7 +505,126 @@ const swatch = (id: string, label: string) => `
   <span class="mono">${label}</span>
 </div>`;
 
-const cards: Card[] = [];
+/**
+ * The mark, DRAWN FROM `MARK_GEOMETRY` rather than from a copy of its numbers.
+ *
+ * That constant's own documentation says it exists because the geometry "has
+ * two consumers and must not have two definitions" — the component and the
+ * favicon endpoint. This card is the third, and it takes the same route rather
+ * than becoming the second drawing that drifts.
+ */
+let markSeq = 0;
+function markSvg(variant: "pitch" | "ink" = "pitch", size = ""): string {
+  /*
+    Ids are per-instance because this card renders the mark six times. Every
+    `url(#…)` reference resolves to the FIRST matching id in the document, so a
+    shared id would clip every later mark against the first one's rectangles —
+    the same failure `Mark.tsx` uses `useId` to avoid.
+  */
+  markSeq += 1;
+  const id = `mark-${markSeq}`;
+  const link = (index: number) =>
+    `<path class="l${index}" d="${MARK_GEOMETRY.link}" fill-rule="evenodd"/>`;
+
+  const defs = MARK_GEOMETRY.scopes
+    .map(
+      (scope, i) =>
+        `<clipPath id="${id}-s${i}"><rect x="${scope.x}" y="${scope.y}" width="${scope.width}" height="${scope.height}"/></clipPath>`,
+    )
+    .join("");
+
+  // Every link, left to right — this settles each pair's LOWER crossing.
+  const links = MARK_GEOMETRY.placements
+    .map((placement, i) => `<g transform="${placement}">${link(i)}</g>`)
+    .join("");
+
+  // And the UPPER crossing, by redrawing the left-hand link inside a rectangle
+  // that contains only that crossing.
+  const upper = MARK_GEOMETRY.scopes
+    .map(
+      (scope, i) =>
+        `<g clip-path="url(#${id}-s${i})"><g transform="${MARK_GEOMETRY.placements[scope.link]}">${link(scope.link)}</g></g>`,
+    )
+    .join("");
+
+  const cls = ["mark", size, variant === "ink" ? "ink" : ""]
+    .filter(Boolean)
+    .join(" ");
+
+  return `<svg class="${cls}" viewBox="${MARK_GEOMETRY.viewBox}" role="img" aria-label="Optfall" focusable="false"><defs>${defs}</defs>${links}${upper}</svg>`;
+}
+
+/**
+ * Filigree, in one of its three sanctioned roles, drawn from `FILIGREE_PATHS`.
+ *
+ * Same argument as `markSvg`: the paths moved into the contract module so this
+ * card and `FiligreeCorner` cannot disagree about what the scrollwork is. The
+ * sizing below is deliberately NOT shared — box, stroke weight and relief lift
+ * are presentation, and the component picks its own by role.
+ */
+function filigreeSvg(
+  role: "panel-corner" | "card-corner" | "section-rule",
+  corner: PlateCorner = "start-start",
+): string {
+  const isPanel = role === "panel-corner";
+  const isRule = role === "section-rule";
+  const weight = isRule ? 1.4 : isPanel ? 1.6 : 1.3;
+  const lift = isPanel ? 1.1 : 0.8;
+
+  /* Ink last, so it sits on top of both relief passes. */
+  const passes = [
+    ["filigree-relief-dark", lift],
+    ["filigree-relief-light", -lift],
+    ["filigree-ink", 0],
+  ] as const;
+
+  const draw = (paths: {
+    strokes: readonly string[];
+    fills: readonly string[];
+  }) =>
+    paths.strokes.map((d) => `<path d="${d}" fill="none"/>`).join("") +
+    paths.fills.map((d) => `<path d="${d}" stroke="none"/>`).join("");
+
+  const attrs = `aria-hidden="true" focusable="false" stroke-linecap="butt" stroke-linejoin="miter" stroke-width="${weight}"`;
+
+  if (isRule) {
+    const half = draw(FILIGREE_PATHS.rule);
+    const body = passes
+      .map(
+        ([tone, shift]) =>
+          `<g class="${tone}" transform="translate(0 ${shift})">` +
+          `<g transform="translate(0 0)">${half}</g>` +
+          `<g transform="translate(72 0) scale(-1 1)">${half}</g>` +
+          `<path d="${FILIGREE_PATHS.rule.centre}" stroke="none"/>` +
+          `</g>`,
+      )
+      .join("");
+    return `<svg class="filigree-figure" viewBox="${FILIGREE_PATHS.rule.viewBox}" ${attrs}>${body}</svg>`;
+  }
+
+  const set = isPanel ? FILIGREE_PATHS.panel : FILIGREE_PATHS.card;
+  const box = isPanel ? 48 : 32;
+  const motif = draw(set);
+
+  /*
+    THE RELIEF PASS IS OUTSIDE THE MIRROR, AND THE ORDER IS THE POINT. Light
+    comes from above in every corner of the frame, so the light pass has to sit
+    above the ink in SCREEN space. Nested the other way round, the two `end-*`
+    corners would carry their bevel upside down.
+  */
+  const body = passes
+    .map(
+      ([tone, shift]) =>
+        `<g class="${tone}" transform="translate(0 ${shift})">` +
+        `<g transform="translate(${box / 2} ${box / 2}) ${FILIGREE_PATHS.mirror[corner]} translate(${-box / 2} ${-box / 2})">${motif}</g>` +
+        `</g>`,
+    )
+    .join("");
+
+  return `<svg viewBox="0 0 ${box} ${box}" ${attrs}>${body}</svg>`;
+}
+
+export const cards: Card[] = [];
 
 /* ---------------------------------------------------------------- Foundations */
 
@@ -601,28 +920,256 @@ cards.push({
   <p class="note" style="margin-block-start:var(--of-space-loose)">Every suggestion is a <strong>destination</strong>, not a result — picking one navigates to that card. Nothing re-ranks while you type.</p>`,
 });
 
+/*
+  THE SEVEN CARDS BELOW REPLACE ONE.
+
+  `primitives/rule-and-citation.html` was a gallery: one card titled "Rules,
+  citations and brass" standing in for three primitives, while four more —
+  bevelled plate, filigree corner, mark, result row — had no card at all. Seven
+  of the thirteen entries in `PRIMITIVES` were undemonstrated, which is what
+  `design-system-coverage.test.ts` now fails on.
+
+  A gallery is the specific failure worth naming, because it looks like
+  coverage. Two of the three primitives it covered had ALREADY drifted inside
+  it, unnoticed, exactly as a shared card invites:
+
+  - The citation was captioned "monospaced, so you can paste it". The monospace
+    face was retired from this system — `Citation.css` sets the sans label voice
+    — so the card advertised a rendering the component does not have, and named
+    the retired face as the reason the primitive works.
+  - The brass seal was a flat inline badge reading "Verified · judge name ·
+    2026-08-12". The component is a two-part struck plate whose lower band
+    carries the rules version in inverted material, which `docs/PLAN.md` Phase 5
+    requires be impossible to miss. The card had no band and no version.
+
+  One card per primitive is what makes that kind of drift a diff.
+*/
+
 cards.push({
-  path: "primitives/rule-and-citation.html",
+  path: "primitives/bevelled-plate.html",
   group: "Primitives",
-  title: "Rules, citations and brass",
+  title: "Bevelled plate",
   body: `
-  <p class="note">Hairlines rather than cards. Filigree earns three roles and no more — never on a control, never on a list, never twice on one screen.</p>
+  <p class="note">The substrate everything else sits on. A light top edge and a dark bottom edge, so a surface reads as struck plate rather than as a box. <code>bevel.radius</code> exists only to be zero.</p>
   <div class="stack" style="margin-block-start:var(--of-space-loose)">
     <div>
-      <p class="eyebrow">Plain section rule</p>
+      <p class="eyebrow">Emphasis — the depth axis</p>
+      <div class="row">
+        <div class="plate">flat</div>
+        <div class="plate raised">raised</div>
+        <div class="plate sunken">sunken</div>
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">Raised is lit from above, which is where light comes from. Sunken keeps the same light source and drops the surface below the ground, so the shadow falls on the near edge — inverting the bevel is the whole of it, and the face darkens to agree with the geometry rather than to replace it.</p>
+    </div>
+    <hr class="rule">
+    <div>
+      <p class="eyebrow">Ornament — the one place filigree may sit on a plate</p>
+      <div class="plate raised ornamented">
+        <span class="corner" data-corner="start-start">${filigreeSvg("panel-corner", "start-start")}</span>
+        <span class="corner" data-corner="start-end">${filigreeSvg("panel-corner", "start-end")}</span>
+        <span class="corner" data-corner="end-start">${filigreeSvg("panel-corner", "end-start")}</span>
+        <span class="corner" data-corner="end-end">${filigreeSvg("panel-corner", "end-end")}</span>
+        <p class="eyebrow" style="margin:0">Feature panel</p>
+        <p style="margin:var(--of-space-tight) 0 0">A feature panel is the one surface in this system allowed to be emphatic.</p>
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)"><strong>The plate hosts the filigree; it does not draw it.</strong> It opens four slots and places and sizes them — only the plate knows where its corners are — and the caller composes the ornament in. That keeps scrollwork rationed by the call site, which can see the whole screen, rather than by a plate that can only see itself. The padding steps up to <code>space.loosest</code> so the first line of text clears its own corner.</p>
+    </div>
+  </div>`,
+});
+
+cards.push({
+  path: "primitives/ornamental-rule.html",
+  group: "Primitives",
+  title: "Ornamental rule",
+  body: `
+  <p class="note">The primitive that replaces the card. Where a lesser system would box a section, this one draws a line and moves on — <em>density without clutter, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding</em>.</p>
+  <div class="stack" style="margin-block-start:var(--of-space-loose)">
+    <div>
+      <p class="eyebrow">Plain — a thematic break, and the common case</p>
       <hr class="rule">
     </div>
     <div>
-      <p class="eyebrow">Citation — monospaced, so you can paste it</p>
-      <span class="mono" style="letter-spacing:var(--of-type-tracking-wide);color:var(--of-color-accent)">cr:8.3.4b</span>
-      <span class="note">· Comprehensive Rules 2.14.0</span>
+      <p class="eyebrow">Ornamented — one per screen, at most</p>
+      <div class="rule-ornamented">
+        <hr class="rule">
+        <span style="display:flex;align-items:center;justify-content:center;color:var(--of-ornament-filigree-ink)">${filigreeSvg("section-rule")}</span>
+        <hr class="rule">
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">Line, ornament, line. The centre is a real gap rather than a masked overlay, so the ornament never depends on sitting against a surface of a particular colour to hide the line behind it.</p>
     </div>
     <div>
-      <p class="eyebrow">Brass — authority, and nothing else</p>
-      <span style="display:inline-block;padding:var(--of-space-tight) var(--of-space-base);background:var(--of-color-brass);color:var(--of-color-brass-ink);font-family:var(--of-type-family-sans);font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase;border:1px solid var(--of-color-brass-edge)">Verified · judge name · 2026-08-12</span>
-      <p class="note" style="margin-block-start:var(--of-space-tight)">A material used once is a signal; used twice it is a theme.</p>
+      <p class="eyebrow">Degenerate ornament — what it draws when nothing is mounted</p>
+      <div class="rule-ornamented">
+        <hr class="rule">
+        <span class="rule-mark"></span>
+        <hr class="rule">
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">A gap with nothing in it is a bug that looks like a design, so the rule draws its own centre mark rather than opening a hole and trusting the caller.</p>
     </div>
-  </div>`,
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Semantics are the point of this primitive.</strong> A divider is either a thematic break or it is furniture, and the two must not render as the same thing: a real <code>&lt;hr&gt;</code> is a <code>separator</code> in the accessibility tree and is announced, a decorative line is <code>aria-hidden</code> and is not. The expensive mistake runs in one direction only — a screen reader announcing "separator" between every header and its body, on every card page, is noise that trains people to ignore the one that meant something. So <code>decorative</code> exists, defaults to false, and is the only way to get a line that is not a break.</p>
+  <p class="note"><strong>This primitive owns the rule; the slot supplies a drawing.</strong> Both halves had to be written down: the rule and the filigree were each built to the same three-role ration and each concluded independently that the section rule was its job, so following the instructions used to yield four hairlines at two weights, doubled rhythm, and a <code>separator</code> buried inside an <code>aria-hidden</code> mount where the accessibility tree threw it away.</p>`,
+});
+
+cards.push({
+  path: "primitives/filigree-corner.html",
+  group: "Primitives",
+  title: "Filigree corner",
+  body: `
+  <p class="note">Scrollwork, rationed. Leaving it out made the first pass read as austere Swiss rather than as Rathe, so it comes back — but it earns a place in <strong>exactly three roles</strong>: the corners of a feature panel, the corners of a card frame, and a section rule. Never on a control, never on a list, never twice on one screen.</p>
+  <div class="stack" style="margin-block-start:var(--of-space-loose)">
+    <div>
+      <p class="eyebrow">Panel corner — the fullest hand</p>
+      <div class="row" style="color:var(--of-ornament-filigree-ink)">
+        <span style="inline-size:calc(var(--of-ornament-filigree-size) * 2);block-size:calc(var(--of-ornament-filigree-size) * 2);display:inline-block">${filigreeSvg("panel-corner")}</span>
+      </div>
+    </div>
+    <div>
+      <p class="eyebrow">Card corner — same motif, fewer members, thinner stroke</p>
+      <div class="row" style="color:var(--of-ornament-filigree-ink)">
+        <span style="inline-size:calc(var(--of-ornament-filigree-size) * 2);block-size:calc(var(--of-ornament-filigree-size) * 2);display:inline-block">${filigreeSvg("card-corner")}</span>
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">A card is one of many on a results page, and filigree at panel weight around each of them would be the "never on a list" failure by another route.</p>
+    </div>
+    <div>
+      <p class="eyebrow">Section rule — a bare figure, no lines of its own</p>
+      <div style="color:var(--of-ornament-filigree-ink)">${filigreeSvg("section-rule")}</div>
+    </div>
+    <hr class="rule">
+    <div>
+      <p class="eyebrow">One motif, four mirrorings</p>
+      <div class="row" style="color:var(--of-ornament-filigree-ink)">
+        ${(["start-start", "start-end", "end-start", "end-end"] as const)
+          .map(
+            (c) =>
+              `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
+                <span style="inline-size:calc(var(--of-ornament-filigree-size) * 2);block-size:calc(var(--of-ornament-filigree-size) * 2);display:inline-block">${filigreeSvg("panel-corner", c)}</span>
+                <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">${c}</code>
+              </div>`,
+          )
+          .join("")}
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">Mirroring rather than redrawing guarantees the four corners agree and keeps the drawing to one set of paths to audit. The corners are named on the <strong>logical</strong> axes — <code>start-start</code>, not <code>top-left</code> — because a plate flips with writing direction and its ornament flips with it.</p>
+    </div>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>It draws scrollwork and owns no layout.</strong> One instance is one ornament; every role is hosted by a primitive that already knows where the ornament goes. There is deliberately no label prop, and this is the one primitive where an absent accessible name is correct: the ornament carries no information, so it is <code>aria-hidden</code> in all three roles. Remove every ornament in the library and nothing is lost — which is what "decoration" has to mean.</p>
+  <p class="note">The relief pass sits outside the mirror, and the order is the point: light comes from above in every corner of the frame, so the light pass has to be above the ink in <em>screen</em> space. Nested the other way round, the two <code>end-*</code> corners would light the plate from below.</p>`,
+});
+
+cards.push({
+  path: "primitives/citation.html",
+  group: "Primitives",
+  title: "Citation",
+  body: `
+  <p class="note">The thing you paste into an argument to end it. <strong>The permalink is the product</strong> — a judge pasting <code>cr:8.3.4b</code> into Discord instead of describing which paragraph they mean is the whole share moment, so this primitive has two jobs: make the identifier look copyable, and make it genuinely clickable.</p>
+  <div class="stack" style="margin-block-start:var(--of-space-loose)">
+    <div>
+      <p class="eyebrow">With the document version</p>
+      <span class="citation">cr:8.3.4b<span class="version">· 2.14.0</span></span>
+    </div>
+    <div>
+      <p class="eyebrow">Without — an unversioned record renders no separator</p>
+      <span class="citation">cr:8.3.4b</span>
+    </div>
+    <div>
+      <p class="eyebrow">Pressed — the bevel inverts and the plate sinks</p>
+      <span class="citation sunk">cr:8.3.4b<span class="version">· 2.14.0</span></span>
+    </div>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>It is an <code>&lt;a&gt;</code>, not a styled span with a click handler.</strong> Middle click, "copy link address", ⌘-click and the browser's own focus order all arrive free with the right element and are unrecoverable without it. The focus ring is a real outline at twice the bevel width; <code>outline: none</code> appears nowhere in the stylesheet, because a citation nobody can tab to is a permalink nobody can share.</p>
+  <p class="note"><strong>The identifier is not uppercased, and that is a deliberate departure.</strong> The label voice is wide-tracked uppercase and the tracking is here — it is what makes this read as a label rather than as code. The casing is not: a rule id is an identifier, <code>8.3.4b</code> and <code>8.3.4B</code> are not interchangeable, and browsers disagree about whether <code>text-transform</code> follows text onto the clipboard. A citation that pastes back differently than it was printed is the one failure this primitive exists to prevent.</p>
+  <p class="note"><strong>It is no longer monospaced, and this card used to say it was.</strong> The face marked citations on the rule "if it is monospaced in this system, you can cite it"; that rule stopped being true as the same face spread to eyebrows, pills and stat labels — chrome, not identifiers — so it was retired. A citation is now marked by being one: a struck plate, in the label voice, next to the thing it cites.</p>`,
+});
+
+cards.push({
+  path: "primitives/brass-seal.html",
+  group: "Primitives",
+  title: "Brass seal",
+  body: `
+  <p class="note">Judge attribution on a verified ruling, and <strong>the single place brass is allowed to appear</strong>. A material used once is a signal; used twice it is a theme. Nothing else in the system may consume <code>color.brass</code>.</p>
+  <div class="stack" style="margin-block-start:var(--of-space-loose)">
+    <div>
+      <p class="eyebrow">The seal</p>
+      <p class="seal">
+        <span class="face">
+          <span class="claim">Verified</span>
+          <span class="judge">Elena Ruiz</span>
+          <span class="date">14 March 2026</span>
+        </span>
+        <span class="band">
+          <span class="label">Rules version</span>
+          <span class="version">2.11.0</span>
+        </span>
+      </p>
+    </div>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>The rules version is a first-class field, not a parenthetical.</strong> Every entry records the version it was answered under so a bump can flag it for review rather than silently serving stale law — and a version a reader has to hunt for cannot do that job. So it gets its own struck band across the foot of the plate, in inverted material: plate ink as the ground, plate metal as the text, so the one field a version bump has to invalidate is the thing you cannot miss.</p>
+  <p class="note"><strong>Colour never carries the claim.</strong> "Verified" is rendered as text, so the brass says only what the plate already says and a reader who cannot see the material loses nothing. Hierarchy is carried by size and weight rather than by fading text down — the only lower-contrast brass available is the edge tone, and it drops under 4.5:1 on this plate in light mode, so nothing here is dimmed.</p>
+  <p class="note"><strong>There is no <code>label</code> prop, and its absence is the argument.</strong> The three facts that <em>are</em> the accessible name are already required props, so the name is composed rather than supplied: the seal announces "Verified by Elena Ruiz on 14 March 2026, under rules version 2.11.0" as one sentence, carried by visually-hidden joiners that keep every visible element genuine text. There is no spelling of this component that renders an unnamed seal.</p>`,
+});
+
+cards.push({
+  path: "primitives/mark.html",
+  group: "Primitives",
+  title: "Mark",
+  body: `
+  <p class="note">Three interlocked links. It says what the tool <em>does</em> rather than what the game is: Optfall's whole claim is the joins it makes — a card to the rule that governs it, a printing to its legality — and a chain is that drawn.</p>
+  <div class="stack" style="margin-block-start:var(--of-space-loose)">
+    <div>
+      <p class="eyebrow">Pitch — the canonical fill, one link per value</p>
+      <div class="row" style="align-items:flex-end">
+        ${markSvg("pitch", "sm")}${markSvg("pitch")}${markSvg("pitch", "lg")}
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">The one place this system spends pitch colour on something that is not a pitch value: the links are the three-value system itself rather than any one of its values.</p>
+    </div>
+    <div>
+      <p class="eyebrow">Ink — blood in the middle, <code>currentColor</code> outside</p>
+      <div class="row" style="align-items:flex-end;color:var(--of-color-ink)">
+        ${markSvg("ink", "sm")}${markSvg("ink")}${markSvg("ink", "lg")}
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">The outer two inherit, so a lockup takes the ink of the word beside it and lights up as one object.</p>
+    </div>
+    <hr class="rule">
+    <div>
+      <p class="eyebrow">One link, upright — what the favicon draws</p>
+      <svg class="mark" viewBox="${MARK_GEOMETRY.single.viewBox}" role="img" aria-label="Optfall" focusable="false"><g transform="${MARK_GEOMETRY.single.placement}"><path class="l1" d="${MARK_GEOMETRY.link}" fill-rule="evenodd"/></g></svg>
+      <p class="note" style="margin-block-start:var(--of-space-tight)"><strong>Not a second drawing.</strong> It is the same path under a different transform, because three links at this aspect are a smudge at 16px and one ring is still a ring.</p>
+    </div>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Nothing here is hand-placed.</strong> The step between links is the run of a rotated link minus the overlap that makes them interlock; the box is the union of their rotated corners; the clips are the empty band between each pair's two crossings. Change the angle and everything else follows — which is why the mark it replaced was rewritten as a derivation rather than left as coordinates somebody typed. <strong>This card renders <code>MARK_GEOMETRY</code> directly</strong>, so it cannot show a chain the product does not draw.</p>
+  <p class="note"><strong>Three links, because the interlock needs three.</strong> Two can be drawn interlocking, but three is where the pattern is visibly a chain rather than two rings that happen to overlap — and three is what carries the pitch palette, one link per value. Each link is an elongated octagon: the chamfer is how this system spells "not a rectangle", on the jewel, on every plate, and here.</p>
+  <p class="note">It is drawn from a game <em>mechanic</em> and from plain geometry rather than from Legend Story Studios' visual identity, which is what keeps it clear of the policy's prohibition on any close semblance to their logos.</p>`,
+});
+
+cards.push({
+  path: "primitives/result-row.html",
+  group: "Primitives",
+  title: "Result row",
+  body: `
+  <p class="note">One hairline between rows and nothing else — no card, no shadow, no padding a reader has to look past. The row wraps intrinsically rather than at a breakpoint, since the theme publishes no breakpoint tokens and a raw one is not available to write.</p>
+  <div class="plate" style="margin-block-start:var(--of-space-loose)">
+    <ul class="results">
+      ${(
+        [
+          ["Head Jab", "1", ["BEN010", "Ninja Action - Attack"]],
+          ["Command and Conquer", "3", ["MST131", "Guardian Action - Attack"]],
+          ["Bonds of Ancestry", "2", ["OUT057", "Generic Action"]],
+        ] as const
+      )
+        .map(
+          ([name, pitch, [key, kind]]) => `<li class="result">
+            <span>${jewel(pitch)}</span>
+            <div class="body">
+              <p class="line"><a class="name" href="#">${name}</a></p>
+              <p class="meta"><span>${key}</span><span>${kind}</span></p>
+            </div>
+          </li>`,
+        )
+        .join("")}
+    </ul>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)">The name is set in the serif — the voice assigned to names — and the metadata in wide-tracked uppercase sans, which is the label voice. The row's <code>lead</code> slot takes whatever identifies the record: a pitch jewel here, a card face on a results grid, nothing at all in the rules index.</p>
+  <p class="note"><strong>It is an <code>&lt;li&gt;</code>, and the caller owns the list.</strong> A row that wrapped itself in its own <code>&lt;ul&gt;</code> would publish a list of one to a screen reader for every result on the page, which is the same count that tells a reader how much there is to get through.</p>`,
 });
 
 /* -------------------------------------------------------------------- Screens */
@@ -786,18 +1333,29 @@ cards.push({
 
 /* ------------------------------------------------------------------ Emit */
 
-mkdirSync(join(OUT, "foundations"), { recursive: true });
-mkdirSync(join(OUT, "primitives"), { recursive: true });
-mkdirSync(join(OUT, "screens"), { recursive: true });
+/**
+ * WRITING IS GUARDED, EXPORTS ARE NOT.
+ *
+ * `design-system-coverage.test.ts` imports `cards` and `page` to check the
+ * registry against `PRIMITIVES` and the committed bundle against the generator.
+ * Without this guard, importing the registry would rewrite `design-system/` as
+ * a side effect of running the test suite — a checker that mutates the artefact
+ * it is checking can never fail.
+ */
+if (import.meta.main) {
+  for (const dir of Object.values(GROUP_DIR)) {
+    mkdirSync(join(OUT, dir), { recursive: true });
+  }
 
-for (const card of cards) {
-  writeFileSync(join(OUT, card.path), page(card));
+  for (const card of cards) {
+    writeFileSync(join(OUT, card.path), page(card));
+  }
+
+  // Sanity: the palettes the previews render must be the shipped ones.
+  const shipped = Object.keys(DARK_TOKENS).length;
+  const light = Object.keys(LIGHT_TOKENS).length;
+  console.log(`${cards.length} cards written to ${OUT}`);
+  console.log(`tokens inlined: ${shipped} dark, ${light} light`);
+  for (const card of cards)
+    console.log(`  ${card.group.padEnd(12)} ${card.path}`);
 }
-
-// Sanity: the palettes the previews render must be the shipped ones.
-const shipped = Object.keys(DARK_TOKENS).length;
-const light = Object.keys(LIGHT_TOKENS).length;
-console.log(`${cards.length} cards written to ${OUT}`);
-console.log(`tokens inlined: ${shipped} dark, ${light} light`);
-for (const card of cards)
-  console.log(`  ${card.group.padEnd(12)} ${card.path}`);

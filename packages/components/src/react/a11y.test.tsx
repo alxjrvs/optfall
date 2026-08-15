@@ -60,7 +60,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
 
-import type { PageSize } from "../index";
+import { type PageSize, PRIMITIVES } from "../index";
 
 import { BevelledPlate } from "./BevelledPlate";
 import { BrassSeal } from "./BrassSeal";
@@ -579,4 +579,40 @@ describe("every primitive passes axe", () => {
       expect(described).toEqual([]);
     });
   }
+
+  /**
+   * THE TABLE ABOVE IS HAND-MAINTAINED, SO SOMETHING HAS TO CHECK IT IS
+   * COMPLETE.
+   *
+   * Fifty passing cases say nothing about the primitive that has no case at
+   * all: a component added without a row here is reported green by a suite that
+   * never rendered it. That is the same "looks like coverage" failure the
+   * design-system gate catches one layer up, where a single gallery card stood
+   * in for three primitives and tracked none of them — so the axe table gets the
+   * same treatment as the catalog.
+   *
+   * It checks against `PRIMITIVES`, the closed set `src/index.ts` declares, for
+   * the reason `parity.test.ts` gives: that is the contract, and two
+   * hand-maintained lists agreeing proves only that they agree.
+   */
+  test("every primitive the library declares has at least one case", () => {
+    /*
+      `pitch-jewel` → `PitchJewel`. Both spellings are correct and neither
+      should move to meet the other; `parity.test.ts` states the same mapping
+      for the same reason.
+    */
+    const componentName = (id: string): string =>
+      id
+        .split("-")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join("");
+
+    const covered = new Set(CASES.map((entry) => entry.component.name));
+
+    const missing = PRIMITIVES.filter((id) => !covered.has(componentName(id)))
+      .map((id) => `${componentName(id)} (${id}) has no axe case`)
+      .toSorted();
+
+    expect(missing).toEqual([]);
+  });
 });
