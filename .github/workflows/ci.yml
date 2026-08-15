@@ -625,6 +625,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
       # A gate can only aggregate what it was told to need, and `needs:` above
       # is maintained by hand. Adding a job to this workflow and forgetting to
       # list it there is a silent downgrade: the gate goes green without it and
@@ -632,45 +637,28 @@ jobs:
       # Phase 1 ("a11y and visual-regression checks wired into the aggregate
       # gate"), so the trigger is already on the roadmap.
       #
-      # This reads the workflow's own job names back out of the file and fails
-      # if any of them is missing from `needs`.
+      # THIS WAS FORTY LINES OF INLINE awk AND jq, AND IT IS A SCRIPT NOW.
+      # Inline, it could not be run before pushing, could not be tested, and
+      # could not say anything about the two failure modes it did not model: a
+      # `needs:` entry naming a job that no longer exists, and a required-check
+      # context that names no job at all. `scripts/check-ci-aggregator.ts` is
+      # the same rule with those cases covered and a test file behind it, and
+      # `bun run check` runs it locally. It needs no `bun install` — it reads
+      # two files with node builtins.
+      #
+      # It also stops hard-coding "gate": it reads the required status-check
+      # context out of scripts/repo-settings.sh and finds the job that reports
+      # it, so renaming the job and the ruleset together is a no-op here and
+      # renaming one without the other is a failure.
+      #
+      # This is not the only place it runs. `scripts/check-ci-aggregator.test.ts`
+      # asserts the same thing about the real workflow, so the `test` job above —
+      # which is in the `needs:` list — goes red for an un-gated job minutes
+      # before this step gets the chance. That is the fast signal; this is the
+      # one that cannot be routed around, because a job can be dropped from
+      # `needs:` and a step inside the gate cannot.
       - name: Assert every job in this workflow is wired into the gate
-        env:
-          NEEDS: ${{ toJSON(needs) }}
-        run: |
-          set -euo pipefail
-
-          declared=$(awk '
-            /^jobs:[[:space:]]*$/ { in_jobs = 1; next }
-            in_jobs && /^[^[:space:]]/ { in_jobs = 0 }
-            in_jobs && /^  [A-Za-z0-9_-]+:[[:space:]]*$/ {
-              name = $0
-              sub(/^  /, "", name)
-              sub(/:[[:space:]]*$/, "", name)
-              print name
-            }
-          ' .github/workflows/ci.yml)
-
-          if [ -z "$declared" ]; then
-            echo "::error::Could not parse any job names out of .github/workflows/ci.yml — this check is blind, which is a failure."
-            exit 1
-          fi
-
-          missing=""
-          for job in $declared; do
-            if [ "$job" = "gate" ]; then continue; fi
-            if ! echo "$NEEDS" | jq -e --arg j "$job" 'has($j)' >/dev/null; then
-              missing="${missing} ${job}"
-            fi
-          done
-
-          if [ -n "$missing" ]; then
-            echo "::error::Jobs exist in ci.yml but are not in gate's needs:${missing} — add them to \`needs:\` or the gate passes without them."
-            exit 1
-          fi
-
-          echo "Every job in ci.yml is wired into the gate:"
-          echo "$declared" | while read -r job; do echo "  ${job}"; done
+        run: bun run check:ci-aggregator
 
       - name: Aggregate job results
         env:
