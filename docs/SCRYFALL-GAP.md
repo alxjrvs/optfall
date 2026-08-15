@@ -88,7 +88,7 @@ row's subject changes, not when someone notices.*
 
 | Capability | Scryfall | Optfall today | |
 |---|---|---|---|
-| Card search on the homepage | yes | typeahead on `/` | **have** |
+| Card search on the homepage | yes | a plain field on `/` that submits to `/search` | **have** |
 | Card images | six variants | two tiers, rendered | **narrowed** |
 | Image grid results | default view | grid is the default | **have** |
 | Display modes | `display:grid/checklist/text/full` | `display:grid/list/text`, a query term | **have** |
@@ -102,7 +102,7 @@ row's subject changes, not when someone notices.*
 | Set index and set pages | `/sets` | `/sets` and a page per set | **have** |
 | Rulings on the card | official rulings, dated | none | **gap** |
 | Random card | `/random` | `/random` | **have** |
-| Name autocomplete | yes | typeahead on `/` | **have** |
+| Name autocomplete | yes | nothing — §6b removed it | **gap, on purpose** |
 | `/` focuses search | yes | yes | **have** |
 | Related cards | tokens, meld, combo | `references` / `referencedBy` | **have, better** |
 | Legality table | ~12 formats, one state each | 6 formats, **multi-state, with the upstream evidence printed** | **have, better** |
@@ -412,10 +412,18 @@ here was that it is live search wearing a different hat, and the empty-state
 browse already covers "I do not know what to type."
 
 `CardTypeahead` shipped on the front door regardless, and the distinction that
-makes it defensible is one this paragraph did not draw: **every suggestion is a
-destination, not a result.** It completes a NAME and takes you to that card's
-page; it does not re-rank results as you type, so the objection above — that
-autocomplete smuggles live search in — does not apply to what was built. The
+made it defensible is one this paragraph did not draw: **every suggestion is a
+destination, not a result.** It completed a NAME and took you to that card's
+page; it did not re-rank results as you type, so the objection above — that
+autocomplete smuggles live search in — did not apply to what was built.
+
+**§6b then removed it, and the original argument was the better one after all.**
+Not because it smuggled in live search, but because of what it made the door
+*for*: a box that jumps straight to a card turns the entrance into a
+disambiguator, when its job is to be the way in to the search page. It also cost
+every visitor the name index before they had typed anything, on a page that now
+ships no JavaScript at all. Name autocomplete is a real gap in the capability
+table above, marked as one, and deliberate. The
 capability table in §3 records it as shipped.
 
 ### 5.3 Second and third corpora — cheap, high yield

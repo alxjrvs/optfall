@@ -970,11 +970,27 @@ legality checking needs from it are facts, LSS publishes the same information,
 and the realistic worst case is a maintainer asking us to stop. Asking for a
 licence is still worth five minutes; it is not a gate to clear before building.
 
-**Closed.** The domain question is answered by the site being on it:
-`optfall.com` serves the build. The display typeface is settled in the token
-layer and enforced by `check-tokens.ts`. The state-backend question that sat
+**One closed, one still open.** The domain question is answered by the site
+being on it: `optfall.com` serves the build. The state-backend question that sat
 here is gone rather than answered — dropping Terraform removed the thing that
 needed a backend, which is the cheapest way to close a question.
+
+**The display typeface is NOT settled, and a previous revision of this paragraph
+said it was.** That claim was wrong twice over: `packages/theme/src/tokens.ts`
+records the opposite in the very layer it cited — the candidates (Grenze, Cinzel,
+Eczar) "all need a licence check for webfont embedding, so this ships a system
+stack" — and there is no display-family token at all, only `type.family.serif`
+and `type.family.sans`. `check-tokens.ts` enforces raw colours, raw lengths and
+undefined `--of-*` references; it has no font rule whatsoever, so a raw
+`font-family: Cinzel, serif` passes every check in this repository.
+
+It stays open because **it is a licensing obligation, not a taste question** —
+`docs/COMPLIANCE.md` lists confirming the display face is licensed for webfont
+embedding as a Phase 1 item, and `docs/DESIGN.md` and `docs/PHASE-1-STATUS.md`
+both still carry it. Marking it closed is precisely what would stop anyone
+re-measuring it, which is the failure the paragraph above this one exists to
+correct. Left visible rather than deleted, because writing it was that failure
+happening again inside the commit that named it.
 
 **Unverified.** The pitch-queue mechanic behind the parked deck-math work was
 never confirmed against the current rules — the official site blocks automated
