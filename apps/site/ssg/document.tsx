@@ -35,12 +35,15 @@ interface DocumentProps {
   readonly route: string;
   /** Emitted stylesheet URLs, from the Vite manifest. */
   readonly styles: readonly string[];
+  /** The island bundle's URL, from the same manifest. */
+  readonly islandScript?: string;
 }
 
 export function Document({
   result,
   route,
   styles,
+  islandScript,
 }: DocumentProps): ReactElement {
   return (
     <html lang="en">
@@ -90,6 +93,19 @@ export function Document({
         <footer className="site-footer">
           <p className="legal">{LSS_DISCLAIMER}</p>
         </footer>
+        {/*
+          THE SCRIPT IS EMITTED ONLY FOR PAGES THAT DECLARE AN ISLAND, which is
+          the whole economy of the architecture: 115 pages ported so far declare
+          none and load no JavaScript at all.
+
+          `type="module"` and `defer` — a module script defers by default, and
+          saying so is documentation rather than belt-and-braces. It sits after
+          the content so the parser reaches the markup first; the island
+          hydrates what is already painted rather than racing it.
+        */}
+        {result.islands && islandScript !== undefined ? (
+          <script type="module" src={islandScript} defer />
+        ) : null}
       </body>
     </html>
   );

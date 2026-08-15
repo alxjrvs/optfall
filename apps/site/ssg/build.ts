@@ -46,6 +46,7 @@ import { routes } from "./routes";
 
 const OUT_DIR = new URL("../dist-next/", import.meta.url).pathname;
 const CONFIG = new URL("./vite.config.ts", import.meta.url).pathname;
+const VITE_BIN = new URL("../node_modules/.bin/vite", import.meta.url).pathname;
 
 /**
  * THE TOKEN STYLESHEET IS A FILE, WHERE ASTRO INLINES IT INTO EVERY PAGE.
@@ -65,24 +66,43 @@ const CONFIG = new URL("./vite.config.ts", import.meta.url).pathname;
  */
 const TOKENS_PATH = "assets/tokens.css";
 
-/** The emitted stylesheet urls, read from Vite's manifest rather than guessed. */
-async function stylesheetsFromManifest(): Promise<readonly string[]> {
+interface ManifestEntry {
+  readonly file: string;
+  readonly css?: readonly string[];
+  readonly isEntry?: boolean;
+  readonly name?: string;
+}
+
+/**
+ * What Vite emitted, read from its manifest rather than guessed.
+ *
+ * A HASHED FILENAME MUST BE READ, NEVER CONSTRUCTED. Hard-coding a url would
+ * produce pages linking a file that does not exist — an unstyled site, or an
+ * island that never hydrates, from a build that reported success. That is
+ * precisely the failure this generator has already hit twice from two other
+ * directions.
+ */
+async function assetsFromManifest(): Promise<{
+  readonly styles: readonly string[];
+  readonly islandScript: string | undefined;
+}> {
   const manifestPath = join(OUT_DIR, ".vite/manifest.json");
   const file = Bun.file(manifestPath);
-  if (!(await file.exists())) return [];
+  if (!(await file.exists())) return { styles: [], islandScript: undefined };
 
-  const manifest = (await file.json()) as Record<
-    string,
-    { readonly css?: readonly string[] }
-  >;
+  const manifest = (await file.json()) as Record<string, ManifestEntry>;
+  const entries = Object.values(manifest);
 
-  /*
-   * A HASHED FILENAME MUST BE READ, NEVER CONSTRUCTED. Hard-coding the url
-   * would produce pages linking a stylesheet that does not exist — an unstyled
-   * site, from a build that reported success, which is precisely the failure
-   * this generator has now hit twice from two other directions.
-   */
-  return Object.values(manifest).flatMap((entry) => entry.css ?? []);
+  return {
+    styles: entries.flatMap((entry) => entry.css ?? []),
+    /*
+     * Found by the entry NAME rather than by the source path, because the key
+     * is the path relative to Vite's root and that changes if this file moves.
+     * The name is the one in `rollupOptions.input`, which is the thing the
+     * build actually declared.
+     */
+    islandScript: entries.find((entry) => entry.name === "islands")?.file,
+  };
 }
 
 async function main(): Promise<void> {
@@ -92,8 +112,16 @@ async function main(): Promise<void> {
   // Vite writes the component CSS. Spawned rather than imported so the build
   // runs exactly as a developer would run it, and so a failure there stops
   // this one.
+  /*
+   * THE LOCAL BINARY, BY PATH, NOT `bunx vite`.
+   *
+   * `bunx` resolved `vite@latest` out of a temp cache rather than the version
+   * this app declares — a different major, built against a different rolldown,
+   * failing on a config the installed Vite accepts. A build that silently uses
+   * a package the lockfile does not pin is a build nobody can reproduce.
+   */
   const vite = Bun.spawnSync(
-    ["bunx", "vite", "build", "--config", CONFIG, "--logLevel", "warn"],
+    [VITE_BIN, "build", "--config", CONFIG, "--logLevel", "warn"],
     { stdout: "inherit", stderr: "inherit" },
   );
   if (vite.exitCode !== 0) {
@@ -110,10 +138,13 @@ async function main(): Promise<void> {
    * also the order a reader would expect, which is worth something in a
    * `<head>` nobody rereads.
    */
+  const assets = await assetsFromManifest();
   const styles: readonly string[] = [
     `/${TOKENS_PATH}`,
-    ...(await stylesheetsFromManifest()).map((href) => `/${href}`),
+    ...assets.styles.map((href) => `/${href}`),
   ];
+  const islandScript =
+    assets.islandScript === undefined ? undefined : `/${assets.islandScript}`;
 
   let count = 0;
   const written = new Map<string, string>();
@@ -132,7 +163,7 @@ async function main(): Promise<void> {
       }
       written.set(outputPath, resolved.route);
 
-      const html = resolved.render(styles);
+      const html = resolved.render(styles, islandScript);
 
       const target = join(OUT_DIR, outputPath);
       await mkdir(dirname(target), { recursive: true });
@@ -145,7 +176,9 @@ async function main(): Promise<void> {
   await rm(join(OUT_DIR, ".vite"), { recursive: true, force: true });
 
   console.log(
-    `[ssg] ${count} page(s), ${styles.length} stylesheet(s) → dist-next/`,
+    `[ssg] ${count} page(s), ${styles.length} stylesheet(s)` +
+      `${islandScript === undefined ? ", no islands" : ", islands bundled"}` +
+      ` → dist-next/`,
   );
 }
 

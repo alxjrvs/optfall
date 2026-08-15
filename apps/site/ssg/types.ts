@@ -71,6 +71,17 @@ export interface PageResult {
   readonly headerSearch?: boolean;
   /** `measure` (prose) or `wide` (a face beside a column). See the tokens. */
   readonly width?: "measure" | "wide";
+  /**
+   * True when this page mounts an `Island`, so the shell emits the script.
+   *
+   * DECLARED RATHER THAN DETECTED, because detecting it means scanning the
+   * rendered HTML for `data-island` — which works, and which would make every
+   * page pay a string search to answer a question its author already knows. It
+   * is also the wrong default in the safe direction: a page that forgets this
+   * renders its island as static server markup, which is degraded but correct,
+   * where a page that wrongly claimed one would ship a script for nothing.
+   */
+  readonly islands?: boolean;
   readonly children: ReactNode;
 }
 
