@@ -6,7 +6,7 @@
       "name": "optfall",
       "devDependencies": {
         "@biomejs/biome": "2.5.7",
-        "@netlify/blobs": "10.7.12",
+        "@netlify/blobs": "catalog:",
         "@types/bun": "1.3.14",
         "sharp": "0.35.3",
         "typescript": "7.0.2",
@@ -16,7 +16,7 @@
       "name": "@optfall/images",
       "version": "0.0.0",
       "dependencies": {
-        "@netlify/blobs": "^10.7.11",
+        "@netlify/blobs": "catalog:",
       },
     },
     "apps/site": {
@@ -25,14 +25,14 @@
       "dependencies": {
         "optfall-components": "workspace:*",
         "optfall-theme": "workspace:*",
-        "react": "19",
-        "react-dom": "19",
+        "react": "catalog:",
+        "react-dom": "catalog:",
       },
       "devDependencies": {
-        "@types/react": "19",
-        "@types/react-dom": "19",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
         "@vitejs/plugin-react-swc": "4.3.3",
-        "vite": "8",
+        "vite": "catalog:",
         "workbox-build": "7.4.1",
       },
     },
@@ -44,17 +44,17 @@
       },
       "devDependencies": {
         "@types/jsdom": "27.0.0",
-        "@types/react": "19",
-        "@types/react-dom": "19",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
         "axe-core": "4.13.0",
         "jsdom": "30.0.1",
-        "react": "19",
-        "react-dom": "19",
-        "vite": "8.2.1",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "vite": "catalog:",
       },
       "peerDependencies": {
-        "react": "19",
-        "react-dom": "19",
+        "react": "catalog:",
+        "react-dom": "catalog:",
       },
     },
     "packages/legality": {
@@ -69,6 +69,14 @@
       "name": "optfall-theme",
       "version": "0.0.0",
     },
+  },
+  "catalog": {
+    "@netlify/blobs": "10.7.12",
+    "@types/react": "19",
+    "@types/react-dom": "19",
+    "react": "19",
+    "react-dom": "19",
+    "vite": "8.2.1",
   },
   "packages": {
     "@apideck/better-ajv-errors": ["@apideck/better-ajv-errors@0.3.7", "", { "dependencies": { "jsonpointer": "^5.0.1", "leven": "^3.1.0" }, "peerDependencies": { "ajv": ">=8" } }, "sha512-TajUJwGWbDwkCx/CZi7tRE8PVB7simCvKJfHUsSdvps+aTM/PDPP4gkLmKnc+x3CE//y9i/nj74GqdL/hwk7Iw=="],

@@ -24,17 +24,17 @@
     "optfall-theme": "workspace:*"
   },
   "peerDependencies": {
-    "react": "19",
-    "react-dom": "19"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@types/jsdom": "27.0.0",
-    "@types/react": "19",
-    "@types/react-dom": "19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "axe-core": "4.13.0",
     "jsdom": "30.0.1",
-    "react": "19",
-    "react-dom": "19",
-    "vite": "8.2.1"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   }
 }
