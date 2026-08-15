@@ -28,6 +28,29 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "root": true,
+  // BIOME DOES NOT READ `.gitignore` UNLESS YOU ASK IT TO, and the negations in
+  // `files.includes` below were an enumeration of the cases someone had already
+  // been bitten by rather than of the rule.
+  //
+  // Measured on a checkout that predates `#107` deleting Astro: the leftover
+  // `apps/site/.astro/` — ignored by git, so `git status` is clean and nothing
+  // in review can see it — takes `bun run lint` AND `bun run format:check` to
+  // exit 1 from the repo root. Four lint errors and three unformatted files, in
+  // generated Astro type stubs for a framework this project no longer has.
+  //
+  // CI cannot catch this class of failure by construction: it checks out fresh,
+  // so every ignored path is absent there. It only ever fires locally, where the
+  // fix looks like "the linter is broken" rather than "delete this directory".
+  //
+  // `!.claude` stays below rather than being folded into this. `.gitignore` has
+  // `.claude/worktrees/`, so this line does cover it — but the failure that line
+  // documents is a nested-root-config error raised during the discovery walk,
+  // and belt-and-braces is worth one line for the one case that hard-errors.
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
     "ignoreUnknown": true,
     "includes": [
