@@ -158,6 +158,21 @@ Deletions first, because most of the confusion is *surplus*, not absence.
 - **The hard 60-result cap with "narrow the query".** `CARD_RESULT_LIMIT` is a
   refusal where Scryfall paginates. A grid makes it worse — 60 images is under
   one scroll. Replace with paging, keeping the true total honest as it is now.
+  **Done.** Both search surfaces page, through the `pagination` primitive and
+  `apps/site/src/lib/pagination.ts`. The shape it took, and the two decisions
+  worth arguing with later:
+  - **The page is in the URL** — `?page=` and `?per=`, read and written exactly
+    as `?q=` is, so page 4 of a search is an address. Every control in the pager
+    is a real `<a href>` for the same reason. Defaults are omitted rather than
+    written, so one answer has one canonical link.
+  - **`per=all` is on the menu, and it removes the cap rather than raising it.**
+    It resolves to an infinite limit, so a reader who asks for every row gets
+    every row — 6,847 of them on `type:action unique:art`. Deliberate: a deck
+    builder collecting names four pages at a time has been answered a different
+    question. It is the last step offered because it is the expensive one.
+  - What did **not** change is the count. `total` still reports matches rather
+    than rows on screen, which was the one honest thing about the old
+    behaviour.
 - **`PENDING_OPERATORS` entries `artist` and `flavor`/`flavour`.** The data is in
   the corpus. They are pending only because nothing indexed them.
 - **The `cr:` "that lives at /search, not here" entry.** Section 8 makes it

@@ -15,6 +15,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { BevelledPlate } from "./BevelledPlate";
 import { OrnamentalRule } from "./OrnamentalRule";
+import { PAGE_GAP, Pagination, pageWindow } from "./Pagination";
 import { PitchJewel } from "./PitchJewel";
 import { ResultRow } from "./ResultRow";
 
@@ -192,5 +193,155 @@ describe("ResultRow", () => {
       html.indexOf("of-result__body"),
     );
     expect(html).toContain("of-result__meta");
+  });
+});
+
+describe("pageWindow", () => {
+  /*
+   * The interesting cases are all boundaries, which is why this is tested as a
+   * function rather than through rendered markup: asserting it through the
+   * component would be asserting it through a second thing that can also be
+   * wrong, and the failure that matters — a page nothing links to — is
+   * invisible in a screenshot.
+   */
+  test("a single page is itself, and no pages is nothing", () => {
+    expect(pageWindow(1, 1)).toEqual([1]);
+    expect(pageWindow(1, 0)).toEqual([]);
+  });
+
+  test("a short run is drawn whole, with no gaps to draw", () => {
+    expect(pageWindow(1, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(pageWindow(3, 5)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  test("the first and last page are always reachable in one click", () => {
+    /*
+     * "Jump to the end" is a real question about a sorted list — the cheapest
+     * card, the last set alphabetically — and a control that offers only the
+     * neighbours answers it with an unknown number of clicks.
+     */
+    for (const page of [1, 2, 10, 40, 99, 100]) {
+      const window = pageWindow(page, 100);
+      expect(window).toContain(1);
+      expect(window).toContain(100);
+    }
+  });
+
+  test("the window around the current page is fixed width, so the row cannot grow", () => {
+    expect(pageWindow(50, 100)).toEqual([
+      1,
+      PAGE_GAP,
+      48,
+      49,
+      50,
+      51,
+      52,
+      PAGE_GAP,
+      100,
+    ]);
+  });
+
+  test("a gap of exactly one page collapses to that page", () => {
+    // `1 … 3 4 5` spends an ellipsis to hide page 2, which is both longer than
+    // showing it and a worse answer.
+    expect(pageWindow(4, 20)).toEqual([1, 2, 3, 4, 5, 6, PAGE_GAP, 20]);
+  });
+
+  test("every page it lists is listed once, in order", () => {
+    for (const pages of [1, 2, 7, 13, 64, 200]) {
+      for (const page of [1, 2, Math.ceil(pages / 2), pages]) {
+        const numbers = pageWindow(page, pages).filter(
+          (entry): entry is number => entry !== PAGE_GAP,
+        );
+        expect(new Set(numbers).size).toBe(numbers.length);
+        expect(numbers).toEqual(numbers.toSorted((a, b) => a - b));
+      }
+    }
+  });
+});
+
+describe("Pagination", () => {
+  const props = {
+    page: 6,
+    pages: 12,
+    size: 60,
+    sizes: [30, 60, 120, "all"] as const,
+    total: 703,
+    from: 301,
+    to: 360,
+    unit: "cards",
+    href: (page: number) => `/search?q=attack&page=${page}`,
+    sizeHref: (size: number | "all") => `/search?q=attack&per=${size}`,
+  };
+
+  test("every control is a real link, because a page of results is an address", () => {
+    /*
+     * The whole reason this component takes `href` callbacks rather than
+     * rendering buttons: `docs/PLAN.md` Phase 4, "the permalink is the
+     * product". Buttons would make page 4 of a search unshareable and
+     * unopenable in a new tab, which is how a reader compares two pages of one
+     * answer.
+     */
+    const html = renderToStaticMarkup(<Pagination {...props} />);
+    expect(html).toContain('href="/search?q=attack&amp;page=7"');
+    expect(html).toContain('href="/search?q=attack&amp;page=5"');
+    expect(html).toContain('href="/search?q=attack&amp;page=12"');
+    expect(html).toContain('href="/search?q=attack&amp;per=all"');
+  });
+
+  test("the true total is stated, not the number of rows on screen", () => {
+    // The count was always honest; what was missing was any way to see the rows
+    // it counted. Losing the honesty while adding the paging would be a trade
+    // in the wrong direction.
+    const html = renderToStaticMarkup(<Pagination {...props} />);
+    expect(html).toContain("Showing 301–360 of 703 cards.");
+  });
+
+  test("the current page is marked in more than one channel", () => {
+    const html = renderToStaticMarkup(<Pagination {...props} />);
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain("of-pages__page--here");
+  });
+
+  test("a spent step is present and inert rather than absent", () => {
+    // Omitting it would move every other control sideways at the two moments a
+    // reader is most likely to be aiming at one.
+    const first = renderToStaticMarkup(<Pagination {...props} page={1} />);
+    expect(first).toContain("of-pages__step--spent");
+    expect(first).toContain("Previous");
+    expect(first).not.toContain('rel="prev"');
+
+    const last = renderToStaticMarkup(<Pagination {...props} page={12} />);
+    expect(last).toContain("Next");
+    expect(last).not.toContain('rel="next"');
+  });
+
+  test("the numbered run is dropped when there is one page, and the sizes are not", () => {
+    /*
+     * The rows-per-page choice is what makes a one-page answer honest: it is
+     * one page BECAUSE of what the reader asked for, and the control that says
+     * so has to survive the numbers going away.
+     */
+    const html = renderToStaticMarkup(
+      <Pagination {...props} pages={1} page={1} total={9} from={1} to={9} />,
+    );
+    expect(html).not.toContain("of-pages__list");
+    expect(html).toContain("of-pages__sizes");
+  });
+
+  test("an ellipsis names no page and is hidden from assistive technology", () => {
+    const html = renderToStaticMarkup(<Pagination {...props} pages={100} />);
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain("of-pages__gap");
+  });
+
+  test("a size link's accessible name says what its number means", () => {
+    // "60" alone is a link whose purpose is carried entirely by the sentence
+    // around it. WCAG 2.5.3 is satisfied because the visible text is contained
+    // in the name.
+    const html = renderToStaticMarkup(<Pagination {...props} />);
+    expect(html).toContain('aria-label="Show 60 per page"');
+    expect(html).toContain('aria-label="Show All per page"');
+    expect(html).toContain('aria-label="Page 7"');
   });
 });

@@ -1,0 +1,340 @@
+/**
+ * The pager — which slice of a long answer is on screen, and how to reach the
+ * rest of it.
+ *
+ * IT EXISTS BECAUSE THE ALTERNATIVE WAS A REFUSAL. `docs/SCRYFALL-GAP.md` §4:
+ * "The hard 60-result cap with 'narrow the query'. `CARD_RESULT_LIMIT` is a
+ * refusal where Scryfall paginates. A grid makes it worse — 60 images is under
+ * one scroll. Replace with paging, keeping the true total honest as it is now."
+ * The honest total was never the problem; the missing thing was any way to see
+ * the rows it counted.
+ *
+ * EVERY CONTROL IS A LINK, AND THAT IS THE LOAD-BEARING DECISION.
+ *
+ * A page of results is an ADDRESS — the same claim `docs/PLAN.md` Phase 4 makes
+ * about the query itself, "the permalink is the product", extended to the one
+ * part of the view a query string did not yet describe. Buttons would have made
+ * page 4 of a search unshareable, unbookmarkable, and unopenable in a new tab,
+ * which is precisely how a reader compares two pages of the same answer.
+ *
+ * So the caller supplies {@link PaginationProps.href}, every control renders as
+ * a real `<a href>`, and the click handler is an ENHANCEMENT rather than the
+ * mechanism: it is skipped for modified clicks, so cmd-click still opens a tab,
+ * and a browser with no islands running follows the link and gets the same page
+ * from the URL.
+ *
+ * THE ENDS ARE SPANS, NOT MISSING ELEMENTS. On page one there is no previous
+ * page, and the control renders the word anyway as an inert `<span>`. Omitting
+ * it would move every other control sideways at the two moments a reader is
+ * most likely to be aiming at one — the first click into paging, and the last
+ * click out of it.
+ *
+ * NOTHING HERE KNOWS WHAT IS BEING PAGED. The noun in the range line arrives as
+ * {@link PaginationProps.unit}, the counts on offer arrive as
+ * {@link PaginationProps.sizes}, and both are decisions about a particular list:
+ * a grid of card faces and a list of rule sections do not want the same steps.
+ */
+
+import type { MouseEvent } from "react";
+
+import type { PageSize } from "../index";
+
+import "./Pagination.css";
+
+export interface PaginationProps {
+  /** The page on screen, 1-based. */
+  readonly page: number;
+  /** How many there are. `1` means the whole answer is already on screen. */
+  readonly pages: number;
+  /** The rows-per-page currently in force. */
+  readonly size: PageSize;
+  /** The counts this list offers. Written by the surface, not by the control. */
+  readonly sizes: readonly PageSize[];
+  /** The true total — the number this component exists to make reachable. */
+  readonly total: number;
+  /** First row on screen, 1-based and inclusive. */
+  readonly from: number;
+  /** Last row on screen, inclusive. */
+  readonly to: number;
+  /**
+   * The plural noun for a row: `"cards"`, `"sections"`.
+   *
+   * A prop rather than a guess, because this component cannot know what it is
+   * counting and a component that invents the word for it would be composing
+   * prose about data it has never seen.
+   */
+  readonly unit: string;
+  /** Where a page lives. Called for every rendered control. */
+  readonly href: (page: number) => string;
+  /** Where a rows-per-page choice lives. */
+  readonly sizeHref: (size: PageSize) => string;
+  /**
+   * Take the navigation client-side. Optional: without it the links are
+   * ordinary links and the page reloads, which is the correct fallback rather
+   * than a degraded one.
+   */
+  readonly onNavigate?: (page: number) => void;
+  /** As {@link onNavigate}, for the rows-per-page choice. */
+  readonly onResize?: (size: PageSize) => void;
+  /**
+   * Accessible name for the landmark. Defaults to `"Pages of results"`.
+   *
+   * Worth setting when a screen carries two pagers, which is the case this
+   * default is wrong for: two `<nav>` elements with the same name are two
+   * landmarks a screen reader cannot tell apart.
+   */
+  readonly label?: string;
+}
+
+/**
+ * A gap in the numbered run, where pages were left out.
+ *
+ * A distinct value rather than a magic number, for the same reason `"all"` is a
+ * string in {@link PageSize}: nothing arithmetic can produce it by accident.
+ */
+export const PAGE_GAP = "gap" as const;
+
+/**
+ * Which page numbers to draw, and where the runs of them break.
+ *
+ * THE FIRST AND LAST PAGE ARE ALWAYS DRAWN, and that is what makes this a
+ * navigation rather than a nudge. "Jump to the end" is a real question about a
+ * sorted list — the cheapest card, the last set alphabetically — and a control
+ * that only offers the neighbours answers it with an unknown number of clicks.
+ *
+ * THE WINDOW AROUND THE CURRENT PAGE IS FIXED WIDTH, so the control does not
+ * grow as the reader walks into the middle of a long answer. `span` counts
+ * pages on EACH side; the default of two gives a run of five, which is the
+ * widest that still fits beside "Previous" and "Next" on a narrow screen.
+ *
+ * A GAP IS NEVER DRAWN OVER A SINGLE PAGE. `1 … 3 4 5` spends an ellipsis to
+ * hide page 2, which is both longer than showing it and a worse answer — so a
+ * gap of exactly one page collapses to that page.
+ *
+ * Exported for its own test rather than for callers: the interesting cases are
+ * the boundaries — page 1, the last page, a total small enough that no gap is
+ * possible — and asserting them through rendered markup would be asserting
+ * this function through a second thing that can also be wrong.
+ */
+export function pageWindow(
+  page: number,
+  pages: number,
+  span = 2,
+): readonly (number | typeof PAGE_GAP)[] {
+  if (pages <= 1) return pages === 1 ? [1] : [];
+
+  const wanted = new Set<number>([1, pages]);
+  for (let at = page - span; at <= page + span; at += 1) {
+    if (at >= 1 && at <= pages) wanted.add(at);
+  }
+
+  const out: (number | typeof PAGE_GAP)[] = [];
+  let previous = 0;
+  for (const at of [...wanted].toSorted((a, b) => a - b)) {
+    // A hole of exactly one page is cheaper to draw than to elide.
+    if (at - previous === 2) out.push(previous + 1);
+    else if (at - previous > 2) out.push(PAGE_GAP);
+    out.push(at);
+    previous = at;
+  }
+  return out;
+}
+
+/** `60` → `"60"`, `"all"` → `"All"`. The one place the word is spelled. */
+function sizeLabel(size: PageSize): string {
+  return size === "all" ? "All" : size.toLocaleString("en-GB");
+}
+
+export function Pagination({
+  page,
+  pages,
+  size,
+  sizes,
+  total,
+  from,
+  to,
+  unit,
+  href,
+  sizeHref,
+  onNavigate,
+  onResize,
+  label = "Pages of results",
+}: PaginationProps) {
+  /**
+   * A modified click is the reader asking the BROWSER for something, and this
+   * component is not entitled to intercept it. Cmd/ctrl opens a tab, shift
+   * opens a window, and a middle click arrives as `button === 1` — all three
+   * are how somebody compares two pages of one answer side by side.
+   */
+  const intercept = (event: MouseEvent, take: () => void): void => {
+    if (
+      event.defaultPrevented ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+    event.preventDefault();
+    take();
+  };
+
+  /** The numbered run, computed once so a gap can be keyed by what follows it. */
+  const run = pageWindow(page, pages);
+  const count = total.toLocaleString("en-GB");
+  const showing =
+    total === 0
+      ? `No ${unit}.`
+      : `Showing ${from.toLocaleString("en-GB")}–${to.toLocaleString("en-GB")} of ${count} ${unit}.`;
+
+  return (
+    <nav className="of-pages" aria-label={label}>
+      <p className="of-pages__range">{showing}</p>
+
+      {pages > 1 ? (
+        <ol className="of-pages__list">
+          <li className="of-pages__item">
+            {page > 1 ? (
+              <a
+                className="of-pages__step"
+                href={href(page - 1)}
+                rel="prev"
+                onClick={(event) =>
+                  onNavigate && intercept(event, () => onNavigate(page - 1))
+                }
+              >
+                Previous
+              </a>
+            ) : (
+              /* Inert rather than absent — see the note at the top about the
+                 control shifting under the cursor at the two moments it is most
+                 likely to be aimed at. */
+              <span className="of-pages__step of-pages__step--spent">
+                Previous
+              </span>
+            )}
+          </li>
+
+          {run.map((entry, at) =>
+            entry === PAGE_GAP ? (
+              /*
+                THE ELLIPSIS IS HIDDEN FROM ASSISTIVE TECHNOLOGY, which is the
+                honest rendering: it carries no destination and names no page.
+                A screen reader announcing "one, ellipsis, four, five, six" is
+                being read punctuation as though it were a control.
+
+                KEYED BY THE PAGE IT PRECEDES rather than by its index. A run can
+                hold two gaps, so the key has to distinguish them — and the
+                position does that only until the run changes length underneath
+                it, which is every time the reader turns a page. The page after
+                a gap is the one fact about it that survives.
+              */
+              <li
+                aria-hidden="true"
+                className="of-pages__gap"
+                key={`gap-before-${run[at + 1] ?? "end"}`}
+              >
+                …
+              </li>
+            ) : (
+              <li className="of-pages__item" key={entry}>
+                {entry === page ? (
+                  /*
+                    THE CURRENT PAGE IS STILL A LINK, and `aria-current` is what
+                    says so. A span here would remove the one control a reader
+                    might use to get BACK to where they are after scrolling, and
+                    would break the run of link shapes the eye follows across
+                    the row.
+                  */
+                  <a
+                    aria-current="page"
+                    aria-label={`Page ${entry}`}
+                    className="of-pages__page of-pages__page--here"
+                    href={href(entry)}
+                    onClick={(event) =>
+                      onNavigate && intercept(event, () => onNavigate(entry))
+                    }
+                  >
+                    {entry}
+                  </a>
+                ) : (
+                  <a
+                    aria-label={`Page ${entry}`}
+                    className="of-pages__page"
+                    href={href(entry)}
+                    onClick={(event) =>
+                      onNavigate && intercept(event, () => onNavigate(entry))
+                    }
+                  >
+                    {entry}
+                  </a>
+                )}
+              </li>
+            ),
+          )}
+
+          <li className="of-pages__item">
+            {page < pages ? (
+              <a
+                className="of-pages__step"
+                href={href(page + 1)}
+                rel="next"
+                onClick={(event) =>
+                  onNavigate && intercept(event, () => onNavigate(page + 1))
+                }
+              >
+                Next
+              </a>
+            ) : (
+              <span className="of-pages__step of-pages__step--spent">Next</span>
+            )}
+          </li>
+        </ol>
+      ) : null}
+
+      {sizes.length > 1 ? (
+        <p className="of-pages__sizes">
+          <span className="of-pages__sizes-label">Per page</span>
+          {sizes.map((offered) => {
+            const name = sizeLabel(offered);
+            /*
+              THE ACCESSIBLE NAME SAYS WHAT THE NUMBER MEANS. "60" alone is a
+              link whose purpose is carried entirely by the sentence around it;
+              "Show 60 per page" is one that survives being read out of a link
+              list. The visible text is contained in the name, which is what
+              WCAG 2.5.3 asks of a control whose label is shorter than its name.
+            */
+            return offered === size ? (
+              <a
+                aria-current="true"
+                aria-label={`Show ${name} per page`}
+                className="of-pages__size of-pages__size--here"
+                href={sizeHref(offered)}
+                key={String(offered)}
+                onClick={(event) =>
+                  onResize && intercept(event, () => onResize(offered))
+                }
+              >
+                {name}
+              </a>
+            ) : (
+              <a
+                aria-label={`Show ${name} per page`}
+                className="of-pages__size"
+                href={sizeHref(offered)}
+                key={String(offered)}
+                onClick={(event) =>
+                  onResize && intercept(event, () => onResize(offered))
+                }
+              >
+                {name}
+              </a>
+            );
+          })}
+        </p>
+      ) : null}
+    </nav>
+  );
+}

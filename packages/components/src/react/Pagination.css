@@ -1,0 +1,164 @@
+/*
+ * `Pagination`'s styles.
+ *
+ * Every value names a token; `scripts/check-tokens.ts` fails the build on a raw
+ * hex or length in component source, and it scans `.css`.
+ *
+ * THE PAGER IS FURNITURE, NOT A FEATURE. It sits under a list it does not
+ * belong to, so it takes the quietest voice the system has — sans, micro, wide
+ * tracking, muted ink — and spends its one piece of emphasis on the page the
+ * reader is standing on. No filigree: `docs/DESIGN.md` rations ornament to one
+ * per screen and forbids it on a control outright.
+ */
+
+.of-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-tight) var(--of-space-looser);
+  margin-block-start: var(--of-space-loose);
+  padding-block-start: var(--of-space-base);
+  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-muted);
+}
+
+/*
+  THE RANGE LINE TAKES THE WHOLE ROW, and the controls sit under it rather than
+  beside it. It is a sentence and they are targets; putting a sentence in a row
+  of buttons makes the reader parse the layout before they can read either.
+*/
+.of-pages__range {
+  flex: 1 0 100%;
+  margin: 0;
+}
+
+.of-pages__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--of-space-tightest);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.of-pages__item {
+  display: flex;
+}
+
+/*
+  ONE TARGET SIZE FOR EVERY CONTROL IN THE ROW, and it is a real one.
+
+  `space.loosest` plus `space.tighter` is 2.75rem — the 44px WCAG 2.5.5 asks
+  for, spelled in the two tokens that reach it, because this repository
+  publishes no target-size token and a raw length is not available to write.
+  Numbers are the smallest labels in the interface and the ones most often
+  aimed at on a phone, so the box is set rather than left to the text.
+*/
+.of-pages__page,
+.of-pages__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
+  min-block-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
+  padding-inline: var(--of-space-tight);
+  border-radius: var(--of-bevel-radius);
+  color: var(--of-color-accent);
+  text-decoration: none;
+}
+
+.of-pages__page:hover,
+.of-pages__step:hover {
+  color: var(--of-color-accent-hover);
+  background: var(--of-color-surface);
+}
+
+/*
+  THE CURRENT PAGE IS A SUNKEN PLATE — the same "you are inside this" the search
+  well uses, rather than a colour swap. Colour alone would make the one piece of
+  state in this control carry it in the single channel `docs/DESIGN.md` refuses
+  to rely on, and `aria-current` would be the only other place it was said.
+*/
+.of-pages__page--here {
+  background: var(--of-color-sunken);
+  border-block-start: var(--of-bevel-width) solid var(--of-bevel-dark);
+  border-block-end: var(--of-bevel-width) solid var(--of-bevel-light);
+  border-inline: var(--of-bevel-width) solid var(--of-color-rule);
+  color: var(--of-color-ink);
+  font-weight: var(--of-type-weight-medium);
+}
+
+/* A step with nowhere to go. Present, aligned, and plainly not a target. */
+.of-pages__step--spent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
+  min-block-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
+  padding-inline: var(--of-space-tight);
+  color: var(--of-color-ink-faint);
+}
+
+.of-pages__gap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--of-space-loose);
+  color: var(--of-color-ink-faint);
+}
+
+.of-pages__sizes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--of-space-tightest);
+  margin: 0;
+}
+
+.of-pages__sizes-label {
+  margin-inline-end: var(--of-space-tighter);
+  color: var(--of-color-ink-faint);
+}
+
+.of-pages__size {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
+  min-block-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
+  padding-inline: var(--of-space-tight);
+  border-radius: var(--of-bevel-radius);
+  color: var(--of-color-accent);
+  text-decoration: none;
+}
+
+.of-pages__size:hover {
+  color: var(--of-color-accent-hover);
+  background: var(--of-color-surface);
+}
+
+.of-pages__size--here {
+  background: var(--of-color-sunken);
+  border-block-start: var(--of-bevel-width) solid var(--of-bevel-dark);
+  border-block-end: var(--of-bevel-width) solid var(--of-bevel-light);
+  border-inline: var(--of-bevel-width) solid var(--of-color-rule);
+  color: var(--of-color-ink);
+  font-weight: var(--of-type-weight-medium);
+}
+
+/*
+  Never `outline: none`. The ring is the system's, at the width every other
+  control in the library draws it, offset by a hairline so it clears the sunken
+  plate the current page wears rather than sitting on its border.
+*/
+.of-pages__page:focus-visible,
+.of-pages__step:focus-visible,
+.of-pages__size:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: var(--of-bevel-width);
+}

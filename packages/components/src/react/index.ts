@@ -17,9 +17,16 @@
  * two whose failure is silent: every other primitive in this library is wrong
  * in a way you can see. The rest followed.
  *
- * ALL FOURTEEN ARE HERE NOW, which means this list and the Svelte one should
- * stay the same length. `parity.test.ts` checks them against each other — a
+ * ALL FOURTEEN ARE HERE NOW, and `parity.test.ts` checks the list against
+ * `PRIMITIVES` in `../index` rather than against a second implementation — a
  * port that forgets a component is a port that looks finished.
+ *
+ * THE FOURTEENTH IS `Pagination`, and it did not arrive with the port. It is
+ * the primitive `docs/SCRYFALL-GAP.md` §4 asked for when it called the hard
+ * 60-result cap "a refusal where Scryfall paginates": both search surfaces
+ * needed the same control, and the library's rule is that a screen needing new
+ * CSS is a signal a primitive is missing rather than a licence to write it in
+ * the page.
  */
 
 export { BevelledPlate, type BevelledPlateProps } from "./BevelledPlate";
@@ -30,6 +37,7 @@ export { FiligreeCorner, type FiligreeCornerProps } from "./FiligreeCorner";
 export { GameSymbol, type GameSymbolProps } from "./GameSymbol";
 export { Mark, type MarkProps } from "./Mark";
 export { OrnamentalRule, type OrnamentalRuleProps } from "./OrnamentalRule";
+export { Pagination, type PaginationProps } from "./Pagination";
 export { PitchJewel, type PitchJewelProps } from "./PitchJewel";
 export { ResultRow, type ResultRowProps } from "./ResultRow";
 export { SearchField, type SearchFieldProps } from "./SearchField";
