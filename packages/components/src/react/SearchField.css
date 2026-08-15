@@ -23,10 +23,28 @@
   color: var(--of-color-ink-muted);
 }
 
+/*
+  THE WELL IS A ROW OF TWO THINGS NOW: the mark and the field.
+
+  `align-items: center` rather than `stretch`, which is what made this render
+  oddly. Stretch was there to make the submit button the same height as the
+  input; with the button gone it stretched the mark instead, so a small square
+  glyph was pulled to the height of a title-sized line and sat off its optical
+  centre. Centring is what a row of unlike things wants.
+*/
 .of-search__well {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: var(--of-space-tight);
+}
+
+/* Flex-none so the mark keeps its intrinsic size while the field takes the
+   rest, and `line-height: 0` so the inline SVG contributes no leading of its
+   own to a row whose height is set by the input. */
+.of-search__mark {
+  flex: 0 0 auto;
+  display: inline-flex;
+  line-height: 0;
 }
 
 .of-search__field {
@@ -67,7 +85,24 @@
   border-radius: var(--of-bevel-radius);
 }
 
+/*
+  VISUALLY HIDDEN, NOT REMOVED — see the comment at its markup. The standard
+  clip pattern rather than `display: none`, which would take it out of the
+  accessibility tree and out of the tab order along with it.
+*/
 .of-search__submit {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.of-search__submit-unused {
   flex: 0 0 auto;
   padding-block: var(--of-space-tighter);
   padding-inline: var(--of-space-base);

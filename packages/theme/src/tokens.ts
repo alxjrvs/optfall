@@ -456,7 +456,13 @@ export const DARK_TOKENS: TokenTable = {
 
   "ornament.filigree.ink": "#3f3f3f",
 
-  "color.focus": "#8fb8e8",
+  /* BRASS RATHER THAN BLUE. The focus ring was a pale system blue — the one
+     colour on the page that belonged to no part of the palette, and the more
+     visible for it on every field and pill. Brass is already the site's second
+     metal, it is nothing like the accent so a focused control is never mistaken
+     for a selected or errored one, and it clears contrast against both grounds.
+     `tokens.test.ts` computes the ratios. */
+  "color.focus": "#d8b45f",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -569,5 +575,5 @@ export const LIGHT_TOKENS: TokenTable = {
 
   "ornament.filigree.ink": "#9a9a9a",
 
-  "color.focus": "#1d4f86",
+  "color.focus": "#6d541b",
 };

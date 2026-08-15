@@ -188,13 +188,6 @@
   max-inline-size: none;
 }
 
-.of-door__provenance {
-  margin-block: var(--of-space-loosest) 0;
-  text-align: center;
-  color: var(--of-color-ink-muted);
-  font-size: var(--of-type-size-small);
-}
-
 /*
   BIGGER ON THE DOOR THAN ANYWHERE ELSE, and declared on `.of-fan__row` rather
   than on `.of-fan` because that is the element `CardFan.css` sets it on — a

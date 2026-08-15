@@ -83,8 +83,6 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
   };
 });
 
-const cards = CARD_PAGES.length.toLocaleString("en-GB");
-
 /**
  * The most recent sets, newest first, as searches rather than as set pages.
  *
@@ -200,17 +198,6 @@ function page(): PageResult {
         </p>
 
         <CardFan cards={fan} />
-
-        {/*
-          BELOW THE FOLD, which is what the fan being the floor of the first
-          screen buys. The counts and the provenance are what a returning reader
-          scrolls to, not what a first-time one is met with.
-        */}
-        <p className="of-door__provenance">
-          {cards} cards, each at a permanent URL, with its printed text, its
-          printings and its per-format legality — and every verdict showing the
-          upstream flags it came from.
-        </p>
       </div>
     ),
   };

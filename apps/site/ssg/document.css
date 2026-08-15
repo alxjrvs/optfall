@@ -221,6 +221,15 @@ strong {
 /* The compliance footer's own rules. It is emitted by the document shell rather
    than by a page — see `document.tsx` — so its styles belong here too. */
 .site-footer {
+  /*
+    ABOVE THE CONTENT, so the front door's card fan can stand behind it. The fan
+    is a fixed-height band whose cards overflow downwards on purpose; without a
+    stacking context here they would paint over the legal text, which is the one
+    thing on the page that may never be obscured.
+  */
+  position: relative;
+  z-index: 1;
+  background: var(--of-color-ground);
   margin-block-start: var(--of-space-loosest);
   border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
   padding-block-start: var(--of-space-loose);
