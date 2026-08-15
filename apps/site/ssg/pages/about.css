@@ -1,0 +1,50 @@
+/*
+ * `/about`'s own styles. Prose, so most of the work is done by the document
+ * stylesheet and this only sets rhythm and the two things that are specific to
+ * the page.
+ */
+
+.of-about {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-base);
+}
+
+.of-about__title {
+  margin: 0;
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-display);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink);
+}
+
+.of-about__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--of-space-base);
+}
+
+.of-about__heading {
+  margin: 0;
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-title);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink);
+}
+
+/* The one paragraph that has to land before anybody decides whether to keep
+   reading, so it gets the size the rest of the page does not. */
+.of-about__lede {
+  margin: 0;
+  font-size: var(--of-type-size-large);
+  line-height: var(--of-type-leading-loose);
+  color: var(--of-color-ink);
+}
+
+.of-about__section p {
+  margin: 0;
+  line-height: var(--of-type-leading-loose);
+  color: var(--of-color-ink-muted);
+}
