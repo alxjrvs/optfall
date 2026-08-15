@@ -1,25 +1,29 @@
 /**
- * `/` — the front door. Ported.
+ * `/` — the front door. Specified in `docs/SCRYFALL-GAP.md` §6b.
  *
- * ONE BOX, ONE DOMINANT SURFACE. `docs/DESIGN.md`: no marketing hero, no
- * illustration above the fold — the first thing on the page is the thing you
- * came to do. The wordmark's only job is to say where you are.
+ * IT SHIPS NO JAVASCRIPT AT ALL, and that is the largest change here. The door
+ * carried a typeahead island: a live suggestion list that jumped straight to a
+ * card. Good feature, wrong page — it made the entrance a disambiguator when
+ * its job is to be the way in to the search page, and it cost every visitor the
+ * name index before they had typed anything. `SearchField` is a `<form
+ * method="get">` with a `name="q"` input, so a plain uncontrolled render of it
+ * submits to `/search` with no script involved. `islands` is false and there is
+ * no bundle on this page.
  *
- * THE MARK IS PART OF THE NAME HERE, not an illustration above it, and that
- * distinction is the whole reason it is allowed on this page: a mark set beside
- * the word at the word's own size is a masthead, while the same mark given its
- * own line above the word is the hero the door refuses. It is `lg` — one step up
- * from the header bar's `sm`, because this is the only page where the wordmark
- * is the masthead rather than a way home — and decorative, since the `<h1>`
- * beside it already carries the name.
+ * THE SENTENCE REPLACES THE WORDMARK. A masthead says where you are; a sentence
+ * says what the thing does, and the door is the one page where a visitor may
+ * not know. The name and the game carry the weight, the rest is quiet.
  *
- * AND IT IS THE CANONICAL PITCH VARIANT, which the header bar's is not. This is
- * the one surface where the mark is identity rather than chrome, so it is the
- * one that spends the three-value palette.
+ * THE `NEW` LIST IS DERIVED, WHICH IS THE WHOLE POINT OF IT. Scryfall
+ * hand-maintains its equivalent; ours reads `SETS_BY_RELEASE`, which is sorted
+ * by the corpus's own `initial_release_date`, and links each entry to a search
+ * that `order:released` can answer. Nothing to curate, nothing to go stale, and
+ * a set that ships next month appears here on the next corpus sync with no edit
+ * to this file. "Sync, never curate", applied to the surface most tools
+ * hand-edit weekly.
  *
- * THE ROW IS NOT AN ISLAND. `CardFan` is rendered as ordinary markup, so the row
- * costs the page six images and no JavaScript at all — hovering pops a card
- * forward in CSS. Only the typeahead hydrates.
+ * THE FAN IS THE FLOOR OF THE FIRST SCREEN rather than an ornament in the
+ * middle of it — see `home.css`, where the height arithmetic lives.
  *
  * THE SIX ARE NOT A RANDOM SELECTION. THEY ARE THE JOKE. Every name points at
  * the fact that this project is a tonal copy of Scryfall — Homage to Ancestors,
@@ -28,17 +32,13 @@
  * card, so the row is reviewable rather than incidental.
  */
 
-import { Mark } from "optfall-components/react";
+import { SearchField } from "optfall-components/react";
 
 import { CARD_PAGES } from "../../src/lib/cards";
-import { buildNameIndex } from "../../src/lib/typeahead";
+import { SETS_BY_RELEASE } from "../../src/lib/sets";
 import { CardFan, type FanCard } from "../components/CardFan";
-import { Island } from "../Island";
-import { CardTypeahead } from "../islands/CardTypeahead";
 import type { PageModule, PageResult } from "../types";
 import "./home.css";
-
-const names = buildNameIndex(CARD_PAGES);
 
 const FAN_NAMES = [
   "Homage to Ancestors",
@@ -85,59 +85,132 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
 
 const cards = CARD_PAGES.length.toLocaleString("en-GB");
 
+/**
+ * The most recent sets, newest first, as searches rather than as set pages.
+ *
+ * THREE, DATED, AND BIG ENOUGH TO BE A RELEASE. `SETS_BY_RELEASE` puts the
+ * undated sets last — the judge and organised-play lines — so an undated set can
+ * never occupy a slot; `RELEASE_SIZE` keeps the decks and armory products out,
+ * which is the filter that stopped this list advertising a demo deck as the
+ * newest thing in the game.
+ *
+ * The link is a SEARCH, not `/sets/<code>`: the set page is a description of a
+ * set, and somebody clicking `NEW` wants the cards in it. `order:released`
+ * keeps a multi-set week in the order the sets actually came out.
+ */
+/**
+ * How many printings a set needs before it counts as a release.
+ *
+ * MEASURED, NOT GUESSED, and the gap is an order of magnitude so the number is
+ * not delicate. The fourteen most recent dated sets in this corpus are either
+ * expansions — 272, 482, 681 printings — or decks and armory products: 16, 27,
+ * 29, 30, 34, 36, 39, 42, 55. There is nothing between 55 and 272.
+ *
+ * Without this the door advertised "Armory Deck - Olympia" and "Dorinthea Demo
+ * Deck" as the newest things in Flesh and Blood, because they are dated latest.
+ * A reader clicking `NEW` wants the set that just came out, not the most
+ * recently dated SKU.
+ */
+const RELEASE_SIZE = 200;
+
+const PRINTINGS_PER_SET = new Map<string, number>();
+for (const page of CARD_PAGES) {
+  for (const printing of page.card.printings) {
+    const id = printing.set_id.toUpperCase();
+    PRINTINGS_PER_SET.set(id, (PRINTINGS_PER_SET.get(id) ?? 0) + 1);
+  }
+}
+
+const RECENT_SETS = SETS_BY_RELEASE.filter(
+  (set) =>
+    set.released !== null &&
+    (PRINTINGS_PER_SET.get(set.id.toUpperCase()) ?? 0) >= RELEASE_SIZE,
+).slice(0, 3);
+
+function searchHref(query: string): string {
+  return `/search?q=${encodeURIComponent(query)}`;
+}
+
 function page(): PageResult {
   return {
     title: "Optfall — Flesh and Blood card search",
     description:
       "Search every Flesh and Blood card. Every card has a permanent, citable URL with its printed text, its printings and its per-format legality — and every legality verdict shows the upstream flags it was derived from.",
     section: "none",
-    islands: true,
+    /*
+      WIDE, FOR THE FAN AND NOTHING ELSE. Six cards at a readable size overlap
+      to about 855px, and the default `measure` column is 736 — so the last card
+      was clipped by the window's own edge, which is the exact defect
+      `CardFan.css` warns about arriving from the other direction. The text on
+      this page keeps the measure through `.of-door > *`; only the fan is allowed
+      out of it.
+    */
+    width: "wide",
+    islands: false,
     children: (
       <div className="of-door">
-        <h1 className="of-door__wordmark">
-          {/*
-            Decorative because the heading it sits in already carries the name —
-            a named mark would make the page's one heading announce itself twice.
-          */}
-          <Mark size="lg" decorative />
-          Optfall
+        <h1 className="of-door__sentence">
+          <strong>Optfall</strong> is a powerful{" "}
+          <strong>Flesh and Blood</strong> card search
         </h1>
 
-        <noscript>
-          <p className="of-door__noscript">
-            Live results need JavaScript. Every card is addressable without it:{" "}
-            <code>/card/command-and-conquer</code> is that card, and a name
-            shared by several cards — <code>/card/head-jab</code> — is that card
-            too, with its pitch versions as tabs.
-          </p>
-        </noscript>
-
-        <Island
-          name="CardTypeahead"
-          props={{ index: names, action: "/search" }}
-        >
-          <CardTypeahead index={names} action="/search" />
-        </Island>
-
         {/*
-          Four links, each going somewhere that ANSWERS a question rather than
-          describing the answer. The five paragraphs of "what this is" that used
-          to sit here were the page explaining itself to somebody who had already
-          arrived.
+          NO ISLAND, AND THEREFORE NO `onValueChange`. Rendered uncontrolled: the
+          `value` is the initial value of a plain HTML input, the form is
+          `method="get"` with `name="q"`, and submitting navigates to
+          `/search?q=…`. There is no React on this page to control it.
         */}
+        <SearchField
+          label="Search the cards"
+          region="Flesh and Blood cards"
+          action="/search"
+          value=""
+          placeholder="command and conquer"
+        />
+
         <nav className="of-door__ways-in" aria-label="Elsewhere in Optfall">
-          <a href="/search">Browse all {cards} cards</a>
-          <a href="/sets">Browse by set</a>
-          <a href="/cr">Search the rules</a>
-          <a href="/card/winters-wail">A card that is two things at once</a>
-          <a href="/cr/8.3.4b">A rules permalink</a>
+          <a href={searchHref("banned:cc")}>Advanced search</a>
+          <a href="/syntax">Syntax</a>
+          <a href="/sets">All sets</a>
+          <a href="/random">Random card</a>
         </nav>
 
+        <ul className="of-door__new" aria-label="Recent sets">
+          {RECENT_SETS.map((set) => (
+            <li key={set.id}>
+              <a
+                href={searchHref(`set:${set.id.toLowerCase()} order:released`)}
+              >
+                <span className="of-door__badge">New</span>
+                {set.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+
         {/*
-          BELOW THE FIELD AND BELOW THE LINKS, in the empty half of the screen
-          the door already had.
+          NOT ABOUT CARDS, AND THAT IS WHY IT IS HERE. A reference tool a
+          community relies on has a front page, and what a front page points at
+          is a statement about who it is for.
         */}
+        <p className="of-door__cause">
+          <a href="https://goodlawproject.org/" rel="noreferrer">
+            Help Good Law Project fight for trans rights
+          </a>
+        </p>
+
         <CardFan cards={fan} />
+
+        {/*
+          BELOW THE FOLD, which is what the fan being the floor of the first
+          screen buys. The counts and the provenance are what a returning reader
+          scrolls to, not what a first-time one is met with.
+        */}
+        <p className="of-door__provenance">
+          {cards} cards, each at a permanent URL, with its printed text, its
+          printings and its per-format legality — and every verdict showing the
+          upstream flags it came from.
+        </p>
       </div>
     ),
   };

@@ -1,104 +1,212 @@
 /*
- * `/`'s own styles, ported from the Astro page's scoped block.
+ * `/`'s own styles. `docs/SCRYFALL-GAP.md` §6b.
  *
- * `:global(*)` became a plain child selector. That escape existed because a
- * scoped stylesheet could not reach children it did not author — the field, the
- * hint, the links — and there is no scoping here for it to escape from.
+ * THE PAGE IS A COLUMN THAT IS AT LEAST ONE SCREEN TALL, and the fan is pushed
+ * to the bottom of it with `margin-block-start: auto`. That is the whole of the
+ * "fan is the floor of the first screen" requirement: no viewport units on the
+ * fan itself, no magic numbers, and everything below the fan lands below the
+ * fold by construction rather than by a spacer that happens to be tall enough.
+ *
+ * `svh` RATHER THAN `vh`. On a phone `100vh` is the viewport with the browser
+ * chrome hidden, which is taller than what the reader can actually see — so a
+ * fan anchored to `100vh` sits under the address bar until they scroll. `svh`
+ * is the small viewport, the one that is always visible.
  */
 
-/*
-    Stacking and voice assignment only. Nothing here draws anything: no box, no
-    shadow, no border beyond the hairlines the system already owns.
-
-    The door is given vertical room rather than centred in the viewport. A hero
-    that vertically centres itself has to guess the viewport height, and guesses
-    wrong on the phone where it matters most.
-  */
-/*
-    A LANDING, NOT A PAGE HEADER. Scryfall's front door is deliberately
-    Google-shaped — one field, centred, with the rest of the site as small links
-    under it — and this was a left-aligned column with the field partway down.
-    The difference is not decoration: a centred field reads as "this is the
-    thing to do", where the same field left-aligned under a wordmark reads as
-    the first item in a document.
-
-    Centred HORIZONTALLY and pushed down vertically, rather than centred in the
-    viewport. Vertical centring has to guess a viewport height, and guesses
-    worst on the phone, where the keyboard takes half of it.
-  */
 .of-door {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--of-space-looser);
+  gap: var(--of-space-loose);
+  min-block-size: 100svh;
   padding-block-start: var(--of-space-loosest);
+
+  position: relative;
+}
+
+/*
+  THE GROUND STOPS BEING FLAT, and it is painted by a FIXED pseudo-element
+  rather than by a background on the column.
+
+  `.of-door` lives inside `main`, which is capped at the page measure — so a
+  background declared on it painted a lit strip down the middle of an unlit
+  page, which looked worse than the flat black it replaced. A fixed layer at
+  `inset: 0` covers the viewport regardless of what the column is doing, sits
+  behind everything at `z-index: -1`, and does not scroll away underneath a long
+  page.
+
+  Built from tokens rather than from a new colour: a lift towards `surface` at
+  the top and a settle into `sunken` at the bottom. No literal appears here, so
+  `check-tokens.ts` is satisfied and each theme follows its own palette without
+  this file knowing which is active.
+*/
+.of-door::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      120% 60% at 50% 0%,
+      var(--of-color-surface) 0%,
+      transparent 70%
+    ),
+    linear-gradient(var(--of-color-ground) 40%, var(--of-color-sunken) 100%);
 }
 
 /* The block is centred; the field and its hint keep the page's width and stay
-     left-aligned inside it, because a centred hint is a hint nobody reads.
-
-     `layout.page.measure` rather than `type.measure`: this caps a CONTAINER —
-     the field is not a line of prose — and the front door is the one page that
-     does not get its width from `main`, so it has to name the same token
-     `BaseLayout` does or it silently stops agreeing with every other page the
-     moment either value moves. */
+   left-aligned inside it, because a centred hint is a hint nobody reads. */
 .of-door > * {
   inline-size: 100%;
   max-inline-size: var(--of-layout-page-measure);
 }
 
 /*
-    Small, tracked and quiet. The field below is the loud thing on this page,
-    and a wordmark competing with it would be the marketing hero the design
-    language refuses.
-  */
-/*
-    The masthead of a landing page rather than a breadcrumb. It was the small
-    tracked label the header bar now carries on every other page — correct
-    there, and wrong here, where it is the only thing above the field.
-  */
-/*
-    Centred as a lockup rather than as text. `text-align` centres the line box,
-    which is the wrong unit once the heading holds a mark as well as a word: it
-    would centre the two together and leave the mark's optical weight pulling
-    the pair off centre. A flex row centres the box, and `align-items: center`
-    sets the mark on the word's centre line rather than its baseline — a
-    baseline-aligned octagon reads as having fallen out of the word, which is a
-    joke the mark is already making once and does not need to make twice.
-  */
-.of-door__wordmark {
+  ONE SENTENCE, NOT A WORDMARK. The name and the game are the two things a
+  first-time reader needs to bind together, so they carry the weight and the
+  connective tissue does not.
+*/
+.of-door__sentence {
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--of-space-base);
+  text-align: center;
   font-family: var(--of-type-family-serif);
   font-size: var(--of-type-size-display);
+  font-weight: var(--of-type-weight-regular);
+  line-height: var(--of-type-leading-tight);
   letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink-muted);
+  text-wrap: balance;
+}
+
+.of-door__sentence strong {
+  font-weight: var(--of-type-weight-bold);
   color: var(--of-color-ink);
 }
 
 /*
- * The no-JS notice, in the same accent-ruled register `/cr` and `/search` use
- * for theirs. It came from `NoScriptNotice.astro`'s scoped `.degraded`, and
- * inlining the component is what dropped the rule — the front door was the one
- * page whose notice rendered as unstyled body text.
- */
-.of-door__noscript {
-  /* No trailing margin, unlike `/cr` and `/search`: the door is a flex column
-     with its own `gap`, and a margin here would add to it rather than replace
-     it. */
-  margin-block: 0;
-  padding-inline-start: var(--of-space-tight);
-  border-inline-start: calc(var(--of-bevel-width) * 2) solid
-    var(--of-color-accent);
+  DESTINATIONS AS A ROW OF PLATES, not a column of links. Four targets on one
+  line is scannable; the same four stacked read as a menu of things you must
+  choose between before you may search.
+*/
+.of-door__ways-in {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--of-space-tight);
+}
+
+.of-door__ways-in a {
+  padding-block: var(--of-space-tighter);
+  padding-inline: var(--of-space-base);
+  border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
+  border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
+  border-inline: var(--of-bevel-width) solid var(--of-color-rule);
+  border-radius: var(--of-bevel-radius);
+  background: var(--of-color-surface);
+  color: var(--of-color-ink);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-small);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-decoration: none;
+}
+
+.of-door__ways-in a:hover,
+.of-door__ways-in a:focus-visible {
+  background: var(--of-color-surface-raised);
+  border-inline-color: var(--of-color-rule-strong);
+  color: var(--of-color-accent);
+}
+
+/*
+  THE `NEW` LIST. Derived from the set corpus — see `home.page.tsx` — so it is
+  never edited by hand and never stale.
+*/
+.of-door__new {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--of-space-tighter);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.of-door__new a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--of-space-tight);
+  font-size: var(--of-type-size-small);
+  color: var(--of-color-ink-muted);
+  text-decoration: none;
+}
+
+.of-door__new a:hover,
+.of-door__new a:focus-visible {
+  color: var(--of-color-ink);
+}
+
+/* Loud on purpose: this is the one element on the door that is about time
+   rather than about navigation, and it earns the accent it spends. */
+.of-door__badge {
+  padding-block: var(--of-space-hair);
+  padding-inline: var(--of-space-tighter);
+  border-radius: var(--of-bevel-radius);
+  background: var(--of-color-accent);
+  color: var(--of-color-ink-inverse);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-bold);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+}
+
+.of-door__cause {
+  margin: 0;
+  text-align: center;
+  font-size: var(--of-type-size-small);
+}
+
+.of-door__cause a {
+  color: var(--of-color-ink-muted);
+}
+
+.of-door__cause a:hover,
+.of-door__cause a:focus-visible {
+  color: var(--of-color-accent);
+}
+
+/*
+  THE FLOOR. `margin-block-start: auto` inside the flex column pushes the fan to
+  the bottom of whatever the column's height turns out to be — one screen when
+  the content is short, taller when it is not — and it is `max-inline-size: none`
+  because the fan is the one element on this page that is deliberately wider than
+  the measure.
+*/
+.of-door > .of-fan {
+  margin-block-start: auto;
+  max-inline-size: none;
+}
+
+.of-door__provenance {
+  margin-block: var(--of-space-loosest) 0;
+  text-align: center;
   color: var(--of-color-ink-muted);
   font-size: var(--of-type-size-small);
 }
 
-.of-door__ways-in {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--of-space-base) var(--of-space-looser);
-  font-size: var(--of-type-size-small);
+/*
+  BIGGER ON THE DOOR THAN ANYWHERE ELSE, and declared on `.of-fan__row` rather
+  than on `.of-fan` because that is the element `CardFan.css` sets it on — a
+  value inherited from an ancestor loses to a declaration on the element itself,
+  so setting it on the nav did nothing at all.
+
+  The component's default is half a published thumb: right for a row inside a
+  page, too small for the thing meant to be the floor of the first screen, where
+  the card names were legible only if you already knew them. A full thumb here,
+  capped against the viewport so a narrow screen gets a band rather than a
+  horizontal scroll.
+*/
+.of-door .of-fan__row {
+  --card: min(var(--of-card-face-thumb), 22vw);
 }
