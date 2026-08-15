@@ -27,8 +27,26 @@ import { readFileSync } from "node:fs";
 
 import { DARK_TOKENS, LIGHT_TOKENS } from "../packages/theme/src/index";
 
-/** Directories whose component source must consume tokens. */
-const SCANNED = ["packages/components/src", "apps/site/src"] as const;
+/**
+ * Directories whose component source must consume tokens.
+ *
+ * `apps/site/ssg` IS HERE BECAUSE IT WAS NOT, AND THAT WAS A HOLE. Phase 6's
+ * generator keeps its document stylesheet beside its renderer rather than under
+ * `src/`, so the first version of `ssg/document.css` — the layout, the type
+ * scale, the page frame, every rule `BaseLayout.astro` used to own — sat
+ * outside this check entirely while `bun run check:tokens` reported success.
+ *
+ * The whole point of this file is that the design system is enforcement rather
+ * than intent, and a directory the enforcement does not scan is a directory
+ * where it is intent again. Adding a THIRD renderer would need a third line
+ * here; that is the cost of the list being explicit, and it is cheaper than a
+ * glob that silently starts covering `node_modules`.
+ */
+const SCANNED = [
+  "packages/components/src",
+  "apps/site/src",
+  "apps/site/ssg",
+] as const;
 
 /**
  * Paths not yet migrated, with the reason and the thing that removes them.
