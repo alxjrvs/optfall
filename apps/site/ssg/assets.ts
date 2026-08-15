@@ -137,17 +137,19 @@ function faviconSvg(): string {
 /**
  * `/icon.svg` — the mark again, at install size.
  *
- * SEPARATE FROM `favicon.svg` FOR ONE REASON: `purpose: "maskable"`. An
- * installed icon is cropped to whatever silhouette the platform uses — a circle
- * on Android, a squircle on iOS — and the mark is a wide, thin ring. Dropped
- * into a maskable slot at its own proportions it loses both ends.
+ * SEPARATE FROM `favicon.svg` BECAUSE AN INSTALLED ICON IS A SQUARE. The mark is
+ * a wide, thin ring; dropped into an icon slot at its own proportions it is
+ * either letterboxed or, where the platform crops to a circle or a squircle, it
+ * loses both ends. So this is the same path on a square canvas, and it paints
+ * the ground rather than leaving it transparent — a transparent icon gets a
+ * platform-chosen fill behind it, and this project's whole visual key is that
+ * the mark sits on near-black.
  *
- * So this is the same path, on a square canvas, inside the **safe zone the spec
- * defines**: a maskable icon is guaranteed only the centre 80% of each axis, so
- * the mark is scaled to fit a circle of 40% radius about the centre rather than
- * to the full square. It also paints the ground, because a maskable icon with a
- * transparent background gets a platform-chosen fill behind it, and this
- * project's whole visual key is that the mark sits on near-black.
+ * EMITTED TWICE, AT TWO INSETS, and the manifest gives each its own `purpose`.
+ * A maskable icon is guaranteed only the centre 80% of each axis, so the
+ * maskable copy is inset to that safe zone; the `any` copy is full bleed,
+ * because the surfaces that use it do not crop and padded artwork there just
+ * renders small in empty ground.
  *
  * IT IS NOT THEMED, unlike the favicon, and that is deliberate rather than an
  * omission. A favicon composites against browser chrome we do not own, so it has
@@ -155,7 +157,7 @@ function faviconSvg(): string {
  * surface — one identity, the dark one, which `docs/DESIGN.md` calls the native
  * key.
  */
-function iconSvg(): string {
+function iconSvg(safeZone: number): string {
   const { single, link } = MARK_GEOMETRY;
   const dark = themes.dark.tokens;
 
@@ -169,9 +171,10 @@ function iconSvg(): string {
     .split(/\s+/)
     .map(Number);
 
-  /* The safe zone: the centre 80%, so the canvas is the mark's longer side
-     divided by 0.8, with the mark centred inside it. */
-  const side = Math.max(vw, vh) / 0.8;
+  /* `safeZone` is the fraction of the canvas the artwork is guaranteed. At 1
+     the mark fills the square edge to edge; at 0.8 it is inset to the centre
+     80%, which is what a maskable crop may keep. */
+  const side = Math.max(vw, vh) / safeZone;
   const x = vx + vw / 2 - side / 2;
   const y = vy + vh / 2 - side / 2;
 
@@ -225,12 +228,29 @@ function manifest(): string {
          accent: this is furniture, and the accent is rationed. */
       theme_color: literal(dark, "color.ground"),
       background_color: literal(dark, "color.ground"),
+      /*
+       * TWO ENTRIES, NOT ONE WITH TWO PURPOSES. A single
+       * `purpose: "any maskable"` icon is the padded artwork, and it is then
+       * ALSO what every non-maskable surface renders — Chrome's install dialog,
+       * the task switcher, a bookmark tile — where nothing crops it and the mark
+       * sits at roughly 64% linear size inside empty ground, looking like a
+       * mistake.
+       *
+       * The padding exists FOR the maskable case, so it is scoped to it. `any`
+       * gets the mark at full bleed; `maskable` gets it inset to the safe zone.
+       */
       icons: [
         {
           src: "/icon.svg",
           sizes: "any",
           type: "image/svg+xml",
-          purpose: "any maskable",
+          purpose: "any",
+        },
+        {
+          src: "/icon-maskable.svg",
+          sizes: "any",
+          type: "image/svg+xml",
+          purpose: "maskable",
         },
       ],
     },
@@ -241,6 +261,9 @@ function manifest(): string {
 
 export const GENERATED_ASSETS: readonly GeneratedAsset[] = [
   { path: "favicon.svg", contents: faviconSvg() },
-  { path: "icon.svg", contents: iconSvg() },
+  /* Full bleed: nothing crops this one. */
+  { path: "icon.svg", contents: iconSvg(1) },
+  /* Inset to the centre 80%, which is all a maskable crop is guaranteed. */
+  { path: "icon-maskable.svg", contents: iconSvg(0.8) },
   { path: "manifest.webmanifest", contents: manifest() },
 ];

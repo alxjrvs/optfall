@@ -12,7 +12,8 @@
  *
  * Nothing caught it. The build reported success, all 13,675 pages rendered, the
  * islands hydrated, and every compliance check passed — a bundle nobody measures
- * is a bundle that can be any size at all. `ssg.test.ts` now measures it.
+ * is a bundle that can be any size at all. **`assertIslandBudget` in
+ * `ssg/build.ts` measures it now**, and fails the build over a ceiling.
  *
  * These two functions are pure over their arguments and touch no corpus, so the
  * fix is to put them where importing them does not drag one in. `cards.ts`
@@ -34,6 +35,19 @@ import { faceKeyFor } from "./faces";
  */
 import type { Card, CardPrinting } from "./cards";
 
+/**
+ * One addressable printing of a card: a distinct FACE, and where it lives.
+ *
+ * `docs/SCRYFALL-GAP.md` §5.1c: "Scryfall treats the printing as the
+ * addressable unit; so should we." This is that unit.
+ *
+ * IT IS A FACE, NOT A PRINTING ROW, and the difference is 5,124 of them. The
+ * corpus carries 16,502 printing rows and only 11,376 distinct arts, because a
+ * card printed Regular / Rainbow Foil / Cold Foil in one set is three rows
+ * sharing one image. Giving each row its own URL would mint three addresses
+ * that render the identical page — the definition of a duplicate — so the unit
+ * is the art, and the rows that share it share its address.
+ */
 export interface PrintingRef {
   /** The face key, `MST131.webp`. Unique per distinct image. */
   readonly key: string;
