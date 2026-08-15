@@ -763,31 +763,35 @@ demand. This is the part of the plan that is not about features.
   the intrinsic answer has also been the one that holds at widths nobody
   enumerated. The numbers above are where the browser is pointed to confirm it,
   not values any stylesheet may name.
-- **One TypeScript, and right now it cannot be TypeScript 7.** Three compilers
-  were installed and running against this repo at once — 7.0.2 at the root,
-  6.0.3 for the site, 5.9.3 for the components package — so "does it typecheck"
-  had three different answers depending on which directory asked. The two
-  framework workspaces are now both on 6.0.3.
+- **One TypeScript, and it is 7.0.2.** ✅ **Paid, Phase 6 layer 5c.** Every
+  workspace resolves the same compiler, so "does it typecheck" has one answer
+  regardless of which directory asks.
 
-  **Six, not seven, and the reason is a measurement rather than caution.**
-  TypeScript 7 is the native compiler, and it does not expose the programmatic
-  API that the framework checkers are built on:
+  **The history is kept because the reasoning is the argument that moved this
+  project off Astro, and it was a measurement rather than a preference.** Three
+  compilers were once installed and running against this repo at once — 7.0.2 at
+  the root, 6.0.3 for the site, 5.9.3 for the components package. The two
+  framework workspaces were pinned to 6.0.3 because TypeScript 7 is the native
+  Go compiler and does not expose the programmatic API the framework checkers
+  are built on:
 
-  - `astro check` refuses outright — *"TypeScript's native compiler (7.0 and
+  - `astro check` refused outright — *"TypeScript's native compiler (7.0 and
     later) does not ship this API yet … run `astro check` with a TypeScript
     version that still provides it (6.x)"* (withastro/roadmap#1321).
-  - `svelte-check` can use it, but only alongside a 6.x install and behind
-    `--tsgo`, so **6 remains the primary compiler either way**.
+  - `svelte-check` could use it, but only alongside a 6.x install and behind
+    `--tsgo`, so **6 remained the primary compiler either way**.
 
-  The root stays on 7.0.2, because the packages it checks are plain TypeScript
-  and the native compiler handles them — so the direction of travel is real
-  rather than aspirational; it simply stops at the framework boundary.
+  "Optfall should run TypeScript 7" and "Optfall is an Astro site" were not two
+  goals to sequence — measured, they were mutually exclusive. So TS 7 was made
+  an OUTCOME of leaving Astro rather than a prerequisite for it, and that is
+  exactly how it landed: layer 5b replaced `astro check` with `tsc --noEmit` and
+  deleted `svelte-check`, after which layer 5c was deleting two `~6.0.3` pins.
+  **Nothing in this repository calls the TypeScript API programmatically**, which
+  is what made the last step that small.
 
-  **THIS IS THE ARGUMENT FOR LEAVING ASTRO, AND IT IS EVIDENCE RATHER THAN
-  PREFERENCE.** "Optfall should run TypeScript 7" and "Optfall is an Astro site"
-  are not two goals to sequence — measured today, they are mutually exclusive.
-  Whatever replaces Astro must typecheck under the native compiler, and TS 7
-  becomes an OUTCOME of that move rather than a prerequisite for it.
+  The native compiler is also considerably faster on this codebase: the site's
+  own typecheck went from 7.26s to 2.80s, and each library workspace from
+  roughly 200ms to 150ms.
 - **Tokens or nothing.** No component may name a colour or a size directly. The
   lint rule is what makes this real; a design system defended by prose lasts
   about six weeks.
