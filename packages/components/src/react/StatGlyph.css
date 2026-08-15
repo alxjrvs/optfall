@@ -158,3 +158,34 @@
   clip-path: var(--of-ornament-cut-diagonal-end);
   --optical: 0.908;
 }
+
+/* -- The empty socket ------------------------------------------------------ */
+
+/*
+  A STAT THE CARD DOES NOT PRINT, which is not the same as one printed 0 — and
+  0 is common enough that the difference has to be visible: 1,648 cards print a
+  cost of 0, 191 a defence of 0, 13 a power of 0.
+
+  THE SILHOUETTE IS UNTOUCHED and only the fill changes, because the shape is
+  the channel saying WHICH stat is absent. Every `clip-path` above still
+  applies; this overrides `background` and `color` and nothing else.
+
+  `.of-stat.of-stat--absent` IS TWO CLASSES ON PURPOSE. `.of-stat--cost` and
+  friends are (0,1,0), so a single-class rule here would tie with them and be
+  decided by source order — the exact fragility that put ink-on-ink into the
+  pager earlier in this repository's history. Doubling the class makes it
+  (0,2,0) and the outcome a fact rather than a line number.
+*/
+.of-stat.of-stat--absent {
+  background: var(--of-color-stat-absent);
+  color: var(--of-color-stat-absent-ink);
+}
+
+/*
+  The dash is lighter than a numeral would be. A stat that is not there should
+  not shout as loudly as one that is, and the weight is the only channel left
+  once the shape and the plate are both still doing their jobs.
+*/
+.of-stat--absent .of-stat__value {
+  font-weight: var(--of-type-weight-regular);
+}

@@ -348,3 +348,79 @@ describe("the ported pages", () => {
     expect(monarchHtml).toContain("of-pitch-rule__band");
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* The card page's empty stat sockets                                          */
+/* -------------------------------------------------------------------------- */
+
+describe("a card page shows the combat positions it does not fill", () => {
+  const all = routes.flatMap((registration) => [...registration.resolve()]);
+  const render = (route: string) =>
+    all.find((resolved) => resolved.route === route)?.render([], undefined) ??
+    "";
+
+  /*
+   * ASSERTED ON REAL PAGES rather than on a fixture, because the rule is about
+   * WHICH cards get sockets and that is a fact about the corpus. Shapes
+   * measured across all 4,941 cards: 1,902 print cost+power+defence, 1,363
+   * print cost and defence and no power, 525 print defence alone, 151 are
+   * heroes printing life and intellect only, 181 print nothing at all.
+   */
+
+  test("an action with no attack draws the power plate, empty", () => {
+    /* `Absorb in Aether` is a Wizard Defense Reaction: cost and defence, no
+       power. The 1,363-card case, and the reason for the change. */
+    const html = render("/card/absorb-in-aether-1");
+    expect(html).not.toBe("");
+    expect(html).toContain('aria-label="No printed power"');
+    /* The plate it drew is still the POWER plate — the silhouette is what says
+       which stat is missing. */
+    expect(html).toContain("of-stat--power");
+  });
+
+  test("equipment draws cost and power empty, because the frame has them", () => {
+    /* `Aether Ironweave` is Runeblade Equipment: defence only. */
+    const html = render("/card/aether-ironweave");
+    expect(html).not.toBe("");
+    expect(html).toContain('aria-label="No printed cost"');
+    expect(html).toContain('aria-label="No printed power"');
+  });
+
+  test("a hero gets no sockets, because it has no combat positions", () => {
+    /*
+     * THE LIMIT ON THE RULE, and why it is not "always draw three". A hero
+     * prints life and intellect; cost, power and defence are not values it is
+     * missing but positions its frame does not have. Three dashes on a hero
+     * would be inventing slots rather than reporting an absence.
+     */
+    const hero = CARDS.cards.find(
+      (card) =>
+        card.health !== "" &&
+        card.intelligence !== "" &&
+        card.cost === "" &&
+        card.power === "" &&
+        card.defense === "",
+    );
+    expect(hero).toBeDefined();
+
+    const html = render(
+      `/card/${(hero?.name ?? "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")}`,
+    );
+    expect(html).not.toBe("");
+    expect(html).not.toContain("No printed cost");
+    expect(html).not.toContain("No printed power");
+    expect(html).not.toContain("No printed defence");
+  });
+
+  test("a printed zero is still a printed zero", () => {
+    /*
+     * The same distinction from the other side. 1,648 cards print a cost of 0;
+     * rendering those as absences would have replaced one wrong answer with
+     * another.
+     */
+    expect(render("/card/absorb-in-aether-1")).toMatch(/aria-label="Cost \d+"/);
+  });
+});

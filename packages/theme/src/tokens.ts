@@ -465,6 +465,25 @@ export const DARK_TOKENS: TokenTable = {
   "color.stat.cost": "#5e5e5e",
   "color.stat.cost.ink": "#ededed",
 
+  /* THE SLOT EXISTS AND IS EMPTY — which is a different statement from a zero,
+     and the reason this is a colour rather than a missing element.
+
+     1,648 cards print a cost of 0, 191 a defence of 0 and 13 a power of 0. So
+     "0" is a real, common, printed value, and a card page that answered "no
+     printed power" by rendering nothing at all left the reader to infer an
+     absence from a gap — indistinguishable from a layout they had not scrolled
+     to. An absent stat now keeps its silhouette, because the shape is what says
+     WHICH stat is missing, and takes this recessed plate with an en dash in it.
+
+     RECESSED RATHER THAN TINTED. It is darker than every other chip in this
+     table here and lighter than every one of them in the light table, so on
+     either ground it reads as a socket rather than as a seventh stat with a
+     colour of its own. It is deliberately far from `stat.defence`, the other
+     neutral, which is a mid steel in both themes. Same idiom as the pitch
+     jewel's `none` stone, which has meant exactly this since it was drawn. */
+  "color.stat.absent": "#3a3a3a",
+  "color.stat.absent.ink": "#c8c8c8",
+
   /* Rarity. Ten of them, and the honest note is at the top rather than buried:
      THESE ARE OPTFALL'S COLOURS, NOT LEGEND STORY STUDIOS'. Nothing in the
      published dataset names a colour for a rarity, and this project does not
@@ -597,6 +616,14 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.stat.defence.ink": "#ffffff",
   "color.stat.cost": "#5c5c5c",
   "color.stat.cost.ink": "#ffffff",
+
+  /* The empty socket, translated rather than reused: on an ash ground it is
+     LIGHTER than every other chip, where in the dark table it is darker than
+     every one of them. Both readings are "recessed"; the direction is whatever
+     recedes against the ground it is on. Checked against its own ink here
+     rather than carried over, which is the rule this whole table follows. */
+  "color.stat.absent": "#b8b8b8",
+  "color.stat.absent.ink": "#2a2a2a",
 
   /* Darkened to hold the same separation against an ash ground, and every one
      of them re-checked for contrast against its own ink rather than translated

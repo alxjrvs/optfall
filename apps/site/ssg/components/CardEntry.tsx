@@ -54,6 +54,7 @@ import {
   facesOf,
   hrefForSlug,
   LAST_CONFIRMED,
+  STAT_ORDER,
 } from "../../src/lib/cards";
 import {
   boxFor,
@@ -114,6 +115,16 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
   Intellect: "intellect",
 };
 
+/**
+ * The three positions the card frame always has, whether or not a card fills
+ * them. Cost sits top-left, attack bottom-left, defence bottom-right.
+ *
+ * The other three stats are not here because they have no fixed position: life
+ * and intellect belong to a hero, arcane to whatever prints it, and each is
+ * placed by what the card IS rather than by a slot the frame reserves.
+ */
+const COMBAT_STATS = ["Cost", "Power", "Defence"] as const;
+
 const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
   Power: "start",
   Intellect: "start",
@@ -143,14 +154,56 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   ];
   const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
 
-  const printedStats = page.stats.map((stat) => {
-    const kind = SYMBOL_FOR[stat.label];
-    return {
-      label: stat.label,
-      value: stat.value,
-      kind: GLYPH_FOR[stat.label] ?? null,
-      symbol: kind === undefined ? null : symbolForKind(kind),
-    };
+  /**
+   * The stat block, INCLUDING the combat positions this card leaves empty.
+   *
+   * A Flesh and Blood card frame has three fixed positions — cost top-left,
+   * attack bottom-left, defence bottom-right — and a card that prints nothing
+   * in one of them used to render nothing there at all. That left the reader
+   * inferring an absence from a gap, which is indistinguishable from a layout
+   * they had not finished looking at. Worse, it made the absence unreadable
+   * against the common case: 1,648 cards print a cost of 0, 191 a defence of 0
+   * and 13 a power of 0, so "no power" and "power 0" were a blank and a numeral
+   * with nothing to connect them. `StatGlyph` draws the empty ones now, keeping
+   * the silhouette and taking `null`.
+   *
+   * ONLY ON A CARD THAT USES THAT FRAME, which is what `usesCombatFrame` is
+   * for. 1,363 cards print cost and defence and no power — actions, instants,
+   * defence reactions — and those gain the empty attack plate, which is the
+   * point. The 151 heroes print life and intellect and have no combat positions
+   * at all; drawing three sockets on them would be inventing slots the card
+   * does not have. The 181 cards that print nothing whatsoever keep the written
+   * sentence below instead.
+   *
+   * Life, intellect and arcane are unchanged and appear only when printed. They
+   * have no fixed position on the frame — they are where a card's type puts
+   * them — so there is no empty slot for them to leave.
+   */
+  const printedValues = new Map(
+    page.stats.map((stat) => [stat.label, stat.value]),
+  );
+  const usesCombatFrame = COMBAT_STATS.some((label) =>
+    printedValues.has(label),
+  );
+
+  const printedStats = STAT_ORDER.flatMap((label) => {
+    const printed = printedValues.get(label);
+    const shown =
+      printed !== undefined ||
+      (usesCombatFrame && (COMBAT_STATS as readonly string[]).includes(label));
+    if (!shown) return [];
+
+    const kind = SYMBOL_FOR[label];
+    return [
+      {
+        label,
+        /* `null` is the absence; `""` would be a different and wrong claim.
+           See `StatGlyphProps.value`. */
+        value: printed ?? null,
+        kind: GLYPH_FOR[label] ?? null,
+        symbol: kind === undefined ? null : symbolForKind(kind),
+      },
+    ];
   });
 
   const costStat = printedStats.find((stat) => stat.kind === "cost");

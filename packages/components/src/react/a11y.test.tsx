@@ -264,6 +264,27 @@ const CASES: readonly Case[] = [
     component: StatGlyph,
     props: { kind: "arcane", value: "1" },
   },
+  /*
+   * The empty socket, at the contrast axe can check. Its plate is the one
+   * colour pair in this component that exists to RECEDE, which is exactly the
+   * direction that drifts under 4.5:1 without anybody noticing — the dash is
+   * small, and a reader who cannot make it out has been told nothing at all.
+   */
+  {
+    name: "StatGlyph cost absent",
+    component: StatGlyph,
+    props: { kind: "cost", value: null },
+  },
+  {
+    name: "StatGlyph power absent",
+    component: StatGlyph,
+    props: { kind: "power", value: null },
+  },
+  {
+    name: "StatGlyph defence absent",
+    component: StatGlyph,
+    props: { kind: "defence", value: null },
+  },
   // `X` and `*` are printed values upstream, which is why `value` is a string.
   {
     name: "StatGlyph variable",

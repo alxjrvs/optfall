@@ -49,11 +49,22 @@ export interface StatGlyphProps {
   /** Which stat this is. Decides the silhouette and the spoken name. */
   readonly kind: StatKind;
   /**
-   * The printed value, verbatim. A string because upstream prints `X`, `XX` and
-   * `*` as often as it prints a number, and coercing those to a number is how a
-   * card acquires a cost it was never printed with.
+   * The printed value, verbatim — or `null` where the card prints none.
+   *
+   * A STRING because upstream prints `X`, `XX` and `*` as often as it prints a
+   * number, and coercing those to a number is how a card acquires a cost it was
+   * never printed with.
+   *
+   * `null`, NOT `""`, AND THE TWO ARE NOT THE SAME CLAIM. Upstream writes an
+   * absent stat as the empty string, so "this card has no power" and "this card
+   * has power 0" arrive as one field carrying two different facts — and 0 is
+   * not rare: 1,648 cards print a cost of 0, 191 a defence of 0, 13 a power of
+   * 0. `null` is the explicit second claim, and it draws an en dash in a
+   * recessed plate rather than a numeral. An empty string is passed through
+   * as-is and draws an empty plate, which is a caller's bug this component will
+   * not disguise as an absence.
    */
-  readonly value: string;
+  readonly value: string | null;
   /** Rendered size, in token steps rather than pixels. */
   readonly size?: "sm" | "md";
 }
@@ -73,14 +84,35 @@ const SPOKEN: Record<StatKind, string> = {
 };
 
 export function StatGlyph({ kind, value, size = "md" }: StatGlyphProps) {
+  const absent = value === null;
+
+  /*
+   * THE SILHOUETTE SURVIVES THE ABSENCE, which is the whole reason this draws a
+   * plate rather than nothing. The shape is what says WHICH stat is missing: a
+   * reader looking at an action with no attack should see the power plate
+   * standing empty, rather than be left to notice that a plate they have never
+   * seen is not there.
+   */
+  const glyph = absent ? "–" : value;
+
+  /*
+   * SPOKEN AS AN ABSENCE, NOT AS A DASH. "Power –" is what the markup says and
+   * it is not what the card means; a screen reader announcing a punctuation
+   * mark has handed the problem to the listener. `PitchJewel` makes the same
+   * decision for pitch 0 and this borrows its wording.
+   */
+  const spoken = absent
+    ? `No printed ${SPOKEN[kind].toLowerCase()}`
+    : `${SPOKEN[kind]} ${value}`;
+
   return (
     <span
-      className={`of-stat of-stat--${kind} of-stat--${size}`}
+      className={`of-stat of-stat--${kind} of-stat--${size}${absent ? " of-stat--absent" : ""}`}
       role="img"
-      aria-label={`${SPOKEN[kind]} ${value}`}
+      aria-label={spoken}
     >
       <span className="of-stat__value" aria-hidden="true">
-        {value}
+        {glyph}
       </span>
     </span>
   );
