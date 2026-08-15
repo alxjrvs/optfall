@@ -24,6 +24,7 @@
 
 import { Document } from "./document";
 import { dataTermsPage } from "./pages/data-terms.page";
+import { syntaxPage } from "./pages/syntax.page";
 import { renderRoute, resolveRoutes } from "./render";
 import type { PageModule } from "./types";
 
@@ -56,4 +57,7 @@ function register<Params extends Record<string, string>, Props>(
   };
 }
 
-export const routes: readonly RouteRegistration[] = [register(dataTermsPage)];
+export const routes: readonly RouteRegistration[] = [
+  register(dataTermsPage),
+  register(syntaxPage),
+];

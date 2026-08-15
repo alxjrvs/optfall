@@ -34,6 +34,12 @@
 import "./document.css";
 import "./SiteHeader.css";
 
+/* Every PAGE's stylesheet, on the same terms as the components' — a page may
+   own CSS that is genuinely its own (an operator table is not a primitive), and
+   collecting them by glob means a new page's sheet is picked up on the day the
+   file is created. */
+import.meta.glob("./pages/*.css", { eager: true });
+
 /* Every component's stylesheet, collected without a list to maintain. */
 import.meta.glob("../../../packages/components/src/react/*.css", {
   eager: true,
