@@ -488,6 +488,64 @@ there is nothing to wait for.
 
 ---
 
+## 6b. The front door, specified against the thing it copies
+
+The door was ported through Phase 6 unchanged and then measured against
+Scryfall's, and the gap is structural rather than cosmetic. Scryfall's homepage
+is one sentence, one box, one row of destinations, a short list of what is new,
+and a hand of cards along the bottom edge. Ours is a wordmark, a typeahead, a
+column of links and a small row of cards floating in the middle of a lot of
+nothing.
+
+**The sentence.** `Optfall is a powerful Flesh and Blood card search`, set large,
+with the product name and the game name carrying the weight. It replaces the
+bare wordmark: a masthead says where you are, a sentence says what the thing
+does, and the door is the one page where a visitor may not know.
+
+**The box searches; it does not autocomplete.** The typeahead goes. It was a
+live suggestion list that jumped straight to a card, which is a good feature and
+the wrong one here — it makes the door a disambiguator when its job is to be the
+entrance to the search page. A plain field that submits to `/search` is what
+Scryfall has and what this needs. The typeahead's index build and island come
+out with it; `/search` keeps its own submit-driven engine, unchanged.
+
+**One row of destinations, not a column of links.** Bordered pills rather than a
+stacked list: Advanced Search, Syntax, All Sets, Random. Same targets, one line,
+scannable.
+
+**A `NEW` list under them, and it is generated rather than typed.** Scryfall's
+row of `NEW` badges links to searches for the sets that just came out. Ours can
+be derived, which theirs cannot be: `SETS_BY_RELEASE` already sorts every set by
+`initial_release_date`, and `order:released` and `year:` now exist to link to. So
+the door lists the most recent sets with a `NEW` badge and links each to
+`/search?q=set:<code> order:released`. No hand-curated feed, nothing to go stale
+— "sync, never curate" applied to the one surface most tools hand-edit weekly.
+
+**The fan is the floor of the first screen.** It sits at the base of the initial
+viewport, cards large enough to read, overlapping — the bottom edge of the fold
+rather than an ornament in the middle of it. Everything else on the page lives
+below the fold, which is where the corpus counts, the provenance and the footer
+go.
+
+**The background stops being flat.** A single dead near-black is what makes the
+current door read as unfinished. Scryfall's is a deep gradient; ours should be
+the same idea in this palette, and it belongs in the token layer rather than in
+the page, because a ground is a design-system value and `check-tokens.ts` will
+refuse it anywhere else.
+
+**And one link that is not about cards.** Scryfall carries "Help Good Law
+Project fight for Trans Rights in the UK" on its homepage. Optfall will carry a
+link of the same kind, in the same place, at the same weight. It is not
+decoration and it is not a feature — a reference tool that a community relies on
+has a front page, and what a front page points at is a statement about who it is
+for.
+
+*This is a story rather than a diff: it touches the door's markup, its
+stylesheet, the token layer's ground, and it deletes the typeahead island. It
+does not touch the card layer, the query engine or the rules join.*
+
+---
+
 ## 6a. The redesign — streamline, with Scryfall as north star
 
 Images change the interface's job. A page that was a stack of tables is now a
