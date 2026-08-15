@@ -300,35 +300,51 @@ function manifest(): string {
  * the pages they had stored. Those pages could not have rendered anyway, so what
  * is lost is a blank screen.
  *
- * **THE EXPIRATION METADATA IS A KNOWN LOOSE END.** `ExpirationPlugin` keeps its
- * timestamps in IndexedDB rather than in the `Cache`, and `caches.delete()` does
- * not touch them — Workbox's own note on `deleteCacheAndMetadata` says a bare
- * `caches.delete()` suffices only when expiration is not in use, and here it is.
- * Left alone, the `maxEntries: 200` budget stays full of records for pages that
- * no longer exist, so each newly cached page evicts a phantom instead of adding
- * to the count, and the cache holds fewer than 200 real pages until they drain.
- * It self-heals and corrupts nothing, because the phantoms are the oldest
- * records and so are always the ones evicted first.
+ * **THE EXPIRATION METADATA IS A KNOWN, ACCEPTED LOOSE END.** `ExpirationPlugin`
+ * keeps its timestamps in IndexedDB rather than in the `Cache`, and
+ * `caches.delete()` does not touch them — Workbox's own note on
+ * `deleteCacheAndMetadata` says a bare `caches.delete()` suffices only when
+ * expiration is not in use, and here it is. So after a purge the
+ * `maxEntries: 200` budget still holds records for pages that no longer exist,
+ * and each newly cached page evicts a phantom instead of adding to the count:
+ * the cache carries fewer than 200 real pages until they drain, one per
+ * navigation.
  *
- * The database is dropped alongside the cache to avoid even that, and
- * deliberately WITHOUT being awaited: `deleteDatabase` blocks while any
- * connection is open, and a blocked request inside `waitUntil` would stall
- * activation — trading a self-healing accounting quirk for a worker that never
- * takes over. If the database name ever changes upstream the call becomes a
- * no-op and the quirk comes back, which is the right way for this to fail.
+ * **It self-heals and corrupts nothing** — the phantoms are the oldest records,
+ * so they are always the ones evicted first and a real entry is never lost
+ * early.
+ *
+ * A previous version of this file deleted the whole `workbox-expiration`
+ * database here, and it is worth recording why that came out rather than
+ * leaving the impression it was never tried. Three reasons, in order:
+ *
+ * - **It is scoped to the ORIGIN, not to this cache.** Workbox keeps every
+ *   expiring cache's records in one database and one `cache-entries` store. It
+ *   is inert while `pages` is the only expiring route, and the day a second one
+ *   is added it would silently wipe that cache's timestamps on every activate —
+ *   and an entry with no record is invisible to `expireEntries`, so it becomes
+ *   an orphan that neither `maxEntries` nor `maxAgeSeconds` can ever evict. A
+ *   fix whose failure mode is worse than the problem is not a fix.
+ * - **Its failure modes are asynchronous and were unhandled.** `deleteDatabase`
+ *   returns a request; a `try`/`catch` catches only a synchronous throw. The
+ *   blocked case is the EXPECTED one here, because the redundant worker holds
+ *   its connection open until it terminates — so the delete could simply never
+ *   complete while the comment claimed the loose end was closed.
+ * - **This file is uniquely dangerous.** `importScripts` runs inside install,
+ *   and anything that throws here means no worker installs at all. It should
+ *   carry the minimum that is certainly correct, and nothing else.
+ *
+ * The accounting quirk is the cheaper of the two problems, so it is the one that
+ * stays.
  *
  * IT IS A SEPARATE FILE BECAUSE `generateSW` HAS NO ACTIVATE HOOK. Workbox
  * generates the worker; `importScripts` is the supported way to add behaviour to
  * one, short of switching to `injectManifest` and hand-writing the whole worker
- * for the sake of three lines.
+ * for the sake of one listener.
  */
 function serviceWorkerPurge(): string {
   return `self.addEventListener("activate", function (event) {
   event.waitUntil(caches.delete("pages"));
-  /* Not awaited, and not inside waitUntil: see ssg/assets.ts. */
-  try {
-    indexedDB.deleteDatabase("workbox-expiration");
-  } catch (error) {}
 });
 `;
 }
