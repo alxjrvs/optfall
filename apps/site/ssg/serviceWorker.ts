@@ -11,7 +11,8 @@
  * excludes HTML, with no navigation fallback. Optfall has **13,675 pages**, so
  * here it is not a preference at all: precaching them would mean shipping the
  * whole site to every visitor's disk on first load. Visited pages get
- * `StaleWhileRevalidate` and nothing else is promised.
+ * `NetworkFirst` — network when there is one, cache when there is not — and
+ * nothing else is promised.
  *
  * **AND THERE IS NO `navigateFallback`, WHICH IS THE HALF WORTH SPELLING OUT.**
  * The tempting configuration serves a cached shell for any unmatched navigation,
@@ -101,7 +102,7 @@ function assertRoutesEmitted(source: string): void {
     );
   }
   if (!source.includes('"pages"')) {
-    problems.push("the StaleWhileRevalidate page cache is missing");
+    problems.push("the NetworkFirst page cache is missing");
   }
   /* The specific shape of the bug: an identifier that existed only in the
      TypeScript module, left dangling in the emitted worker. */
@@ -123,6 +124,15 @@ export async function writeServiceWorker(
 ): Promise<ServiceWorkerResult> {
   assertHostMatches();
 
+  /*
+   * Hashed from the file's own bytes, so a deploy that changes `/search`
+   * invalidates the precached copy and one that does not leaves it alone. A
+   * constant here would pin readers to the first version they ever cached.
+   */
+  const startUrlRevision = Bun.hash(
+    await Bun.file(`${outDir}/search/index.html`).text(),
+  ).toString(16);
+
   const { count, size, warnings } = await generateSW({
     globDirectory: outDir,
     /*
@@ -133,6 +143,19 @@ export async function writeServiceWorker(
      * once for size, once for the licence.
      */
     globPatterns: ["**/*.{js,css,woff2,svg,webmanifest}"],
+    /*
+     * ONE DOCUMENT, AND IT IS THE ONE THE MANIFEST NAMES. `start_url` is
+     * `/search`, so an installed app launched offline before that page has ever
+     * been visited would otherwise open on the browser's network error — an
+     * install that does not survive its own first cold start.
+     *
+     * This does not weaken "never precache the pages". It is a single file
+     * chosen because it is the app's entry point, not a category; the other
+     * 13,674 remain the runtime cache's business.
+     */
+    additionalManifestEntries: [
+      { url: "/search/", revision: startUrlRevision },
+    ],
     swDest: `${outDir}/sw.js`,
     /*
      * A new worker takes over as soon as it is installed rather than waiting
@@ -158,19 +181,32 @@ export async function writeServiceWorker(
       },
       {
         /*
-         * VISITED PAGES, AND ONLY VISITED ONES. `StaleWhileRevalidate` serves
-         * the stored copy instantly and refreshes it behind the reader, which
-         * is the right trade for a corpus that resyncs on a schedule rather
-         * than continuously: a card page that is a day stale is still correct
-         * about the card, and the legality data states its own confirmation
-         * date on the page.
+         * VISITED PAGES, AND ONLY VISITED ONES.
+         *
+         * `NetworkFirst`, NOT `StaleWhileRevalidate`, AND THE DIFFERENCE IS A
+         * BUG RATHER THAN A PREFERENCE. Every stylesheet and script this site
+         * serves is content-hashed, and Netlify's deploys are atomic — so the
+         * previous deploy's `/assets/*-<oldhash>.css` stops existing the moment
+         * a new one lands.
+         *
+         * Under `StaleWhileRevalidate` a returning reader is served the STORED
+         * HTML first, which links exactly those dead URLs: they 404, they are
+         * not in the new precache either, and the page paints unstyled with no
+         * hydrated islands until the background revalidation finishes and the
+         * reader navigates a second time. Every returning reader, every deploy.
+         *
+         * `NetworkFirst` asks the network first and falls back to the cache
+         * only when it cannot answer — which is the offline story this rule
+         * exists for, unchanged, without ever serving a document that has
+         * outlived its assets. The cost is a network round trip on a warm
+         * navigation, and that is the correct thing to pay for it.
          *
          * Same-origin navigations only. A cross-origin navigation is somebody
          * leaving.
          */
         urlPattern: ({ request, sameOrigin }: RouteMatchArgs) =>
           sameOrigin && request.mode === "navigate",
-        handler: "StaleWhileRevalidate",
+        handler: "NetworkFirst",
         options: {
           cacheName: "pages",
           /*

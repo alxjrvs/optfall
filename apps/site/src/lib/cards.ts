@@ -1070,24 +1070,6 @@ export const NAME_PAGES: readonly NamePage[] = [...BY_NAME_SLUG.entries()]
       .filter((page): page is CardPage => page !== undefined),
   }));
 
-/* -------------------------------------------------------------------------- */
-/* The printing as an address                                                  */
-/* -------------------------------------------------------------------------- */
-
-/**
- * One addressable printing of a card: a distinct FACE, and where it lives.
- *
- * `docs/SCRYFALL-GAP.md` §5.1c: "Scryfall treats the printing as the
- * addressable unit; so should we." This is that unit.
- *
- * IT IS A FACE, NOT A PRINTING ROW, and the difference is 5,124 of them. The
- * corpus carries 16,502 printing rows and only 11,376 distinct arts, because a
- * card printed Regular / Rainbow Foil / Cold Foil in one set is three rows
- * sharing one image. Giving each row its own URL would mint three addresses
- * that render the identical page — the definition of a duplicate — so the unit
- * is the art, and the rows that share it share its address.
- */
-
 /** Every URL the `/card/` route emits: the cards, the shared names, the printings. */
 export type CardRoute =
   | { readonly kind: "card"; readonly slug: string; readonly page: CardPage }

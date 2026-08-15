@@ -72,6 +72,8 @@ interface ManifestEntry {
   readonly css?: readonly string[];
   readonly isEntry?: boolean;
   readonly name?: string;
+  /** Manifest KEYS of the chunks this one imports, not file paths. */
+  readonly imports?: readonly string[];
 }
 
 /**
@@ -86,23 +88,49 @@ interface ManifestEntry {
 async function assetsFromManifest(): Promise<{
   readonly styles: readonly string[];
   readonly islandScript: string | undefined;
+  /** Every JS file the island entry pulls in, transitively, including itself. */
+  readonly islandChunks: readonly string[];
 }> {
   const manifestPath = join(OUT_DIR, ".vite/manifest.json");
   const file = Bun.file(manifestPath);
-  if (!(await file.exists())) return { styles: [], islandScript: undefined };
+  if (!(await file.exists())) {
+    return { styles: [], islandScript: undefined, islandChunks: [] };
+  }
 
   const manifest = (await file.json()) as Record<string, ManifestEntry>;
-  const entries = Object.values(manifest);
+  const entries = Object.entries(manifest);
+
+  /*
+   * Found by the entry NAME rather than by the source path, because the key is
+   * the path relative to Vite's root and that changes if this file moves. The
+   * name is the one in `rollupOptions.input`, which is what the build declared.
+   */
+  const islandKey = entries.find(([, entry]) => entry.name === "islands")?.[0];
+
+  /*
+   * THE WHOLE GRAPH, NOT THE ENTRY CHUNK. `vite.config.ts` declares two Rollup
+   * inputs, so a module both of them reach is hoisted into a SHARED chunk that
+   * the entry merely imports. Measuring only the entry would let a future
+   * corpus arrive through such a chunk while the entry stayed small and the
+   * build reported success — which is precisely the failure the budget exists
+   * to catch, wearing a different hat.
+   */
+  const seen = new Set<string>();
+  const walk = (key: string | undefined): void => {
+    if (key === undefined || seen.has(key)) return;
+    seen.add(key);
+    for (const next of manifest[key]?.imports ?? []) walk(next);
+  };
+  walk(islandKey);
 
   return {
-    styles: entries.flatMap((entry) => entry.css ?? []),
-    /*
-     * Found by the entry NAME rather than by the source path, because the key
-     * is the path relative to Vite's root and that changes if this file moves.
-     * The name is the one in `rollupOptions.input`, which is the thing the
-     * build actually declared.
-     */
-    islandScript: entries.find((entry) => entry.name === "islands")?.file,
+    styles: entries.flatMap(([, entry]) => entry.css ?? []),
+    islandScript:
+      islandKey === undefined ? undefined : manifest[islandKey]?.file,
+    islandChunks: [...seen].flatMap((key) => {
+      const emitted = manifest[key]?.file;
+      return emitted === undefined ? [] : [emitted];
+    }),
   };
 }
 
@@ -126,17 +154,32 @@ async function assetsFromManifest(): Promise<{
  * The ceiling is roughly 70% above the current 233 kB — loose enough that
  * ordinary work never touches it, and two orders of magnitude below a corpus, so
  * the failure it exists for cannot squeeze under it.
+ *
+ * IT SUMS THE WHOLE IMPORT GRAPH, not the entry chunk. `vite.config.ts` declares
+ * two inputs, so a module both reach is hoisted into a shared chunk the entry
+ * merely imports — and a budget that weighed only the entry would wave through a
+ * corpus arriving that way while reporting success.
  */
 const ISLAND_BUDGET_BYTES = 400 * 1024;
 
-async function assertIslandBudget(file: string | undefined): Promise<void> {
-  if (file === undefined) return;
+async function assertIslandBudget(chunks: readonly string[]): Promise<void> {
+  if (chunks.length === 0) return;
 
-  const bytes = Bun.file(join(OUT_DIR, file)).size;
-  if (bytes <= ISLAND_BUDGET_BYTES) return;
+  const sizes = chunks.map((chunk) => ({
+    chunk,
+    bytes: Bun.file(join(OUT_DIR, chunk)).size,
+  }));
+  const total = sizes.reduce((sum, one) => sum + one.bytes, 0);
+  if (total <= ISLAND_BUDGET_BYTES) return;
+
+  const breakdown = sizes
+    .toSorted((a, b) => b.bytes - a.bytes)
+    .map((one) => `    ${one.chunk} — ${Math.round(one.bytes / 1024)} kB`)
+    .join("\n");
 
   throw new Error(
-    `The island bundle is ${Math.round(bytes / 1024)} kB, over the ${Math.round(ISLAND_BUDGET_BYTES / 1024)} kB budget.\n` +
+    `The island bundle is ${Math.round(total / 1024)} kB across ${chunks.length} chunk(s), over the ${Math.round(ISLAND_BUDGET_BYTES / 1024)} kB budget.\n` +
+      `${breakdown}\n` +
       `This almost always means a module the client imports now reaches the card corpus: ` +
       `\`cards.ts\` loads 16 MB at module scope, and a VALUE import of anything from it ` +
       `pulls the whole thing into the bundle. See \`src/lib/printings.ts\`, which exists ` +
@@ -195,7 +238,7 @@ async function main(): Promise<void> {
   const islandScript =
     assets.islandScript === undefined ? undefined : `/${assets.islandScript}`;
 
-  await assertIslandBudget(assets.islandScript);
+  await assertIslandBudget(assets.islandChunks);
 
   let count = 0;
   const written = new Map<string, string>();

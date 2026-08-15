@@ -230,9 +230,30 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
             decide whether to strip the legacy `?display=` parameter from the
             previous query's parse, leaving exactly the self-contradicting URL
             the operator exists to remove.
+
+            It does mean the index is ranked twice per submit — here, and again
+            in the memo when the re-render lands. That is accepted rather than
+            overlooked: `searchCards` is pure, this is a submit rather than a
+            keystroke, and the alternative is caching machinery to save one pass
+            over an index the same interaction already pays for once.
           */
           const next = searchCards(cards, query);
           setSubmitted(query);
+          /*
+            THE LEGACY PARAMETER IS FORGOTTEN ON SUBMIT, not merely dropped from
+            the URL. `paramDisplay` was cleared in `show()` and on `popstate` but
+            not here, so it outlived the URL it came from: arrive at
+            `?q=x&display=list`, submit `x display:text` — the parameter is
+            stripped from the address bar — then submit a plain `winter`, and the
+            URL says nothing about display while the retained state still
+            resolves it to `list`. The screen and the address bar disagree, which
+            is the exact failure making `display:` an operator was meant to end.
+
+            Pre-existing, and faithful to the Svelte original — but this handler
+            is what decides the parameter is gone, so it is where forgetting it
+            belongs.
+          */
+          setParamDisplay(null);
           syncUrl("push", query, next.display !== null);
           field.current?.blur();
 
