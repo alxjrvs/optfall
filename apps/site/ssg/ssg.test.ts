@@ -257,4 +257,94 @@ describe("the ported pages", () => {
     expect(paths).toContain("/syntax");
     expect(paths).toContain("/sets");
   });
+
+  /* ------------------------------------------------------------------------ */
+
+  const monarch = all.find((resolved) => resolved.route === "/sets/mon");
+  const monarchHtml =
+    monarch === undefined ? "" : monarch.render([], "islands.js");
+
+  /**
+   * The island's props, parsed back out of the attribute they cross in.
+   *
+   * READ FROM THE RENDERED HTML RATHER THAN FROM THE PAGE MODULE, because the
+   * attribute is the channel — `Island` serialises with `JSON.stringify` and
+   * the client parses what survived React's escaping. A test against the
+   * in-memory object would pass on props that cannot make the trip.
+   */
+  const monarchProps = (() => {
+    const match = /data-island="CardList" data-props="(.*?)"/s.exec(
+      monarchHtml,
+    );
+    if (match?.[1] === undefined) return null;
+    const decoded = match[1]
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#x27;", "'")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&amp;", "&");
+    return JSON.parse(decoded) as {
+      entries: { label: string; faceKey: string | null }[];
+      subject: string;
+    };
+  })();
+
+  test("a set page shows THAT SET'S printing, not each card's first one", () => {
+    /*
+     * THE FAILURE WAS SILENT AND IT LOOKED RIGHT, which is the only reason this
+     * is worth a test. `page.face` is the card's first printing that publishes
+     * art in corpus order, so Monarch's page rendered Monarch's cards wearing
+     * Heavy Hitters' and Uprising's art — the right cards, the wrong print run,
+     * on the one page whose entire subject IS the print run.
+     *
+     * 2,239 of the 4,941 cards are printed in more than one set and every one
+     * of them has at least one set whose art differs from its default, so this
+     * was most of the reprints in the game rather than a long tail.
+     */
+    expect(monarchProps).not.toBeNull();
+    const entries = monarchProps?.entries ?? [];
+    expect(entries.length).toBeGreaterThan(100);
+
+    const strays = entries.filter(
+      (entry) =>
+        entry.faceKey !== null &&
+        !entry.faceKey.toUpperCase().startsWith("MON"),
+    );
+    expect(strays).toEqual([]);
+  });
+
+  test("a set page without JavaScript still lists every card in the set", () => {
+    /*
+     * THE PAGER IS A BUTTON, so a reader with scripting off gets the island's
+     * server-rendered first page and no way to reach the rest. That would be a
+     * regression: this page WAS a complete column of names. So the complete
+     * list ships in a `<noscript>`, and this counts it — an anchor per card,
+     * not a promise in a comment.
+     */
+    /*
+     * BOTH SIDES ARE PINNED TO A REAL NUMBER FIRST, because otherwise this
+     * passes on a page with no list at all. `monarchProps` is `null` when the
+     * props regex misses — it depends on `Island` emitting `data-island`
+     * immediately before `data-props`, so reordering two attributes is enough
+     * — and `null` gives `entries = []`. If the `<noscript>` were also absent
+     * that is `expect(0).toBe(0)`, and the test whose whole purpose is "every
+     * card is still listed without JavaScript" goes green over a page that
+     * lists none of them.
+     */
+    const entries = monarchProps?.entries ?? [];
+    expect(entries.length).toBeGreaterThan(100);
+
+    const noscript =
+      /<noscript>(.*?)<\/noscript>/s.exec(monarchHtml)?.[1] ?? "";
+    const anchors = noscript.match(/<a href="\/card\//g) ?? [];
+    expect(anchors.length).toBe(entries.length);
+  });
+
+  test("the set page carries card faces, which it did not before", () => {
+    // The whole point of the change, asserted at its coarsest: there are
+    // images of cards on a set page. `check-card-notice.ts` separately proves
+    // every one of them came from `CardFace` and carries the attribution.
+    expect(monarchHtml).toContain("of-index__cell-link");
+    expect(monarchHtml).toContain("of-pitch-rule__band");
+  });
 });

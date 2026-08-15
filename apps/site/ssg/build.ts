@@ -13,7 +13,7 @@
  *      why the Vite config sets `emptyOutDir: false` — two things clearing one
  *      directory is one of them deleting the other's output.
  *   2. `vite build`: the client bundle, whose only real product is a
- *      content-hashed stylesheet collecting all fourteen component sheets.
+ *      content-hashed stylesheet collecting all fifteen component sheets.
  *   3. Write the token stylesheet, generated from `packages/theme`.
  *   4. Read `dist/.vite/manifest.json` for the emitted CSS urls.
  *   5. Render every route.
@@ -35,6 +35,7 @@
  * about slugs cannot see it.
  */
 
+import { Buffer } from "node:buffer";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
@@ -194,6 +195,110 @@ async function assertIslandBudget(chunks: readonly string[]): Promise<void> {
   );
 }
 
+/**
+ * The ceiling on ONE PAGE'S HTML, which is a different failure from the bundle's.
+ *
+ * `assertIslandBudget` weighs the JavaScript, and for a long time that was the
+ * only thing here that could get quietly enormous. It stopped being: an island
+ * carries its props as JSON in a `data-props` attribute, React escapes every
+ * `"` in it to `&quot;`, and a set page hands `CardList` a row per card. So a
+ * 750-card set's markup is a real number that no check was watching, and the
+ * comment beside the noscript list costed only the part that was easy to see.
+ *
+ * MEASURED RATHER THAN GUESSED, exactly as the island budget was — and measured
+ * over EVERY route, which the first version of this note was not. It said "the
+ * largest page in this corpus is `/sets/1hp` at 220 kB", which was true of set
+ * pages and false of the site: `/search` is 884 kB. A budget whose stated
+ * baseline covers only the pages its author was working on is a budget that has
+ * not looked at the others, which is the whole failure it exists to prevent.
+ *
+ * Measured across all 13,676: `/search` 884 kB (see the exceptions below),
+ * `/sets/lgs` and `/sets/1hp` 216 kB, `/cr` 212 kB, `/sets/pen` 184 kB, and a
+ * 40 kB median set page.
+ *
+ * THE MARGIN IS WIDE FOR THE SAME REASON `/search`'s IS, and the first version
+ * of this number was not. A set page's HTML is LINEAR IN THE SET'S CARD COUNT,
+ * so a ceiling 48% above today's largest set is a ceiling that a big new set
+ * trips — failing the build with an error blaming per-row props, on a commit
+ * that only synced data. That is the exact misdiagnosis the exceptions table
+ * below argues against, and it applied here first.
+ *
+ * At roughly 2.4× the largest set page it takes a set half again as large as
+ * 1HP before anyone has to think about it, and what it still catches is the
+ * failure it was written for: a field added to `CardIndexEntry` is paid once
+ * per card and then escaped, so anything of consequence moves this by tens of
+ * kilobytes per page at once.
+ *
+ * IT IS UNCOMPRESSED BYTES, AND THAT IS THE PESSIMISTIC READING. The same page
+ * is about 20 kB over the wire, because a list of cards is extremely
+ * compressible. Measuring the compressed size would be measuring what the
+ * reader pays; measuring this measures what the page CONTAINS, which is the
+ * thing that goes wrong.
+ */
+const PAGE_BUDGET_BYTES = 512 * 1024;
+
+/**
+ * Routes that carry something other than rows, with the reason and a ceiling.
+ *
+ * AN EXPLICIT LIST, NOT A RAISED CEILING, AND THE DIFFERENCE IS THE WHOLE VALUE
+ * OF THE CHECK. Adding this budget found `/search` at 883 kB on its first run —
+ * not a regression, and not a surprise once looked at: that page ships the
+ * ENTIRE encoded card index as island props, 732 kB of it, which is the
+ * deliberate trade `search.page.tsx` argues at length (the 16 MB corpus stays on
+ * the build machine and the reader gets the index instead). Raising the general
+ * ceiling to cover it would have bought nothing — 1 MB is above every page that
+ * could ever go wrong, so the check would pass forever while measuring nothing.
+ *
+ * So the one page that is legitimately enormous says so here, at its own
+ * number, and every other page is held to the row-shaped budget. A new entry in
+ * this table should be an argument, not a convenience.
+ */
+const PAGE_BUDGET_EXCEPTIONS: Readonly<Record<string, number>> = {
+  /*
+     The whole-corpus search index, encoded. Measured at 916 kB.
+
+     THE HEADROOM IS WIDE ON PURPOSE, AND IT WAS 8.6% — which is the wrong
+     number for a page whose size is LINEAR IN THE CORPUS. This branch alone
+     spent about 55 kB of it: `faceSets` 9.6 kB, the per-art landscape bit
+     12.9 kB, and three more printed stats per card 32 kB. The last of those
+     landed AFTER the ceiling was widened and would have tripped the old one —
+     failing the build with an error blaming per-row props, which is the wrong
+     diagnosis on a page that has no rows.
+
+     So the margin has to absorb corpus growth, and what it still catches on
+     this one page is therefore coarse: an order-of-magnitude mistake, not a
+     tight field. That is the honest limit of a byte ceiling here. The check
+     that a new per-card field is worth its weight is the doc-block beside it in
+     `card-search.ts`, where every existing field states its measured cost.
+  */
+  "/search": 1280 * 1024,
+  /*
+     `/cr` IS DELIBERATELY NOT HERE, and it is the page most likely to be added
+     by mistake — it also ships a whole encoded corpus as island props, so it
+     looks like `/search`'s twin. Measured: 212 kB, comfortably inside the
+     general ceiling, because the rules index carries a ≤120-character lede per
+     section rather than the 651 kB of verbatim rules text. An exception it does
+     not need would stop measuring it.
+  */
+};
+
+function assertPageBudget(route: string, html: string): void {
+  const bytes = Buffer.byteLength(html, "utf-8");
+  const budget = PAGE_BUDGET_EXCEPTIONS[route] ?? PAGE_BUDGET_BYTES;
+  if (bytes <= budget) return;
+
+  throw new Error(
+    `${route} is ${Math.round(bytes / 1024)} kB of HTML, over its ${Math.round(budget / 1024)} kB budget.\n` +
+      `On a page carrying an island this is usually the props: they cross as JSON in a ` +
+      `\`data-props\` attribute and React escapes every quote, so a field added to a ` +
+      `per-row shape is paid once per row and then some. Send what the view needs.\n` +
+      `If nothing was added to a row, check whether the CORPUS grew instead — a set page ` +
+      `is linear in its card count, and a genuinely larger set wants this ceiling raised ` +
+      `rather than the page slimmed. If the page carries something other than rows ` +
+      `altogether, give it an entry in PAGE_BUDGET_EXCEPTIONS with the argument for it.`,
+  );
+}
+
 async function main(): Promise<void> {
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(OUT_DIR, { recursive: true });
@@ -265,6 +370,7 @@ async function main(): Promise<void> {
       written.set(outputPath, resolved.route);
 
       const html = resolved.render(styles, islandScript);
+      assertPageBudget(resolved.route, html);
 
       const target = join(OUT_DIR, outputPath);
       await mkdir(dirname(target), { recursive: true });

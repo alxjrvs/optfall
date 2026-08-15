@@ -1,0 +1,87 @@
+/*
+ * `PitchRule`'s styles. Struck bands, not printed lines — the same bevel rule
+ * every plate in this system follows.
+ *
+ * SPELLING (4) FROM `PitchJewel`'s LIST: the hairline, an OUTSET zero-blur
+ * `box-shadow` pair. `OrnamentalRule` is the other user of it and the reason is
+ * identical — a band must stay exactly its own thickness of layout, and borders
+ * would make it three. The band is thicker than a rule because it is a mark
+ * rather than a divider, but the geometry is a flat-topped rectangle either
+ * way, which is what makes this the right spelling rather than the filter the
+ * jewel needs for its diamond.
+ */
+
+.of-pitch-rule {
+  display: flex;
+  align-items: center;
+  /*
+    CENTRED, because the name above it is. The band row is the underline of a
+    centred label, so a start-aligned rule under a centred name would read as
+    two elements rather than as one mark.
+  */
+  justify-content: center;
+  gap: var(--of-space-tighter);
+  line-height: var(--of-type-leading-tight);
+  user-select: none;
+}
+
+/*
+  ITS OWN SIZE TOKENS, NOT ANOTHER OBJECT'S. This borrowed
+  `ornament.filigree.size` and `ornament.mark.small` because the numbers looked
+  right — which is exactly the drift `tokens.ts` records the mark escaping when
+  it stopped borrowing the jewel's steps. Same values, own names, so filigree
+  can be resized without silently resizing every pitch band in the card index.
+*/
+.of-pitch-rule__band {
+  display: block;
+  inline-size: var(--of-ornament-band-base);
+  /*
+    Three hairlines. One reads as a rule — a divider the eye skips — and the
+    whole point of this mark is that it is READ. Expressed against the bevel
+    width rather than as its own token so the band can never be thinner than
+    the two bevel edges drawn on it, which would leave a bar of pure highlight
+    and shadow with no pitch colour between them.
+  */
+  block-size: calc(var(--of-bevel-width) * 3);
+  background: var(--band);
+  /* Cut, never rounded — the system has one radius token and it is none. */
+  border-radius: var(--of-bevel-radius);
+  box-shadow:
+    0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light),
+    0 var(--of-bevel-width) 0 0 var(--of-bevel-dark);
+}
+
+/*
+  The small size is for a dense row rather than a grid cell: narrower and
+  thinner, so a band sitting beside a line of type does not out-weigh it.
+*/
+.of-pitch-rule--sm .of-pitch-rule__band {
+  inline-size: var(--of-ornament-band-small);
+  block-size: calc(var(--of-bevel-width) * 2);
+}
+
+.of-pitch-rule__band--tone-none {
+  --band: var(--of-color-pitch-none);
+}
+
+.of-pitch-rule__band--tone-one {
+  --band: var(--of-color-pitch-one);
+}
+
+.of-pitch-rule__band--tone-two {
+  --band: var(--of-color-pitch-two);
+}
+
+.of-pitch-rule__band--tone-three {
+  --band: var(--of-color-pitch-three);
+}
+
+/*
+  NO `prefers-reduced-motion` BLOCK, AND THAT IS A DECISION RATHER THAN AN
+  OMISSION. `PitchJewel` carries one, and this file copied it — but neither
+  component declares a `transition` anywhere, so `transition: none` overrides
+  nothing. A rule that reads as protection and provides none is worse than no
+  rule: the next person to add a hover animation here will see it, believe the
+  case is handled, and ship motion that ignores the preference. There is
+  nothing to suppress because nothing moves.
+*/

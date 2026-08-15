@@ -54,7 +54,8 @@ export type IslandName =
   | "RulesSearch"
   | "RandomCard"
   | "PrintingPicker"
-  | "CardSearch";
+  | "CardSearch"
+  | "CardList";
 
 export interface IslandProps<P> {
   /** Which component to hydrate. Must be a key of the client registry. */

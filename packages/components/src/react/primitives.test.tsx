@@ -17,6 +17,7 @@ import { BevelledPlate } from "./BevelledPlate";
 import { OrnamentalRule } from "./OrnamentalRule";
 import { PAGE_GAP, Pagination, pageWindow } from "./Pagination";
 import { PitchJewel } from "./PitchJewel";
+import { PitchRule } from "./PitchRule";
 import { ResultRow } from "./ResultRow";
 
 describe("PitchJewel", () => {
@@ -66,6 +67,99 @@ describe("PitchJewel", () => {
     const html = renderToStaticMarkup(<PitchJewel value={2} />);
     expect(html).toContain('class="of-jewel of-jewel--md of-jewel--tone-two"');
     expect(html).toContain('class="of-jewel__stone"');
+  });
+});
+
+describe("PitchRule", () => {
+  test("one band per pitch value, in the tone that value owns", () => {
+    /*
+     * The whole feature. A cell in a card index stands for a name, and a name
+     * is commonly three cards — so "which pitches is this cell talking about"
+     * is a question with three answers and the mark has to be able to give
+     * all of them.
+     */
+    const html = renderToStaticMarkup(<PitchRule values={[1, 2, 3]} />);
+    expect(html).toContain("of-pitch-rule__band--tone-one");
+    expect(html).toContain("of-pitch-rule__band--tone-two");
+    expect(html).toContain("of-pitch-rule__band--tone-three");
+    expect(html.split("of-pitch-rule__band ").length - 1).toBe(3);
+  });
+
+  test("the values are sorted and deduplicated by the component", () => {
+    /*
+     * NOT BY THE CALLER. A search collapses the pitch versions of a matched
+     * name; a set page walks a set's printings. Two sources, and a cell
+     * rendering blue-before-red would be stating one fact in two orders on one
+     * screen. Deduplicating matters for the set page in particular: a card
+     * printed twice in a set arrives with its pitch twice.
+     */
+    const html = renderToStaticMarkup(<PitchRule values={[3, 1, 3, 2]} />);
+    const order = [...html.matchAll(/--tone-(\w+)/g)].map((match) => match[1]);
+    expect(order).toEqual(["one", "two", "three"]);
+  });
+
+  test("no pitch is a grey band; no VALUES is no mark at all", () => {
+    /*
+     * Two different absences, exactly as `CardFaceRef` keeps `null` apart from
+     * `""`. A card with no pitch value HAS an answer — equipment pitches for
+     * nothing — and gets the `none` tone the jewel would render as a dash. An
+     * empty array is the claim that the pitch is unknown, and a mark asserting
+     * "no pitch" there would be inventing the answer.
+     */
+    const none = renderToStaticMarkup(<PitchRule values={[0]} />);
+    expect(none).toContain("of-pitch-rule__band--tone-none");
+    expect(none).toContain('aria-label="No pitch value"');
+    expect(renderToStaticMarkup(<PitchRule values={[]} />)).toBe("");
+  });
+
+  test("the accessible name spells the values out, and cannot be erased", () => {
+    /*
+     * THE ONLY NON-COLOUR CHANNEL THIS MARK HAS. The jewel can afford
+     * `aria-label` to be a convenience because its numeral is a real text
+     * node; a band has none, so an empty name here would leave meaning
+     * carried by fill colour alone — the exact failure the house
+     * `label?.trim() ||` idiom exists to prevent.
+     */
+    expect(renderToStaticMarkup(<PitchRule values={[2]} />)).toContain(
+      'aria-label="Pitch 2"',
+    );
+    expect(renderToStaticMarkup(<PitchRule values={[1, 3]} />)).toContain(
+      'aria-label="Pitch 1 and 3"',
+    );
+    expect(renderToStaticMarkup(<PitchRule values={[1, 2, 3]} />)).toContain(
+      'aria-label="Pitch 1, 2 and 3"',
+    );
+    expect(renderToStaticMarkup(<PitchRule values={[1]} label="" />)).toContain(
+      'aria-label="Pitch 1"',
+    );
+    expect(
+      renderToStaticMarkup(<PitchRule values={[1]} label="   " />),
+    ).toContain('aria-label="Pitch 1"');
+  });
+
+  test("the name accounts for every band, including the no-pitch one", () => {
+    /*
+     * THE MISMATCH THIS PINS DREW MORE THAN IT SAID. `spokenFor` filtered `0`
+     * out before composing while the render still drew a `tone-none` band for
+     * it, so a mixed row drew four bands and announced three — and this label
+     * is the only non-colour channel the images view has, so the band nobody
+     * was told about was a pitch value nobody was told about.
+     *
+     * `[0, 1, 2, 3]` is not hypothetical: `cards.ts` documents Hyper Driver, a
+     * pitch-0 token sharing its name with three pitched actions, and
+     * `unique:names` collapses that group to exactly this.
+     */
+    const html = renderToStaticMarkup(<PitchRule values={[0, 1, 2, 3]} />);
+    expect(html.split("of-pitch-rule__band ").length - 1).toBe(4);
+    expect(html).toContain('aria-label="No pitch value, and pitch 1, 2 and 3"');
+
+    /* And the two unmixed cases keep the wording they had. */
+    expect(renderToStaticMarkup(<PitchRule values={[0]} />)).toContain(
+      'aria-label="No pitch value"',
+    );
+    expect(renderToStaticMarkup(<PitchRule values={[0, 2]} />)).toContain(
+      'aria-label="No pitch value, and pitch 2"',
+    );
   });
 });
 

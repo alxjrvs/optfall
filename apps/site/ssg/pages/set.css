@@ -55,9 +55,33 @@
   font-size: var(--of-type-size-small);
 }
 
+/*
+  THE CARD LIST IS NOT STYLED HERE ANY MORE. `.of-set-cards` was this page's own
+  column of names; the page renders `CardIndex` now, which brings its own
+  stylesheet — and that is the point of the component rather than an incidental
+  consequence of it, since the alternative is two surfaces styling a list of
+  cards from two files that have to be kept in step by hand.
+
+  What is left below is the fallback for a reader with no scripting, which IS
+  particular to this page: the search page's fallback is a sentence explaining
+  that live results need JavaScript, because a query has no static answer. A set
+  does.
+*/
+
+.of-set-noscript__heading {
+  margin-block: var(--of-space-looser) var(--of-space-tight);
+  font-size: var(--of-type-size-large);
+}
+
+.of-set-noscript__note {
+  margin-block: 0 var(--of-space-base);
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-small);
+}
+
 /* Two or three columns where there is room, because a 400-card set is a column
    of names and a reader is scanning rather than reading. */
-.of-set-cards {
+.of-set-noscript__list {
   columns: var(--of-card-face-thumb);
   column-gap: var(--of-space-loosest);
   margin: 0;
@@ -66,7 +90,7 @@
   font-family: var(--of-type-family-serif);
 }
 
-.of-set-cards li {
+.of-set-noscript__list li {
   break-inside: avoid;
   padding-block: var(--of-space-tightest);
 }

@@ -35,6 +35,7 @@ import {
   decodeCardIndex,
   parseCardQuery,
   searchCards,
+  STAT_LABELS,
   tokeniseCard,
   FORMAT_NAMES,
   type CardIndex,
@@ -1095,5 +1096,334 @@ describe("comparing two printed values", () => {
 
   test("comparing a field to a literal still works", () => {
     expect(total("power>2")).toBeGreaterThan(0);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* Which printing's art a row carries                                          */
+/* -------------------------------------------------------------------------- */
+
+describe("one card index, one stat vocabulary", () => {
+  test("a search row and a set-page row name the same printed values", () => {
+    /*
+     * THE ROWS VIEW IS ONE COMPONENT ON TWO SURFACES, and for a while it spoke
+     * two vocabularies. A set page builds its rows from `CardPage.stats`, which
+     * `statsOf` assembles as Cost / Power / Defence / Life / Intellect / Arcane;
+     * a search row was built from an index that carried only the first three.
+     * So a hero read `Life 20 · Intellect 4` on `/sets/mon` and carried no
+     * stats at all on `/search?q=set:mon` — in the one rendering `CardIndex`
+     * exists to make identical.
+     *
+     * Two lists in two files is a drift waiting to happen, so this pins them
+     * against each other rather than trusting that both get edited together.
+     */
+    const fromCorpus = new Set(
+      CARD_PAGES.flatMap((page) => page.stats.map((stat) => stat.label)),
+    );
+    const fromIndex: readonly string[] = STAT_LABELS;
+
+    /* More than the three the index used to carry, or this test would pass on
+       the version it was written against. */
+    expect(fromCorpus.size).toBeGreaterThan(3);
+    expect([...fromCorpus].toSorted()).toEqual([...fromIndex].toSorted());
+  });
+
+  test("a hero carries its life and intellect on a search row", () => {
+    /* The concrete consequence, on the card type that has nothing else to
+       show: before this, `type:hero` rendered rows with an empty stat line. */
+    const hero = searchCards(index, "type:hero unique:cards", 20000).results[0];
+    expect(hero).toBeDefined();
+    const labels = (hero?.stats ?? []).map(([label]) => label);
+    expect(labels).toContain("Life");
+    expect(labels).toContain("Intellect");
+  });
+
+  test("the comparison operators still index the first three positionally", () => {
+    /* Cost, power and defence stay at positions 0-2 so `passesFilter` and the
+       sort keys keep reading the column they name. The three added values are
+       display-only and no filter reads them. */
+    expect(STAT_LABELS.slice(0, 3)).toEqual(["Cost", "Power", "Defence"]);
+    expect(total("power>2")).toBeGreaterThan(0);
+    expect(total("cost>=3")).toBeGreaterThan(0);
+    expect(total("defence>=2")).toBeGreaterThan(0);
+  });
+});
+
+describe("a set-scoped search shows that set's printing", () => {
+  /*
+   * THE BUG THIS PINS WAS SILENT AND IT LOOKED RIGHT. Every row carried its
+   * card's DEFAULT face — the first printing that publishes art, in corpus
+   * order — so `set:MON` returned Monarch's cards wearing Heavy Hitters' art.
+   * A picture of the right card from the wrong print run, on a query whose
+   * entire subject is the print run, with nothing on the page to say so.
+   *
+   * Measured while writing these: 2,239 of the 4,941 cards are printed in more
+   * than one set, and all 2,239 have at least one set whose art differs from
+   * the default. This was most of the reprints in the game.
+   */
+  test("every face on a single-set query comes from that set", () => {
+    const outcome = searchCards(index, "set:mon unique:cards", 20000);
+    expect(outcome.setFocus).toBe("mon");
+    expect(outcome.results.length).toBeGreaterThan(100);
+
+    const strays = outcome.results.filter(
+      (row) =>
+        row.faceKey !== null && !row.faceKey.toUpperCase().startsWith("MON"),
+    );
+    expect(strays).toEqual([]);
+  });
+
+  test("no row loses its picture to the resolution", () => {
+    /*
+     * A straight reprint carries no new art, and Regular / Rainbow Foil / Cold
+     * Foil in one set are three printing rows sharing one image — so "this set
+     * published no distinct art for this card" is a real answer, and the
+     * fallback to the card's own face is correct rather than a miss. What must
+     * never happen is a row that HAD a face ending up with none, which is what
+     * a lookup treated as authoritative would produce.
+     */
+    const scoped = searchCards(index, "set:sup unique:cards", 20000);
+    const blank = scoped.results.filter((row) => row.faceKey === null);
+    expect(scoped.results.length).toBeGreaterThan(0);
+    /* The four cards in the whole corpus with no published art are the only
+       ones entitled to a null face, and none of them is in this set. */
+    expect(blank).toEqual([]);
+  });
+
+  test("two sets, or a negated one, resolve to no focus at all", () => {
+    /*
+     * AMBIGUITY ANSWERS `null`, WHICH IS THE WHOLE SAFETY PROPERTY. Picking
+     * either side of `set:mon or set:mst` would answer an unknown fraction of
+     * the rows with art from a set the reader did not name — and it would look
+     * exactly as correct as the right answer does.
+     */
+    expect(searchCards(index, "set:mon or set:mst").setFocus).toBeNull();
+    expect(searchCards(index, "-set:mon dominate").setFocus).toBeNull();
+    expect(searchCards(index, "dominate").setFocus).toBeNull();
+    /* A set named beside another filter is still one set. */
+    expect(searchCards(index, "set:mon pitch:1").setFocus).toBe("mon");
+  });
+
+  test("the orientation travels with the face, never with the card", () => {
+    /*
+     * THE HALF-SWAP THAT ALMOST SHIPPED. The first pass overrode `faceKey` with
+     * the focus set's art and went on reading `faceLandscape` from the default
+     * face's — so a rotated alternate would have been drawn inside a portrait
+     * box, visible at a glance, and only on the printings this feature exists
+     * to show.
+     *
+     * `orientationOf` reads two inputs: `played_horizontally`, which belongs to
+     * the CARD, and `image_rotation_degrees`, which belongs to the PRINTING —
+     * ten of them in this corpus are non-zero. Zero cards diverge today, so
+     * this is a latent failure rather than a live one, which is exactly how
+     * `faces.ts` describes the last bug of this shape to reach production.
+     *
+     * Asserted as an invariant over the whole index rather than against a
+     * fixture card, so it starts holding the day a corpus sync creates one.
+     *
+     * THE ROW IS FOUND BY ITS CARD, NOT BY ITS FACE. Selecting it with
+     * `faceKey === art.key` and then asserting `faceKey` back is a tautology —
+     * it can only find rows that already agree, so the swap this test is named
+     * after would have passed by simply not matching anything.
+     *
+     * AND THE ASSERTION IS PAIR-MEMBERSHIP RATHER THAN A NAMED ART, because
+     * addressing by card turned up a case the first version had not considered:
+     * a card can have SEVERAL arts in one set. `A Bit Off the Side` carries both
+     * `OMN243.webp` and `OMN243-CF.webp` in Omen, and a row shows one picture,
+     * so "the row wears THIS art" is not a property any single art has.
+     *
+     * What is always true is the thing the half-swap broke: the key and the
+     * orientation come from the SAME printing. So the row's pair has to be one
+     * of the pairs the card actually has. Pairing an art's key with the default
+     * face's orientation — exactly the bug — produces a pair that is in neither.
+     */
+    for (const [ordinal, arts] of index.arts.entries()) {
+      const href = `/card/${index.slugs[ordinal]}`;
+      /* Every face this card could legitimately be shown by, as a pair. */
+      const known = [
+        {
+          key: index.faceKeys[ordinal] ?? null,
+          landscape: index.faceLandscape[ordinal] === true,
+        },
+        ...arts.map((art) => ({ key: art.key, landscape: art.landscape })),
+      ].map((pair) => JSON.stringify(pair));
+
+      for (const setCode of new Set(arts.map((art) => art.setCode))) {
+        const row = searchCards(
+          index,
+          `set:${setCode} unique:cards`,
+          20000,
+        ).results.find((result) => result.href === href);
+        if (row === undefined) continue;
+        expect({
+          href,
+          setCode,
+          pair: JSON.stringify({
+            key: row.faceKey,
+            landscape: row.faceLandscape,
+          }),
+          known: known.includes(
+            JSON.stringify({
+              key: row.faceKey,
+              landscape: row.faceLandscape,
+            }),
+          ),
+        }).toMatchObject({ href, setCode, known: true });
+      }
+      /* Only the first few ordinals: the loop above runs a full search per set
+         and there are 6,437 arts. The property is structural, so a sample that
+         covers both orientations proves the wiring. */
+      if (ordinal > 40) break;
+    }
+  });
+
+  test("a divergent art is drawn at ITS orientation, not the default face's", () => {
+    /*
+     * THE TEST ABOVE CANNOT FAIL TODAY, AND THIS ONE CAN. Zero cards in this
+     * corpus have an alternate art whose orientation differs from their default
+     * face, so the invariant holds vacuously — reintroduce the half-swap and it
+     * still passes. That makes it a statement of the property rather than a
+     * guard on it, which is worth having and is not worth mistaking for a
+     * regression test.
+     *
+     * So the divergence is CONSTRUCTED. The encoded index is a bag of strings
+     * by design, and `arts` is `<setId> <landscapeBit> <key>` per entry — so
+     * flipping one bit produces the corpus this repository does not have yet,
+     * decodes through the real decoder, and runs the real search. Under the
+     * half-swap this fails; under the fix it passes.
+     */
+    const artLines = encoded.arts.split("\n");
+    /*
+     * THE ART HAS TO BE FROM A SET THE DEFAULT FACE IS NOT IN, or the override
+     * never runs: `toResult` returns the card's own face as soon as
+     * `faceSets[ordinal]` equals the focus, which is the common case and the
+     * cheap path. The first card tried had both its Omen arts under `set:omn`,
+     * so it took that branch and the test was measuring nothing.
+     */
+    const target = index.arts.findIndex(
+      (arts, ordinal) =>
+        arts.length > 0 &&
+        arts[0] !== undefined &&
+        arts[0].setCode !== index.faceSets[ordinal] &&
+        index.faceLandscape[ordinal] === false &&
+        arts[0].landscape === false,
+    );
+    expect(target).toBeGreaterThanOrEqual(0);
+
+    const entry = artLines[target]?.split("\t")[0] ?? "";
+    const [setId = "", bit = "", key = ""] = entry.split(" ");
+    /* The card's own face must be PORTRAIT for the flip to be a divergence. */
+    expect(bit).toBe("0");
+    expect(encoded.faceLandscape[target]).toBe("0");
+
+    const flipped = decodeCardIndex({
+      ...encoded,
+      arts: artLines
+        .map((line, ordinal) =>
+          ordinal === target
+            ? [`${setId} 1 ${key}`, ...line.split("\t").slice(1)].join("\t")
+            : line,
+        )
+        .join("\n"),
+    });
+
+    const art = flipped.arts[target]?.[0];
+    expect(art?.landscape).toBe(true);
+
+    const href = `/card/${flipped.slugs[target]}`;
+    const row = searchCards(
+      flipped,
+      `set:${art?.setCode} unique:cards`,
+      20000,
+    ).results.find((result) => result.href === href);
+
+    /* The row must wear the alternate art AND its landscape box. Reading the
+       orientation off the default face gives `false` here, which is the bug. */
+    expect({ key: row?.faceKey, landscape: row?.faceLandscape }).toEqual({
+      key: art?.key,
+      landscape: true,
+    });
+  });
+
+  test("in unique:art no card shows one picture on two of its rows", () => {
+    /*
+     * `unique:art` expands a card into its DEFAULT face plus one row per
+     * alternate, so every row in this mode is already a printing and none of
+     * them wants the focus set's art.
+     *
+     * THE FIRST GUARD ONLY COVERED THE ROWS THE EXPANSION ADDED. It tested
+     * `art !== undefined`, true of the alternates and false of the row being
+     * expanded — so under `set:lgs` the card row took the LGS art and the LGS
+     * art row rendered the identical picture directly beneath it.
+     *
+     * This assertion counts duplicates PER CARD because the obvious one does
+     * not catch it: ">1 distinct key across the result set" is true of a page
+     * full of adjacent duplicate pairs.
+     */
+    const arts = searchCards(index, "set:lgs unique:art", 20000);
+    expect(arts.total).toBeGreaterThan(0);
+
+    /* Every row for one card shares `/card/<slug>`; an art row appends the
+       printing to that path, so the first three segments identify the card. */
+    const byCard = new Map<string, string[]>();
+    for (const row of arts.results) {
+      if (row.faceKey === null) continue;
+      const card = row.href.split("/").slice(0, 3).join("/");
+      const seen = byCard.get(card);
+      if (seen) seen.push(row.faceKey);
+      else byCard.set(card, [row.faceKey]);
+    }
+    expect(byCard.size).toBeGreaterThan(0);
+
+    const duplicated = [...byCard.entries()].filter(
+      ([, keys]) => new Set(keys).size !== keys.length,
+    );
+    expect(duplicated).toEqual([]);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* Paging                                                                      */
+/* -------------------------------------------------------------------------- */
+
+describe("offset pages the ranked rows without changing the answer", () => {
+  test("consecutive pages are disjoint and reassemble the whole list", () => {
+    /*
+     * THE CAP BECAME A PAGE SIZE. The engine used to return the first sixty
+     * matches and the interface told the reader to narrow the query, which is a
+     * reference work saying the question was wrong. Paging has to be a cut of
+     * ONE ranked list rather than a second ranking — otherwise page 2 could
+     * repeat or skip rows and nothing on the page would show it.
+     */
+    const all = searchCards(index, "type:action", 20000).results.map(
+      (row) => row.href,
+    );
+    expect(all.length).toBeGreaterThan(120);
+
+    const first = searchCards(index, "type:action", 60, 0);
+    const second = searchCards(index, "type:action", 60, 60);
+    const third = searchCards(index, "type:action", 60, 120);
+
+    expect(first.results.map((row) => row.href)).toEqual(all.slice(0, 60));
+    expect(second.results.map((row) => row.href)).toEqual(all.slice(60, 120));
+    expect(third.results.map((row) => row.href)).toEqual(all.slice(120, 180));
+  });
+
+  test("the total is the whole answer on every page, never the page", () => {
+    /* This is what lets the interface say "1,204 cards match, page 3 of 21".
+       A total that shrank to the page size would make the pager unbuildable. */
+    const first = searchCards(index, "type:action", 60, 0);
+    const later = searchCards(index, "type:action", 60, 120);
+    expect(later.total).toBe(first.total);
+    expect(later.total).toBeGreaterThan(later.results.length);
+  });
+
+  test("an offset past the end is an empty page, not an error or a wrap", () => {
+    /* `?page=` is a number somebody can edit. Wrapping to the first page would
+       be the worst outcome: a URL showing page 1 while claiming page 99. The
+       interface walks the page back; the engine's job is to not lie meanwhile. */
+    const past = searchCards(index, "type:action", 60, 100000);
+    expect(past.results).toEqual([]);
+    expect(past.total).toBeGreaterThan(0);
   });
 });

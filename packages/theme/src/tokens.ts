@@ -292,6 +292,27 @@ const STRUCTURE: TokenTable = {
   "ornament.mark.base": "1.25rem",
   "ornament.mark.large": "1.75rem",
 
+  /* THE PITCH BAND'S WIDTHS, AND THEY ARE ITS OWN FOR THE REASON THE MARK'S
+     ARE. `PitchRule` shipped borrowing `ornament.filigree.size` for its base
+     step and `ornament.mark.small` for its small one — two other reserved
+     objects' sizes, chosen because the numbers happened to look right. That is
+     the same shape of borrow the block above records the mark escaping from,
+     and it fails the same way: a future change to filigree sizing would
+     silently resize every pitch band in the card index, on a commit about
+     scrollwork.
+
+     The values are what the borrowed tokens hold today, so this is a rename
+     rather than a redesign. What changes is that they can now move
+     independently, which is the whole point of a token having a name.
+
+     NO THICKNESS TOKEN, deliberately. The band is `calc(bevel.width * 3)`, and
+     that is a real relationship rather than a borrow: the band carries a bevel
+     edge top and bottom, so it must never be thinner than the two of them plus
+     the colour between. Expressed as a constant it would be a number that
+     silently stops being true the day the bevel changes. */
+  "ornament.band.small": "0.875rem",
+  "ornament.band.base": "1.25rem",
+
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and
      nothing else, so a surface free to pick its own width would be asking for a

@@ -43,6 +43,7 @@ export type { BevelEdge, OrnamentRole, PitchValue, StateTone, Voice };
  */
 export type PrimitiveName =
   | "pitch-jewel"
+  | "pitch-rule"
   | "bevelled-plate"
   | "state-pill"
   | "brass-seal"
@@ -59,6 +60,7 @@ export type PrimitiveName =
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
+  "pitch-rule",
   "bevelled-plate",
   "state-pill",
   "brass-seal",
@@ -91,6 +93,33 @@ export interface PitchJewelProps {
   /** Rendered size, in token steps rather than pixels. */
   readonly size?: "sm" | "md" | "lg";
   /** Accessible label. Defaults to the pitch value spoken in full. */
+  readonly label?: string;
+}
+
+/**
+ * The pitch rule — the same fact as the jewel, rendered for UNDER A CARD FACE.
+ *
+ * The two divide by what the surface can afford, not by preference. Wherever
+ * there is a line of type, the jewel goes beside it and carries its numeral;
+ * under a picture there is no line and no room, and a scattering of stones over
+ * a grid of card art competes with the art. So the mark becomes an underline
+ * under the name, which is what a caption's mark looks like.
+ *
+ * `values` is plural where the jewel's `value` is singular, and that is the
+ * other half of why this is a second primitive rather than a variant: a card
+ * page shows one card, so it has one pitch; a cell in a card index stands for a
+ * NAME, and a name in this game is commonly three cards at three pitches.
+ *
+ * There is deliberately no prop that turns the accessible name off. On the
+ * jewel the numeral is the primary channel and colour the redundant one; here
+ * there is no room for a numeral, so the written name IS the redundant channel
+ * and removing it would leave meaning carried by fill colour alone.
+ */
+export interface PitchRuleProps {
+  readonly values: readonly PitchValue[];
+  /** Rendered size, in token steps rather than pixels. */
+  readonly size?: "sm" | "md";
+  /** Accessible label. Defaults to the values spoken in full. */
   readonly label?: string;
 }
 

@@ -19,7 +19,7 @@ move; each expression of it does not.
 |---|---|
 | **The search field is the hero.** No marketing hero, no illustration above the fold. The first thing on the page is the thing you came to do. | **The grammar is inherited, not invented.** LSS's own Card Vault already has a syntax. We adopt it verbatim and extend it to rules and interactions, so a query someone already knows keeps working. |
 | **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on anything carrying state. The chrome should feel struck from metal, not laid out in a design tool. |
-| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch appears only as a cut jewel; the interface never uses that form for anything else. The mark is the single sanctioned exception, and it is argued below. |
+| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch wears a cut jewel, and under a card face a band — two forms, both reserved, neither used for anything else. The mark is the single sanctioned exception to the jewel's silhouette, and both are argued below. |
 | **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Two voices, strictly assigned.** A serif for names and questions, a sans for everything else. ~~a wide-tracked mono for labels and anything citable~~ — see below. |
 | **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the card**, and the rules and rulings attach to it. Card pages are the shareable object; `/cr/…` sections are addressable too and a card links into them. ~~The unit is the verdict, not the card.~~ — see below. |
 | **Dark mode is not an inversion.** It is designed, and for many users it is the only mode they will ever see. | **Black is the native key.** Near-black ground, blood accent, brass for anything authoritative. Light mode is the printed-rulebook translation — ash and iron, not paper white. |
@@ -128,6 +128,38 @@ yellow are the classic deuteranopia confusion pair, pitch is the most-read value
 on a card, and it is the same pair the leading commercial scanner app misreads.
 Designing colour as the redundant channel costs nothing and fixes it for everyone
 downstream.
+
+### The pitch rule — the jewel's one exception, and where it applies
+
+**Under a card face, the jewel becomes an underline.** A grid of card art has
+nowhere to put a stone: forty jewels scattered over forty pictures are forty
+objects competing with what the reader is there to look at, and there is no line
+of type for one to sit beside. So in the images view of a card index — and
+nowhere else — pitch is drawn as coloured bands under the centred name, one band
+per value, ascending. `PitchRule` in `optfall-components`.
+
+**Every text surface keeps the jewel**, which is what stops this from being a
+weakening of the rule above. The card page, the rows view and the names view all
+carry numbered stones, so the numeral remains available one click — usually
+zero clicks — away, and the reserved silhouette still appears wherever there is
+room for it.
+
+**What the bands give up, and what replaces it.** A band has no room for a
+numeral, so on that one surface colour carries more weight than this document
+otherwise allows. Three things stand in for it: the element is a `role="img"`
+with a written name that spells the values out ("Pitch 1, 2 and 3"); the COUNT
+of bands is a non-colour channel, which is new information the old rendering did
+not have at all; and the ORDER is fixed ascending, so the leftmost band is always
+the lowest pitch. The honest summary is that this is a trade rather than a free
+win, and it is confined to the surface that could not take the jewel.
+
+**It is plural where the jewel is singular, and that is why it is a second
+primitive rather than a variant.** A card page shows one card and one pitch. A
+cell in a card index stands for a NAME, and a name in this game is commonly three
+cards — the rendering has to be able to say so. What the grid replaced was worse
+on both counts: the words "pitch 1, pitch 2", printed only when *some* versions
+matched, so the ordinary case said nothing and a reader could not tell a
+single-version card from a collapsed one.
 
 ### Blood and brass
 
@@ -276,12 +308,21 @@ that knows about time.
 - **Red came back.** An earlier pass gave the accent to verdigris to avoid
   colliding with pitch, and the result read like a museum catalogue rather than a
   game about hitting people with axes. Pitch and chrome can share a hue because
-  they never share a *shape*: pitch appears only as a cut jewel, and nothing else
-  in the interface is ever that silhouette. It is exactly why coloured mana pips
-  coexist with coloured UI. The mark is the one object that spends the pitch
-  PALETTE without being a pitch value — see "The mark" above for why that is an
-  identity rather than a datum, and note that it does not touch this rule, since
-  a chain link is not the jewel's silhouette.
+  they never share a *shape*: pitch appears as a cut jewel or, under a card face,
+  as a short band under the name — and nothing else in the interface is ever
+  either. It is exactly why coloured mana pips coexist with coloured UI. The mark
+  is the one object that spends the pitch PALETTE without being a pitch value —
+  see "The mark" above for why that is an identity rather than a datum, and note
+  that it does not touch this rule, since a chain link is neither silhouette.
+
+  **The band is the form that has to be watched**, and it is worth saying so
+  where the rule lives rather than only where the component does. A red bar under
+  a name is one step from a link underline, and the name above it IS a link that
+  turns accent-red on hover. Three things keep them apart: the band is detached
+  from the text by a gap, it is a fixed short width rather than the width of the
+  name, and the names it sits under are never underlined at rest. If a future
+  pass gives grid names a resting underline, that separation is gone and this
+  is the entry that should stop it.
 - **Brass is rationed to one job.** Verified judge attribution, and nothing else.
 - **Filigree earns three roles and no more.** Feature-panel corners, card-frame
   corners, and the section rule. Scrollwork is how the game's frames signal that

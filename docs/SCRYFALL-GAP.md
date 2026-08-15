@@ -105,7 +105,8 @@ row's subject changes, not when someone notices.*
 | Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, against a number **or against each other** | **have** |
 | Exact name | `!"Lightning Bolt"` | `!"Head Jab"`, quoted or bare | **have** |
 | Artist / flavour search | `a:`, `ft:` | `artist:`/`a:`, `flavour:`/`ft:`, separately indexed | **have** |
-| Set index and set pages | `/sets` | `/sets` and a page per set | **have** |
+| Set index and set pages | `/sets` | `/sets`, and a page per set carrying the same card index the results do — with that set's printings | **have** |
+| Paging | yes | `?page=`, on search results and set pages alike | **have** |
 | Rulings on the card | official rulings, dated | none | **gap** |
 | Random card | `/random` | `/random` | **have** |
 | Name autocomplete | yes | nothing — §6b removed it | **gap, on purpose** |
@@ -179,6 +180,10 @@ Deletions first, because most of the confusion is *surplus*, not absence.
   - What did **not** change is the count. `total` still reports matches rather
     than rows on screen, which was the one honest thing about the old
     behaviour.
+  - **The set pages page through the same control**, which they could not do at
+    all before: `/sets/<code>` was an unpaginated column of names. That they now
+    share a pager with `/search` is a consequence of sharing a `CardIndex`, not
+    a second implementation of one.
 - **`PENDING_OPERATORS` entries `artist` and `flavor`/`flavour`.** The data is in
   the corpus. They are pending only because nothing indexed them.
 - **The `cr:` "that lives at /search, not here" entry.** Section 8 makes it
@@ -432,11 +437,20 @@ and on load from `?q=`, rather than on input.
   defence. Every one must be a *total* order so two browsers cannot disagree,
   which is the same discipline the current corpus-order tiebreak already keeps.
 - **Paging**, replacing the 60-cap refusal. Page state in the URL like
-  everything else.
+  everything else. ✅ Built: `?page=`, on both the search results and the set
+  pages, through one component.
 - **`unique:cards|prints`**, once printings are addressable.
 - **`/random`.**
 - **`/sets` and `/sets/<code>`** — the browsable spine, typographic only, no set
   symbols (compliance: product set logos count as FAB logos).
+
+  **"Typographic only" turned out to be one word too broad.** It was written to
+  keep set LOGOS off the page, which is a compliance rule and still holds — and
+  it was read as keeping CARD FACES off too, which nothing required. So the one
+  page whose subject is a print run was the one page with no pictures on it,
+  while `/search?q=set:MST` answered the same question in a grid of art. A set
+  page now renders the same `CardIndex` the search results do. No set symbol
+  appears anywhere on it.
 
 **Dropped from this plan, then built anyway:** name autocomplete. The argument
 here was that it is live search wearing a different hat, and the empty-state

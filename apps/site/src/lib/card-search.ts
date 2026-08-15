@@ -62,6 +62,9 @@ import type { PitchValue, StateTone } from "optfall-theme";
  * live in `printings.ts`, which is pure and corpus-free.
  */
 import type { CardPage } from "./cards";
+/* `faces.ts` is pure and corpus-free — the same property `printings.ts` was
+   split out for. Importing it here does not reach `cards.ts`. */
+import { orientationOf } from "./faces";
 import { facesOf, numberFor } from "./printings";
 import {
   evaluate,
@@ -153,6 +156,31 @@ export interface EncodedCardIndex {
    */
   readonly arts: string;
   /**
+   * Which set {@link EncodedCardIndex.faceKeys} came from — two base-36
+   * characters per card, `setDict` index PLUS ONE, and `00` where the card
+   * publishes no art at all.
+   *
+   * WITHOUT THIS THE INDEX CANNOT ANSWER "SHOW ME THIS SET'S PRINTING", which
+   * is what a `set:MST` search is asking for. `arts` carries a set code beside
+   * every NON-default face, deliberately — the default one "is already in
+   * `faceKeys`". True, and the omission made the default face the one printing
+   * whose set was unknown, so a set-scoped search could resolve every art
+   * except the one it was most likely to want. Measured on this corpus: 2,239
+   * of the 4,941 cards are printed in more than one set, and ALL 2,239 have at
+   * least one set whose art differs from their default face — so every one of
+   * them could show the wrong set's picture under a filter naming a set,
+   * silently, and looking entirely correct.
+   *
+   * PLUS ONE SO THAT ZERO CAN MEAN ABSENCE. `setDict` is zero-indexed and its
+   * first entry is a real set, so `00` would otherwise be indistinguishable
+   * from "printed in whichever set happens to sort first". Four cards in this
+   * corpus have no face; they get `00` and keep the placeholder.
+   *
+   * Two characters, 4,941 cards: 9.6 KB, and it is the difference between a
+   * set page showing the set's art and showing art from somewhere else.
+   */
+  readonly faceSets: string;
+  /**
    * One digit per card: `1` where the face is landscape, `0` where portrait.
    *
    * Needed because the box has to be right BEFORE the image loads, and a
@@ -166,7 +194,24 @@ export interface EncodedCardIndex {
   readonly typeDict: string;
   /** Two base-36 characters per card, indexing {@link EncodedCardIndex.typeDict}. */
   readonly typeAt: string;
-  /** `cost\tpower\tdefence` per card, one line each; empty where absent. */
+  /**
+   * `cost\tpower\tdefence\tlife\tintellect\tarcane` per card, one line each,
+   * empty where a card does not print that value.
+   *
+   * IT CARRIED THREE, AND THAT MADE ONE RENDERING SPEAK TWO VOCABULARIES. The
+   * rows view of `CardIndex` is the same component on `/search` and on a set
+   * page, but the set page builds its rows from `CardPage.stats` — which
+   * `cards.ts` assembles as all six — while a search row could only ever offer
+   * the three this line held. So a hero read `Life 20 · Intellect 4` on
+   * `/sets/mon` and carried no stats at all on `/search?q=set:mon`, in the one
+   * rendering the component exists to make identical.
+   *
+   * The last three are display-only: no filter reads them, and `cost`, `power`
+   * and `defence` stay first so the comparison operators keep indexing
+   * positionally. About 15 KB across 4,941 cards, most of it the empty strings
+   * of cards that print none of them — which is the honest price of the two
+   * surfaces agreeing.
+   */
   readonly stats: string;
   /** Keyword vocabulary, one per line. */
   readonly keywordDict: string;
@@ -456,6 +501,7 @@ export function buildCardIndex(
   const slugs: string[] = [];
   const nameSlugs: string[] = [];
   const faceKeys: string[] = [];
+  const faceSets: string[] = [];
   const arts: string[] = [];
   const faceLandscape: string[] = [];
   const pitches: string[] = [];
@@ -500,16 +546,48 @@ export function buildCardIndex(
     /* `facesOf` is the router's list (see `cards.ts`), and `.slice(1)` drops
        the default — the one face that already has an address of its own. So
        every entry written here has a page waiting for it. */
+    const faces = facesOf(page.card);
     arts.push(
-      facesOf(page.card)
+      faces
         .slice(1)
-        .map((ref) => `${sets.idOf.get(ref.printing.set_id) ?? 0} ${ref.key}`)
+        .map((ref) => {
+          /* Per ART, not per card — see `ArtRef.landscape`. The card-level
+             half of the rule is passed in beside the printing-level half so
+             this is the SAME function the card page and the set page call,
+             rather than a second evaluation of the same rule. */
+          const landscape =
+            orientationOf({
+              playedHorizontally: page.card.played_horizontally,
+              rotationDegrees: ref.printing.image_rotation_degrees,
+            }) === "landscape";
+          return `${sets.idOf.get(ref.printing.set_id) ?? 0} ${landscape ? 1 : 0} ${ref.key}`;
+        })
         .join("\t"),
     );
+    /*
+      THE DEFAULT FACE'S SET, TAKEN FROM THE SAME LIST THE ARTS COME FROM.
+      `faces[0]` is by construction the face `faceOf` chose for `page.face` —
+      both walk `card.printings` in order and take the first with an image — so
+      reading the set off a second source here would be a second evaluation of
+      one rule, which is the shape of bug this file's `nameSlugs` note is about.
+      Zero where there is no face at all; see `EncodedCardIndex.faceSets` for
+      why the id is offset by one.
+    */
+    const faceSetId = sets.idOf.get(faces[0]?.printing.set_id ?? "");
+    faceSets.push(pad2(faceSetId === undefined ? 0 : faceSetId + 1));
     faceLandscape.push(page.face.orientation === "landscape" ? "1" : "0");
     pitches.push(String(page.pitch));
     typeAt.push(pad2(types.idOf.get(page.card.type_text) ?? 0));
-    stats.push([page.card.cost, page.card.power, page.card.defense].join("\t"));
+    stats.push(
+      [
+        page.card.cost,
+        page.card.power,
+        page.card.defense,
+        page.card.health,
+        page.card.intelligence,
+        page.card.arcane,
+      ].join("\t"),
+    );
 
     memberships.push(
       [
@@ -615,6 +693,7 @@ export function buildCardIndex(
     slugs: slugs.join("\n"),
     nameSlugs: nameSlugs.join("\n"),
     faceKeys: faceKeys.join("\n"),
+    faceSets: faceSets.join(""),
     arts: arts.join("\n"),
     faceLandscape: faceLandscape.join(""),
     pitches: pitches.join(""),
@@ -672,11 +751,24 @@ export interface CardIndex {
    * derived here rather than shipped; see `numberOf`.
    */
   readonly arts: readonly (readonly ArtRef[])[];
+  /**
+   * The lowercased set code {@link CardIndex.faceKeys} came from, `""` where
+   * the card has no face. Lowercased for the reason `arts` is: this is compared
+   * against a `set:` filter's operand, which the parser has already lowercased.
+   */
+  readonly faceSets: readonly string[];
   readonly faceLandscape: readonly boolean[];
   readonly pitches: readonly PitchValue[];
   readonly typeLines: readonly string[];
   readonly typeTokens: readonly (readonly string[])[];
-  readonly stats: readonly (readonly [string, string, string])[];
+  readonly stats: readonly (readonly [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ])[];
   readonly keywords: readonly (readonly string[])[];
   readonly traits: readonly (readonly string[])[];
   readonly sets: readonly (readonly string[])[];
@@ -757,6 +849,29 @@ export interface ArtRef {
   readonly key: string;
   readonly setCode: string;
   readonly number: string;
+  /**
+   * Whether THIS art is landscape, which is not always what the card is.
+   *
+   * CARRIED PER ART BECAUSE THE INPUT IS PER PRINTING. `orientationOf` reads
+   * two things: `played_horizontally`, which belongs to the card and is
+   * therefore the same for every one of its faces, and
+   * `image_rotation_degrees`, which belongs to the PRINTING — ten of them in
+   * this corpus carry a non-zero one. So two arts of one card can differ, and
+   * an index that knew only the default face's orientation would put a
+   * rotated alternate inside a portrait box.
+   *
+   * Measured today: zero cards actually diverge, so this is latent rather than
+   * live. It is carried anyway, for the reason `faces.ts` gives about the
+   * `decodeURIComponent` throw it once shipped — latent is exactly how a bug
+   * like this arrives, on a corpus sync nobody is watching.
+   *
+   * TWO characters per art, not one: the flag needs its own space delimiter, so
+   * 6,437 arts cost about 12.9 KB rather than the 6.4 KB the digit alone would
+   * suggest. Stated at the true number for the same reason the 9.6 KB beside
+   * `faceSets` is — a cost written down at half its size is a cost nobody
+   * weighed.
+   */
+  readonly landscape: boolean;
 }
 
 export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
@@ -805,7 +920,8 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const released: string[][] = [];
   const rarities: string[][] = [];
   const artists: string[][] = [];
-  const stats: (readonly [string, string, string])[] = [];
+  const stats: (readonly [string, string, string, string, string, string])[] =
+    [];
 
   labels.forEach((_, ordinal) => {
     const typeId = Number.parseInt(
@@ -829,10 +945,15 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
         .map((mask) => Number.parseInt(mask, 36) || 0),
     );
 
-    const [cost = "", power = "", defence = ""] = (
-      statLines[ordinal] ?? ""
-    ).split("\t");
-    stats.push([cost, power, defence] as const);
+    const [
+      cost = "",
+      power = "",
+      defence = "",
+      life = "",
+      intellect = "",
+      arcane = "",
+    ] = (statLines[ordinal] ?? "").split("\t");
+    stats.push([cost, power, defence, life, intellect, arcane] as const);
 
     const [k = "", t = "", s = "", r = "", a = ""] = (
       membershipLines[ordinal] ?? ""
@@ -884,8 +1005,16 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
       const line = artLines[ordinal] ?? "";
       if (line === "") return [];
       return line.split("\t").flatMap((entry): ArtRef[] => {
-        const gap = entry.indexOf(" ");
-        if (gap === -1) return [];
+        /*
+           THREE FIELDS, AND THE KEY IS LAST SO IT CAN BE TAKEN WHOLE. Face
+           keys are constrained to `[A-Za-z0-9][A-Za-z0-9._-]*` by
+           `faceKeyFor`, so they cannot contain a space — which is what makes
+           splitting on the first two safe without escaping anything.
+        */
+        const first = entry.indexOf(" ");
+        if (first === -1) return [];
+        const second = entry.indexOf(" ", first + 1);
+        if (second === -1) return [];
         /* LOWERCASED, BECAUSE THE ROUTE IS. `setDict` holds upstream's
            spelling — `WTR` — and `facesOf` lowercases when it builds the path,
            so taking the dictionary's spelling verbatim produced
@@ -893,11 +1022,22 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
            `unique:art` row would have been a 404, and every one of them would
            have looked right. */
         const setCode =
-          setDict[Number.parseInt(entry.slice(0, gap), 10)]?.toLowerCase();
-        const key = entry.slice(gap + 1);
+          setDict[Number.parseInt(entry.slice(0, first), 10)]?.toLowerCase();
+        const landscape = entry.slice(first + 1, second) === "1";
+        const key = entry.slice(second + 1);
         if (setCode === undefined || key === "") return [];
-        return [{ key, setCode, number: numberFor(key, setCode) }];
+        return [{ key, setCode, number: numberFor(key, setCode), landscape }];
       });
+    }),
+    faceSets: labels.map((_, ordinal) => {
+      /* Fixed-width two, so the slice is arithmetic rather than a split — the
+         same shape `typeAt` and `verdictAt` already decode with. */
+      const id = Number.parseInt(
+        encoded.faceSets.slice(ordinal * 2, ordinal * 2 + 2),
+        36,
+      );
+      if (!Number.isFinite(id) || id <= 0) return "";
+      return setDict[id - 1]?.toLowerCase() ?? "";
     }),
     faceLandscape: labels.map(
       (_, ordinal) => encoded.faceLandscape[ordinal] === "1",
@@ -1898,6 +2038,63 @@ function positiveFreeTerms(
   }
 }
 
+/**
+ * The one set the whole query is restricted to, or `null`.
+ *
+ * Walks the tree the way {@link positiveFreeTerms} does and for the same
+ * reason: a set named under a `not` is one the reader excluded, and treating it
+ * as the set they are looking at would be reading the query backwards.
+ *
+ * ANY AMBIGUITY ANSWERS `null`. Two distinct codes cannot both be "the set",
+ * and this decides which picture every row carries — so the failure mode of
+ * guessing is a grid where an unknown fraction of the art is from a set the
+ * reader did not name, with nothing on the page to say which. Returning `null`
+ * falls back to each card's own face, which is what the page showed before this
+ * existed and is never a claim about a set.
+ *
+ * AN `or` IS NOT SPECIAL-CASED, AND THE REASON IS NARROWER THAN IT LOOKS.
+ * `set:mst or set:wtr` yields two codes and is rejected by the count. `set:mst
+ * or pitch:1` yields one code while not actually restricting to it, so the name
+ * `setFocusOf` overstates what has been established — every row gets the
+ * Mistveil art where the card has one, including rows that are on the page
+ * because of their pitch and have nothing to do with Mistveil.
+ *
+ * That is accepted rather than overlooked, and the property that makes it safe
+ * is NOT "those rows keep their own face" — they do not. It is that the art has
+ * to be in `arts` to be chosen at all, and `arts` holds only faces of THAT
+ * card. So the worst case is a card shown by a real printing of itself from a
+ * set the reader named in half of a disjunction. Nothing false is rendered; the
+ * picture is merely chosen by a clause that is not why the row matched.
+ *
+ * Tightening it would mean asking which BRANCH of the `or` each row satisfied,
+ * which is a per-row question this function is not given the results to answer.
+ * If that ever matters, the fix is to resolve the focus per row during
+ * evaluation rather than to make this walk cleverer.
+ */
+function setFocusOf(node: QueryNode): string | null {
+  const codes = new Set<string>();
+
+  const walk = (current: QueryNode, under: boolean): void => {
+    switch (current.kind) {
+      case "leaf":
+        if (!under && current.field === "set") codes.add(current.value);
+        return;
+      case "not":
+        walk(current.child, !under);
+        return;
+      default:
+        for (const child of current.children) walk(child, under);
+    }
+  };
+
+  /* The root is never under a negation; `walk` carries that state downwards.
+     This took a `negated` parameter for symmetry with `positiveFreeTerms`, and
+     no caller ever passed it — an argument nobody supplies is a claim about
+     flexibility this function does not have. */
+  walk(node, false);
+  return codes.size === 1 ? ([...codes][0] ?? null) : null;
+}
+
 /** Cards whose flavour text contains the term, whole word or by prefix. */
 function flavourMatches(index: CardIndex, term: string): ReadonlySet<number> {
   const out = new Set<number>();
@@ -2024,6 +2221,27 @@ export interface CardOutcome {
   readonly results: readonly CardResult[];
   /** Matches found, which may exceed the number returned. */
   readonly total: number;
+  /**
+   * The single set every result is restricted to, lowercased — or `null`.
+   *
+   * WHAT IT IS FOR: choosing which printing's art each row carries. A reader
+   * who typed `set:MST` is looking at Mistveil, so the grid should be Mistveil's
+   * pictures rather than each card's first-ever printing. See the face
+   * resolution in `toResult`.
+   *
+   * IT IS NULL UNLESS THE ANSWER IS UNAMBIGUOUS, which is stricter than "the
+   * query mentions a set". `set:MST or set:WTR` restricts to two, and picking
+   * either would silently answer half the rows with the wrong set's art; a
+   * negated `-set:MST` restricts to everything else. Both give `null`, and the
+   * rows keep their own faces — the honest rendering when no single set is
+   * being asked about.
+   *
+   * Reported on the outcome rather than kept private for the same reason `sort`
+   * and `unique` are: an interface has to be able to say which printings it is
+   * showing, and a set page reading this is how it stays in step with a search
+   * that asks the same question.
+   */
+  readonly setFocus: string | null;
 }
 
 /**
@@ -2036,10 +2254,32 @@ export interface CardOutcome {
  * It used to be a hard cap with "narrow the query" printed under it, which
  * `docs/SCRYFALL-GAP.md` §4 named for what it was: "a refusal where Scryfall
  * paginates. A grid makes it worse — 60 images is under one scroll."
+ *
+ * IT GOVERNS THE SET PAGES TOO, which is where the old wording was not merely
+ * unhelpful but meaningless: a set page's query IS the set, so there is nothing
+ * to narrow. Sixty is kept rather than raised for the reason it was chosen —
+ * the grid is IMAGES, and a page asking for four hundred faces at once spends
+ * its first several seconds fetching pictures nobody has scrolled to.
  */
 export const CARD_RESULT_LIMIT = 60;
 
-const STAT_LABELS = ["Cost", "Power", "Defence"] as const;
+/**
+ * The printed values a row shows, in the order `docs/DESIGN.md` reads a card.
+ *
+ * THE SAME SIX `statsOf` PRODUCES, AND THE ORDER IS THE SAME ONE. A set page
+ * builds its rows straight from `CardPage.stats`; this builds them from the
+ * index. Two lists in two files is a drift waiting to happen, so they are
+ * pinned against each other in `card-search.test.ts`, under "one card index,
+ * one stat vocabulary".
+ */
+export const STAT_LABELS = [
+  "Cost",
+  "Power",
+  "Defence",
+  "Life",
+  "Intellect",
+  "Arcane",
+] as const;
 
 /** `"Head Jab (pitch 2)"` → `"Head Jab"`. The suffix `labelFor` added. */
 function nameOf(label: string): string {
@@ -2055,8 +2295,16 @@ function toResult(
   mode: CardUniqueMode = "names",
   /** Set when this row stands for one ALTERNATE art rather than for the card. */
   art?: ArtRef,
+  /**
+   * The one set the query restricted to, lowercased, or `null`.
+   *
+   * See {@link CardOutcome.setFocus}. It changes only which PICTURE the row
+   * carries — never its label, its link or its rank — because the row still
+   * stands for the card rather than for the printing.
+   */
+  setFocus: string | null = null,
 ): CardResult {
-  const printed = index.stats[ordinal] ?? ["", "", ""];
+  const printed = index.stats[ordinal] ?? ["", "", "", "", "", ""];
   const slug = index.slugs[ordinal] ?? "";
   const nameSlug = index.nameSlugs[ordinal] ?? slug;
   /*
@@ -2090,6 +2338,76 @@ function toResult(
    */
   const partial = matchedPitches.length < totalVersions;
 
+  /**
+   * THE FACE THE QUERY ASKED FOR, WHICH IS NOT ALWAYS THE CARD'S OWN.
+   *
+   * `faceKeys` holds the card's default face — its first printing that
+   * publishes art, in corpus order. That is the right picture for a bare name
+   * search and the WRONG one for `set:MST`: a card first printed in Welcome to
+   * Rathe and reprinted in Mistveil showed the Rathe art under a filter naming
+   * Mistveil, which is a true picture of a false claim. The reader asked what
+   * this set looks like.
+   *
+   * Resolved inside `toResult` rather than by its caller because the face and
+   * its orientation have to come out of ONE expression — see the note below on
+   * the half-swap that shipped when they did not. (This used to say "because
+   * there are three call sites"; there is one. The reason survives the
+   * correction, the arithmetic did not.) The order is deliberate:
+   *
+   * 1. An ART ROW already IS a printing, so it keeps its own face. `unique:art`
+   *    expands a card into its arts; overriding one of them with the focus
+   *    set's art would collapse the expansion it just performed.
+   * 2. The default face, WHEN IT COMES FROM THE FOCUS SET. This is the common
+   *    case and it costs one string comparison.
+   * 3. An alternate art from the focus set, if the card has one.
+   * 4. The default face, unchanged. A card can match `set:MST` on a printing
+   *    whose art is shared with an earlier set — Regular, Rainbow Foil and Cold
+   *    Foil in one set are three rows and one image, and a straight reprint
+   *    carries no new art at all — so "no art from this set" is a real answer
+   *    rather than a lookup failure, and showing the card's own face is better
+   *    than showing a placeholder.
+   */
+  /*
+   * THE ORIENTATION COMES BACK WITH THE FACE, and the two are resolved in one
+   * expression so they cannot come from different printings.
+   *
+   * Splitting them is exactly what went wrong on the first pass: the key was
+   * swapped to the focus set's art while `faceLandscape` went on being read
+   * from `index.faceLandscape[ordinal]`, which describes the DEFAULT face. A
+   * rotated alternate would then have been drawn inside a portrait box —
+   * visible at a glance, and only on the printings this feature exists to
+   * show. The same trap applies to an `unique:art` row, which was already
+   * showing every alternate art at the default face's orientation.
+   */
+  const shown = (() => {
+    const own = {
+      key: index.faceKeys[ordinal] ?? null,
+      landscape: index.faceLandscape[ordinal] === true,
+    };
+    if (art !== undefined) return { key: art.key, landscape: art.landscape };
+    /*
+     * IN `unique:art`, EVERY ROW IS A PRINTING — INCLUDING THIS ONE.
+     *
+     * `mode === "art"` expands a card into its default face plus one row per
+     * alternate, so the row reached here is the DEFAULT ART rather than a
+     * stand-in for the card. Letting it take the focus set's art meant
+     * `set:lgs unique:art` rendered the card row wearing the LGS art and then
+     * the LGS art row immediately beneath it — the same picture twice, adjacent,
+     * which is the duplication the mode exists to avoid.
+     *
+     * The guard above only covered `art !== undefined`, so it caught every row
+     * the expansion ADDED and not the one it was expanding.
+     */
+    if (mode === "art") return own;
+    if (setFocus === null || index.faceSets[ordinal] === setFocus) return own;
+    const fromSet = (index.arts[ordinal] ?? []).find(
+      (ref) => ref.setCode === setFocus,
+    );
+    return fromSet === undefined
+      ? own
+      : { key: fromSet.key, landscape: fromSet.landscape };
+  })();
+
   return {
     // THE BARE NAME WHEN THE ROW STANDS FOR THE WHOLE CARD. Everywhere a row
     // points at ONE version it must render the disambiguated label, or two
@@ -2115,8 +2433,8 @@ function toResult(
         : `/card/${collapsed && !partial ? nameSlug : slug}`,
     matchedPitches,
     totalVersions,
-    faceKey: art !== undefined ? art.key : (index.faceKeys[ordinal] ?? null),
-    faceLandscape: index.faceLandscape[ordinal] === true,
+    faceKey: shown.key,
+    faceLandscape: shown.landscape,
     pitch: index.pitches[ordinal] ?? 0,
     typeLine: index.typeLines[ordinal] ?? "",
     stats: STAT_LABELS.map(
@@ -2276,6 +2594,15 @@ export function searchCards(
   index: CardIndex,
   raw: string,
   limit: number = CARD_RESULT_LIMIT,
+  /**
+   * How many ranked rows to skip — `(page - 1) * limit`.
+   *
+   * A PAGE IS CUT HERE RATHER THAN IN THE COMPONENT, and the difference is what
+   * gets built. Slicing after the fact would mean assembling a `CardResult` for
+   * every match — labels, hrefs, resolved faces, stat pairs — to render sixty
+   * of them, and `type:action` matches upwards of a thousand. Ranking is
+   * unavoidable and cheap; result construction is avoidable, so it is avoided.
+   */
   offset = 0,
 ): CardOutcome {
   const { terms, filters, notices, sort, unique, display, folded, tree } =
@@ -2320,8 +2647,12 @@ export function searchCards(
       display,
       results: [],
       total: 0,
+      setFocus: null,
     };
   }
+
+  /* Resolved once, from the tree, and handed to every row. */
+  const setFocus = setFocusOf(tree);
 
   /*
     TEXT POSTINGS ARE RESOLVED ONCE, BEFORE THE WALK. They are the only lookup
@@ -2559,8 +2890,10 @@ export function searchCards(
         versions,
         unique,
         row.art,
+        setFocus,
       );
     }),
     total: rows.length,
+    setFocus,
   };
 }
