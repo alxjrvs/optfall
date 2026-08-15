@@ -188,10 +188,34 @@
     to three lines should grow downward past a jewel that stays at the top, and
     a one-line type line should sit level with the plates beside it.
   */
+/*
+    THE MIDDLE COLUMN HAS A FLOOR, AND THE CORNERS GIVE WAY TO IT.
+
+    `minmax(0, 1fr)` alone means the corners are sized first and the name gets
+    whatever is left. That was slack while the corners were a bare jewel and a
+    stacked plate — about 65px between them. Putting the label BESIDE the plate
+    roughly trebles that: measured, 87px and 81px, so on a 360px phone the name
+    came down from 237px to 134px and on a 320px one to 94px. Nothing overflows
+    — `overflow-wrap: anywhere` sees to that — but a card's name breaking mid
+    word to keep the word POWER on one line has the priorities backwards.
+
+    So the name asks for a thumb's width before the corners may keep their
+    labels. The length is derived rather than chosen, the same move
+    `.of-card__formats` makes below: `card.face.thumb` is a published token, it
+    is the width the corpus's longer names set at `title` without breaking, and
+    `min(…, 100%)` keeps the floor from becoming an overflow on a viewport
+    narrower than the floor itself.
+
+    What gives, when it has to, is the label's POSITION and never the plate —
+    see `.of-card__badge`.
+  */
 .of-card__band--title,
 .of-card__band--bar {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns:
+    minmax(0, auto)
+    minmax(min(var(--of-card-face-thumb), 100%), 1fr)
+    minmax(0, auto);
   gap: var(--of-space-base);
 }
 
@@ -308,10 +332,24 @@
     a `<dl>` whose term follows its value is a `<dl>` that has stopped being one
     for anything reading the document rather than looking at it.
   */
+/*
+    THE WORD WRAPS UNDER THE PLATE WHEN THE BAND RUNS OUT, and never the other
+    way round. `flex-wrap: wrap` is what lets the corner's min-content fall from
+    `plate + gap + label` to `max(plate, label)`, which is what the name
+    column's floor above spends to buy its width back. On a wide panel there is
+    no pressure and this never fires; on a 320px phone the corner folds to the
+    stacked arrangement this band used to have everywhere, which is the right
+    thing to degrade INTO — it is a worse reading of which corner you are in,
+    and that is a smaller loss than a shredded name.
+
+    Centred, so the folded state is a column rather than a ragged edge.
+  */
 .of-card__badge {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: var(--of-space-tight);
 }
 
@@ -357,8 +395,12 @@
     space at — so the run read as a clump with a stray word after it, at every
     rarity count, which is the whole of the unevenness.
 
-    A flex row with one `gap` is the fix, and it needs the attribution wrapped in
-    a span to work: `gap` spaces flex ITEMS, and a bare text node is not one.
+    A flex row with one `gap` is the whole fix, and it needs NOTHING wrapped
+    around the attribution to work. The first attempt put a span there on the
+    theory that `gap` spaces elements and a bare text node is not one; flexbox
+    wraps each contiguous run of text in an ANONYMOUS flex item, so the gap
+    already applied to it. Worth writing down, because the wrong version looked
+    like a load-bearing reason rather than a guess.
   */
 .of-card__credit {
   display: flex;
