@@ -181,9 +181,10 @@ export async function writeServiceWorker(
      */
     globPatterns: ["**/*.{js,css,woff2,svg,webmanifest}"],
     /*
-     * Three lines Workbox has no hook for: drop the page cache whenever a new
+     * One listener Workbox has no hook for: drop the page cache whenever a new
      * worker activates. See `serviceWorkerPurge` in `ssg/assets.ts` for why that
-     * is the deploy signal and why the page cache is unsafe without it.
+     * is the deploy signal, why the page cache is unsafe without it, and what
+     * this deliberately does NOT also clean up.
      */
     importScripts: ["/sw-purge.js"],
     /*
