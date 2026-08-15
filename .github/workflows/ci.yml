@@ -660,7 +660,13 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          # `.bun-version`, like the other ten steps in this file. This one
+          # pinned `${{ env.BUN_VERSION }}` inline and reached main anyway,
+          # because the PR that added the step and the PR that added the rule
+          # were each green against a main that did not yet have the other.
+          # Required checks are not `strict` here, so the combination was never
+          # run until a third PR inherited it.
+          bun-version-file: .bun-version
 
       # A gate can only aggregate what it was told to need, and `needs:` above
       # is maintained by hand. Adding a job to this workflow and forgetting to
