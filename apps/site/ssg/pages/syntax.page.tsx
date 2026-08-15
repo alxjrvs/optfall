@@ -28,6 +28,7 @@
  * before anything with state is attempted.
  */
 
+import { SETS } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./syntax.css";
 
@@ -82,8 +83,10 @@ const FIELDS: readonly Row[] = [
   },
   {
     example: "date>=2024-06-21",
-    meaning:
-      "The same question by the day rather than the year. Seventeen sets carry no published date and no date filter can match them; the search says so when you use one.",
+    /* COUNTED FROM THE CORPUS, NOT TYPED. This page is the manual, so a number
+       here that a re-sync can falsify is a published wrong answer with nothing
+       to catch it — the same drift this operator's own PR documents elsewhere. */
+    meaning: `The same question by the day rather than the year. ${SETS.counts.sets - SETS.counts.dated} sets carry no published date and no date filter can match them; the search says so when you use one.`,
   },
   {
     example: "rarity:majestic",
