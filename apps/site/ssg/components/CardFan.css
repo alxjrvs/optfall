@@ -28,7 +28,21 @@
     value the layout has to compute.
   */
 .of-fan__window {
-  block-size: 22vh;
+  /*
+    A BAND, AND THE FOOTER IS WHAT ENDS IT.
+
+    The height is constrained so the fan occupies a strip rather than a full
+    card's worth of page — but nothing is clipped here any more. The cards
+    overflow DOWNWARDS out of this box and the footer, which paints above them,
+    is what cuts them off. So the row reads as cards standing behind the footer
+    rather than as a cropped image, the rise is fully visible because the
+    overflow at the top is real, and no scrollbar exists in either axis.
+
+    `block-size` rather than `max-block-size`: this box has to reserve its strip
+    whatever the cards do, or the column's height would follow the artwork and
+    the fold arithmetic in `home.css` would move with it.
+  */
+  block-size: 24vh;
 
   /*
       CLIPPED DOWNWARD, SCROLLING SIDEWAYS, and the two axes are set separately
@@ -59,7 +73,7 @@
       That is why the horizontal scroll lives on `.of-fan__track` inside this box.
       Nothing here scrolls; the vertical crop is final.
     */
-  overflow-y: clip;
+  overflow-y: visible;
 
   /*
       HEADROOM FOR THE LIFT AND THE FOCUS RING. Half the cards sit flush with
@@ -73,12 +87,10 @@
       the same trap.
     */
   box-sizing: border-box;
-  padding-block-start: calc(
-    var(--of-space-loose) +
-    var(--of-space-tighter) +
-    var(--of-bevel-width) *
-    2
-  );
+  /* Room above for the rise, and NOTHING below it: the band sits flat on the
+     footer, so the cards meet it rather than floating over a gap. */
+  padding-block-start: var(--of-space-loose);
+  padding-block-end: 0;
 }
 
 /*
@@ -88,7 +100,7 @@
     cannot be scrolled.
   */
 .of-fan__track {
-  overflow-x: auto;
+  overflow-x: visible;
 }
 
 .of-fan__row {
@@ -152,22 +164,26 @@
 }
 
 /*
-    HOVER BRINGS THE CARD TO THE FRONT AND LIFTS IT, and both halves matter.
-    Lifting alone moves a card that is still behind its neighbours, so the one
-    under the cursor is the one you cannot see.
+    HOVER LIFTS THE CARD AND LEAVES THE STACKING ALONE.
 
-    `z-index` goes on the LIST ITEM rather than the link, because the item is
-    what the stacking order is established on. `:focus-within` covers keyboard
-    focus with the same rule — the anchor is the only focusable thing inside.
+    It used to raise `z-index` as well, on the argument that lifting alone moves
+    a card still behind its neighbours. That was true while the band was cropped
+    and the lift was most of a card's height — the raised card went up into a
+    clip and the pop to the front was what made it readable. The band is no
+    longer cropped and the lift is now a nudge, so bringing the card to the front
+    is a bigger gesture than the interaction deserves: it reshuffles the whole
+    fan under the cursor for a hover that only needs to say "this one".
+
+    `:focus-within` on the item is kept for the focus ring, which must not be
+    drawn under a neighbouring card.
   */
-.of-fan__row li:hover,
 .of-fan__row li:focus-within {
   z-index: calc(var(--z) + 100);
 }
 
 .of-fan__row li:hover a,
 .of-fan__row li a:focus-visible {
-  transform: translateY(calc(-1 * var(--of-space-loose)));
+  transform: translateY(calc(-1 * var(--of-space-tight)));
 }
 
 .of-fan__row li a:focus-visible {
@@ -177,9 +193,9 @@
 
 /*
     Honour a reduced-motion preference by removing the transition, not the
-    behaviour: the card still comes to the front, it just arrives rather than
-    travels. Taking the lift away entirely would remove the only feedback that
-    the hover did anything.
+    behaviour: the card still rises, it just arrives rather than travels. Taking
+    the lift away entirely would remove the only feedback that the hover did
+    anything.
   */
 @media (prefers-reduced-motion: reduce) {
   .of-fan__row li a {

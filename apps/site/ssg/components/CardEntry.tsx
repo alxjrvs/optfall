@@ -938,8 +938,11 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         which is a claim about a card, and it does not extend to the corpus
         envelope, which is identical on all 4,941 pages.
 
-        The rights line stays outside the fold, because it has to accompany the
-        page rather than be available from it.
+        THE RIGHTS LINE USED TO SIT HERE, outside the fold, on the argument that
+        it has to accompany the page rather than be available from it. That
+        argument is still right and the line is still on every page — it moved to
+        the universal footer with the card-image notice, so repeating it here was
+        printing the same paragraph twice on one page.
       */}
       <OrnamentalRule label="Source" />
       <section className="of-card__apparatus" aria-labelledby="source">
@@ -994,7 +997,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             deterministic code — no language model touches this corpus.
           </p>
         </details>
-        <p className="of-card__legal">{CORPUS.rights}</p>
       </section>
     </>
   );

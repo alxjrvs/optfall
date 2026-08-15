@@ -39,6 +39,7 @@
 import { type ReactNode, type Ref, useId } from "react";
 
 import { BevelledPlate } from "./BevelledPlate";
+import { Mark } from "./Mark";
 import "./SearchField.css";
 
 export interface SearchFieldProps {
@@ -129,6 +130,16 @@ export function SearchField({
       <BevelledPlate emphasis="sunken">
         <div className="of-search__well">
           {/*
+            THE MARK, INSIDE THE FIELD. Scryfall puts a mana symbol here and it
+            does real work: it tells you what you are about to search before you
+            have typed, on a page that is otherwise a bare box. Decorative,
+            because the field's own `<label>` already names it — a mark with an
+            accessible name would make the control announce itself twice.
+          */}
+          <span className="of-search__mark" aria-hidden="true">
+            <Mark size="sm" decorative />
+          </span>
+          {/*
             EVERY COMBOBOX ATTRIBUTE IS CONDITIONAL ON `listboxId`, WHICH IS
             THE POINT OF THEM. With no list to expand they all evaluate to
             `undefined` and none of them renders — an `aria-expanded` on a
@@ -159,6 +170,17 @@ export function SearchField({
             ref={inputRef}
             onKeyDown={onKeyDown}
           />
+          {/*
+            NO VISIBLE SUBMIT, AND STILL A REAL ONE. Scryfall has no button and
+            neither do we: a single-input form submits on Enter, and the button
+            was the widest thing in the well for an action nobody clicked.
+
+            It is hidden rather than deleted. Implicit submission is a browser
+            behaviour, not a guarantee — and a form whose only way in is a key
+            press is a form some assistive technology cannot submit at all. The
+            button is still in the accessibility tree and still focusable; it
+            just takes no space.
+          */}
           <button className="of-search__submit" type="submit">
             Search
           </button>
