@@ -23,6 +23,7 @@
  */
 
 import { Document } from "./document";
+import { aboutPage } from "./pages/about.page";
 import { cardPage } from "./pages/card.page";
 import { homePage } from "./pages/home.page";
 import { crPage } from "./pages/cr.page";
@@ -81,4 +82,5 @@ export const routes: readonly RouteRegistration[] = [
   register(cardPage),
   register(searchPage),
   register(homePage),
+  register(aboutPage),
 ];

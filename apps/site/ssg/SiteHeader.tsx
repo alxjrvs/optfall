@@ -41,6 +41,9 @@ const LINKS: readonly {
   { href: "/cr", label: "Rules", key: "rules" },
   { href: "/syntax", label: "Syntax", key: "syntax" },
   { href: "/random", label: "Random" },
+  /* Last, and without a `key`: it is a destination rather than a section, so no
+     page marks it current. */
+  { href: "/about", label: "About" },
 ];
 
 export function SiteHeader({ section, field = true }: SiteHeaderProps) {
