@@ -24,11 +24,13 @@
 
 import { Document } from "./document";
 import { cardPage } from "./pages/card.page";
+import { homePage } from "./pages/home.page";
 import { crPage } from "./pages/cr.page";
 import { dataTermsPage } from "./pages/data-terms.page";
 import { randomPage } from "./pages/random.page";
 import { rulePage } from "./pages/rule.page";
 import { setPage } from "./pages/set.page";
+import { searchPage } from "./pages/search.page";
 import { setsPage } from "./pages/sets.page";
 import { syntaxPage } from "./pages/syntax.page";
 import { renderRoute, resolveRoutes } from "./render";
@@ -77,4 +79,6 @@ export const routes: readonly RouteRegistration[] = [
   register(rulePage),
   register(randomPage),
   register(cardPage),
+  register(searchPage),
+  register(homePage),
 ];

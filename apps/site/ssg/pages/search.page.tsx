@@ -1,0 +1,140 @@
+/**
+ * `/search` — and `/search?q=banned:cc`, which is the same page with an answer
+ * on it. **The room the front door opens onto.** Ported.
+ *
+ * IT IS AT `/search` BECAUSE THAT IS WHERE PEOPLE LOOK. Scryfall's results live
+ * at `/search?q=`, and `docs/DESIGN.md` settled that the grammar is inherited
+ * rather than invented — "people arrive already fluent". The address is part of
+ * the grammar.
+ *
+ * THE SPLIT FROM `/` IS UNCHANGED. The door takes a name and sends you
+ * somewhere; this page renders the answer. The door ships names, slugs and
+ * pitches; this ships the full index — inverted postings over printed text,
+ * keyword and trait memberships, per-format verdict vectors. Somebody looking up
+ * "head jab" never downloads the machinery.
+ *
+ * NO `<h1>`. It read "Search the cards", and the field's own visible `<label>` —
+ * the one a screen reader announces — says the same words immediately beneath
+ * it, under a nav that says "Cards" and a title that says "Search the cards —
+ * Optfall". Four statements of one fact, and the display-sized one cost the most
+ * fold on the page that can least afford it.
+ */
+
+import rulesJson from "../../../../data/rules/cr-2.14.0.json";
+
+import { buildCardIndex } from "../../src/lib/card-search";
+import {
+  CARD_PAGES,
+  CARD_ROUTES,
+  CORPUS,
+  LAST_CONFIRMED,
+} from "../../src/lib/cards";
+import {
+  buildKeywordVocabulary,
+  keywordCoverage,
+} from "../../src/lib/keywords";
+import type { RulesCorpus } from "../../src/lib/search";
+import { Island } from "../Island";
+import { CardSearch } from "../islands/CardSearch";
+import type { PageModule, PageResult } from "../types";
+import "./search.css";
+
+/*
+ * Built here, once, at build time, from the same shaped pages `/card/<slug>`
+ * renders — which is what makes it impossible for a search result and the page
+ * it links to to disagree about a slug, a label, a legality verdict or a face.
+ * The 16 MB corpus stays on the build machine.
+ */
+const index = buildCardIndex(CARD_PAGES, {
+  commit: CORPUS.source.commit,
+  confirmed: LAST_CONFIRMED,
+});
+
+const cards = CORPUS.counts.cards.toLocaleString("en-GB");
+const printings = CORPUS.counts.printings.toLocaleString("en-GB");
+/*
+ * EVERY ROUTE, NOT EVERY CARD ROUTE — because the sentence this feeds names the
+ * printings in the same breath, and "16,502 printings at 5,841 permanent URLs"
+ * invites exactly the conclusion that the printings are not addressable.
+ */
+const permalinks = CARD_ROUTES.length.toLocaleString("en-GB");
+const upstream = `https://github.com/${CORPUS.source.repository}`;
+
+/**
+ * THE JOIN'S COVERAGE, STATED RATHER THAN IMPLIED. A join that quietly drops
+ * what it cannot answer is asserting a completeness it does not have. The number
+ * is computed rather than typed, so it cannot rot when either document is
+ * re-synced.
+ */
+const coverage = keywordCoverage(
+  buildKeywordVocabulary(rulesJson as unknown as RulesCorpus),
+  CORPUS.cards.flatMap((card) =>
+    card.card_keywords.concat(card.ability_and_effect_keywords),
+  ),
+);
+const unmatchedList = coverage.unmatched.join(", ");
+
+function page(): PageResult {
+  return {
+    title: "Search the cards — Optfall",
+    description:
+      "Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from.",
+    section: "cards",
+    headerSearch: false,
+    islands: true,
+    children: (
+      <>
+        {/*
+          THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form submits here, so
+          a reader with scripting off arrives at `/search?q=…` with a query in
+          the address bar and no machinery on the page able to answer it.
+          Without this block that reads as an empty field and nothing else — a
+          silent failure, which is the one shape "degrade visibly" forbids.
+        */}
+        <noscript>
+          <p className="of-search-page__noscript">
+            Live results need JavaScript. Every card is addressable without it:{" "}
+            <code>/card/command-and-conquer</code> is that card, and a name
+            shared by several cards — <code>/card/head-jab</code> — is that card
+            too, with its pitch versions as tabs.
+          </p>
+        </noscript>
+
+        <Island name="CardSearch" props={{ index, ornament: true }}>
+          <CardSearch index={index} ornament />
+        </Island>
+
+        {/*
+          Degrade visibly, on the surface that serves the data rather than on the
+          one that links to it.
+        */}
+        <p className="of-search-page__provenance">
+          {cards} cards and {printings} printings at {permalinks} permanent
+          URLs, from <a href={upstream}>{CORPUS.source.repository}</a> at{" "}
+          <code>{CORPUS.source.commit}</code>, confirmed {LAST_CONFIRMED}.
+          Legality is present day only; the query language says so rather than
+          guessing.
+        </p>
+
+        <p className="of-search-page__provenance">
+          Card keywords are matched to the Comprehensive Rules section that
+          defines each one, and every card page cites the rules that govern it.
+          Coverage is <strong>{coverage.percent}%</strong> —{" "}
+          {coverage.direct + coverage.viaFamily} of {coverage.baseForms}{" "}
+          distinct keywords, {coverage.direct} matched directly and{" "}
+          {coverage.viaFamily} through a rule the document parameterises. The{" "}
+          {coverage.unmatched.length} it cannot resolve are named rather than
+          hidden: {unmatchedList}. A keyword the rules do not define carries no
+          citation instead of a guessed one.
+        </p>
+
+        <p className="of-search-page__legal">{CORPUS.rights}</p>
+      </>
+    ),
+  };
+}
+
+export const searchPage: PageModule = {
+  pattern: "/search",
+  page,
+};

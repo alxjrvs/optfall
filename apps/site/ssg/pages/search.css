@@ -1,0 +1,31 @@
+/*
+ * `/search`'s own styles, ported from the Astro page's scoped block.
+ */
+
+/* The rights notice is legalese: present, not competing. */
+.of-search-page__legal {
+  margin-block-start: var(--of-space-base);
+  font-size: var(--of-type-size-legal);
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink-faint);
+}
+
+.of-search-page__provenance {
+  margin-block-start: var(--of-space-loosest);
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-small);
+}
+
+/*
+ * The no-JS notice, in the same accent-ruled register the query engine's own
+ * notices use inside the island: this is the page telling you about itself
+ * rather than content.
+ */
+.of-search-page__noscript {
+  margin-block: 0 var(--of-space-loose);
+  padding-inline-start: var(--of-space-tight);
+  border-inline-start: calc(var(--of-bevel-width) * 2) solid
+    var(--of-color-accent);
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-small);
+}
