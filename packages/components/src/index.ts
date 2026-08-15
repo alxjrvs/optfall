@@ -2,18 +2,22 @@
  * `optfall-components` — the component library, and the contracts its
  * primitives are built against.
  *
- * The Svelte sources land in Phase 1 of the build plan, each one built in
- * Storybook, in both themes, before it appears on a product surface. What lives
- * here today is the part that has to be settled *before* anyone writes markup:
- * the prop contracts, and the two compliance obligations that are properties of
- * a component rather than of a page.
+ * This module is the contract layer: the prop types, the shared geometry, and
+ * the compliance obligations that are properties of a component rather than of
+ * a page. The implementations live in `./react`; the Svelte sources this file
+ * was originally written against were deleted in Phase 6.
  *
- * Two rules govern everything added here:
+ * Three rules govern everything added here:
  *
  * - **Compose, never restyle.** A screen that needs new CSS is a signal this
  *   library is missing a primitive; it gets added here, not in the page.
  * - **Tokens or nothing.** No component may name a colour or a size directly.
  *   Every visual value arrives through `optfall-theme`.
+ * - **One primitive, one card.** Every entry in {@link PRIMITIVES} is
+ *   demonstrated by its own card in the `design-system/` workbench, titled with
+ *   its own id. `scripts/design-system-coverage.test.ts` fails the build on a
+ *   primitive that has none, and `docs/DESIGN.md` records the taxonomy and why
+ *   a shared "gallery" card does not count as coverage.
  *
  * @packageDocumentation
  */
@@ -177,12 +181,13 @@ export type PageSize = number | "all";
  * **The plate hosts panel filigree; it does not draw it.** With
  * `ornament="panel-corner"` it opens four slots — placed *and sized* by the
  * plate, since only the plate knows where its corners are — and renders a
- * `corner` snippet into each, passing the {@link PlateCorner} id. The caller
- * composes `FiligreeCorner role="panel-corner" corner={id}` in, which keeps
- * scrollwork rationed by the call site that can see the whole screen rather
- * than by a plate that can only see itself. The snippet prop is deliberately
- * not typed here: snippets are a Svelte concern and stay local to the
- * component, exactly as `children` does.
+ * `corner` render prop into each, passing the {@link PlateCorner} id. The
+ * caller composes `FiligreeCorner role="panel-corner" corner={id}` in, which
+ * keeps scrollwork rationed by the call site that can see the whole screen
+ * rather than by a plate that can only see itself. The render prop is
+ * deliberately not typed here: it is a rendering concern and stays local to the
+ * component, exactly as `children` does. (It was a Svelte `snippet` until
+ * Phase 6; the division of labour is unchanged.)
  */
 export interface BevelledPlateProps {
   readonly emphasis?: "flat" | "raised" | "sunken";
@@ -367,12 +372,13 @@ export interface MarkProps {
  * pitch diamond, cleaved, on the argument that the logo and the core interface
  * primitive should be the same object; `docs/DESIGN.md` records why that
  * argument was retired. The jewel is still the interface primitive and still
- * has its own token, `ornament.cut.jewel`, which `PitchJewel.svelte` clips
- * itself with — the mark simply stopped being it.
+ * has its own token, `ornament.cut.jewel`, which `PitchJewel` clips itself
+ * with — the mark simply stopped being it.
  *
- * IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND MUST NOT HAVE TWO DEFINITIONS.
- * `Mark.svelte` draws the chain and `apps/site/src/pages/favicon.svg.ts` draws
- * one link of it at build time. A second copy of these numbers is a second
+ * IT LIVES HERE BECAUSE IT HAS THREE CONSUMERS AND MUST NOT HAVE THREE
+ * DRAWINGS. `Mark.tsx` draws the chain, `apps/site/ssg/assets.ts` draws one
+ * link of it at build time for the favicon, and the `mark` design-system card
+ * draws it again in the workbench. A second copy of these numbers is a second
  * drawing, and a second drawing drifts — which is the failure the previous mark
  * had, in this same file, before it was rewritten as a derivation.
  *
@@ -587,6 +593,94 @@ export const MARK_GEOMETRY: MarkGeometry = {
     placement: placementOf(0, 0),
   },
 };
+
+/**
+ * The filigree drawing — the paths, and the mirror that places them.
+ *
+ * IT LIVES HERE FOR THE SAME REASON {@link MARK_GEOMETRY} DOES: it has two
+ * consumers and must not have two definitions. `FiligreeCorner` draws it, and
+ * `scripts/build-design-system.ts` draws it again on the `filigree-corner`
+ * design-system card. A second copy of these paths is a second drawing, and a
+ * second drawing drifts — which is the failure that generator's own header
+ * documents ("the card screen went on showing a stat block that had become
+ * glyphs"), one primitive over.
+ *
+ * ONLY THE PATHS ARE SHARED, NOT THE SIZING. The `box`, the stroke weight and
+ * the relief `lift` are chosen per role by whoever renders, because those are
+ * presentation; the scrollwork is the thing that must agree.
+ *
+ * All coordinates are SVG user units inside a `viewBox`, so they are
+ * proportions of the ornament rather than lengths — the rendered size comes
+ * from the host slot for a corner and from `--of-ornament-filigree-size` for
+ * the rule figure, and nothing here changes when either does.
+ */
+export const FILIGREE_PATHS = {
+  /** The feature panel's corner: the fullest hand in the system. */
+  panel: {
+    /* The angular bracket — mitred, not curved, because the frame is square
+       even where the ornament growing out of it is not — and the volute, a
+       sweep out of the corner that spirals back on itself. The volute is what
+       makes this scrollwork rather than a chevron. */
+    strokes: [
+      "M 47 2 L 2 2 L 2 47",
+      "M 3 3 C 15.5 5.5 25.6 12.6 28.4 22.4 C 30.4 29.2 26.2 35 19.6 34.6" +
+        " C 14.4 34.3 10.8 29.8 11.9 25.2 C 12.8 21.5 16.9 19.7 20 21.6",
+    ],
+    /** Crescent leaves, and the lozenge at the eye of the scroll. */
+    fills: [
+      "M 6.5 3.4 C 13 8.4 20 9.6 27.4 6.6 C 21 10.2 13.6 9.4 7.6 5.2 Z",
+      "M 3.4 6.5 C 8.4 13 9.6 20 6.6 27.4 C 10.2 21 9.4 13.6 5.2 7.6 Z",
+      "M 20 23.6 L 22.4 26 L 20 28.4 L 17.6 26 Z",
+    ],
+  },
+  /**
+   * The card frame's corner: same motif, fewer members, thinner stroke. A card
+   * is one of many on a results page, and filigree at panel weight around each
+   * of them would be the "never on a list" failure by another route.
+   */
+  card: {
+    strokes: [
+      "M 31 1.5 L 1.5 1.5 L 1.5 31",
+      "M 2.5 2.5 C 10 4 15.6 8.4 17.6 14.6 C 19 19 16 22.8 12 22" +
+        " C 8.8 21.4 7.2 17.8 9.2 15.4 C 10.6 13.7 13.4 13.7 14.6 15.6",
+    ],
+    fills: [
+      "M 4.6 2.6 C 9 6 13.6 6.8 18.4 4.8 C 14.2 7.2 9.2 6.6 5.2 3.8 Z",
+      "M 13 16.4 L 14.8 18.2 L 13 20 L 11.2 18.2 Z",
+    ],
+  },
+  /**
+   * The section rule's figure, drawn as its LEFT HALF and mirrored. Symmetry
+   * about the centre is the point of a rule ornament, and a mirrored half
+   * cannot drift out of true the way two hand-drawn halves can.
+   */
+  rule: {
+    viewBox: "0 0 72 24",
+    strokes: [
+      "M 2 12 L 16 12",
+      /* Opposed volutes, above and below the stem — the double scroll. */
+      "M 16 12 C 22.6 12 26 8.4 24.2 5 C 22.7 2.2 18.7 2.4 17.6 5.4" +
+        " C 16.7 7.9 18.9 10.2 21.2 9.4",
+      "M 16 12 C 22.6 12 26 15.6 24.2 19 C 22.7 21.8 18.7 21.6 17.6 18.6" +
+        " C 16.7 16.1 18.9 13.8 21.2 14.6",
+      "M 25.6 12 L 31 12",
+    ],
+    fills: ["M 9 9.4 L 11.6 12 L 9 14.6 L 6.4 12 Z"],
+    /** Drawn once, spanning the mirror line, so the centre is a single shape. */
+    centre: "M 36 5.6 L 40.6 12 L 36 18.4 L 31.4 12 Z",
+  },
+  /**
+   * One motif, four placements. Mirroring rather than redrawing guarantees the
+   * four corners agree, and keeps the drawing to one set of paths to audit.
+   * Only the mirroring lives here — where the ornament *sits* is the host's.
+   */
+  mirror: {
+    "start-start": "translate(0 0)",
+    "start-end": "scale(-1 1)",
+    "end-start": "scale(1 -1)",
+    "end-end": "scale(-1 -1)",
+  } as Readonly<Record<PlateCorner, string>>,
+} as const;
 
 /* -------------------------------------------------------------------------- */
 /* Compliance carried by the component, not the page                           */

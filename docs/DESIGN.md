@@ -311,17 +311,98 @@ that knows about time.
 ## Implementation
 
 The design language is not a mockup — it is Phase 1 of the build plan, shipped as
-a theme package and a Svelte component library with Storybook as its workbench.
-Tokens are the only source of truth, a lint rule fails the build on a raw hex or
-pixel value inside a component, and accessibility checks run against every story
-in CI.
+a theme package and a React component library, with the `design-system/` bundle
+as its workbench. Tokens are the only source of truth, a lint rule fails the
+build on a raw hex or pixel value inside a component, and axe-core runs over
+every primitive in CI.
 
-The same component source compiles to custom elements, so the accessible pitch
-jewel can be adopted by other Flesh and Blood tools without them adopting our
-stack. That is the only mechanism by which the accessibility work reaches beyond
-our own edges.
+**Adoption by other tools is currently unsolved.** This section used to claim
+that "the same component source compiles to custom elements, so the accessible
+pitch jewel can be adopted by other Flesh and Blood tools without them adopting
+our stack" — described as the only mechanism by which the accessibility work
+reaches beyond our own edges. That mechanism was Svelte's, and it went with
+Svelte in Phase 6. Nothing replaces it yet. Recorded rather than deleted,
+because the goal outlived the technique.
 
 See [`PLAN.md`](PLAN.md) Phase 1.
+
+### The design-system bundle
+
+`design-system/` is the workbench: a small set of static HTML cards, generated
+from the theme's own tokens by `bun run design-system` and **committed**, so a
+drift between the cards and the product is a diff rather than a discovery.
+
+Its rule, in one line:
+
+> **One primitive = one card = one nav leaf, titled `Group/Primitive`, with the
+> leaf pinned to the primitive's own id.**
+
+**The taxonomy is closed.** Three top-level groups, and a card belongs to
+whichever question it answers:
+
+| Group | What it answers | Titles |
+|---|---|---|
+| `Foundations` | What the system is made of, before any component exists — colour, type, spacing. | Free-form. These document the system rather than living in it. |
+| `Primitives` | What one primitive is, how it varies, and why. **Exactly one card per entry in `PRIMITIVES`, and nothing else.** | Derived: the primitive's id in sentence case, so `pitch-jewel` is titled `Pitch jewel`. |
+| `Screens` | What the primitives assemble into — the exit criterion `PRIMITIVES` exists to check, which is that a complete product screen needs no new CSS. | Free-form. A screen is named by its route. |
+
+Adding a fourth group is a real decision: write it here and add it to
+`DS_GROUPS`. Do not invent one in a card.
+
+**The title is derived, not chosen.** A title is the only thing that puts a
+primitive somewhere findable, so a hand-written one drifts into naming something
+the code does not have. Deriving it from the id removes the choice rather than
+policing it.
+
+**Why it is enforced rather than asked for.** `scripts/design-system-coverage.test.ts`
+is the executable half of this section and runs under `bun run check`. It exists
+because the bundle had already rotted in both of the ways the rule prevents, and
+this repository is the third to arrive at the same conclusion —
+[`SU-SRD`](https://github.com/alxjrvs/SU-SRD) and `binfinite-app` each invented
+it independently, and each recorded that presence alone was not enough:
+
+- **Seven of thirteen primitives had no card at all**, so the bundle documented
+  just over half the library while looking complete.
+- **`rule-and-citation.html` was a gallery** — one card standing in for the
+  ornamental rule, the citation and the brass seal. Two of the three had already
+  drifted inside it, unnoticed: the citation was captioned *"monospaced, so you
+  can paste it"* after that face had been retired from the system, and the brass
+  seal was a flat badge with no version band — the one field Phase 5 requires be
+  impossible to miss.
+
+A gallery is the failure worth naming, because it looks like coverage. The
+allowlist for genuine exceptions starts **empty**, and a test fails if an entry
+in it goes stale.
+
+**The bundle is checked against its generator**, not just against the taxonomy:
+every committed card must be byte-identical to what `build-design-system.ts`
+renders. Without that, the gate would police a declaration the published HTML
+need not resemble — which is exactly how the bundle went stale the first time,
+built from a scratch directory with nothing to prompt a re-run.
+
+**What the gate does NOT reach — stated here rather than discovered later.** The
+cards hand-author the markup they illustrate rather than rendering the real
+components, so a component change does not propagate on its own. That bounds the
+gate precisely:
+
+| The gate checks | The gate cannot check |
+|---|---|
+| Every primitive has a card | That the card still *looks like* its primitive |
+| The group vocabulary is closed | — |
+| The title is derived from the id | — |
+| The committed HTML is byte-identical to what the generator renders | That the generator's hand-written markup agrees with the component's |
+
+So the catalog's **shape** is enforceable and its **fidelity** is left to review.
+That is the same class of problem the generator's own header describes — a card
+that went on showing a stat block after the component had become glyphs — and
+this gate does not solve it. It makes the missing-card and mis-titled-card half
+impossible, which is the half that was silently wrong at scale.
+
+The mark and the filigree are the two exceptions, and are immune: both draw from
+geometry published in `packages/components/src/index.ts` precisely so there is
+one drawing rather than two. Rendering the real React components into every card
+would extend that immunity to the whole bundle, removing the weakness rather
+than managing it, and remains the right next step.
 
 ---
 

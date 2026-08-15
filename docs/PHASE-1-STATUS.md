@@ -3,6 +3,15 @@
 Written against the `phase-1-*` stack. Every claim here was checked by running
 the thing, not by reading a summary.
 
+> **Historical.** This is a snapshot of Phase 1 and is kept as the record of
+> what was true then. **Phase 6 deleted Astro, Svelte and Storybook** — `grep -c
+> 'astro\|svelte\|storybook' bun.lock` is `0` — so every Storybook claim below
+> describes tooling that no longer exists, and the Svelte file paths no longer
+> resolve. The workbench is now the committed `design-system/` bundle, gated by
+> `scripts/design-system-coverage.test.ts`; see
+> [`DESIGN.md`](DESIGN.md#the-design-system-bundle). The a11y coverage described
+> below survived the port intact, as `packages/components/src/react/a11y.test.tsx`.
+
 ## Deliverables
 
 Quoted from `docs/PLAN.md` Phase 1.
