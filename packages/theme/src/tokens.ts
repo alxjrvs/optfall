@@ -153,9 +153,18 @@ const STRUCTURE: TokenTable = {
      one silhouette reserved to a single meaning — it appears at these three
      sizes and no others, and a component free to pick its own would erode
      that. */
-  /* The stat plate. Larger than the jewel because it carries a numeral that is
-     read rather than glanced at, and because the jewel must stay the smallest
-     reserved shape on the card. */
+  /* The stat plate, and THE SIZE EVERY SYMBOL IN THE CARD PANEL IS MATCHED TO.
+     Pitch, cost, power, defence, life, intellect and arcane all sit in the same
+     two bands of that panel, so a reader compares them against each other
+     before comparing any of them to the type around them.
+
+     IT USED TO BE THE LARGER OF TWO SIZES, AND THAT WAS DRIFT RATHER THAN A
+     DECISION. The note here read "larger than the jewel … the jewel must stay
+     the smallest reserved shape on the card", which is a sentence about the
+     silhouette's PRIVILEGE wearing the clothes of a sentence about its SIZE: a
+     1.75rem stone beside a 2.25rem plate, on the same line, 29% apart in the
+     one dimension the eye compares first. Reserved means nothing else may take
+     the shape. It never meant the stone has to be the runt of the row. */
   "ornament.stat.size": "2.25rem",
 
   /* How far a symbol plate drops below the text baseline when it is set INLINE
@@ -243,9 +252,32 @@ const STRUCTURE: TokenTable = {
      a number. Percentages, so it holds at every plate size. */
   "ornament.cut.shield": "polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%)",
 
+  /* THE BASE STEP IS THE STAT PLATE'S SIZE PLUS AN OPTICAL SIXTEENTH, and the
+     sixteenth is arithmetic rather than taste.
+
+     Two shapes of the same bounding box do not read as the same size; the eye
+     compares ink, not boxes. Against a unit square the disc `ornament.cut.disc`
+     covers π/4 ≈ 0.785 of it and the diamond `ornament.cut.jewel` covers 0.700
+     — its four cut corners are what the shoelace of that polygon gives back. So
+     matching the ink means scaling the stone by √(0.785 / 0.700) ≈ 1.059, and
+     2.25rem × 1.059 lands here. Set the two equal instead and the stone reads a
+     shade small beside the cost disc it shares a line with, which is the whole
+     complaint this step exists to answer.
+
+     `large` moves with it so the top of the scale keeps its ~1.4 step off
+     `base` instead of collapsing onto it. Nothing in the product asks for `lg`
+     today — only the design-system page renders it — so that half is
+     housekeeping, not a change anybody will see.
+
+     `small` DELIBERATELY STAYS PUT, which does widen the gap under `base` to
+     ~1.9. It is not the same job: `small` is the stone set inline beside micro
+     type — the version tabs, a related-cards link, a search result's lead — and
+     it is sized against that type rather than against the stat plates it never
+     appears next to. Dragging it up to preserve a tidy ratio would resize four
+     surfaces to fix an arithmetic itch on none of them. */
   "ornament.jewel.small": "1.25rem",
-  "ornament.jewel.base": "1.75rem",
-  "ornament.jewel.large": "2.5rem",
+  "ornament.jewel.base": "2.375rem",
+  "ornament.jewel.large": "3.375rem",
 
   /* THE MARK IS SIZED BY HEIGHT, NOT BY A SQUARE, because it is no longer a
      square. The chain is roughly twice as wide as it is tall, so one dimension

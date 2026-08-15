@@ -138,6 +138,30 @@
 .of-card__panel {
   display: flex;
   flex-direction: column;
+
+  /*
+      THE PANEL'S PITCH, AS A COLOUR, RESOLVED ONCE HERE. `data-pitch` is on the
+      panel rather than on the name, so anything else in the panel that ever
+      needs to say "this version" reads the same custom property instead of
+      growing a second copy of this table.
+
+      The default is the no-pitch grey, so a card with no pitch value — and a
+      value upstream invents tomorrow — gets a real colour rather than an unset
+      `var()` and no rule at all.
+    */
+  --card-pitch: var(--of-color-pitch-none);
+}
+
+.of-card__panel[data-pitch="1"] {
+  --card-pitch: var(--of-color-pitch-one);
+}
+
+.of-card__panel[data-pitch="2"] {
+  --card-pitch: var(--of-color-pitch-two);
+}
+
+.of-card__panel[data-pitch="3"] {
+  --card-pitch: var(--of-color-pitch-three);
 }
 
 .of-card__band + .of-card__band {
@@ -208,6 +232,32 @@
     4.5vw,
     var(--of-type-size-display)
   );
+
+  /*
+      UNDERLINED IN THE PITCH COLOUR — a fourth carrier of the fact the jewel,
+      the tab strip and the numeral already carry, and the only one a reader
+      gets for free while looking at the name.
+
+      A BORDER ON A SHRUNK BOX, NOT `text-decoration`. The name wraps: at two
+      lines `text-decoration: underline` draws two rules, which reads as two
+      links rather than as one card. `fit-content` shrinks the heading's box to
+      its text on the common case, so the rule ends where the name does; on a
+      name long enough to wrap, the box fills the column and the rule runs
+      under both lines as a single stroke. `max-inline-size` is what stops
+      `fit-content` from reaching past the middle grid column, and the auto
+      margins re-centre a box that is now narrower than its cell.
+
+      Colour is the ONLY channel this adds, and it is deliberately not the only
+      channel the fact has — `docs/DESIGN.md` puts red and yellow at the top of
+      the deuteranopia confusion pair, which is why the numeral in the stone
+      next to it exists.
+    */
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  margin-inline: auto;
+  padding-block-end: var(--of-space-tighter);
+  border-block-end: calc(var(--of-bevel-width) * 2) solid
+    var(--card-pitch, var(--of-color-pitch-none));
 }
 
 /* Same argument, one step down the scale: the type line shares the bottom
@@ -237,11 +287,36 @@
   justify-content: flex-end;
 }
 
+/*
+    THE SYMBOL SITS OUTBOARD OF ITS WORD, ALWAYS.
+
+    The label used to sit ABOVE the plate, which is the one arrangement that
+    reads the same on both sides of the panel and is therefore the one that says
+    nothing about which side it is on. Stacked, the four corners were four
+    identical two-line towers and the eye had to read a word to find out which
+    corner it had landed in.
+
+    Set side by side instead, the plate takes the outer position and the word
+    the inner one — so the symbols form a column down each edge of the panel,
+    the words face in toward the name and the type line between them, and a
+    reader scanning for "what does this cost" travels the edge rather than the
+    middle. This is also how the printed card arranges it: the values live in
+    the margins, and everything that explains them is inboard.
+
+    Mirrored with `row-reverse` on the start side rather than by reordering the
+    markup, because `<dt>` before `<dd>` is what makes the pair a definition and
+    a `<dl>` whose term follows its value is a `<dl>` that has stopped being one
+    for anything reading the document rather than looking at it.
+  */
 .of-card__badge {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: var(--of-space-tightest);
+  gap: var(--of-space-tight);
+}
+
+.of-card__badges--start .of-card__badge {
+  flex-direction: row-reverse;
 }
 
 .of-card__badge dt {
@@ -271,7 +346,25 @@
   gap: var(--of-space-tight) var(--of-space-base);
 }
 
+/*
+    ONE GAP BETWEEN EVERY PART OF THE LINE.
+
+    The credit line is a row of rarities and then an attribution, and it was
+    spaced by two different mechanisms that happened to sit next to each other:
+    `margin-inline-end` between the rarities, and a literal space character
+    between the last rarity and "Illustrated by". Those are not the same
+    distance — one is a token, the other is whatever the sans face sets a word
+    space at — so the run read as a clump with a stray word after it, at every
+    rarity count, which is the whole of the unevenness.
+
+    A flex row with one `gap` is the fix, and it needs the attribution wrapped in
+    a span to work: `gap` spaces flex ITEMS, and a bare text node is not one.
+  */
 .of-card__credit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--of-space-tight);
   margin: 0;
   font-size: var(--of-type-size-micro);
   color: var(--of-color-ink-faint);
@@ -284,7 +377,11 @@
   align-items: center;
   /* No gap: the bubble and the remainder are one word interrupted, not two
        elements set beside each other. */
-  margin-inline-end: var(--of-space-tight);
+
+  /* The trailing margin is gone. `.of-card__credit` is a flex row now and owns
+       every distance in the line; leaving this here would add a second one to
+       the gap on one side of each rarity and not the other, which is the
+       unevenness the row was introduced to remove. */
 }
 
 /*

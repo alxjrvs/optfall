@@ -24,12 +24,47 @@
   box-shadow:
     inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
     inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
-  --stat-size: var(--of-ornament-stat-size);
+
+  /*
+     THE OPTICAL FACTOR. One box size for every stat is what the token layer
+     hands us; one box size is NOT one visual size, because the eye compares ink
+     rather than bounding boxes and these six silhouettes keep very different
+     fractions of the square they are cut from.
+
+     Six plates in a row at an identical `--stat-size` therefore read as four
+     sizes: the shield noticeably heavier than the disc beside it, the plain
+     plate heavier still, and the two diagonals between. On the card panel those
+     plates sit on ONE LINE — power at the start, defence at the end, or
+     intellect and life on a hero — which is the arrangement that makes the
+     mismatch impossible not to see.
+
+     So each cut declares how much of the square it keeps, and the box is scaled
+     by the square root of the ratio to the reference. The reference is the disc,
+     `ornament.cut.disc`, at π/4 ≈ 0.785 — chosen because cost and power are the
+     two plates a reader meets most often and the two the printed card draws as
+     circles, so everything else is matched TO them rather than all six being
+     matched to an average none of them is.
+
+     Every number below is the area of that clip-path over a unit square, not a
+     value anybody nudged until it looked right:
+
+       disc      π/4                              0.785   → 1.000  (reference)
+       shield    0.72 body + 0.28 point halved    0.860   → 0.956
+       diagonal  1 less two chamfer triangles     0.951   → 0.908
+       plain     the whole square                 1.000   → 0.886
+
+     Held as a separate custom property rather than folded into `--stat-size`
+     because `--sm` also writes `--stat-size`, and a per-kind override of the
+     same property would win over the size variant on source order and quietly
+     un-shrink every small plate.
+  */
+  --optical: 1;
+  --stat-size: calc(var(--of-ornament-stat-size) * var(--optical));
   --chamfer: var(--of-ornament-notch-size);
 }
 
 .of-stat--sm {
-  --stat-size: calc(var(--of-ornament-stat-size) * 0.75);
+  --stat-size: calc(var(--of-ornament-stat-size) * 0.75 * var(--optical));
 }
 
 .of-stat__value {
@@ -93,12 +128,18 @@
   background: var(--of-color-stat-defence);
   color: var(--of-color-stat-defence-ink);
   padding-block-end: calc(var(--stat-size) * 0.28);
+  --optical: 0.956;
 }
 
 /* Life — the plain plate. Nothing is cut, which is its own signal in a set where
-   everything else is. */
+   everything else is.
+
+   It is also the one that has to give back the most: an uncut square keeps all
+   of its box, so at the shared size it carries 27% more ink than the disc it
+   sits opposite. */
 .of-stat--life {
   clip-path: var(--of-ornament-cut-plain);
+  --optical: 0.886;
 }
 
 /* Intellect and Arcane — opposed diagonals, so the two hero stats are
@@ -110,8 +151,10 @@
    alone, which is exactly why it is worth saying here. */
 .of-stat--intellect {
   clip-path: var(--of-ornament-cut-diagonal-start);
+  --optical: 0.908;
 }
 
 .of-stat--arcane {
   clip-path: var(--of-ornament-cut-diagonal-end);
+  --optical: 0.908;
 }
