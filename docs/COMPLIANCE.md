@@ -304,16 +304,30 @@ constant, and asserted in CI on both the source and the built output.
 
 **What would break it.** Paraphrasing it. Reflowing it into a component that
 inserts soft hyphens. An editor autocorrecting `®`/`™`. A page rendered outside
-the shared layout — an error page, an embed, a standalone Storybook build, an
+the shared layout — an error page, an embed, a standalone workbench build, an
 OG-image route. Rendering it only on `/about`. Hiding it behind a collapsed
 "legal" disclosure. Shipping it in an image rather than text.
 
 **Where it must also appear.** `README.md` carries it (it already does), and any
-standalone published surface — Storybook, the docs site, embedded custom
-elements distributed to other tools — needs its own copy. An embeddable
-component handed to a third party carries our compliance obligation into their
-page; that is a design constraint on the custom-element build, not an
-afterthought.
+standalone published surface needs its own copy.
+
+**The obligation is unchanged; two of the three examples it used to name are
+gone.** This paragraph listed "Storybook, the docs site, embedded custom
+elements distributed to other tools", and argued that an embeddable component
+handed to a third party carries our compliance obligation into their page — *"a
+design constraint on the custom-element build, not an afterthought."* Storybook
+was deleted in [#107](https://github.com/alxjrvs/optfall/pull/107) and the
+workbench that replaced it, the committed `design-system/` bundle, is not
+published. The custom-element build went in the same PR and has no replacement;
+whether it returns is open as
+[#156](https://github.com/alxjrvs/optfall/issues/156).
+
+The constraint is recorded rather than dropped **because it is a precondition,
+not a consequence**: if the primitives are ever shipped to other tools, the
+disclaimer travels with them or we have exported a compliance breach. That is a
+requirement on any answer to #156, and it should be found by whoever scopes it
+rather than rediscovered afterwards. Today there is nothing published outside
+this site, so nothing is currently in breach.
 
 ### 5. The copyright line on card images
 
@@ -386,7 +400,9 @@ was wrong.
 **Still open, and neither is small.** The second failure is not covered by
 anything: the check reads HTML, so it knows the notice is on the page and cannot
 know whether a stylesheet has put it where nobody reads it. That is the
-Storybook visual-regression bullet, still unbuilt. And the serving boundary is
+visual-regression bullet in [`PLAN.md`](PLAN.md) Phase 1 — committed Playwright
+screenshots rather than a hosted service — still unbuilt, and framework-neutral
+now that the Storybook it was once phrased against is gone. And the serving boundary is
 unbuilt — nothing applies the line at the image host, so a hotlinked face is an
 unmarked face.
 

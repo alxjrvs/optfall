@@ -183,10 +183,16 @@ Deletions first, because most of the confusion is *surplus*, not absence.
   the corpus. They are pending only because nothing indexed them.
 - **The `cr:` "that lives at /search, not here" entry.** Section 8 makes it
   answerable.
-- **One of the two search islands.** `RulesSearch.svelte` (593 lines) and
-  `CardSearch.svelte` (551) are near-duplicates, and both carry a comment naming
-  the same two missing primitives: `SearchField` and `ResultRow`. Extract them
-  into `optfall-components` and the duplication goes with them.
+- **One of the two search islands.** ✅ Done, and by the route this entry
+  proposed. As written: `RulesSearch.svelte` (593 lines) and `CardSearch.svelte`
+  (551) were near-duplicates, and both carried a comment naming the same two
+  missing primitives — `SearchField` and `ResultRow` — so extracting those into
+  `optfall-components` would take the duplication with them. Both primitives now
+  exist there, both are in `PRIMITIVES`, both are axe-covered and both have a
+  design-system card. The islands are `apps/site/ssg/islands/RulesSearch.tsx`
+  (367 lines) and `CardSearch.tsx` (492), and each imports the shared primitives
+  rather than restating them. The `.svelte` files named here were deleted by
+  [#107](https://github.com/alxjrvs/optfall/pull/107).
 
 Nothing in the legality, rules-parsing or compliance layers is removed. Those
 are the parts that are right.
@@ -413,8 +419,12 @@ and on load from `?q=`, rather than on input.
   sections of body copy under the field. They become a compact row of links —
   syntax, the rules browser, bulk data, data terms, the plan — because a
   reference tool that explains itself before letting you search has misunderstood
-  what it is, and that principle is already written into `index.astro`'s own
-  header comment.
+  what it is. That principle was written into `index.astro`'s own header
+  comment; that file went with
+  [#107](https://github.com/alxjrvs/optfall/pull/107), and the principle now
+  lives in `apps/site/ssg/pages/home.page.tsx`, whose header argues the door's
+  job is to be the way in to the search page rather than a surface in its own
+  right.
 - **`display:grid` (default) / `list` / `text`**, in the URL. The existing dense
   row is not thrown away — it becomes `display:list`, and it is genuinely better
   than Scryfall's checklist.
