@@ -197,6 +197,9 @@
     file and it is doing the job a media query would otherwise be hired for.
   */
 .of-card__name {
+  /* The one heading on the site a reader looks AT rather than scans past, so it
+     takes the display face even though it is not an `h1`. */
+  font-family: var(--of-type-family-display);
   margin-block: 0;
   overflow-wrap: anywhere;
   text-align: center;

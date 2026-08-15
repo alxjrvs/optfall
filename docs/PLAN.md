@@ -975,22 +975,24 @@ being on it: `optfall.com` serves the build. The state-backend question that sat
 here is gone rather than answered — dropping Terraform removed the thing that
 needed a backend, which is the cheapest way to close a question.
 
-**The display typeface is NOT settled, and a previous revision of this paragraph
-said it was.** That claim was wrong twice over: `packages/theme/src/tokens.ts`
-records the opposite in the very layer it cited — the candidates (Grenze, Cinzel,
-Eczar) "all need a licence check for webfont embedding, so this ships a system
-stack" — and there is no display-family token at all, only `type.family.serif`
-and `type.family.sans`. `check-tokens.ts` enforces raw colours, raw lengths and
-undefined `--of-*` references; it has no font rule whatsoever, so a raw
-`font-family: Cinzel, serif` passes every check in this repository.
+**Settled: Grenze, SIL Open Font License 1.1, self-hosted.**
+`docs/DESIGN.md` called the display face "the single highest-leverage upgrade
+available" and named three candidates that can be legitimately self-hosted.
+Grenze is the one it describes as angular, faintly medieval and *uncommon*,
+against Cinzel's "the default fantasy choice" — uncommon being worth more than
+familiar on a face whose job is to be recognised.
 
-It stays open because **it is a licensing obligation, not a taste question** —
-`docs/COMPLIANCE.md` lists confirming the display face is licensed for webfont
-embedding as a Phase 1 item, and `docs/DESIGN.md` and `docs/PHASE-1-STATUS.md`
-both still carry it. Marking it closed is precisely what would stop anyone
-re-measuring it, which is the failure the paragraph above this one exists to
-correct. Left visible rather than deleted, because writing it was that failure
-happening again inside the commit that named it.
+The OFL permits webfont embedding and self-hosting, which is the licence
+question this was blocked on. It is served from our own origin rather than a
+font CDN, for the same reason nothing else here depends on a third party staying
+up, and `data/fonts/fonts.json` records its URL and SHA-256 because
+`docs/COMPLIANCE.md` §3 wants an origin for every binary served publicly.
+
+*A previous revision of this paragraph marked this closed while it was open, and
+was wrong on both halves it asserted: the token layer said the opposite, and
+`check-tokens.ts` has no font rule to enforce anything with. That retraction is
+left in the history rather than smoothed over — closing a licensing item on an
+assumption is exactly the failure this section keeps recording.*
 
 **Unverified.** The pitch-queue mechanic behind the parked deck-math work was
 never confirmed against the current rules — the official site blocks automated

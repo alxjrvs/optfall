@@ -35,9 +35,10 @@ import type { TokenTable } from "./index";
  * than tonal — a heading is the same size in the dark, and reading distance
  * does not change with the lights.
  *
- * The display face is an open question in `docs/DESIGN.md`: the candidates
- * (Grenze, Cinzel, Eczar) all need a licence check for webfont embedding, so
- * this ships a system stack that renders identically everywhere and gets
+ * The display face WAS an open question in `docs/DESIGN.md` — the candidates
+ * (Grenze, Cinzel, Eczar) all needed a licence check for webfont embedding.
+ * Grenze is in, under SIL OFL 1.1, self-hosted. What follows described the
+ * placeholder that shipped that renders identically everywhere and gets
  * replaced in one token when that decision lands.
  */
 const STRUCTURE: TokenTable = {
@@ -48,6 +49,25 @@ const STRUCTURE: TokenTable = {
      citable" had stopped being true long before anyone read it that way. The
      sans carries all of it now, and a citation is marked by BEING a citation —
      a link, in the accent, next to the thing it cites. */
+  /* THE DISPLAY FACE, AND IT IS A REAL ONE NOW. `docs/DESIGN.md` called this
+     "the single highest-leverage upgrade available" and listed three candidates
+     that can be legitimately self-hosted; Grenze is the one it describes as
+     angular, faintly medieval and UNCOMMON, against Cinzel's "the default
+     fantasy choice". Uncommon is worth more than familiar on a mark that has to
+     be recognised.
+
+     SIL Open Font License 1.1, which permits webfont embedding and self-hosting
+     — the licence question this token existed to be blocked on. Served from our
+     own origin rather than a font CDN, for the same reason nothing else here
+     depends on a third party staying up, and recorded in `data/fonts/fonts.json`
+     with its URL and hash because `docs/COMPLIANCE.md` §3 wants an origin for
+     every binary we serve.
+
+     The stack falls back to the serif below, so a blocked or failed font
+     download degrades to what the site rendered before rather than to
+     Times. */
+  "type.family.display":
+    "Grenze, Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
   "type.family.serif":
     "Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif",
   "type.family.sans":
