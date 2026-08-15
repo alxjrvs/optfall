@@ -4,6 +4,12 @@
 # not stop the next `bun add` from writing a caret range into package.json.
 # Dependabot moves these; nothing else does.
 #
+# `exact` is only half of that story. It governs what gets written when a
+# dependency is added; it says nothing about whether two workspaces agree with
+# each other. The `catalog` block in the root package.json is the other half:
+# anything more than one workspace consumes is declared there once and
+# referenced as `catalog:`, so the workspaces cannot drift apart.
+#
 # There was a `[test] preload` here until Phase 6 layer 5: Bun's runtime has no
 # Svelte loader, so `import X from "./X.svelte"` resolved to the file path as a
 # string and failed inside Svelte's renderer with an error that pointed at

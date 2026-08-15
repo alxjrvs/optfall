@@ -10,6 +10,6 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@netlify/blobs": "^10.7.11"
+    "@netlify/blobs": "catalog:"
   }
 }

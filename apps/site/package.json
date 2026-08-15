@@ -15,14 +15,14 @@
   "dependencies": {
     "optfall-components": "workspace:*",
     "optfall-theme": "workspace:*",
-    "react": "19",
-    "react-dom": "19"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "19",
-    "@types/react-dom": "19",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@vitejs/plugin-react-swc": "4.3.3",
-    "vite": "8",
+    "vite": "catalog:",
     "workbox-build": "7.4.1"
   }
 }
