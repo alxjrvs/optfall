@@ -138,6 +138,9 @@ const checks: Check[] = [
    */
   { path: "/manifest.webmanifest", contentType: "application/manifest+json" },
   { path: "/icon.svg", contentType: "image/svg+xml" },
+  /* BOTH ICONS. The manifest names two — full bleed and maskable — and a check
+     that covers one of them leaves the other free to stop being emitted. */
+  { path: "/icon-maskable.svg", contentType: "image/svg+xml" },
   { path: "/sw.js", contentType: "text/javascript" },
   { path: `/card/${slug}`, contentType: "text/html" },
   { path: `/card/${printingSlug}`, contentType: "text/html" },

@@ -240,21 +240,28 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
           const next = searchCards(cards, query);
           setSubmitted(query);
           /*
-            THE LEGACY PARAMETER IS FORGOTTEN ON SUBMIT, not merely dropped from
-            the URL. `paramDisplay` was cleared in `show()` and on `popstate` but
-            not here, so it outlived the URL it came from: arrive at
+            THE LEGACY PARAMETER IS FORGOTTEN EXACTLY WHEN IT IS DROPPED, and
+            those two have to be one condition rather than two.
+
+            `paramDisplay` was cleared in `show()` and on `popstate` but not
+            here, so it outlived the URL it came from: arrive at
             `?q=x&display=list`, submit `x display:text` — the parameter is
             stripped from the address bar — then submit a plain `winter`, and the
             URL says nothing about display while the retained state still
-            resolves it to `list`. The screen and the address bar disagree, which
-            is the exact failure making `display:` an operator was meant to end.
+            resolves it to `list`.
 
-            Pre-existing, and faithful to the Svelte original — but this handler
-            is what decides the parameter is gone, so it is where forgetting it
-            belongs.
+            Clearing it unconditionally produces the mirror image of that bug:
+            arrive at `?q=winter&display=list` and press Enter without editing,
+            and `next.display` is null so the parameter STAYS in the URL while
+            the cleared state falls back to `grid` — the view changes under the
+            reader and now contradicts the address bar it did not leave.
+
+            So the state is forgotten on precisely the submits that drop the
+            parameter, which is the same expression `syncUrl` is given.
           */
-          setParamDisplay(null);
-          syncUrl("push", query, next.display !== null);
+          const droppingParam = next.display !== null;
+          if (droppingParam) setParamDisplay(null);
+          syncUrl("push", query, droppingParam);
           field.current?.blur();
 
           const only = next.total === 1 ? next.results[0] : undefined;

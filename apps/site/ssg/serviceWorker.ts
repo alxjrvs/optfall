@@ -130,7 +130,7 @@ export async function writeServiceWorker(
    * constant here would pin readers to the first version they ever cached.
    */
   const startUrlRevision = Bun.hash(
-    await Bun.file(`${outDir}/search/index.html`).text(),
+    await Bun.file(`${outDir}/index.html`).text(),
   ).toString(16);
 
   const { count, size, warnings } = await generateSW({
@@ -144,18 +144,25 @@ export async function writeServiceWorker(
      */
     globPatterns: ["**/*.{js,css,woff2,svg,webmanifest}"],
     /*
-     * ONE DOCUMENT, AND IT IS THE ONE THE MANIFEST NAMES. `start_url` is
-     * `/search`, so an installed app launched offline before that page has ever
-     * been visited would otherwise open on the browser's network error — an
-     * install that does not survive its own first cold start.
+     * ONE DOCUMENT, AND IT IS THE ONE THE MANIFEST NAMES. `start_url` is `/`,
+     * so an installed app launched offline would otherwise open on the
+     * browser's network error — an install that does not survive its own first
+     * cold start.
+     *
+     * THE URL HAS NO TRAILING SLASH BEYOND THE ROOT, and that detail is the
+     * whole difference between working and not. Workbox's precache matcher
+     * appends `directoryIndex` only when the REQUEST path already ends in `/`,
+     * so an entry written `/search/` is never matched by a navigation to
+     * `/search` — it is precached bytes nothing reaches, while the cold start it
+     * was added for still falls through to the network route and errors. That
+     * is exactly what the first version of this did, and the browser check that
+     * "proved" it worked had navigated to `/search/` by hand.
      *
      * This does not weaken "never precache the pages". It is a single file
      * chosen because it is the app's entry point, not a category; the other
      * 13,674 remain the runtime cache's business.
      */
-    additionalManifestEntries: [
-      { url: "/search/", revision: startUrlRevision },
-    ],
+    additionalManifestEntries: [{ url: "/", revision: startUrlRevision }],
     swDest: `${outDir}/sw.js`,
     /*
      * A new worker takes over as soon as it is installed rather than waiting
@@ -209,6 +216,15 @@ export async function writeServiceWorker(
         handler: "NetworkFirst",
         options: {
           cacheName: "pages",
+          /*
+           * LIE-FI IS THE CASE THIS EXISTS FOR. `NetworkFirst` with no timeout
+           * waits for the fetch to settle, and a connected-but-dead network
+           * never settles quickly — so a reader with a cached copy of the page
+           * they are opening would sit on a blank screen rather than see it.
+           * Three seconds is longer than any real response to this static site
+           * and shorter than anybody's patience.
+           */
+          networkTimeoutSeconds: 3,
           /*
            * A ceiling, because there are 13,675 pages and a determined browse
            * would otherwise store all of them. 200 is generous for the reading

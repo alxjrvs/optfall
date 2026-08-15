@@ -720,8 +720,19 @@ that can each fail in silence.
 `**/*.{js,css,woff2,svg}` and deliberately excludes HTML and images, with
 `navigateFallback: null` — an unvisited page should 404 offline rather than
 resolve to a stale shell that lies. Optfall has **13,675 pages**, so this is not
-a preference here, it is the only option: visited pages get
-`StaleWhileRevalidate`, and nothing else is promised.
+a preference here, it is the only option.
+
+*As implemented, with the two amendments the review of layer 6 forced.* Visited
+pages get **`NetworkFirst`** with a 3-second timeout, not `StaleWhileRevalidate`:
+every asset is content-hashed and Netlify's deploys are atomic, so serving
+stored HTML first meant a returning reader got a document linking the previous
+deploy's stylesheets, which 404 — an unstyled page with no islands on every
+deploy. And **exactly one document is precached**, `/`, because it is the
+manifest's `start_url` and an install that cannot cold-start offline is not an
+install. That is one file chosen as the app's entry point, not a category; the
+other 13,674 remain the runtime cache's business. It is the door rather than
+`/search` because the door is 47 kB gzipped against 245 kB and carries the
+typeahead, which is what somebody who just tapped an app icon wants.
 
 **Card images are never precached.** `docs/COMPLIANCE.md` §5 — the licence is
 revocable, and a service worker that has already stored the art is a cache we
