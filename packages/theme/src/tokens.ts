@@ -480,7 +480,17 @@ export const DARK_TOKENS: TokenTable = {
      either ground it reads as a socket rather than as a seventh stat with a
      colour of its own. It is deliberately far from `stat.defence`, the other
      neutral, which is a mid steel in both themes. Same idiom as the pitch
-     jewel's `none` stone, which has meant exactly this since it was drawn. */
+     jewel's `none` stone, which has meant exactly this since it was drawn.
+
+     IT IS ~1.4:1 AGAINST THE PANEL AND THAT IS NOT THE CHANNEL. Receding is the
+     stated goal, so the fill deliberately sits close to the ground — but the
+     SHAPE is what says which stat is missing, and the shape is drawn by the
+     inset bevel `.of-stat` puts on every plate, which `.of-stat--absent` does
+     not touch. A test in `primitives.test.tsx` pins that it does not. Nor is
+     the ratio out of family: the weakest existing plate, cost in this table, is
+     2.42:1 against the same panel, so fill-against-ground is not a threshold
+     any plate here is held to. What is held, and asserted in `tokens.test.ts`,
+     is the ink on the plate. */
   "color.stat.absent": "#3a3a3a",
   "color.stat.absent.ink": "#c8c8c8",
 

@@ -431,12 +431,18 @@ describe("a card page shows the combat positions it does not fill", () => {
      * at all. A card printing LIFE is where the line actually falls; see the
      * ally test below.
      */
+    /* `intelligence` is constrained as well as `health`, because
+       `usesCombatFrame` rejects a card printing EITHER permanent stat. No card
+       prints intellect without life today, so leaving it out passed — but a
+       resync introducing one that sorted earlier would fail this test on
+       "No printed cost" with nothing saying it was disqualified by intellect. */
     const weapon = CARD_PAGES.find(
       (page) =>
         page.card.power !== "" &&
         page.card.cost === "" &&
         page.card.defense === "" &&
-        page.card.health === "",
+        page.card.health === "" &&
+        page.card.intelligence === "",
     );
     expect(weapon).toBeDefined();
 
@@ -491,6 +497,7 @@ describe("a card page shows the combat positions it does not fill", () => {
       (page) =>
         page.card.cost === "0" &&
         page.card.health === "" &&
+        page.card.intelligence === "" &&
         page.card.power === "",
     );
     expect(zero).toBeDefined();

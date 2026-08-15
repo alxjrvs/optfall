@@ -11,6 +11,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { BevelledPlate } from "./BevelledPlate";
@@ -498,5 +499,45 @@ describe("StatGlyph", () => {
     const empty = renderToStaticMarkup(<StatGlyph kind="power" value="" />);
     expect(empty).not.toContain("of-stat--absent");
     expect(empty).toContain('aria-label="Power "');
+  });
+});
+
+describe("the absent stat plate keeps its edge", () => {
+  test("`--absent` overrides the fill and nothing else", () => {
+    /*
+     * WHAT DRAWS THE SILHOUETTE IS THE BEVEL, NOT THE FILL, and that is the
+     * answer to an objection worth recording: `color.stat.absent` is only about
+     * 1.4:1 against the panel it sits on, so if the fill were the outline the
+     * shape would be near-invisible — and the shape is the channel this design
+     * says carries WHICH stat is missing.
+     *
+     * It is not the fill. `.of-stat` draws an inset light-above/dark-below
+     * bevel on every plate, and `.of-stat.of-stat--absent` sets `background`
+     * and `color` and stops, so the absent plate is outlined exactly as the
+     * other six are. A future edit that added `box-shadow: none` there, or
+     * moved the bevel into the per-kind rules, would take the silhouette away
+     * silently — hence a test rather than a comment.
+     *
+     * The ratio itself is not a defect to fix: the weakest EXISTING plate,
+     * cost in the dark theme, is 2.42:1 against the same panel, so
+     * fill-against-ground is not a threshold this system holds any plate to.
+     * What it holds is ink-on-plate, asserted in `tokens.test.ts`.
+     */
+    const css = readFileSync(
+      new URL("./StatGlyph.css", import.meta.url),
+      "utf-8",
+    );
+
+    const base = /\.of-stat \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(base).toContain("box-shadow");
+    expect(base).toContain("--of-bevel-light");
+    expect(base).toContain("--of-bevel-dark");
+
+    const absent = /\.of-stat\.of-stat--absent \{([^}]*)\}/.exec(css)?.[1];
+    expect(absent).toBeDefined();
+    expect(absent).toContain("--of-color-stat-absent");
+    /* The two properties it is allowed to touch, and no third. */
+    expect(absent).not.toContain("box-shadow");
+    expect(absent).not.toContain("clip-path");
   });
 });
