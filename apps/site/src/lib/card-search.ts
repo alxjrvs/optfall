@@ -1005,6 +1005,12 @@ export interface CardNotice {
 export interface CardFilter {
   readonly field:
     | "name"
+    /* Present because `outcome.filters` reports it, NOT because `passesFilter`
+       handles it — the `released` branch of the leaf test returns before that
+       function is reached. Declared anyway: the union is what `toCardFilter`
+       casts into, and a cast into a union that does not contain the value is a
+       lie that stays quiet until somebody reorders the branches. */
+    | "released"
     | "text"
     | "artist"
     | "flavour"
@@ -1402,6 +1408,36 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     if (name === "year" || name === "date") {
       const grain = name === "year" ? "year" : "date";
       const pattern = grain === "year" ? /^\d{4}$/ : /^\d{4}-\d{2}-\d{2}$/;
+
+      /*
+        `!=` IS REFUSED, AND THE REASON IS THE 53 UNDATED CARDS RATHER THAN
+        laziness about implementing it.
+
+        There is no meaning for `year!=2024` that is both consistent and honest.
+        Applied per printing it is wrong outright: a card printed in 2019 and
+        reprinted in 2024 has a printing outside 2024, so it would come back
+        from `year:2024` AND `year!=2024` — a query and its own negation.
+        Applied to the whole card it becomes `-year:2024`, except on the cards
+        with no published date at all, where the two part company: `-` is a
+        boolean NOT over a match that did not happen, so it INCLUDES them, while
+        `!=` would be asserting "this card was not released in 2024" about a
+        card whose release date upstream does not publish. That is a claim this
+        corpus cannot support.
+
+        So the operator that has a defensible meaning is offered and the one
+        that does not is named. `docs/PLAN.md`, "degrade visibly": an engine
+        that cannot answer honestly says so rather than picking whichever
+        answer looks reasonable.
+      */
+      if (token.compare === "!=") {
+        note(
+          "operator-unknown",
+          `${name}!=${operandRaw}: there is no honest answer to "not this ${grain}". Use -${name}:${operandRaw}, which excludes the cards that match and keeps the ${
+            grain === "year" ? "undated" : "undated"
+          } ones — ${name}!= would have to claim a release date for cards upstream publishes none for.`,
+        );
+        return null;
+      }
 
       if (!pattern.test(operand)) {
         note(
@@ -2163,7 +2199,13 @@ export function searchCards(
           ...notices,
           {
             kind: "coverage-partial" as const,
-            text: `${index.undatedCards} cards are printed only in sets upstream publishes no release date for, so no year: or date: filter can match them. They are excluded rather than guessed at.`,
+            /* ENTRIES, NOT CARDS, and the distinction is this corpus's
+               oldest units trap: an index row is a pitch version, so the three
+               Head Jabs are three entries and one card. The count beside the
+               results is in whatever `unique:` mode is active — names by
+               default — so calling this one "cards" would put two different
+               units side by side and invite the reader to subtract them. */
+            text: `${index.undatedCards} card entries are printed only in sets upstream publishes no release date for, so no year: or date: filter can match them. They are excluded rather than guessed at.`,
           },
         ]
       : notices;
@@ -2241,8 +2283,10 @@ export function searchCards(
 
       const grain = leaf.value.length === 4 ? 4 : 10;
       const wanted = leaf.value;
+      const at = (date: string) => date.slice(0, grain);
+
       return dates.some((date) => {
-        const value = date.slice(0, grain);
+        const value = at(date);
         switch (leaf.compare) {
           case ">":
             return value > wanted;
@@ -2252,8 +2296,6 @@ export function searchCards(
             return value < wanted;
           case "<=":
             return value <= wanted;
-          case "!=":
-            return value !== wanted;
           default:
             return value === wanted;
         }
