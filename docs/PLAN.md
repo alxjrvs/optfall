@@ -942,10 +942,18 @@ demand. This is the part of the plan that is not about features.
 ## Settled, and still open
 
 **Settled.** `alxjrvs/optfall`, personal ownership, MIT, TypeScript on Bun,
-Svelte components, Astro site, Netlify hosting, repository settings as a
-`gh api` script rather than Terraform, no direct monetisation, and no language
-model in anything shipped. **The positioning is settled too: a card search
-engine and reference, Scryfall-shaped, with the rules engine attached.**
+**React components and a static generator this project owns**, Netlify hosting,
+repository settings as a `gh api` script rather than Terraform, no direct
+monetisation, and no language model in anything shipped. **The positioning is
+settled too: a card search engine and reference, Scryfall-shaped, with the rules
+engine attached.**
+
+*This line read "Svelte components, Astro site" until Phase 6 deleted both, and
+went on reading that way after they were gone. It is corrected rather than
+quietly rewritten because it is the third instance of the same failure this
+document now records twice elsewhere: a status line nobody re-measures drifts in
+whichever direction is least visible, and the summary of what is settled is
+exactly the kind of prose nobody re-reads.*
 
 **Settled, and it was the headline question.** Past banned-and-restricted
 revisions *are* publicly archived — the Wayback Machine carries 202 archived
@@ -962,11 +970,11 @@ legality checking needs from it are facts, LSS publishes the same information,
 and the realistic worst case is a maintainer asking us to stop. Asking for a
 licence is still worth five minutes; it is not a gate to clear before building.
 
-**Open, and cheap to settle.** Domain (`optfall.com` did not resolve when
-checked, so it may be free) and the display typeface. Neither blocks Phase 0;
-both want deciding before Phase 1 ends. The state-backend question that sat here
-is gone rather than answered — dropping Terraform removed the thing that needed
-a backend, which is the cheapest way to close a question.
+**Closed.** The domain question is answered by the site being on it:
+`optfall.com` serves the build. The display typeface is settled in the token
+layer and enforced by `check-tokens.ts`. The state-backend question that sat
+here is gone rather than answered — dropping Terraform removed the thing that
+needed a backend, which is the cheapest way to close a question.
 
 **Unverified.** The pitch-queue mechanic behind the parked deck-math work was
 never confirmed against the current rules — the official site blocks automated
