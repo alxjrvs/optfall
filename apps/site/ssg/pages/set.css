@@ -71,8 +71,15 @@
   padding-block: var(--of-space-tightest);
 }
 
+/*
+  `base`, not `loosest`. This line is the tail of the card list — where the list
+  came from — rather than a section of its own, and 40px of clearance above it
+  said the opposite: it read as a separate block marooned between the cards and
+  the footer, with the page's largest gap on one side of it and the footer's on
+  the other.
+*/
 .of-set-provenance {
-  margin-block-start: var(--of-space-loosest);
+  margin-block-start: var(--of-space-base);
   color: var(--of-color-ink-muted);
   font-size: var(--of-type-size-small);
 }
