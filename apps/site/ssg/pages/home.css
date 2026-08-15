@@ -1,0 +1,86 @@
+/*
+ * `/`'s own styles, ported from the Astro page's scoped block.
+ *
+ * `:global(*)` became a plain child selector. That escape existed because a
+ * scoped stylesheet could not reach children it did not author — the field, the
+ * hint, the links — and there is no scoping here for it to escape from.
+ */
+
+/*
+    Stacking and voice assignment only. Nothing here draws anything: no box, no
+    shadow, no border beyond the hairlines the system already owns.
+
+    The door is given vertical room rather than centred in the viewport. A hero
+    that vertically centres itself has to guess the viewport height, and guesses
+    wrong on the phone where it matters most.
+  */
+/*
+    A LANDING, NOT A PAGE HEADER. Scryfall's front door is deliberately
+    Google-shaped — one field, centred, with the rest of the site as small links
+    under it — and this was a left-aligned column with the field partway down.
+    The difference is not decoration: a centred field reads as "this is the
+    thing to do", where the same field left-aligned under a wordmark reads as
+    the first item in a document.
+
+    Centred HORIZONTALLY and pushed down vertically, rather than centred in the
+    viewport. Vertical centring has to guess a viewport height, and guesses
+    worst on the phone, where the keyboard takes half of it.
+  */
+.of-door {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--of-space-looser);
+  padding-block-start: var(--of-space-loosest);
+}
+
+/* The block is centred; the field and its hint keep the page's width and stay
+     left-aligned inside it, because a centred hint is a hint nobody reads.
+
+     `layout.page.measure` rather than `type.measure`: this caps a CONTAINER —
+     the field is not a line of prose — and the front door is the one page that
+     does not get its width from `main`, so it has to name the same token
+     `BaseLayout` does or it silently stops agreeing with every other page the
+     moment either value moves. */
+.of-door > * {
+  inline-size: 100%;
+  max-inline-size: var(--of-layout-page-measure);
+}
+
+/*
+    Small, tracked and quiet. The field below is the loud thing on this page,
+    and a wordmark competing with it would be the marketing hero the design
+    language refuses.
+  */
+/*
+    The masthead of a landing page rather than a breadcrumb. It was the small
+    tracked label the header bar now carries on every other page — correct
+    there, and wrong here, where it is the only thing above the field.
+  */
+/*
+    Centred as a lockup rather than as text. `text-align` centres the line box,
+    which is the wrong unit once the heading holds a mark as well as a word: it
+    would centre the two together and leave the mark's optical weight pulling
+    the pair off centre. A flex row centres the box, and `align-items: center`
+    sets the mark on the word's centre line rather than its baseline — a
+    baseline-aligned octagon reads as having fallen out of the word, which is a
+    joke the mark is already making once and does not need to make twice.
+  */
+.of-door__wordmark {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--of-space-base);
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-display);
+  letter-spacing: var(--of-type-tracking-tight);
+  color: var(--of-color-ink);
+}
+
+.of-door__ways-in {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--of-space-base) var(--of-space-looser);
+  font-size: var(--of-type-size-small);
+}
