@@ -78,6 +78,24 @@
   color: var(--of-color-ink);
 }
 
+/*
+ * The no-JS notice, in the same accent-ruled register `/cr` and `/search` use
+ * for theirs. It came from `NoScriptNotice.astro`'s scoped `.degraded`, and
+ * inlining the component is what dropped the rule — the front door was the one
+ * page whose notice rendered as unstyled body text.
+ */
+.of-door__noscript {
+  /* No trailing margin, unlike `/cr` and `/search`: the door is a flex column
+     with its own `gap`, and a margin here would add to it rather than replace
+     it. */
+  margin-block: 0;
+  padding-inline-start: var(--of-space-tight);
+  border-inline-start: calc(var(--of-bevel-width) * 2) solid
+    var(--of-color-accent);
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-small);
+}
+
 .of-door__ways-in {
   display: flex;
   flex-wrap: wrap;

@@ -212,11 +212,31 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
         inputRef={field}
         onSubmit={(event) => {
           event.preventDefault();
+          /*
+            THE NEW QUERY IS RANKED HERE, NOT READ OFF `outcome`, and that is a
+            React correction rather than a detail of the port.
+
+            `outcome` is a `useMemo` over `submitted`, so inside this handler it
+            still holds the PREVIOUS query's results: `setSubmitted` schedules a
+            re-render, it does not recompute anything synchronously. The Svelte
+            original could read its `$derived` on the line after assigning
+            because a `$derived` recomputes when read; reading the memo here is
+            one submit behind.
+
+            That staleness is not cosmetic in either place it was used. The
+            redirect would send the reader to the PREVIOUS query's single match
+            — asking `dominate` right after a one-result query navigates to that
+            earlier card and discards what was just typed — and `display` would
+            decide whether to strip the legacy `?display=` parameter from the
+            previous query's parse, leaving exactly the self-contradicting URL
+            the operator exists to remove.
+          */
+          const next = searchCards(cards, query);
           setSubmitted(query);
-          syncUrl("push", query, outcome.display !== null);
+          syncUrl("push", query, next.display !== null);
           field.current?.blur();
 
-          const only = outcome.total === 1 ? outcome.results[0] : undefined;
+          const only = next.total === 1 ? next.results[0] : undefined;
           if (only) window.location.assign(only.href);
         }}
         onKeyDown={(event) => {
