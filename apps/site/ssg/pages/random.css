@@ -1,0 +1,11 @@
+/*
+ * `/random`'s own styles, ported from the Astro page's scoped block.
+ */
+
+.of-random__heading {
+  margin-block: 0 var(--of-space-loose);
+}
+
+.of-random__note {
+  color: var(--of-color-ink-muted);
+}
