@@ -21,8 +21,13 @@
  * reader — the string "Scryfall" appeared nowhere in the built site — so the
  * section exists to say where the ideas came from. It says it the way you would
  * say it out loud, because the author has used the thing for years and the
- * influence is a credit rather than an admission. The card names link to their
- * own pages, so the joke is checkable instead of asserted.
+ * influence is a credit rather than an admission.
+ *
+ * THE SIX FRONT-DOOR CARDS ARE NOT NAMED HERE. They were, briefly, linked to
+ * their own pages — and explaining the joke is what killed it. The fan stands
+ * on its own for whoever reads the names; a paragraph pointing at it does not.
+ * `home.page.tsx` still owns that list and still fails the build if a name
+ * stops resolving.
  */
 
 import { readFileSync } from "node:fs";
@@ -31,14 +36,8 @@ import { fileURLToPath } from "node:url";
 import { OrnamentalRule } from "optfall-components/react";
 
 import { CORPUS as RULES } from "../../src/lib/rules";
-import {
-  CARD_PAGES,
-  CORPUS,
-  LAST_CONFIRMED,
-  hrefForSlug,
-} from "../../src/lib/cards";
+import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
 import { SETS } from "../../src/lib/sets";
-import { FAN_NAMES } from "./home.page";
 import type { PageModule, PageResult } from "../types";
 import "./about.css";
 
@@ -135,25 +134,6 @@ function Colophon({ source }: { readonly source: string }) {
   );
 }
 
-/**
- * The six front-door cards, as links to their own pages.
- *
- * IMPORTING `FAN_NAMES` RATHER THAN RETYPING IT is the whole point: this page
- * makes a claim about what is on the front page, and a second copy of the list
- * would let that claim go quietly false. `home.page.tsx` already throws if a
- * name stops resolving to exactly one card, and importing it runs that check.
- */
-const fanLinks: readonly { readonly name: string; readonly href: string }[] =
-  FAN_NAMES.map((name) => {
-    const match = CARD_PAGES.find((page) => page.card.name === name);
-    if (match === undefined) {
-      throw new Error(
-        `about.page.tsx: "${name}" is named in the Scryfall section but resolves to no card page. Fix the name in home.page.tsx rather than letting the sentence link nowhere.`,
-      );
-    }
-    return { name, href: hrefForSlug(match.slug) };
-  });
-
 const cards = CORPUS.counts.cards.toLocaleString("en-GB");
 const printings = CORPUS.counts.printings.toLocaleString("en-GB");
 const pages = CARD_PAGES.length.toLocaleString("en-GB");
@@ -208,42 +188,30 @@ function page(): PageResult {
             <code>c:r t:goblin</code> for years, and a second dialect would just
             be the same thing learned twice.
           </p>
-          <p>
-            The six cards fanned across the front page say so out loud —{" "}
-            {fanLinks.map(({ name, href }, index) => (
-              <span key={name}>
-                {index > 0 ? ", " : ""}
-                <a href={href}>{name}</a>
-              </span>
-            ))}
-            .
-          </p>
         </section>
 
         <OrnamentalRule label="The data" />
 
         <section className="of-about__section">
-          <h2 className="of-about__heading">Where all of this comes from</h2>
+          <h2 className="of-about__heading">Sources</h2>
           <p>
-            The cards are {cards} cards and {printings} printings across {sets}{" "}
-            sets, from <a href={upstream}>{CORPUS.source.repository}</a>, pinned
-            at commit <code>{CORPUS.source.commit}</code> and last confirmed{" "}
-            {LAST_CONFIRMED}. The rules are the Comprehensive Rules{" "}
-            {RULES.version}, published by Legend Story Studios and parsed into{" "}
-            {sections} addressable sections. Both are committed to the
-            repository at an immutable commit rather than fetched at read time,
-            so the site cannot silently change under a link somebody shared.
+            Cards: {cards} cards, {printings} printings, {sets} sets, from{" "}
+            <a href={upstream}>{CORPUS.source.repository}</a> at commit{" "}
+            <code>{CORPUS.source.commit}</code>. Last confirmed {LAST_CONFIRMED}
+            .
           </p>
           <p>
-            {pages} card pages are generated at build time and served as static
-            files. There is no database and no API to fall over, which is the
-            point: three Flesh and Blood tools have died or decayed, and none of
-            them died of a missing feature.
+            Rules: Comprehensive Rules {RULES.version}, published by Legend
+            Story Studios, parsed into {sections} addressable sections.
           </p>
           <p>
-            Legality is present-day only, and the query language says so rather
-            than guessing. Where upstream publishes no flag for a format,
-            Optfall says it has nothing to say instead of inferring one.
+            Both corpora are committed to the repository at a pinned commit and
+            read at build time. {pages} card pages are generated and served as
+            static files. No database, no API, no server.
+          </p>
+          <p>
+            Legality is present-day only. Where upstream publishes no flag for a
+            format, Optfall returns no verdict for it.
           </p>
         </section>
 

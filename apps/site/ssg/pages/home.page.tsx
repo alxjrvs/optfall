@@ -40,12 +40,7 @@ import { CardFan, type FanCard } from "../components/CardFan";
 import type { PageModule, PageResult } from "../types";
 import "./home.css";
 
-/**
- * Exported because `/about` names these six cards in prose and links each one.
- * Two lists of the same joke would drift the first time one of them changed, so
- * the about page reads this one rather than repeating it.
- */
-export const FAN_NAMES = [
+const FAN_NAMES = [
   "Homage to Ancestors",
   "Preserve Tradition",
   "Path Well Traveled",
