@@ -1,0 +1,122 @@
+/*
+ * `StatePill`'s styles, ported from the Svelte component's scoped block. Every
+ * declaration and every comment is the original's; the two `.pill` rules the
+ * Svelte file kept separate are merged, since nothing between them depended on
+ * the order.
+ */
+
+.of-pill {
+  /* One corner, clipped. The size is a token because the notch means the same
+     thing everywhere it appears, and a component free to pick its own depth
+     would erode that. */
+  --notch: var(--of-ornament-notch-size);
+  /* Clip geometry is physical, so the inline-end corner is named once here and
+     mirrored under `:dir(rtl)` below rather than being hard-coded right. Where
+     `:dir()` is unsupported the pill keeps its LTR notch — still one corner,
+     still meaning the same thing. */
+  --notch-near: 0%;
+  --notch-far: 100%;
+
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding-block: var(--of-space-tighter);
+  padding-inline: var(--of-space-tight);
+
+  clip-path: polygon(
+    var(--notch-near) 0%,
+    calc(var(--notch-far) - var(--notch)) 0%,
+    var(--notch-far) var(--notch),
+    var(--notch-far) 100%,
+    var(--notch-near) 100%
+  );
+  /* Square corners are a system rule, so the rule is stated rather than relied
+     upon: the token exists only to be zero. */
+  border-radius: var(--of-bevel-radius);
+
+  background: var(--fill);
+  color: var(--ink);
+
+  /* Struck plate: light top edge, dark bottom edge. The clip cuts across both,
+     which is what makes the notch read as a chamfer taken out of metal rather
+     than as a triangle drawn on top of it. */
+  box-shadow:
+    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
+    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+
+  /* The label voice. Wide tracking is what separates a label from code. */
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-medium);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+
+  /* Deliberately absent: `overflow: hidden`, `text-overflow: ellipsis`, and any
+     `max-inline-size`. A clipped verdict is a wrong verdict, and this is the
+     channel that has to survive when colour does not. A long label wraps — ugly
+     beats unreadable — and `anywhere` keeps a single long token inside its
+     container instead of pushing out under an ancestor that does clip. */
+  overflow-wrap: anywhere;
+}
+
+.of-pill:dir(rtl) {
+  --notch-near: 100%;
+  --notch-far: 0%;
+}
+
+/* Every tone carries its own ink rather than sharing one, so each fill is free
+   to sit where its meaning wants it — which is how `verified` gets to be brass
+   instead of being dragged into a common luminance band and landing on muddy
+   brown. */
+.of-pill--tone-legal {
+  --fill: var(--of-color-state-legal);
+  --ink: var(--of-color-state-legal-ink);
+}
+
+.of-pill--tone-banned {
+  --fill: var(--of-color-state-banned);
+  --ink: var(--of-color-state-banned-ink);
+}
+
+.of-pill--tone-suspended {
+  --fill: var(--of-color-state-suspended);
+  --ink: var(--of-color-state-suspended-ink);
+}
+
+.of-pill--tone-restricted {
+  --fill: var(--of-color-state-restricted);
+  --ink: var(--of-color-state-restricted-ink);
+}
+
+.of-pill--tone-living-legend {
+  --fill: var(--of-color-state-living-legend);
+  --ink: var(--of-color-state-living-legend-ink);
+}
+
+.of-pill--tone-not-in-format {
+  --fill: var(--of-color-state-not-in-format);
+  --ink: var(--of-color-state-not-in-format-ink);
+}
+
+.of-pill--tone-verified {
+  --fill: var(--of-color-state-verified);
+  --ink: var(--of-color-state-verified-ink);
+}
+
+.of-pill--tone-unverified {
+  --fill: var(--of-color-state-unverified);
+  --ink: var(--of-color-state-unverified-ink);
+}
+
+/* Forced-colours mode discards the fill and the bevel, which is the design
+   working rather than failing: the label and the notch are what remain, and
+   between them they still say both "this carries state" and which one. */
+
+/* No motion here at all — a verdict does not animate into place. Declared so
+   the absence is intent rather than oversight. */
+@media (prefers-reduced-motion: reduce) {
+  .of-pill {
+    transition: none;
+  }
+}

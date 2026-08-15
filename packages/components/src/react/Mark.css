@@ -1,0 +1,103 @@
+/*
+ * `Mark`'s styles, ported from the Svelte component's scoped block. Every
+ * declaration and every comment is the original's.
+ */
+
+.of-mark {
+  display: inline-block;
+
+  /* Height is set and width follows from the viewBox — see the note at the top
+     of the component for why both would be one number too many. */
+  block-size: var(--of-ornament-mark-base);
+  inline-size: auto;
+
+  /* Struck, not printed: a light top edge and a dark bottom one, carried on the
+     alpha silhouette so the bevel needs no extra geometry. */
+  filter: drop-shadow(
+      0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light)
+    )
+    drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
+
+  /* An SVG root clips at its viewBox by default, which would shear the bevel off
+     the top and bottom edges. */
+  overflow: visible;
+}
+
+.of-mark--sm {
+  block-size: var(--of-ornament-mark-small);
+}
+
+.of-mark--lg {
+  block-size: var(--of-ornament-mark-large);
+}
+
+/*
+  THE CANONICAL FILL IS THE PITCH PALETTE, one link per value, in order. It is
+  the one place this system spends pitch colour on something that is not a pitch
+  value — argued in `docs/DESIGN.md`, and the argument is that the mark is not a
+  card: the links are the three-value system itself rather than any one of its
+  values.
+*/
+.of-mark[data-variant="pitch"] .of-mark__link[data-link="0"] {
+  fill: var(--of-color-pitch-one);
+}
+
+.of-mark[data-variant="pitch"] .of-mark__link[data-link="1"] {
+  fill: var(--of-color-pitch-two);
+}
+
+.of-mark[data-variant="pitch"] .of-mark__link[data-link="2"] {
+  fill: var(--of-color-pitch-three);
+}
+
+/*
+  The alternate: ink on the outside, blood in the middle. Blood is chrome in this
+  system and a logo is chrome, so the accent is spent on exactly one link — and
+  the outer two inherit, so the mark takes the ink of whatever it is locked up
+  with rather than asserting its own.
+*/
+.of-mark[data-variant="ink"] .of-mark__link {
+  fill: currentColor;
+}
+
+.of-mark[data-variant="ink"] .of-mark__link[data-link="1"] {
+  fill: var(--of-color-accent);
+}
+
+/*
+  Forced colours: the palette is replaced wholesale, so the mark collapses to a
+  single system ink. It still reads, because the interlock — not the colour — is
+  what says "chain".
+
+  THE SELECTORS HERE MATCH THE VARIANT RULES ABOVE, AND THEY HAVE TO. The first
+  version of this was a two-class selector, which the variant rules beat on
+  specificity — so in Windows High Contrast the mark kept its pitch blues against
+  a forced background and the collapse this block exists to perform never
+  happened. The rules it replaced were the same specificity as the override and
+  lost only to source order, so the attribute selectors turned a working
+  guarantee into a dead one. Written out per variant rather than hoisted behind
+  `:where()`, because the point is to be no less specific than what it is
+  overriding and that is easier to check than to reason about.
+*/
+@media (forced-colors: active) {
+  .of-mark[data-variant="pitch"] .of-mark__link[data-link="0"],
+  .of-mark[data-variant="pitch"] .of-mark__link[data-link="1"],
+  .of-mark[data-variant="pitch"] .of-mark__link[data-link="2"],
+  .of-mark[data-variant="ink"] .of-mark__link,
+  .of-mark[data-variant="ink"] .of-mark__link[data-link="1"] {
+    fill: CanvasText;
+  }
+
+  .of-mark {
+    filter: none;
+  }
+}
+
+/* Honour a reduced-motion preference by never introducing motion here at all;
+   the mark is static by design. Declared so the intent is explicit rather than
+   accidental. */
+@media (prefers-reduced-motion: reduce) {
+  .of-mark {
+    transition: none;
+  }
+}

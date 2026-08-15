@@ -1,0 +1,182 @@
+/*
+ * `GameSymbol`'s styles, ported from the Svelte component's scoped block. Every
+ * declaration and every comment is the original's.
+ */
+
+.of-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* See `StatGlyph`: no universal reset exists, so padding would otherwise grow
+     the box and disturb the inline rhythm `vertical-align` protects. */
+  box-sizing: border-box;
+  inline-size: var(--symbol-size);
+  block-size: var(--symbol-size);
+  /* Sits on a text baseline rather than a grid, which a stat plate never has to
+     do: without this the line-height of a paragraph containing six of them opens
+     up and the text loses its rhythm. */
+  vertical-align: var(--of-ornament-symbol-shift);
+  background: var(--of-color-surface-raised);
+  color: var(--of-color-ink);
+  box-shadow:
+    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
+    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+  --symbol-size: calc(var(--of-ornament-stat-size) * 0.62);
+  --chamfer: calc(var(--of-ornament-notch-size) * 0.62);
+}
+
+.of-symbol--md {
+  --symbol-size: var(--of-ornament-stat-size);
+  --chamfer: var(--of-ornament-notch-size);
+}
+
+.of-symbol__letter {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-bold);
+  line-height: 1;
+  /* Tracked in, because a single capital in a small plate reads as offset
+     otherwise — the letterform's own side bearings are not symmetric. */
+  letter-spacing: 0;
+}
+
+.of-symbol--md .of-symbol__letter {
+  font-size: var(--of-type-size-base);
+}
+
+/*
+  THE ARTWORK CARRIES ITS OWN SHAPE, so the plate underneath it gets out of the
+  way entirely — no background, no bevel, no clip, and no `align-items` nudge
+  from the shield. The icons are round with their own dark ring; a struck square
+  behind a disc would read as a mounting plate somebody forgot to remove.
+
+  TWO CLASSES, NOT ONE, AND THAT IS THE WHOLE OF A BUG THAT SHIPPED. Svelte
+  scoped by adding one class to every selector, so `.art` and `.defence` were
+  both single-class rules of equal specificity, and the silhouettes below won on
+  source order. Every ingested icon was therefore drawn clipped by the plate it
+  was supposed to replace, on top of the colour it was supposed to remove: `{d}`
+  lost its bottom corners to the shield cut, `{t}` and `{u}` lost a whole side,
+  `{c}` lost its top.
+
+  It was invisible in review precisely where it was checked hardest — `{p}` and
+  `{r}` clip to `cut.disc`, and a disc-shaped clip on a round icon is a no-op, so
+  the two symbols anybody would screenshot first looked perfect. Raising
+  specificity rather than reordering, because source order is not a thing a
+  future edit can be expected to preserve and this rule has now demonstrated what
+  it costs when it is not.
+
+  The port keeps the doubled selector for exactly the same reason. The scoping
+  mechanism changed; the specificity hazard did not.
+*/
+.of-symbol.of-symbol--art {
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+  align-items: center;
+  /* BOTH ENDS, and the `-end` half is the one that matters. This zeroed
+     `padding-block-start` because that is what the shield used at the time; the
+     shield moved to `padding-block-end` and the rule went on neutralising a
+     property nobody sets. Every inline `{d}` — which HAS artwork — was getting
+     28% bottom padding the reset had explicitly opted out of. */
+  padding-block: 0;
+}
+
+.of-symbol.of-symbol--art img {
+  inline-size: 100%;
+  block-size: 100%;
+  /* The files are square and the box is square, but `contain` is stated rather
+     than assumed: two of the eight are a pixel smaller than the other six, and a
+     symbol that stretched to fit would be the one place on this site where
+     upstream's own artwork got distorted to suit a layout. */
+  object-fit: contain;
+  display: block;
+}
+
+/* -- The silhouettes --------------------------------------------------------
+   Read from the token layer, which is where the shape table lives so that this
+   component and `StatGlyph` cannot drift apart. See `ornament.cut.*` in
+   `packages/theme/src/tokens.ts` for why each cut is the cut it is, and for the
+   rule that none of them may be eight-sided. */
+
+/* -- The three the card itself draws ----------------------------------------
+   Resource, power and defence take the disc, the disc and the shield, in the
+   card's own two inks — the same change `StatGlyph` made and for the same
+   reason, held together by the same token table.
+
+   THIS IS THE HALF THAT MATTERS MOST. A stat plate is read once, at the top of a
+   page, beside a word that names it. These are read INLINE, mid-sentence, in
+   "deal 3 {p} damage" — with no label anywhere near them. A marker that needed
+   the legend to be decoded was doing its job only for a reader who had already
+   scrolled to the legend, which is most of why that legend existed.
+
+   Resource keeps `cost`'s red disc rather than getting one of its own: a cost is
+   a resource value (CR 1.12.4e), and one concept gets one shape. */
+.of-symbol--resource {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-cost);
+  color: var(--of-color-stat-cost-ink);
+}
+
+.of-symbol--power {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-power);
+  color: var(--of-color-stat-power-ink);
+}
+
+/* Centred in the shield's body rather than pinned to the top of its box — same
+   reasoning as `StatGlyph`, and the same fraction, so the inline marker and the
+   corner plate stay the same object at two sizes. */
+.of-symbol--defence {
+  clip-path: var(--of-ornament-cut-shield);
+  background: var(--of-color-stat-defence);
+  color: var(--of-color-stat-defence-ink);
+  padding-block-end: calc(var(--symbol-size) * 0.28);
+}
+
+/* Life — the plain plate. Nothing is cut, which is its own signal in a set where
+   everything else is. */
+.of-symbol--life {
+  clip-path: var(--of-ornament-cut-plain);
+}
+
+.of-symbol--intellect {
+  clip-path: var(--of-ornament-cut-diagonal-start);
+}
+
+/* Chi — cut across the top, distinct from all five above without becoming the
+   reserved pitch diamond. */
+.of-symbol--chi {
+  clip-path: var(--of-ornament-cut-crown);
+}
+
+/*
+  Tap and untap are EFFECTS, not values — the CR draws that line itself (1.12.4g
+  "represents the tap effect", against 1.12.4a "represents a defense value") — so
+  they are cut down one whole side rather than at a corner. The two are mirrors
+  of each other, which is what they are.
+*/
+.of-symbol--tap {
+  clip-path: var(--of-ornament-cut-side-end);
+}
+
+.of-symbol--untap {
+  clip-path: var(--of-ornament-cut-side-start);
+}
+
+/*
+  X is the one marker the CR's symbol table does not list — 1.12.2 defines the
+  LETTER X, not a symbol — so it is drawn as the plain letter it is, with no
+  plate and no silhouette. The absence is the honesty: a reader can see at a
+  glance that this one is not part of the published set.
+*/
+.of-symbol--x {
+  background: none;
+  box-shadow: none;
+  inline-size: auto;
+  color: var(--of-color-ink);
+}
+
+.of-symbol--x .of-symbol__letter {
+  font-style: italic;
+  font-size: inherit;
+}

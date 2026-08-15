@@ -1,0 +1,83 @@
+/*
+ * `FiligreeCorner`'s styles, ported from the Svelte component's scoped block.
+ * Every declaration and every comment is the original's.
+ */
+
+/* The ink is inherited rather than painted per path, so a caller can retune the
+   ornament with `color` alone and an adopted custom element picks up its host's
+   colour. `fill` and `stroke` are inherited SVG properties, so setting them on
+   the pass group is enough for every path inside it. */
+.of-filigree {
+  color: var(--of-ornament-filigree-ink);
+}
+
+.of-filigree__ink {
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+/* Light above, dark below: the same bevel the plates use, applied to a line.
+   This is what stops the scrollwork reading as a decal on the surface. */
+.of-filigree__relief-light {
+  stroke: var(--of-bevel-light);
+  fill: var(--of-bevel-light);
+}
+
+.of-filigree__relief-dark {
+  stroke: var(--of-bevel-dark);
+  fill: var(--of-bevel-dark);
+}
+
+/* ---- The two corner roles ------------------------------------------------ */
+
+/* Fills the slot it was handed and claims nothing else — no `position`, no
+   `inset`, no size of its own. The host (`BevelledPlate`, or a card frame)
+   places and sizes the ornament, which is the only arrangement in which the
+   positioning context is the frame rather than one slot inside it.
+   `overflow: visible` because the volute is drawn a little proud of its own
+   viewBox, and the relief passes are offset out of it besides. */
+.of-filigree--corner {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+
+/* Logical insets move the host's four slots under RTL but cannot turn the
+   drawing round with them, which would leave every scroll curling out of its own
+   frame. Mirroring the motif as well makes the assembly whole again. */
+.of-filigree--corner:dir(rtl) {
+  transform: scaleX(-1);
+}
+
+/* ---- The section rule's figure -------------------------------------------- */
+
+/* Height from the token, width from the drawing's own proportions, so the
+   ornament can never be squashed by its container. This is the one size the
+   component sets, because the rule mounts it in an `auto` grid track that has no
+   dimension to inherit. */
+.of-filigree--figure {
+  display: block;
+  flex: 0 0 auto;
+  block-size: var(--of-ornament-filigree-size);
+  inline-size: auto;
+  overflow: visible;
+}
+
+/* A forced palette has no ink to spare for decoration, and the relief passes
+   collapse onto the ink colour there anyway. What the ornament sat on — the
+   plate's borders, the rule's own hairlines — is drawn elsewhere and survives,
+   so nothing structural goes with it. */
+@media (forced-colors: active) {
+  .of-filigree {
+    display: none;
+  }
+}
+
+/* Static by design. Declared so the absence of motion is a decision rather than
+   an oversight, exactly as in `PitchJewel`. */
+@media (prefers-reduced-motion: reduce) {
+  .of-filigree {
+    transition: none;
+  }
+}

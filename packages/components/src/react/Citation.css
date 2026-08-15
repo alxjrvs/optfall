@@ -1,0 +1,111 @@
+/*
+ * `Citation`'s styles, ported from the Svelte component's scoped block. Every
+ * declaration and every comment is the original's.
+ */
+
+.of-citation {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--of-space-tighter);
+  box-sizing: border-box;
+  padding-block: var(--of-space-tightest);
+  padding-inline: var(--of-space-tight);
+
+  /* A struck plate: light top edge, dark bottom edge, hairline sides. */
+  border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
+  border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
+  border-inline: var(--of-bevel-width) solid var(--of-color-rule);
+  /* Nothing in this system is rounded. The token exists only to be zero, and
+     naming it is how that stays true rather than merely being true today. */
+  border-radius: var(--of-bevel-radius);
+
+  background: var(--of-color-surface);
+  color: var(--of-color-ink);
+
+  /* The label voice, in its definitive use. Wide tracking is the property that
+     separates a label from a line of code. */
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-small);
+  font-weight: var(--of-type-weight-medium);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-wide);
+
+  /* The plate — surface, bevel, hairline, label voice — is what marks this as a
+     link, so the underline is spent on hover and focus instead of being
+     always-on. Colour is never the distinguishing channel on its own. */
+  text-decoration: none;
+
+  /* A citation is atomic. Half of `cr:8.3.4b` on the next line is not a shorter
+     citation, it is a wrong one. */
+  white-space: nowrap;
+
+  transition:
+    background-color var(--of-motion-fast) var(--of-motion-ease),
+    border-color var(--of-motion-fast) var(--of-motion-ease);
+}
+
+/* One click selects the whole identifier. The component's entire job is to be
+   pasted somewhere, so selection is a first-class affordance rather than an
+   accident of it being text. */
+.of-citation__rule-id {
+  user-select: all;
+}
+
+.of-citation__separator,
+.of-citation__version {
+  color: var(--of-color-ink-muted);
+}
+
+.of-citation__version {
+  font-size: var(--of-type-size-micro);
+}
+
+.of-citation:hover {
+  background: var(--of-color-surface-raised);
+  border-inline-color: var(--of-color-rule-strong);
+}
+
+/* Underline on both, so a keyboard user gets the same affordance a mouse user
+   does rather than a quieter version of it. */
+.of-citation:hover,
+.of-citation:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: var(--of-space-tightest);
+}
+
+/* Never `outline: none`. Two bevel widths so the ring survives a high-density
+   display and the offset keeps it off the plate's own light edge. */
+.of-citation:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: var(--of-bevel-width);
+}
+
+/* Pressed: the bevel inverts and the plate sinks, because a struck surface
+   pushed in catches light on its lower edge. */
+.of-citation:active {
+  background: var(--of-color-sunken);
+  border-block-start-color: var(--of-bevel-dark);
+  border-block-end-color: var(--of-bevel-light);
+}
+
+/* The clarifier a screen reader needs and a sighted reader already has from
+   position and weight. Sized from `space.hair` rather than collapsed to zero: a
+   zero-area element is skipped by some assistive technology, and a hidden word
+   that goes unread is worse than no word at all. */
+.of-citation__sr-only {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of-citation {
+    transition: none;
+  }
+}
