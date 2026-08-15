@@ -282,14 +282,40 @@ function manifest(): string {
  * the network is slow or absent. So the handler cannot fix this on its own: the
  * stale entry has to stop existing.
  *
- * **A NEW WORKER ACTIVATING IS THE DEPLOY SIGNAL, and it is exact.** The
- * precache manifest is part of `sw.js`, so any deploy that changes any hashed
- * asset produces a different worker, which installs and activates. Dropping the
- * page cache there means no document ever outlives the assets it references.
+ * **A NEW WORKER ACTIVATING IS THE DEPLOY SIGNAL.** The precache manifest is
+ * part of `sw.js`, so any deploy that changes any hashed asset produces a
+ * different worker, which installs and activates. Dropping the page cache there
+ * removes every document that predates the running deploy.
+ *
+ * **IT NARROWS THE WINDOW RATHER THAN CLOSING IT, and the difference is worth
+ * being accurate about.** The purge fires on *activate*, and until then the OLD
+ * worker is still in control — the update check and a full precache install have
+ * to finish first, which on a slow network is exactly the case that is slow, and
+ * on lie-fi may not finish at all. So a reader on a bad connection immediately
+ * after a deploy can still be served pre-deploy HTML. What the purge guarantees
+ * is that this cannot persist: once the new worker takes over, the stale entries
+ * are gone.
  *
  * The cost is honest and small: after a deploy, a reader who is offline has lost
  * the pages they had stored. Those pages could not have rendered anyway, so what
  * is lost is a blank screen.
+ *
+ * **THE EXPIRATION METADATA IS A KNOWN LOOSE END.** `ExpirationPlugin` keeps its
+ * timestamps in IndexedDB rather than in the `Cache`, and `caches.delete()` does
+ * not touch them — Workbox's own note on `deleteCacheAndMetadata` says a bare
+ * `caches.delete()` suffices only when expiration is not in use, and here it is.
+ * Left alone, the `maxEntries: 200` budget stays full of records for pages that
+ * no longer exist, so each newly cached page evicts a phantom instead of adding
+ * to the count, and the cache holds fewer than 200 real pages until they drain.
+ * It self-heals and corrupts nothing, because the phantoms are the oldest
+ * records and so are always the ones evicted first.
+ *
+ * The database is dropped alongside the cache to avoid even that, and
+ * deliberately WITHOUT being awaited: `deleteDatabase` blocks while any
+ * connection is open, and a blocked request inside `waitUntil` would stall
+ * activation — trading a self-healing accounting quirk for a worker that never
+ * takes over. If the database name ever changes upstream the call becomes a
+ * no-op and the quirk comes back, which is the right way for this to fail.
  *
  * IT IS A SEPARATE FILE BECAUSE `generateSW` HAS NO ACTIVATE HOOK. Workbox
  * generates the worker; `importScripts` is the supported way to add behaviour to
@@ -299,6 +325,10 @@ function manifest(): string {
 function serviceWorkerPurge(): string {
   return `self.addEventListener("activate", function (event) {
   event.waitUntil(caches.delete("pages"));
+  /* Not awaited, and not inside waitUntil: see ssg/assets.ts. */
+  try {
+    indexedDB.deleteDatabase("workbox-expiration");
+  } catch (error) {}
 });
 `;
 }

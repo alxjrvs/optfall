@@ -14,11 +14,12 @@
  * `NetworkFirst` — network when there is one, cache when there is not — and
  * nothing else is promised.
  *
- * **AND THE PAGE CACHE IS EMPTIED ON EVERY DEPLOY**, via `sw-purge.js`. Stored
- * HTML links content-hashed assets, so it stops being renderable the moment a
- * deploy replaces them; a new worker activating is the exact signal that has
- * happened. Without that, both the offline path and the network timeout below
- * can hand a reader a page that cannot paint.
+ * **AND THE PAGE CACHE IS EMPTIED WHEN A NEW WORKER ACTIVATES**, via
+ * `sw-purge.js`. Stored HTML links content-hashed assets, so it stops being
+ * renderable the moment a deploy replaces them, and a new worker activating is
+ * the signal that has happened. It narrows the window rather than closing it —
+ * the old worker stays in control until the new one activates — but it does mean
+ * a page that cannot paint can never persist past that point.
  *
  * **AND THERE IS NO `navigateFallback`, WHICH IS THE HALF WORTH SPELLING OUT.**
  * The tempting configuration serves a cached shell for any unmatched navigation,
@@ -88,6 +89,31 @@ function assertHostMatches(): void {
     `The service worker's NetworkOnly rule names "${IMAGE_HOST}" but FACE_HOST is "${expected}". ` +
       `docs/COMPLIANCE.md §5 forbids caching card art, and a rule pointing at the wrong host enforces nothing. ` +
       `Update the literal inside the urlPattern callback in this file — it cannot read a constant, see the note above it.`,
+  );
+}
+
+/**
+ * The file the worker imports is really on disk.
+ *
+ * THIS FAILURE IS WORSE THAN THE ONE THE PURGE FIXES, which is why it is checked
+ * here rather than left to a later job. `importScripts` of a URL that 404s
+ * throws inside the install handler and **aborts installation**, so a missing
+ * `sw-purge.js` means no service worker installs at all — no precache, no
+ * offline, no install prompt. Dropping the `GENERATED_ASSETS` entry while
+ * leaving the `importScripts` line would do exactly that, and the two live in
+ * different files.
+ *
+ * `check:dev-server` covers it too, but that is a separate CI job from the one
+ * that emits the file; this puts the assertion where the coupling is.
+ */
+async function assertPurgeScriptExists(outDir: string): Promise<void> {
+  if (await Bun.file(`${outDir}/sw-purge.js`).exists()) return;
+
+  throw new Error(
+    `The worker imports /sw-purge.js and the build did not emit it. ` +
+      `\`importScripts\` of a 404 throws during install, so this would ship a site where NO service worker installs — ` +
+      `no precache, no offline, no install prompt. Restore the entry in GENERATED_ASSETS (ssg/assets.ts) ` +
+      `or remove the importScripts line here; they have to move together.`,
   );
 }
 
@@ -239,14 +265,19 @@ export async function writeServiceWorker(
            * never settles quickly — so a reader with a cached copy of the page
            * they are opening would sit on a blank screen rather than see it.
            *
-           * IT IS ONLY SAFE BECAUSE OF THE PURGE. A timeout falls back to the
-           * cache, which is the same thing being offline does, so on its own it
-           * reopens the deploy-staleness failure `NetworkFirst` was chosen to
-           * close: a slow response on a page cached before the current deploy
-           * would serve HTML linking assets that no longer exist. `sw-purge.js`
-           * empties this cache whenever a new worker activates, so there is no
-           * pre-deploy entry left to fall back to and the timeout can only ever
-           * return a document from the deploy that is live.
+           * IT IS A TRADE, NOT A PURE WIN, and the losing case is worth
+           * naming. A timeout falls back to the cache, which is the same thing
+           * being offline does — so it can serve HTML cached before the current
+           * deploy, linking hashed assets that no longer exist. `sw-purge.js`
+           * narrows that to the interval before the new worker activates,
+           * because until then the OLD worker is still in control and its cache
+           * is intact. On a slow network right after a deploy — precisely when
+           * this timeout fires — that interval is not empty.
+           *
+           * It is accepted because the window is narrow, it closes itself the
+           * moment the new worker takes over, and the alternative is a reader
+           * with a perfectly good cached page staring at a blank screen every
+           * time the network is bad.
            *
            * Three seconds is longer than any real response to this static site
            * and shorter than anybody's patience.
@@ -267,6 +298,7 @@ export async function writeServiceWorker(
 
   for (const warning of warnings) console.warn(`[sw] ${warning}`);
 
+  await assertPurgeScriptExists(outDir);
   assertRoutesEmitted(await Bun.file(`${outDir}/sw.js`).text());
 
   return { precached: count, bytes: size };
