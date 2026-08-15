@@ -144,10 +144,14 @@ the drift output above. `allow_auto_merge` is `false` and the `default-branch`
 ruleset does not exist on the live repository.
 
 The declaration is right. The ruleset body sets `deletion`, `non_fast_forward`,
-`required_linear_history`, one `required_check` with context `gate`, no
+`required_linear_history`, one `required_check` with context `CI Success`, no
 `pull_request` rule (so no required human review), no `bypass_actors`, and
 `do_not_enforce_on_create: true` so the first push cannot deadlock against its
-own status check. `GATE_JOB="gate"` matches `ci.yml`'s job name byte for byte.
+own status check. `GATE_JOB="CI Success"` matches the `name:` of `ci.yml`'s
+`gate` job byte for byte — the display name, which is what GitHub matches a
+required context against; the job key never appears as a status. (It read
+`gate` on both sides until #132 standardised the display name across the four
+monorepos.)
 
 ### CI with a single aggregate gate — **done**
 
@@ -583,8 +587,9 @@ gh pr create --fill
 gh pr checks --watch
 ```
 
-Watch for four things, in order: a Netlify deploy-preview check appears; `gate`
-reports (and is the *only* required check); the PR shows no "review required";
+Watch for four things, in order: a Netlify deploy-preview check appears;
+`CI Success` reports (and is the *only* required check); the PR shows no
+"review required";
 `gh pr merge --auto --squash` lands it with no human approval.
 
 *Why not an agent:* it opens a pull request and merges to `main`, both forbidden
