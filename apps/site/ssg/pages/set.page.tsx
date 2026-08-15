@@ -19,7 +19,7 @@
  */
 
 import { CARD_PAGES, type CardPage } from "../../src/lib/cards";
-import { editionName, SETS, setFor } from "../../src/lib/sets";
+import { editionName, setFor } from "../../src/lib/sets";
 import type { PageModule, PageResult, RouteContext } from "../types";
 import "./set.css";
 
@@ -115,14 +115,21 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
           ))}
         </ul>
 
-        <p className="of-set-provenance">
-          From{" "}
-          <a href={`https://github.com/${SETS.source.repository}`}>
-            {SETS.source.repository}
-          </a>{" "}
-          at <code>{SETS.source.commit}</code>. A card is listed under every set
-          it was printed in.
-        </p>
+        {/*
+          THE PROVENANCE LINE IS GONE, and it is deleted rather than folded away.
+
+          It repeated, on 112 pages, an envelope the site states elsewhere: the
+          upstream repository and the pinned commit are the same two values on
+          every set page, and every card page already carries them in its Source
+          fold beside the file hash, the retrieval URL and the confirmation date
+          — which is the version of the claim that can actually be checked. A
+          repository name and a commit with none of that around them are a
+          gesture at auditability rather than the thing itself.
+
+          The second sentence went with it for a different reason: "a card is
+          listed under every set it was printed in" describes the list directly
+          above it, which the list already demonstrates.
+        */}
       </>
     ),
   };

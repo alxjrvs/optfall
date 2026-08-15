@@ -72,14 +72,14 @@
 }
 
 /*
-  `base`, not `loosest`. This line is the tail of the card list — where the list
-  came from — rather than a section of its own, and 40px of clearance above it
-  said the opposite: it read as a separate block marooned between the cards and
-  the footer, with the page's largest gap on one side of it and the footer's on
-  the other.
+  `.of-set-provenance` WENT WITH THE PARAGRAPH IT STYLED. Deleted rather than
+  left behind, on the rule `CardEntry.css` already states about a rule matching
+  no element: dead weight that reads, to the next person, like the markup is
+  still there.
+
+  IT COLLIDED ON THE REBASE WITH A TIGHTENING OF THIS RULE — `base` in place of
+  `loosest`, on the argument that the line was the tail of the card list rather
+  than a section of its own. That argument was right about what the line WAS
+  and is moot about whether it should be here: the paragraph is gone, so the
+  best margin for it is no margin at all.
 */
-.of-set-provenance {
-  margin-block-start: var(--of-space-base);
-  color: var(--of-color-ink-muted);
-  font-size: var(--of-type-size-small);
-}

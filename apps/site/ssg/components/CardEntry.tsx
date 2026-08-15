@@ -459,16 +459,40 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               </nav>
             ) : null}
 
+            {/*
+              THE PANEL CARRIES ITS PITCH, so the stylesheet can tint the one
+              thing on the page that is allowed to say which version this is
+              without words: the rule under the name. A data attribute rather
+              than an inline custom property, because the four values are a
+              closed set the theme already names — `data-pitch` selects one of
+              them, where a `style=` would let this file mix a colour.
+            */}
             <BevelledPlate emphasis="flat">
-              <div className="of-card__panel">
+              <div className="of-card__panel" data-pitch={page.pitch}>
                 <header className="of-card__band of-card__band--title">
+                  {/*
+                    PITCH IS LABELLED, LIKE COST. It is the same kind of thing
+                    in the same kind of corner — a printed value in a plate —
+                    and the corner opposite it has said its own name in micro
+                    caps since the panel was built. The stone carries the
+                    numeral, the word carries what the numeral is OF, and the
+                    two are a `<dl>` for the reason the stat corners are: this
+                    is term-and-value data.
+                  */}
                   {page.pitch === 0 ? (
                     <span
                       className="of-card__corner-empty"
                       aria-hidden="true"
                     />
                   ) : (
-                    <PitchJewel value={page.pitch} />
+                    <dl className="of-card__badges of-card__badges--start">
+                      <div className="of-card__badge">
+                        <dt>Pitch</dt>
+                        <dd>
+                          <PitchJewel value={page.pitch} />
+                        </dd>
+                      </div>
+                    </dl>
                   )}
                   {/*
                     `card.name`, not `page.label`. Everywhere else in the product
@@ -628,9 +652,21 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         </span>
                       </span>
                     ))}
-                    {artists.length === 0
-                      ? "No artist is credited in the published dataset."
-                      : `Illustrated by ${artists.join(", ")}`}
+                    {/*
+                      IN A SPAN, so it is a flex item rather than a bare text
+                      node. The line is a row of rarities followed by an
+                      attribution, and the gap between any two of those things
+                      should be the same gap. A loose text node is not spaced by
+                      `gap` at all, which is why this line used to run its
+                      rarities on a margin and then butt the attribution against
+                      the last of them on whatever the space character happened
+                      to measure.
+                    */}
+                    <span className="of-card__attribution">
+                      {artists.length === 0
+                        ? "No artist is credited in the published dataset."
+                        : `Illustrated by ${artists.join(", ")}`}
+                    </span>
                   </p>
                   <p className="of-card__credit">
                     <a href="#printings">

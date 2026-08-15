@@ -66,6 +66,69 @@ function jewel(pitch: string | number, size = ""): string {
 }
 
 /**
+ * A stat plate, in the shape `StatGlyph` actually renders.
+ *
+ * WRITTEN ONCE HERE BECAUSE IT WAS WRITTEN TWICE INLINE, AND BOTH COPIES WERE
+ * WRONG. The stat-glyph primitive page and the card screen each carried their
+ * own hand-spelled `<span style="…">` per stat, from before the component took
+ * the card's own furniture for the three the card draws — so the gallery
+ * published a hexagon for cost and a chamfered square for power against a
+ * product that ships a red disc and a yellow one, in a repository whose token
+ * comments already tell the story of a silhouette drifting exactly this way.
+ *
+ * The three things a copy can get wrong are the three things this reads rather
+ * than states: the SHAPE comes out of `ornament.cut.*` via `cutValue`, the INK
+ * out of `color.stat.*`, and the SIZE out of `ornament.stat.size` scaled by the
+ * same optical factor `StatGlyph.css` derives from the silhouette's area.
+ */
+const STAT_PLATES: Readonly<
+  Record<string, { cut: string; tone: string | null; optical: number }>
+> = {
+  cost: { cut: "cut.disc", tone: "cost", optical: 1 },
+  power: { cut: "cut.disc", tone: "power", optical: 1 },
+  defence: { cut: "cut.shield", tone: "defence", optical: 0.956 },
+  life: { cut: "cut.plain", tone: null, optical: 0.886 },
+  intellect: { cut: "cut.diagonal.start", tone: null, optical: 0.908 },
+  arcane: { cut: "cut.diagonal.end", tone: null, optical: 0.908 },
+};
+
+function statPlate(kind: string, value: string): string {
+  const spec = STAT_PLATES[kind];
+  // Same argument as `cutValue`: a stat the component knows and this table does
+  // not is drift, and the gallery should say so rather than render a blank.
+  if (spec === undefined) throw new Error(`no such stat plate: ${kind}`);
+
+  const size = `calc(var(--of-ornament-stat-size) * ${spec.optical})`;
+  const surface =
+    spec.tone === null
+      ? "background:var(--of-color-surface-raised);color:var(--of-color-ink)"
+      : `background:var(--of-color-stat-${spec.tone});color:var(--of-color-stat-${spec.tone}-ink)`;
+  /* The shield's point takes the bottom of the square, so the numeral is
+     centred in the BODY rather than in the box — the component's own note. */
+  const seat =
+    kind === "defence" ? `;padding-block-end:calc(${size} * 0.28)` : "";
+
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:${size};block-size:${size};${surface};font-family:var(--of-type-family-sans);font-size:var(--of-type-size-base);font-weight:var(--of-type-weight-bold);line-height:1;clip-path:${cutValue(spec.cut)};box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark)${seat}">${value}</span>`;
+}
+
+/**
+ * A stat and its word, side by side, in the arrangement the card panel uses.
+ *
+ * THE PLATE TAKES THE OUTER POSITION AND THE WORD THE INNER ONE. On the panel
+ * that means the symbols form a column down each edge and the words face in
+ * toward the name between them.
+ *
+ * NO `outboard` PARAMETER, and it was written and then removed. The gallery
+ * draws these as a left-aligned row with no edges to face away from, so an
+ * argument for mirroring would have had exactly one caller and one value
+ * forever — a knob illustrating a rule rather than obeying one. The prose beside
+ * the row carries the mirroring instead, which is what a gallery is for.
+ */
+function statBadge(kind: string, label: string, value: string): string {
+  return `<div style="display:flex;align-items:center;gap:var(--of-space-tight)">${statPlate(kind, value)}<span class="eyebrow" style="margin:0">${label}</span></div>`;
+}
+
+/**
  * The light palette, scoped so it can apply to a SUBTREE rather than a document.
  *
  * `themeStylesheet()` keys every block on `:root`, which is correct for a page
@@ -399,45 +462,23 @@ cards.push({
   group: "Primitives",
   title: "Stat glyph",
   body: `
-  <p class="note">A printed stat in a struck plate whose silhouette says which stat it is. <code>docs/DESIGN.md</code> described these — "cost in a hexagonal plate, power and defence in chamfered plates at the corners" — and they were rendered as a definition list until now.</p>
-  <div class="row" style="margin-block-start:var(--of-space-loose);align-items:flex-start;gap:var(--of-space-looser)">
+  <p class="note">A printed stat in a struck plate whose silhouette says which stat it is. <code>docs/DESIGN.md</code> asked for "cost in a hexagonal plate, power and defence in chamfered plates at the corners"; the three the card itself draws have since taken the card's own geometry instead, and the note below says why.</p>
+  <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center;gap:var(--of-space-looser);flex-wrap:wrap">
     ${[
-      ["cost", "0", "polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)"],
-      [
-        "power",
-        "3",
-        "polygon(0 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%)",
-      ],
-      [
-        "defence",
-        "2",
-        "polygon(0 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem))",
-      ],
-      ["life", "20", "none"],
-      [
-        "intellect",
-        "4",
-        "polygon(.5rem 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%,0 .5rem)",
-      ],
-      [
-        "arcane",
-        "1",
-        "polygon(0 0,calc(100% - .5rem) 0,100% .5rem,100% 100%,.5rem 100%,0 calc(100% - .5rem))",
-      ],
+      ["cost", "0"],
+      ["power", "3"],
+      ["defence", "2"],
+      ["life", "20"],
+      ["intellect", "4"],
+      ["arcane", "1"],
     ]
-      .map(
-        ([
-          kind,
-          value,
-          clip,
-        ]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:${clip};box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">${value}</span>
-          <span class="eyebrow" style="margin:0">${kind}</span>
-        </div>`,
-      )
+      .map(([kind, value]) => statBadge(kind ?? "", kind ?? "", value ?? ""))
       .join("")}
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)">One vocabulary — a square plate, chamfered differently — so the six read as a family rather than as six icons. <strong>None is eight-sided:</strong> the pitch jewel owns that outline and the system promises it means pitch, so a stat glyph that happened to be an octagon would spend the one shape that is spoken for. The numeral stays the primary channel and the label stays visible; the silhouette is the third redundant carrier, never the only one.</p>
+  <p class="note"><strong>Cost, power and defence break the vocabulary on purpose.</strong> They are the three a player already knows by sight, so they take the card's own geometry rather than a forward-leaning grey square that has to be read to be identified: two discs and a shield, drawn by us in tokens from our own palette. A player looking for attack is looking for a yellow disc.</p>
+  <p class="note"><strong>One size, six areas, so the boxes are not all the same.</strong> The eye compares ink rather than bounding boxes, and an uncut square keeps 27% more of its box than a disc does. Each plate is therefore scaled by the square root of its silhouette's area against the disc's π/4, which is what makes the row above read as one size instead of four.</p>
+  <p class="note"><strong>The word sits beside the plate, never above it</strong> — and on the card panel it sits <em>inboard</em> of it, so the plates line the two edges of the panel and the words face in toward the name and the type line between them.</p>
   <p class="note">No LSS symbol is reproduced. These are the system's own plates carrying our numerals — the same move the mark made: take the register, none of the form.</p>`,
 });
 
@@ -697,9 +738,21 @@ cards.push({
 
         <div>
           <p class="eyebrow">Stats</p>
-          <div style="display:flex;gap:var(--of-space-loose);flex-wrap:wrap">
-            $<div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Pitch</div>${jewel("1")}</div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Cost</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">0</span></div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Power</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0,100% 0,100% calc(100% - .5rem),calc(100% - .5rem) 100%,0 100%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">3</span></div><div style="display:flex;flex-direction:column;gap:var(--of-space-tightest)"><div class="eyebrow" style="margin:0">Defence</div><span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0,100% 0,100% 100%,.5rem 100%,0 calc(100% - .5rem));box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">2</span></div>
+          <!-- A STRAY DOLLAR SIGN USED TO PRINT HERE, at the head of the row:
+               the line was one hand-spelled 4,000-character blob and an
+               interpolation had lost its brace, so the published card screen
+               carried it as the first stat. It survived because nobody reads a
+               line that long. (Writing the character out in this very comment
+               reproduced the fault — inside a template literal it opens an
+               interpolation whatever it is sitting in — which is as good a
+               demonstration as the original.) -->
+          <div style="display:flex;align-items:center;gap:var(--of-space-loose);flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:var(--of-space-tight)">${jewel("1")}<span class="eyebrow" style="margin:0">Pitch</span></div>
+            ${statBadge("cost", "Cost", "0")}
+            ${statBadge("power", "Power", "3")}
+            ${statBadge("defence", "Defence", "2")}
           </div>
+          <p class="note" style="margin-block-start:var(--of-space-tight)">Pitch is labelled like every other corner, and every plate here is one visual size — the stone is scaled up and the shield down, because the eye compares ink rather than boxes.</p>
         </div>
 
         <div>
