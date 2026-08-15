@@ -4,6 +4,23 @@
  */
 
 .of-fan {
+  /*
+    A STACKING CONTEXT, AND IT IS LOAD-BEARING FOR COMPLIANCE RATHER THAN
+    LAYOUT.
+
+    Each card carries `z-index: 1`–`6` so the fan overlaps in order, and
+    `:focus-within` raises one to `+100`. With nothing between them and `<body>`
+    establishing a context, those values compete directly with the page — so
+    `.site-footer`'s `z-index: 1` lost to five of the six cards and the artwork
+    painted OVER the LSS rights and copyright text. That is the one regression
+    this project has already shipped once and written a check about, arriving by
+    a new route.
+
+    `isolation: isolate` confines the whole ladder to this element, so the fan
+    orders itself internally and sits, entire, below anything the document puts
+    above it.
+  */
+  isolation: isolate;
   margin-block-start: var(--of-space-looser);
 }
 
@@ -100,7 +117,20 @@
     cannot be scrolled.
   */
 .of-fan__track {
-  overflow-x: visible;
+  /*
+    CLIP HORIZONTALLY, BLEED VERTICALLY. `overflow: clip` is the one value that
+    permits this: a `hidden` or `auto` on one axis forces the other to `auto`,
+    which is why the earlier version of this file said the combination was
+    impossible and reached for a scrollbar instead. `clip` does not, so the row
+    can overflow upwards and downwards — the rise, and the cards meeting the
+    footer — while never escaping sideways into a page-wide horizontal scroll.
+
+    Getting this wrong is not cosmetic on a phone: with the row wider than a
+    375px viewport, a visible overflow makes the whole DOCUMENT scroll sideways,
+    which `docs/PLAN.md`'s mobile rule states as the one thing that may never
+    happen.
+  */
+  overflow-x: clip;
 }
 
 .of-fan__row {

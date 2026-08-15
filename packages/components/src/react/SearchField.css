@@ -89,6 +89,13 @@
   VISUALLY HIDDEN, NOT REMOVED — see the comment at its markup. The standard
   clip pattern rather than `display: none`, which would take it out of the
   accessibility tree and out of the tab order along with it.
+
+  AND IT UN-HIDES ON FOCUS, which is the half that makes the pattern legitimate.
+  A control that is permanently one pixel but still tabbable draws its focus ring
+  on a one-pixel box — so a keyboard user tabbing off the field would lose the
+  focus indicator entirely, which is exactly the failure WCAG 2.4.7 names. On
+  focus it becomes a real button again, in flow, visible, where the ring can be
+  seen.
 */
 .of-search__submit {
   position: absolute;
@@ -102,10 +109,14 @@
   overflow: hidden;
 }
 
-.of-search__submit-unused {
-  flex: 0 0 auto;
+.of-search__submit:focus-visible {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  margin: 0;
   padding-block: var(--of-space-tighter);
   padding-inline: var(--of-space-base);
+  clip-path: none;
   border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
   border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
   border-inline: var(--of-bevel-width) solid var(--of-color-rule);
@@ -118,22 +129,8 @@
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
   cursor: pointer;
-}
-
-.of-search__submit:hover {
-  border-inline-color: var(--of-color-rule-strong);
-  color: var(--of-color-accent-hover);
-}
-
-.of-search__submit:focus-visible {
   outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
   outline-offset: var(--of-bevel-width);
-}
-
-.of-search__submit:active {
-  background: var(--of-color-sunken);
-  border-block-start-color: var(--of-bevel-dark);
-  border-block-end-color: var(--of-bevel-light);
 }
 
 .of-search__hint {
