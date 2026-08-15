@@ -282,10 +282,12 @@ not a shortened version because the footer is crowded.
   [`apps/site/src/lib/compliance.ts`](../apps/site/src/lib/compliance.ts). Every
   surface that renders the disclaimer imports that constant. Nobody retypes it,
   and there is exactly one place a typo can live.
-- The site layout footer
-  ([`ComplianceFooter.astro`](../apps/site/src/components/ComplianceFooter.astro),
-  rendered by `BaseLayout`), so it appears on every page rather than on an
-  about page.
+- The site layout footer, rendered by the shared document shell
+  ([`apps/site/ssg/document.tsx`](../apps/site/ssg/document.tsx)), so it appears
+  on every page rather than on an about page. (This was
+  `ComplianceFooter.astro` under `BaseLayout` until Phase 6 deleted Astro; the
+  obligation and the one-constant rule are unchanged — only the renderer moved,
+  and the link above pointed at a file that no longer exists.)
 - [`scripts/canonical-disclaimer.ts`](../scripts/canonical-disclaimer.ts) reads
   the canonical text out of `PLAN.md` itself, so no check compares a copy
   against another copy. `scripts/canonical-disclaimer.test.ts` asserts that the

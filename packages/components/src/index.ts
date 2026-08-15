@@ -181,12 +181,13 @@ export type PageSize = number | "all";
  * **The plate hosts panel filigree; it does not draw it.** With
  * `ornament="panel-corner"` it opens four slots — placed *and sized* by the
  * plate, since only the plate knows where its corners are — and renders a
- * `corner` snippet into each, passing the {@link PlateCorner} id. The caller
- * composes `FiligreeCorner role="panel-corner" corner={id}` in, which keeps
- * scrollwork rationed by the call site that can see the whole screen rather
- * than by a plate that can only see itself. The snippet prop is deliberately
- * not typed here: snippets are a Svelte concern and stay local to the
- * component, exactly as `children` does.
+ * `corner` render prop into each, passing the {@link PlateCorner} id. The
+ * caller composes `FiligreeCorner role="panel-corner" corner={id}` in, which
+ * keeps scrollwork rationed by the call site that can see the whole screen
+ * rather than by a plate that can only see itself. The render prop is
+ * deliberately not typed here: it is a rendering concern and stays local to the
+ * component, exactly as `children` does. (It was a Svelte `snippet` until
+ * Phase 6; the division of labour is unchanged.)
  */
 export interface BevelledPlateProps {
   readonly emphasis?: "flat" | "raised" | "sunken";
@@ -371,12 +372,13 @@ export interface MarkProps {
  * pitch diamond, cleaved, on the argument that the logo and the core interface
  * primitive should be the same object; `docs/DESIGN.md` records why that
  * argument was retired. The jewel is still the interface primitive and still
- * has its own token, `ornament.cut.jewel`, which `PitchJewel.svelte` clips
- * itself with — the mark simply stopped being it.
+ * has its own token, `ornament.cut.jewel`, which `PitchJewel` clips itself
+ * with — the mark simply stopped being it.
  *
- * IT LIVES HERE BECAUSE IT HAS TWO CONSUMERS AND MUST NOT HAVE TWO DEFINITIONS.
- * `Mark.svelte` draws the chain and `apps/site/src/pages/favicon.svg.ts` draws
- * one link of it at build time. A second copy of these numbers is a second
+ * IT LIVES HERE BECAUSE IT HAS THREE CONSUMERS AND MUST NOT HAVE THREE
+ * DRAWINGS. `Mark.tsx` draws the chain, `apps/site/ssg/assets.ts` draws one
+ * link of it at build time for the favicon, and the `mark` design-system card
+ * draws it again in the workbench. A second copy of these numbers is a second
  * drawing, and a second drawing drifts — which is the failure the previous mark
  * had, in this same file, before it was rewritten as a derivation.
  *

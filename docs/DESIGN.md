@@ -380,13 +380,29 @@ renders. Without that, the gate would police a declaration the published HTML
 need not resemble — which is exactly how the bundle went stale the first time,
 built from a scratch directory with nothing to prompt a re-run.
 
-**Known weakness, unchanged by the gate.** The cards hand-author the markup they
-illustrate rather than rendering the real components, so a component change does
-not propagate on its own. The mark and the filigree are the two exceptions —
-both draw from geometry published in `packages/components/src/index.ts`
-precisely so there is only one drawing to keep true. Rendering the real
-components into the cards would remove the weakness rather than manage it, and
-remains the right next step.
+**What the gate does NOT reach — stated here rather than discovered later.** The
+cards hand-author the markup they illustrate rather than rendering the real
+components, so a component change does not propagate on its own. That bounds the
+gate precisely:
+
+| The gate checks | The gate cannot check |
+|---|---|
+| Every primitive has a card | That the card still *looks like* its primitive |
+| The group vocabulary is closed | — |
+| The title is derived from the id | — |
+| The committed HTML is byte-identical to what the generator renders | That the generator's hand-written markup agrees with the component's |
+
+So the catalog's **shape** is enforceable and its **fidelity** is left to review.
+That is the same class of problem the generator's own header describes — a card
+that went on showing a stat block after the component had become glyphs — and
+this gate does not solve it. It makes the missing-card and mis-titled-card half
+impossible, which is the half that was silently wrong at scale.
+
+The mark and the filigree are the two exceptions, and are immune: both draw from
+geometry published in `packages/components/src/index.ts` precisely so there is
+one drawing rather than two. Rendering the real React components into every card
+would extend that immunity to the whole bundle, removing the weakness rather
+than managing it, and remains the right next step.
 
 ---
 

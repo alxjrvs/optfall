@@ -18,8 +18,19 @@
  * bundle from one command, and the output is committed so a drift is a diff
  * rather than a discovery.
  *
- * Rendering the real Svelte components into these cards would remove the
- * weakness rather than manage it, and is the right next step.
+ * Rendering the real React components into these cards would remove the
+ * weakness rather than manage it, and is the right next step. (It said "Svelte"
+ * until Phase 6 deleted those sources.)
+ *
+ * WHAT THE COVERAGE GATE DOES AND DOES NOT REACH. `design-system-coverage.test.ts`
+ * checks that every primitive has a card, that the taxonomy is closed, that the
+ * title is derived from the primitive id, and that the committed HTML is
+ * byte-identical to what this file renders. It CANNOT check that a card's
+ * CONTENT still matches the primitive it names, because the markup here is
+ * hand-authored rather than derived — which is precisely the weakness above.
+ * So the gate makes the catalog's SHAPE enforceable and leaves its FIDELITY to
+ * review, and the two exceptions are `MARK_GEOMETRY` and `FILIGREE_PATHS`,
+ * drawn from the contract module so those two cannot drift at all.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -50,7 +61,7 @@ const TOKENS = themeStylesheet();
 const FACE = "https://optfall-images.netlify.app";
 
 /**
- * A pitch jewel, in the two-element shape `PitchJewel.svelte` renders.
+ * A pitch jewel, in the two-element shape `PitchJewel.tsx` renders.
  *
  * THE NESTING IS THE BEVEL. Every plate in this system carries a light top edge
  * and a dark bottom one, and on the diamond that has to be a `drop-shadow()`
@@ -162,7 +173,7 @@ ${toCssDeclarations(lightTheme)}
  *
  * THE SILHOUETTES BELOW ARE NAMED, NOT REDRAWN, and that is the fix for how
  * this file went wrong before: its hand-drawn pitch diamond was the ONLY place
- * that shape existed, while the shipped `PitchJewel.svelte` clipped an edge-up
+ * that shape existed, while the shipped `PitchJewel` clipped an edge-up
  * chamfered square. These cards published a shape the product did not render —
  * the "hand-authored markup does not propagate" weakness at the top of this
  * file, realised. A named token cannot drift from the component naming the same
