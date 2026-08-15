@@ -129,8 +129,13 @@ function statPlate(kind: string, value: string): string {
      centred in the BODY rather than in the box — the component's own note. */
   const seat =
     kind === "defence" ? `;padding-block-end:calc(${size} * 0.28)` : "";
+  /* THE DASH IS LIGHTER THAN A NUMERAL, exactly as `StatGlyph.css` draws it —
+     a stat that is not there should not shout as loudly as one that is. Stated
+     here because a card publishing a bold dash against a product shipping a
+     regular one is the same shape/ink/size drift this helper exists to end. */
+  const weight = absent ? "regular" : "bold";
 
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:${size};block-size:${size};${surface};font-family:var(--of-type-family-sans);font-size:var(--of-type-size-base);font-weight:var(--of-type-weight-bold);line-height:1;clip-path:${cutValue(spec.cut)};box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark)${seat}">${value}</span>`;
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:${size};block-size:${size};${surface};font-family:var(--of-type-family-sans);font-size:var(--of-type-size-base);font-weight:var(--of-type-weight-${weight});line-height:1;clip-path:${cutValue(spec.cut)};box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark)${seat}">${value}</span>`;
 }
 
 /**

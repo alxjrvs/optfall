@@ -9,7 +9,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { CORPUS as CARDS } from "../src/lib/cards";
+import { CARD_PAGES, CORPUS as CARDS } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { setFor } from "../src/lib/sets";
 import { canonicalFor, Document } from "./document";
@@ -393,26 +393,60 @@ describe("a card page shows the combat positions it does not fill", () => {
      * missing but positions its frame does not have. Three dashes on a hero
      * would be inventing slots rather than reporting an absence.
      */
-    const hero = CARDS.cards.find(
-      (card) =>
-        card.health !== "" &&
-        card.intelligence !== "" &&
-        card.cost === "" &&
-        card.power === "" &&
-        card.defense === "",
+    /*
+     * THE ADDRESS COMES FROM `CARD_PAGES`, NOT FROM SLUGGING THE NAME HERE.
+     * Re-implementing it diverges from `slugify`'s NFKD and transliteration
+     * pass — an apostrophe becomes `-` in a naive version and vanishes in the
+     * real one — and the failure is SILENT: a hero sharing its name with
+     * another card lives at `/card/<slug>-<pitch>`, leaving `/card/<slug>` as
+     * the disambiguation page, which carries no stat block at all. Every
+     * assertion below would then pass against a page that could never have
+     * carried a socket.
+     */
+    const hero = CARD_PAGES.find(
+      (page) =>
+        page.card.health !== "" &&
+        page.card.intelligence !== "" &&
+        page.card.cost === "" &&
+        page.card.power === "" &&
+        page.card.defense === "",
     );
     expect(hero).toBeDefined();
 
-    const html = render(
-      `/card/${(hero?.name ?? "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")}`,
-    );
-    expect(html).not.toBe("");
+    const html = render(hero?.href ?? "");
+    /* Not the disambiguation page and not nothing: this has to be the card. */
+    expect(html).toContain("of-card__name");
     expect(html).not.toContain("No printed cost");
     expect(html).not.toContain("No printed power");
     expect(html).not.toContain("No printed defence");
+  });
+
+  test("an ally gets no sockets either, because its frame is not that frame", () => {
+    /*
+     * THE SHAPE THE FIRST VERSION OF THIS RULE MISSED, and the reason the test
+     * for it is a `describe` of its own rather than a line in the hero one. 198
+     * cards print life and only 154 are heroes; the other 44 are allies,
+     * angels, dragons, demons and token creatures. `Aegis, Archangel of
+     * Protection` prints power and life and nothing else, so a rule reading
+     * "prints any combat stat" qualified it on the power and handed it an empty
+     * cost bubble and an empty defence shield — the latter immediately left of
+     * the life plate, since `CORNER_FOR` puts both at `end`. An absence
+     * asserted in the exact corner the card prints life in.
+     */
+    const ally = CARD_PAGES.find(
+      (page) =>
+        page.card.health !== "" &&
+        page.card.intelligence === "" &&
+        page.card.power !== "",
+    );
+    expect(ally).toBeDefined();
+
+    const html = render(ally?.href ?? "");
+    expect(html).toContain("of-card__name");
+    expect(html).not.toContain("No printed cost");
+    expect(html).not.toContain("No printed defence");
+    /* And it still shows what it DOES print. */
+    expect(html).toMatch(/aria-label="Power \d+"/);
   });
 
   test("a printed zero is still a printed zero", () => {

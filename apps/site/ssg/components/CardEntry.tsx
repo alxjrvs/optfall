@@ -116,14 +116,25 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
 };
 
 /**
- * The three positions the card frame always has, whether or not a card fills
+ * The three positions the ordinary card frame has, whether or not a card fills
  * them. Cost sits top-left, attack bottom-left, defence bottom-right.
  *
  * The other three stats are not here because they have no fixed position: life
- * and intellect belong to a hero, arcane to whatever prints it, and each is
- * placed by what the card IS rather than by a slot the frame reserves.
+ * and intellect belong to a permanent, arcane to whatever prints it, and each
+ * is placed by what the card IS rather than by a slot the frame reserves.
  */
 const COMBAT_STATS = ["Cost", "Power", "Defence"] as const;
+
+/**
+ * The stats that mean a card is NOT on the ordinary frame.
+ *
+ * A hero, an ally, a demi-hero and a token creature all print life, and what
+ * that says is that the card is a permanent with its own furniture rather than
+ * something you play for a cost and swing for power. `Aegis, Archangel of
+ * Protection` prints power and life and nothing else; its frame has no cost
+ * bubble and no defence shield to leave standing empty.
+ */
+const PERMANENT_STATS = ["Life", "Intellect"] as const;
 
 const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
   Power: "start",
@@ -167,13 +178,26 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * with nothing to connect them. `StatGlyph` draws the empty ones now, keeping
    * the silhouette and taking `null`.
    *
-   * ONLY ON A CARD THAT USES THAT FRAME, which is what `usesCombatFrame` is
-   * for. 1,363 cards print cost and defence and no power — actions, instants,
-   * defence reactions — and those gain the empty attack plate, which is the
-   * point. The 151 heroes print life and intellect and have no combat positions
-   * at all; drawing three sockets on them would be inventing slots the card
-   * does not have. The 181 cards that print nothing whatsoever keep the written
-   * sentence below instead.
+   * ONLY ON A CARD THAT IS ON THAT FRAME, which is what `usesCombatFrame` is
+   * for, and the test has TWO halves because one was not enough.
+   *
+   * It has to print at least one of the three, so the 181 cards printing
+   * nothing whatsoever keep the written sentence below rather than growing
+   * three sockets out of nowhere. And it has to print NO permanent stat, which
+   * is the half the first version was missing: 198 cards print life, and only
+   * 154 of those are heroes. The other 44 are allies, angels, dragons, demons
+   * and token creatures — `Aegis, Archangel of Protection` prints power and
+   * life and nothing else — and under "prints any combat stat" they qualified
+   * on their power and were handed an empty cost bubble and an empty defence
+   * shield. The defence one landed immediately left of the life plate, because
+   * `CORNER_FOR` puts both at `end`: an absence asserted in the exact corner the
+   * card prints life in. That is the "inventing slots" failure the hero case
+   * was carved out to prevent, arriving through a shape the carve-out did not
+   * name.
+   *
+   * What is left is what the change is for: 1,363 cards print cost and defence
+   * and no power — actions, instants, defence reactions — and gain the empty
+   * attack plate; 525 print defence alone (equipment) and gain two.
    *
    * Life, intellect and arcane are unchanged and appear only when printed. They
    * have no fixed position on the frame — they are where a card's type puts
@@ -182,9 +206,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const printedValues = new Map(
     page.stats.map((stat) => [stat.label, stat.value]),
   );
-  const usesCombatFrame = COMBAT_STATS.some((label) =>
-    printedValues.has(label),
-  );
+  const usesCombatFrame =
+    COMBAT_STATS.some((label) => printedValues.has(label)) &&
+    !PERMANENT_STATS.some((label) => printedValues.has(label));
 
   const printedStats = STAT_ORDER.flatMap((label) => {
     const printed = printedValues.get(label);

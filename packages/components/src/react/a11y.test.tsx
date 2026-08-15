@@ -265,10 +265,12 @@ const CASES: readonly Case[] = [
     props: { kind: "arcane", value: "1" },
   },
   /*
-   * The empty socket, at the contrast axe can check. Its plate is the one
-   * colour pair in this component that exists to RECEDE, which is exactly the
-   * direction that drifts under 4.5:1 without anybody noticing — the dash is
-   * small, and a reader who cannot make it out has been told nothing at all.
+   * The empty socket. NOT here for contrast — this harness disables
+   * `color-contrast` outright, because jsdom answers it `incomplete` rather
+   * than with a verdict, and the header above says so. What axe does check on
+   * these is what it checks on every other case: that a `role="img"` carrying
+   * only an `aria-hidden` glyph still has a name. The colour pair is asserted
+   * in `packages/theme/src/tokens.test.ts`, where contrast lives.
    */
   {
     name: "StatGlyph cost absent",
