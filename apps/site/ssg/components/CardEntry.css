@@ -175,10 +175,11 @@
 
     A corner, the centred thing, the other corner — which is the geometry of
     both the top of a Flesh and Blood card (pitch, name, cost) and the bottom of
-    one (attack, type, defence). The columns are `auto 1fr auto` so the corners
-    take exactly what their plates need and the middle takes the rest; the name
-    and the type line are centred inside that middle column rather than by the
-    grid, so a corner that is absent cannot slide them off-axis.
+    one (attack, type, defence). Each corner takes what its badge needs UP TO A
+    CAP and the middle takes the rest; the name and the type line are centred
+    inside that middle column rather than by the grid, so a corner that is
+    absent cannot slide them off-axis. The cap is the whole of the interesting
+    part and it is argued below.
 
     A corner that is absent renders `.of-card__corner-empty` rather than nothing, because
     an omitted grid item would let the next one take its column and put the
@@ -189,10 +190,12 @@
     a one-line type line should sit level with the plates beside it.
   */
 /*
-    THE MIDDLE COLUMN HAS A FLOOR, AND THE CORNERS GIVE WAY TO IT.
+    EACH CORNER IS CAPPED AT A SHARE OF THE BAND. THE MIDDLE HAS NO FLOOR.
 
-    THE CORNERS ARE `auto`, WHICH IS TO SAY THEY HAVE A MIN-CONTENT FLOOR, and
-    that floor is the whole reason the track list is spelled this plainly.
+    (Two earlier headlines stood here saying the reverse, one per attempt, and a
+    reader skimming for the rule takes the headline as the rule. The attempts
+    are worth keeping — they are why the cap is the cap — but they are history
+    now and they are labelled as history below.)
 
     Putting the label beside the plate roughly trebles what a corner costs —
     measured at 87px and 81px against about 65px when the corner was a bare
@@ -201,8 +204,9 @@
     obvious repair is to give the middle column a floor and let the corners
     yield to it.
 
-    THAT REPAIR WAS TRIED, SHIPPED AND REVERTED, so here is why it does not
-    work. `minmax(0, auto)` is what lets a corner yield — and dropping the min
+    THAT REPAIR WAS TRIED, SHIPPED AND REVERTED — history, not the rule — so
+    here is why it does not work. `minmax(0, auto)` is what lets a corner yield,
+    and dropping the min
     from min-content to zero also disables the grid item's automatic minimum
     size, so the corner does not merely fold, it can be sized BELOW its folded
     content and the label paints outside its column. Measured on the shipped
@@ -353,9 +357,10 @@
 /*
     THE WORD WRAPS UNDER THE PLATE WHEN THE BAND RUNS OUT, and never the other
     way round. `flex-wrap: wrap` drops the corner's min-content from
-    `plate + gap + label` to `max(plate, label)`, so the `auto` track above has
-    somewhere to shrink TO — and, because that is the track's floor rather than
-    a suggestion, somewhere it stops. On a wide panel there is no pressure and
+    `plate + gap + label` to `max(plate, label)`, which is what the capped track
+    above folds INTO once 28% stops covering max-content — and, because that
+    min-content is the track's floor rather than a suggestion, it is also where
+    the folding stops. On a wide panel there is no pressure and
     this never fires; on a phone the corner folds back to the stacked
     arrangement this band used to have everywhere, which is the right thing to
     degrade into. It is a worse reading of which corner you are in, and that is
@@ -365,8 +370,22 @@
     than its box splits the overflow both ways, which on the start corner means
     spilling outward past the plate's padding and over `BevelledPlate`'s border.
     The `safe` keyword falls back to start-alignment in exactly that case and is
-    identical in every other, and a browser that does not know it drops the
-    declaration to `flex-start`, which is the same answer.
+    identical in every other.
+
+    IT IS A SECOND BELT, AND ITS FALLBACK IS NOT THE SAME ANSWER — an earlier
+    version of this comment claimed it was, and the claim was wrong on the one
+    corner the keyword exists to protect. A browser that does not understand
+    `safe center` drops the whole declaration to the initial `normal`, which in
+    a flex container behaves as `flex-start`; the start corner is `row-reverse`
+    (below), so `flex-start` there is the RIGHT edge and an overflowing badge
+    would spill LEFT — outward, the direction the paragraph above exists to
+    prevent. `safe`'s own fallback is `start`, which is the left edge whatever
+    `row-reverse` says. The supported and unsupported paths disagree.
+
+    That is tolerable only because the guarantee lives elsewhere: the corner
+    track's minimum is `auto`, so a badge wider than its box is not a case that
+    arises. If that track ever loses its automatic minimum again, this keyword
+    is not the thing that will save it — the track is.
   */
 .of-card__badge {
   display: flex;
