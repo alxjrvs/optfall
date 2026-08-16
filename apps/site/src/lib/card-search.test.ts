@@ -51,6 +51,26 @@ const encoded = buildCardIndex(CARD_PAGES, {
 });
 const index: CardIndex = decodeCardIndex(encoded);
 
+/**
+ * A card's address, derived exactly as the search module derives it.
+ *
+ * THREE TESTS BUILT THIS BY HAND AS `/card/${slug}` AND ALL THREE WENT QUIET
+ * when the scheme moved: they select rows by `href`, no href has that shape any
+ * more, the selection returns nothing, and an assertion loop over nothing
+ * passes. That is worse than a failure — the bug each of them was written to
+ * catch could come back with the suite green. One helper, so there is one place
+ * for this to be wrong and it is a place that fails loudly.
+ */
+function addressOf(ordinal: number): string {
+  const key = index.faceKeys[ordinal] ?? "";
+  const setCode = index.faceSets[ordinal] ?? "";
+  return hrefForPrinting(
+    setCode,
+    numberFor(key, setCode),
+    index.slugs[ordinal] ?? "",
+  );
+}
+
 const total = (query: string) => searchCards(index, query).total;
 const labels = (query: string) =>
   searchCards(index, query).results.map((row) => row.label);
@@ -1112,11 +1132,21 @@ describe("release dates", () => {
     /* The ordering is the claim, so it is checked over the whole page rather
        than at the ends: every card's first release is at least as late as the
        one before it. */
+    /* KEYED ON THE ROW'S HREF, WHICH IS NOW A PRINTING URL. This used to strip
+       `/card/` and look the remainder up in `slugs`; that returned -1 for every
+       row the moment addresses gained segments, so `dated` was empty and the
+       assertion compared [] to []. The ordering claim went unchecked. */
+    const ordinalByHref = new Map(
+      index.slugs.map((_, ordinal) => [addressOf(ordinal), ordinal]),
+    );
     const dates = asc.results.map((row) => {
-      const ordinal = index.slugs.indexOf(row.href.replace("/card/", ""));
-      return index.released[ordinal]?.[0] ?? "";
+      const ordinal = ordinalByHref.get(row.href);
+      return ordinal === undefined ? "" : (index.released[ordinal]?.[0] ?? "");
     });
     const dated = dates.filter((date) => date !== "");
+    /* The lookup has to actually resolve, or this test is green over nothing —
+       which is precisely how it broke. */
+    expect(dated.length).toBeGreaterThan(0);
     expect(dated).toEqual([...dated].toSorted());
   });
 
@@ -1368,8 +1398,9 @@ describe("a set-scoped search shows that set's printing", () => {
      * of the pairs the card actually has. Pairing an art's key with the default
      * face's orientation — exactly the bug — produces a pair that is in neither.
      */
+    let checked = 0;
     for (const [ordinal, arts] of index.arts.entries()) {
-      const href = `/card/${index.slugs[ordinal]}`;
+      const href = addressOf(ordinal);
       /* Every face this card could legitimately be shown by, as a pair. */
       const known = [
         {
@@ -1386,6 +1417,7 @@ describe("a set-scoped search shows that set's printing", () => {
           20000,
         ).results.find((result) => result.href === href);
         if (row === undefined) continue;
+        checked += 1;
         expect({
           href,
           setCode,
@@ -1406,6 +1438,12 @@ describe("a set-scoped search shows that set's printing", () => {
          covers both orientations proves the wiring. */
       if (ordinal > 40) break;
     }
+
+    /* AND IT LOOKED AT SOMETHING. The row lookup is by href, so a scheme change
+       that leaves `addressOf` out of step with the search module makes every
+       `find` return undefined and every iteration `continue` — the loop passes
+       having asserted nothing, which is exactly how this test died once. */
+    expect(checked).toBeGreaterThan(0);
   });
 
   test("a divergent art is drawn at ITS orientation, not the default face's", () => {

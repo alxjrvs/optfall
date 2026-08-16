@@ -41,7 +41,7 @@ import { dirname, join } from "node:path";
 
 import { themeStylesheet } from "optfall-theme";
 
-import { CARD_REDIRECTS } from "../src/lib/cards";
+import { CARD_REDIRECTS, ROUTE_SET_CODES } from "../src/lib/cards";
 import { GENERATED_ASSETS } from "./assets";
 import { outputPathFor } from "./outputPath";
 import { redirectRules, renderRedirects } from "./redirects";
@@ -350,7 +350,7 @@ async function main(): Promise<void> {
    * what colour the tab icon is. It is written here, beside the pages it is
    * about, from the same route table that produced them.
    */
-  const rules = redirectRules(CARD_REDIRECTS);
+  const rules = redirectRules(CARD_REDIRECTS, ROUTE_SET_CODES);
   await writeFile(join(OUT_DIR, "_redirects"), renderRedirects(rules), "utf-8");
 
   /*

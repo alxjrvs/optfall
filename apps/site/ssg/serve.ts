@@ -73,7 +73,7 @@ function fileFor(pathname: string): string | undefined {
 /**
  * The generated redirect table, read from the artefact the build wrote.
  *
- * READ ONCE, AT STARTUP, rather than per request: it is 5,842 rules and the
+ * READ ONCE, AT STARTUP, rather than per request: it is 5,953 rules and the
  * server is long-lived. A rebuild while the server is up therefore serves the
  * previous table — acceptable, and the same restart this server already needs
  * to pick up new pages.

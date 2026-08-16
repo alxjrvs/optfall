@@ -16,6 +16,7 @@ import {
   CARD_REDIRECTS,
   CARD_ROUTES,
   CORPUS as CARDS,
+  ROUTE_SET_CODES,
   variantSuffix,
 } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
@@ -25,7 +26,7 @@ import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document } from "./document";
 import { outputPathFor } from "./outputPath";
 import {
-  LEGACY_PRINTING_RULE,
+  legacyPrintingRules,
   matchRedirect,
   parseRedirects,
   redirectRules,
@@ -1252,8 +1253,13 @@ describe("a related-cards list is one row per name, stones beside it", () => {
      * `groupTarget`. So the suffix is hidden rather than absent, exactly as
      * `of-index__variant` is in the card index.
      */
-    for (const route of ["/card/fist-pump", "/card/runechant"]) {
+    for (const route of [addressOf("fist-pump"), addressOf("runechant")]) {
       const list = listIn(render(route));
+      /* THE PAGE HAS TO EXIST. These were spelled `/card/fist-pump` — redirect
+         sources rather than routes — so `render` returned `""`, the regexes
+         below found no pitch words in no markup, and both assertions passed
+         against an empty string. */
+      expect(list).not.toBe("");
       /* Strip the hidden spans, then the tags: what is left is what a reader
          sees, and it carries no pitch words. */
       const seen = list
@@ -1617,7 +1623,7 @@ describe("a card index prints the name and not the pitch qualifier", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("_redirects keeps every pre-change card URL alive", () => {
-  const rules = redirectRules(CARD_REDIRECTS);
+  const rules = redirectRules(CARD_REDIRECTS, ROUTE_SET_CODES);
 
   test("the table is what the build writes and what the server reads back", () => {
     /*
@@ -1648,19 +1654,88 @@ describe("_redirects keeps every pre-change card URL alive", () => {
     );
   });
 
-  test("the one placeholder rule permutes the old printing form", () => {
+  test("one rule per set code permutes the old printing form", () => {
     /*
-     * 6,437 URLs, one rule. `/card/<slug>/<set>/<number>` and
-     * `/card/<set>/<number>/<slug>` are the same three segments in a different
-     * order, which is the only reason this table fits inside Netlify's
-     * guidance — see `redirects.ts`.
+     * 6,437 URLs, 112 rules — one per set code the routes use. See
+     * `legacyPrintingRules` for why it is not the single unconstrained
+     * placeholder that would obviously do the same job.
      */
-    expect(LEGACY_PRINTING_RULE.status).toBe(301);
+    expect(legacyPrintingRules(ROUTE_SET_CODES).length).toBe(
+      ROUTE_SET_CODES.length,
+    );
     expect(matchRedirect(rules, "/card/head-jab-1/lgs/017-rf")).toBe(
       "/card/lgs/017-rf/head-jab-1",
     );
     expect(matchRedirect(rules, "/card/a-drop-in-the-ocean/mst/095-mv")).toBe(
       "/card/mst/095-mv/a-drop-in-the-ocean",
+    );
+  });
+
+  test("THE TABLE DOES NOT CYCLE, which the first version of it did", () => {
+    /*
+     * THE BUG THIS EXISTS FOR, STATED PLAINLY. The obvious spelling of the
+     * permutation is one rule — `/card/:slug/:set/:number` →
+     * `/card/:set/:number/:slug` — and it is a 3-cycle over unconstrained
+     * placeholders: `(a,b,c) → (b,c,a) → (c,a,b) → (a,b,c)`. An unforced rule
+     * is skipped only when a FILE exists at the REQUEST path; Netlify never
+     * checks the target. So a mistyped card URL would 301 around that ring
+     * forever and the reader would see `ERR_TOO_MANY_REDIRECTS` rather than a
+     * 404 — on a path whose only sin was not existing.
+     *
+     * Pinning the set code to the segment the OLD form put it in separates the
+     * two shapes, and this is the assertion that says so.
+     */
+    /* EXHAUSTIVE, AND SPLIT THE SAME WAY THE GUARD SPLITS IT. `matchRedirect`
+       over all 5,953 rules, 5,953 times, is 35M comparisons — the first version
+       of this test took 8s and failed on bun's 5s timeout rather than on a
+       cycle, which is a worse outcome than not having written it. Exact sources
+       answer from a Set; only the 112 patterns need matching. */
+    const exact = new Set(
+      rules.filter((rule) => !rule.from.includes(":")).map((rule) => rule.from),
+    );
+    const patterns = rules.filter((rule) => rule.from.includes(":"));
+    expect(patterns.length).toBe(ROUTE_SET_CODES.length);
+
+    for (const rule of rules) {
+      const probe = rule.to.replace(/:[a-z]+/gi, "x");
+      const next = exact.has(probe) ? probe : matchRedirect(patterns, probe);
+      expect(`${rule.from} → ${next}`).toBe(`${rule.from} → undefined`);
+    }
+  });
+
+  test("a dead card URL 404s after one hop, and a live one is untouched", () => {
+    /* The permuted target of a real old URL is a page, so the browser stops
+       there. `matchRedirect` returning undefined for it IS "the chain ends". */
+    const moved = matchRedirect(rules, "/card/head-jab-1/lgs/017-rf");
+    expect(moved).toBe("/card/lgs/017-rf/head-jab-1");
+    expect(matchRedirect(rules, moved ?? "")).toBeUndefined();
+
+    /* A three-segment path naming nothing: one hop, then nothing. Its second
+       segment is a set code, so the old-form rule fires exactly once. */
+    const dead = matchRedirect(rules, "/card/not-a-card/lgs/000");
+    expect(dead).toBe("/card/lgs/000/not-a-card");
+    expect(matchRedirect(rules, dead ?? "")).toBeUndefined();
+
+    /* And one whose second segment is NOT a set code never enters the table at
+       all — a mistyped NEW-form URL, which is the shape that used to loop. */
+    expect(matchRedirect(rules, "/card/lgs/017-rf/head-jabb")).toBeUndefined();
+  });
+
+  test("three card slugs are spelled like set codes, and it does not matter", () => {
+    /*
+     * `fai`, `nuu` and `zen` are card slugs AND set codes. The old-form rules
+     * pin the code in segment TWO and leave segment one an unconstrained slug,
+     * so those cards' URLs are ordinary — measured here rather than argued,
+     * because the mirror-image fix (pinning segment one) would have broken on
+     * exactly this and it is not obvious which way round the hazard falls.
+     */
+    const overlapping = CARD_PAGES.filter((page) =>
+      ROUTE_SET_CODES.includes(page.slug),
+    ).map((page) => page.slug);
+    expect(overlapping.toSorted()).toEqual(["fai", "nuu", "zen"]);
+
+    expect(matchRedirect(rules, "/card/zen/lgs/017-rf")).toBe(
+      "/card/lgs/017-rf/zen",
     );
   });
 
@@ -1689,11 +1764,23 @@ describe("_redirects keeps every pre-change card URL alive", () => {
 
   test("a duplicated source is a build failure, not a silent loser", () => {
     expect(() =>
-      redirectRules([
-        { from: "/card/x", to: "/card/a/1/x" },
-        { from: "/card/x", to: "/card/b/2/x" },
-      ]),
+      redirectRules(
+        [
+          { from: "/card/x", to: "/card/a/1/x" },
+          { from: "/card/x", to: "/card/b/2/x" },
+        ],
+        ROUTE_SET_CODES,
+      ),
     ).toThrow(/redirected twice/);
+  });
+
+  test("a rule whose target re-enters the table is a build failure", () => {
+    /* The guard, exercised. A card redirect pointing at something the
+       old-form rules still match is the same loop arriving from the other
+       direction, and it has to stop the build rather than ship. */
+    expect(() =>
+      redirectRules([{ from: "/card/x", to: "/card/y/lgs/1" }], ["lgs"]),
+    ).toThrow(/cycle/);
   });
 
   test("matchRedirect refuses a splat rather than ignoring it", () => {

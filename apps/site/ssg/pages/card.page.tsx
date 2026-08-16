@@ -109,7 +109,14 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     canonical,
     section: "cards",
     width: "wide",
-    islands: true,
+    /*
+      NO ISLANDS, AND THIS LINE WENT WITH THE PICKER. It asked the shell for
+      `islands.js`, which was right while the printing picker lived in the face
+      column and is now a script tag on 11,378 pages that hydrates nothing —
+      the largest route in the build fetching a bundle to find no
+      `data-island` in the document. The printings table is the control, and it
+      is markup.
+    */
     children: <CardEntry page={card} selected={route.index} />,
   };
 }
