@@ -166,13 +166,30 @@ export function PrintingPicker({
    * on screen.
    */
   useEffect(() => {
-    const rarity = printings[selected]?.rarity;
-    if (rarity === undefined || rarity === "") return;
-    /* `setAttribute` rather than `dataset.printingRarity`, so the string here is
-       the string in the stylesheet. `dataset` would spell it `printingRarity`
-       and rely on the reader knowing the camelCase-to-kebab rule to connect the
-       two — a rename in either place would then miss the other silently. */
-    document.documentElement.setAttribute("data-printing-rarity", rarity);
+    /*
+      STAMPED UNCONDITIONALLY, INCLUDING WITH AN EMPTY VALUE.
+
+      This used to bail out when the newly selected printing had no rarity,
+      which left the PREVIOUS printing's slug on the root — so the credit line
+      went on asserting the old printing's rarity under the new picture, which
+      is the exact failure the whole arrangement exists to end. An empty stamp
+      is the honest state instead: a bare `[data-printing-rarity]` still matches,
+      so it retires the server's `--initial` and reveals nothing, which is what
+      "upstream published no rarity for this printing" should look like.
+
+      THE FALLBACK MIRRORS `current` ABOVE. That line resolves an out-of-range
+      index to `printings[0]` for the picture; resolving it differently here
+      would put a rarity on screen for a printing the reader is not looking at.
+
+      `setAttribute` rather than `dataset.printingRarity`, so the string here is
+      the string in the stylesheet. `dataset` would spell it `printingRarity`
+      and rely on the reader knowing the camelCase-to-kebab rule to connect the
+      two — a rename in either place would then miss the other silently.
+    */
+    document.documentElement.setAttribute(
+      "data-printing-rarity",
+      printings[selected]?.rarity ?? printings[0]?.rarity ?? "",
+    );
   }, [printings, selected]);
 
   /**

@@ -15,11 +15,69 @@ import {
   foilingName,
   hrefForSet,
   rarityName,
+  raritySlug,
   setFor,
   setName,
 } from "./sets";
 
+/**
+ * THE CREDIT LINE'S "CLOSED SET" CLAIM, MADE ENFORCEABLE.
+ *
+ * `CardEntry.css` reveals the rarity of the printing on screen with one
+ * enumerated selector per rarity, and its comment defends the enumeration by
+ * saying the set is closed — `sets.json` decodes exactly these, and every slug
+ * comes from that table via `raritySlug`.
+ *
+ * That was asserted in prose and checked by nothing. A rarity added upstream
+ * fails SILENTLY in the worst available way: `rarityName` falls through to the
+ * raw code, the bubble renders, no build step complains, and the bubble is then
+ * invisible on every page it appears on because no selector names its slug. A
+ * hidden fact is exactly what this page exists not to produce.
+ *
+ * READ OUT OF THE STYLESHEET RATHER THAN RESTATED HERE, because a second
+ * hand-written list of ten slugs is the thing that drifts.
+ */
+describe("every rarity the corpus decodes can be shown", () => {
+  const STYLESHEET = "apps/site/ssg/components/CardEntry.css";
+
+  test("has a reveal selector in CardEntry.css", async () => {
+    const css = await Bun.file(STYLESHEET).text();
+
+    const missing = Object.keys(SETS.decode.rarity)
+      .map((code) => raritySlug(code))
+      .filter(
+        (slug) =>
+          !css.includes(`:root[data-printing-rarity="${slug}"]`) ||
+          !css.includes(`.of-card__rarity[data-rarity="${slug}"]`),
+      );
+
+    expect(missing).toEqual([]);
+  });
+
+  test("and a colour, so no bubble falls back to grey unnoticed", async () => {
+    const css = await Bun.file(STYLESHEET).text();
+
+    const uncoloured = Object.keys(SETS.decode.rarity)
+      .map((code) => raritySlug(code))
+      .filter(
+        (slug) => !css.includes(`--rarity: var(--of-color-rarity-${slug})`),
+      );
+
+    expect(uncoloured).toEqual([]);
+  });
+});
+
 describe("the decode tables", () => {
+  test("turn a rarity code into the slug its CSS is written against", () => {
+    /* The one two-word name in the table, and therefore the only case where
+       "first word only" decides anything. */
+    expect(raritySlug("S")).toBe("super");
+    expect(raritySlug("M")).toBe("majestic");
+    /* Falls through to the raw code, lower-cased, rather than throwing — the
+       same fallback `rarityName` makes, reached the same way. */
+    expect(raritySlug("Z")).toBe("z");
+  });
+
   test("turn upstream's storage letters into words", () => {
     expect(rarityName("R")).toBe("Rare");
     expect(rarityName("C")).toBe("Common");
