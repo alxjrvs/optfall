@@ -1333,16 +1333,28 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         printing.id
                       ) : (
                         /*
-                          `aria-current="page"` ON THE ONE BEING SHOWN, which is
-                          the row whose art is at the top of this page. It is
-                          still a link: it addresses the page it is on, which is
-                          what makes it copyable and what makes the marked row
-                          mean something on arrival rather than only after a
-                          click.
+                          `aria-current="true"`, NOT `"page"`, and the name page
+                          is why. `"page"` claims the link addresses the URL
+                          being rendered, which is true of `/card/head-jab-1`
+                          and its per-art routes and FALSE of `/card/head-jab` —
+                          the shared page for a name, which renders the first
+                          version's card and would have marked a row pointing
+                          somewhere else as the page you are on.
+
+                          `"true"` is the weaker and accurate claim: the current
+                          item within a set. That is what the row is on every
+                          route — the printing whose art is at the top of this
+                          page — and it is the state a control has to expose
+                          however it is reached.
+
+                          It is still a link. On most routes it addresses the
+                          page it is on, which is what makes the row copyable
+                          and what makes the marking mean something on arrival
+                          rather than only after a click.
                         */
                         <a
                           href={href}
-                          aria-current={current ? "page" : undefined}
+                          aria-current={current ? "true" : undefined}
                         >
                           {printing.id}
                           {qualifier === "" ? null : (

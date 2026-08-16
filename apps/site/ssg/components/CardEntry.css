@@ -1051,6 +1051,15 @@
     broken across two lines is no longer a citation, which is the thing nowrap
     was for. The table still scrolls inside `.of-card__scroller` when it has to.
   */
+.of-card__printings th,
+.of-card__printings td {
+  padding-block: var(--of-space-tight);
+  padding-inline-end: var(--of-space-base);
+  text-align: start;
+  vertical-align: baseline;
+  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
 /*
   THE ROW THIS PAGE IS SHOWING — the printing whose art is at the top of the
   page, and the one whose rarity the credit line up there is quoting.
@@ -1061,28 +1070,39 @@
   it in the two channels a table row has.
 
   NOT COLOUR ALONE. The row is drawn on the sunken ground the rest of the system
-  uses for a recessed surface, and the collector number carries the accent —
-  but `aria-current="page"` on that link is what actually names it, so the state
-  is announced rather than only rendered. A reader who cannot see the tint is
-  told which row they are on by the same word the breadcrumb uses.
+  uses for a recessed surface, and its number is set in ink rather than in the
+  link accent — but `aria-current` on that link is what actually names the
+  state, so it is announced rather than only rendered.
+
+  THE SELECTOR IS THE BARE ATTRIBUTE, NOT `[aria-current="page"]`, and that is
+  not a widening for its own sake: the markup says `"true"` because `"page"`
+  would be a false claim on `/card/<name>`, the shared page for a name, where
+  the row addresses a different URL than the one being read. A selector naming
+  the old value styled nothing at all. See `CardEntry.tsx`.
 */
 .of-card__printings tr.of-card__printing--shown {
   background: var(--of-color-sunken);
 }
 
-.of-card__printings tr.of-card__printing--shown [aria-current="page"] {
+.of-card__printings tr.of-card__printing--shown [aria-current] {
   color: var(--of-color-ink);
   font-weight: var(--of-type-weight-medium);
   text-decoration: none;
 }
 
-.of-card__printings th,
-.of-card__printings td {
-  padding-block: var(--of-space-tight);
-  padding-inline-end: var(--of-space-base);
-  text-align: start;
-  vertical-align: baseline;
-  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+/*
+  THE HIDDEN QUALIFIER IS NOT PART OF THE CITATION.
+
+  `.of-card__collector` carries `user-select: all` so one click takes the whole
+  collector number — and the number is an anchor now, with a visually-hidden
+  suffix inside it wherever two arts share a number. A clipped element is still
+  selectable, so that select-all swept the suffix in and copying `WTR098` gave
+  "WTR098 (Alpha)" on 5,554 rows. `PitchJewel` and `.of-index__variant` both
+  carry this same rule for this same reason: hidden text that is read aloud must
+  not arrive in a paste.
+*/
+.of-card__collector .of-card__visually-hidden {
+  user-select: none;
 }
 
 /*

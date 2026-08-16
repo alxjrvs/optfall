@@ -11,7 +11,9 @@ import { CORPUS as CARDS } from "./cards";
 import {
   SETS,
   SETS_BY_RELEASE,
+  editionLabel,
   editionName,
+  UNSPECIFIED_EDITION,
   foilingName,
   hrefForSet,
   rarityName,
@@ -84,6 +86,33 @@ describe("every rarity the corpus decodes can be shown", () => {
       );
 
     expect(uncoloured).toEqual([]);
+  });
+});
+
+describe("an edition of none", () => {
+  test("`N` is a code for an absence, and reads as one", () => {
+    /*
+     * UPSTREAM EXPLAINS ITS OWN ABSENCE AT LENGTH, and `editionName` reports
+     * that faithfully because it is the decode. What a surface asks is which
+     * edition a printing names, and the answer for `N` is none — 60 characters
+     * of gloss in a table column, on the commonest edition in the corpus.
+     */
+    expect(editionName(UNSPECIFIED_EDITION)).toContain("No specified edition");
+    expect(editionLabel(UNSPECIFIED_EDITION)).toBeNull();
+  });
+
+  test("a blank edition is the same answer, reached the other way", () => {
+    /* Nothing recorded and nothing to record are one claim about the card; a
+       surface that told them apart would be reporting on the corpus. */
+    expect(editionLabel("")).toBeNull();
+  });
+
+  test("a real edition still names itself", () => {
+    expect(editionLabel("A")).toBe("Alpha");
+    expect(editionLabel("U")).toBe("Unlimited");
+    /* And an unknown code falls through to itself rather than to null: it is a
+       name this table cannot decode, not an absence. */
+    expect(editionLabel("Q")).toBe("Q");
   });
 });
 

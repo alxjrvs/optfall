@@ -268,6 +268,16 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
   */
   const entries = groupByName(listed).map((group) => entryFor(group, props.id));
 
+  /**
+   * The editions this set was released in, minus the one that is not an
+   * edition. See `editionLabel`: `N` is upstream's code for "no specified
+   * edition", glossed as a sentence, so a promo set's masthead read "Editions:
+   * No specified edition (used for promos, non-set releases, etc.)".
+   */
+  const editions = set.editions
+    .map((code) => editionLabel(code))
+    .filter((name): name is string => name !== null);
+
   /*
     TWO COUNTS, AND THE PAGE HAS TO SAY WHICH IS WHICH.
 
@@ -279,10 +289,6 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     the reader can count on the screen, and the versions are named after it
     wherever the two disagree.
   */
-  const editions = set.editions
-    .map((code) => editionLabel(code))
-    .filter((name): name is string => name !== null);
-
   const versions = listed.length;
   const rows = entries.length;
   const counted =
@@ -332,15 +338,7 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
             )}{" "}
             {counted}
             {set.outOfPrint ? " Out of print." : null}
-            {/*
-              THE EDITIONS THIS SET WAS RELEASED IN, and `N` is not one of them.
-              It is upstream's code for "no specified edition", glossed as a
-              sentence — so a promo set's masthead read "Editions: No specified
-              edition (used for promos, non-set releases, etc.)", which is a
-              line saying the set has no editions in the most words available.
-              Dropped from the list, and the sentence goes with it when nothing
-              is left. See `editionLabel`.
-            */}
+            {/* The sentence goes when nothing is left to name. */}
             {editions.length > 0 ? ` Editions: ${editions.join(", ")}.` : null}
           </p>
         </header>
