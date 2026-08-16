@@ -307,6 +307,38 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     ]),
   );
 
+  /**
+   * Every foiling that reaches each art, in words, keyed by face.
+   *
+   * BUILT OVER ALL PRINTINGS BEFORE THE TILES ARE, AND THAT ORDER IS THE POINT.
+   * The tile list below is deduped by image and keeps the FIRST printing to
+   * reach each one; asking that printing for its foiling would caption
+   * `MST131` — one image published Standard and Rainbow Foil — as merely
+   * "Standard". A full pass first means the tile names both, so the caption
+   * describes the picture rather than the row that happened to claim it.
+   *
+   * DEDUPED AND ORDERED BY THE CORPUS, not sorted. Two rows at the same foiling
+   * would otherwise say it twice, and imposing an alphabet would put "Cold Foil"
+   * before "Standard" — an order that means nothing, where corpus order at least
+   * means the order upstream lists the printings in.
+   */
+  const foilingsByFace = (() => {
+    const codes = new Map<string, Set<string>>();
+    for (const printing of card.printings) {
+      const key = faceKeyFor(printing.image_url);
+      if (key === null || printing.foiling === "") continue;
+      const found = codes.get(key) ?? new Set<string>();
+      found.add(printing.foiling);
+      codes.set(key, found);
+    }
+    return new Map(
+      [...codes].map(([key, found]) => [
+        key,
+        [...found].map((code) => foilingName(code)).join(" · "),
+      ]),
+    );
+  })();
+
   const printings = (() => {
     const seen = new Set<string>();
     const entries: {
@@ -328,6 +360,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       /** Upstream's own rarity code, kept so the credit line can decode the
        *  display name from the same record the slug came from. */
       rarityCode: string;
+      /** Every foiling this art is published at, in words. See
+       *  {@link foilingsByFace}. */
+      foiling: string;
     }[] = [];
 
     for (const printing of card.printings) {
@@ -368,6 +403,10 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
            complete record, and it lists every printing's rarity separately. */
         rarity: raritySlug(printing.rarity),
         rarityCode: printing.rarity,
+        /* NOT `printing.foiling`, and the difference is 3,179 tiles. See
+           `foilingsByFace` — a tile is an art, and an art can be published at
+           more than one foiling. */
+        foiling: foilingsByFace.get(key) ?? "",
       });
     }
 

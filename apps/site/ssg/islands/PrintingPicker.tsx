@@ -65,6 +65,25 @@ export interface Printing {
    * — it publishes it; see the effect below.
    */
   readonly rarity: string;
+  /**
+   * How this art is foiled, in words — `"Cold Foil"`, `"Standard · Rainbow
+   * Foil"` — or `""` where upstream records no foiling for it.
+   *
+   * ALREADY DECODED, because `foilingName` reads the sets corpus and this is an
+   * island. `printings.ts` records what happens when a module the client entry
+   * can reach pulls a corpus in behind it: a 9.28 MB bundle. The build decodes;
+   * the island renders a string.
+   *
+   * PLURAL, BECAUSE A TILE IS AN IMAGE AND FOILING IS A PROPERTY OF A PRINTING.
+   * This list is deduped by art, and 3,179 of the 9,328 tiles the site renders
+   * are shared by printings at more than one foiling — `MST131` is one image
+   * published Standard AND Rainbow Foil. Naming only the first would caption a
+   * picture with one of the several things it is, which is the trap the rarity
+   * field one line up had to accept (a caption can show one rarity at a time)
+   * and this one does not: every foiling that reaches this art is named, so the
+   * tile says what the picture IS rather than which row happened to claim it.
+   */
+  readonly foiling: string;
 }
 
 export interface PrintingPickerProps {
@@ -257,6 +276,55 @@ export function PrintingPicker({
                   </span>
                   <span className="of-picker__set">{printing.setName}</span>
                   <span className="of-picker__id">{printing.id}</span>
+                  {/*
+                    THE FOILING, WHICH IS WHAT MAKES THE TILE DISTINGUISHABLE AT
+                    ALL ON 791 CARDS.
+
+                    Set and number named a printing almost everywhere and named
+                    NOTHING here: `Aether Ashwing` showed three tiles all reading
+                    "Uprising · UPR042" — the standard art, the cold foil, and a
+                    second cold foil — and `Adaptive Plating` showed two reading
+                    "Evolution · EVO013" with no standard art among them.
+                    Measured off the rendered captions: 1,735 tiles across 791
+                    cards read identically to a sibling. The reader could see the
+                    pictures differ and could select either, which is the control
+                    working; they could not learn WHICH THING they had selected,
+                    which is the control failing at the one question it exists to
+                    answer.
+
+                    The edition disambiguation above solves the neighbouring case
+                    and could not solve this one — these printings share an
+                    edition and differ only in how they are foiled — so the fact
+                    that separates them is the fact that goes on the tile. It
+                    takes those 1,735 down to 279.
+
+                    WHAT IS LEFT, NAMED RATHER THAN ROUNDED AWAY. All 279 are
+                    arts upstream separates only by a marker in the image file
+                    name, for which the corpus publishes no display vocabulary.
+                    237 of them are one shape: a front and a back under one
+                    number at one foiling — `DYN212-CF_BACK` beside
+                    `DYN212-MV_BACK` — which is a different axis entirely, and
+                    the printings table's `Other face` column is where it is
+                    answered. The other 42 are lettered or `art_variations`
+                    variants: `MST158` beside `MST158-A` and `MST158-B`,
+                    `FAB470-RFA` beside `-RFB` and `-RFC`, `UPR042-CF` beside
+                    `UPR042-MV`. Upstream distinguishes those by codes (`AA`,
+                    `AB`, `EA`, …) it publishes no decode table for, so naming
+                    them here would be this project asserting a vocabulary its
+                    source does not define.
+
+                    ROOM IS TAKEN, NOT MADE. Foiling is missing on 5 printing
+                    rows in the corpus, four of which publish no image and so
+                    never reach a tile at all; the line is dropped rather than
+                    rendering a dash, because a strip of tiles all one row taller
+                    to hold the single em-dash that `Cracked Bauble`'s `SUP243`
+                    would earn is a layout paying for an absence.
+                  */}
+                  {printing.foiling === "" ? null : (
+                    <span className="of-picker__foiling">
+                      {printing.foiling}
+                    </span>
+                  )}
                 </label>
               </li>
             ))}

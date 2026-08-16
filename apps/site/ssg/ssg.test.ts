@@ -11,6 +11,7 @@ import { describe, expect, test } from "bun:test";
 
 import { CARD_PAGES, CORPUS as CARDS, variantSuffix } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
+import { facesOf } from "../src/lib/printings";
 import { setFor } from "../src/lib/sets";
 import { canonicalFor, Document } from "./document";
 import { outputPathFor } from "./outputPath";
@@ -565,6 +566,187 @@ describe("a card page shows the combat positions it does not fill", () => {
     /* …on the same page where a real absence is drawn as one, which is exactly
        the pair this change exists to keep apart. */
     expect(html).toContain('aria-label="No printed power"');
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The printing picker's captions                                             */
+/* -------------------------------------------------------------------------- */
+
+describe("every picker tile says which printing it is", () => {
+  const render = (route: string) =>
+    RESOLVED.find((resolved) => resolved.route === route)?.render(
+      [],
+      undefined,
+    ) ?? "";
+
+  /**
+   * The picker's tiles READ BACK OUT OF THE RENDERED PAGE, caption by caption.
+   *
+   * PARSED RATHER THAN RECOMPUTED, AND THE FIRST VERSION OF THIS FILE DID THE
+   * OTHER THING. It derived each tile's caption from the corpus with its own
+   * copy of the dedupe, then asserted a property of THAT — which is a test of
+   * the corpus wearing a test of the page's clothes. Both tests below passed
+   * with the feature deleted: one because `Cold Foil` also appears in the
+   * printings table further down every card page, so `toContain` found it with
+   * the picker caption gone; the other because it never rendered a page at all.
+   *
+   * Reading the markup is what makes the assertions about what a reader sees.
+   * A regex over HTML is normally a poor idea; here the markup being matched is
+   * three sibling spans emitted by one component ten lines long, and the
+   * alternative — a DOM parser — would be a dependency to read three strings.
+   *
+   * THE ISLAND'S `data-props` JSON IS NOT MATCHED, and that is worth stating
+   * because the same values appear there. The pattern anchors on the `<span
+   * class="of-picker__…">` markup that only the server-rendered tiles carry, so
+   * a component that stopped rendering a caption could not pass on the strength
+   * of the props blob beside it.
+   */
+  const tilesIn = (html: string) =>
+    [
+      ...html.matchAll(/<label class="of-picker__tile[^"]*">(.*?)<\/label>/gs),
+    ].map((tile) => {
+      const span = (name: string) =>
+        tile[1]?.match(
+          new RegExp(`<span class="of-picker__${name}">([^<]*)</span>`),
+        )?.[1] ?? "";
+      return {
+        setName: span("set"),
+        id: span("id"),
+        foiling: span("foiling"),
+      };
+    });
+
+  test("two tiles under one number are told apart by their foiling", () => {
+    /*
+     * THE BUG, PINNED ON THE CARD THAT SHOWS IT WORST. `Aether Ashwing` has
+     * four printings across two sets and three distinct arts under `UPR042`
+     * alone: the standard art, a cold foil, and a second cold foil. All three
+     * carried the caption "Uprising · UPR042" — a control offering three
+     * choices with one name between them.
+     *
+     * Measured off the rendered captions before the fix: 1,735 tiles on 791
+     * cards read identically to a sibling.
+     */
+    const tiles = tilesIn(render("/card/aether-ashwing"));
+    expect(tiles.length).toBe(4);
+
+    const upr = tiles.filter((tile) => tile.id === "UPR042");
+    expect(upr.length).toBe(3);
+    /*
+     * THE ASSERTION IS THAT THE STANDARD ART IS SEPARABLE FROM THE FOILS, which
+     * is the whole of what this change buys on this card. Two of the three are
+     * the documented `art_variations` residue and remain identical to each
+     * other; before the change all THREE were.
+     */
+    expect(upr.map((tile) => tile.foiling).toSorted()).toEqual([
+      "Cold Foil",
+      "Cold Foil",
+      "Standard",
+    ]);
+    /* And the standard art says what IT is, rather than the foiling line being
+       a badge only the odd ones out wear. */
+    expect(tiles.find((tile) => tile.id === "DRO003")?.foiling).toBe(
+      "Standard",
+    );
+  });
+
+  test("a tile names every foiling its art is published at, not just the first", () => {
+    /*
+     * THE HALF THAT IS EASY TO GET WRONG, and the reason `foilingsByFace` is a
+     * pass over all printings rather than a field read off the printing that
+     * claimed the tile. 3,179 of the 9,328 tiles the site renders are shared by
+     * printings at more than one foiling — one image published Standard AND
+     * Rainbow Foil — and captioning such a tile "Standard" states one of the
+     * two things the picture is.
+     *
+     * `Head Jab` is named rather than searched for because it is the card the
+     * picker's own comments are written about, and its Welcome to Rathe entries
+     * exercise this beside the edition disambiguation rather than instead of it:
+     * one number, two editions, each of them one art published at two foilings.
+     */
+    const tiles = tilesIn(render("/card/head-jab-1"));
+    const wtr = tiles.filter((tile) => tile.id.startsWith("WTR098"));
+    expect(wtr.length).toBe(2);
+    for (const tile of wtr) {
+      /* The list, not the first of it. */
+      expect(tile.foiling).toBe("Standard · Rainbow Foil");
+      /* And the edition disambiguation is untouched — the two are separated by
+         one fact each, on different lines. */
+      expect(tile.id).toMatch(/^WTR098 · (Alpha|Unlimited)$/);
+    }
+  });
+
+  test("what foiling cannot disambiguate is a marker in a file name", () => {
+    /*
+     * THE RESIDUE, ASSERTED SO IT CANNOT GROW QUIETLY. Foiling takes the 1,735
+     * identical captions down to 279, and this pins BOTH halves: that the fix
+     * lands, and that what survives it is the shape `PrintingPicker` names. A
+     * resync that reintroduced a kind of collision foiling ought to have solved
+     * would fail here rather than ship a picker with two nameless tiles on a
+     * card nobody happened to open.
+     *
+     * What survives is arts upstream separates only by a marker in the image
+     * file name, for which the corpus publishes no display vocabulary. 237 of
+     * the 279 are one shape: a front and a back under one number at one foiling
+     * — `DYN212-CF_BACK` beside `DYN212-MV_BACK` — which the printings table
+     * answers in its `Other face` column. The rest are lettered or
+     * `art_variations` variants: `MST158` beside `MST158-A` and `MST158-B`,
+     * `FAB470-RFA` beside `-RFB` and `-RFC`, `UPR042-CF` beside `UPR042-MV`.
+     * Naming those on the tile would mean inventing a vocabulary the source
+     * does not define.
+     *
+     * COUNTED OFF THE RENDERED CAPTIONS, so it measures the control rather than
+     * the corpus. Deleting the foiling line takes this to 1,735 and fails. An
+     * earlier version of this test recomputed the captions from the corpus
+     * instead and was wrong in both directions at once: it stayed green with
+     * the feature removed, AND it overcounted — grouping by number alone, it
+     * called all three of `Aether Ashwing`'s UPR042 tiles ambiguous when the
+     * Standard one is plainly distinguishable from the two Cold Foils. That
+     * is where the 1,410 and 359 in the first draft of this change came from.
+     *
+     * THE CANDIDATES ARE NARROWED FROM THE CORPUS, and only the narrowing is.
+     * Two tiles can only caption identically if they share a set and a collector
+     * number, which is cheap to find; those pages are rendered and every
+     * survivor is judged on its markup. Rendering all 4,941 card pages to reach
+     * the same number would spend the bulk of a test run proving that cards with
+     * one printing have no collision.
+     */
+    const suspects = CARD_PAGES.filter((page) => {
+      const numbers = facesOf(page.card).map(
+        (ref) => `${ref.printing.set_id}/${ref.printing.id}`,
+      );
+      return new Set(numbers).size < numbers.length;
+    });
+    /* The narrowing has to actually find things; a selector that silently went
+       empty would leave the count below trivially at zero. */
+    expect(suspects.length).toBeGreaterThan(500);
+
+    let ambiguous = 0;
+    for (const page of suspects) {
+      const byCaption = new Map<string, number>();
+      for (const tile of tilesIn(render(page.href))) {
+        /*
+         * THE WHOLE CAPTION, WHICH IS THE POINT. Set name, collector number
+         * (carrying the edition where `CardEntry` appended it) and foiling are
+         * the three lines a reader has; two tiles agreeing on all three are two
+         * choices the control cannot tell apart. Counting only the tiles that
+         * actually collide — not every tile in a group containing a collision —
+         * is what the corpus-side version got wrong.
+         */
+        const caption = `${tile.setName}|${tile.id}|${tile.foiling}`;
+        byCaption.set(caption, (byCaption.get(caption) ?? 0) + 1);
+      }
+      for (const count of byCaption.values()) if (count > 1) ambiguous += count;
+    }
+
+    /*
+     * AN EQUALITY, NOT A CEILING. A `toBeLessThan` would pass just as happily
+     * if the count went to zero for the wrong reason — a face-keying change
+     * that collapsed distinct arts into one tile — and losing a printing is a
+     * worse outcome than captioning one ambiguously.
+     */
+    expect(ambiguous).toBe(279);
   });
 });
 
