@@ -549,6 +549,44 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     };
   })();
 
+  /**
+   * The citation for the printing on screen — `MST131`, with its set half
+   * addressable.
+   *
+   * IT IS THE ONE FACT THE CREDIT LINE WAS MISSING. The line already says what
+   * grade this printing is, who drew it and what is on its back; what it could
+   * not say is WHICH printing it is talking about, which is the thing a reader
+   * writes down. The printings table below carries it in a row like everything
+   * else, and this is the same argument the other captions make: the table is
+   * the record, the line under the picture is a caption ON the picture.
+   *
+   * ONE CODE, BECAUSE THE PAGE SHOWS ONE PRINTING. It reads off `shown` for the
+   * same reason the rarity and the other face do — see `shown` — so it cannot
+   * disagree with the picture above it.
+   *
+   * SPLIT AT THE SET PREFIX, NOT COMPOSED FROM TWO FIELDS. Upstream's collector
+   * number already carries the set code (`MST` + `131` — true of all 16,502
+   * printings in this corpus), so concatenating `set_id` with `id` would print
+   * `MSTMST131`. Where a number does NOT start with its set code, the whole
+   * number becomes the link rather than being sliced into a wrong word: the
+   * citation stays intact and only the amount of it that is clickable changes.
+   */
+  const shownCode = (() => {
+    const printing = shown?.printing;
+    if (printing === undefined || printing.id === "" || printing.set_id === "")
+      return null;
+    const prefixed = printing.id.startsWith(printing.set_id);
+    return {
+      /* The linked half, and its name for anything reading the link aloud. */
+      link: prefixed ? printing.set_id : printing.id,
+      setName: setName(printing.set_id),
+      href: hrefForSet(printing.set_id),
+      /* The rest of the number, which is not a link because there is nothing
+         to look up under it. */
+      rest: prefixed ? printing.id.slice(printing.set_id.length) : "",
+    };
+  })();
+
   /** The card printed on the back of THIS printing, or `null`. */
   const shownOtherFace =
     shown === undefined
@@ -1068,6 +1106,48 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         >
                           {shownRarity.rest}
                         </span>
+                      </span>
+                    </p>
+                  )}
+                  {/*
+                    WHICH PRINTING THIS IS, BETWEEN ITS GRADE AND ITS ARTIST —
+                    `MST131`, the string a reader cites, quotes in a deck list
+                    or searches for.
+
+                    THE SET CODE IS THE LINK AND THE NUMBER IS NOT. `MST` names
+                    something with a page of its own; `131` names a position
+                    inside it and has nowhere to go, so making the whole code a
+                    link would promise a destination for a half of it that has
+                    none. The set's own page is where "what else is in this
+                    set" is answered.
+
+                    ONE SPAN AROUND BOTH HALVES, AND IT IS LOAD-BEARING. This
+                    paragraph is a flex row with a gap, and flexbox wraps a bare
+                    text node in an anonymous flex item — the note beside
+                    `.of-card__credit` says so, and it is the reason nothing
+                    else in this footer is wrapped. Here it works the other way:
+                    the anchor and the number are ONE word interrupted, so
+                    letting the row space them would print `MST 131` and break
+                    the citation in half. The span makes them a single item, the
+                    same trick `.of-card__rarity` uses on the bubble and its
+                    word.
+
+                    THE SET'S NAME IS INSIDE THE ANCHOR, CLIPPED. A link reading
+                    "MST" and nothing else is a link named by a code, which is a
+                    lookup rather than a name; the visible half stays a code
+                    because that is what the card prints, and the accessible
+                    name contains it, so `label in name` still holds.
+                  */}
+                  {shownCode === null ? null : (
+                    <p className="of-card__credit">
+                      <span className="of-card__printing-code">
+                        <a href={shownCode.href}>
+                          {shownCode.link}
+                          <span className="of-card__visually-hidden">
+                            {` (${shownCode.setName})`}
+                          </span>
+                        </a>
+                        {shownCode.rest}
                       </span>
                     </p>
                   )}
