@@ -428,6 +428,15 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * from the tiles makes the set on the page equal to the set that can be
    * displayed, which is the claim the line is making anyway.
    *
+   * A CARD WITH NO FACE AT ALL WOULD CARRY NO RARITY HERE, and that is the
+   * intended reading rather than an unconsidered edge. `printings` is empty on
+   * such a card — the page renders the placeholder branch below instead of the
+   * picker — so there is no printing on screen for a caption to describe, and
+   * the line degrades to the artist credit with no stray separator. The
+   * printings table still carries every rarity. Measured at zero today: every
+   * card in the corpus has at least one printing with an image, so this is the
+   * behaviour the code would have, not behaviour anybody has seen.
+   *
    * WHAT THAT GIVES UP, stated rather than left for somebody to find: the credit
    * line is no longer a complete list of every rarity this card exists at, and
    * on `Toughness` "Basic" now appears only in the printings table below. That
