@@ -8,6 +8,8 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -15,6 +17,7 @@ import { CARD_PAGES, CORPUS as CARDS, variantSuffix } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { facesOf } from "../src/lib/printings";
 import { setFor } from "../src/lib/sets";
+import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document } from "./document";
 import { outputPathFor } from "./outputPath";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
@@ -1330,5 +1333,76 @@ describe("a card index prints the name and not the pitch qualifier", () => {
     expect(
       [...html.matchAll(/<span class="of-index__variant"><\/span>/g)].length,
     ).toBe(0);
+  });
+
+  test("in every view, and the names view needs its own render to say so", () => {
+    /*
+     * THE SET PAGE ONLY EVER PROVES THE GRID. `CardIndex` has three views and
+     * the switch between them is client state, so a route render can only ever
+     * exercise the default one — the test above would stay green with the guard
+     * reverted in the names list alone, which is exactly the shape of the bug
+     * it is meant to catch. Measured: it does. So this renders the COMPONENT,
+     * which is the only way to reach the other two.
+     *
+     * ROWS IS HERE TOO, AND IT IS THE CONTROL. `ResultRow` has always guarded
+     * this case, so that view was correct before the change and must still be —
+     * a fixture that produced an empty span there would mean the primitive had
+     * regressed rather than this component.
+     */
+    const entries = [
+      {
+        href: "/card/anothos",
+        label: "Anothos",
+        name: "Anothos",
+        /* Nothing to qualify: a name belonging to one card. */
+        qualifier: "",
+        typeLine: "Guardian Weapon - Hammer (2H)",
+        faceKey: null,
+        faceLandscape: false,
+        versions: [
+          { pitch: 0 as const, href: "/card/anothos", label: "Anothos" },
+        ],
+      },
+      {
+        href: "/card/head-jab-2",
+        label: "Head Jab (pitch 2)",
+        name: "Head Jab",
+        /* And one that needs it, so an empty count cannot pass by rendering
+           nothing at all. */
+        qualifier: " (pitch 2)",
+        typeLine: "Ninja Attack Action",
+        faceKey: null,
+        faceLandscape: false,
+        versions: [
+          {
+            pitch: 2 as const,
+            href: "/card/head-jab-2",
+            label: "Head Jab (pitch 2)",
+          },
+        ],
+      },
+    ];
+
+    for (const display of ["grid", "list", "text"] as const) {
+      /* `createElement` rather than JSX: this file is `.ts`, and renaming it to
+         `.tsx` to render one component would be a change to every other test in
+         it. */
+      const markup = renderToStaticMarkup(
+        createElement(CardIndex, {
+          entries,
+          display,
+          onDisplayChange: () => undefined,
+          summary: "2 cards",
+          controlName: "test",
+          interactive: false,
+        }),
+      );
+      expect(`${display}: ${markup.includes(" (pitch 2)")}`).toBe(
+        `${display}: true`,
+      );
+      expect(
+        `${display}: ${[...markup.matchAll(/class="[^"]*variant[^"]*"><\/span>/g)].length}`,
+      ).toBe(`${display}: 0`);
+    }
   });
 });
