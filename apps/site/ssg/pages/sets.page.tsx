@@ -22,6 +22,22 @@
  * `lib/sets.ts` and `lib/cards.ts` and counts over 4,941 cards at build time.
  * Those modules are framework-free and moved across untouched — the import
  * paths are the only thing that changed.
+ *
+ * NO RIGHTS NOTICE IN THE BODY. This page used to end on `SETS.rights`, in the
+ * same faint legal type the footer sets three paragraphs of a few hundred pixels
+ * below it: a rights notice stated twice on one screen, once where it reads as
+ * content and once where it reads as chrome. The shell's copy is the one a page
+ * cannot omit, so the shell's is the one that stays.
+ *
+ * WHAT THE SHELL CARRIES IS NOT THIS STRING, and that is worth stating exactly
+ * rather than waving at, because `SETS.rights` is now rendered on no page of the
+ * site. The footer emits `CORPUS.rights` — the CARD corpus's envelope — plus
+ * `CARD_IMAGE_COPYRIGHT` and `LSS_DISCLAIMER`. Both of the sets envelope's
+ * claims survive that, in other words: `LSS_DISCLAIMER` names set names as LSS
+ * trademarks in its own sentence, and `CORPUS.rights` licenses "Optfall's
+ * structural work over the dataset", which is the same claim `SETS.rights` made
+ * about "this data". Nothing this page asserted stopped being asserted; it is
+ * asserted by a different string, which is what a future audit needs to know.
  */
 
 import { CORPUS as CARDS, slugify } from "../../src/lib/cards";
@@ -104,8 +120,6 @@ function page(): PageResult {
           {SETS.counts.sets - listed.length} further sets carry no card here and
           are not listed.
         </p>
-
-        <p className="of-sets__legal">{SETS.rights}</p>
       </>
     ),
   };
