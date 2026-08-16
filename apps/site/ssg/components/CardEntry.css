@@ -747,10 +747,16 @@
   margin-block-end: var(--of-space-looser);
 }
 
+/* CENTRED, NOT BASELINED, because the last crumb on a disambiguated card is a
+   pitch jewel rather than a word. A diamond has no baseline worth aligning to:
+   the only thing in it that reports one is the numeral at its middle, so
+   `baseline` lines that numeral up with the trail and hangs the whole stone
+   below it. Every other crumb is one line of one size, where centring and
+   baseline agree, so nothing else moves. */
 .of-card__crumbs {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: var(--of-space-tight);
   margin: 0;
   padding: 0;
