@@ -2161,6 +2161,20 @@ const FIELD_RANK: Readonly<Record<CardMatchField, number>> = {
   filter: 6,
 };
 
+/**
+ * One pitch version behind a result row: which pitch, and where it lives.
+ *
+ * THE LABEL IS QUALIFIED, ALWAYS. It is the accessible name of a control that
+ * has no text in it — a coloured band, or a stone carrying a numeral — so
+ * "Pitch 2" would name three links on one screen after a value with no card
+ * attached to it. See {@link CardResult.matchedVersions}.
+ */
+export interface CardResultVersion {
+  readonly pitch: PitchValue;
+  readonly href: string;
+  readonly label: string;
+}
+
 export interface CardResult {
   /**
    * The full text a link must carry, INCLUDING the pitch qualifier where the
@@ -2214,8 +2228,20 @@ export interface CardResult {
    * the row names the versions it is talking about. When they are equal — the
    * ordinary case, including every plain name search — there is nothing to
    * qualify and the row says nothing.
+   *
+   * EACH MATCHED VERSION CARRIES ITS OWN ADDRESS, WHICH IS WHAT MAKES THE MARK
+   * A CONTROL. The row's own `href` is one destination for a row that may stand
+   * for three cards; the coloured band drawn for the blue version is where a
+   * reader who means the blue version aims. `CardIndex` draws those bands as
+   * links, so the engine has to say where each one goes — and it can, because
+   * the collapse ran over ranked rows that each knew their own slug. It was
+   * throwing that away and keeping the pitch value alone.
+   *
+   * A ROW THAT STANDS FOR ONE CARD CARRIES ONE ENTRY, pointing at itself. The
+   * index draws that as the plain unlinked mark it always did; see
+   * `CardIndexEntry.versions`.
    */
-  readonly matchedPitches: readonly PitchValue[];
+  readonly matchedVersions: readonly CardResultVersion[];
   readonly totalVersions: number;
   /** Face blob key, or `null` where the card publishes no art. */
   readonly faceKey: string | null;
@@ -2324,7 +2350,7 @@ function toResult(
   index: CardIndex,
   ordinal: number,
   matchedIn: CardMatchField,
-  matchedPitches: readonly PitchValue[],
+  matchedVersions: readonly CardResultVersion[],
   totalVersions: number,
   mode: CardUniqueMode = "names",
   /** Set when this row stands for one ALTERNATE art rather than for the card. */
@@ -2370,7 +2396,7 @@ function toResult(
    * tab it opens on is the one the row is talking about, and the other versions
    * are one click away in the strip.
    */
-  const partial = matchedPitches.length < totalVersions;
+  const partial = matchedVersions.length < totalVersions;
 
   /*
    * The label's two halves, split once.
@@ -2498,7 +2524,7 @@ function toResult(
       art !== undefined
         ? `/card/${slug}/${art.setCode}/${art.number}`
         : `/card/${collapsed && !partial ? nameSlug : slug}`,
-    matchedPitches,
+    matchedVersions,
     totalVersions,
     faceKey: shown.key,
     faceLandscape: shown.landscape,
@@ -2885,13 +2911,28 @@ export function searchCards(
     string,
     { ordinal: number; field: CardMatchField }
   >();
-  const matchedByName = new Map<string, PitchValue[]>();
+  /*
+    THE MATCHED VERSIONS, WITH THEIR ADDRESSES — not the pitch values alone.
+
+    This map used to collect `PitchValue`s, which was everything the row needed
+    while its mark was decoration: three bands, three colours, one destination.
+    The bands are links now, so the collapse has to keep WHICH ROW each pitch
+    came from — and the only place that is known is here, walking the ranked
+    rows, each of which carries its own slug and its own label. Recovering it
+    afterwards from the pitch alone would mean looking a version up by name and
+    pitch, which is a second index of a fact this loop is already holding.
+  */
+  const matchedByName = new Map<string, CardResultVersion[]>();
   for (const row of ranked) {
     const name = index.nameSlugs[row.ordinal] ?? index.slugs[row.ordinal] ?? "";
-    const pitches = matchedByName.get(name);
-    const pitch = index.pitches[row.ordinal] ?? 0;
-    if (pitches) pitches.push(pitch);
-    else matchedByName.set(name, [pitch]);
+    const version: CardResultVersion = {
+      pitch: index.pitches[row.ordinal] ?? 0,
+      href: `/card/${index.slugs[row.ordinal] ?? ""}`,
+      label: index.labels[row.ordinal] ?? "",
+    };
+    const versions = matchedByName.get(name);
+    if (versions) versions.push(version);
+    else matchedByName.set(name, [version]);
     // `ranked` is already in rank order, so the first sighting is the best one.
     if (!bestByName.has(name)) bestByName.set(name, row);
   }
@@ -2940,20 +2981,32 @@ export function searchCards(
     display,
     results: rows.slice(offset, offset + limit).map((row) => {
       const name = nameOfRow(row.ordinal);
-      const pitches =
+      const matched =
         unique === "names"
-          ? (matchedByName.get(name) ?? []).toSorted((a, b) => a - b)
-          : [index.pitches[row.ordinal] ?? 0];
+          ? (matchedByName.get(name) ?? []).toSorted(
+              (a, b) => a.pitch - b.pitch,
+            )
+          : [
+              {
+                pitch: index.pitches[row.ordinal] ?? 0,
+                /* ITS OWN PAGE, NEVER THE ART ROW'S PRINTING URL. In
+                   `unique:art` the row's `href` is one picture of the card;
+                   the mark beside it stands for the CARD's pitch, so it points
+                   where the pitch is a fact — the card page. */
+                href: `/card/${index.slugs[row.ordinal] ?? ""}`,
+                label: index.labels[row.ordinal] ?? "",
+              },
+            ];
       const versions =
         unique === "names"
           ? (index.versionsByName.get(name) ?? 1)
-          : pitches.length;
+          : matched.length;
 
       return toResult(
         index,
         row.ordinal,
         row.field,
-        pitches,
+        matched,
         versions,
         unique,
         row.art,

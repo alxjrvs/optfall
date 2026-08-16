@@ -22,6 +22,7 @@ import {
   CARD_PAGES,
   type CardPage,
   facesOf,
+  hrefForSlug,
   variantSuffix,
 } from "../../src/lib/cards";
 import { orientationOf } from "../../src/lib/faces";
@@ -47,7 +48,10 @@ type Props = { readonly id: string; readonly cards: readonly CardPage[] };
  * more than one set, and every one of those 2,239 has at least one set whose art
  * differs from the default — so this is not a long-tail correction, it is most
  * of the reprints in the game. Monarch's page went from 307 rows carrying a mix
- * of other sets' art to 307 carrying Monarch's.
+ * of other sets' art to 307 carrying Monarch's. (Those 307 cards are 155 rows
+ * now — see `entryFor` — and every one of them still wears this set's face,
+ * because the collapse chooses a version and this chooses that version's
+ * printing.)
  *
  * `facesOf` IS THE ROUTER'S LIST, so every key this can return is one the face
  * host has been asked to store and one `/card/<slug>/<set>/<number>` addresses.
@@ -81,34 +85,135 @@ function faceForSet(page: CardPage, setId: string) {
 }
 
 /**
- * One row of the set's index.
+ * One row of the set's index: a NAME, and the versions of it this set printed.
  *
- * THE PITCHES ARE THIS CARD'S, SINGULAR, WHICH LOOKS WRONG NEXT TO SEARCH AND IS
- * NOT. A search result collapses the pitch versions of a name into one row, so
- * its mark carries all the versions that matched. A set page lists CARDS: Head
- * Jab red, yellow and blue are three separate entries upstream, each with its
- * own collector number in the set, and collapsing them here would be inventing
- * a row the print run does not have.
+ * THIS PAGE USED TO LIST CARDS, AND THE ARGUMENT FOR IT WAS WRONG. The note
+ * here said that Head Jab red, yellow and blue are three separate entries
+ * upstream with three collector numbers, so collapsing them "would be inventing
+ * a row the print run does not have". What it actually produced was the
+ * screenshot this change came from: three consecutive cells of Angelic Wrath,
+ * identical art, identical name, identical type line, differing in one coloured
+ * band and in a pitch qualifier the index deliberately hides — so the reader
+ * saw the same card three times and had no visible way to tell which was which.
+ * That is not the print run being honest, it is a list repeating itself.
+ *
+ * A player calls those three ONE card. `card-search.ts` has said so since it was
+ * written and collapses on exactly this rule; this page is where the two
+ * surfaces stopped agreeing.
+ *
+ * NOTHING IS HIDDEN BY THE COLLAPSE, WHICH IS THE CONDITION FOR MAKING IT. Each
+ * version keeps a destination of its own — it is the band drawn in its own
+ * colour, and hovering one says which card it is — so the row is a name with
+ * three doors rather than a name that has swallowed two cards. The collector
+ * numbers were never on this page to lose; they are on the card page, in the
+ * printings table, where a print run is actually described.
+ *
+ * THE VERSIONS ARE THE ONES THIS SET PRINTED, never all the ones that exist.
+ * A set that published only the blue Head Jab draws one band, because the
+ * question this page answers is what is in the set.
  */
-function entryFor(page: CardPage, setId: string): CardIndexEntry {
-  const face = faceForSet(page, setId);
+function entryFor(
+  /** The versions of one name in this set, pitch ascending. At least one. */
+  group: readonly CardPage[],
+  setId: string,
+): CardIndexEntry {
+  /*
+   * THE ROW WEARS THE LOWEST PITCH'S FACE, TYPE LINE AND PRINTED VALUES, and
+   * the stats are the half of that worth stating plainly: the three versions of
+   * a name differ in cost and often in power, so the rows view shows one
+   * version's numbers on a row standing for three. That is the same trade
+   * `card-search.ts` already makes on a collapsed result — the alternative is
+   * either three rows again or a row printing three costs in one socket — and
+   * the honest bound on it is that the numbers belong to the version the bands'
+   * leftmost door opens.
+   */
+  const first = group[0];
+  if (first === undefined) throw new Error("entryFor: an empty name group");
+
+  const face = faceForSet(first, setId);
+  const collapsed = group.length > 1;
+  /*
+   * WHETHER THIS SET PRINTED THE WHOLE NAME. `variants` is the card's siblings
+   * in the CORPUS, so the name has `variants.length + 1` versions in total and
+   * this group has however many of them this set published.
+   */
+  const whole = group.length === first.variants.length + 1;
+
   return {
-    href: page.href,
-    label: page.label,
+    /*
+     * THE NAME GOES TO THE NAME, BUT ONLY WHEN THE SET PRINTED ALL OF IT.
+     * `/card/angelic-wrath` is the page that holds every version, and it EXISTS
+     * whenever this row is collapsed: two cards in this set sharing a name is
+     * two cards in the corpus sharing one, which is the exact condition
+     * `NAME_PAGES` is built on.
+     *
+     * A PARTIAL GROUP MUST LAND ON A VERSION THIS SET ACTUALLY PRINTED, and
+     * that is the same rule `card-search.ts` states at length beside its own
+     * `partial` flag rather than a second one invented here. `/card/<nameSlug>`
+     * renders the corpus's LOWEST-PITCH version, which a set that printed only
+     * the higher ones does not contain: Aurora prints Spark Spray at pitch 2
+     * and 3, so the collapsed row wore AUR022's art, drew two bands — and sent
+     * the reader to the pitch-1 card Aurora never published. 23 (set, name)
+     * groups in this corpus are that shape, and `set:aur` in the search box
+     * already answered `/card/spark-spray-2` for the same query. So a partial
+     * row links to the lowest version PRESENT, which is `first` by the sort.
+     *
+     * A one-version row goes to that version's own page for the same reason at
+     * the other end: there is nothing to disambiguate, and a disambiguation
+     * page for one card is a stop on the way to it.
+     */
+    href: collapsed && whole ? hrefForSlug(first.nameSlug) : first.href,
+    label: collapsed ? first.card.name : first.label,
     /* The bare name; the pitch qualifier `label` carries is hidden in the
        markup and kept for the accessible name. See `CardIndexEntry`. */
-    name: page.card.name,
+    name: first.card.name,
     /* The pitch suffix `label` carries, taken from the function that composes
-       it rather than sliced back off the label — one evaluation of the rule. */
-    qualifier: variantSuffix(page.pitch, page.disambiguated),
-    typeLine: page.card.type_text ?? "",
+       it rather than sliced back off the label — one evaluation of the rule.
+       A collapsed row has nothing left to qualify: it stands for every version
+       it draws a band for, so a suffix naming one of them would be false. */
+    qualifier: collapsed ? "" : variantSuffix(first.pitch, first.disambiguated),
+    typeLine: first.card.type_text ?? "",
     faceKey: face.key,
     faceLandscape: face.landscape,
-    pitches: [page.pitch],
-    stats: page.stats.map(
+    versions: group.map((version) => ({
+      pitch: version.pitch,
+      href: version.href,
+      label: version.label,
+    })),
+    stats: first.stats.map(
       (stat) => [stat.label, stat.value] as readonly [string, string],
     ),
   };
+}
+
+/**
+ * The set's cards, grouped into one row per name, each group pitch ascending.
+ *
+ * ORDER IS THE CORPUS'S, TAKEN FROM THE FIRST VERSION SEEN. Corpus order is
+ * upstream's name sort, so a name's versions are already adjacent and the group
+ * lands where the first of them was — which means the page reads in the same
+ * order it did before, with three cells replaced by one rather than moved.
+ *
+ * SORTED WITHIN THE GROUP BECAUSE THE MARK IS, and the two orders have to be the
+ * same one. `PitchRule` draws bands ascending whatever it is handed; a group
+ * left in corpus order would then link its leftmost band to whichever version
+ * upstream happened to list first, and the leftmost band is by construction the
+ * lowest pitch. The `href` and `label` a collapsed row carries come from the
+ * FIRST member of the group, so this sort is also what makes those the lowest
+ * version's rather than an arbitrary one's.
+ */
+function groupByName(
+  cards: readonly CardPage[],
+): readonly (readonly CardPage[])[] {
+  const groups = new Map<string, CardPage[]>();
+  for (const card of cards) {
+    const existing = groups.get(card.nameSlug);
+    if (existing) existing.push(card);
+    else groups.set(card.nameSlug, [card]);
+  }
+  return [...groups.values()].map((group) =>
+    group.toSorted((a, b) => a.pitch - b.pitch),
+  );
 }
 
 function getStaticPaths() {
@@ -161,11 +266,32 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     guard which does not actually guard the work below it is a guard that will
     stop reading as one.
   */
-  const entries = listed.map((card) => entryFor(card, props.id));
+  const entries = groupByName(listed).map((group) => entryFor(group, props.id));
+
+  /*
+    TWO COUNTS, AND THE PAGE HAS TO SAY WHICH IS WHICH.
+
+    `entries.length` is what this page LISTS — names, one row each. `listed`
+    is what upstream carries, which counts Head Jab three times. Before the
+    collapse they were one number; now they differ on most sets, and printing
+    the larger one over an index of the smaller would be the masthead
+    contradicting the list under it. So the row count leads, because it is what
+    the reader can count on the screen, and the versions are named after it
+    wherever the two disagree.
+  */
+  const versions = listed.length;
+  const rows = entries.length;
+  const counted =
+    versions === rows
+      ? `${rows.toLocaleString("en-GB")} cards in this corpus.`
+      : `${rows.toLocaleString("en-GB")} cards in this corpus, ${versions.toLocaleString("en-GB")} counting each pitch version.`;
 
   return {
     title: `${set.name} — Optfall`,
-    description: `The ${listed.length} Flesh and Blood cards Optfall carries from ${set.name} (${set.id}), each with its printed text, its printings and its per-format legality.`,
+    /* THE SAME TWO NUMBERS THE MASTHEAD PRINTS, because this string is what a
+       pasted link says about itself and a description claiming 155 cards over a
+       page that also says 307 is the disagreement `counted` exists to end. */
+    description: `The ${rows} Flesh and Blood cards Optfall carries from ${set.name} (${set.id})${versions === rows ? "" : `, ${versions} counting each pitch version`}, each with its printed text, its printings and its per-format legality.`,
     section: "sets",
     /*
       THE FIRST PAGE OF THIS SET IS STILL IN THE HTML, because `Island` renders
@@ -200,7 +326,7 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
                 Released <time dateTime={set.released}>{set.released}</time>.
               </>
             )}{" "}
-            {listed.length.toLocaleString("en-GB")} cards in this corpus.
+            {counted}
             {set.outOfPrint ? " Out of print." : null}
             {set.editions.length > 0
               ? ` Editions: ${set.editions.map(editionName).join(", ")}.`
@@ -218,10 +344,18 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
 
           WHAT THE PROPS COST, STATED, because the whole set crosses here as
           JSON in an attribute and React escapes every quote in it. Measured:
-          the largest set page in this corpus is 220 kB of HTML — props, the
+          the largest set page in this corpus is 273 kB of HTML — props, the
           sixty server-rendered cells, and the noscript list together — against
           a 40 kB median, and about 20 kB over the wire, since a list of cards
           compresses extremely well.
+
+          IT WAS 215 kB BEFORE THE VERSIONS CARRIED THEIR ADDRESSES, measured on
+          `main` rather than remembered, because that is exactly the drift the
+          paragraph below is about: an href and a label per version is a field
+          paid once per card and then escaped. Collapsing rows gave some of it
+          back — a three-version name is one set of stats and one face key now
+          instead of three — and the net on the largest set is +52 kB, inside
+          the ceiling `assertPageBudget` holds by a wide margin.
 
           It is not left to a comment to stay true. `assertPageBudget` in
           `ssg/build.ts` fails the build over a per-page ceiling, for the reason
@@ -254,7 +388,8 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
           <h2 className="of-set-noscript__heading">Every card in {set.name}</h2>
           <p className="of-set-noscript__note">
             The index above pages and switches views with JavaScript. This is
-            the whole set, in one list.
+            the whole set, in one list — one line per pitch version, where the
+            index above draws one row per name.
           </p>
           <ul className="of-set-noscript__list">
             {listed.map((card) => (

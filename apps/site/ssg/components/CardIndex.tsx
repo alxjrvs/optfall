@@ -18,6 +18,14 @@
  * supplies rows and owns the state; it does not get to invent a fourth way to
  * show a card.
  *
+ * A ROW IS A NAME, AND THE MARK UNDER IT IS HOW THE READER PICKS A VERSION.
+ * Both callers hand over the pitch versions a row stands for — a search hands
+ * the ones that matched, a set page the ones that set printed — and where there
+ * is more than one, the bands and stones this component draws are LINKS to
+ * them. That is the difference between "three cells of Angelic Wrath that look
+ * identical" and one cell whose red, yellow and blue thirds each open the card
+ * they are the colour of. See {@link CardIndexEntry.versions}.
+ *
  * IT IS PRESENTATIONAL AND CONTROLLED, WHICH IS WHAT LETS BOTH CALLERS USE IT.
  * The two disagree about where the state lives and they are both right:
  * `CardSearch` keeps the display mode in the QUERY, because `display:text` is a
@@ -67,6 +75,30 @@ import "./CardIndex.css";
 export type CardIndexDisplay = "grid" | "list" | "text";
 
 /**
+ * One pitch version of the card a row stands for: which pitch, and where it is.
+ *
+ * A ROW WITH ONE OF THESE IS A CARD; A ROW WITH SEVERAL IS A NAME. That is the
+ * whole of the distinction, and every difference in how a row renders follows
+ * from it — see {@link CardIndexEntry.versions}.
+ */
+export interface CardIndexVersion {
+  readonly pitch: PitchValue;
+  /** This version's own page. `/card/head-jab-2`. */
+  readonly href: string;
+  /**
+   * The version's full label — "Head Jab (pitch 2)".
+   *
+   * IT IS THE ACCESSIBLE NAME OF THIS VERSION'S MARK, which is why it is
+   * qualified and why it is supplied rather than composed here. A row standing
+   * for three versions renders three links that carry no text at all — a band
+   * is a coloured rectangle — so each one's name is the only thing telling them
+   * apart, and "Pitch 2" alone would give a screen-reader user three links
+   * named for a value with no card attached to it.
+   */
+  readonly label: string;
+}
+
+/**
  * One row.
  *
  * SERIALISABLE THROUGHOUT, because the set page hands an array of these across
@@ -104,6 +136,17 @@ export interface CardIndexEntry {
    * the values out, but a sighted reader comparing two same-named cells has the
    * band colour and the card art, both of which are hue. See the note in
    * `CardIndex.css` beside the cell name.
+   *
+   * THE CASE THAT NOTE WAS WRITTEN ABOUT IS NARROWER THAN IT WAS. Two cells
+   * with the same name were, in practice, the pitch versions of one card, and
+   * both callers now hand those over as ONE row with a band per version — so
+   * the comparison the reader was making with hue alone is a comparison between
+   * bands inside a single cell instead of between cells. It still happens: a
+   * search asking for `unique:cards` or `unique:art` deliberately expands a name
+   * back into its versions, and that is the surface the paragraph above is now
+   * about. What is new in both is that each band is a link carrying the version
+   * in its accessible name, so "which one is this" has an answer that is not
+   * colour, on hover and to anything reading the page aloud.
    */
   readonly name: string;
   /**
@@ -123,10 +166,25 @@ export interface CardIndexEntry {
   readonly faceKey: string | null;
   readonly faceLandscape: boolean;
   /**
-   * The pitch values this row stands for.
+   * The pitch versions this row stands for, and where each one lives.
    *
    * PLURAL BECAUSE A ROW IS A NAME. Head Jab is three cards at three pitches
    * and one row, and the mark under the name is how the row says so.
+   *
+   * IT CARRIES HREFS BECAUSE THE MARK IS A CONTROL WHEN THERE IS MORE THAN ONE
+   * OF THEM, and that is the change this type exists to record. A row standing
+   * for three versions used to be one destination: the name went to the shared
+   * page and the three coloured bands under it were decoration, so a reader who
+   * wanted the blue one specifically had to arrive at the name and then find it
+   * in the strip. Now the name still goes to the name — the address for "this
+   * card", whichever version you meant — and each BAND goes to the version it
+   * is drawn for. The colour was already saying which version; this makes the
+   * thing it says clickable.
+   *
+   * THE FIELD WAS `pitches: PitchValue[]` AND THE HREFS ARE NOT BESIDE IT.
+   * Two arrays — values here, links there — is two orderings of one fact and
+   * an invitation for a caller to supply three bands and two links. One array
+   * of versions cannot disagree with itself.
    *
    * TWO RENDERINGS, CHOSEN BY VIEW, AND THAT IS A DESIGN DECISION RATHER THAN
    * AN INCONSISTENCY. Under a card face there is no room for a stone carrying a
@@ -137,7 +195,7 @@ export interface CardIndexEntry {
    * that `docs/DESIGN.md` calls the primary channel. The information is
    * identical; what differs is what the surface can afford to say it with.
    */
-  readonly pitches: readonly PitchValue[];
+  readonly versions: readonly CardIndexVersion[];
   /**
    * The card's printed values, label and value. Rows view only.
    *
@@ -231,25 +289,108 @@ const VIEWS = [
 ] as const;
 
 /**
- * The pitch values as jewels — the rendering the two TEXT views use.
+ * The versions a row stands for, one per pitch, ascending.
  *
- * ONE STONE PER VALUE, so a row standing for three pitch versions of a name
+ * DEDUPLICATED AND SORTED HERE, ONCE, for the reason `PitchRule` does it
+ * internally: several call sites build these lists from different sources, and
+ * a row rendering blue before red would be stating one fact in two orders on
+ * one screen. A card printed twice in one set arrives with its pitch twice, and
+ * the two arrivals are the same destination — so the first wins and the second
+ * is dropped rather than drawn as a fourth band.
+ */
+function versionsOf(
+  versions: readonly CardIndexVersion[],
+): readonly CardIndexVersion[] {
+  const byPitch = new Map<PitchValue, CardIndexVersion>();
+  for (const version of versions) {
+    if (!byPitch.has(version.pitch)) byPitch.set(version.pitch, version);
+  }
+  return [...byPitch.values()].toSorted((a, b) => a.pitch - b.pitch);
+}
+
+/**
+ * The pitch versions as jewels — the rendering the two TEXT views use.
+ *
+ * ONE STONE PER VERSION, so a row standing for three pitch versions of a name
  * carries three, exactly as the grid carries three bands. `PitchJewel` is
  * singular by contract because a card page shows one card; the plurality is a
  * fact about a list, so it lives in the list.
  *
- * Deduplicated and ascending here for the reason `PitchRule` does it
- * internally: three call sites build these arrays and a row rendering blue
- * before red would be stating one fact in two orders on one screen. A card
- * printed twice in a set arrives with its pitch twice.
+ * A STONE IS A LINK ONLY WHERE THERE IS SOMETHING TO CHOOSE BETWEEN. On a row
+ * standing for one card the stone would point where the name beside it already
+ * points — a second control, in a smaller target, for the same destination —
+ * so the single-version row keeps the plain mark it has always had. Where a row
+ * stands for several, each stone goes to its own version: that is the whole
+ * feature, and the numeral in the stone is what says which one is under the
+ * pointer before it is clicked.
+ *
+ * BOTH TEXT VIEWS PUT THE STONES OUTSIDE THE NAME'S ANCHOR ALREADY —
+ * `ResultRow` renders its `lead` before the link rather than inside it, and the
+ * names view lists them as siblings — so this needs no markup contortion to
+ * avoid nesting an anchor in an anchor. The grid did need one; see the cell.
  */
-function PitchStones({ pitches }: { readonly pitches: readonly PitchValue[] }) {
-  const shown = [...new Set(pitches)].toSorted((a, b) => a - b);
+function PitchStones({
+  versions,
+}: {
+  readonly versions: readonly CardIndexVersion[];
+}) {
+  const shown = versionsOf(versions);
   if (shown.length === 0) return null;
   return (
     <span className="of-index__stones">
-      {shown.map((value) => (
-        <PitchJewel key={value} value={value} size="sm" />
+      {shown.map((version) =>
+        shown.length === 1 ? (
+          <PitchJewel key={version.pitch} value={version.pitch} size="sm" />
+        ) : (
+          <a
+            className="of-index__stone"
+            href={version.href}
+            key={version.pitch}
+          >
+            <PitchJewel value={version.pitch} size="sm" label={version.label} />
+          </a>
+        ),
+      )}
+    </span>
+  );
+}
+
+/**
+ * The pitch versions as bands — the rendering the IMAGES view uses.
+ *
+ * ONE `PitchRule` PER BAND WHERE THE BANDS ARE LINKS, WHICH IS NOT THE SAME
+ * COMPONENT USED TWICE BY ACCIDENT. `PitchRule` is a `role="img"` with a
+ * written name, and the children of a `role="img"` are not exposed — so three
+ * anchors INSIDE one rule would be three links no assistive technology could
+ * reach, which is the failure mode that looks fine in a browser and is a wall
+ * to everyone else. A rule per version instead makes each band an image with
+ * its own name inside its own link, and the link takes that name as its own.
+ *
+ * The row of them is spaced by the same token `PitchRule` puts between its own
+ * bands, so a split mark and an unsplit one are the same object on screen.
+ *
+ * A SINGLE-VERSION ROW DRAWS THE PLAIN RULE, unlinked, for the reason the
+ * stones do: there is nothing to choose between, and the cell's own anchor is
+ * already the destination.
+ */
+function PitchSplits({
+  versions,
+}: {
+  readonly versions: readonly CardIndexVersion[];
+}) {
+  const shown = versionsOf(versions);
+  if (shown.length === 0) return null;
+  if (shown.length === 1) {
+    const only = shown[0];
+    return only === undefined ? null : <PitchRule values={[only.pitch]} />;
+  }
+
+  return (
+    <span className="of-index__splits">
+      {shown.map((version) => (
+        <a className="of-index__split" href={version.href} key={version.pitch}>
+          <PitchRule values={[version.pitch]} label={version.label} />
+        </a>
       ))}
     </span>
   );
@@ -325,6 +466,22 @@ export function CardIndex({
             );
             return (
               <li className="of-index__cell" key={entry.href}>
+                {/*
+                  THE ANCHOR STOPS AT THE NAME, AND THE MARK IS ITS SIBLING.
+                  It used to wrap the whole cell — face, name, rule and note —
+                  which was the right shape while the rule was decoration. It
+                  cannot survive the rule becoming a set of links: an anchor
+                  inside an anchor is invalid HTML, and browsers repair it by
+                  closing the outer one early, so the markup that reaches the
+                  reader is not the markup that was written.
+
+                  What the cell loses by the split is nothing a reader can
+                  see. The face and the name were the accessible name of the
+                  link; the rule contributed its spoken values to the end of
+                  it, which is the one place they were redundant — the name is
+                  the card, and which VERSIONS the row stands for is now said
+                  by controls that go to them.
+                */}
                 <a className="of-index__cell-link" href={entry.href}>
                   <CardFace
                     src={faceSrc(entry)}
@@ -346,11 +503,11 @@ export function CardIndex({
                     {entry.name}
                     <span className="of-index__variant">{entry.qualifier}</span>
                   </span>
-                  <PitchRule values={entry.pitches} />
-                  {entry.note !== undefined && entry.note !== "" ? (
-                    <span className="of-index__cell-note">{entry.note}</span>
-                  ) : null}
                 </a>
+                <PitchSplits versions={entry.versions} />
+                {entry.note !== undefined && entry.note !== "" ? (
+                  <span className="of-index__cell-note">{entry.note}</span>
+                ) : null}
               </li>
             );
           })}
@@ -376,7 +533,7 @@ export function CardIndex({
               href={entry.href}
               label={entry.name}
               qualifier={entry.qualifier}
-              lead={<PitchStones pitches={entry.pitches} />}
+              lead={<PitchStones versions={entry.versions} />}
               meta={
                 <>
                   <span>{entry.typeLine}</span>
@@ -415,7 +572,7 @@ export function CardIndex({
         <ol className="of-index__names">
           {entries.map((entry) => (
             <li key={entry.href}>
-              <PitchStones pitches={entry.pitches} />
+              <PitchStones versions={entry.versions} />
               <a href={entry.href}>
                 {entry.name}
                 <span className="of-index__variant">{entry.qualifier}</span>
