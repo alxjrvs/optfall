@@ -668,6 +668,63 @@ describe("a card page shows the combat positions it does not fill", () => {
 });
 
 /* -------------------------------------------------------------------------- */
+/* The last crumb                                                             */
+/* -------------------------------------------------------------------------- */
+
+describe("a card's breadcrumb ends in the fact that crumb is for", () => {
+  const render = (route: string) =>
+    RESOLVED.find((resolved) => resolved.route === route)?.render(
+      [],
+      undefined,
+    ) ?? "";
+
+  const crumbsIn = (html: string) =>
+    /<ol class="of-card__crumbs">.*?<\/ol>/s.exec(html)?.[0] ?? "";
+
+  test("a disambiguated card ends in its stone, named by the whole label", () => {
+    /*
+     * THE TRAIL USED TO SAY THE NAME TWICE — "Head Jab › Head Jab (pitch 1)" —
+     * with the one fact distinguishing the two crumbs spelled out in
+     * parentheses at the end. The stone is that fact, in the silhouette the
+     * page already reserves for it.
+     *
+     * THE LABEL IS THE HALF A TEST HAS TO HOLD. `PitchJewel` falls back to
+     * speaking its numeral, so dropping `label` would leave the page
+     * pixel-identical, keep every other test green, and rename the current-page
+     * crumb to "Pitch 1" on every disambiguated card — a crumb that no longer
+     * names the page, and the WCAG 2.4.4 hazard `labelFor` exists to prevent.
+     */
+    const crumbs = crumbsIn(render("/card/head-jab-1"));
+    expect(crumbs).not.toBe("");
+    expect(crumbs).toContain('aria-label="Head Jab (pitch 1)"');
+    /* And the name is not printed a second time beside it. */
+    expect(
+      crumbs.replace(/aria-label="[^"]*"/g, "").match(/Head Jab/g),
+    ).toEqual(["Head Jab"]);
+  });
+
+  test("a card whose name identifies it keeps the name", () => {
+    /* There is no name crumb above it to avoid repeating, and its pitch — which
+       may be none at all — is not what tells it apart from anything. */
+    const crumbs = crumbsIn(render("/card/crouching-tiger"));
+    expect(crumbs).toContain("Crouching Tiger");
+    expect(crumbs).not.toContain("of-jewel");
+  });
+
+  test("a no-pitch version still gets a stone, and it says so", () => {
+    /*
+     * `hyper-driver` is the one group in the corpus disambiguated by an ABSENCE
+     * — a pitch-0 token sharing its name with three pitched actions — so the
+     * crumb is the grey stone with a dash, and the label is what carries the
+     * distinction to anything reading it aloud.
+     */
+    const crumbs = crumbsIn(render("/card/hyper-driver-0"));
+    expect(crumbs).toContain('aria-label="Hyper Driver (no pitch)"');
+    expect(crumbs).toContain("of-jewel--tone-none");
+  });
+});
+
+/* -------------------------------------------------------------------------- */
 /* The printings table, which is the picker now                               */
 /* -------------------------------------------------------------------------- */
 
