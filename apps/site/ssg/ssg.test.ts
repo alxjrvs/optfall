@@ -9,7 +9,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { CARD_PAGES, CORPUS as CARDS } from "../src/lib/cards";
+import { CARD_PAGES, CORPUS as CARDS, variantSuffix } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { facesOf } from "../src/lib/printings";
 import { setFor } from "../src/lib/sets";
@@ -747,5 +747,55 @@ describe("every picker tile says which printing it is", () => {
      * worse outcome than captioning one ambiguously.
      */
     expect(ambiguous).toBe(279);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* Bare names in a card index                                                  */
+/* -------------------------------------------------------------------------- */
+
+describe("a card index prints the name and not the pitch qualifier", () => {
+  const monarch = RESOLVED.find((resolved) => resolved.route === "/sets/mon");
+  const html = monarch?.render([], "islands.js") ?? "";
+
+  test("the visible title is bare, and the qualifier is still in the anchor", () => {
+    /*
+     * WHY THE QUALIFIER CANNOT SIMPLY BE DELETED. 900 names in this corpus
+     * belong to more than one card, so "Belly Buster" is three anchors that
+     * differ only in where they point — a WCAG 2.4.4 failure, and the exact one
+     * `variantSuffix` was written to prevent. What changed is that the pitch is
+     * carried by the rule under the name and the stone beside it instead of by
+     * four words repeated on every row, so the text is hidden rather than
+     * dropped: still inside the anchor, still part of its accessible name.
+     */
+    expect(html).not.toBe("");
+    /* The suffix is present in the markup… */
+    expect(html).toContain("of-index__variant");
+    expect(html).toMatch(/of-index__variant[^>]*>\s*\(pitch \d\)/);
+    /* …and never sits loose in a title, which is what the reader was seeing. */
+    expect(html).not.toMatch(/of-index__cell-name[^>]*>[^<]*\(pitch \d\)/);
+  });
+
+  test("a card whose name is unique carries no qualifier at all", () => {
+    /*
+     * ASSERTED THROUGH `entryFor`'s OWN INPUT, not by restating `labelFor`.
+     * The first version of this checked `label === card.name` — true of
+     * `variantSuffix` and true before this change, so it said nothing about
+     * whether the page had started hiding the right thing. It also named a
+     * function that does not exist in the repository.
+     */
+    const unique = CARD_PAGES.find((page) => !page.disambiguated);
+    expect(unique).toBeDefined();
+    expect(
+      variantSuffix(unique?.pitch ?? 0, unique?.disambiguated ?? false),
+    ).toBe("");
+
+    /* And a card that DOES need one supplies it, so the empty case above is a
+       result rather than the only case there is. */
+    const versioned = CARD_PAGES.find((page) => page.disambiguated);
+    expect(versioned).toBeDefined();
+    expect(
+      variantSuffix(versioned?.pitch ?? 0, versioned?.disambiguated ?? false),
+    ).toMatch(/^ \((?:no pitch|pitch \d)\)$/);
   });
 });

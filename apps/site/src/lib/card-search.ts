@@ -2162,7 +2162,41 @@ const FIELD_RANK: Readonly<Record<CardMatchField, number>> = {
 };
 
 export interface CardResult {
+  /**
+   * The full text a link must carry, INCLUDING the pitch qualifier where the
+   * name alone does not identify the card.
+   *
+   * This is the ACCESSIBLE name, not necessarily the visible one. 900 names in
+   * this corpus belong to more than one card, and two anchors that differ only
+   * in where they point are a WCAG 2.4.4 failure — so this stays qualified even
+   * where a surface chooses to print {@link name} instead and carry the
+   * difference in a mark. See `CardIndexEntry`.
+   */
   readonly label: string;
+  /**
+   * The card's name with no qualifier — what a reader sees when the interface
+   * says "which version" some other way.
+   *
+   * Carried rather than derived at the call site because stripping the suffix
+   * back off a label is a second, weaker evaluation of `variantSuffix`: a card
+   * genuinely named something ending in "(pitch 2)" would be mangled by it.
+   */
+  readonly name: string;
+  /**
+   * The part of {@link label} a surface may hide — " (pitch 2)", or `""`.
+   *
+   * CARRIED RATHER THAN DERIVED, and the first version of this derived it by
+   * subtracting `name` from `label`, which was wrong in a way only `unique:art`
+   * showed: an art row's label is `"Head Jab (pitch 2) · MST131"`, so the
+   * subtraction hid the ART KEY as well as the pitch and left several rows of
+   * one card reading identically in every text view. The key is the only thing
+   * telling those rows apart once the picture is not on screen.
+   *
+   * So the two halves are stated separately. `name` is everything a reader must
+   * SEE — bare name, plus the art key where the row stands for one picture —
+   * and this is the pitch qualifier alone, which a mark can carry instead.
+   */
+  readonly qualifier: string;
   readonly href: string;
   /**
    * Which pitch versions of this card matched, and how many the corpus has.
@@ -2338,6 +2372,18 @@ function toResult(
    */
   const partial = matchedPitches.length < totalVersions;
 
+  /*
+   * The label's two halves, split once.
+   *
+   * `nameOf` strips exactly the suffix `labelFor` added, so whatever is left
+   * over IS that suffix — which means there is no second pattern here to keep
+   * in step with `variantSuffix`, only the one already in `nameOf`.
+   */
+  const fullLabel = index.labels[ordinal] ?? "";
+  const bareName = nameOf(fullLabel);
+  const pitchSuffix = fullLabel.slice(bareName.length);
+  const artStem = art === undefined ? "" : art.key.replace(/\.webp$/, "");
+
   /**
    * THE FACE THE QUERY ASKED FOR, WHICH IS NOT ALWAYS THE CARD'S OWN.
    *
@@ -2421,12 +2467,33 @@ function toResult(
      * direction. `ResultRow` takes a plain string for accessibility, so the
      * qualifier has to be in it rather than beside it.
      */
+    /*
+      ALWAYS `name` + `qualifier`, in that order, so the string a surface
+      assembles from the two halves IS this one. An art row used to read
+      "Head Jab (pitch 2) · MST131" while the rendered anchor read
+      "Head Jab · MST131 (pitch 2)" — same words, different order, so the
+      identity the two doc blocks assert quietly failed on the one mode nothing
+      tested. The art key sits with the name because both are visible; the pitch
+      trails because it is the half a mark can carry instead.
+    */
     label:
       art !== undefined
-        ? `${index.labels[ordinal] ?? ""} · ${art.key.replace(/\.webp$/, "")}`
+        ? `${bareName} · ${artStem}${pitchSuffix}`
         : collapsed
-          ? nameOf(index.labels[ordinal] ?? "")
-          : (index.labels[ordinal] ?? ""),
+          ? bareName
+          : fullLabel,
+    /*
+      WHAT A READER MUST SEE, which is not the same as what the anchor is named.
+      The bare name, plus the art key where the row stands for one PICTURE
+      rather than for the card — that key is the only thing telling one card's
+      art rows apart in a view that has no pictures in it. The pitch is
+      deliberately not here: it rides in `qualifier`, because a mark can carry
+      it and four words on every row cannot.
+    */
+    name: art === undefined ? bareName : `${bareName} · ${artStem}`,
+    /* Empty where the row already stands for the whole name and there is
+       nothing left to qualify. */
+    qualifier: collapsed ? "" : pitchSuffix,
     href:
       art !== undefined
         ? `/card/${slug}/${art.setCode}/${art.number}`

@@ -106,9 +106,20 @@
 
 /*
   The name is the accessible name of the link along with the face's alt text,
-  and it is visible because recognising art is not the same as being sure — 900
-  names in this corpus belong to more than one card, and the variant suffix is
-  what tells two identical-looking faces apart.
+  and it is visible because recognising art is not the same as being sure.
+
+  WHAT TELLS TWO SAME-NAMED CELLS APART IS NO LONGER THE SUFFIX — it used to be,
+  and this comment used to say so. The suffix is hidden now (see
+  `.of-index__variant`) and what remains in the grid is the pitch rule under the
+  name, plus the card face above it, which is itself printed in the pitch's
+  colour.
+
+  BOTH OF THOSE ARE COLOUR, AND THAT IS THE COST OF THE CHANGE RATHER THAN AN
+  OVERSIGHT. In the rows and names views the stone carries a numeral, so hue is
+  redundant there; in the grid it is not, and a reader who cannot separate red
+  from yellow has the accessible name and the card art and nothing else. It is
+  recorded here rather than in a commit message because this is where somebody
+  will stand when they decide whether to change it back.
 */
 .of-index__cell-name {
   font-family: var(--of-type-family-serif);
@@ -235,3 +246,43 @@
   hydration. `Pagination` is built from real `<a href>`s instead, which is the
   better shape and not one worth having twice.
 */
+
+/*
+  THE PITCH QUALIFIER, READ BUT NOT SEEN.
+
+  Every title used to print "Belly Buster (pitch 3)" — four words saying what
+  the rule under the name and the stone beside it already say in a glyph, three
+  times over on the three versions of a card, in the one view whose job is
+  scanning names rather than reading them.
+
+  It is hidden rather than removed. 900 names in this corpus belong to more than
+  one card, so a bare name is up to four anchors differing only in where they
+  point, which is a WCAG 2.4.4 failure. Kept inside the anchor, it is still part
+  of the accessible name and the links are still told apart by anything reading
+  them aloud.
+
+  Sized from `space.hair` rather than collapsed to zero: a zero-area element is
+  skipped by some screen readers, which would lose the disambiguation entirely.
+*/
+.of-index__variant {
+  /*
+    NOT SELECTABLE, and the names view is why. That view exists so a drag-select
+    yields forty names and nothing that has to be cleaned out of the paste —
+    `PitchJewel` carries this same rule for exactly that reason. Without it a
+    line reading "Belly Buster" pastes as "Belly Buster (pitch 3)", which is
+    text the reader cannot see arriving in their deck list.
+
+    It does not affect what a screen reader announces: `user-select` governs
+    selection, not the accessibility tree.
+  */
+  user-select: none;
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

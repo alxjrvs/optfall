@@ -77,11 +77,47 @@ export interface CardIndexEntry {
   /** Where the row goes. Every row in this index is a destination. */
   readonly href: string;
   /**
-   * The text inside the anchor, disambiguated by the caller where it needs to
-   * be. 900 names in this corpus belong to more than one card, so a bare name
-   * is sometimes two anchors differing only in where they point.
+   * The full text the anchor must be NAMED by, qualifier and all.
+   *
+   * 900 names in this corpus belong to more than one card, and two anchors that
+   * differ only in where they point are a WCAG 2.4.4 failure — so this stays
+   * qualified even though it is no longer what a reader sees.
    */
   readonly label: string;
+  /**
+   * The card's name with nothing appended — what a reader actually sees.
+   *
+   * THE QUALIFIER MOVED OUT OF THE TYPE AND INTO THE MARK. Every row used to
+   * print "Belly Buster (pitch 3)", which said in four words what the pitch
+   * rule under the name and the jewel beside it already say in a glyph — three
+   * times over on the three versions of a card, in the one place the reader is
+   * scanning names rather than reading them.
+   *
+   * It is not deleted, only made invisible: {@link qualifier} is rendered
+   * inside the anchor as visually-hidden text, so `name` + `qualifier` names
+   * the anchor exactly as `label` does and the versions are still told apart by
+   * anything reading them aloud.
+   *
+   * VISUALLY, THE GRID IS LEFT WITH COLOUR, and that is worth stating plainly.
+   * The rows and names views carry a numbered stone, so hue is redundant there.
+   * The grid carries `PitchRule`, which is bands — its accessible name spells
+   * the values out, but a sighted reader comparing two same-named cells has the
+   * band colour and the card art, both of which are hue. See the note in
+   * `CardIndex.css` beside the cell name.
+   */
+  readonly name: string;
+  /**
+   * The part of {@link label} this index may hide — " (pitch 2)", or `""`.
+   *
+   * SUPPLIED, NOT SUBTRACTED. Deriving it as `label` minus `name` looked
+   * equivalent and was not: an `unique:art` row's label carries the art key as
+   * well as the pitch, so the subtraction hid the key too and left several rows
+   * of one card reading identically in both text views — same name, same
+   * stones, same type line, same stats, differing only in where they pointed.
+   * The picture is what separates them in the grid, and the key is what has to
+   * separate them without one.
+   */
+  readonly qualifier: string;
   readonly typeLine: string;
   /** Face blob key, or `null` where no printing publishes art. */
   readonly faceKey: string | null;
@@ -306,7 +342,10 @@ export function CardIndex({
                     picture; the pitch rule under it is centred for the same
                     reason and would look like a stray mark otherwise.
                   */}
-                  <span className="of-index__cell-name">{entry.label}</span>
+                  <span className="of-index__cell-name">
+                    {entry.name}
+                    <span className="of-index__variant">{entry.qualifier}</span>
+                  </span>
                   <PitchRule values={entry.pitches} />
                   {entry.note !== undefined && entry.note !== "" ? (
                     <span className="of-index__cell-note">{entry.note}</span>
@@ -335,7 +374,8 @@ export function CardIndex({
             <ResultRow
               key={entry.href}
               href={entry.href}
-              label={entry.label}
+              label={entry.name}
+              qualifier={entry.qualifier}
               lead={<PitchStones pitches={entry.pitches} />}
               meta={
                 <>
@@ -376,7 +416,10 @@ export function CardIndex({
           {entries.map((entry) => (
             <li key={entry.href}>
               <PitchStones pitches={entry.pitches} />
-              <a href={entry.href}>{entry.label}</a>
+              <a href={entry.href}>
+                {entry.name}
+                <span className="of-index__variant">{entry.qualifier}</span>
+              </a>
             </li>
           ))}
         </ol>
