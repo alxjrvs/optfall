@@ -41,13 +41,34 @@ export interface ResultRowProps {
    * incidentally.
    */
   readonly label: string;
+  /**
+   * A qualifier joined to {@link label} inside the anchor and hidden from
+   * sight — " (pitch 3)".
+   *
+   * IT DOES NOT WEAKEN THE RULE ABOVE, it is how a caller keeps it. A card
+   * index prints bare names because the pitch is already carried by a jewel
+   * beside them, and a bare name is shared by up to four cards — so without
+   * this the row would be exactly the WCAG 2.4.4 failure `label` exists to
+   * prevent. It is a STRING for the same reason `label` is: what a screen
+   * reader announces has to be something the caller composed on purpose.
+   *
+   * Empty or absent where the name already identifies the card, which is the
+   * common case.
+   */
+  readonly qualifier?: string | undefined;
   /** Rendered before the link — a pitch jewel, a citation. */
   readonly lead?: ReactNode;
   /** Rendered under the link, in the label voice. Facts, not prose. */
   readonly meta?: ReactNode;
 }
 
-export function ResultRow({ href, label, lead, meta }: ResultRowProps) {
+export function ResultRow({
+  href,
+  label,
+  qualifier,
+  lead,
+  meta,
+}: ResultRowProps) {
   return (
     <li className="of-result">
       {lead}
@@ -56,6 +77,9 @@ export function ResultRow({ href, label, lead, meta }: ResultRowProps) {
         <p className="of-result__line">
           <a className="of-result__name" href={href}>
             {label}
+            {qualifier === undefined || qualifier === "" ? null : (
+              <span className="of-result__qualifier">{qualifier}</span>
+            )}
           </a>
         </p>
         {meta ? <p className="of-result__meta">{meta}</p> : null}

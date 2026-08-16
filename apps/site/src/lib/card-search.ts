@@ -2162,7 +2162,26 @@ const FIELD_RANK: Readonly<Record<CardMatchField, number>> = {
 };
 
 export interface CardResult {
+  /**
+   * The full text a link must carry, INCLUDING the pitch qualifier where the
+   * name alone does not identify the card.
+   *
+   * This is the ACCESSIBLE name, not necessarily the visible one. 900 names in
+   * this corpus belong to more than one card, and two anchors that differ only
+   * in where they point are a WCAG 2.4.4 failure — so this stays qualified even
+   * where a surface chooses to print {@link name} instead and carry the
+   * difference in a mark. See `CardIndexEntry`.
+   */
   readonly label: string;
+  /**
+   * The card's name with no qualifier — what a reader sees when the interface
+   * says "which version" some other way.
+   *
+   * Carried rather than derived at the call site because stripping the suffix
+   * back off a label is a second, weaker evaluation of `variantSuffix`: a card
+   * genuinely named something ending in "(pitch 2)" would be mangled by it.
+   */
+  readonly name: string;
   readonly href: string;
   /**
    * Which pitch versions of this card matched, and how many the corpus has.
@@ -2427,6 +2446,10 @@ function toResult(
         : collapsed
           ? nameOf(index.labels[ordinal] ?? "")
           : (index.labels[ordinal] ?? ""),
+    /* The bare name, whatever the label ended up being. An art row's label
+       carries the face key as well as the qualifier, and neither belongs in a
+       heading. */
+    name: nameOf(index.labels[ordinal] ?? ""),
     href:
       art !== undefined
         ? `/card/${slug}/${art.setCode}/${art.number}`

@@ -196,6 +196,7 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
   const entries: readonly CardIndexEntry[] = outcome.results.map((result) => ({
     href: result.href,
     label: result.label,
+    name: result.name,
     typeLine: result.typeLine,
     faceKey: result.faceKey,
     faceLandscape: result.faceLandscape,

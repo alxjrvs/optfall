@@ -90,6 +90,9 @@ function entryFor(page: CardPage, setId: string): CardIndexEntry {
   return {
     href: page.href,
     label: page.label,
+    /* The bare name; the pitch qualifier `label` carries is hidden in the
+       markup and kept for the accessible name. See `CardIndexEntry`. */
+    name: page.card.name,
     typeLine: page.card.type_text ?? "",
     faceKey: face.key,
     faceLandscape: face.landscape,

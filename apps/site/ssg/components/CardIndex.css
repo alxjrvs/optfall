@@ -235,3 +235,32 @@
   hydration. `Pagination` is built from real `<a href>`s instead, which is the
   better shape and not one worth having twice.
 */
+
+/*
+  THE PITCH QUALIFIER, READ BUT NOT SEEN.
+
+  Every title used to print "Belly Buster (pitch 3)" — four words saying what
+  the rule under the name and the stone beside it already say in a glyph, three
+  times over on the three versions of a card, in the one view whose job is
+  scanning names rather than reading them.
+
+  It is hidden rather than removed. 900 names in this corpus belong to more than
+  one card, so a bare name is up to four anchors differing only in where they
+  point, which is a WCAG 2.4.4 failure. Kept inside the anchor, it is still part
+  of the accessible name and the links are still told apart by anything reading
+  them aloud.
+
+  Sized from `space.hair` rather than collapsed to zero: a zero-area element is
+  skipped by some screen readers, which would lose the disambiguation entirely.
+*/
+.of-index__variant {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

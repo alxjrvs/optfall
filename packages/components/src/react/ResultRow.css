@@ -59,3 +59,25 @@
 .of-result__meta span {
   color: var(--of-color-ink-muted);
 }
+
+/*
+  READ, NEVER SEEN. The qualifier is inside the anchor so it joins the
+  accessible name — "Head Jab (pitch 2)" — while the row prints the bare name,
+  because the pitch is already on the stone in the leading slot and printing it
+  twice is printing it twice.
+
+  Sized from `space.hair` rather than collapsed to zero: a zero-area element is
+  skipped by some screen readers, which would take the disambiguation away
+  entirely and leave three anchors reading alike.
+*/
+.of-result__qualifier {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

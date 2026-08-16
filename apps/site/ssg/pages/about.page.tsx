@@ -36,7 +36,8 @@ import { fileURLToPath } from "node:url";
 import { OrnamentalRule } from "optfall-components/react";
 
 import { CORPUS as RULES } from "../../src/lib/rules";
-import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
+import { CARD_PAGES, CORPUS } from "../../src/lib/cards";
+import { FACE_HOST } from "../../src/lib/faces";
 import { SETS } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./about.css";
@@ -141,6 +142,75 @@ const sections = RULES.sections.length.toLocaleString("en-GB");
 const sets = SETS.counts.sets.toLocaleString("en-GB");
 const upstream = `https://github.com/${CORPUS.source.repository}`;
 
+/** This site's own source. Linked from the sources table and from the foot. */
+const OPTFALL_REPO = "https://github.com/alxjrvs/optfall";
+
+/**
+ * Every source this site is built from, each one a link you can open.
+ *
+ * IT IS A TABLE RATHER THAN PROSE because the claim is completeness: this page
+ * says the data has provenance, and a reader has no way to check that against
+ * three sentences naming two of five things. Each row is the address the build
+ * actually read, pulled from the corpus metadata rather than typed, so a
+ * re-sync moves the link with the data.
+ *
+ * NO RETRIEVAL DATES. They were a fact about the last sync rather than about
+ * the data, they went stale the moment one ran, and nothing on the page could
+ * tell a reader whether "last confirmed" three months ago meant the corpus was
+ * old or merely that nobody had re-run a script. The COMMIT is the honest
+ * version of the same claim: it identifies the exact bytes, it cannot drift,
+ * and it is checkable.
+ */
+const SOURCES: readonly {
+  readonly what: string;
+  readonly href: string;
+  readonly label: string;
+  readonly note: string;
+}[] = [
+  {
+    what: "Cards",
+    href: CORPUS.source.url,
+    label: `${CORPUS.source.repository}/${CORPUS.source.path}`,
+    note: `The compilation this site's card data is read from, pinned at commit ${CORPUS.source.commit.slice(0, 7)}. Community-maintained; it publishes no licence of its own.`,
+  },
+  {
+    what: "Sets, rarities, editions, foilings",
+    href: `${upstream}/tree/${SETS.source.commit}/json/english`,
+    label: SETS.source.files.join(", "),
+    note: "Four more files from the same compilation, at the same commit.",
+  },
+  {
+    what: "Comprehensive Rules",
+    href: RULES.sourceUrl,
+    label: `Comprehensive Rules ${RULES.version} (PDF)`,
+    note: "Published by Legend Story Studios and parsed into addressable sections. The PDF is the source; the parse is ours.",
+  },
+  {
+    what: "Game symbols",
+    href: "https://rules.fabtcg.com/en/",
+    label: "rules.fabtcg.com",
+    note: "The resource, attack and defence markers the printed text carries, ingested from the rules site and recorded in data/symbols/symbols.json.",
+  },
+  {
+    what: "Card images",
+    href: FACE_HOST,
+    label: "optfall-images.netlify.app",
+    note: "Faces published by Legend Story Studios, reached through the URLs the card compilation carries and re-served from a store of our own so the page does not hotlink theirs.",
+  },
+  {
+    what: "Typeface",
+    href: "https://fonts.google.com/specimen/Grenze",
+    label: "Grenze",
+    note: "Self-hosted under the SIL Open Font Licence, whose text ships beside the font file.",
+  },
+  {
+    what: "Optfall itself",
+    href: OPTFALL_REPO,
+    label: "alxjrvs/optfall",
+    note: "Every page on this site is generated from this repository by a script in it. The structural work over the dataset is openly licensed.",
+  },
+];
+
 function page(): PageResult {
   return {
     title: "About — Optfall",
@@ -195,20 +265,29 @@ function page(): PageResult {
         <section className="of-about__section">
           <h2 className="of-about__heading">Sources</h2>
           <p>
-            Cards: {cards} cards, {printings} printings, {sets} sets, from{" "}
-            <a href={upstream}>{CORPUS.source.repository}</a> at commit{" "}
-            <code>{CORPUS.source.commit}</code>. Last confirmed {LAST_CONFIRMED}
-            .
-          </p>
-          <p>
-            Rules: Comprehensive Rules {RULES.version}, published by Legend
-            Story Studios, parsed into {sections} addressable sections.
-          </p>
-          <p>
-            Both corpora are committed to the repository at a pinned commit and
-            read at build time. {pages} card pages are generated and served as
+            {cards} cards, {printings} printings, {sets} sets and {sections}{" "}
+            rules sections, generated into {pages} card pages and served as
             static files. No database, no API, no server.
           </p>
+          <p>
+            Every source is listed here with the address the build actually
+            read. Both corpora are committed to the repository at a pinned
+            commit, so what a page shows is identified by bytes rather than by a
+            date somebody last checked.
+          </p>
+
+          <dl className="of-about__sources">
+            {SOURCES.map((source) => (
+              <div className="of-about__source" key={source.what}>
+                <dt>{source.what}</dt>
+                <dd>
+                  <a href={source.href}>{source.label}</a>
+                  <span className="of-about__source-note">{source.note}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+
           <p>
             Legality is present-day only. Where upstream publishes no flag for a
             format, Optfall returns no verdict for it.
@@ -239,6 +318,22 @@ function page(): PageResult {
 
         <Colophon source={llmStatement} />
         <Colophon source={aboutJrvs} />
+
+        {/*
+          THE LAST THING ON THE PAGE IS THE SOURCE, which is the one link a
+          reader who has got this far is most likely to want and the only claim
+          on this page that can be checked in full. Everything above describes
+          how the site is built; this is the build.
+
+          It is also in the sources table above, deliberately. That table is
+          about provenance and answers "where did this data come from"; this is
+          an invitation and answers "can I see it". Same URL, two different
+          questions, and a reader who skimmed the table should not have to
+          scroll back up to find it.
+        */}
+        <p className="of-about__source-link">
+          <a href={OPTFALL_REPO}>Optfall on GitHub</a>
+        </p>
       </div>
     ),
   };

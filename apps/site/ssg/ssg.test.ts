@@ -567,3 +567,44 @@ describe("a card page shows the combat positions it does not fill", () => {
     expect(html).toContain('aria-label="No printed power"');
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* Bare names in a card index                                                  */
+/* -------------------------------------------------------------------------- */
+
+describe("a card index prints the name and not the pitch qualifier", () => {
+  const monarch = RESOLVED.find((resolved) => resolved.route === "/sets/mon");
+  const html = monarch?.render([], "islands.js") ?? "";
+
+  test("the visible title is bare, and the qualifier is still in the anchor", () => {
+    /*
+     * WHY THE QUALIFIER CANNOT SIMPLY BE DELETED. 900 names in this corpus
+     * belong to more than one card, so "Belly Buster" is three anchors that
+     * differ only in where they point — a WCAG 2.4.4 failure, and the exact one
+     * `variantSuffix` was written to prevent. What changed is that the pitch is
+     * carried by the rule under the name and the stone beside it instead of by
+     * four words repeated on every row, so the text is hidden rather than
+     * dropped: still inside the anchor, still part of its accessible name.
+     */
+    expect(html).not.toBe("");
+    /* The suffix is present in the markup… */
+    expect(html).toContain("of-index__variant");
+    expect(html).toMatch(/of-index__variant[^>]*>\s*\(pitch \d\)/);
+    /* …and never sits loose in a title, which is what the reader was seeing. */
+    expect(html).not.toMatch(/of-index__cell-name[^>]*>[^<]*\(pitch \d\)/);
+  });
+
+  test("a card whose name is unique carries no qualifier at all", () => {
+    /*
+     * `qualifierOf` takes the DIFFERENCE between the two strings the caller
+     * supplied rather than matching the suffix pattern a second time, so a card
+     * needing no qualifier yields the empty string rather than a stray
+     * fragment. Monarch has both kinds on one page.
+     */
+    const unique = CARD_PAGES.find(
+      (page) => !page.disambiguated && page.card.name.length > 0,
+    );
+    expect(unique).toBeDefined();
+    expect(unique?.label).toBe(unique?.card.name);
+  });
+});
