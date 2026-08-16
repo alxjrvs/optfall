@@ -18,6 +18,14 @@
  * it, under a nav that says "Cards" and a title that says "Search the cards —
  * Optfall". Four statements of one fact, and the display-sized one cost the most
  * fold on the page that can least afford it.
+ *
+ * NO RIGHTS NOTICE IN THE BODY, for the same reason. `CORPUS.rights` closed this
+ * page in faint legal type, and `ssg/document.tsx` then emitted the identical
+ * paragraph in the footer immediately beneath it — the corpus's own envelope,
+ * printed twice, once as content. The provenance paragraphs above stay: those
+ * are facts about THIS page's data, computed at build time. The rights notice is
+ * a fact about the whole site, and the shell is where the whole site's notices
+ * live, because a page has no way to omit what the shell emits.
  */
 
 import rulesJson from "../../../../data/rules/cr-2.14.0.json";
@@ -135,8 +143,6 @@ function page(): PageResult {
           hidden: {unmatchedList}. A keyword the rules do not define carries no
           citation instead of a guessed one.
         </p>
-
-        <p className="of-search-page__legal">{CORPUS.rights}</p>
       </>
     ),
   };

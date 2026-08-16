@@ -51,13 +51,6 @@
   margin-inline-start: auto;
 }
 
-.of-sets__legal {
-  margin-block-start: var(--of-space-base);
-  font-size: var(--of-type-size-legal);
-  letter-spacing: var(--of-type-tracking-tight);
-  color: var(--of-color-ink-faint);
-}
-
 .of-sets__provenance {
   margin-block-start: var(--of-space-loosest);
   color: var(--of-color-ink-muted);

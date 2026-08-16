@@ -22,6 +22,13 @@
  * `lib/sets.ts` and `lib/cards.ts` and counts over 4,941 cards at build time.
  * Those modules are framework-free and moved across untouched — the import
  * paths are the only thing that changed.
+ *
+ * NO RIGHTS NOTICE IN THE BODY. This page used to end on `SETS.rights`, in the
+ * same faint legal type the footer sets three paragraphs of a few hundred pixels
+ * below it — the same notice twice, once where it reads as content and once
+ * where it reads as a footer. The shell's copy is the one that cannot be
+ * omitted, and `LSS_DISCLAIMER` already names set names as LSS trademarks, so
+ * nothing this page was claiming stopped being claimed.
  */
 
 import { CORPUS as CARDS, slugify } from "../../src/lib/cards";
@@ -104,8 +111,6 @@ function page(): PageResult {
           {SETS.counts.sets - listed.length} further sets carry no card here and
           are not listed.
         </p>
-
-        <p className="of-sets__legal">{SETS.rights}</p>
       </>
     ),
   };
