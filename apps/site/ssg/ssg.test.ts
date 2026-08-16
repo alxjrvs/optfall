@@ -747,7 +747,15 @@ describe("every picker tile says which printing it is", () => {
      * worse outcome than captioning one ambiguously.
      */
     expect(ambiguous).toBe(279);
-  });
+    /*
+     * A RAISED BUDGET, NOT A WEAKENED TEST. This renders 682 card pages to
+     * judge their captions, which is the whole point of it — the corpus-side
+     * version that needed no budget is the one that stayed green with the
+     * feature deleted. It crossed bun's 5s default once this file grew other
+     * page-rendering tests around it, so the deadline moved and the work did
+     * not.
+     */
+  }, 30_000);
 });
 
 /* -------------------------------------------------------------------------- */
@@ -817,84 +825,130 @@ describe("the credit line spaces three facts, not two", () => {
 /* Bare names in a related-cards list                                          */
 /* -------------------------------------------------------------------------- */
 
-describe("a related-cards list prints the name and not the pitch qualifier", () => {
-  const html =
-    RESOLVED.find((resolved) => resolved.route === "/card/head-jab-1")?.render(
+describe("a related-cards list is one row per name, stones on the right", () => {
+  const render = (route: string) =>
+    RESOLVED.find((resolved) => resolved.route === route)?.render(
       [],
       undefined,
     ) ?? "";
-  const list = html.match(/<ul class="of-card__links">.*?<\/ul>/s)?.[0] ?? "";
+  const listIn = (html: string) =>
+    html.match(/<ul class="of-card__links">.*?<\/ul>/s)?.[0] ?? "";
 
-  test("the visible text is bare, and the qualifier is still in the anchor", () => {
+  test("three versions of one name are one row and three stones", () => {
     /*
-     * "Other versions" on Head Jab read "Head Jab (pitch 2)" beside a stone
-     * already carrying a 2 — four words restating a glyph, on the one list
-     * whose entire subject is that these cards differ by pitch.
-     *
-     * THE QUALIFIER IS HIDDEN, NOT DROPPED, and both halves are asserted
-     * because dropping it is the tempting version and it is a WCAG 2.4.4
-     * failure: three anchors reading "Head Jab" pointing at three URLs.
+     * "Other versions" on Head Jab was two rows both reading "Head Jab" — the
+     * pitch was the only thing that differed, which is exactly what a stone is
+     * for. Measured across the corpus: 10,868 rows become 6,816.
      */
+    const list = listIn(render("/card/head-jab-1"));
     expect(list).not.toBe("");
-    expect(list).toContain("of-card__qualifier");
-    expect(list).toMatch(/of-card__qualifier">\s*\(pitch \d\)/);
 
-    /* …and it is INSIDE the anchor, which is the whole of why it satisfies
-       2.4.4. `variantSuffix` records the trap: a `PitchJewel` beside the link
-       does not name it, because it sits outside the accessible name. */
-    expect(list).toMatch(
-      /<a href="\/card\/head-jab-\d">Head Jab<span class="of-card__qualifier">/,
-    );
-
-    /*
-     * And with the hidden spans removed, no "(pitch n)" is left anywhere in the
-     * list — which is the state this change exists to produce.
-     *
-     * THE STRIP IS THE ASSERTION. A bare `not.toMatch(/\(pitch \d\)/)` over the
-     * whole list is what this was first, and it failed against the change that
-     * makes it pass: the qualifier is STILL in the markup, deliberately, so the
-     * only honest question is whether any of it is outside a hidden span.
-     */
-    const visible = list.replace(
-      /<span class="of-card__qualifier">[^<]*<\/span>/g,
-      "",
-    );
-    expect(visible).toContain("Head Jab");
-    expect(visible).not.toMatch(/\(pitch \d\)/);
-    expect(visible).not.toMatch(/\(no pitch\)/);
+    /* One row… */
+    expect([...list.matchAll(/<li class="of-card__link">/g)].length).toBe(1);
+    /* …one name… */
+    expect(
+      [...list.matchAll(/<span class="of-card__link-name">Head Jab<\/span>/g)]
+        .length,
+    ).toBe(1);
+    /* …and a link per remaining version. */
+    const pitchLinks = [
+      ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
+    ].map((m) => m[1]);
+    expect(pitchLinks).toEqual(["/card/head-jab-2", "/card/head-jab-3"]);
   });
 
-  test("a card whose name is unique carries no qualifier at all", () => {
+  test("each stone is a link named for the card it reaches", () => {
     /*
-     * ASSERTED THROUGH `variantSuffix`'s OWN INPUT rather than by re-deriving
-     * it here, matching the card-index test below. The empty case has to be a
-     * result of the rule, not the only case there is — so a link that DOES need
-     * one is checked beside it.
+     * THE STONE CARRIES THE ACCESSIBLE NAME, through `PitchJewel`'s `label`
+     * rather than a hidden span. A `role="img"` with an `aria-label` inside an
+     * anchor contributes that string to the anchor's name, so the link is
+     * called "Head Jab (pitch 2)" with no text in the DOM — which is what keeps
+     * two stones on one row from being two links called the same thing (WCAG
+     * 2.4.4), and leaves nothing for a drag-select to pick up.
+     *
+     * ASSERTED AS A PAIRING, not merely as presence: the label has to match the
+     * href it sits inside, since a row of stones all correctly labelled but
+     * wired to the wrong cards would pass any weaker check.
      */
-    const unique = CARD_PAGES.find((page) => !page.disambiguated);
-    expect(unique).toBeDefined();
-    expect(
-      variantSuffix(unique?.pitch ?? 0, unique?.disambiguated ?? false),
-    ).toBe("");
+    const list = listIn(render("/card/head-jab-1"));
+    for (const [, href, label] of list.matchAll(
+      /<a class="of-card__pitch-link" href="([^"]+)"><span class="of-jewel[^"]*" role="img" aria-label="([^"]+)"/g,
+    )) {
+      const pitch = href?.match(/-(\d)$/)?.[1];
+      expect(`${href}:${label}`).toBe(`${href}:Head Jab (pitch ${pitch})`);
+    }
+    /* And the loop above has to have run. */
+    expect(list).toContain('aria-label="Head Jab (pitch 2)"');
+  });
 
-    const versioned = CARD_PAGES.find((page) => page.disambiguated);
-    expect(versioned).toBeDefined();
-    expect(
-      variantSuffix(versioned?.pitch ?? 0, versioned?.disambiguated ?? false),
-    ).toMatch(/^ \((?:no pitch|pitch \d)\)$/);
+  test("a sole version keeps the whole row as its link", () => {
+    /*
+     * THE BRANCH HALF THE ROWS TAKE — 51.1% of groups have one version. A bare
+     * stone there would trade a full-width target for a 24px one to condense a
+     * list with nothing to condense, so the row stays one anchor.
+     *
+     * `Runechant` is named because its lists carry both shapes at once, which
+     * is the only way to assert they coexist rather than one having replaced
+     * the other.
+     */
+    const list = listIn(render("/card/runechant"));
+    expect(list).toContain('<a class="of-card__link-row" href=');
+    expect(list).toContain('<a class="of-card__pitch-link" href=');
+
+    /* The sole-version anchor holds the name AND its stone, so the target is
+       the row rather than the glyph. */
+    expect(list).toMatch(
+      /<a class="of-card__link-row" href="[^"]+"><span class="of-card__link-name">[^<]+<\/span><span class="of-jewel/,
+    );
+  });
+
+  test("no row prints the pitch as words any more", () => {
+    /*
+     * The text this replaced. Stripping nothing first is safe now — unlike the
+     * hidden-span version this supersedes, there is no `(pitch n)` anywhere in
+     * the list's markup, because the string that names each link lives in an
+     * attribute rather than in a node.
+     */
+    for (const route of ["/card/head-jab-1", "/card/runechant"]) {
+      const list = listIn(render(route));
+      const text = list.replace(/<[^>]+>/g, "");
+      expect(`${route}:${/\(pitch \d\)/.test(text)}`).toBe(`${route}:false`);
+      expect(`${route}:${/\(no pitch\)/.test(text)}`).toBe(`${route}:false`);
+    }
+  });
+
+  test("grouping by name never merges two links at one pitch", () => {
+    /*
+     * THE ASSUMPTION THE ROW SHAPE RESTS ON, measured rather than trusted. Two
+     * cards sharing a name in these lists are the pitch versions of one card,
+     * so a name plus a pitch identifies a link — and if that ever stopped being
+     * true, a group would render two stones with the same numeral and a reader
+     * would have no way to tell which went where.
+     *
+     * Zero today, across every list on every card page.
+     */
+    let collisions = 0;
+    for (const page of CARD_PAGES)
+      for (const links of [page.variants, page.references, page.referencedBy]) {
+        const byName = new Map<string, number[]>();
+        for (const link of links) {
+          const found = byName.get(link.name) ?? [];
+          found.push(link.pitch);
+          byName.set(link.name, found);
+        }
+        for (const pitches of byName.values())
+          if (new Set(pitches).size < pitches.length) collisions += 1;
+      }
+    expect(collisions).toBe(0);
   });
 
   test("the lists that carry no pitch mark are left alone", () => {
     /*
-     * THE LIMIT ON THE CHANGE, pinned so somebody does not "finish the job"
-     * and break two pages. A rule page's governed-cards list and a set page's
-     * `<noscript>` list are plain anchors with NO jewel beside them — nothing
-     * else on those rows says which version a name is. Stripping the qualifier
-     * there would not trade a word for a glyph, it would delete the only thing
-     * telling three same-named links apart, visibly and accessibly at once.
-     *
-     * The instruction was to drop the text where a pitch mark already carries
-     * it. These have no mark, so they keep the words.
+     * THE LIMIT ON THE CHANGE, pinned so somebody does not "finish the job" and
+     * break two pages. A rule page's governed-cards list and a set page's
+     * `<noscript>` list are plain anchors with NO stone beside them — nothing
+     * else on those rows says which version a name is, so their qualifier is
+     * load-bearing text rather than a restatement of a glyph.
      */
     const rule =
       RESOLVED.find((resolved) => resolved.route.startsWith("/rules/"))?.render(
@@ -902,8 +956,8 @@ describe("a related-cards list prints the name and not the pitch qualifier", () 
         undefined,
       ) ?? "";
     const governs = rule.match(/<ul class="of-rule__governs">.*?<\/ul>/s)?.[0];
-    if (governs !== undefined && /\(pitch \d\)/.test(governs))
-      expect(governs).not.toContain("of-card__qualifier");
+    if (governs !== undefined)
+      expect(governs).not.toContain("of-card__pitch-link");
   });
 });
 

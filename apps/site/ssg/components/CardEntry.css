@@ -1194,37 +1194,63 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  /*
+    THE STONES SIT AT THE RIGHT-HAND END, and `space-between` is what puts them
+    there rather than a margin on one child. A row is a name and its versions;
+    the name reads from the start of the line, the stones align down the right
+    so a reader scanning the list compares stones against each other rather than
+    against ragged name lengths.
+  */
+  justify-content: space-between;
   gap: var(--of-space-tight);
 }
 
 /*
-  The variant qualifier inside a related-card anchor — " (pitch 2)" — named but
-  not shown. `CardEntry.tsx` carries the argument for why it is still in the
-  anchor at all; this is only how it is hidden.
-
-  NOT `.of-card__visually-hidden`, WHICH IS THE SAME RULE PLUS ONE DECLARATION.
-  `user-select: none` is the addition, and it is the reason this is its own
-  class rather than a reuse: the related list is names a reader drags over to
-  copy into a deck list, and without it a line reading "Head Jab" pastes as
-  "Head Jab (pitch 2)" — text they cannot see arriving in their clipboard.
-  `PitchJewel`, `.of-index__variant` and `.of-result__qualifier` all carry the
-  same declaration for the same reason; this is the fourth place the rule
-  applies, and the fourth time it is written down beside the thing it protects.
-
-  It does not affect what a screen reader announces: `user-select` governs
-  selection, not the accessibility tree.
+  The whole row, as a link — the branch a single-version group takes. It is a
+  flex row of the same shape as `.of-card__link` itself, because it has to lay
+  its name and stone out the same way a multi-version row lays out its own.
 */
-.of-card__qualifier {
-  user-select: none;
-  position: absolute;
-  inline-size: var(--of-space-hair);
-  block-size: var(--of-space-hair);
-  margin: calc(var(--of-space-hair) * -1);
-  padding: 0;
-  border: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+.of-card__link-row {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--of-space-tight);
+}
+
+.of-card__link-name {
+  /* The name is the row's subject and reads as body text, whether or not it is
+     inside the anchor — the two branches must not look different. Colour comes
+     from the anchor above it in the sole-version case and from the line here in
+     the other, so neither is stated. */
+  min-inline-size: 0;
+}
+
+.of-card__link-pitches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--of-space-tighter);
+}
+
+/*
+  ONE STONE, ONE DESTINATION — and the padding is a target-size requirement
+  rather than spacing.
+
+  `ornament.jewel.small` is 1.25rem, which is 20px at the root size: under the
+  24×24 floor WCAG 2.5.8 sets for a pointer target. A stone that is the ONLY way
+  to reach a card has to clear that, where the same stone sitting decoratively
+  beside a full-width link did not. `space.tightest` is 0.125rem a side, which
+  takes the box to exactly 24px.
+
+  It is deliberately not solved by using a bigger jewel: the size is a typographic
+  choice about how loud pitch is in a list, and inflating it to buy hit area
+  would change how the page reads to fix how it clicks.
+*/
+.of-card__pitch-link {
+  display: inline-flex;
+  padding: var(--of-space-tightest);
 }
 
 /* -- Provenance ---------------------------------------------------------- */
