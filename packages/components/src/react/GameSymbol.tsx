@@ -35,8 +35,12 @@
  * THE LETTER IS UPSTREAM'S, NOT A NICER ONE. Life is `H`, because the marker is
  * `{h}` — calling it `L` would be tidier and would break the one job the
  * fallback plate has, which is to let a reader connect what they see rendered to
- * what they see in the raw view. The accessible name says "life" in full, so
- * nobody has to decode `H` to read the card.
+ * the marker the rules define. That used to be an argument about the card page's
+ * raw-text view, which no longer exists; the letter stays upstream's anyway,
+ * because a reader meeting this plate in a story or in `{x}` is meeting the
+ * notation, and renaming it here would make this the one surface in the project
+ * that spells the game's own marker differently. The accessible name says "life"
+ * in full, so nobody has to decode `H` to read the card.
  *
  * THE NUMBER IS NOT ABSORBED. `+1{p}` renders as the text "+1" followed by this
  * plate, not as a plate containing "+1". Two reasons: the card says "plus one

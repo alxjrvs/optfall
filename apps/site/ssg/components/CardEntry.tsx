@@ -70,6 +70,7 @@ import {
   foilingName,
   hrefForSet,
   rarityName,
+  raritySlug,
   setName,
 } from "../../src/lib/sets";
 import { Island } from "../Island";
@@ -259,6 +260,32 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     ...new Set(card.printings.flatMap((printing) => printing.artists)),
   ];
 
+  /**
+   * EVERY RARITY THIS CARD HAS BEEN PRINTED AT — of which exactly one is
+   * visible at a time, and it is the one belonging to the printing on screen.
+   *
+   * This used to render the whole list at once: "(C)ommon (R)are (M)ajestic"
+   * strung along the credit line of a card that is, at that moment, showing one
+   * specific printing. Read against the picture above it, that is three claims
+   * where the page supports one, and the two most-reprinted cards in the game
+   * carried five bubbles apiece. Worse, it was ambiguous in the direction a
+   * reference work must never be ambiguous in: a reader looking at a Majestic
+   * face had no way to tell which of the three letters described what they were
+   * looking at, so the honest reading of the line was "this card exists at these
+   * rarities somewhere", which is not what a credit line under a picture says.
+   *
+   * ALL OF THEM ARE STILL IN THE MARKUP, HIDDEN, and that is what makes the
+   * client-side picker work without an island of its own. `PrintingPicker` swaps
+   * the face in place — it does not navigate — so a server-rendered rarity would
+   * be correct on load and wrong one click later. Publishing the closed set and
+   * letting one CSS rule choose between them keeps the two in step with no
+   * second copy of the data and no second island. See `CardEntry.css`.
+   *
+   * `display: none` RATHER THAN AN ATTRIBUTE, because it takes the hidden ones
+   * out of the accessibility tree as well as off the page. A screen reader
+   * announces the current rarity and nothing else; hiding them any other way
+   * would read all five aloud.
+   */
   const rarities = (() => {
     const seen = new Set<string>();
     const found: {
@@ -275,9 +302,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         name,
         initial: name.slice(0, 1),
         rest: name.slice(1),
-        /* A rarity upstream adds later falls through to a name with no colour
-           rather than to a broken `var()`. */
-        slug: name.toLowerCase().split(" ")[0] ?? "",
+        slug: raritySlug(printing.rarity),
       });
     }
     return found;
@@ -345,6 +370,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       thumbWidth: number;
       thumbHeight: number;
       href: string;
+      /** This printing's rarity slug, for the credit line. `""` where upstream
+       *  publishes none. */
+      rarity: string;
     }[] = [];
 
     for (const printing of card.printings) {
@@ -372,6 +400,18 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         thumbWidth: thumbBox.width,
         thumbHeight: thumbBox.height,
         href: hrefByFace.get(key) ?? page.href,
+        /* THE RARITY OF THE PRINTING THAT CLAIMED THIS FACE, which is a real
+           choice rather than a lookup, because this list is deduped by IMAGE
+           and rarity is a property of the PRINTING. Two printings sharing one
+           piece of art can carry different rarities — a card reprinted at the
+           same art in a different product — and only the first is represented
+           here, because only the first has a tile.
+
+           That is the same granularity the picker itself works at: the reader
+           is choosing a picture, and this reports the rarity of the printing
+           that picture is addressed as. The printings table below is the
+           complete record, and it lists every printing's rarity separately. */
+        rarity: raritySlug(printing.rarity),
       });
     }
 
@@ -404,6 +444,23 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
     return entries;
   })();
+
+  /**
+   * The rarity the page is rendered against, before any clicking happens.
+   *
+   * `selected` is the printing the ROUTE names — every printing has its own URL
+   * and its own build of this page — so this is correct on load, correct in a
+   * crawler, and correct with scripting off, which is the state the CSS below
+   * treats as the default. From there `PrintingPicker` owns it.
+   *
+   * FALLING BACK TO THE FIRST PRINTING RATHER THAN TO NOTHING, matching what the
+   * picker itself does one column over when an index it cannot resolve arrives:
+   * the two have to agree about which face is showing, and disagreeing by
+   * rendering a rarity for a picture the reader is not looking at is the exact
+   * failure this whole block exists to end.
+   */
+  const currentRarity =
+    printings[selected]?.rarity ?? printings[0]?.rarity ?? "";
 
   const facelessBox = boxFor("normal", page.face.orientation);
 
@@ -626,7 +683,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                       This card has no rules text in the published dataset.
                     </p>
                   ) : (
-                    <PrintedText text={card.functional_text} uid={page.slug} />
+                    <PrintedText text={card.functional_text} />
                   )}
                 </div>
 
@@ -720,10 +777,18 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                       margin; the rest is there because a letter alone is a
                       lookup, and this is a reference work. The colour is a
                       grouping and not a claim.
+
+                      ONE OF THESE IS VISIBLE AT A TIME — the one belonging to
+                      the printing shown above. The rest are published hidden so
+                      the picker can switch between them without a round trip.
                     */}
                     {rarities.map((rarity) => (
                       <span
-                        className="of-card__rarity"
+                        className={
+                          rarity.slug === currentRarity
+                            ? "of-card__rarity of-card__rarity--initial"
+                            : "of-card__rarity"
+                        }
                         data-rarity={rarity.slug}
                         key={rarity.name}
                       >

@@ -1,80 +1,14 @@
 /*
  * `PrintedText`'s styles, ported from the Astro component's scoped block.
+ *
+ * The toggle rules that used to head this file went with the raw view — see
+ * `PrintedText.tsx` for why there is one view now. `.of-printed` survives as the
+ * wrapper because `BevelledPlate` owns the element in between and the type rules
+ * below need a root that is this component's own.
  */
 
-/* -- The toggle ------------------------------------------------------------- */
-
-.of-printed__views {
-  display: flex;
-  gap: 0;
-  margin: 0 0 var(--of-space-base);
-  padding: 0;
-  border: none;
-}
-
-/* The input is the state; the label is the control. Hidden with `clip` rather
-   than `display: none`, which would take it out of the focus order and leave the
-   pair unreachable from a keyboard. */
-.of-printed__views input {
-  position: absolute;
-  inline-size: var(--of-space-hair);
-  block-size: var(--of-space-hair);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.of-printed__views label {
-  padding: var(--of-space-tight) var(--of-space-loose);
-  border: var(--of-ornament-rule-width) solid var(--of-color-rule);
-  color: var(--of-color-ink-muted);
-  font-size: var(--of-type-size-small);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.of-printed__views label + input + label {
-  border-inline-start: none;
-}
-
-.of-printed__views input:checked + label {
-  background: var(--of-color-surface-raised);
-  color: var(--of-color-ink);
-  box-shadow:
-    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
-    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
-}
-
-/* Never `outline: none` — and the ring has to land on the LABEL, since the input
-   it belongs to is clipped to a pixel. */
-.of-printed__views input:focus-visible + label {
-  outline: var(--of-bevel-width) solid var(--of-color-focus);
-  outline-offset: var(--of-space-tightest);
-}
-
-/* -- The two views ---------------------------------------------------------- */
-
-/*
-  Both views are in the document and CSS picks one.
-
-  Matched from the COMMON ANCESTOR with `:has()` rather than by walking sideways
-  from the inputs. The two views sit inside `BevelledPlate`'s own wrapper, so a
-  sibling combinator would have to traverse an element this component does not
-  own and would break the moment that component gained a layer. `:has()` on
-  `.of-printed` does not care what is in between.
-*/
-.of-printed__rendered,
-.of-printed__raw {
+.of-printed__rendered {
   margin: 0;
-}
-
-.of-printed:has(input[value="rendered"]:checked) .of-printed__raw {
-  display: none;
-}
-
-.of-printed:has(input[value="raw"]:checked) .of-printed__rendered {
-  display: none;
 }
 
 .of-printed__text,
@@ -98,9 +32,13 @@
 
   About 20 cards print a single newline inside a paragraph block, and the parser
   deliberately keeps it in the text node rather than treating it as whitespace.
-  Without this, those breaks render as spaces and the "Text" view quietly reflows
-  a card while the note beside it claims both views are verbatim. Losing it in the
-  move from `CardEntry` did exactly that.
+  Without this, those breaks render as spaces and the page quietly reflows a card
+  while claiming to show what was printed. Losing it in the move from `CardEntry`
+  did exactly that.
+
+  IT MATTERS MORE NOW, NOT LESS. While the raw view existed, a reader who
+  suspected a reflow had somewhere to go and check; this is the only view there
+  is, so the fidelity it provides is the whole of the promise.
 */
 .of-printed__text {
   white-space: pre-line;
@@ -117,22 +55,4 @@
 
 .of-printed__list li {
   margin-block-end: var(--of-space-tight);
-}
-
-.of-printed__raw {
-  /* The published line breaks ARE the content in this view. */
-  white-space: pre-wrap;
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-small);
-  line-height: var(--of-type-leading-loose);
-  color: var(--of-color-ink-muted);
-}
-
-.of-printed__sr-only {
-  position: absolute;
-  inline-size: var(--of-space-hair);
-  block-size: var(--of-space-hair);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }

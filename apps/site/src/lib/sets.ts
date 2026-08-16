@@ -74,6 +74,29 @@ export function rarityName(code: string): string {
   return SETS.decode.rarity[code] ?? code;
 }
 
+/**
+ * A rarity's slug — the key its colour and its visibility rule are written
+ * against in CSS.
+ *
+ * DERIVED FROM THE NAME, NOT FROM THE CODE, which is worth stating because the
+ * code is right there and shorter. Upstream's codes are not a closed set this
+ * project controls: `rarityName` falls back to the raw code for a rarity it has
+ * never seen, and the same fallback has to reach here or a new rarity would get
+ * a slug from one function and a name from the other.
+ *
+ * THE FIRST WORD ONLY, which decides exactly one of the ten: "Super Rare"
+ * becomes `super`, and every other published name is already a single word.
+ * That is what the card page did inline before this had a name, and it is kept
+ * rather than tidied because the ten slugs are written out in `CardEntry.css`
+ * and changing the derivation would silently unstyle one of them.
+ *
+ * A rarity upstream adds tomorrow lands on a slug no rule names, which draws
+ * the plain grey bubble the CSS defaults to rather than a broken `var()`.
+ */
+export function raritySlug(code: string): string {
+  return rarityName(code).toLowerCase().split(" ")[0] ?? "";
+}
+
 export function editionName(code: string): string {
   return SETS.decode.edition[code] ?? code;
 }

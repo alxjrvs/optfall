@@ -465,6 +465,48 @@ export const DARK_TOKENS: TokenTable = {
   "color.stat.cost": "#5e5e5e",
   "color.stat.cost.ink": "#ededed",
 
+  /* Intellect and life, and THE RULE THAT DECIDES WHICH STATS GET A COLOUR IS
+     NOT "the important ones" — it is whether the game prints a notation for
+     them.
+
+     The Comprehensive Rules name eight symbols at 1.12.4, and intellect ({i},
+     1.12.4b) and life ({h}, 1.12.4c) are two of them. Both are published as
+     discs on LSS's own rules site — light blue and green — and this project
+     already ships those exact files, with provenance, for the inline `{i}` and
+     `{h}` a reader meets in card text. So a hero's intellect was being drawn as
+     a grey forward-leaning square directly beneath the blue disc that means
+     intellect, which is the "private notation" failure this repository has
+     already diagnosed once and reversed.
+
+     Arcane is deliberately NOT here, and it is the case that proves the rule
+     rather than an omission: 1.12.4 does not name it, LSS publishes no icon for
+     it, and there is no printed register to take. It keeps the house plate — a
+     chamfered square in the default ink — which is now what "this stat has no
+     printed notation" looks like.
+
+     THE REGISTER, NOT THE ARTWORK, exactly as cost, power and defence took it.
+     The disc and the hue are the card's; every byte here is ours, and the
+     motifs LSS strikes into their discs — the crown, the koru — are not
+     redrawn, because those are drawings rather than mechanics.
+
+     WHICH SEPARATIONS ARE LOAD-BEARING, since six plates cannot all be pairwise
+     distinct by luminance and pretending otherwise is how a threshold gets
+     quietly dropped. Only the pairs that share a card matter:
+
+       intellect / life   — every hero prints both
+       power / life       — 44 non-hero permanents print both, `Aegis,
+                            Archangel of Protection` among them
+
+     Green and yellow at a shared lightness is the deuteranopia pair all over
+     again, which is why life is driven well clear of power rather than left at
+     the mid green it wants to be. intellect / power is NOT pinned: no card
+     prints both, so spending contrast on it would cost one of the pairs above.
+     `tokens.test.ts` asserts exactly these two. */
+  "color.stat.intellect": "#7ec4e6",
+  "color.stat.intellect.ink": "#0b1519",
+  "color.stat.life": "#5aa544",
+  "color.stat.life.ink": "#0a1405",
+
   /* THE SLOT EXISTS AND IS EMPTY — which is a different statement from a zero,
      and the reason this is a colour rather than a missing element.
 
@@ -626,6 +668,26 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.stat.defence.ink": "#ffffff",
   "color.stat.cost": "#5c5c5c",
   "color.stat.cost.ink": "#ffffff",
+
+  /* Intellect and life, re-checked here rather than translated from the dark
+     table — see it for why these two stats have a colour at all and arcane does
+     not.
+
+     THE TWO DO NOT DARKEN TOGETHER, which is the whole difficulty of this pair
+     on an ash ground. Blue and green both want to go dark to hold against a
+     light surface, and taken independently they land within 0.01 of each other
+     in luminance — indistinguishable on a hero card, which is the one card that
+     prints both. So they are split deliberately: intellect stays a mid blue
+     with dark ink, life goes dark enough to carry white. That also keeps life
+     clear of power, the other pair that shares a card.
+
+     The direction is the opposite of the dark table's for life, which is the
+     same thing defence does one block up and for the same reason: what recedes
+     or holds is a fact about the ground, not a property of the hue. */
+  "color.stat.intellect": "#3f96bd",
+  "color.stat.intellect.ink": "#0b1519",
+  "color.stat.life": "#2f6b28",
+  "color.stat.life.ink": "#ffffff",
 
   /* The empty socket, translated rather than reused: on an ash ground it is
      LIGHTER than every other chip, where in the dark table it is darker than

@@ -133,14 +133,32 @@
   padding-block-end: calc(var(--symbol-size) * 0.28);
 }
 
-/* Life — the plain plate. Nothing is cut, which is its own signal in a set where
-   everything else is. */
-.of-symbol--life {
-  clip-path: var(--of-ornament-cut-plain);
+/* Intellect and life — discs, in the game's own two inks, matching the stat
+   plates that now carry the same values.
+
+   KEPT IN STEP WITH `StatGlyph` BECAUSE THAT PAIRING IS THE POINT: `20{h}` read
+   inline and `20` read in a hero's stat block have to be recognisably the same
+   object, and they stopped being so the moment the stat plate took the disc.
+   The shape comes from the shared `ornament.cut.*` table, so the two components
+   cannot drift; the colour has to be restated here, which is why this block
+   exists at all.
+
+   THESE ARE FALLBACKS AND THAT DOES NOT MAKE THEM DECORATIVE. `{i}` and `{h}`
+   are both in the 1.12.4 table, so in the product `assetForSymbol` supplies
+   LSS's own artwork and `.of-symbol--art` drops the plate underneath entirely.
+   What is left renders in a story, where `public/` is not mounted — and if a
+   story is where somebody checks whether the inline marker and the stat plate
+   agree, then a story showing the OLD plates is a story that answers wrongly. */
+.of-symbol--intellect {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-intellect);
+  color: var(--of-color-stat-intellect-ink);
 }
 
-.of-symbol--intellect {
-  clip-path: var(--of-ornament-cut-diagonal-start);
+.of-symbol--life {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-life);
+  color: var(--of-color-stat-life-ink);
 }
 
 /* Chi — cut across the top, distinct from all five above without becoming the

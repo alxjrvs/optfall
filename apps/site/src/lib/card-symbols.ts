@@ -26,9 +26,16 @@
  * carries the rule that says what it is, and `card-symbols.test.ts` reads those
  * rules out of the corpus and fails if this table stops matching them.
  *
- * WHICH IS WHY BOTH VIEWS EXIST rather than the rendered one replacing the raw.
- * A join is a claim, and a reference work should let you see the thing it was
- * derived from. "Raw text" is upstream's bytes, unaltered.
+ * A JOIN IS A CLAIM, AND THE CITATION IS HOW IT IS CHECKED. The card page used
+ * to carry a second copy of every card's text — a "Raw text" view — on the
+ * theory that a reader should be able to see the bytes the claim was derived
+ * from. It was the weakest half of the evidence: nobody doubts that `{p}` is in
+ * the text, and the raw view said nothing at all about the part that is
+ * actually being asserted, which is `{p}` → power. That assertion is carried by
+ * the rule number this table records and the card page prints beside the
+ * symbols. `card-symbols.test.ts` reads those rules out of the corpus and fails
+ * if this table stops matching them, so the join is checkable by machine on
+ * every build rather than by eye behind a toggle.
  */
 import { CORPUS as RULES } from "./rules";
 import MANIFEST from "../../../../data/symbols/symbols.json";

@@ -104,8 +104,12 @@ const STAT_PLATES: Readonly<
   cost: { cut: "cut.disc", tone: "cost", optical: 1 },
   power: { cut: "cut.disc", tone: "power", optical: 1 },
   defence: { cut: "cut.shield", tone: "defence", optical: 0.956 },
-  life: { cut: "cut.plain", tone: null, optical: 0.886 },
-  intellect: { cut: "cut.diagonal.start", tone: null, optical: 0.908 },
+  life: { cut: "cut.disc", tone: "life", optical: 1 },
+  intellect: { cut: "cut.disc", tone: "intellect", optical: 1 },
+  /* The only stat left with no tone, because it is the only one the rules print
+     no symbol for — 1.12.4 names eight and arcane is not among them. The bare
+     plate is now what "no printed notation" looks like rather than a default
+     five stats happened to share. */
   arcane: { cut: "cut.diagonal.end", tone: null, optical: 0.908 },
 };
 
@@ -913,30 +917,47 @@ cards.push({
   body: `
   <p class="note">The markers upstream prints inside card text — <code>{p}</code>, <code>{r}</code>, <code>{t}</code> — as struck plates. <strong>The same silhouettes the stat glyph uses</strong>, read from <code>ornament.cut.*</code> in the token layer so the two cannot drift: the plate you meet inline in <code>+1{p}</code> is the plate carrying <code>4</code> in the stat block above it.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:flex-start;gap:var(--of-space-looser);flex-wrap:wrap">
-    ${[
-      ["{p}", "P", "power", "cut.lean.end"],
-      ["{r}", "R", "resource", "cut.hexagon"],
-      ["{d}", "D", "defence", "cut.lean.start"],
-      ["{h}", "H", "life", "cut.plain"],
-      ["{i}", "I", "intellect", "cut.diagonal.start"],
-      ["{c}", "C", "chi", "cut.crown"],
-      ["{t}", "T", "tap", "cut.side.end"],
-      ["{u}", "U", "untap", "cut.side.start"],
-    ]
-      .map(([token, letter, name, cut]) => [
-        token,
-        letter,
-        name,
-        cutValue(cut as string),
-      ])
+    ${(
+      [
+        /* READ OFF `GameSymbol.css`, NOT REMEMBERED. Four of these were wrong:
+           this table advertised `cut.lean.end` for power, `cut.hexagon` for
+           resource and `cut.lean.start` for defence long after the component
+           moved all three to the card's own geometry, and every plate here was
+           drawn in the bare surface ink while the component gave the value
+           symbols the stat tones. A gallery whose whole claim is "the same
+           silhouettes the stat glyph uses" was the one surface publishing
+           shapes the product does not render — the exact drift `ornament.cut.*`
+           was lifted into the token layer to end, arriving through the colour
+           and the table instead of through the shape. */
+        ["{p}", "P", "power", "cut.disc", "power"],
+        ["{r}", "R", "resource", "cut.disc", "cost"],
+        ["{d}", "D", "defence", "cut.shield", "defence"],
+        ["{h}", "H", "life", "cut.disc", "life"],
+        ["{i}", "I", "intellect", "cut.disc", "intellect"],
+        /* The three with no stat of their own keep the bare plate: chi is a
+           value the stat block never carries, and tap and untap are effects. */
+        ["{c}", "C", "chi", "cut.crown", null],
+        ["{t}", "T", "tap", "cut.side.end", null],
+        ["{u}", "U", "untap", "cut.side.start", null],
+      ] as readonly (readonly [string, string, string, string, string | null])[]
+    )
       .map(
         ([
           token,
           letter,
           name,
-          clip,
+          cut,
+          tone,
         ]) => `<div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:${clip};box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">${letter}</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;${
+            tone === null
+              ? "background:var(--of-color-surface-raised);color:var(--of-color-ink)"
+              : `background:var(--of-color-stat-${tone});color:var(--of-color-stat-${tone}-ink)`
+          };font-weight:var(--of-type-weight-bold);clip-path:${cutValue(cut)}${
+            /* The shield seats its numeral in the body, not the box — the same
+               fraction the component uses, for the same reason. */
+            name === "defence" ? ";padding-block-end:calc(2.25rem * 0.28)" : ""
+          };box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">${letter}</span>
           <span class="eyebrow" style="margin:0">${name}</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">${token}</code>
         </div>`,
@@ -945,7 +966,7 @@ cards.push({
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>The table is the rules', not ours.</strong> The Comprehensive Rules defines all eight at 1.12.4a&ndash;h — "the power symbol is {p} and represents a power value" — so rendering them is the same join this site already makes between a keyword and the rule that governs it, and every symbol on a card page links to the rule that defines it. A ninth marker, <code>{x}</code>, appears on two cards and is <em>not</em> in that table; it is drawn as a plain italic letter and flagged as inferred rather than filed with the rest.</p>
   <p class="note"><strong>The last two are cut differently on purpose.</strong> The rules distinguish symbols that represent a <em>value</em> from those that represent an <em>effect</em> — 1.12.4g says tap "represents the tap effect" — so tap and untap are cut down a whole side rather than at a corner, and read as verbs before the letter is read. None is eight-sided: that outline belongs to the pitch jewel, which is why chi takes two corners rather than the four it wants.</p>
-  <p class="note">The letter is upstream's, never a tidier one: life is <strong>H</strong> because the marker is <code>{h}</code>. Calling it L would break the one job the plate has, which is to connect the rendered view to the raw one. The accessible name says "life" in full.</p>
+  <p class="note">The letter is upstream's, never a tidier one: life is <strong>H</strong> because the marker is <code>{h}</code>. Calling it L would make this the one surface in the project that spells the game's own marker differently. The accessible name says "life" in full.</p>
   <p class="note">No LSS symbol is reproduced. These are not redrawn resource or attack pips — they are the system's own plates carrying the letter upstream itself writes between the braces.</p>`,
 });
 
