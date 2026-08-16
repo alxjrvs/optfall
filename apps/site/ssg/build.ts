@@ -212,9 +212,9 @@ async function assertIslandBudget(chunks: readonly string[]): Promise<void> {
  * baseline covers only the pages its author was working on is a budget that has
  * not looked at the others, which is the whole failure it exists to prevent.
  *
- * Measured across all 13,676: `/search` 884 kB (see the exceptions below),
- * `/sets/lgs` and `/sets/1hp` 216 kB, `/cr` 212 kB, `/sets/pen` 184 kB, and a
- * 40 kB median set page.
+ * Measured across all 13,676: `/search` 934 kB (see the exceptions below),
+ * `/sets/lgs` 273 kB, `/sets/fab` 243 kB, `/sets/1hp` 238 kB, `/sets/pen` 231
+ * kB, `/cr` 215 kB, and a 40 kB median set page.
  *
  * THE MARGIN IS WIDE FOR THE SAME REASON `/search`'s IS, and the first version
  * of this number was not. A set page's HTML is LINEAR IN THE SET'S CARD COUNT,
@@ -255,7 +255,13 @@ const PAGE_BUDGET_BYTES = 512 * 1024;
  */
 const PAGE_BUDGET_EXCEPTIONS: Readonly<Record<string, number>> = {
   /*
-     The whole-corpus search index, encoded. Measured at 916 kB.
+     The whole-corpus search index, encoded. Measured at 934 kB.
+
+     THAT NUMBER MOVED WITHOUT A COMMIT MOVING IT, which is the property this
+     page has and the set pages do not: it is linear in the CORPUS, so a data
+     sync grows it and the note beside it ages silently. Re-measured here at 934
+     kB, and checked against `main` at the same figure — this branch adds
+     nothing to this page, it only found the drift.
 
      THE HEADROOM IS WIDE ON PURPOSE, AND IT WAS 8.6% — which is the wrong
      number for a page whose size is LINEAR IN THE CORPUS. This branch alone

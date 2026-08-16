@@ -205,8 +205,15 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       THE MATCHED VERSIONS, NOT EVERY VERSION. A `pitch:1` search that drew
       three bands under Head Jab would be answering a question about red with a
       picture of red, yellow and blue.
+
+      AND EACH BAND IS A DOOR TO THE VERSION IT DREW, which is the whole of what
+      carrying the addresses buys: the row goes to the card, the blue band goes
+      to the blue one. A filtered search keeps that honest for free — only the
+      versions that matched are drawn, so only the versions that matched can be
+      clicked, and `banned:cc` cannot offer a reader the legal version of a card
+      it has just put on a banned list.
     */
-    pitches: result.matchedPitches,
+    versions: result.matchedVersions,
     stats: result.stats,
     /*
       ONLY SOME PITCH VERSIONS MATCHED, AND SAYING SO IS NOT OPTIONAL. Four
@@ -215,8 +222,8 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       banned list without saying which version was banned.
     */
     note:
-      result.matchedPitches.length < result.totalVersions
-        ? versionsMatched(result.matchedPitches)
+      result.matchedVersions.length < result.totalVersions
+        ? versionsMatched(result.matchedVersions.map((v) => v.pitch))
         : undefined,
     why: WHY[result.matchedIn],
   }));

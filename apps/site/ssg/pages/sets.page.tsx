@@ -24,7 +24,7 @@
  * paths are the only thing that changed.
  */
 
-import { CORPUS as CARDS } from "../../src/lib/cards";
+import { CORPUS as CARDS, slugify } from "../../src/lib/cards";
 import { hrefForSet, SETS, SETS_BY_RELEASE } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./sets.css";
@@ -35,13 +35,21 @@ import "./sets.css";
  * Counted in CARDS rather than printings, to match what the set page and the
  * search both report — a set listing "412 printings" beside a page showing 380
  * rows is two true numbers arguing.
+ *
+ * AND COUNTED IN NAMES RATHER THAN PITCH VERSIONS, for that same sentence's
+ * reason rather than in spite of it. A set page draws one row per NAME now —
+ * Head Jab red, yellow and blue are one cell with three bands — so counting
+ * versions here would put "307 cards" beside a page whose own masthead leads
+ * with 155, which is the argument this note was written to prevent, arrived at
+ * from the other side. `slugify(name)` is the key the set page groups on; using
+ * the same function is what keeps the two numbers one number.
  */
 const cardsPerSet = new Map<string, Set<string>>();
 for (const card of CARDS.cards) {
   for (const printing of card.printings) {
     const seen = cardsPerSet.get(printing.set_id);
-    if (seen) seen.add(card.unique_id);
-    else cardsPerSet.set(printing.set_id, new Set([card.unique_id]));
+    if (seen) seen.add(slugify(card.name));
+    else cardsPerSet.set(printing.set_id, new Set([slugify(card.name)]));
   }
 }
 

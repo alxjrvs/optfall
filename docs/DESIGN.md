@@ -161,6 +161,27 @@ on both counts: the words "pitch 1, pitch 2", printed only when *some* versions
 matched, so the ordinary case said nothing and a reader could not tell a
 single-version card from a collapsed one.
 
+**Where the row stands for several versions, the mark is a control.** The name
+goes to the name — `/card/head-jab`, the page that holds all three — and each
+band goes to the version it is drawn in the colour of, so a reader who means the
+blue one aims at the blue third of the rule instead of arriving at red and
+correcting. The stones in the two text views are the same control drawn the way
+those views draw pitch. Three consequences worth stating, because each one is a
+rule rather than an implementation detail:
+
+- **Only the versions on offer are drawn.** A search draws the versions that
+  matched and a set page the versions that set printed, so a band is never a
+  door to a card the surface has just said is not in the answer.
+- **One version means no control.** A row standing for a single card draws the
+  plain unlinked mark: a link there would be a second, smaller target for the
+  destination the name beside it already has.
+- **A band carries no text, so it carries a name.** Each is a `role="img"` named
+  for the card and the version — "Head Jab (pitch 2)" — inside its own link,
+  which is what stops three coloured rectangles from being three anonymous
+  links. This is also why the bands are one rule each rather than one rule with
+  three anchors in it: the children of a `role="img"` are not exposed, so links
+  inside one would be links nothing could reach.
+
 ### Blood and brass
 
 Red is the game's own accent, and refusing it made an earlier pass read like a
