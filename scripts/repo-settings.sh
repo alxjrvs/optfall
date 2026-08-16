@@ -368,9 +368,28 @@ fi
 #     included. For a genuine emergency, disable and re-enable the ruleset
 #     rather than adding a standing bypass.
 #
-# strict_required_status_checks_policy is false deliberately: requiring branches
-# to be up to date with main before merging rejects the merge whenever main
-# moves while checks run, which turns unattended auto-merge into a retry loop.
+# strict_required_status_checks_policy is TRUE, and it was false for a reason
+# that a real incident outweighed.
+#
+# The old argument is still true as far as it goes: requiring a branch to be up
+# to date with main rejects the merge whenever main moves while checks run, so
+# unattended auto-merge becomes a retry loop. That is a real cost and it is
+# being paid on purpose.
+#
+# What bought it: two pull requests each went green against a main that did not
+# yet contain the other, and the combination was never run. #151 added the rule
+# that every `setup-bun` step must read `.bun-version`; #153 added a step to the
+# gate job pinning the version inline. Both merged, both correct alone, and main
+# was broken the moment they met — discovered by a third pull request inheriting
+# a failure it had not caused. Non-strict checks do not verify the merge result,
+# only the branch, and "green twice" is not "green together".
+#
+# The retry loop is the price of that not happening again. It is bounded — the
+# fix is `gh pr update-branch --rebase` and a re-run, and this repository merges
+# a handful of PRs a day rather than a queue of them. A merge queue would give
+# the same guarantee without the loop and is deliberately NOT used here: it
+# cannot coexist with the Dependabot auto-merge workflow, since GITHUB_TOKEN
+# cannot enqueue.
 #
 # do_not_enforce_on_create is TRUE, and this one is a bootstrap deadlock if you
 # get it wrong. The rule defaults to enforcing on branch creation, so with an
@@ -395,7 +414,7 @@ ruleset_body="$(jq -n --arg name "$RULESET_NAME" --arg gate "$GATE_JOB" '{
     {
       type: "required_status_checks",
       parameters: {
-        strict_required_status_checks_policy: false,
+        strict_required_status_checks_policy: true,
         do_not_enforce_on_create: true,
         required_status_checks: [ { context: $gate } ]
       }
@@ -474,6 +493,15 @@ else
   [[ "$checks" == "$GATE_JOB" ]] \
     && ok "required checks = ${checks}" \
     || bad "required checks = ${checks:-none} (expected exactly '${GATE_JOB}')"
+
+  # ASSERTED BECAUSE IT WAS NOT, which is how it could have drifted back to
+  # false without anything saying so — and false is the setting that let a
+  # broken main through once already. See the note above the ruleset body.
+  strict="$(jq -r '[.rules[] | select(.type == "required_status_checks")
+                    | .parameters.strict_required_status_checks_policy] | first // false' <<<"$live")"
+  [[ "$strict" == "true" ]] \
+    && ok "strict = true (a branch must be up to date with the default branch)" \
+    || bad "strict = ${strict} (expected true; false merges branches whose checks never saw the merge result)"
 
   on_create="$(jq -r '[.rules[] | select(.type == "required_status_checks")
                       | .parameters.do_not_enforce_on_create] | first // false' <<<"$live")"
