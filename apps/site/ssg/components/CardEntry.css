@@ -1197,6 +1197,36 @@
   gap: var(--of-space-tight);
 }
 
+/*
+  The variant qualifier inside a related-card anchor — " (pitch 2)" — named but
+  not shown. `CardEntry.tsx` carries the argument for why it is still in the
+  anchor at all; this is only how it is hidden.
+
+  NOT `.of-card__visually-hidden`, WHICH IS THE SAME RULE PLUS ONE DECLARATION.
+  `user-select: none` is the addition, and it is the reason this is its own
+  class rather than a reuse: the related list is names a reader drags over to
+  copy into a deck list, and without it a line reading "Head Jab" pastes as
+  "Head Jab (pitch 2)" — text they cannot see arriving in their clipboard.
+  `PitchJewel`, `.of-index__variant` and `.of-result__qualifier` all carry the
+  same declaration for the same reason; this is the fourth place the rule
+  applies, and the fourth time it is written down beside the thing it protects.
+
+  It does not affect what a screen reader announces: `user-select` governs
+  selection, not the accessibility tree.
+*/
+.of-card__qualifier {
+  user-select: none;
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* -- Provenance ---------------------------------------------------------- */
 
 .of-card__provenance {

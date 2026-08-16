@@ -814,6 +814,100 @@ describe("the credit line spaces three facts, not two", () => {
 });
 
 /* -------------------------------------------------------------------------- */
+/* Bare names in a related-cards list                                          */
+/* -------------------------------------------------------------------------- */
+
+describe("a related-cards list prints the name and not the pitch qualifier", () => {
+  const html =
+    RESOLVED.find((resolved) => resolved.route === "/card/head-jab-1")?.render(
+      [],
+      undefined,
+    ) ?? "";
+  const list = html.match(/<ul class="of-card__links">.*?<\/ul>/s)?.[0] ?? "";
+
+  test("the visible text is bare, and the qualifier is still in the anchor", () => {
+    /*
+     * "Other versions" on Head Jab read "Head Jab (pitch 2)" beside a stone
+     * already carrying a 2 — four words restating a glyph, on the one list
+     * whose entire subject is that these cards differ by pitch.
+     *
+     * THE QUALIFIER IS HIDDEN, NOT DROPPED, and both halves are asserted
+     * because dropping it is the tempting version and it is a WCAG 2.4.4
+     * failure: three anchors reading "Head Jab" pointing at three URLs.
+     */
+    expect(list).not.toBe("");
+    expect(list).toContain("of-card__qualifier");
+    expect(list).toMatch(/of-card__qualifier">\s*\(pitch \d\)/);
+
+    /* …and it is INSIDE the anchor, which is the whole of why it satisfies
+       2.4.4. `variantSuffix` records the trap: a `PitchJewel` beside the link
+       does not name it, because it sits outside the accessible name. */
+    expect(list).toMatch(
+      /<a href="\/card\/head-jab-\d">Head Jab<span class="of-card__qualifier">/,
+    );
+
+    /*
+     * And with the hidden spans removed, no "(pitch n)" is left anywhere in the
+     * list — which is the state this change exists to produce.
+     *
+     * THE STRIP IS THE ASSERTION. A bare `not.toMatch(/\(pitch \d\)/)` over the
+     * whole list is what this was first, and it failed against the change that
+     * makes it pass: the qualifier is STILL in the markup, deliberately, so the
+     * only honest question is whether any of it is outside a hidden span.
+     */
+    const visible = list.replace(
+      /<span class="of-card__qualifier">[^<]*<\/span>/g,
+      "",
+    );
+    expect(visible).toContain("Head Jab");
+    expect(visible).not.toMatch(/\(pitch \d\)/);
+    expect(visible).not.toMatch(/\(no pitch\)/);
+  });
+
+  test("a card whose name is unique carries no qualifier at all", () => {
+    /*
+     * ASSERTED THROUGH `variantSuffix`'s OWN INPUT rather than by re-deriving
+     * it here, matching the card-index test below. The empty case has to be a
+     * result of the rule, not the only case there is — so a link that DOES need
+     * one is checked beside it.
+     */
+    const unique = CARD_PAGES.find((page) => !page.disambiguated);
+    expect(unique).toBeDefined();
+    expect(
+      variantSuffix(unique?.pitch ?? 0, unique?.disambiguated ?? false),
+    ).toBe("");
+
+    const versioned = CARD_PAGES.find((page) => page.disambiguated);
+    expect(versioned).toBeDefined();
+    expect(
+      variantSuffix(versioned?.pitch ?? 0, versioned?.disambiguated ?? false),
+    ).toMatch(/^ \((?:no pitch|pitch \d)\)$/);
+  });
+
+  test("the lists that carry no pitch mark are left alone", () => {
+    /*
+     * THE LIMIT ON THE CHANGE, pinned so somebody does not "finish the job"
+     * and break two pages. A rule page's governed-cards list and a set page's
+     * `<noscript>` list are plain anchors with NO jewel beside them — nothing
+     * else on those rows says which version a name is. Stripping the qualifier
+     * there would not trade a word for a glyph, it would delete the only thing
+     * telling three same-named links apart, visibly and accessibly at once.
+     *
+     * The instruction was to drop the text where a pitch mark already carries
+     * it. These have no mark, so they keep the words.
+     */
+    const rule =
+      RESOLVED.find((resolved) => resolved.route.startsWith("/rules/"))?.render(
+        [],
+        undefined,
+      ) ?? "";
+    const governs = rule.match(/<ul class="of-rule__governs">.*?<\/ul>/s)?.[0];
+    if (governs !== undefined && /\(pitch \d\)/.test(governs))
+      expect(governs).not.toContain("of-card__qualifier");
+  });
+});
+
+/* -------------------------------------------------------------------------- */
 /* Bare names in a card index                                                  */
 /* -------------------------------------------------------------------------- */
 

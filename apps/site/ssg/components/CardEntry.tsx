@@ -55,6 +55,7 @@ import {
   hrefForSlug,
   LAST_CONFIRMED,
   STAT_ORDER,
+  variantSuffix,
 } from "../../src/lib/cards";
 import {
   boxFor,
@@ -1200,11 +1201,50 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     <li className="of-card__link" key={link.href}>
                       <PitchJewel value={link.pitch} size="sm" />
                       {/*
-                        `link.label`, never `link.name`. Two cards on this list
-                        can share a name; the label is what makes the two anchors
-                        distinguishable to somebody reading the links alone.
+                        THE NAME IS BARE AND THE QUALIFIER IS STILL IN THE
+                        ANCHOR — the arrangement `CardIndex` already uses,
+                        arrived at here for the same reason.
+
+                        This rendered `link.label`, so "Other versions" on Head
+                        Jab read "Head Jab (pitch 2)" and "Head Jab (pitch 3)"
+                        beside stones already carrying a 2 and a 3. Four words
+                        restating a glyph, on the one list whose whole subject is
+                        that these cards differ by pitch — which is where the
+                        restatement is least needed and most repeated.
+
+                        WHAT THE OLD NOTE HERE GOT RIGHT IS KEPT, and it is the
+                        reason this is not simply `link.name`. Two cards on this
+                        list share a name, so bare anchors would be identical
+                        link text pointing at different URLs: WCAG 2.4.4, and
+                        axe's `identical-links-same-purpose`. `variantSuffix`
+                        exists for exactly that failure and its own note settles
+                        the tempting shortcut — a `PitchJewel` BESIDE the link
+                        does not fix it, because it is outside the anchor's
+                        accessible name. So the suffix stays inside the anchor
+                        and stops being visible, which changes what a reader
+                        sees and nothing about what the link is called.
+
+                        SUPPLIED, NOT SUBTRACTED, matching `CardIndexEntry`'s
+                        rule: the qualifier is recomputed from the pitch and the
+                        disambiguation flag the link already carries, rather than
+                        derived as `label` minus `name`. The two agree today —
+                        `labelFor` is that concatenation — and a subtraction
+                        would quietly hide anything else a future label appended.
                       */}
-                      <a href={link.href}>{link.label}</a>
+                      <a href={link.href}>
+                        {link.name}
+                        {(() => {
+                          const qualifier = variantSuffix(
+                            link.pitch,
+                            link.disambiguated,
+                          );
+                          return qualifier === "" ? null : (
+                            <span className="of-card__qualifier">
+                              {qualifier}
+                            </span>
+                          );
+                        })()}
+                      </a>
                     </li>
                   ))}
                 </ul>
