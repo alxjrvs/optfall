@@ -191,3 +191,27 @@
   text-transform: uppercase;
   color: var(--of-color-ink-faint);
 }
+
+/* THE LINE THAT TELLS TWO TILES APART, so it is the faintest thing on the tile
+   and not the loudest. It reads under the collector number for the reason the
+   number reads under the set: set, then number, then the thing that separates
+   two printings sharing both. On the 6,326 tiles whose art has one foiling it is
+   a fact nobody needed; on the 1,410 that used to caption identically it is the
+   only fact on the tile that differs, and it should not have to shout to be the
+   answer.
+
+   NOT UPPERCASED like the number above it. That treatment is for a code — an
+   identifier read character by character — and these are words. "COLD FOIL ·
+   STANDARD" set in tracked-out caps would give a subtitle the weight of a
+   heading in the smallest type on the page. */
+.of-picker__foiling {
+  font-size: var(--of-type-size-micro);
+  line-height: var(--of-type-leading-tight);
+  color: var(--of-color-ink-faint);
+  /* The strip's columns are half a thumbnail wide and "Standard · Rainbow Foil"
+     does not fit on one line there. Wrapping is the intended outcome — the tile
+     is a flex column and grows — but a break has to be allowed to land BETWEEN
+     the two names rather than only inside them. */
+  max-inline-size: 100%;
+  text-wrap: balance;
+}

@@ -65,6 +65,25 @@ export interface Printing {
    * — it publishes it; see the effect below.
    */
   readonly rarity: string;
+  /**
+   * How this art is foiled, in words — `"Cold Foil"`, `"Standard · Rainbow
+   * Foil"` — or `""` where upstream records no foiling for it.
+   *
+   * ALREADY DECODED, because `foilingName` reads the sets corpus and this is an
+   * island. `printings.ts` records what happens when a module the client entry
+   * can reach pulls a corpus in behind it: a 9.28 MB bundle. The build decodes;
+   * the island renders a string.
+   *
+   * PLURAL, BECAUSE A TILE IS AN IMAGE AND FOILING IS A PROPERTY OF A PRINTING.
+   * This list is deduped by art, and 4,995 tiles are shared by printings at two
+   * different foilings — `MST131` is one image published Standard AND Rainbow
+   * Foil. Naming only the first would caption a picture with one of the two
+   * things it is, which is the trap the rarity field one line up had to accept
+   * (a caption can show one rarity at a time) and this one does not: every
+   * foiling that reaches this art is named, so the tile says what the picture
+   * IS rather than which row happened to claim it.
+   */
+  readonly foiling: string;
 }
 
 export interface PrintingPickerProps {
@@ -257,6 +276,51 @@ export function PrintingPicker({
                   </span>
                   <span className="of-picker__set">{printing.setName}</span>
                   <span className="of-picker__id">{printing.id}</span>
+                  {/*
+                    THE FOILING, WHICH IS WHAT MAKES THE TILE DISTINGUISHABLE AT
+                    ALL ON 640 CARDS.
+
+                    Set and number named a printing almost everywhere and named
+                    NOTHING here: `Aether Ashwing` showed three tiles all reading
+                    "Uprising · UPR042" — the standard art, the cold foil, and a
+                    second cold foil — and `Adaptive Plating` showed two reading
+                    "Evolution · EVO013" with no standard art among them.
+                    Measured: 1,410 tiles across 640 cards carried a caption
+                    identical to a sibling's. The reader could see the pictures
+                    differ and could select either, which is the control working;
+                    they could not learn WHICH THING they had selected, which is
+                    the control failing at the one question it exists to answer.
+
+                    The edition disambiguation above solves the neighbouring case
+                    and could not solve this one — these printings share an
+                    edition and differ only in how they are foiled — so the fact
+                    that separates them is the fact that goes on the tile. It
+                    takes those 1,410 down to 359.
+
+                    WHAT IS LEFT, NAMED RATHER THAN ROUNDED AWAY. 336 of the 359
+                    are the Arakni shape `CardEntry` already documents: upstream
+                    publishes a front and a back under one number, both Marvel
+                    cold foil, so the two tiles agree on set, number, edition,
+                    foiling and rarity and differ only by which face they are.
+                    That is a different axis, and the printings table's `Other
+                    face` column is where it is answered. The remaining 23 are
+                    cards with TWO cold-foil arts under one number — a `-CF` and
+                    a `-MV` — which upstream distinguishes by `art_variations`
+                    codes (`AA`, `AB`, `EA`, …) that it publishes no decode table
+                    for. Inventing display names for them would be this project
+                    asserting a vocabulary its source does not define.
+
+                    ROOM IS TAKEN, NOT MADE. Foiling is missing on 5 printing
+                    rows in the corpus and the line is dropped entirely for them
+                    rather than rendering a dash, because a strip of tiles all
+                    one row taller to hold one em-dash is a layout paying for an
+                    absence.
+                  */}
+                  {printing.foiling === "" ? null : (
+                    <span className="of-picker__foiling">
+                      {printing.foiling}
+                    </span>
+                  )}
                 </label>
               </li>
             ))}

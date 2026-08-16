@@ -11,6 +11,8 @@ import { describe, expect, test } from "bun:test";
 
 import { CARD_PAGES, CORPUS as CARDS } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
+import { faceKeyFor } from "../src/lib/faces";
+import { facesOf } from "../src/lib/printings";
 import { setFor } from "../src/lib/sets";
 import { canonicalFor, Document } from "./document";
 import { outputPathFor } from "./outputPath";
@@ -565,5 +567,128 @@ describe("a card page shows the combat positions it does not fill", () => {
     /* …on the same page where a real absence is drawn as one, which is exactly
        the pair this change exists to keep apart. */
     expect(html).toContain('aria-label="No printed power"');
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The printing picker's captions                                             */
+/* -------------------------------------------------------------------------- */
+
+describe("every picker tile says which printing it is", () => {
+  const render = (route: string) =>
+    RESOLVED.find((resolved) => resolved.route === route)?.render(
+      [],
+      undefined,
+    ) ?? "";
+
+  /**
+   * The list the picker renders, derived here the way `CardEntry` derives it:
+   * one entry per DISTINCT ART, in corpus order.
+   *
+   * `facesOf` is the shared definition and is used rather than re-deduped by
+   * hand, so a change to what counts as a face cannot leave this test asserting
+   * about a list the page no longer builds.
+   */
+  const tilesOf = (page: (typeof CARD_PAGES)[number]) =>
+    facesOf(page.card).map((ref) => {
+      const foilings = new Set(
+        page.card.printings
+          .filter(
+            (printing) =>
+              faceKeyFor(printing.image_url) === ref.key &&
+              printing.foiling !== "",
+          )
+          .map((printing) => printing.foiling),
+      );
+      return {
+        key: ref.key,
+        /* What the tile said BEFORE this change: set, number, and the edition
+           only where two printings under one number actually differ by it. */
+        caption: `${ref.printing.set_id}/${ref.printing.id}`,
+        edition: ref.printing.edition,
+        foilings: [...foilings].sort().join("+"),
+      };
+    });
+
+  test("two tiles under one number are told apart by their foiling", () => {
+    /*
+     * THE BUG, PINNED ON THE CARD THAT SHOWS IT WORST. `Aether Ashwing` has
+     * four printings across two sets and three distinct arts under `UPR042`
+     * alone: the standard art, a cold foil, and a second cold foil. All three
+     * carried the caption "Uprising · UPR042" — a control offering three
+     * choices with one name between them.
+     *
+     * Measured across the corpus before the fix: 1,410 tiles on 640 cards
+     * captioned identically to a sibling.
+     */
+    const html = render("/card/aether-ashwing");
+    expect(html).toContain("of-picker__tile");
+    expect(html).toContain("Cold Foil");
+    /* And the standard art still says what IT is, rather than the foiling line
+       being a badge that only the odd ones out wear. */
+    expect(html).toContain("Standard");
+  });
+
+  test("a tile names every foiling its art is published at, not just the first", () => {
+    /*
+     * THE HALF THAT IS EASY TO GET WRONG, and the reason `foilingsByFace` is a
+     * pass over all printings rather than a field read off the printing that
+     * claimed the tile. 4,995 tiles are shared by printings at two foilings —
+     * one image published Standard AND Rainbow Foil — and captioning such a
+     * tile "Standard" states one of the two things the picture is.
+     */
+    const shared = CARD_PAGES.find((page) => {
+      const tiles = tilesOf(page);
+      return (
+        tiles.length > 1 && tiles.some((tile) => tile.foilings.includes("+"))
+      );
+    });
+    expect(shared).toBeDefined();
+
+    const html = render(shared?.href ?? "");
+    expect(html).toContain("of-card__name");
+    /* The separator is what makes it a list rather than a single claim. */
+    expect(html).toMatch(/of-picker__foiling[^>]*>[^<]+ · [^<]+</);
+  });
+
+  test("what foiling cannot disambiguate is a face or an unnamed variation", () => {
+    /*
+     * THE RESIDUE, ASSERTED SO IT CANNOT GROW QUIETLY. Foiling takes the 1,410
+     * identical captions down to 359, and this pins BOTH halves: that the fix
+     * lands, and that what survives it is only the two shapes named in
+     * `PrintingPicker`. A resync that reintroduced a third kind of collision
+     * would fail here rather than ship a picker with two nameless tiles on a
+     * card nobody happened to open.
+     *
+     * The survivors are 336 tiles of the Arakni shape — a front and a back
+     * published under one number at one foiling, which the printings table
+     * answers in its `Other face` column — and 23 tiles where one number
+     * carries two cold-foil arts distinguished upstream only by
+     * `art_variations` codes the corpus publishes no decode table for.
+     */
+    let ambiguous = 0;
+    for (const page of CARD_PAGES) {
+      const byNumber = new Map<string, ReturnType<typeof tilesOf>>();
+      for (const tile of tilesOf(page)) {
+        const found = byNumber.get(tile.caption) ?? [];
+        found.push(tile);
+        byNumber.set(tile.caption, found);
+      }
+      for (const tiles of byNumber.values()) {
+        if (tiles.length < 2) continue;
+        /* The edition already separates these; see `CardEntry`. */
+        if (new Set(tiles.map((tile) => tile.edition)).size > 1) continue;
+        const labels = new Set(tiles.map((tile) => tile.foilings));
+        if (labels.size < tiles.length) ambiguous += tiles.length;
+      }
+    }
+
+    /*
+     * AN EQUALITY, NOT A CEILING. A `toBeLessThan` would pass just as happily
+     * if the count went to zero for the wrong reason — a face-keying change
+     * that collapsed distinct arts into one tile — and losing a printing is a
+     * worse outcome than captioning one ambiguously.
+     */
+    expect(ambiguous).toBe(359);
   });
 });
