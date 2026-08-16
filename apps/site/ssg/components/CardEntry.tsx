@@ -260,54 +260,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     ...new Set(card.printings.flatMap((printing) => printing.artists)),
   ];
 
-  /**
-   * EVERY RARITY THIS CARD HAS BEEN PRINTED AT — of which exactly one is
-   * visible at a time, and it is the one belonging to the printing on screen.
-   *
-   * This used to render the whole list at once: "(C)ommon (R)are (M)ajestic"
-   * strung along the credit line of a card that is, at that moment, showing one
-   * specific printing. Read against the picture above it, that is three claims
-   * where the page supports one, and the two most-reprinted cards in the game
-   * carried five bubbles apiece. Worse, it was ambiguous in the direction a
-   * reference work must never be ambiguous in: a reader looking at a Majestic
-   * face had no way to tell which of the three letters described what they were
-   * looking at, so the honest reading of the line was "this card exists at these
-   * rarities somewhere", which is not what a credit line under a picture says.
-   *
-   * ALL OF THEM ARE STILL IN THE MARKUP, HIDDEN, and that is what makes the
-   * client-side picker work without an island of its own. `PrintingPicker` swaps
-   * the face in place — it does not navigate — so a server-rendered rarity would
-   * be correct on load and wrong one click later. Publishing the closed set and
-   * letting one CSS rule choose between them keeps the two in step with no
-   * second copy of the data and no second island. See `CardEntry.css`.
-   *
-   * `display: none` RATHER THAN AN ATTRIBUTE, because it takes the hidden ones
-   * out of the accessibility tree as well as off the page. A screen reader
-   * announces the current rarity and nothing else; hiding them any other way
-   * would read all five aloud.
-   */
-  const rarities = (() => {
-    const seen = new Set<string>();
-    const found: {
-      name: string;
-      initial: string;
-      rest: string;
-      slug: string;
-    }[] = [];
-    for (const printing of card.printings) {
-      if (printing.rarity === "" || seen.has(printing.rarity)) continue;
-      seen.add(printing.rarity);
-      const name = rarityName(printing.rarity);
-      found.push({
-        name,
-        initial: name.slice(0, 1),
-        rest: name.slice(1),
-        slug: raritySlug(printing.rarity),
-      });
-    }
-    return found;
-  })();
-
   const flavours = [
     ...new Set(
       page.printings
@@ -373,6 +325,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       /** This printing's rarity slug, for the credit line. `""` where upstream
        *  publishes none. */
       rarity: string;
+      /** Upstream's own rarity code, kept so the credit line can decode the
+       *  display name from the same record the slug came from. */
+      rarityCode: string;
     }[] = [];
 
     for (const printing of card.printings) {
@@ -412,6 +367,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
            that picture is addressed as. The printings table below is the
            complete record, and it lists every printing's rarity separately. */
         rarity: raritySlug(printing.rarity),
+        rarityCode: printing.rarity,
       });
     }
 
@@ -443,6 +399,74 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     }
 
     return entries;
+  })();
+
+  /**
+   * THE RARITIES THE CREDIT LINE CAN SHOW — of which exactly one is visible at
+   * a time, and it is the one belonging to the printing on screen.
+   *
+   * This used to render the whole list at once: "(C)ommon (R)are (M)ajestic"
+   * strung along the credit line of a card that is, at that moment, showing one
+   * specific printing. Read against the picture above it, that is three claims
+   * where the page supports one, and the two most-reprinted cards in the game
+   * carried five bubbles apiece. Worse, it was ambiguous in the direction a
+   * reference work must never be ambiguous in: a reader looking at a Majestic
+   * face had no way to tell which of the three letters described what they were
+   * looking at, so the honest reading of the line was "this card exists at these
+   * rarities somewhere", which is not what a credit line under a picture says.
+   *
+   * BUILT FROM THE TILE LIST, NOT FROM `card.printings`, and the difference is
+   * one real card rather than a hypothetical. `printings` above is deduped by
+   * IMAGE, so a printing upstream publishes with no `image_url` never gets a
+   * tile and can never be the printing on screen. Deriving this from every
+   * printing therefore emitted bubbles that no selector could ever reveal —
+   * markup that is `display: none` for the life of the page.
+   *
+   * Measured: four cards have a face-less printing, and on exactly one of them
+   * — `Toughness`, whose `SUP241` is Basic and has no image — that was the only
+   * source of a rarity. Its Basic bubble would have been dead markup. Building
+   * from the tiles makes the set on the page equal to the set that can be
+   * displayed, which is the claim the line is making anyway.
+   *
+   * WHAT THAT GIVES UP, stated rather than left for somebody to find: the credit
+   * line is no longer a complete list of every rarity this card exists at, and
+   * on `Toughness` "Basic" now appears only in the printings table below. That
+   * is the right home for it. The table is the complete record, it lists every
+   * printing's rarity in its own row including the face-less ones, and a credit
+   * line under a picture is a caption rather than an index.
+   *
+   * ALL OF THEM ARE IN THE MARKUP, HIDDEN, and that is what makes the
+   * client-side picker work without an island of its own. `PrintingPicker` swaps
+   * the face in place — it does not navigate — so a server-rendered rarity would
+   * be correct on load and wrong one click later. Publishing the set and letting
+   * one CSS rule choose between them keeps the two in step with no second copy
+   * of the data and no second island. See `CardEntry.css`.
+   *
+   * `display: none` RATHER THAN AN ATTRIBUTE, because it takes the hidden ones
+   * out of the accessibility tree as well as off the page. A screen reader
+   * announces the current rarity and nothing else; hiding them any other way
+   * would read all five aloud.
+   */
+  const rarities = (() => {
+    const seen = new Set<string>();
+    const found: {
+      name: string;
+      initial: string;
+      rest: string;
+      slug: string;
+    }[] = [];
+    for (const printing of printings) {
+      if (printing.rarity === "" || seen.has(printing.rarity)) continue;
+      seen.add(printing.rarity);
+      const name = rarityName(printing.rarityCode);
+      found.push({
+        name,
+        initial: name.slice(0, 1),
+        rest: name.slice(1),
+        slug: printing.rarity,
+      });
+    }
+    return found;
   })();
 
   /**

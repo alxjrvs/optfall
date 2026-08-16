@@ -17,8 +17,17 @@
  * incidental. `PitchJewel` owns it: "the silhouette is reserved: nothing else in
  * the interface is ever this shape." A stat glyph that happened to be
  * eight-sided would spend the one shape the system has promised means pitch. So
- * `life` is a plain plate and the diagonals are two-corner cuts, none of which
- * can be mistaken for a cut stone.
+ * `arcane` — the one plate still cut from the house vocabulary — is a two-corner
+ * diagonal, and the four discs are circles; none of them can be mistaken for a
+ * cut stone.
+ *
+ * FIVE OF THE SIX NO LONGER COME FROM THAT VOCABULARY AT ALL, which is the
+ * larger point the paragraph above used to obscure. Cost, power and defence take
+ * the card's own geometry, and intellect and life take it too — the CR names
+ * `{i}` at 1.12.4b and `{h}` at 1.12.4c and LSS draws both as discs. What
+ * decides is whether the game prints a notation for the stat; arcane is the only
+ * one it does not, so arcane is the only one still wearing a chamfered plate.
+ * See `StatGlyph.css` for the shapes and the inks.
  *
  * THE NUMERAL IS THE PRIMARY CHANNEL, exactly as on the jewel. The shape is
  * redundant, the label is redundant, and the accessible name spells the stat out
