@@ -769,7 +769,14 @@ cards.push({
  * not.
  */
 function band(pitch: string | number): string {
-  return `<span style="display:block;inline-size:var(--of-ornament-band-base);block-size:calc(var(--of-bevel-width) * 3);background:var(--of-color-pitch-${["none", "one", "two", "three"][Number(pitch)]});border-radius:var(--of-bevel-radius);box-shadow:0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light), 0 var(--of-bevel-width) 0 0 var(--of-bevel-dark)"></span>`;
+  const tone = ["none", "one", "two", "three"][Number(pitch)];
+  /* THE NUMERAL IS IN THE BAND, as the component draws it. It shipped wordless
+     for one revision and that put hue on its own in the grid — the one view of
+     the card index with no jewel to fall back on. A card publishing the
+     wordless version would be advertising a mark the product does not render,
+     which is the drift this whole file's header is about. */
+  const glyph = Number(pitch) === 0 ? "–" : String(pitch);
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:var(--of-ornament-band-base);padding-block:var(--of-space-tightest);background:var(--of-color-pitch-${tone});color:var(--of-color-pitch-${tone}-ink);border-radius:var(--of-bevel-radius);font-family:var(--of-type-family-sans);font-size:var(--of-type-size-micro);font-weight:var(--of-type-weight-bold);line-height:var(--of-type-leading-tight);box-shadow:0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light), 0 var(--of-bevel-width) 0 0 var(--of-bevel-dark)">${glyph}</span>`;
 }
 
 cards.push({
@@ -793,7 +800,7 @@ cards.push({
       .join("")}
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Plural where the jewel is singular.</strong> A card page shows one card and has one pitch; a cell in a card index stands for a NAME, and a name in this game is commonly three cards. One band per value is a fact the jewel has no way to state — and what it replaced was the words "pitch 1, pitch 2", printed only when SOME versions matched, so the ordinary case said nothing and a reader could not tell a single-version card from a collapsed one.</p>
-  <p class="note"><strong>Colour carries more weight here than this system otherwise allows, and that is the stated cost.</strong> A band has no room for a numeral, so the redundancy moves to the accessible layer: the element is a <code>role="img"</code> with a written name, always, spelling the values out — "Pitch 1, 2 and 3". The COUNT of bands and their fixed ascending ORDER are the two non-colour channels that remain, and both text views of the same index carry numbered stones instead.</p>
+  <p class="note"><strong>The band carries a numeral, and for one revision it did not.</strong> The argument then was that a band had no room for one, with the redundancy pushed onto the accessible layer — a <code>role="img"</code> spelling the values out. That was fine for a screen reader and not fine for a sighted reader who cannot separate red from yellow, which is the classic deuteranopia confusion pair and the exact reason the jewel renders its numeral at every size. The grid is the one view of the card index with no jewel in it, so there was nothing to fall back on. The band makes room now — still wider than tall, still square-cornered, still struck top and bottom, still reading as an underline rather than a second cut stone. The COUNT of bands and their fixed ascending ORDER are non-colour channels too.</p>
   <p class="note">A card with no pitch — equipment, weapons — draws the grey <code>none</code> tone rather than nothing, exactly as the jewel draws a grey stone with a dash. An empty list is the different claim that the pitch is unknown, and draws no mark at all.</p>`,
 });
 

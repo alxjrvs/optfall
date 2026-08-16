@@ -110,16 +110,15 @@
 
   WHAT TELLS TWO SAME-NAMED CELLS APART IS NO LONGER THE SUFFIX — it used to be,
   and this comment used to say so. The suffix is hidden now (see
-  `.of-index__variant`) and what remains in the grid is the pitch rule under the
-  name, plus the card face above it, which is itself printed in the pitch's
-  colour.
+  `.of-index__variant`) and what carries the version is the pitch rule under the
+  name.
 
-  BOTH OF THOSE ARE COLOUR, AND THAT IS THE COST OF THE CHANGE RATHER THAN AN
-  OVERSIGHT. In the rows and names views the stone carries a numeral, so hue is
-  redundant there; in the grid it is not, and a reader who cannot separate red
-  from yellow has the accessible name and the card art and nothing else. It is
-  recorded here rather than in a commit message because this is where somebody
-  will stand when they decide whether to change it back.
+  THAT MARK CARRIES A NUMERAL, which is what makes the swap safe. For one
+  revision it did not: the band was wordless, so this view separated two
+  same-named cells by hue alone while the rows and names views kept a numbered
+  stone. `PitchRule` seats a digit now, so every view of this index states the
+  pitch in a channel that survives colour blindness, and the reader who cannot
+  separate red from yellow reads the number instead.
 */
 .of-index__cell-name {
   font-family: var(--of-type-family-serif);

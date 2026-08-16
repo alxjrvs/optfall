@@ -301,17 +301,20 @@ const STRUCTURE: TokenTable = {
      silently resize every pitch band in the card index, on a commit about
      scrollwork.
 
-     The values are what the borrowed tokens hold today, so this is a rename
-     rather than a redesign. What changes is that they can now move
-     independently, which is the whole point of a token having a name.
+     THEY GREW WHEN THE BAND LEARNED TO CARRY A NUMERAL. At the borrowed widths
+     — 1.25rem and 0.875rem — a band tall enough to seat a digit came out 20x18,
+     which is a chip rather than a bar: the mark stopped reading as an underline
+     under a name and started reading as a second cut stone, which is the one
+     silhouette `PitchJewel` reserves. Wider keeps it a bar. That these numbers
+     could move at all is the whole point of their having names of their own.
 
      NO THICKNESS TOKEN, deliberately. The band is `calc(bevel.width * 3)`, and
      that is a real relationship rather than a borrow: the band carries a bevel
      edge top and bottom, so it must never be thinner than the two of them plus
      the colour between. Expressed as a constant it would be a number that
      silently stops being true the day the bevel changes. */
-  "ornament.band.small": "0.875rem",
-  "ornament.band.base": "1.25rem",
+  "ornament.band.small": "1.5rem",
+  "ornament.band.base": "2rem",
 
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and

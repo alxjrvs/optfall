@@ -19,18 +19,24 @@
  * case rendered nothing at all and the reader had no way to tell a
  * single-version card from a collapsed one.
  *
- * THE COLOUR IS NOT THE ONLY CHANNEL, AND THAT MATTERS MORE HERE THAN ANYWHERE.
- * `PitchJewel` records the reason at length: red and yellow are the classic
- * deuteranopia confusion pair, and pitch is the most-read value on a card. A
- * band has no room for a numeral, so the redundancy moves to the accessible
- * layer — the element is a `role="img"` with a written name, always, and the
- * name spells the values out ("Pitch 1, 2 and 3"). That is a real reduction in
- * what a sighted colour-blind reader gets from the GRID, and it is the stated
- * cost of the trade rather than an oversight: the COUNT and the ORDER of the
- * bands are both non-colour channels — they are laid out ascending, so the
- * leftmost band is always the lowest pitch — the two text views of the same
- * index carry numbered stones instead, and the card page one click away carries
- * the jewel too.
+ * THE COLOUR IS NOT THE ONLY CHANNEL, AND IT WAS ONCE. The band shipped
+ * wordless on the argument that it had no room for a numeral, with the
+ * redundancy pushed onto the accessible layer — a `role="img"` whose written
+ * name spells the values out. That was fine for a screen reader and not fine
+ * for a sighted reader who cannot separate red from yellow: they are the
+ * classic deuteranopia confusion pair, pitch is the most-read value on a card,
+ * and the grid is the one view with no jewel in it to fall back on. It was the
+ * exact failure `PitchJewel` was drawn to avoid, one surface over.
+ *
+ * So the band makes room. It is tall enough to seat a digit and carries one,
+ * which is the smallest change that gives the redundant channel back without
+ * turning the mark into a second cut stone — still wider than tall, still
+ * square-cornered, still struck top and bottom, still reading as an underline
+ * under a name. The written name stays; the numeral is `aria-hidden` because it
+ * is the sighted half of the same fact.
+ *
+ * The COUNT and the ORDER remain non-colour channels too — bands are laid out
+ * ascending, so the leftmost is always the lowest pitch.
  *
  * WIDTH IS FIXED PER BAND RATHER THAN SPLIT ACROSS THE NAME. A rule whose
  * segments divided the name's width would make one band mean "pitch 1" under a
@@ -67,9 +73,10 @@ const TONES = ["none", "one", "two", "three"] as const;
  * IT HAS TO NAME EVERY BAND IT DRAWS, and an earlier version did not. It
  * dropped `0` before composing, while the component went on rendering a
  * `tone-none` band for it — so a row carrying both drew four bands and
- * announced three. That is not a cosmetic mismatch here: this label is the
- * ONLY non-colour channel the images view has, so a band it does not mention
- * is a pitch value a screen-reader user is not told about.
+ * announced three. That is not a cosmetic mismatch: a band this label does not
+ * mention is a pitch value a screen-reader user is not told about, and the band
+ * itself is `aria-hidden`, so nothing else in the accessibility tree covers for
+ * it.
  *
  * The mixed row is real rather than hypothetical. `cards.ts` documents Hyper
  * Driver — a pitch-0 token sharing its name with three pitched actions — and
@@ -123,7 +130,29 @@ export function PitchRule({ values, size = "md", label }: PitchRuleProps) {
         <span
           key={value}
           className={`of-pitch-rule__band of-pitch-rule__band--tone-${TONES[value] ?? "none"}`}
-        />
+        >
+          {/*
+            THE NUMERAL IS INSIDE THE BAND, and it is what lets this be the only
+            pitch mark on a surface.
+
+            Without it the band carried its value in hue alone, and the grid —
+            the one view with no jewel in it — separated two same-named cells by
+            colour and nothing else. Red and yellow are the classic deuteranopia
+            confusion pair and pitch is the most-read value on a card, so that
+            was precisely the failure `PitchJewel` exists to avoid, reintroduced
+            one surface over.
+
+            `aria-hidden`, because the wrapper is already a `role="img"` with the
+            values spoken in full. This is the SIGHTED reader's redundant
+            channel, which is the one that was missing.
+
+            Zero draws the dash the jewel draws, for the reason it does there: an
+            absence should read as an absence rather than as a numeral.
+          */}
+          <span className="of-pitch-rule__glyph" aria-hidden="true">
+            {value === 0 ? "–" : value}
+          </span>
+        </span>
       ))}
     </span>
   );

@@ -87,6 +87,35 @@ describe("PitchRule", () => {
     expect(html.split("of-pitch-rule__band ").length - 1).toBe(3);
   });
 
+  test("each band carries its numeral, which is the sighted redundant channel", () => {
+    /*
+     * THE BAND SHIPPED WORDLESS AND THAT WAS A REGRESSION. Its accessible name
+     * spelled the values out, so a screen reader was fine — but the grid is the
+     * one view of the card index with no jewel in it, so a sighted reader who
+     * cannot separate red from yellow had hue and nothing else. Red and yellow
+     * are the classic deuteranopia confusion pair and pitch is the most-read
+     * value on a card, which is the whole reason `PitchJewel` renders a numeral
+     * at every size.
+     *
+     * The digits are `aria-hidden`: the wrapper already speaks the values, and
+     * announcing them twice would be worse than not at all.
+     */
+    const html = renderToStaticMarkup(<PitchRule values={[1, 2, 3]} />);
+    for (const digit of ["1", "2", "3"]) {
+      expect(html).toContain(`>${digit}<`);
+    }
+    expect(html.split("of-pitch-rule__glyph").length - 1).toBe(3);
+    expect(html).toContain('aria-hidden="true"');
+  });
+
+  test("a no-pitch band draws the dash the jewel draws", () => {
+    /* An absence reads as an absence rather than as a numeral — the same
+       decision, in the same glyph, as `PitchJewel` makes for pitch 0. */
+    const html = renderToStaticMarkup(<PitchRule values={[0]} />);
+    expect(html).toContain(">–<");
+    expect(html).toContain("of-pitch-rule__band--tone-none");
+  });
+
   test("the values are sorted and deduplicated by the component", () => {
     /*
      * NOT BY THE CALLER. A search collapses the pitch versions of a matched

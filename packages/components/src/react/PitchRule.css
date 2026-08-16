@@ -33,17 +33,26 @@
   can be resized without silently resizing every pitch band in the card index.
 */
 .of-pitch-rule__band {
-  display: block;
-  inline-size: var(--of-ornament-band-base);
   /*
-    Three hairlines. One reads as a rule — a divider the eye skips — and the
-    whole point of this mark is that it is READ. Expressed against the bevel
-    width rather than as its own token so the band can never be thinner than
-    the two bevel edges drawn on it, which would leave a bar of pure highlight
-    and shadow with no pitch colour between them.
+    IT SEATS A NUMERAL NOW, so it is a flex box rather than a bare rule.
+
+    It was three hairlines tall and wordless, and that made hue the only channel
+    on the one surface with no jewel — the grid. A band a digit can sit in is
+    the smallest change that gives the sighted reader the redundant channel
+    back, and it keeps the mark reading as an underline rather than becoming a
+    second cut stone: still wider than it is tall, still square-cornered, still
+    struck top and bottom.
   */
-  block-size: calc(var(--of-bevel-width) * 3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: var(--of-ornament-band-base);
+  /* Tall enough for the glyph and no taller — the digit sets the height, and
+     the padding is what keeps the bar from gripping it. */
+  padding-block: var(--of-space-tightest);
   background: var(--band);
+  color: var(--ink);
   /* Cut, never rounded — the system has one radius token and it is none. */
   border-radius: var(--of-bevel-radius);
   box-shadow:
@@ -52,28 +61,53 @@
 }
 
 /*
-  The small size is for a dense row rather than a grid cell: narrower and
-  thinner, so a band sitting beside a line of type does not out-weigh it.
+  MICRO, WHICH IS THE SIZE THE JEWEL'S SMALL GLYPH USES. The numeral is the
+  redundant channel rather than the headline — the name above it is what a
+  reader is scanning — so it is set at the smallest size this system will put
+  type at, and no smaller.
+*/
+.of-pitch-rule__glyph {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-bold);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-normal);
+  user-select: none;
+}
+
+/*
+  The small size is for a dense row rather than a grid cell: narrower, so a band
+  sitting beside a line of type does not out-weigh it. The glyph does not shrink
+  with it — `type.size.micro` is already the floor.
 */
 .of-pitch-rule--sm .of-pitch-rule__band {
   inline-size: var(--of-ornament-band-small);
-  block-size: calc(var(--of-bevel-width) * 2);
 }
 
+/*
+  EACH BAND CARRIES ITS OWN INK, exactly as each pitch stone does — the pairs are
+  asserted at 4.5:1 in both themes in `packages/theme/src/tokens.test.ts`. A
+  numeral that failed contrast on its own band would put the redundant channel
+  back where it started.
+*/
 .of-pitch-rule__band--tone-none {
   --band: var(--of-color-pitch-none);
+  --ink: var(--of-color-pitch-none-ink);
 }
 
 .of-pitch-rule__band--tone-one {
   --band: var(--of-color-pitch-one);
+  --ink: var(--of-color-pitch-one-ink);
 }
 
 .of-pitch-rule__band--tone-two {
   --band: var(--of-color-pitch-two);
+  --ink: var(--of-color-pitch-two-ink);
 }
 
 .of-pitch-rule__band--tone-three {
   --band: var(--of-color-pitch-three);
+  --ink: var(--of-color-pitch-three-ink);
 }
 
 /*
