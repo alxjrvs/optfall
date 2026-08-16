@@ -45,8 +45,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         # `--auto` hands the pull request to GitHub's own gate: it merges only
-        # once the required `CI Success` check from ci.yml is green, and never
-        # sooner.
+        # once every merge requirement is satisfied, and never sooner. That is
+        # the required `CI Success` check from ci.yml AND — since the ruleset
+        # turned `strict` on — the branch being up to date with the default
+        # branch. Dependabot rebases its own pull requests when the base moves,
+        # so the second one costs a re-run rather than a stall.
         # Requires "Allow auto-merge" on the repository, which
         # scripts/repo-settings.sh sets and its --check mode asserts.
         run: gh pr merge --auto --squash "$PR_URL"
