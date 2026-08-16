@@ -158,11 +158,12 @@ function pitchRank(pitch: number): number {
  * vocabulary, because it is a fact about the corpus rather than about a page.
  *
  * IT EXISTS TO ANSWER "IS THIS GROUP THE WHOLE CARD", which is what decides
- * where a row's NAME points, and how it is NAMED — see `groupTarget`. A related list is often a
- * subset: `page.variants` excludes the card you are looking at by definition,
- * so a Head Jab page's row for Head Jab carries two of its three versions.
- * Sending that name to the shared page would offer a version the list is not
- * showing; sending a WHOLE group to one of its members would pick a favourite.
+ * where a row's NAME points, and how it is NAMED — see `groupTarget`. A related
+ * list is often a subset: `page.variants` excludes the card you are looking at
+ * by definition, so a Head Jab page's row for Head Jab carries two of its three
+ * versions. Sending that name to the shared page would offer a version the list
+ * is not showing; sending a WHOLE group to one of its members would pick a
+ * favourite.
  *
  * `nameSlug` is safe to key by name: measured, zero names in the corpus have
  * cards that disagree about it, and all 3,158 name-level routes exist.
@@ -202,16 +203,60 @@ interface LinkGroup {
  * would produce a different arrangement per card for no reason a reader could
  * see. `pitchRank` puts a card with no pitch last, matching the version tabs.
  */
+function groupByName(links: readonly CardLink[]): readonly LinkGroup[] {
+  const byName = new Map<string, CardLink[]>();
+  for (const link of links) {
+    const found = byName.get(link.name) ?? [];
+    found.push(link);
+    byName.set(link.name, found);
+  }
+  return [...byName].map(([name, found]) => ({
+    name,
+    links: found.toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch)),
+  }));
+}
+
 /**
- * Where a row's NAME points, which is the rule `CardIndex` already publishes.
+ * The hidden suffix for a row standing for SOME of a name's versions.
  *
- * `PitchStones` there: "a stone is a link only where there is something to
- * choose between" — the name is the destination, and the marks become controls
- * only when a row stands for more than one card. An earlier version of this
- * list dropped the name's link entirely on a multi-version row and left the
- * stones as the only way in, which made the two surfaces disagree about what a
- * name IS. It is the address for "this card, whichever version you meant", on
- * both.
+ * ONE VERSION IS `variantSuffix`, UNCHANGED, so the ordinary row is named by
+ * the same function every other surface names a card with, and a name belonging
+ * to one card still gets `""`.
+ *
+ * SEVERAL ARE SPELLED OUT — " (pitch 2 and 3)" — rather than named after the
+ * one the href opens. The row covers two cards; calling it "(pitch 2)" would be
+ * true of the destination and false of the row, and it would announce the same
+ * string as the first stone sitting beside it. `PitchRule` spells its own
+ * values the same way for the same reason; it cannot be borrowed from because
+ * that one is a primitive's `aria-label` and this is a suffix on a name.
+ *
+ * `variantSuffix` STILL DECIDES WHETHER THERE IS ONE AT ALL: a group of two is
+ * two cards sharing a name, so both are disambiguated by construction.
+ */
+function versionsSuffix(links: readonly CardLink[]): string {
+  const first = links[0];
+  if (first === undefined) return "";
+  if (links.length === 1)
+    return variantSuffix(first.pitch, first.disambiguated);
+
+  const spoken = links.map((link) =>
+    link.pitch === 0 ? "no pitch" : String(link.pitch),
+  );
+  const last = spoken[spoken.length - 1];
+  return ` (pitch ${spoken.slice(0, -1).join(", ")} and ${last})`;
+}
+
+/**
+ * Where a row's NAME points, and what it is CALLED — one function, because they
+ * are one decision and splitting them is what shipped a bug.
+ *
+ * WHERE IT POINTS is the rule `CardIndex` already publishes. `PitchStones`
+ * there: "a stone is a link only where there is something to choose between" —
+ * the name is the destination, and the marks become controls only when a row
+ * stands for more than one card. An earlier version of this list dropped the
+ * name's link entirely on a multi-version row and left the stones as the only
+ * way in, which made the two surfaces disagree about what a name IS. It is the
+ * address for "this card, whichever version you meant", on both.
  *
  * THE WHOLE-GROUP CASE GOES TO THE NAME; A PARTIAL ONE GOES TO A MEMBER. This
  * is `set.page.tsx`'s `collapsed && whole` test, arrived at for the same
@@ -220,30 +265,30 @@ interface LinkGroup {
  * showing. Related lists are partial more often than a set is — `variants`
  * always excludes the card being read — so this branch is the common one here
  * and the rare one there.
- */
-/**
- * THE QUALIFIER COMES BACK WITH THE HREF, IN ONE FUNCTION, because they are one
- * decision and splitting them is what shipped the bug.
  *
- * A row prints the BARE NAME — that is the whole point of collapsing versions
- * into a stone. But a bare name is not always a name: 900 in this corpus belong
- * to more than one card, and two anchors that differ only in where they point
- * are a WCAG 2.4.4 failure. Measured on the shipped build: 3,583 card pages
- * carried a pair. `/card/count-your-blessings-1` reads "Count Your Blessings"
- * twice, once going to `/card/count-your-blessings-2` in Other versions and
- * once to `/card/count-your-blessings` in References — same words, different
- * cards, and nothing on either to tell a screen reader which is which.
+ * WHAT IT IS CALLED HAD NO RULE AT ALL, AND THAT WAS THE BUG. A row prints the
+ * BARE NAME — the whole point of collapsing versions into a stone. But a bare
+ * name is not always a name: 900 in this corpus belong to more than one card,
+ * and two anchors that differ only in where they point are a WCAG 2.4.4
+ * failure. Measured on the shipped build: 3,583 card pages carried a pair.
+ * `/card/count-your-blessings-1` read "Count Your Blessings" twice, once going
+ * to `/card/count-your-blessings-2` in Other versions and once to
+ * `/card/count-your-blessings` in References — same words, different cards, and
+ * nothing on either to tell a screen reader which is which.
  *
- * SO THE ANCHOR IS NAMED FOR WHERE IT GOES, which is the rule `CardIndexEntry`
- * already states — "the full text the anchor must be NAMED by, qualifier and
- * all" — and the three cases fall out of it rather than being enumerated:
+ * SO THE ANCHOR IS NAMED FOR WHAT IT STANDS FOR, which is `CardIndexEntry`'s
+ * rule — "the full text the anchor must be NAMED by, qualifier and all" — and
+ * three cases fall out of it:
  *
- * - A row pointing at the SHARED page is named by the shared name, so there is
- *   nothing to qualify and the qualifier is empty. That row and the breadcrumb
- *   read alike and go to the same place, which 2.4.4 permits and a reader would
- *   expect.
- * - A row pointing at ONE version is named for that version — "(pitch 2)" — so
- *   it can no longer collide with the shared page's row above it.
+ * - A row that IS the whole name goes to the shared page and is named by the
+ *   shared name. Nothing to qualify. It reads alike to the breadcrumb and goes
+ *   where the breadcrumb goes, which 2.4.4 permits and a reader expects.
+ * - A row standing for ONE version is named for that version, "(pitch 2)".
+ * - A row standing for SOME of them is named for all of those — "(pitch 2 and
+ *   3)". Naming it after the version its href happens to open would be a
+ *   third true-but-partial statement: it would announce the same string as the
+ *   first stone beside it, for a row that covers two cards. See
+ *   {@link versionsSuffix}.
  *
  * IT IS HIDDEN, NOT PRINTED. `CardIndex` does exactly this with
  * `of-index__variant`: the suffix stays inside the anchor and out of sight, so
@@ -267,23 +312,7 @@ function groupTarget(group: LinkGroup): {
 
   return whole
     ? { href: hrefForSlug(known.nameSlug), qualifier: "" }
-    : {
-        href: first.href,
-        qualifier: variantSuffix(first.pitch, first.disambiguated),
-      };
-}
-
-function groupByName(links: readonly CardLink[]): readonly LinkGroup[] {
-  const byName = new Map<string, CardLink[]>();
-  for (const link of links) {
-    const found = byName.get(link.name) ?? [];
-    found.push(link);
-    byName.set(link.name, found);
-  }
-  return [...byName].map(([name, found]) => ({
-    name,
-    links: found.toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch)),
-  }));
+    : { href: first.href, qualifier: versionsSuffix(group.links) };
 }
 
 export function CardEntry({ page, selected = 0 }: CardEntryProps) {

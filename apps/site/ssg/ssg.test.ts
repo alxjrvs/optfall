@@ -1106,11 +1106,26 @@ describe("a related-cards list is one row per name, stones on the right", () => 
       expect(`${route}:${/\(no pitch\)/.test(seen)}`).toBe(`${route}:false`);
     }
 
-    /* And the hidden half is really there on a row that needs it: Head Jab's
-       Other versions row points at pitch 2, one of the two it stands for. */
+    /*
+      And the hidden half is really there on a row that needs it — NAMED FOR
+      EVERY VERSION IT STANDS FOR, not for the one its href opens. Head Jab's
+      Other versions row covers pitch 2 and 3 (the page's own version is
+      excluded from `variants` by definition) and lands on the lower of them.
+      Calling it "(pitch 2)" would be true of the destination and false of the
+      row, and would announce the same string as the first stone beside it.
+    */
     const versions = listIn(render("/card/head-jab-1"));
     expect(versions).toContain(
-      '<a class="of-card__link-name" href="/card/head-jab-2">Head Jab<span class="of-card__visually-hidden"> (pitch 2)</span></a>',
+      '<a class="of-card__link-name" href="/card/head-jab-2">Head Jab<span class="of-card__visually-hidden"> (pitch 2 and 3)</span></a>',
+    );
+
+    /* And a row standing for ONE version is named for that one, through
+       `variantSuffix` exactly as every other surface names a card. Crouching
+       Tiger is referenced by Growl at pitch 1 and by no other version of it —
+       the only shape in the corpus where a group has one disambiguated member,
+       which is why this names an odd pair of cards. */
+    expect(render("/card/crouching-tiger")).toContain(
+      '<a class="of-card__link-name" href="/card/growl-1">Growl<span class="of-card__visually-hidden"> (pitch 1)</span></a>',
     );
   });
 
@@ -1134,8 +1149,23 @@ describe("a related-cards list is one row per name, stones on the right", () => 
       return labelled?.[1] ?? anchor.replace(/<[^>]+>/g, "").trim();
     };
 
+    /*
+     * EVERY 12th PAGE, NOT THE FIRST 400, and the difference is what the sample
+     * can see. Corpus order is upstream's name sort, so a prefix is the letter
+     * A and a little of B — and whether a name is shared is not distributed
+     * evenly through the alphabet. Striding covers the same number of pages
+     * across the whole corpus for the same cost.
+     *
+     * A FULL SCAN IS CLEAN AND IS NOT RUN HERE: 4,941 pages take about 11.5
+     * seconds, against roughly one for this. It was run once by hand over the
+     * built site — 3,583 pages with a pair before the fix, zero after — and the
+     * number in the doc block beside `groupTarget` is that scan's, not this
+     * sample's.
+     */
     let collisions = 0;
-    for (const page of CARD_PAGES.slice(0, 400)) {
+    const sampled = CARD_PAGES.filter((_, index) => index % 12 === 0);
+    expect(sampled.length).toBeGreaterThan(400);
+    for (const page of sampled) {
       const html = render(page.href);
       const targets = new Map<string, Set<string>>();
       for (const anchor of html.matchAll(
