@@ -297,8 +297,16 @@
   NO UNDERLINE AND NO COLOUR CHANGE, because there is no text here to decorate —
   the affordance is the pointer and the ring, and the jewel already carries its
   numeral at full contrast.
+
+  THE SELECTOR HAS TO NAME THE LIST, and a bare `.of-index__stone` did not.
+  `.of-index__names a:hover` is (0,2,1) against this rule's (0,1,0), so the
+  names view drew an underline under a stone on hover while the rows view drew
+  none — one control behaving two ways, under a comment claiming it behaved one.
+  The same specificity trap `.of-index__row-why` records a few rules above.
 */
-.of-index__stone {
+.of-index__stone,
+.of-index__names .of-index__stone:hover,
+.of-index__names .of-index__stone:focus-visible {
   display: inline-flex;
   text-decoration: none;
 }

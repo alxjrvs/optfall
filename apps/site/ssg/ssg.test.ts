@@ -409,6 +409,51 @@ describe("the ported pages", () => {
     expect(html).toContain('href="/card/angelic-wrath"');
   });
 
+  test("the sets index counts what the set page lists", () => {
+    /*
+     * TWO PAGES, ONE NUMBER. `/sets` prints a card count per set and
+     * `sets.page.tsx` says why it counts cards rather than printings: "a set
+     * listing 412 printings beside a page showing 380 rows is two true numbers
+     * arguing." Collapsing rows made that argument true again in the other
+     * direction — the index would have said 307 for Monarch over a page leading
+     * with 155 — so both count NAMES.
+     */
+    const index = all.find((resolved) => resolved.route === "/sets");
+    const indexHtml = index?.render([], undefined) ?? "";
+    const monarchRows = monarchProps?.entries.length ?? 0;
+    expect(monarchRows).toBeGreaterThan(100);
+
+    /* The row for Monarch in the index names the same count the set page's
+       island was handed. */
+    const row = /Monarch<\/a>.{0,400}?([\d,]+)\s*cards/s.exec(indexHtml)?.[1];
+    expect(row).toBe(monarchRows.toLocaleString("en-GB"));
+  });
+
+  test("a set that printed only some versions links to one it printed", () => {
+    /*
+     * `/card/<nameSlug>` RENDERS THE CORPUS'S LOWEST-PITCH VERSION, which a set
+     * that published only the higher ones does not contain. Aurora prints Spark
+     * Spray at pitch 2 and 3: the collapsed row wears AUR022's art and draws two
+     * bands, and sending its name to `/card/spark-spray` would open the pitch-1
+     * card Aurora never published — on the one page whose whole subject is what
+     * this set contains. 23 (set, name) groups in this corpus are that shape.
+     *
+     * It is the same rule `card-search.ts` states beside its own `partial` flag,
+     * and `set:aur` in the search box already answered `/card/spark-spray-2`.
+     */
+    const aurora = all.find((resolved) => resolved.route === "/sets/aur");
+    const html = aurora?.render([], "islands.js") ?? "";
+    expect(html).not.toBe("");
+
+    /* Every Spark Spray link on the page is a version Aurora printed — the
+       bare name would be the pitch-1 card, and it is nowhere. */
+    const links = html.match(/href="\/card\/spark-spray[^"]*"/g) ?? [];
+    expect(links.length).toBeGreaterThan(0);
+    expect(new Set(links)).toEqual(
+      new Set(['href="/card/spark-spray-2"', 'href="/card/spark-spray-3"']),
+    );
+  });
+
   test("the set page carries card faces, which it did not before", () => {
     // The whole point of the change, asserted at its coarsest: there are
     // images of cards on a set page. `check-card-notice.ts` separately proves
