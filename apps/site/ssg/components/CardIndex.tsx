@@ -394,6 +394,45 @@ function PitchSplits({
   );
 }
 
+/**
+ * The pitch qualifier, hidden inside the anchor — and NOTHING where there is
+ * none to carry.
+ *
+ * MOST ROWS HAVE NOTHING TO QUALIFY. A collapsed row stands for every version
+ * it draws a band for, and a card whose name is unique never needed a suffix;
+ * both hand over `""`. The two views below rendered the span regardless, so an
+ * empty `<span class="of-index__variant"></span>` — 39 bytes saying nothing —
+ * shipped on the majority of rows.
+ *
+ * THE SAVING IS SMALL AND IS STATED AS SMALL. Measured across the build: 3,096
+ * empty spans over 112 set pages, 121 kB in total, and 55 of them (2.1 kB) on
+ * the largest page of the largest set. That is not why the guard is here — dead
+ * markup that says nothing is worth removing at any size, and `ResultRow` has
+ * always guarded the identical case — but a comment that implied a budget
+ * problem would be overselling it.
+ *
+ * THE BIGGER NUMBER IS NOT THIS ONE, and it is worth naming so nobody reads
+ * this as having dealt with it. A set page hands the whole set to its island as
+ * JSON in an attribute, and `"qualifier":""` appears there once per row with
+ * every quote escaped to `&quot;` — 324 times on `/sets/lgs`, about 13 kB. That
+ * is the entry FIELD rather than this markup, so removing the span does not
+ * touch it; shrinking it means making `qualifier` optional in the props, which
+ * is a change to what crosses the island boundary and belongs on its own.
+ *
+ * `ResultRow` GUARDS THE IDENTICAL CASE — `qualifier === undefined ||
+ * qualifier === ""` — so the rows view was already clean and the other two were
+ * not. This is that guard, in the one place both of them can share it, rather
+ * than a third spelling of it.
+ *
+ * IT CHANGES NOTHING A READER OR A SCREEN READER GETS. An empty span
+ * contributes no text to an anchor's accessible name; what names the versions
+ * apart is the suffix, and the suffix is still rendered wherever there is one.
+ */
+function Variant({ qualifier }: { readonly qualifier: string }) {
+  if (qualifier === "") return null;
+  return <span className="of-index__variant">{qualifier}</span>;
+}
+
 function altFor(entry: CardIndexEntry): string {
   return entry.typeLine === ""
     ? entry.label
@@ -501,7 +540,7 @@ export function CardIndex({
                   */}
                   <span className="of-index__cell-name">
                     {entry.name}
-                    <span className="of-index__variant">{entry.qualifier}</span>
+                    <Variant qualifier={entry.qualifier} />
                   </span>
                 </a>
                 <PitchSplits versions={entry.versions} />
@@ -569,7 +608,7 @@ export function CardIndex({
               <PitchStones versions={entry.versions} />
               <a href={entry.href}>
                 {entry.name}
-                <span className="of-index__variant">{entry.qualifier}</span>
+                <Variant qualifier={entry.qualifier} />
               </a>
             </li>
           ))}
