@@ -403,7 +403,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
            complete record, and it lists every printing's rarity separately. */
         rarity: raritySlug(printing.rarity),
         rarityCode: printing.rarity,
-        /* NOT `printing.foiling`, and the difference is 4,995 tiles. See
+        /* NOT `printing.foiling`, and the difference is 3,179 tiles. See
            `foilingsByFace` — a tile is an art, and an art can be published at
            more than one foiling. */
         foiling: foilingsByFace.get(key) ?? "",

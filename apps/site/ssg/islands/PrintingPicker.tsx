@@ -75,13 +75,13 @@ export interface Printing {
    * the island renders a string.
    *
    * PLURAL, BECAUSE A TILE IS AN IMAGE AND FOILING IS A PROPERTY OF A PRINTING.
-   * This list is deduped by art, and 4,995 tiles are shared by printings at two
-   * different foilings — `MST131` is one image published Standard AND Rainbow
-   * Foil. Naming only the first would caption a picture with one of the two
-   * things it is, which is the trap the rarity field one line up had to accept
-   * (a caption can show one rarity at a time) and this one does not: every
-   * foiling that reaches this art is named, so the tile says what the picture
-   * IS rather than which row happened to claim it.
+   * This list is deduped by art, and 3,179 of the 9,328 tiles the site renders
+   * are shared by printings at more than one foiling — `MST131` is one image
+   * published Standard AND Rainbow Foil. Naming only the first would caption a
+   * picture with one of the several things it is, which is the trap the rarity
+   * field one line up had to accept (a caption can show one rarity at a time)
+   * and this one does not: every foiling that reaches this art is named, so the
+   * tile says what the picture IS rather than which row happened to claim it.
    */
   readonly foiling: string;
 }
@@ -278,43 +278,47 @@ export function PrintingPicker({
                   <span className="of-picker__id">{printing.id}</span>
                   {/*
                     THE FOILING, WHICH IS WHAT MAKES THE TILE DISTINGUISHABLE AT
-                    ALL ON 640 CARDS.
+                    ALL ON 791 CARDS.
 
                     Set and number named a printing almost everywhere and named
                     NOTHING here: `Aether Ashwing` showed three tiles all reading
                     "Uprising · UPR042" — the standard art, the cold foil, and a
                     second cold foil — and `Adaptive Plating` showed two reading
                     "Evolution · EVO013" with no standard art among them.
-                    Measured: 1,410 tiles across 640 cards carried a caption
-                    identical to a sibling's. The reader could see the pictures
-                    differ and could select either, which is the control working;
-                    they could not learn WHICH THING they had selected, which is
-                    the control failing at the one question it exists to answer.
+                    Measured off the rendered captions: 1,735 tiles across 791
+                    cards read identically to a sibling. The reader could see the
+                    pictures differ and could select either, which is the control
+                    working; they could not learn WHICH THING they had selected,
+                    which is the control failing at the one question it exists to
+                    answer.
 
                     The edition disambiguation above solves the neighbouring case
                     and could not solve this one — these printings share an
                     edition and differ only in how they are foiled — so the fact
                     that separates them is the fact that goes on the tile. It
-                    takes those 1,410 down to 359.
+                    takes those 1,735 down to 279.
 
-                    WHAT IS LEFT, NAMED RATHER THAN ROUNDED AWAY. 336 of the 359
-                    are the Arakni shape `CardEntry` already documents: upstream
-                    publishes a front and a back under one number, both Marvel
-                    cold foil, so the two tiles agree on set, number, edition,
-                    foiling and rarity and differ only by which face they are.
-                    That is a different axis, and the printings table's `Other
-                    face` column is where it is answered. The remaining 23 are
-                    cards with TWO cold-foil arts under one number — a `-CF` and
-                    a `-MV` — which upstream distinguishes by `art_variations`
-                    codes (`AA`, `AB`, `EA`, …) that it publishes no decode table
-                    for. Inventing display names for them would be this project
-                    asserting a vocabulary its source does not define.
+                    WHAT IS LEFT, NAMED RATHER THAN ROUNDED AWAY. All 279 are
+                    arts upstream separates only by a marker in the image file
+                    name, for which the corpus publishes no display vocabulary.
+                    237 of them are one shape: a front and a back under one
+                    number at one foiling — `DYN212-CF_BACK` beside
+                    `DYN212-MV_BACK` — which is a different axis entirely, and
+                    the printings table's `Other face` column is where it is
+                    answered. The other 42 are lettered or `art_variations`
+                    variants: `MST158` beside `MST158-A` and `MST158-B`,
+                    `FAB470-RFA` beside `-RFB` and `-RFC`, `UPR042-CF` beside
+                    `UPR042-MV`. Upstream distinguishes those by codes (`AA`,
+                    `AB`, `EA`, …) it publishes no decode table for, so naming
+                    them here would be this project asserting a vocabulary its
+                    source does not define.
 
                     ROOM IS TAKEN, NOT MADE. Foiling is missing on 5 printing
-                    rows in the corpus and the line is dropped entirely for them
-                    rather than rendering a dash, because a strip of tiles all
-                    one row taller to hold one em-dash is a layout paying for an
-                    absence.
+                    rows in the corpus, four of which publish no image and so
+                    never reach a tile at all; the line is dropped rather than
+                    rendering a dash, because a strip of tiles all one row taller
+                    to hold the single em-dash that `Cracked Bauble`'s `SUP243`
+                    would earn is a layout paying for an absence.
                   */}
                   {printing.foiling === "" ? null : (
                     <span className="of-picker__foiling">
