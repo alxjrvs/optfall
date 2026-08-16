@@ -971,11 +971,13 @@ describe("a related-cards list is one row per name, stones on the right", () => 
 
     /* One row… */
     expect([...list.matchAll(/<li class="of-card__link">/g)].length).toBe(1);
-    /* …one name, which is itself a link… */
+    /* …one name, which is itself a link. The visible text is bare; the
+       qualifier that follows it is hidden, and is what stops the anchor
+       colliding with the other lists' rows for the same name. */
     expect(
       [
         ...list.matchAll(
-          /<a class="of-card__link-name" href="[^"]+">Head Jab<\/a>/g,
+          /<a class="of-card__link-name" href="[^"]+">Head Jab(<span class="of-card__visually-hidden">[^<]*<\/span>)?<\/a>/g,
         ),
       ].length,
     ).toBe(1);
@@ -1082,19 +1084,108 @@ describe("a related-cards list is one row per name, stones on the right", () => 
     expect(stoneHrefs).toContain(nameHref);
   });
 
-  test("no row prints the pitch as words any more", () => {
+  test("no row SHOWS the pitch as words, and one row still says it", () => {
     /*
-     * The text this replaced. Stripping nothing first is safe now — unlike the
-     * hidden-span version this supersedes, there is no `(pitch n)` anywhere in
-     * the list's markup, because the string that names each link lives in an
-     * attribute rather than in a node.
+     * THE CLAIM WEAKENED FROM "NOWHERE IN THE MARKUP" TO "NOWHERE ON SCREEN",
+     * and the difference is a bug this test used to enforce. The stones do name
+     * themselves in an attribute, which is why the words left the list — but a
+     * row whose name points at ONE version has to carry that version's
+     * qualifier inside its anchor, or two rows reading "Count Your Blessings"
+     * go to two different cards with nothing to tell them apart. See
+     * `groupTarget`. So the suffix is hidden rather than absent, exactly as
+     * `of-index__variant` is in the card index.
      */
     for (const route of ["/card/head-jab-1", "/card/runechant"]) {
       const list = listIn(render(route));
-      const text = list.replace(/<[^>]+>/g, "");
-      expect(`${route}:${/\(pitch \d\)/.test(text)}`).toBe(`${route}:false`);
-      expect(`${route}:${/\(no pitch\)/.test(text)}`).toBe(`${route}:false`);
+      /* Strip the hidden spans, then the tags: what is left is what a reader
+         sees, and it carries no pitch words. */
+      const seen = list
+        .replace(/<span class="of-card__visually-hidden">[^<]*<\/span>/g, "")
+        .replace(/<[^>]+>/g, "");
+      expect(`${route}:${/\(pitch \d\)/.test(seen)}`).toBe(`${route}:false`);
+      expect(`${route}:${/\(no pitch\)/.test(seen)}`).toBe(`${route}:false`);
     }
+
+    /*
+      And the hidden half is really there on a row that needs it — NAMED FOR
+      EVERY VERSION IT STANDS FOR, not for the one its href opens. Head Jab's
+      Other versions row covers pitch 2 and 3 (the page's own version is
+      excluded from `variants` by definition) and lands on the lower of them.
+      Calling it "(pitch 2)" would be true of the destination and false of the
+      row, and would announce the same string as the first stone beside it.
+    */
+    const versions = listIn(render("/card/head-jab-1"));
+    expect(versions).toContain(
+      '<a class="of-card__link-name" href="/card/head-jab-2">Head Jab<span class="of-card__visually-hidden"> (pitch 2 and 3)</span></a>',
+    );
+
+    /* And a row standing for ONE version is named for that one, through
+       `variantSuffix` exactly as every other surface names a card. Crouching
+       Tiger is referenced by Growl at pitch 1 and by no other version of it —
+       the only shape in the corpus where a group has one disambiguated member,
+       which is why this names an odd pair of cards. */
+    expect(render("/card/crouching-tiger")).toContain(
+      '<a class="of-card__link-name" href="/card/growl-1">Growl<span class="of-card__visually-hidden"> (pitch 1)</span></a>',
+    );
+  });
+
+  test("no card page has two links reading alike that go to different cards", () => {
+    /*
+     * THE REGRESSION THIS PAIR OF TESTS MISSED, ASSERTED DIRECTLY ON THE PAGE.
+     * WCAG 2.4.4, and the exact failure `variantSuffix` exists to prevent:
+     * `/card/count-your-blessings-1` carried "Count Your Blessings" twice, once
+     * to `/card/count-your-blessings-2` in Other versions and once to
+     * `/card/count-your-blessings` in References. Measured on the shipped
+     * build: 3,583 card pages had a pair, and on 12 of them BOTH sides were
+     * related-list rows.
+     *
+     * ACCESSIBLE NAMES, NOT TEXT NODES, which is what makes this test able to
+     * see the stones as well as the names: a pitch link's name comes from the
+     * `aria-label` on the `role="img"` inside it, and its only text node is an
+     * `aria-hidden` numeral shared by every row on the page.
+     */
+    const nameOf = (anchor: string) => {
+      const labelled = /aria-label="([^"]*)"/.exec(anchor);
+      return labelled?.[1] ?? anchor.replace(/<[^>]+>/g, "").trim();
+    };
+
+    /*
+     * EVERY 12th PAGE, NOT THE FIRST 400, and the difference is what the sample
+     * can see. Corpus order is upstream's name sort, so a prefix is the letter
+     * A and a little of B — and whether a name is shared is not distributed
+     * evenly through the alphabet. Striding covers the same number of pages
+     * across the whole corpus for the same cost.
+     *
+     * A FULL SCAN IS CLEAN AND IS NOT RUN HERE: 4,941 pages take about 11.5
+     * seconds, against roughly one for this. It was run once by hand over the
+     * built site — 3,583 pages with a pair before the fix, zero after — and the
+     * number in the doc block beside `groupTarget` is that scan's, not this
+     * sample's.
+     */
+    let collisions = 0;
+    const sampled = CARD_PAGES.filter((_, index) => index % 12 === 0);
+    expect(sampled.length).toBeGreaterThan(400);
+    for (const page of sampled) {
+      const html = render(page.href);
+      const targets = new Map<string, Set<string>>();
+      for (const anchor of html.matchAll(
+        /<a[^>]*href="(\/card\/[^"]+)"[^>]*>(.*?)<\/a>/gs,
+      )) {
+        const spoken = nameOf(anchor[2] ?? "");
+        if (spoken === "") continue;
+        const found = targets.get(spoken) ?? new Set<string>();
+        found.add(anchor[1] ?? "");
+        targets.set(spoken, found);
+      }
+      for (const [spoken, hrefs] of targets)
+        if (hrefs.size > 1) {
+          collisions += 1;
+          expect(`${page.href}: ${spoken} -> ${[...hrefs].join(", ")}`).toBe(
+            `${page.href}: no collision`,
+          );
+        }
+    }
+    expect(collisions).toBe(0);
   });
 
   test("grouping by name never merges two links at one pitch", () => {

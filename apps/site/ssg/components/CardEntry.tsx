@@ -56,6 +56,7 @@ import {
   hrefForSlug,
   LAST_CONFIRMED,
   STAT_ORDER,
+  variantSuffix,
 } from "../../src/lib/cards";
 import {
   boxFor,
@@ -157,11 +158,12 @@ function pitchRank(pitch: number): number {
  * vocabulary, because it is a fact about the corpus rather than about a page.
  *
  * IT EXISTS TO ANSWER "IS THIS GROUP THE WHOLE CARD", which is what decides
- * where a row's NAME points — see `groupHref`. A related list is often a
- * subset: `page.variants` excludes the card you are looking at by definition,
- * so a Head Jab page's row for Head Jab carries two of its three versions.
- * Sending that name to the shared page would offer a version the list is not
- * showing; sending a WHOLE group to one of its members would pick a favourite.
+ * where a row's NAME points, and how it is NAMED — see `groupTarget`. A related
+ * list is often a subset: `page.variants` excludes the card you are looking at
+ * by definition, so a Head Jab page's row for Head Jab carries two of its three
+ * versions. Sending that name to the shared page would offer a version the list
+ * is not showing; sending a WHOLE group to one of its members would pick a
+ * favourite.
  *
  * `nameSlug` is safe to key by name: measured, zero names in the corpus have
  * cards that disagree about it, and all 3,158 name-level routes exist.
@@ -201,35 +203,6 @@ interface LinkGroup {
  * would produce a different arrangement per card for no reason a reader could
  * see. `pitchRank` puts a card with no pitch last, matching the version tabs.
  */
-/**
- * Where a row's NAME points, which is the rule `CardIndex` already publishes.
- *
- * `PitchStones` there: "a stone is a link only where there is something to
- * choose between" — the name is the destination, and the marks become controls
- * only when a row stands for more than one card. An earlier version of this
- * list dropped the name's link entirely on a multi-version row and left the
- * stones as the only way in, which made the two surfaces disagree about what a
- * name IS. It is the address for "this card, whichever version you meant", on
- * both.
- *
- * THE WHOLE-GROUP CASE GOES TO THE NAME; A PARTIAL ONE GOES TO A MEMBER. This
- * is `set.page.tsx`'s `collapsed && whole` test, arrived at for the same
- * reason: a set that printed two of three versions lands its name "on one it
- * did print", because the shared page would offer a third the surface is not
- * showing. Related lists are partial more often than a set is — `variants`
- * always excludes the card being read — so this branch is the common one here
- * and the rare one there.
- */
-function groupHref(group: LinkGroup): string {
-  const first = group.links[0];
-  if (first === undefined) return "";
-  if (group.links.length === 1) return first.href;
-  const known = VERSIONS_BY_NAME.get(group.name);
-  return known !== undefined && known.count === group.links.length
-    ? hrefForSlug(known.nameSlug)
-    : first.href;
-}
-
 function groupByName(links: readonly CardLink[]): readonly LinkGroup[] {
   const byName = new Map<string, CardLink[]>();
   for (const link of links) {
@@ -241,6 +214,105 @@ function groupByName(links: readonly CardLink[]): readonly LinkGroup[] {
     name,
     links: found.toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch)),
   }));
+}
+
+/**
+ * The hidden suffix for a row standing for SOME of a name's versions.
+ *
+ * ONE VERSION IS `variantSuffix`, UNCHANGED, so the ordinary row is named by
+ * the same function every other surface names a card with, and a name belonging
+ * to one card still gets `""`.
+ *
+ * SEVERAL ARE SPELLED OUT — " (pitch 2 and 3)" — rather than named after the
+ * one the href opens. The row covers two cards; calling it "(pitch 2)" would be
+ * true of the destination and false of the row, and it would announce the same
+ * string as the first stone sitting beside it. `PitchRule` spells its own
+ * values the same way for the same reason; it cannot be borrowed from because
+ * that one is a primitive's `aria-label` and this is a suffix on a name.
+ *
+ * `variantSuffix` STILL DECIDES WHETHER THERE IS ONE AT ALL: a group of two is
+ * two cards sharing a name, so both are disambiguated by construction.
+ */
+function versionsSuffix(links: readonly CardLink[]): string {
+  const first = links[0];
+  if (first === undefined) return "";
+  if (links.length === 1)
+    return variantSuffix(first.pitch, first.disambiguated);
+
+  const spoken = links.map((link) =>
+    link.pitch === 0 ? "no pitch" : String(link.pitch),
+  );
+  const last = spoken[spoken.length - 1];
+  return ` (pitch ${spoken.slice(0, -1).join(", ")} and ${last})`;
+}
+
+/**
+ * Where a row's NAME points, and what it is CALLED — one function, because they
+ * are one decision and splitting them is what shipped a bug.
+ *
+ * WHERE IT POINTS is the rule `CardIndex` already publishes. `PitchStones`
+ * there: "a stone is a link only where there is something to choose between" —
+ * the name is the destination, and the marks become controls only when a row
+ * stands for more than one card. An earlier version of this list dropped the
+ * name's link entirely on a multi-version row and left the stones as the only
+ * way in, which made the two surfaces disagree about what a name IS. It is the
+ * address for "this card, whichever version you meant", on both.
+ *
+ * THE WHOLE-GROUP CASE GOES TO THE NAME; A PARTIAL ONE GOES TO A MEMBER. This
+ * is `set.page.tsx`'s `collapsed && whole` test, arrived at for the same
+ * reason: a set that printed two of three versions lands its name "on one it
+ * did print", because the shared page would offer a third the surface is not
+ * showing. Related lists are partial more often than a set is — `variants`
+ * always excludes the card being read — so this branch is the common one here
+ * and the rare one there.
+ *
+ * WHAT IT IS CALLED HAD NO RULE AT ALL, AND THAT WAS THE BUG. A row prints the
+ * BARE NAME — the whole point of collapsing versions into a stone. But a bare
+ * name is not always a name: 900 in this corpus belong to more than one card,
+ * and two anchors that differ only in where they point are a WCAG 2.4.4
+ * failure. Measured on the shipped build: 3,583 card pages carried a pair.
+ * `/card/count-your-blessings-1` read "Count Your Blessings" twice, once going
+ * to `/card/count-your-blessings-2` in Other versions and once to
+ * `/card/count-your-blessings` in References — same words, different cards, and
+ * nothing on either to tell a screen reader which is which.
+ *
+ * SO THE ANCHOR IS NAMED FOR WHAT IT STANDS FOR, which is `CardIndexEntry`'s
+ * rule — "the full text the anchor must be NAMED by, qualifier and all" — and
+ * three cases fall out of it:
+ *
+ * - A row that IS the whole name goes to the shared page and is named by the
+ *   shared name. Nothing to qualify. It reads alike to the breadcrumb and goes
+ *   where the breadcrumb goes, which 2.4.4 permits and a reader expects.
+ * - A row standing for ONE version is named for that version, "(pitch 2)".
+ * - A row standing for SOME of them is named for all of those — "(pitch 2 and
+ *   3)". Naming it after the version its href happens to open would be a
+ *   third true-but-partial statement: it would announce the same string as the
+ *   first stone beside it, for a row that covers two cards. See
+ *   {@link versionsSuffix}.
+ *
+ * IT IS HIDDEN, NOT PRINTED. `CardIndex` does exactly this with
+ * `of-index__variant`: the suffix stays inside the anchor and out of sight, so
+ * the list still reads as bare names and the links are still told apart by
+ * anything reading them aloud. The stones were already right — `PitchJewel`'s
+ * `label` names each of them — and this is the same fix applied to the one
+ * anchor on the row that was left carrying a bare name.
+ */
+function groupTarget(group: LinkGroup): {
+  readonly href: string;
+  readonly qualifier: string;
+} {
+  const first = group.links[0];
+  if (first === undefined) return { href: "", qualifier: "" };
+
+  const known = VERSIONS_BY_NAME.get(group.name);
+  const whole =
+    group.links.length > 1 &&
+    known !== undefined &&
+    known.count === group.links.length;
+
+  return whole
+    ? { href: hrefForSlug(known.nameSlug), qualifier: "" }
+    : { href: first.href, qualifier: versionsSuffix(group.links) };
 }
 
 export function CardEntry({ page, selected = 0 }: CardEntryProps) {
@@ -1402,9 +1474,11 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 <h3 className="of-card__related-name">{label}</h3>
                 <p className="of-card__scope">{blurb}</p>
                 <ul className="of-card__links">
-                  {groupByName(links).map((group) => (
-                    <li className="of-card__link" key={group.name}>
-                      {/*
+                  {groupByName(links).map((group) => {
+                    const target = groupTarget(group);
+                    return (
+                      <li className="of-card__link" key={group.name}>
+                        {/*
                         ONE ROW PER NAME, WITH A STONE PER VERSION — and which
                         of them is a link follows `CardIndex`'s rule rather than
                         a second one invented here.
@@ -1437,13 +1511,24 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         pitch, which is the collision that would make a stone
                         ambiguous, and the test pins that at zero.
                       */}
-                      <a className="of-card__link-name" href={groupHref(group)}>
-                        {group.name}
-                      </a>
-                      <span className="of-card__link-pitches">
-                        {group.links.map((link) =>
-                          group.links.length === 1 ? (
-                            /*
+                        <a className="of-card__link-name" href={target.href}>
+                          {group.name}
+                          {/*
+                          READ BUT NOT SEEN, exactly as `of-index__variant` is
+                          in the card index. Empty on a row that points at the
+                          shared page, because there is nothing left to qualify;
+                          see `groupTarget`.
+                        */}
+                          {target.qualifier === "" ? null : (
+                            <span className="of-card__visually-hidden">
+                              {target.qualifier}
+                            </span>
+                          )}
+                        </a>
+                        <span className="of-card__link-pitches">
+                          {group.links.map((link) =>
+                            group.links.length === 1 ? (
+                              /*
                               A SOLE VERSION DRAWS A PLAIN STONE, unlinked, for
                               the reason `PitchStones` gives: it would point
                               where the name beside it already points — a second
@@ -1452,13 +1537,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                               have one version), so it is the common shape rather
                               than an edge.
                             */
-                            <PitchJewel
-                              key={link.href}
-                              value={link.pitch}
-                              size="sm"
-                            />
-                          ) : (
-                            /*
+                              <PitchJewel
+                                key={link.href}
+                                value={link.pitch}
+                                size="sm"
+                              />
+                            ) : (
+                              /*
                               THE STONE CARRIES THE LINK'S NAME, via
                               `PitchJewel`'s own `label` prop rather than a
                               hidden span beside it. A `role="img"` with an
@@ -1473,22 +1558,23 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                               composed to tell two same-named cards apart, and
                               here it is the whole of what names the link.
                             */
-                            <a
-                              className="of-card__pitch-link"
-                              href={link.href}
-                              key={link.href}
-                            >
-                              <PitchJewel
-                                value={link.pitch}
-                                size="sm"
-                                label={link.label}
-                              />
-                            </a>
-                          ),
-                        )}
-                      </span>
-                    </li>
-                  ))}
+                              <a
+                                className="of-card__pitch-link"
+                                href={link.href}
+                                key={link.href}
+                              >
+                                <PitchJewel
+                                  value={link.pitch}
+                                  size="sm"
+                                  label={link.label}
+                                />
+                              </a>
+                            ),
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
