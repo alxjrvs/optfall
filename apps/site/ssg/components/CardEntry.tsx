@@ -56,6 +56,7 @@ import {
   hrefForSlug,
   LAST_CONFIRMED,
   STAT_ORDER,
+  variantSuffix,
 } from "../../src/lib/cards";
 import {
   boxFor,
@@ -157,7 +158,7 @@ function pitchRank(pitch: number): number {
  * vocabulary, because it is a fact about the corpus rather than about a page.
  *
  * IT EXISTS TO ANSWER "IS THIS GROUP THE WHOLE CARD", which is what decides
- * where a row's NAME points — see `groupHref`. A related list is often a
+ * where a row's NAME points, and how it is NAMED — see `groupTarget`. A related list is often a
  * subset: `page.variants` excludes the card you are looking at by definition,
  * so a Head Jab page's row for Head Jab carries two of its three versions.
  * Sending that name to the shared page would offer a version the list is not
@@ -220,14 +221,56 @@ interface LinkGroup {
  * always excludes the card being read — so this branch is the common one here
  * and the rare one there.
  */
-function groupHref(group: LinkGroup): string {
+/**
+ * THE QUALIFIER COMES BACK WITH THE HREF, IN ONE FUNCTION, because they are one
+ * decision and splitting them is what shipped the bug.
+ *
+ * A row prints the BARE NAME — that is the whole point of collapsing versions
+ * into a stone. But a bare name is not always a name: 900 in this corpus belong
+ * to more than one card, and two anchors that differ only in where they point
+ * are a WCAG 2.4.4 failure. Measured on the shipped build: 3,583 card pages
+ * carried a pair. `/card/count-your-blessings-1` reads "Count Your Blessings"
+ * twice, once going to `/card/count-your-blessings-2` in Other versions and
+ * once to `/card/count-your-blessings` in References — same words, different
+ * cards, and nothing on either to tell a screen reader which is which.
+ *
+ * SO THE ANCHOR IS NAMED FOR WHERE IT GOES, which is the rule `CardIndexEntry`
+ * already states — "the full text the anchor must be NAMED by, qualifier and
+ * all" — and the three cases fall out of it rather than being enumerated:
+ *
+ * - A row pointing at the SHARED page is named by the shared name, so there is
+ *   nothing to qualify and the qualifier is empty. That row and the breadcrumb
+ *   read alike and go to the same place, which 2.4.4 permits and a reader would
+ *   expect.
+ * - A row pointing at ONE version is named for that version — "(pitch 2)" — so
+ *   it can no longer collide with the shared page's row above it.
+ *
+ * IT IS HIDDEN, NOT PRINTED. `CardIndex` does exactly this with
+ * `of-index__variant`: the suffix stays inside the anchor and out of sight, so
+ * the list still reads as bare names and the links are still told apart by
+ * anything reading them aloud. The stones were already right — `PitchJewel`'s
+ * `label` names each of them — and this is the same fix applied to the one
+ * anchor on the row that was left carrying a bare name.
+ */
+function groupTarget(group: LinkGroup): {
+  readonly href: string;
+  readonly qualifier: string;
+} {
   const first = group.links[0];
-  if (first === undefined) return "";
-  if (group.links.length === 1) return first.href;
+  if (first === undefined) return { href: "", qualifier: "" };
+
   const known = VERSIONS_BY_NAME.get(group.name);
-  return known !== undefined && known.count === group.links.length
-    ? hrefForSlug(known.nameSlug)
-    : first.href;
+  const whole =
+    group.links.length > 1 &&
+    known !== undefined &&
+    known.count === group.links.length;
+
+  return whole
+    ? { href: hrefForSlug(known.nameSlug), qualifier: "" }
+    : {
+        href: first.href,
+        qualifier: variantSuffix(first.pitch, first.disambiguated),
+      };
 }
 
 function groupByName(links: readonly CardLink[]): readonly LinkGroup[] {
@@ -1402,9 +1445,11 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 <h3 className="of-card__related-name">{label}</h3>
                 <p className="of-card__scope">{blurb}</p>
                 <ul className="of-card__links">
-                  {groupByName(links).map((group) => (
-                    <li className="of-card__link" key={group.name}>
-                      {/*
+                  {groupByName(links).map((group) => {
+                    const target = groupTarget(group);
+                    return (
+                      <li className="of-card__link" key={group.name}>
+                        {/*
                         ONE ROW PER NAME, WITH A STONE PER VERSION — and which
                         of them is a link follows `CardIndex`'s rule rather than
                         a second one invented here.
@@ -1437,13 +1482,24 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         pitch, which is the collision that would make a stone
                         ambiguous, and the test pins that at zero.
                       */}
-                      <a className="of-card__link-name" href={groupHref(group)}>
-                        {group.name}
-                      </a>
-                      <span className="of-card__link-pitches">
-                        {group.links.map((link) =>
-                          group.links.length === 1 ? (
-                            /*
+                        <a className="of-card__link-name" href={target.href}>
+                          {group.name}
+                          {/*
+                          READ BUT NOT SEEN, exactly as `of-index__variant` is
+                          in the card index. Empty on a row that points at the
+                          shared page, because there is nothing left to qualify;
+                          see `groupTarget`.
+                        */}
+                          {target.qualifier === "" ? null : (
+                            <span className="of-card__visually-hidden">
+                              {target.qualifier}
+                            </span>
+                          )}
+                        </a>
+                        <span className="of-card__link-pitches">
+                          {group.links.map((link) =>
+                            group.links.length === 1 ? (
+                              /*
                               A SOLE VERSION DRAWS A PLAIN STONE, unlinked, for
                               the reason `PitchStones` gives: it would point
                               where the name beside it already points — a second
@@ -1452,13 +1508,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                               have one version), so it is the common shape rather
                               than an edge.
                             */
-                            <PitchJewel
-                              key={link.href}
-                              value={link.pitch}
-                              size="sm"
-                            />
-                          ) : (
-                            /*
+                              <PitchJewel
+                                key={link.href}
+                                value={link.pitch}
+                                size="sm"
+                              />
+                            ) : (
+                              /*
                               THE STONE CARRIES THE LINK'S NAME, via
                               `PitchJewel`'s own `label` prop rather than a
                               hidden span beside it. A `role="img"` with an
@@ -1473,22 +1529,23 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                               composed to tell two same-named cards apart, and
                               here it is the whole of what names the link.
                             */
-                            <a
-                              className="of-card__pitch-link"
-                              href={link.href}
-                              key={link.href}
-                            >
-                              <PitchJewel
-                                value={link.pitch}
-                                size="sm"
-                                label={link.label}
-                              />
-                            </a>
-                          ),
-                        )}
-                      </span>
-                    </li>
-                  ))}
+                              <a
+                                className="of-card__pitch-link"
+                                href={link.href}
+                                key={link.href}
+                              >
+                                <PitchJewel
+                                  value={link.pitch}
+                                  size="sm"
+                                  label={link.label}
+                                />
+                              </a>
+                            ),
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
