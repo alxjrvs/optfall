@@ -66,6 +66,20 @@ export interface Printing {
    */
   readonly rarity: string;
   /**
+   * Which of the card's other faces this printing is backed with, as an index
+   * into the list the credit line renders — or `""` where this printing is
+   * single-faced.
+   *
+   * CARRIED FOR THE SAME REASON `rarity` IS, and it is per printing for a
+   * sharper reason: a token printed on the back of a hero in one product is
+   * printed alone in another, and 16 cards in this corpus are backed with
+   * different cards in different printings. The picker does not render the link
+   * — that line is in the other column — it publishes which one is true of the
+   * picture on screen. See `CardEntry.tsx` for why the value is an index and
+   * not a slug.
+   */
+  readonly otherFace: string;
+  /**
    * How this art is foiled, in words — `"Cold Foil"`, `"Standard · Rainbow
    * Foil"` — or `""` where upstream records no foiling for it.
    *
@@ -208,6 +222,23 @@ export function PrintingPicker({
     document.documentElement.setAttribute(
       "data-printing-rarity",
       printings[selected]?.rarity ?? printings[0]?.rarity ?? "",
+    );
+    /*
+      AND WHICH OTHER FACE, stamped in the same effect because it is the same
+      claim about the same picture. Two attributes rather than one compound
+      value: they are read by two independent sets of rules, and a single stamp
+      would make every rarity rule name an other-face slot it does not care
+      about.
+
+      UNCONDITIONAL AND EMPTY-WHEN-ABSENT, exactly as above. Bailing out on a
+      single-faced printing would leave the PREVIOUS printing's slot on the
+      root, so the line would go on naming a back that the picture in front of
+      the reader does not have — which is worse than saying nothing, and is the
+      failure the note above records having already shipped once for rarity.
+    */
+    document.documentElement.setAttribute(
+      "data-printing-other-face",
+      printings[selected]?.otherFace ?? printings[0]?.otherFace ?? "",
     );
   }, [printings, selected]);
 

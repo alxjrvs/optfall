@@ -8,6 +8,8 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { CARD_PAGES, CORPUS as CARDS, variantSuffix } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
@@ -878,8 +880,15 @@ describe("the credit line spaces three facts, not two", () => {
    * distribute instead of three. A test of the CSS declaration would have been
    * green throughout the bug. The count is the fact.
    */
+  /*
+    MATCHED ON THE CLASS PREFIX, NOT THE WHOLE ATTRIBUTE, because the footer
+    grew a fourth kind of item whose class list carries modifiers — the other
+    face, on a double-faced printing. An exact `class="of-card__credit"` match
+    would have gone on reporting three items on a line showing four, which is a
+    test that stops describing the thing it is named after.
+  */
   const creditsIn = (html: string) =>
-    [...footerOf(html).matchAll(/<p class="of-card__credit">/g)].length;
+    [...footerOf(html).matchAll(/<p class="of-card__credit[ "]/g)].length;
 
   test("rarity, artist and printings are three siblings", () => {
     const html = render("/card/adaptive-plating");
@@ -908,10 +917,29 @@ describe("the credit line spaces three facts, not two", () => {
      * 4,941 pages because the claim is about the COMPONENT, which does not vary
      * per card, and rendering the corpus twice over to say so would buy nothing
      * the sample does not.
+     *
+     * IT IS THE ITEMS IN THE MARKUP, NOT THE ITEMS ON SCREEN, and the two stop
+     * being the same number on a double-faced card: the other faces are all
+     * published and all but one hidden, so a card backed with two cards has
+     * five children and four visible. What `space-between` distributes is the
+     * visible ones; what this counts is the children, because that is what the
+     * component controls and what a regex can see.
      */
     for (const page of CARD_PAGES.slice(0, 200)) {
-      const html = render(page.href);
-      expect(`${page.label}:${creditsIn(html)}`).toBe(`${page.label}:3`);
+      /*
+        PLUS ONE PER OTHER FACE, and the addition is the point rather than an
+        allowance. A double-faced card publishes a link per card it is backed
+        with — all but one hidden — so the number of ITEMS on the line varies
+        while the number of items VISIBLE does not. Counting only three here
+        would have made this test blind to the whole feature.
+      */
+      const backs = new Set(
+        page.printings
+          .map((printing) => printing.otherFace?.href)
+          .filter((href) => href !== undefined),
+      ).size;
+      const counted = creditsIn(render(page.href));
+      expect(`${page.label}:${counted}`).toBe(`${page.label}:${3 + backs}`);
     }
   });
 });
@@ -1107,6 +1135,117 @@ describe("a related-cards list is one row per name, stones on the right", () => 
     const governs = rule.match(/<ul class="of-rule__governs">.*?<\/ul>/s)?.[0];
     if (governs !== undefined)
       expect(governs).not.toContain("of-card__pitch-link");
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The card on the other face                                                  */
+/* -------------------------------------------------------------------------- */
+
+describe("a double-faced printing names the card on its back", () => {
+  const render = (route: string) =>
+    RESOLVED.find((resolved) => resolved.route === route)?.render(
+      [],
+      undefined,
+    ) ?? "";
+
+  test("the credit line links to the other face", () => {
+    /*
+     * THE CARD A READER'S COPY IS PHYSICALLY ATTACHED TO was named on this page
+     * only in the printings table below the fold — a grid a reader goes to with
+     * a question about printings, not a caption on the picture in front of
+     * them. A Drop in the Ocean is one physical card with Inner Chi.
+     */
+    const html = render("/card/a-drop-in-the-ocean");
+    expect(html).toContain("Backed with");
+    expect(html).toContain('<a href="/card/inner-chi">Inner Chi</a>');
+    /* Marked as the route's own printing, so it shows with no scripting. */
+    expect(html).toContain("of-card__other--initial");
+  });
+
+  test("a card backed with two different cards publishes both, showing one", () => {
+    /*
+     * WHICH CARD IS ON THE BACK IS A FACT ABOUT THE PRINTING, and Agility is
+     * the card that proves it: printed on the back of Gold in Heavy Hitters,
+     * on the back of Might in Part the Mistveil, and alone in six other
+     * products. So the page publishes both and each PRINTING'S OWN URL reveals
+     * the one belonging to the picture it renders — the same arrangement, and
+     * the same reason, as the rarity beside it.
+     */
+    const html = render("/card/agility");
+    expect(html).toContain('data-other-face="0"');
+    expect(html).toContain('data-other-face="1"');
+    expect(html).toContain('href="/card/gold"');
+    expect(html).toContain('href="/card/might"');
+
+    /*
+      Each per-printing route marks its own, and only its own. Read as the list
+      of slots carrying `--initial` rather than as a boolean, so a page marking
+      two of them fails here instead of passing on the first match.
+    */
+    const initialIn = (route: string) =>
+      [
+        ...render(route).matchAll(
+          /class="[^"]*of-card__other--initial"\s+data-other-face="(\d)"/g,
+        ),
+      ].map((match) => match[1]);
+    expect(initialIn("/card/agility/hvy/240")).toEqual(["0"]);
+    expect(initialIn("/card/agility/kyo/027")).toEqual(["1"]);
+
+    /*
+     * AND THE DEFAULT PRINTING MARKS NEITHER, which is the honest answer
+     * rather than a gap: `/card/agility` renders AKO027, an Ako printing of a
+     * token that Ako published on its own. A page showing a single-faced
+     * picture must not caption it with a back it does not have.
+     */
+    expect(render("/card/agility")).not.toContain("of-card__other--initial");
+  });
+
+  test("no card needs more slots than the stylesheet enumerates", () => {
+    /*
+     * THE BOUND THE CSS CANNOT CHECK ITSELF. `CardEntry.css` reveals the
+     * current other face with one rule per slot, because CSS cannot compare an
+     * attribute on the root with an attribute on an element and the set of
+     * cards a card can be backed with is not closed. A corpus sync that gave
+     * some card a fifth distinct back would put a link in the markup that no
+     * printing could ever reveal — invisible, and invisible in exactly the way
+     * a reader cannot report.
+     *
+     * Measured today: 115 cards are backed with one card, 14 with two, 2 with
+     * three — Harmonized Kodachi and Might — and none with more.
+     *
+     * THE BOUND IS COUNTED OUT OF THE STYLESHEET, not written down twice.
+     * Hardcoding the number here would leave this test green on the day
+     * somebody deletes a reveal rule — the exact failure it exists to catch,
+     * arrived at from the CSS side instead of the corpus side.
+     */
+    const stylesheet = readFileSync(
+      join(import.meta.dir, "components", "CardEntry.css"),
+      "utf8",
+    );
+    const slots = new Set(
+      [...stylesheet.matchAll(/data-printing-other-face="(\d+)"/g)].map(
+        (match) => match[1],
+      ),
+    ).size;
+    /* And the rules are the ones this test thinks they are: a stylesheet that
+       stopped enumerating any would otherwise set the bound to zero and fail
+       for a reason nobody could read. */
+    expect(slots).toBeGreaterThan(0);
+
+    const worst = CARD_PAGES.map((page) => ({
+      label: page.label,
+      backs: new Set(
+        page.printings
+          .map((printing) => printing.otherFace?.href)
+          .filter((href) => href !== undefined),
+      ).size,
+    })).toSorted((a, b) => b.backs - a.backs)[0];
+
+    expect(worst?.backs).toBeLessThanOrEqual(slots);
+    /* Pinned, so the day it moves this test says which card moved it rather
+       than only that something did. */
+    expect(`${worst?.label}: ${worst?.backs}`).toBe("Harmonized Kodachi: 3");
   });
 });
 

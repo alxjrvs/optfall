@@ -295,17 +295,22 @@
   names view drew an underline under a stone on hover while the rows view drew
   none — one control behaving two ways, under a comment claiming it behaved one.
   The same specificity trap `.of-index__row-why` records a few rules above.
+
+  THE RING IS WRITTEN FIRST so specificity ascends with source order. It is
+  (0,2,0) against the (0,3,0) below it and they set different properties, so
+  nothing was actually overridden — but `noDescendingSpecificity` reads the
+  shape as the bug it usually is, and the fix is free.
 */
+.of-index__stone:focus-visible {
+  outline: var(--of-bevel-width) solid var(--of-color-accent);
+  outline-offset: var(--of-space-tightest);
+}
+
 .of-index__stone,
 .of-index__names .of-index__stone:hover,
 .of-index__names .of-index__stone:focus-visible {
   display: inline-flex;
   text-decoration: none;
-}
-
-.of-index__stone:focus-visible {
-  outline: var(--of-bevel-width) solid var(--of-color-accent);
-  outline-offset: var(--of-space-tightest);
 }
 
 /* -- Names ----------------------------------------------------------------- */
