@@ -9,7 +9,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { CARD_PAGES, CORPUS as CARDS } from "../src/lib/cards";
+import { CARD_PAGES, CORPUS as CARDS, variantSuffix } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { setFor } from "../src/lib/sets";
 import { canonicalFor, Document } from "./document";
@@ -596,15 +596,24 @@ describe("a card index prints the name and not the pitch qualifier", () => {
 
   test("a card whose name is unique carries no qualifier at all", () => {
     /*
-     * `qualifierOf` takes the DIFFERENCE between the two strings the caller
-     * supplied rather than matching the suffix pattern a second time, so a card
-     * needing no qualifier yields the empty string rather than a stray
-     * fragment. Monarch has both kinds on one page.
+     * ASSERTED THROUGH `entryFor`'s OWN INPUT, not by restating `labelFor`.
+     * The first version of this checked `label === card.name` — true of
+     * `variantSuffix` and true before this change, so it said nothing about
+     * whether the page had started hiding the right thing. It also named a
+     * function that does not exist in the repository.
      */
-    const unique = CARD_PAGES.find(
-      (page) => !page.disambiguated && page.card.name.length > 0,
-    );
+    const unique = CARD_PAGES.find((page) => !page.disambiguated);
     expect(unique).toBeDefined();
-    expect(unique?.label).toBe(unique?.card.name);
+    expect(
+      variantSuffix(unique?.pitch ?? 0, unique?.disambiguated ?? false),
+    ).toBe("");
+
+    /* And a card that DOES need one supplies it, so the empty case above is a
+       result rather than the only case there is. */
+    const versioned = CARD_PAGES.find((page) => page.disambiguated);
+    expect(versioned).toBeDefined();
+    expect(
+      variantSuffix(versioned?.pitch ?? 0, versioned?.disambiguated ?? false),
+    ).toMatch(/^ \((?:no pitch|pitch \d)\)$/);
   });
 });

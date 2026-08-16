@@ -93,11 +93,17 @@ export interface CardIndexEntry {
    * times over on the three versions of a card, in the one place the reader is
    * scanning names rather than reading them.
    *
-   * It is not deleted, only made invisible: {@link label} minus this is
-   * rendered inside the anchor as visually-hidden text, so the accessible name
-   * is exactly what it was and the three anchors are still told apart by
-   * anything reading them aloud. Colour is never the only channel here either —
-   * the mark carries its own written name.
+   * It is not deleted, only made invisible: {@link qualifier} is rendered
+   * inside the anchor as visually-hidden text, so `name` + `qualifier` names
+   * the anchor exactly as `label` does and the versions are still told apart by
+   * anything reading them aloud.
+   *
+   * VISUALLY, THE GRID IS LEFT WITH COLOUR, and that is worth stating plainly.
+   * The rows and names views carry a numbered stone, so hue is redundant there.
+   * The grid carries `PitchRule`, which is bands — its accessible name spells
+   * the values out, but a sighted reader comparing two same-named cells has the
+   * band colour and the card art, both of which are hue. See the note in
+   * `CardIndex.css` beside the cell name.
    */
   readonly name: string;
   /**

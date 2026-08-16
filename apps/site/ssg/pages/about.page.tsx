@@ -142,6 +142,13 @@ const sections = RULES.sections.length.toLocaleString("en-GB");
 const sets = SETS.counts.sets.toLocaleString("en-GB");
 const upstream = `https://github.com/${CORPUS.source.repository}`;
 
+/**
+ * One real face key, taken from the corpus rather than typed, so the sample
+ * link in the sources table points at an image that exists.
+ */
+const SAMPLE_FACE =
+  CARD_PAGES.find((page) => page.face.key !== null)?.face.key ?? "";
+
 /** This site's own source. Linked from the sources table and from the foot. */
 const OPTFALL_REPO = "https://github.com/alxjrvs/optfall";
 
@@ -197,7 +204,10 @@ const SOURCES: readonly {
   },
   {
     what: "Card images",
-    href: FACE_HOST,
+    /* A FACE, NOT THE HOST ROOT. `/` on that site answers a plain-text 404 —
+       the function only serves `<tier>/<name>` — and a table claiming every row
+       is a link you can open should not have one that opens an error. */
+    href: `${FACE_HOST}/normal/${SAMPLE_FACE}`,
     label: "optfall-images.netlify.app",
     note: "Faces published by Legend Story Studios, reached through the URLs the card compilation carries and re-served from a store of our own so the page does not hotlink theirs.",
   },

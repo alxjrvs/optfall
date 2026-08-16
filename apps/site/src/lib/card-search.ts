@@ -2467,9 +2467,18 @@ function toResult(
      * direction. `ResultRow` takes a plain string for accessibility, so the
      * qualifier has to be in it rather than beside it.
      */
+    /*
+      ALWAYS `name` + `qualifier`, in that order, so the string a surface
+      assembles from the two halves IS this one. An art row used to read
+      "Head Jab (pitch 2) · MST131" while the rendered anchor read
+      "Head Jab · MST131 (pitch 2)" — same words, different order, so the
+      identity the two doc blocks assert quietly failed on the one mode nothing
+      tested. The art key sits with the name because both are visible; the pitch
+      trails because it is the half a mark can carry instead.
+    */
     label:
       art !== undefined
-        ? `${fullLabel} · ${artStem}`
+        ? `${bareName} · ${artStem}${pitchSuffix}`
         : collapsed
           ? bareName
           : fullLabel,

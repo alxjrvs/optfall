@@ -62,7 +62,17 @@
 
 .of-about__source {
   display: grid;
-  grid-template-columns: minmax(var(--of-card-face-thumb), 1fr) 2fr;
+  /*
+    TWO COLUMNS WHERE THE LINE CAN SEAT THEM, ONE WHERE IT CANNOT — which the
+    comment above claimed and a fixed `1fr 2fr` did not do. With a 180px floor
+    on the first column the row could not collapse, so a narrow viewport got a
+    sideways scroll instead: exactly the failure `document.css` records, whose
+    `overflow-wrap` fix is scoped to `code` and never reached these anchors.
+  */
+  grid-template-columns: repeat(
+      auto-fit,
+      minmax(var(--of-card-face-thumb), 1fr)
+    );
   gap: var(--of-space-tight) var(--of-space-loose);
   padding-block: var(--of-space-tight);
   border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
@@ -80,6 +90,10 @@
   margin: 0;
   display: grid;
   gap: var(--of-space-tightest);
+  /* `optfall-images.netlify.app` and `Comprehensive Rules 2.14.0 (PDF)` are
+     unbreakable strings; without this they set the row's min-content width and
+     push the page sideways however the columns are declared. */
+  overflow-wrap: anywhere;
 }
 
 /* The sentence under the link, in the quieter voice — it is commentary on the
