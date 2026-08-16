@@ -415,9 +415,26 @@
 }
 
 /*
-    The foot of the panel: attribution and the printing count, in the fine-print
-    register the card-image copyright line already established. Present, never
-    loud — the same argument, and so the same treatment.
+    The foot of the panel: rarity, attribution and the printing count, in the
+    fine-print register the card-image copyright line already established.
+    Present, never loud — the same argument, and so the same treatment.
+
+    THREE ITEMS ACROSS THE LINE, NOT TWO AND A CLUMP. `space-between` has been
+    here since the footer was built, but rarity and the artist credit shared one
+    paragraph, so it was distributing a pair: everything-but-the-count on the
+    left, the count on the right. The three facts are independent — what grade
+    this printing is, who drew it, how many printings exist — and the pairing
+    read as though the first two were one compound fact.
+
+    `CardEntry.tsx` makes them siblings, and this rule then spaces all three
+    with nothing added to it. Worth stating because the fix looks like a CSS
+    change and is not one: the declaration that does the work was already
+    correct, and what was wrong was how many children it had to work on.
+
+    THE GAP IS THE FLOOR, NOT THE SPACING. `space-between` distributes whatever
+    is left over, which is nothing once the line is full — so the two-value
+    `gap` is what keeps the parts apart at the width where they would otherwise
+    touch, and what separates the rows once they wrap. It is unchanged.
   */
 .of-card__band--credits {
   display: flex;
@@ -427,22 +444,28 @@
 }
 
 /*
-    ONE GAP BETWEEN EVERY PART OF THE LINE.
+    ONE GAP INSIDE EACH PART OF THE LINE.
 
-    The credit line is a row of rarities and then an attribution, and it was
-    spaced by two different mechanisms that happened to sit next to each other:
-    `margin-inline-end` between the rarities, and a literal space character
-    between the last rarity and "Illustrated by". Those are not the same
-    distance — one is a token, the other is whatever the sans face sets a word
-    space at — so the run read as a clump with a stray word after it, at every
-    rarity count, which is the whole of the unevenness.
+    HISTORY, KEPT BECAUSE IT IS A RULE SOMEBODY COULD UNDO. Rarity and the
+    attribution shared this paragraph, spaced by two different mechanisms that
+    happened to sit next to each other: `margin-inline-end` between the
+    rarities, and a literal space character between the last rarity and
+    "Illustrated by". Those are not the same distance — one is a token, the
+    other is whatever the sans face sets a word space at — so the run read as a
+    clump with a stray word after it at every rarity count.
 
-    A flex row with one `gap` is the whole fix, and it needs NOTHING wrapped
-    around the attribution to work. The first attempt put a span there on the
-    theory that `gap` spaces elements and a bare text node is not one; flexbox
-    wraps each contiguous run of text in an ANONYMOUS flex item, so the gap
-    already applied to it. Worth writing down, because the wrong version looked
-    like a load-bearing reason rather than a guess.
+    A flex row with one `gap` fixed that, and it needed NOTHING wrapped around
+    the attribution to work: an early attempt added a span on the theory that
+    `gap` spaces elements and a bare text node is not one, but flexbox wraps
+    each contiguous run of text in an ANONYMOUS flex item, so the gap already
+    applied. Still true, and still the reason not to add a span INSIDE one of
+    these paragraphs.
+
+    The parts are separate paragraphs now, distributed by the footer above, so
+    what this rule spaces is the contents of ONE part — the rarity bubble and
+    its word. That is why it survives the split rather than moving up: the
+    footer owns the distance between the three facts, this owns the distance
+    within one of them, and neither is guessing at the other's job.
   */
 .of-card__credit {
   display: flex;

@@ -751,6 +751,69 @@ describe("every picker tile says which printing it is", () => {
 });
 
 /* -------------------------------------------------------------------------- */
+/* The credit line                                                             */
+/* -------------------------------------------------------------------------- */
+
+describe("the credit line spaces three facts, not two", () => {
+  const render = (route: string) =>
+    RESOLVED.find((resolved) => resolved.route === route)?.render(
+      [],
+      undefined,
+    ) ?? "";
+
+  const footerOf = (html: string) =>
+    html.match(
+      /<footer class="of-card__band of-card__band--credits">(.*?)<\/footer>/s,
+    )?.[1] ?? "";
+
+  /**
+   * ASSERTED ON THE CHILD COUNT, WHICH IS THE THING THAT WAS WRONG.
+   *
+   * `justify-content: space-between` was already on the footer and was already
+   * correct; what made the line read as a clump plus a count was that rarity
+   * and the artist shared a paragraph, so the rule had two children to
+   * distribute instead of three. A test of the CSS declaration would have been
+   * green throughout the bug. The count is the fact.
+   */
+  const creditsIn = (html: string) =>
+    [...footerOf(html).matchAll(/<p class="of-card__credit">/g)].length;
+
+  test("rarity, artist and printings are three siblings", () => {
+    const html = render("/card/adaptive-plating");
+    expect(html).toContain("of-card__band--credits");
+    expect(creditsIn(html)).toBe(3);
+
+    /* And they are in reading order: what grade, who drew it, how many. */
+    const footer = footerOf(html);
+    expect(footer.indexOf("of-card__rarity")).toBeLessThan(
+      footer.indexOf("Illustrated by"),
+    );
+    expect(footer.indexOf("Illustrated by")).toBeLessThan(
+      footer.indexOf('href="#printings"'),
+    );
+  });
+
+  test("every card page carries all three, so none of them is a special case", () => {
+    /*
+     * MEASURED RATHER THAN ASSUMED. The artist paragraph renders a refusal
+     * ("No artist is credited…") rather than nothing when upstream credits
+     * none, and the rarity list is built from the tiles — so both are present
+     * on every page today, and a third item that vanished on some card would
+     * leave `space-between` distributing two again on exactly that card.
+     *
+     * Zero cards lack either today. This runs over a sample rather than all
+     * 4,941 pages because the claim is about the COMPONENT, which does not vary
+     * per card, and rendering the corpus twice over to say so would buy nothing
+     * the sample does not.
+     */
+    for (const page of CARD_PAGES.slice(0, 200)) {
+      const html = render(page.href);
+      expect(`${page.label}:${creditsIn(html)}`).toBe(`${page.label}:3`);
+    }
+  });
+});
+
+/* -------------------------------------------------------------------------- */
 /* Bare names in a card index                                                  */
 /* -------------------------------------------------------------------------- */
 
