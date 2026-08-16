@@ -24,7 +24,7 @@
  *
  * THERE IS NO ISLAND ON THIS PAGE AT ALL, which is the end of a direction the
  * previous note recorded halfway. It said the printing picker was the only
- * island here — one interactive control across 12,278 pages, with the
+ * island here — one interactive control across 11,378 pages, with the
  * printed-text toggle done in CSS so it cost nothing. The picker is gone: the
  * printings table below is how a reader reaches another art, each row
  * addressing the art it is published with, so the heaviest route in the build
@@ -98,7 +98,7 @@ export interface CardEntryProps {
   readonly selected?: number;
 }
 
-/** The keyword vocabulary, built once for all 12,278 card pages. */
+/** The keyword vocabulary, built once for all 11,378 card pages. */
 const KEYWORD_VOCABULARY = buildKeywordVocabulary(
   corpusJson as unknown as RulesCorpus,
 );

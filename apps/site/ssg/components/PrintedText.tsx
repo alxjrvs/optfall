@@ -9,7 +9,7 @@
  *
  * The raw view existed to be CHECKABLE, and it was the weakest available way to
  * be. It sat behind a control most readers never touched, it duplicated every
- * card's text into the markup of all 12,278 pages, and what it proved — that
+ * card's text into the markup of all 11,378 pages, and what it proved — that
  * `{p}` was in the bytes — is not the part anybody doubts. The part worth
  * checking is the MAPPING, `{p}` → power, and that is not in the raw text at
  * all: it is in the Comprehensive Rules at 1.12.4a–h, which the card page cites

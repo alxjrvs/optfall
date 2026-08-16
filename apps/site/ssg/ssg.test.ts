@@ -46,6 +46,15 @@ import type { PageModule, PageResult } from "./types";
  *
  * Resolved through the router's own table, so a test asking for a card gets the
  * page the site would actually serve.
+ *
+ * IT COVERS DEFAULT PRINTINGS ONLY, AND THE LITERALS ELSEWHERE IN THIS FILE ARE
+ * DELIBERATE. A handful of assertions spell an ALTERNATE art's URL out —
+ * `/card/lgs/017-rf/head-jab-1`, `/card/wtr/u-wtr098/head-jab-1` — because those
+ * tests are about that specific art: the rainbow-foil promo, the Unlimited
+ * printing that shares a collector number with Alpha. "Whichever alternate comes
+ * first" would make them assert something else, so the address is named. What is
+ * derivable is which of a card's printings is its DEFAULT, and that is the thing
+ * a corpus resync moves.
  */
 function addressOf(slug: string): string {
   const route = CARD_ROUTES.find(
@@ -263,7 +272,7 @@ describe("the route registry", () => {
  * Every route the registry owns, resolved once and shared by the two describes
  * that only need to READ the table.
  *
- * Each of them used to build its own — 13,676 route resolutions twice, which
+ * Each of them used to build its own — 12,776 route resolutions twice, which
  * walks the 4,941-card corpus twice for an answer that cannot differ between
  * them. `routes` is a module-scope constant and `resolve()` is pure over it, so
  * one list is not merely cheaper, it is the same list.

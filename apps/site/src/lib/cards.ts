@@ -1295,38 +1295,6 @@ export const CARD_ROUTES: readonly CardRoute[] = (() => {
   }
 
   /*
-   * NO COLLECTOR NUMBER MAY BE SPELLED LIKE A SET CODE, and this is not a
-   * tidiness rule — it is what keeps the redirect table from looping.
-   *
-   * `ssg/redirects.ts` moves the 6,437 old printing URLs with one rule per set
-   * code, pinning the code to the segment the OLD form put it in so that the
-   * rule cannot also match the NEW form. That separation is exactly the claim
-   * "segment two of a new-form URL is never a set code" — and segment two of a
-   * new-form URL is this `number`. If upstream ever publishes a collector
-   * number that collapses to a set code, the rule's own output re-enters the
-   * table and a dead card URL 301s in a circle forever.
-   *
-   * Asserted HERE, where the number segment is derived, rather than only in
-   * `redirects.ts` where the consequence lands: the message can name the
-   * printing that caused it. Measured: zero of 11,378 today.
-   */
-  const setCodes = new Set(routes.map((route) => route.setCode));
-  const ambiguous = routes.filter((route) => setCodes.has(route.number));
-  if (ambiguous.length > 0) {
-    throw new Error(
-      `apps/site/src/lib/cards.ts: ${ambiguous.length} printing(s) have a ` +
-        `collector-number segment spelled like a set code — ` +
-        `${ambiguous
-          .slice(0, 3)
-          .map((route) => `${route.href} (${route.ref.key})`)
-          .join(", ")}. The redirect table in ssg/redirects.ts distinguishes ` +
-        `the old card URL form from the new one by which segment holds a set ` +
-        `code, so this makes it CYCLE: a dead card URL would 301 forever ` +
-        `instead of 404ing. See legacyPrintingRules.`,
-    );
-  }
-
-  /*
    * EVERY CARD MUST HAVE AT LEAST ONE ADDRESS. `defaultAddressOf` already
    * throws for a card with no face, so this cannot fire independently of it
    * today — it is here because the two failures are different sizes and only

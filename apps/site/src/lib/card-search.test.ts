@@ -1123,8 +1123,27 @@ describe("release dates", () => {
   });
 
   test("order:released is oldest first, and dir:desc reverses it", () => {
-    const asc = searchCards(index, "dominate order:released", 5000);
-    const desc = searchCards(index, "dominate order:released dir:desc", 5000);
+    /*
+     * `unique:cards`, SO EVERY ROW STANDS FOR THE CARD IT WAS SORTED BY.
+     *
+     * The default mode collapses pitch siblings, and a collapsed row's href is
+     * the LOWEST-PITCH sibling's address while the row itself is the
+     * BEST-RANKED one — under `order:released`, the earliest-released. So
+     * looking a row's date up by its href reads a different card's date, and
+     * the monotonicity claim is checked against the wrong card. It passes today
+     * only because siblings are almost always printed in the same sets, which
+     * is the kind of accident that makes a test look like it works.
+     */
+    const asc = searchCards(
+      index,
+      "dominate order:released unique:cards",
+      5000,
+    );
+    const desc = searchCards(
+      index,
+      "dominate order:released dir:desc unique:cards",
+      5000,
+    );
     expect(asc.sort.key).toBe("released");
     expect(asc.total).toBe(desc.total);
     expect(asc.results[0]?.label).not.toBe(desc.results[0]?.label);
@@ -1135,7 +1154,8 @@ describe("release dates", () => {
     /* KEYED ON THE ROW'S HREF, WHICH IS NOW A PRINTING URL. This used to strip
        `/card/` and look the remainder up in `slugs`; that returned -1 for every
        row the moment addresses gained segments, so `dated` was empty and the
-       assertion compared [] to []. The ordering claim went unchecked. */
+       assertion compared [] to []. The ordering claim went unchecked. Every row
+       is one card here, so its href IS its own address. */
     const ordinalByHref = new Map(
       index.slugs.map((_, ordinal) => [addressOf(ordinal), ordinal]),
     );
@@ -1144,8 +1164,10 @@ describe("release dates", () => {
       return ordinal === undefined ? "" : (index.released[ordinal]?.[0] ?? "");
     });
     const dated = dates.filter((date) => date !== "");
-    /* The lookup has to actually resolve, or this test is green over nothing —
-       which is precisely how it broke. */
+    /* EVERY row has to resolve, not merely one — a lookup that silently missed
+       some rows would check monotonicity over a subsequence, which is a weaker
+       claim that can hold while the sort is wrong. */
+    expect(dates.filter((date) => date === "")).toEqual([]);
     expect(dated.length).toBeGreaterThan(0);
     expect(dated).toEqual([...dated].toSorted());
   });

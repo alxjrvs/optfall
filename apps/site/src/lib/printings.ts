@@ -10,7 +10,7 @@
  * which roughly 9.2 MB was the card corpus, sent to every reader who opened a
  * page with an island on it.
  *
- * Nothing caught it. The build reported success, all 13,675 pages rendered, the
+ * Nothing caught it. The build reported success, all 12,776 pages rendered, the
  * islands hydrated, and every compliance check passed — a bundle nobody measures
  * is a bundle that can be any size at all. **`assertIslandBudget` in
  * `ssg/build.ts` measures it now**, and fails the build over a ceiling.

@@ -28,7 +28,7 @@
  *   for the multi-segment printing routes, which are the shape most likely to
  *   be got wrong.
  * - **A generated non-page file goes missing.** This is not hypothetical
- *   either: `document.tsx` linked `/favicon.svg` on all 13,675 pages for four
+ *   either: `document.tsx` linked `/favicon.svg` on all 12,776 pages for four
  *   layers of the port while nothing emitted it, because a favicon is not a
  *   page and page-count parity could not see it.
  *
@@ -74,7 +74,7 @@ import { CARD_ROUTES } from "../apps/site/src/lib/cards";
 const PORT = 4399;
 
 /**
- * Generous, because `dev` BUILDS before it serves — 13,675 pages plus a Vite
+ * Generous, because `dev` BUILDS before it serves — 12,776 pages plus a Vite
  * bundle, on a cold CI runner. The old value was 120s and covered a dev server
  * that rendered nothing up front.
  */
@@ -144,7 +144,7 @@ const checks: Check[] = [
    * THE PWA SURFACE, which is a fourth mechanism: the manifest and the install
    * icon are derived like the favicon, and `sw.js` is written by Workbox after
    * everything else exists. Every page links the manifest and registers the
-   * worker, so a missing one of these is 13,675 pages pointing at nothing.
+   * worker, so a missing one of these is 12,776 pages pointing at nothing.
    */
   { path: "/manifest.webmanifest", contentType: "application/manifest+json" },
   { path: "/icon.svg", contentType: "image/svg+xml" },
