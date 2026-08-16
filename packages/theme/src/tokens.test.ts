@@ -349,6 +349,124 @@ describe("state colours are distinguishable", () => {
   }
 });
 
+/**
+ * PERCEPTUAL DISTANCE, WHICH LUMINANCE CONTRAST CANNOT STAND IN FOR.
+ *
+ * The rarity ramp is ten filled discs a reader scans, so the question it has to
+ * survive is "can I tell this one from that one" — and two colours of identical
+ * lightness and opposite hue have a contrast ratio of 1.0 while being trivially
+ * distinguishable. CIE L*a*b* with a plain ΔE76 is the smallest thing that
+ * answers the real question; the extra machinery of ΔE2000 would buy precision
+ * this is not using, since what follows is a floor rather than a ranking.
+ */
+function lab(hex: string): [number, number, number] {
+  const [r, g, b] = channels(hex).map((c) =>
+    c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4,
+  ) as [number, number, number];
+  /* D65, then the standard f(t) with the linear segment near black. */
+  const x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047;
+  const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883;
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))];
+}
+
+function deltaE(a: string, b: string): number {
+  const [l1, a1, b1] = lab(a);
+  const [l2, a2, b2] = lab(b);
+  return Math.hypot(l1 - l2, a1 - a2, b1 - b2);
+}
+
+/**
+ * The rarity ramp, which had NO TEST OF ANY KIND before Legendary went yellow.
+ *
+ * That is the reason this block exists rather than a nice-to-have alongside the
+ * change. Legendary was a violet and is now a yellow one rank from Majestic's
+ * gold — the only two warm yellows in the table, adjacent on the ladder, which
+ * is precisely where a reader compares. Nothing in the repository would have
+ * noticed if the two had been picked close enough to read as one colour, and
+ * "it looked fine in the mode I happened to open" is not a check.
+ *
+ * THE FLOOR IS THE TABLE'S OWN, NOT AN IMPORTED CONSTANT. A JND for large flat
+ * patches is somewhere near ΔE 2, which everything here clears by an order of
+ * magnitude and which would therefore assert nothing. The honest floor is what
+ * the palette already ships and its authors accepted: `token`/`basic` at 12.4
+ * in dark, `common`/`token` at 10.6 in light. 10 is under both, so this fails
+ * on a NEW collision without pretending the existing near-neighbours are one.
+ */
+describe("the rarity ramp stays scannable", () => {
+  const RARITIES = [
+    "common",
+    "rare",
+    "super",
+    "majestic",
+    "legendary",
+    "fabled",
+    "token",
+    "basic",
+    "marvel",
+    "promo",
+  ] as const;
+
+  for (const [mode, tokens] of MODES) {
+    test(`${mode}: no two rarities collide`, () => {
+      for (let i = 0; i < RARITIES.length; i += 1) {
+        for (let j = i + 1; j < RARITIES.length; j += 1) {
+          const a = token(tokens, `color.rarity.${RARITIES[i]}` as TokenId);
+          const b = token(tokens, `color.rarity.${RARITIES[j]}` as TokenId);
+          const pair = `${RARITIES[i]}/${RARITIES[j]}`;
+          /* Interpolated into the expectation so a failure NAMES the pair.
+             A bare `expect(d).toBeGreaterThan(10)` reports "9.8 is not > 10"
+             and leaves whoever broke it to find which of 45 pairs it was. */
+          expect(`${pair}:${deltaE(a, b) > 10}`).toBe(`${pair}:true`);
+        }
+      }
+    });
+
+    test(`${mode}: the two yellows are further apart than any pair already here`, () => {
+      /*
+       * THE PAIR THIS BLOCK WAS WRITTEN FOR, asserted against the table's own
+       * closest neighbours rather than against a number somebody chose. If a
+       * future palette pass moves Majestic or Legendary together, this fails
+       * before the generic floor above does — which is the point, since these
+       * two are the ones a reader is most likely to be comparing.
+       */
+      const gold = token(tokens, "color.rarity.majestic");
+      const yellow = token(tokens, "color.rarity.legendary");
+
+      let closest = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < RARITIES.length; i += 1) {
+        for (let j = i + 1; j < RARITIES.length; j += 1) {
+          if (RARITIES[i] === "legendary" || RARITIES[j] === "legendary")
+            continue;
+          const a = token(tokens, `color.rarity.${RARITIES[i]}` as TokenId);
+          const b = token(tokens, `color.rarity.${RARITIES[j]}` as TokenId);
+          closest = Math.min(closest, deltaE(a, b));
+        }
+      }
+
+      expect(deltaE(gold, yellow)).toBeGreaterThan(closest);
+    });
+
+    test(`${mode}: every rarity carries its own ink at AA`, () => {
+      /*
+       * The letter is the fact — `docs/DESIGN.md`'s rule that the hue is a
+       * grouping and never the claim — so the one thing that may not degrade is
+       * the letter's legibility on its own bubble. Yellow needs dark ink where
+       * the violet it replaced took white, and this is what says so.
+       */
+      for (const rarity of RARITIES) {
+        const id = `color.rarity.${rarity}` as TokenId;
+        const ratio = contrastRatio(
+          token(tokens, `${id}.ink` as TokenId),
+          token(tokens, id),
+        );
+        expect(`${rarity}:${ratio >= 4.5}`).toBe(`${rarity}:true`);
+      }
+    });
+  }
+});
+
 describe("the emitted stylesheet", () => {
   const css = themeStylesheet();
 

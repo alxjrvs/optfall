@@ -552,17 +552,43 @@ export const DARK_TOKENS: TokenTable = {
 
      BRASS IS NOT AVAILABLE, including to Promo, where it is the obvious choice.
      "A material used once is a signal; used twice it is a theme", and brass is
-     spent on verified attribution. Promo takes a mauve that is nobody else's. */
+     spent on verified attribution. Promo takes a mauve that is nobody else's.
+
+     LEGENDARY IS YELLOW, AND IT SITS NEXT TO MAJESTIC'S GOLD ON PURPOSE. It was
+     a violet, which separated it from everything; the two are now the only warm
+     yellows in the table and they are one rank apart on the ladder, which is
+     exactly where a reader is most likely to be comparing them. So the pair is
+     the one that had to be measured rather than eyeballed: they are 29 ΔE apart
+     in dark and 24 in light, against a table whose closest EXISTING pair is 12.4
+     dark and 10.6 light (token/basic and common/token). Comfortably clear by
+     this palette's own working standard, and `tokens.test.ts` now pins it — the
+     rarity ramp had no test of any kind before this, which is how a second
+     yellow could have landed on top of the first with nothing to catch it.
+
+     THE SEPARATION IS CARRIED DIFFERENTLY IN EACH MODE, and that is the point of
+     keeping two hand-checked tables rather than deriving one from the other.
+     Dark goes up: a bright lemon at L* 88 against gold's 65, which an ink-black
+     letter sits on at 13.5:1. Light cannot — the ash ground is already at L* 85,
+     so a lemon bubble would have less edge than any other chip on the page — so
+     it goes to a deep chrome yellow at L* 70, separating from gold's 55 by
+     lightness in the same direction the whole light table darkens. */
   "color.rarity.common": "#6e6e6e",
   "color.rarity.common.ink": "#ffffff",
   "color.rarity.rare": "#8a6a2f",
   "color.rarity.rare.ink": "#ffffff",
-  "color.rarity.super": "#4a7fa8",
+  /* DARKENED BY A HAIR TO CLEAR AA, and it is a bug fix rather than a palette
+     choice. This was `#4a7fa8`, on which white lands at 4.29:1 — under the 4.5
+     the letter needs, and the letter is the fact. Nothing caught it because the
+     rarity ramp had no test until the one in `tokens.test.ts`, which is the
+     honest reason a pre-existing near-miss is corrected in a commit about
+     Legendary: writing that test is what found it. The shift is 6.7 ΔE, far
+     enough to pass and near enough that the blue is the same blue. */
+  "color.rarity.super": "#3d6e95",
   "color.rarity.super.ink": "#ffffff",
   "color.rarity.majestic": "#c9971f",
   "color.rarity.majestic.ink": "#171307",
-  "color.rarity.legendary": "#6f5aa6",
-  "color.rarity.legendary.ink": "#ffffff",
+  "color.rarity.legendary": "#f7dc3f",
+  "color.rarity.legendary.ink": "#171307",
   "color.rarity.fabled": "#b0431f",
   "color.rarity.fabled.ink": "#ffffff",
   "color.rarity.token": "#4a4a4a",
@@ -710,8 +736,8 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.rarity.super.ink": "#ffffff",
   "color.rarity.majestic": "#a87d13",
   "color.rarity.majestic.ink": "#1a1405",
-  "color.rarity.legendary": "#57458a",
-  "color.rarity.legendary.ink": "#ffffff",
+  "color.rarity.legendary": "#c9a900",
+  "color.rarity.legendary.ink": "#1a1405",
   "color.rarity.fabled": "#8f3315",
   "color.rarity.fabled.ink": "#ffffff",
   "color.rarity.token": "#767676",
