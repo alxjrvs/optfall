@@ -878,17 +878,37 @@ describe("the printings table is how a reader reaches another art", () => {
     }
   });
 
-  test("the shared page for a name does not claim a row is the page", () => {
+  test("the marked row IS the page, and says the strong thing", () => {
     /*
-     * `/card/head-jab` RENDERS THE FIRST VERSION'S CARD at a URL of its own, so
-     * the row whose art is shown addresses `/card/head-jab-1` — a different
-     * page. Marking it `aria-current="page"` told a screen reader the link led
-     * where the reader already was, which is the one thing that attribute
-     * means. The row is still the current ITEM, and says so.
+     * THIS TEST USED TO ASSERT THE OPPOSITE, AND THE REASON EXPIRED.
+     * `/card/head-jab` rendered the first version's card at a URL of its own,
+     * so the row whose art was shown addressed a DIFFERENT page and
+     * `aria-current="page"` would have told a screen reader the link led where
+     * the reader already was. `"true"` — current item, unspecified — was the
+     * only value true on every route.
+     *
+     * Every route is a printing now and the marked row's href is the URL being
+     * rendered, on every one of the 11,378. So the accurate value is `"page"`,
+     * and that is the one a screen reader announces as *this page*.
+     *
+     * ASSERTED ON BOTH A DEFAULT AND AN ALTERNATE, because "the row addresses
+     * itself" is exactly the claim that used to be false on one route shape
+     * and true on the others.
      */
-    const table = tableIn(render(addressOf("head-jab-1")));
-    expect(table).not.toContain('aria-current="page"');
-    expect([...table.matchAll(/aria-current="true"/g)]).toHaveLength(1);
+    for (const route of [
+      addressOf("head-jab-1"),
+      "/card/lgs/017-rf/head-jab-1",
+    ]) {
+      const table = tableIn(render(route));
+      expect(`${route}: ${table === ""}`).toBe(`${route}: false`);
+      expect(table).not.toContain('aria-current="true"');
+
+      const marked = [...table.matchAll(/aria-current="page"/g)];
+      expect(`${route}: ${marked.length}`).toBe(`${route}: 1`);
+
+      /* And it marks the row that addresses THIS url, not merely some row. */
+      expect(table).toContain(`href="${route}" aria-current="page"`);
+    }
   });
 
   test("a printing with no edition says so with a dash, not a sentence", () => {
@@ -918,18 +938,18 @@ describe("the printings table is how a reader reaches another art", () => {
      * The rail said it with an accent outline; the row says it with
      * `aria-current`, which is announced rather than only drawn.
      *
-     * `"true"` RATHER THAN `"page"`, and the assertion below names the value on
-     * purpose. `"page"` claims the link addresses the URL being read, which is
-     * false on `/card/<name>` — the shared page for a name renders the first
-     * version's card, so the marked row points at `/card/<name>-1`. See the
-     * test below it.
+     * `"page"` RATHER THAN `"true"`, and the assertion below names the value on
+     * purpose. It was `"true"` while `/card/<name>` existed — that page rendered
+     * the first version's card, so its marked row pointed somewhere else and the
+     * stronger claim would have been a lie. Every route addresses itself now.
+     * See the test below it.
      *
      * AND FOUR PRINTINGS IN THIS CORPUS PUBLISH NO IMAGE, so there is no page
      * for their number to open. `Toughness`'s `SUP241` is one: its row keeps
      * every other column and carries no anchor.
      */
     const table = tableIn(render("/card/lgs/017-rf/head-jab-1"));
-    expect([...table.matchAll(/aria-current="true"/g)]).toHaveLength(1);
+    expect([...table.matchAll(/aria-current="page"/g)]).toHaveLength(1);
     expect(table).toMatch(
       /<tr class="of-card__printing--shown">.*?LGS017.*?<\/tr>/s,
     );

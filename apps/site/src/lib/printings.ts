@@ -84,13 +84,13 @@ export function numberFor(key: string, setCode: string): string {
 }
 
 /**
- * The address of one printing: `/card/mst/131/head-jab`.
+ * The address of one printing: `/card/wtr/098/head-jab-1`.
  *
  * SET AND NUMBER COME FIRST, AND THE NAME IS THE TAIL. This is Scryfall's
  * spelling — `/card/mh3/467/wooded-foothills` — and it is the right way round
  * for a reason that has nothing to do with imitation: **the identity of a
  * printing is printed on the printing.** A reader holding the card can read
- * `MST131` off it and type the URL; nobody can read a slug off anything. So the
+ * `WTR098` off it and type the URL; nobody can read a slug off anything. So the
  * two segments that name the thing lead, and the name follows as the part that
  * makes a pasted link legible.
  *

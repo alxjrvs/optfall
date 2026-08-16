@@ -2,7 +2,7 @@
  * The card corpus, shaped once for the 11,378 pages that serve it.
  *
  * `docs/PLAN.md` Phase 2: **cards are what people arrive for**, and "every view
- * is a URL" — `/card/mst/095/command-and-conquer` is the product, not
+ * is a URL" — `/card/arc/159/command-and-conquer` is the product, not
  * decoration on it. Everything in this module exists to make one permanent URL
  * per PRINTING cheap enough that emitting all of them statically is
  * unremarkable.
@@ -1295,14 +1295,6 @@ export const CARD_ROUTES: readonly CardRoute[] = (() => {
   }
 
   /*
-   * EVERY CARD MUST HAVE AT LEAST ONE ADDRESS. `defaultAddressOf` already
-   * throws for a card with no face, so this cannot fire independently of it
-   * today — it is here because the two failures are different sizes and only
-   * one of them is loud. A card missing from this list is missing from the
-   * SITE, and a reference index that has quietly stopped carrying a card is
-   * precisely the "stale by silence" failure `docs/PLAN.md` is written against.
-   */
-  /*
    * NO COLLECTOR NUMBER MAY BE SPELLED LIKE A SET CODE, and this is not a
    * tidiness rule — it is what keeps the redirect table from looping.
    *
@@ -1334,6 +1326,14 @@ export const CARD_ROUTES: readonly CardRoute[] = (() => {
     );
   }
 
+  /*
+   * EVERY CARD MUST HAVE AT LEAST ONE ADDRESS. `defaultAddressOf` already
+   * throws for a card with no face, so this cannot fire independently of it
+   * today — it is here because the two failures are different sizes and only
+   * one of them is loud. A card missing from this list is missing from the
+   * SITE, and a reference index that has quietly stopped carrying a card is
+   * precisely the "stale by silence" failure `docs/PLAN.md` is written against.
+   */
   const addressed = new Set(routes.map((route) => route.page.card.unique_id));
   if (addressed.size !== CARD_PAGES.length) {
     const missing = CARD_PAGES.filter(

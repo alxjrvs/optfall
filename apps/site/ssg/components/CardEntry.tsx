@@ -1497,28 +1497,30 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         printing.id
                       ) : (
                         /*
-                          `aria-current="true"`, NOT `"page"`, and the name page
-                          is why. `"page"` claims the link addresses the URL
-                          being rendered, which is true of `/card/head-jab-1`
-                          and its per-art routes and FALSE of `/card/head-jab` —
-                          the shared page for a name, which renders the first
-                          version's card and would have marked a row pointing
-                          somewhere else as the page you are on.
+                          `aria-current="page"`, AND IT USED TO BE `"true"`
+                          BECAUSE OF A PAGE THAT NO LONGER EXISTS. `"page"`
+                          claims the link addresses the URL being rendered. That
+                          was true of a card's own route and its per-art routes
+                          and FALSE of `/card/head-jab` — the shared page for a
+                          name, which rendered the first version's card and so
+                          would have marked a row pointing somewhere else as the
+                          page you are on. `"true"`, the weaker "current item
+                          within a set", was the only claim true on every route.
 
-                          `"true"` is the weaker and accurate claim: the current
-                          item within a set. That is what the row is on every
-                          route — the printing whose art is at the top of this
-                          page — and it is the state a control has to expose
-                          however it is reached.
+                          Every route is a printing now and every printing's row
+                          addresses itself, so the stronger claim is simply
+                          accurate — and it is the one a screen reader can do
+                          something with, since "page" is the value that gets
+                          announced as *this page* rather than as an unspecified
+                          currency.
 
-                          It is still a link. On most routes it addresses the
-                          page it is on, which is what makes the row copyable
-                          and what makes the marking mean something on arrival
-                          rather than only after a click.
+                          It is still a link, which is what makes the row
+                          copyable: the marked row is the permalink for the art
+                          at the top of this page.
                         */
                         <a
                           href={href}
-                          aria-current={current ? "true" : undefined}
+                          aria-current={current ? "page" : undefined}
                         >
                           {printing.id}
                           {qualifier === "" ? null : (

@@ -1541,17 +1541,30 @@ describe("a set-scoped search shows that set's printing", () => {
     const arts = searchCards(index, "set:lgs unique:art", 20000);
     expect(arts.total).toBeGreaterThan(0);
 
-    /* Every row for one card shares `/card/<slug>`; an art row appends the
-       printing to that path, so the first three segments identify the card. */
+    /*
+     * THE CARD IS THE LAST SEGMENT, AND IT USED TO BE THE FIRST THREE.
+     * `/card/<slug>/…` meant the leading `/card/<slug>` identified the card;
+     * addresses are `/card/<set>/<number>/<slug>` now, so the same expression
+     * yields `/card/lgs` and buckets every row in the set together. That breaks
+     * this test in BOTH directions: the regression it guards escapes whenever a
+     * card's default printing comes from another set (its two rows land in
+     * different buckets), and two distinct cards sharing one image inside `lgs`
+     * would fail it spuriously.
+     *
+     * The slug is unique per card — `SLUG_BY_ID` throws otherwise — so the
+     * trailing segment is the card, exactly as the leading one used to be.
+     */
     const byCard = new Map<string, string[]>();
     for (const row of arts.results) {
       if (row.faceKey === null) continue;
-      const card = row.href.split("/").slice(0, 3).join("/");
+      const card = row.href.split("/").at(-1) ?? "";
       const seen = byCard.get(card);
       if (seen) seen.push(row.faceKey);
       else byCard.set(card, [row.faceKey]);
     }
-    expect(byCard.size).toBeGreaterThan(0);
+    /* Grouped by CARD, so there are many buckets — one per set would be one,
+       which is what the broken expression produced and what nothing caught. */
+    expect(byCard.size).toBeGreaterThan(50);
 
     const duplicated = [...byCard.entries()].filter(
       ([, keys]) => new Set(keys).size !== keys.length,

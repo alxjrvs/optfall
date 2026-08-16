@@ -112,7 +112,8 @@ if (!defaultRoute || !alternateRoute) {
 /*
  * A REDIRECT IS A ROUTE THE SITE OWNS, AND NOTHING WAS CHECKING ONE.
  *
- * 5,842 rules keep every pre-change card URL alive, and they reach the reader
+ * The emitted table is 5,953 rules — 5,841 exact sources plus one per set code
+ * — and they reach the reader
  * through a mechanism no other check here touches: a `_redirects` file written
  * by the build and read back by the server. Emitting it, parsing it and acting
  * on it are three separate things that can each silently stop happening, and

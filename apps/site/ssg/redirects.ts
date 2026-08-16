@@ -233,6 +233,10 @@ export function matchRedirect(
   pathname: string,
 ): string | undefined {
   const path = pathname.replace(/\/+$/, "") || "/";
+  /* SPLIT ONCE, NOT PER RULE. This sat inside the loop, so a request that
+     matches nothing — every 404 the dev server serves — re-split the same
+     string 5,953 times. */
+  const pathParts = path.split("/");
 
   for (const rule of rules) {
     if (rule.from.includes("*")) {
@@ -245,7 +249,6 @@ export function matchRedirect(
     }
 
     const fromParts = rule.from.split("/");
-    const pathParts = path.split("/");
     if (fromParts.length !== pathParts.length) continue;
 
     const bindings = new Map<string, string>();

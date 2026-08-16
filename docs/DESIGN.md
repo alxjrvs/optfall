@@ -293,7 +293,7 @@ updates here are consequential and currently arrive as a changelog nobody can
 cross-reference against cards. Note the reverse link — a rule knows which
 interactions cite it, so a change tells you exactly what it invalidates.
 
-### 5. Card page — `optfall.com/card/mst/095/command-and-conquer`
+### 5. Card page — `optfall.com/card/arc/159/command-and-conquer`
 
 **The destination.** ~~Supporting cast, explicitly not a destination.~~ That was
 this document's position and it is now wrong: `PLAN.md` was rewritten on
