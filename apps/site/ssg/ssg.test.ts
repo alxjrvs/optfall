@@ -303,7 +303,12 @@ describe("the ported pages", () => {
       .replaceAll("&gt;", ">")
       .replaceAll("&amp;", "&");
     return JSON.parse(decoded) as {
-      entries: { label: string; faceKey: string | null }[];
+      entries: {
+        label: string;
+        href: string;
+        faceKey: string | null;
+        versions: { pitch: number; href: string; label: string }[];
+      }[];
       subject: string;
     };
   })();
@@ -353,10 +358,55 @@ describe("the ported pages", () => {
     const entries = monarchProps?.entries ?? [];
     expect(entries.length).toBeGreaterThan(100);
 
+    /*
+     * COUNTED IN VERSIONS, NOT IN ROWS, AND THE DIFFERENCE IS THE COLLAPSE.
+     * The index above draws one row per NAME — Head Jab red, yellow and blue
+     * are one cell with three bands — while this list is the fallback for a
+     * reader who cannot page or switch views, so it stays one line per card.
+     * Measured on Monarch: 155 rows over 307 cards, and it is the 307 that has
+     * to survive the `<noscript>`.
+     */
+    const versions = entries.flatMap((entry) => entry.versions);
+    expect(versions.length).toBeGreaterThan(entries.length);
+
     const noscript =
       /<noscript>(.*?)<\/noscript>/s.exec(monarchHtml)?.[1] ?? "";
     const anchors = noscript.match(/<a href="\/card\//g) ?? [];
-    expect(anchors.length).toBe(entries.length);
+    expect(anchors.length).toBe(versions.length);
+  });
+
+  test("the pitch versions of one name are ONE row, with a door each", () => {
+    /*
+     * THE SCREENSHOT THIS CAME FROM: three consecutive cells of Angelic Wrath
+     * on the Local Game Store Promos page, identical art, identical name,
+     * identical type line, differing in one coloured band and in a qualifier
+     * the index deliberately hides. A player calls those three one card, and
+     * `card-search.ts` has collapsed them on exactly that rule since it was
+     * written; this page was where the two surfaces disagreed.
+     *
+     * WHAT THE COLLAPSE MAY NOT COST is any version's address, which is the
+     * half worth asserting: the row names the card, and each band names and
+     * opens the version it is drawn for.
+     */
+    const lgs = all.find((resolved) => resolved.route === "/sets/lgs");
+    const html = lgs?.render([], "islands.js") ?? "";
+    expect(html).not.toBe("");
+
+    const cells = html.match(/of-index__cell-name[^>]*>Angelic Wrath/g) ?? [];
+    expect(cells).toHaveLength(1);
+
+    /* The three versions, each a link, each named for the card and not merely
+       for a pitch value — a band carries no text, so its label is all a screen
+       reader has to tell one from the next. */
+    for (const pitch of [1, 2, 3]) {
+      expect(html).toContain(
+        `<a class="of-index__split" href="/card/angelic-wrath-${pitch}">`,
+      );
+      expect(html).toContain(`aria-label="Angelic Wrath (pitch ${pitch})"`);
+    }
+
+    /* And the name goes to the name — the page that holds all three. */
+    expect(html).toContain('href="/card/angelic-wrath"');
   });
 
   test("the set page carries card faces, which it did not before", () => {
@@ -818,8 +868,18 @@ describe("the credit line spaces three facts, not two", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("a card index prints the name and not the pitch qualifier", () => {
-  const monarch = RESOLVED.find((resolved) => resolved.route === "/sets/mon");
-  const html = monarch?.render([], "islands.js") ?? "";
+  /*
+   * LOCAL GAME STORE PROMOS RATHER THAN MONARCH, and the swap is a consequence
+   * of the collapse rather than a preference. Monarch prints every version of
+   * every name it carries, so after the collapse not one of its 155 rows stands
+   * for a single version of a shared name — there is no qualifier left on that
+   * page to assert about, and this test went green-by-vacancy. LGS is the set
+   * from the screenshot: 432 cards in 344 rows, of which some are whole names
+   * collapsed and some are ONE version of a name printed elsewhere. The second
+   * kind is what still needs the hidden qualifier.
+   */
+  const promos = RESOLVED.find((resolved) => resolved.route === "/sets/lgs");
+  const html = promos?.render([], "islands.js") ?? "";
 
   test("the visible title is bare, and the qualifier is still in the anchor", () => {
     /*
@@ -830,6 +890,10 @@ describe("a card index prints the name and not the pitch qualifier", () => {
      * carried by the rule under the name and the stone beside it instead of by
      * four words repeated on every row, so the text is hidden rather than
      * dropped: still inside the anchor, still part of its accessible name.
+     *
+     * A ROW THAT STANDS FOR EVERY VERSION HAS NOTHING TO QUALIFY and carries no
+     * suffix at all — see the collapse tests above. This is about the other
+     * kind: one version of a name whose siblings were printed somewhere else.
      */
     expect(html).not.toBe("");
     /* The suffix is present in the markup… */

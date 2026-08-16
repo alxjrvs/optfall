@@ -124,7 +124,7 @@ describe("legality filters read the format they name", () => {
    * search reports has to be the one that matches what it displays, or the
    * count is describing a page nobody is looking at.
    *
-   * The per-version truth is not lost — see the `matchedPitches` tests below,
+   * The per-version truth is not lost — see the `matchedVersions` tests below,
    * which cover the four cards whose ban DIFFERS between versions.
    */
   test("banned:cc is the 35 cards behind the corpus's 51 banned entries", () => {
@@ -332,7 +332,52 @@ describe("ranking", () => {
     // version of it — and the destination shows all three.
     expect(headJab[0]?.label).not.toContain("pitch");
     expect(headJab[0]?.totalVersions).toBe(3);
-    expect(headJab[0]?.matchedPitches).toEqual([1, 2, 3]);
+    expect(headJab[0]?.matchedVersions.map((version) => version.pitch)).toEqual(
+      [1, 2, 3],
+    );
+  });
+
+  test("a collapsed row carries an address for every version it drew", () => {
+    /*
+     * THE MARK IS A CONTROL, AND A CONTROL NEEDS SOMEWHERE TO GO. A row
+     * standing for three cards renders three coloured bands; each of them is a
+     * link to the version it is drawn for, so the engine has to say where each
+     * one lives rather than handing the surface three pitch values and one
+     * destination. See `CardIndexEntry.versions`.
+     */
+    const headJab = searchCards(index, "head jab").results.find(
+      (row) => row.label === "Head Jab",
+    );
+
+    expect(headJab?.matchedVersions).toEqual([
+      { pitch: 1, href: "/card/head-jab-1", label: "Head Jab (pitch 1)" },
+      { pitch: 2, href: "/card/head-jab-2", label: "Head Jab (pitch 2)" },
+      { pitch: 3, href: "/card/head-jab-3", label: "Head Jab (pitch 3)" },
+    ]);
+    /* The row's own link is the NAME — the page that holds all three. The
+       versions are how a reader who means one of them says so. */
+    expect(headJab?.href).toBe("/card/head-jab");
+  });
+
+  test("only the matched versions get a door, on every row", () => {
+    /*
+     * THE FILTER HAS TO REACH THE MARK. `pitch:1` draws one band under Head
+     * Jab because only one version matched; if the bands were built from the
+     * card rather than from the match, the row would offer a reader two
+     * versions the query is false of — and on `banned:cc` that is the legal
+     * version of a card the page has just put on a banned list.
+     */
+    for (const row of searchCards(index, "pitch:1", 200).results) {
+      expect(row.matchedVersions.map((version) => version.pitch)).toEqual([1]);
+    }
+
+    const banned = searchCards(index, "banned:cc", 5000).results.find(
+      (row) => row.label === "Electromagnetic Somersault",
+    );
+    expect(banned?.matchedVersions.map((version) => version.href)).toEqual([
+      "/card/electromagnetic-somersault-1",
+      "/card/electromagnetic-somersault-2",
+    ]);
   });
 
   test("a partial version match links to a version that ACTUALLY matched", () => {
@@ -343,7 +388,7 @@ describe("ranking", () => {
     // Spinneret — a result clicked from a BANNED list opened a page reading
     // "Legal", with nothing on either surface saying the version had changed.
     const rows = searchCards(index, "banned:cc", 5000).results.filter(
-      (row) => row.matchedPitches.length < row.totalVersions,
+      (row) => row.matchedVersions.length < row.totalVersions,
     );
 
     expect(rows.length).toBeGreaterThan(0);
@@ -355,7 +400,9 @@ describe("ranking", () => {
       // And the version it points at is one of the ones that matched. Compared
       // as strings so the assertion does not need a cast to `PitchValue` — the
       // slug suffix is a character, and widening it back is noise.
-      expect(row.matchedPitches.map(String)).toContain(slug.slice(-1));
+      expect(
+        row.matchedVersions.map((version) => String(version.pitch)),
+      ).toContain(slug.slice(-1));
     }
   });
 
@@ -371,11 +418,13 @@ describe("ranking", () => {
 
     expect(banned).toBeDefined();
     expect(banned?.totalVersions).toBe(3);
-    expect(banned?.matchedPitches).toEqual([1, 2]);
+    expect(banned?.matchedVersions.map((version) => version.pitch)).toEqual([
+      1, 2,
+    ]);
     // Fewer matched than exist, which is what makes the row render the
     // qualifier rather than staying silent.
     expect(
-      (banned?.matchedPitches.length ?? 0) < (banned?.totalVersions ?? 0),
+      (banned?.matchedVersions.length ?? 0) < (banned?.totalVersions ?? 0),
     ).toBe(true);
   });
 
@@ -1498,7 +1547,7 @@ describe("name, qualifier and label are three different jobs", () => {
     const collapsed = searchCards(index, "head jab", 200).results;
     expect(collapsed.length).toBeGreaterThan(0);
     for (const row of collapsed) {
-      if (row.matchedPitches.length === row.totalVersions) {
+      if (row.matchedVersions.length === row.totalVersions) {
         expect(row.qualifier).toBe("");
       }
     }
