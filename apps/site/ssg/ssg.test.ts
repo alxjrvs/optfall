@@ -213,13 +213,20 @@ describe("the route registry", () => {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Every route the registry owns, resolved ONCE for the whole file.
+ * Every route the registry owns, resolved once and shared by the two describes
+ * that only need to READ the table.
  *
- * Two describes below need it, and each used to build its own — 13,676 route
- * resolutions twice, which walks the 4,941-card corpus twice for an answer that
- * cannot differ between them. `routes` is a module-scope constant and
- * `resolve()` is pure over it, so one list is not merely cheaper, it is the
- * same list.
+ * Each of them used to build its own — 13,676 route resolutions twice, which
+ * walks the 4,941-card corpus twice for an answer that cannot differ between
+ * them. `routes` is a module-scope constant and `resolve()` is pure over it, so
+ * one list is not merely cheaper, it is the same list.
+ *
+ * NOT "ONCE FOR THE WHOLE FILE", which is what this said first and was not
+ * true. `describe("the route registry")` calls `resolve()` itself in two tests,
+ * and should: what those assert is that resolution produces no duplicate output
+ * path and no duplicate route, which is a claim about the ACT of resolving.
+ * Handing them a list somebody else already resolved would test the list rather
+ * than the function.
  */
 const RESOLVED = routes.flatMap((registration) => [...registration.resolve()]);
 
