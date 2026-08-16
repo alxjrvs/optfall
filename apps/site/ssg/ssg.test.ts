@@ -893,7 +893,7 @@ describe("the printings table is how a reader reaches another art", () => {
 /* The credit line                                                             */
 /* -------------------------------------------------------------------------- */
 
-describe("the credit line spaces three facts, not two", () => {
+describe("the credit line spaces every fact, not a clump and a count", () => {
   const render = (route: string) =>
     RESOLVED.find((resolved) => resolved.route === route)?.render(
       [],
@@ -916,27 +916,91 @@ describe("the credit line spaces three facts, not two", () => {
    */
   /*
     MATCHED ON THE CLASS PREFIX, NOT THE WHOLE ATTRIBUTE, because the footer
-    grew a fourth kind of item whose class list carries modifiers — the other
-    face, on a double-faced printing. An exact `class="of-card__credit"` match
-    would have gone on reporting three items on a line showing four, which is a
-    test that stops describing the thing it is named after.
+    grew a kind of item whose class list carries modifiers — the other face, on
+    a double-faced printing. An exact `class="of-card__credit"` match would have
+    gone on reporting fewer items than the line shows, which is a test that
+    stops describing the thing it is named after.
   */
   const creditsIn = (html: string) =>
     [...footerOf(html).matchAll(/<p class="of-card__credit[ "]/g)].length;
 
-  test("rarity, artist and printings are three siblings", () => {
+  test("rarity, code, artist and printings are four siblings", () => {
     const html = render("/card/adaptive-plating");
     expect(html).toContain("of-card__band--credits");
-    expect(creditsIn(html)).toBe(3);
+    expect(creditsIn(html)).toBe(4);
 
-    /* And they are in reading order: what grade, who drew it, how many. */
+    /* And they are in reading order: what grade, which printing, who drew it,
+       how many. */
     const footer = footerOf(html);
     expect(footer.indexOf("of-card__rarity")).toBeLessThan(
+      footer.indexOf("of-card__printing-code"),
+    );
+    expect(footer.indexOf("of-card__printing-code")).toBeLessThan(
       footer.indexOf("Illustrated by"),
     );
     expect(footer.indexOf("Illustrated by")).toBeLessThan(
       footer.indexOf('href="#printings"'),
     );
+  });
+
+  test("the code is one word, and only its set half is a link", () => {
+    /*
+     * `EVO013`, NOT `EVO 013` AND NOT `EVOEVO013`. Two ways to get this wrong,
+     * and the markup is what rules out both: the anchor and the number sit
+     * inside ONE span, because the paragraph around them is a flex row with a
+     * gap that would otherwise print the citation as two words; and the number
+     * is sliced at its own set prefix rather than composed from `set_id` and
+     * `id`, which upstream already concatenated.
+     */
+    const footer = footerOf(render("/card/adaptive-plating"));
+    expect(footer).toContain(
+      '<span class="of-card__printing-code"><a href="/sets/evo">EVO' +
+        '<span class="of-card__visually-hidden"> (Bright Lights)</span>' +
+        "</a>013</span>",
+    );
+
+    /* The number is not inside the anchor: it names a position in a set and
+       has nowhere of its own to go. */
+    expect(footer).not.toMatch(/<a href="\/sets\/evo">[^<]*013/);
+  });
+
+  test("the code names the printing on screen, on every route", () => {
+    /*
+     * THE SAME RULE THE RARITY FOLLOWS, AND FOR THE SAME REASON: a page shows
+     * one printing, so the caption under the picture states THAT printing's
+     * number. A per-art route is where this can go wrong — the code came off
+     * `card.printings[0]` in an early pass and captioned every art of a card
+     * with the first one's number.
+     */
+    const codeIn = (html: string) =>
+      footerOf(html)
+        .match(
+          /<span class="of-card__printing-code">(.*?)<\/span>\s*<\/p>/s,
+        )?.[1]
+        ?.replace(/<[^>]*>/g, "")
+        .replace(/\s*\([^)]*\)\s*/g, "") ?? "";
+
+    let perArt = 0;
+    for (const page of CARD_PAGES.filter((_, index) => index % 53 === 0)) {
+      const faces = facesOf(page.card);
+      /* Face 0 is `/card/<slug>`; the rest have per-art routes of their own. */
+      faces.forEach((face, index) => {
+        const route =
+          index === 0
+            ? page.href
+            : `${page.href}/${face.setCode}/${face.number}`;
+        const html = render(route);
+        if (html === "") return;
+        if (index > 0) perArt += 1;
+        expect(`${route}: ${codeIn(html)}`).toBe(
+          `${route}: ${face.printing.id}`,
+        );
+      });
+    }
+
+    /* A route form this test never reached would make it green by not looking,
+       and the per-art form is the one it exists for. */
+    expect(perArt).toBeGreaterThan(0);
   });
 
   test("what the line carries follows the printing, not the card", () => {

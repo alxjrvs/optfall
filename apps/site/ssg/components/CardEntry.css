@@ -583,6 +583,42 @@
   --rarity-ink: var(--of-color-rarity-promo-ink);
 }
 
+/* -- The printing's code -------------------------------------------------- */
+
+/*
+  THE CITATION, IN THE SAME VOICE THE TABLE SETS IT IN. Sans and wide-tracked is
+  what a code reads as here — `.of-card__collector` and `.of-card__code-hint`
+  both set an identifier this way — so the one under the picture and the one in
+  the row a reader compares it against are recognisably the same kind of thing.
+  It takes its size from `.of-card__credit`, because it is one of that line's
+  facts and not a louder one.
+
+  NOWRAP FOR THE REASON THE TABLE'S CELLS HAVE IT: a collector number broken
+  across two lines is no longer a citation. It is six characters, so this costs
+  nothing.
+
+  `user-select: all` SO ONE CLICK TAKES THE WHOLE CODE, and the clipped set name
+  inside the anchor is excluded from that selection for the reason
+  `.of-card__collector` excludes its own hidden qualifier — hidden text that is
+  read aloud must not arrive in a paste. Without it, copying `MST131` would give
+  "MST (Part the Mistveil)131".
+
+  ONLY THE SET HALF IS AN ANCHOR, so only it takes the link accent. That is the
+  colour doing what the markup does: the half that is a destination looks like
+  one, and the number beside it reads as the fine print it belongs to.
+*/
+.of-card__printing-code {
+  font-family: var(--of-type-family-sans);
+  letter-spacing: var(--of-type-tracking-wide);
+  color: var(--of-color-ink-muted);
+  white-space: nowrap;
+  user-select: all;
+}
+
+.of-card__printing-code .of-card__visually-hidden {
+  user-select: none;
+}
+
 .of-card__code-hint {
   margin-inline-start: var(--of-space-tight);
   font-family: var(--of-type-family-sans);
