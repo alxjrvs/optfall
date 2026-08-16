@@ -1035,18 +1035,21 @@
 }
 
 /*
-    NOWRAP WAS ON EVERY CELL, AND ONE CELL IS A SENTENCE.
+    NOWRAP WAS ON EVERY CELL, AND ONE CELL WAS A SENTENCE.
 
-    `N` decodes to "No specified edition (used for promos, non-set releases,
-    etc.)" — upstream's own gloss, 60 characters of it, and it is the commonest
-    edition in the corpus. Held on one line it made the Edition column wider than a
-    phone and the whole table wider than two of them — a table two and a half
-    screens across with the artist and the other face off the right of it.
+    `N` decoded to "No specified edition (used for promos, non-set releases,
+    etc.)" — upstream's own gloss, 60 characters of it, and the commonest
+    edition in the corpus. Held on one line it made the Edition column wider
+    than a phone and the whole table wider than two of them.
 
-    So cells wrap by default and only the identifiers hold their line: a
-    collector number or a set code broken across two lines is no longer a
-    citation, which is the thing nowrap was for. The table still scrolls inside
-    `.of-card__scroller` when it has to — it just very rarely has to now.
+    THE SENTENCE IS GONE NOW — the column prints an em dash where a printing
+    names no edition, which is what `editionLabel` is for — so the cell this
+    rule was written against no longer exists. The rule stays anyway, and not
+    out of caution: an artist credit is two or three names, a set name is up to
+    six words, and both are prose that a table has no business holding on one
+    line. Only the identifiers do that, because a collector number or a set code
+    broken across two lines is no longer a citation, which is the thing nowrap
+    was for. The table still scrolls inside `.of-card__scroller` when it has to.
   */
 /*
   THE ROW THIS PAGE IS SHOWING — the printing whose art is at the top of the

@@ -770,6 +770,27 @@ describe("the printings table is how a reader reaches another art", () => {
     }
   });
 
+  test("a printing with no edition says so with a dash, not a sentence", () => {
+    /*
+     * `N` IS UPSTREAM EXPLAINING AN ABSENCE AT LENGTH: "No specified edition
+     * (used for promos, non-set releases, etc.)", 60 characters, and the
+     * commonest edition in the corpus — printed in full on most rows of most
+     * cards, in a column whose question it does not answer.
+     *
+     * ASSERTED ON THE WHOLE PAGE, not on the cell, because the same decode
+     * reached the set page's masthead: a promo set's line read "Editions: No
+     * specified edition (used for promos, non-set releases, etc.)", which is a
+     * set saying it has no editions in the most words available.
+     */
+    const html = render("/card/head-jab-1");
+    expect(html).not.toContain("No specified edition");
+    expect(tableIn(html)).toContain("<td>—</td>");
+
+    /* And a real edition still decodes: Head Jab's Welcome to Rathe rows. */
+    expect(tableIn(html)).toContain("<td>Alpha</td>");
+    expect(tableIn(html)).toContain("<td>Unlimited</td>");
+  });
+
   test("the row being shown is marked, and a face-less printing is not a link", () => {
     /*
      * A CONTROL THAT CANNOT SAY WHICH OPTION IS SELECTED IS A LIST OF LINKS.

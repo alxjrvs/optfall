@@ -26,7 +26,7 @@ import {
   variantSuffix,
 } from "../../src/lib/cards";
 import { orientationOf } from "../../src/lib/faces";
-import { editionName, setFor } from "../../src/lib/sets";
+import { editionLabel, setFor } from "../../src/lib/sets";
 import type { CardIndexEntry } from "../components/CardIndex";
 import { Island } from "../Island";
 import { CardList } from "../islands/CardList";
@@ -279,6 +279,10 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     the reader can count on the screen, and the versions are named after it
     wherever the two disagree.
   */
+  const editions = set.editions
+    .map((code) => editionLabel(code))
+    .filter((name): name is string => name !== null);
+
   const versions = listed.length;
   const rows = entries.length;
   const counted =
@@ -328,9 +332,16 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
             )}{" "}
             {counted}
             {set.outOfPrint ? " Out of print." : null}
-            {set.editions.length > 0
-              ? ` Editions: ${set.editions.map(editionName).join(", ")}.`
-              : null}
+            {/*
+              THE EDITIONS THIS SET WAS RELEASED IN, and `N` is not one of them.
+              It is upstream's code for "no specified edition", glossed as a
+              sentence — so a promo set's masthead read "Editions: No specified
+              edition (used for promos, non-set releases, etc.)", which is a
+              line saying the set has no editions in the most words available.
+              Dropped from the list, and the sentence goes with it when nothing
+              is left. See `editionLabel`.
+            */}
+            {editions.length > 0 ? ` Editions: ${editions.join(", ")}.` : null}
           </p>
         </header>
 

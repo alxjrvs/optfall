@@ -71,7 +71,7 @@ import {
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
 import { hrefForNumber, type RulesCorpus } from "../../src/lib/search";
 import {
-  editionName,
+  editionLabel,
   foilingName,
   hrefForSet,
   rarityName,
@@ -632,9 +632,12 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
           rows.filter((row) => row.href === href).map((row) => row[field]),
         );
         const only = [...values][0];
-        return values.size === 1 && only !== undefined && only !== ""
-          ? only
-          : null;
+        if (values.size !== 1 || only === undefined || only === "") return null;
+        /* `N` decodes to a sentence about having no edition, so it can no more
+           name a link than a blank can. Measured at zero today — no ambiguous
+           number is separated by it — which makes this a guard rather than a
+           fix, and the cheapest place to keep the two rules agreeing. */
+        return field === "edition" && editionLabel(only) === null ? null : only;
       };
 
       const axis = (["edition", "foiling"] as const).find((field) => {
@@ -650,7 +653,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
           axis === undefined
             ? row.key.replace(/\.webp$/, "")
             : axis === "edition"
-              ? editionName(row.edition)
+              ? (editionLabel(row.edition) ?? row.edition)
               : foilingName(row.foiling);
         /*
           A KEY THAT IS ALREADY THE NUMBER ADDS A WORD AND NO INFORMATION.
@@ -1369,11 +1372,15 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         ? "—"
                         : rarityName(printing.rarity)}
                     </td>
-                    <td>
-                      {printing.edition === ""
-                        ? "—"
-                        : editionName(printing.edition)}
-                    </td>
+                    {/*
+                      AN EM DASH WHERE THERE IS NO EDITION, and `N` is no
+                      edition. Upstream glosses that code as "No specified
+                      edition (used for promos, non-set releases, etc.)" — its
+                      own explanation of an absence, in the commonest edition in
+                      the corpus — which this column printed in full on most
+                      rows of most cards. See `editionLabel`.
+                    */}
+                    <td>{editionLabel(printing.edition) ?? "—"}</td>
                     <td>
                       {printing.foiling === ""
                         ? "—"
