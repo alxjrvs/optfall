@@ -940,10 +940,13 @@ describe("a related-cards list is one row per name, stones on the right", () => 
 
     /* One row… */
     expect([...list.matchAll(/<li class="of-card__link">/g)].length).toBe(1);
-    /* …one name… */
+    /* …one name, which is itself a link… */
     expect(
-      [...list.matchAll(/<span class="of-card__link-name">Head Jab<\/span>/g)]
-        .length,
+      [
+        ...list.matchAll(
+          /<a class="of-card__link-name" href="[^"]+">Head Jab<\/a>/g,
+        ),
+      ].length,
     ).toBe(1);
     /* …and a link per remaining version. */
     const pitchLinks = [
@@ -976,25 +979,76 @@ describe("a related-cards list is one row per name, stones on the right", () => 
     expect(list).toContain('aria-label="Head Jab (pitch 2)"');
   });
 
-  test("a sole version keeps the whole row as its link", () => {
+  test("the name is a link on every row, whatever the version count", () => {
     /*
-     * THE BRANCH HALF THE ROWS TAKE — 51.1% of groups have one version. A bare
-     * stone there would trade a full-width target for a 24px one to condense a
-     * list with nothing to condense, so the row stays one anchor.
+     * THE RECONCILIATION, AND THE REGRESSION IT UNDOES. `CardIndex` publishes
+     * the rule — "a stone is a link only where there is something to choose
+     * between" — with the name as the destination in both cases. A first pass
+     * at this list dropped the name's anchor on multi-version rows and left the
+     * stones as the only way in, so a reader who learned on a set page that the
+     * name is the card found it inert on a card page.
      *
-     * `Runechant` is named because its lists carry both shapes at once, which
-     * is the only way to assert they coexist rather than one having replaced
-     * the other.
+     * `Runechant` is named because its lists carry both version counts at once,
+     * which is the only way to assert the rule holds across them rather than
+     * one shape having replaced the other.
      */
     const list = listIn(render("/card/runechant"));
-    expect(list).toContain('<a class="of-card__link-row" href=');
-    expect(list).toContain('<a class="of-card__pitch-link" href=');
+    const rows = [
+      ...list.matchAll(/<li class="of-card__link">(.*?)<\/li>/gs),
+    ].map((m) => m[1] ?? "");
+    expect(rows.length).toBeGreaterThan(1);
 
-    /* The sole-version anchor holds the name AND its stone, so the target is
-       the row rather than the glyph. */
-    expect(list).toMatch(
-      /<a class="of-card__link-row" href="[^"]+"><span class="of-card__link-name">[^<]+<\/span><span class="of-jewel/,
-    );
+    let sole = 0;
+    let several = 0;
+    for (const row of rows) {
+      /* Every row, without exception, names a destination on the name. */
+      expect(row).toMatch(
+        /<a class="of-card__link-name" href="\/card\/[^"]+">/,
+      );
+
+      const stoneLinks = [...row.matchAll(/<a class="of-card__pitch-link"/g)]
+        .length;
+      const stones = [...row.matchAll(/role="img"/g)].length;
+      if (stones === 1) {
+        /* A SOLE VERSION DRAWS A PLAIN STONE. Linking it would be a second
+           control, in a smaller target, for where the name already points. */
+        expect(stoneLinks).toBe(0);
+        sole += 1;
+      } else {
+        /* Several, and then every one of them is its own way in. */
+        expect(stoneLinks).toBe(stones);
+        several += 1;
+      }
+    }
+
+    /* Both branches have to have been exercised, or the loop proved nothing. */
+    expect(sole).toBeGreaterThan(0);
+    expect(several).toBeGreaterThan(0);
+  });
+
+  test("a partial group lands its name on a version it is showing", () => {
+    /*
+     * `set.page.tsx`'s `collapsed && whole` test, arrived at here for the same
+     * reason: a surface showing two of three versions must not send its name to
+     * the shared page, which would offer a third it is not showing.
+     *
+     * Related lists are partial more often than a set is — `variants` excludes
+     * the card being read by definition — so on Head Jab's page the row for
+     * Head Jab carries two of three and lands on one of those two, NOT on
+     * `/card/head-jab`, which would resolve to a version this row does not
+     * offer and may well be the page the reader is already on.
+     */
+    const list = listIn(render("/card/head-jab-1"));
+    const nameHref = list.match(
+      /<a class="of-card__link-name" href="([^"]+)"/,
+    )?.[1];
+    expect(nameHref).toBe("/card/head-jab-2");
+
+    const stoneHrefs = [
+      ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
+    ].map((m) => m[1]);
+    /* And it is one the row is actually showing. */
+    expect(stoneHrefs).toContain(nameHref);
   });
 
   test("no row prints the pitch as words any more", () => {

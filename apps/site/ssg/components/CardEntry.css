@@ -1205,25 +1205,9 @@
   gap: var(--of-space-tight);
 }
 
-/*
-  The whole row, as a link — the branch a single-version group takes. It is a
-  flex row of the same shape as `.of-card__link` itself, because it has to lay
-  its name and stone out the same way a multi-version row lays out its own.
-*/
-.of-card__link-row {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--of-space-tight);
-}
-
 .of-card__link-name {
-  /* The name is the row's subject and reads as body text, whether or not it is
-     inside the anchor — the two branches must not look different. Colour comes
-     from the anchor above it in the sole-version case and from the line here in
-     the other, so neither is stated. */
+  /* The row's subject and its destination. `min-inline-size: 0` so a long name
+     shrinks rather than forcing the stones off the line. */
   min-inline-size: 0;
 }
 
