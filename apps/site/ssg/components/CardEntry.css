@@ -639,6 +639,54 @@
   display: inline-flex;
 }
 
+/* -- The other face ------------------------------------------------------- */
+
+/*
+  ONE OTHER FACE IS VISIBLE: THE ONE THE DISPLAYED PRINTING IS BACKED WITH.
+
+  The same two states the rarity above has, for the same reason and by the same
+  mechanism — the server marks the route's own printing with `--initial`, and
+  the moment `PrintingPicker` stamps the root it becomes the authority. What
+  differs is only the shape of the value: a rarity is one of ten words and this
+  is an index, because the set of cards a card can be backed with is not closed
+  and `:root[data-printing-other-face="inner-chi"]` would want a rule per card
+  in the corpus.
+
+  FOUR SLOTS, WHICH IS A BOUND AND NOT A GUESS. Measured across all 4,941 cards:
+  115 are backed with one card, 14 with two, 2 with three, and none with more.
+  The fourth slot is the margin, and `ssg.test.ts` fails the build if a corpus
+  sync ever needs a fifth — the failure this file cannot see on its own is a
+  link that is in the markup and can never be revealed.
+
+  A SINGLE-FACED PRINTING REVEALS NOTHING, and the empty stamp is how. The
+  picker writes `""` for a printing with no back, which matches no rule below,
+  so the line simply loses the item — 94 of those 131 cards have printings of
+  both kinds, so this is the ordinary case rather than the edge.
+
+  `flex` RATHER THAN `inline-flex`, unlike the rarity bubble. This is one of the
+  items the credits footer distributes, so it is a flex ITEM of that row and
+  lays its own two words out as a row of its own; the rarity is one thing INSIDE
+  such an item.
+*/
+.of-card__other {
+  display: none;
+}
+
+.of-card__other--initial {
+  display: flex;
+}
+
+:root[data-printing-other-face] .of-card__other--initial {
+  display: none;
+}
+
+:root[data-printing-other-face="0"] .of-card__other[data-other-face="0"],
+:root[data-printing-other-face="1"] .of-card__other[data-other-face="1"],
+:root[data-printing-other-face="2"] .of-card__other[data-other-face="2"],
+:root[data-printing-other-face="3"] .of-card__other[data-other-face="3"] {
+  display: flex;
+}
+
 .of-card__code-hint {
   margin-inline-start: var(--of-space-tight);
   font-family: var(--of-type-family-sans);

@@ -433,6 +433,32 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     );
   })();
 
+  /**
+   * The cards this one is printed back-to-back with, in tile order.
+   *
+   * A CARD SHARES A PHYSICAL CARD WITH ANOTHER CARD, AND THAT IS A FACT ABOUT
+   * THE PRINTING RATHER THAN ABOUT EITHER CARD. Measured on this corpus: 131
+   * cards have at least one double-faced printing; 94 of them ALSO have
+   * single-faced printings, because a token printed on the back of a hero in
+   * one product is printed alone in another; and 16 are backed with more than
+   * one different card across their printings — Agility is on the back of Gold
+   * and on the back of Might. So "the other face of this card" is not a
+   * question this page can answer once. It is answered per printing, beside the
+   * rarity, which is per printing for the same kind of reason.
+   *
+   * FILLED BY THE TILE LOOP BELOW RATHER THAN BY A SECOND PASS. The list has to
+   * be deduped by IMAGE exactly as the tiles are — a slot no tile can select is
+   * markup that is `display: none` for the life of the page, which is the dead
+   * markup the rarity list was rebuilt to stop emitting — and doing that here
+   * would be a second copy of a rule that has one home ten lines down.
+   *
+   * NOTHING IS LOST TO THE DEDUPE, and it was checked rather than assumed: no
+   * tile in this corpus carries two different other faces, and no card has an
+   * other face reachable only through a printing with no image. So the set on
+   * the page equals the set the card has.
+   */
+  const otherFaces: CardLink[] = [];
+
   const printings = (() => {
     const seen = new Set<string>();
     const entries: {
@@ -454,15 +480,48 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       /** Upstream's own rarity code, kept so the credit line can decode the
        *  display name from the same record the slug came from. */
       rarityCode: string;
+      /**
+       * Which of this card's other faces this printing is backed with, as an
+       * index into {@link otherFaces} — or `""` where this printing is
+       * single-faced.
+       *
+       * AN INDEX RATHER THAN A SLUG, WHICH IS THE ONE PLACE THIS DIFFERS FROM
+       * `rarity` BESIDE IT, and the reason is CSS. The credit line publishes
+       * every other face this card has and hides all but one, exactly as it
+       * does for rarity, and the rule that chooses has to compare the stamp on
+       * the root with an attribute on the element — which CSS cannot do, so
+       * both are written out one rule per value. Rarity can be: `sets.json`
+       * decodes exactly ten and the set is closed. A card slug is not a closed
+       * set, and `:root[data-printing-other="inner-chi"]` would need a rule per
+       * card in the corpus. An index closes it: no card in this corpus is
+       * backed with more than three different cards, and `CardEntry.css`
+       * enumerates four slots against a test that fails if a fourth is ever
+       * needed.
+       */
+      otherFace: string;
       /** Every foiling this art is published at, in words. See
        *  {@link foilingsByFace}. */
       foiling: string;
     }[] = [];
 
-    for (const printing of card.printings) {
+    for (const [index, printing] of card.printings.entries()) {
       const key = faceKeyFor(printing.image_url);
       if (key === null || seen.has(key)) continue;
       seen.add(key);
+
+      /*
+        THE OTHER FACE OF THIS PRINTING, SLOTTED. `page.printings` is
+        `card.printings` mapped one-for-one — see `cards.ts` — so the index is
+        the same row, and `otherFace` there is already resolved through the
+        PRINTING index rather than the card one, which is the lookup that field
+        exists to have done once.
+      */
+      const other = page.printings[index]?.otherFace ?? null;
+      let slot = "";
+      if (other !== null) {
+        const found = otherFaces.findIndex((face) => face.href === other.href);
+        slot = String(found === -1 ? otherFaces.push(other) - 1 : found);
+      }
 
       const orientation = orientationOf({
         playedHorizontally: card.played_horizontally,
@@ -497,6 +556,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
            complete record, and it lists every printing's rarity separately. */
         rarity: raritySlug(printing.rarity),
         rarityCode: printing.rarity,
+        otherFace: slot,
         /* NOT `printing.foiling`, and the difference is 3,179 tiles. See
            `foilingsByFace` — a tile is an art, and an art can be published at
            more than one foiling. */
@@ -627,6 +687,10 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    */
   const currentRarity =
     printings[selected]?.rarity ?? printings[0]?.rarity ?? "";
+
+  /** The other face the page is rendered against. Same rule, same fallback. */
+  const currentOtherFace =
+    printings[selected]?.otherFace ?? printings[0]?.otherFace ?? "";
 
   const facelessBox = boxFor("normal", page.face.orientation);
 
@@ -1010,6 +1074,54 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                       ? "No artist is credited in the published dataset."
                       : `Illustrated by ${artists.join(", ")}`}
                   </p>
+                  {/*
+                    WHAT IS ON THE BACK OF THE CARD IN THE PICTURE, when there
+                    is anything. A double-faced printing is one physical card
+                    carrying two of them.
+
+                    THE PRINTINGS TABLE ALREADY HAS AN `Other face` COLUMN, and
+                    this is not a second copy of it. That table is the complete
+                    record — every printing in its own row, including the ones
+                    with no image — and it is below the fold, past the legality
+                    and the rules join, in a grid a reader goes to when they
+                    have a question about printings. This is a caption on the
+                    picture: it names the back of the ONE printing on screen, in
+                    the line that already says what grade that printing is. The
+                    same split the rarity makes, for the same reason.
+
+                    IT BELONGS ON THIS LINE BECAUSE IT IS A FACT ABOUT THE
+                    PRINTING, which is what the rarity beside it is. And it is
+                    published the same way for the same reason: every other face
+                    this card has is in the markup, all but one hidden, so the
+                    picker can move between printings without a round trip and
+                    without this column knowing the picker exists. `--initial`
+                    marks the route's own printing, so a crawler and a reader
+                    with no scripting see the face that belongs to the picture.
+
+                    THE ANCHOR IS NAMED WITH THE QUALIFIED LABEL, never the bare
+                    name: 900 names in this corpus belong to more than one card,
+                    and `CardLink.label` is the string composed for exactly this.
+                  */}
+                  {otherFaces.map((face, slot) => (
+                    <p
+                      className={
+                        String(slot) === currentOtherFace
+                          ? "of-card__credit of-card__other of-card__other--initial"
+                          : "of-card__credit of-card__other"
+                      }
+                      data-other-face={slot}
+                      key={face.href}
+                    >
+                      {/*
+                        NO SPAN AROUND THE WORDS. `.of-card__credit` is a flex
+                        row and flexbox wraps a contiguous run of text in an
+                        ANONYMOUS flex item, so the gap already applies — the
+                        stylesheet records an earlier attempt to add one here
+                        and why it bought nothing.
+                      */}
+                      Backed with <a href={face.href}>{face.label}</a>
+                    </p>
+                  ))}
                   <p className="of-card__credit">
                     <a href="#printings">
                       {printingCount} printing{printingCount === 1 ? "" : "s"}
