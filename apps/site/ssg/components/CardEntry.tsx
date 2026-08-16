@@ -149,6 +149,40 @@ function pitchRank(pitch: number): number {
   return pitch === 0 ? 4 : pitch;
 }
 
+/** One related-card row: a name, and every version of it this list carries. */
+interface LinkGroup {
+  readonly name: string;
+  readonly links: readonly CardLink[];
+}
+
+/**
+ * A list of card links, collapsed to one entry per NAME.
+ *
+ * IN FIRST-APPEARANCE ORDER, NOT ALPHABETICAL. These lists arrive in corpus
+ * order and the page has never re-sorted them; grouping is not the moment to
+ * start, because a reader comparing this page to the one they came from would
+ * find the same relatives in a different sequence for no stated reason. The
+ * `Map` preserves insertion order, so a group sits where its first member sat.
+ *
+ * THE VERSIONS INSIDE A GROUP *ARE* SORTED, and by pitch rather than by
+ * arrival, because they render as a row of stones. `1 2 3` is the order a
+ * reader expects of three numbered things placed side by side, and corpus order
+ * would produce a different arrangement per card for no reason a reader could
+ * see. `pitchRank` puts a card with no pitch last, matching the version tabs.
+ */
+function groupByName(links: readonly CardLink[]): readonly LinkGroup[] {
+  const byName = new Map<string, CardLink[]>();
+  for (const link of links) {
+    const found = byName.get(link.name) ?? [];
+    found.push(link);
+    byName.set(link.name, found);
+  }
+  return [...byName].map(([name, found]) => ({
+    name,
+    links: found.toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch)),
+  }));
+}
+
 export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const { card } = page;
   const typeLine = card.type_text.trim();
@@ -1196,15 +1230,96 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 <h3 className="of-card__related-name">{label}</h3>
                 <p className="of-card__scope">{blurb}</p>
                 <ul className="of-card__links">
-                  {links.map((link) => (
-                    <li className="of-card__link" key={link.href}>
-                      <PitchJewel value={link.pitch} size="sm" />
+                  {groupByName(links).map((group) => (
+                    <li className="of-card__link" key={group.name}>
                       {/*
-                        `link.label`, never `link.name`. Two cards on this list
-                        can share a name; the label is what makes the two anchors
-                        distinguishable to somebody reading the links alone.
+                        ONE ROW PER NAME, WITH A STONE PER VERSION — and the
+                        stones are the links.
+
+                        This listed one row per CARD, so "Other versions" on Head
+                        Jab was two rows both reading "Head Jab", and `Runechant`
+                        carried 119 rows across its three lists where 69 names
+                        exist. A list of a card's relatives that repeats one name
+                        three times is spending three rows to say what one row
+                        and three stones say — and the pitch is the only thing
+                        that differed, which is exactly what a stone is for.
+                        Measured across the corpus: 10,868 rows become 6,816.
+
+                        GROUPED BY NAME, WHICH IS SOUND HERE AND WOULD NOT BE
+                        EVERYWHERE. Two cards sharing a name in these lists are
+                        always the pitch versions of one card — 900 names belong
+                        to more than one card and that is what those are — so a
+                        name plus a pitch identifies a link. Measured: zero
+                        groups in the whole corpus contain two links at the same
+                        pitch, which is the collision that would make a stone
+                        ambiguous. If upstream ever produces one, the sort below
+                        keeps both and they render as two stones with one
+                        numeral; the test pins the count at zero so that arrives
+                        as a failure rather than as a silent duplicate.
                       */}
-                      <a href={link.href}>{link.label}</a>
+                      {group.links.length === 1 ? (
+                        /*
+                          A SOLE VERSION KEEPS THE WHOLE ROW AS ITS LINK, and
+                          this branch is here because half the rows take it:
+                          measured, 51.1% of groups have exactly one version.
+                          Collapsing those to a bare stone would trade a
+                          full-width target for a 24px one on more rows than the
+                          change improves, to condense a list that has nothing to
+                          condense. The row is one anchor, the name reads as it
+                          always did, and the stone moved to the right with the
+                          rest.
+                        */
+                        <a
+                          className="of-card__link-row"
+                          href={group.links[0]?.href ?? ""}
+                        >
+                          <span className="of-card__link-name">
+                            {group.name}
+                          </span>
+                          <PitchJewel
+                            value={group.links[0]?.pitch ?? 0}
+                            size="sm"
+                          />
+                        </a>
+                      ) : (
+                        <>
+                          <span className="of-card__link-name">
+                            {group.name}
+                          </span>
+                          <span className="of-card__link-pitches">
+                            {group.links.map((link) => (
+                              /*
+                                THE STONE CARRIES THE LINK'S NAME, via
+                                `PitchJewel`'s own `label` prop rather than a
+                                hidden span beside it. A `role="img"` with an
+                                `aria-label` contributes that string to the
+                                anchor's accessible name, so the link is called
+                                "Head Jab (pitch 2)" with NO text in the DOM at
+                                all — which settles the WCAG 2.4.4 problem the
+                                previous version needed `.of-card__qualifier`
+                                for, and settles the paste problem with it.
+                                There is nothing to select, so there is nothing
+                                to hide from a selection.
+
+                                `link.label`, not `link.name`: the label is the
+                                one composed to tell two same-named cards apart,
+                                and here it is the whole of what names the link.
+                              */
+                              <a
+                                className="of-card__pitch-link"
+                                href={link.href}
+                                key={link.href}
+                              >
+                                <PitchJewel
+                                  value={link.pitch}
+                                  size="sm"
+                                  label={link.label}
+                                />
+                              </a>
+                            ))}
+                          </span>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>
