@@ -601,10 +601,22 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     const printing = shown?.printing;
     if (printing === undefined || printing.id === "" || printing.set_id === "")
       return null;
-    const prefixed = printing.id.startsWith(printing.set_id);
+    /* CASE-FOLDED, LIKE `numberFor` FOLDS IT. That function strips the same
+       prefix off a face key and normalizes both sides before comparing; a bare
+       `startsWith` here would agree with it on today's corpus and disagree the
+       day upstream publishes a lower-case set code, silently making the whole
+       collector number the set link. */
+    const prefixed = printing.id
+      .toUpperCase()
+      .startsWith(printing.set_id.toUpperCase());
+    /* SLICED OUT OF THE NUMBER, NOT SUBSTITUTED FOR IT, so the two halves
+       always concatenate back to exactly what upstream published rather than to
+       the set code's spelling plus a remainder. */
     return {
       /* The linked half, and its name for anything reading the link aloud. */
-      link: prefixed ? printing.set_id : printing.id,
+      link: prefixed
+        ? printing.id.slice(0, printing.set_id.length)
+        : printing.id,
       setName: setName(printing.set_id),
       href: hrefForSet(printing.set_id),
       /* The rest of the number, which is not a link because there is nothing
@@ -1075,20 +1087,25 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 */}
                 <footer className="of-card__band of-card__band--credits">
                   {/*
-                    THREE PARTS, THREE ELEMENTS, ONE `space-between`.
+                    ONE FACT, ONE ELEMENT, ONE `space-between`.
 
                     Rarity and the artist credit used to share a paragraph, so
                     the row the footer distributes had only TWO items in it: a
                     clump on the left and the printing count on the right. The
-                    three facts down here are independent of one another — what
-                    grade this printing is, who drew it, how many printings
-                    exist — and reading them as two-and-one made the first two
-                    look like one compound fact.
+                    facts down here are independent of one another — what grade
+                    this printing is, which printing it is, who drew it, what is
+                    on its back, how many printings exist — and reading them as
+                    two-and-one made the first two look like one compound fact.
 
                     They are siblings now, so `justify-content: space-between`
-                    on the footer spaces all three rather than two. Nothing else
-                    changed: the rarity list is still a flex row of its own with
-                    one member visible, because it is one item on this line.
+                    spaces every one of them. NO NUMBER IS WRITTEN DOWN HERE,
+                    deliberately: the count varies by printing — the back is
+                    there only on a double-faced one, the rarity only where
+                    upstream publishes one — so a comment naming a total would
+                    be false on most pages the moment a sixth fact arrived. The
+                    rule is that each fact is its own paragraph. Nothing else
+                    changed: the rarity is still a flex row of its own with one
+                    member, because it is one item on this line.
                   */}
                   {/*
                     RARITY LEADS THE CREDIT LINE, initial in a bubble and the

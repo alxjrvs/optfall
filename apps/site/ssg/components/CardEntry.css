@@ -415,21 +415,25 @@
 }
 
 /*
-    The foot of the panel: rarity, attribution and the printing count, in the
-    fine-print register the card-image copyright line already established.
-    Present, never loud — the same argument, and so the same treatment.
+    The foot of the panel: rarity, the printing's code, attribution, what is on
+    the back and the printing count, in the fine-print register the card-image
+    copyright line already established. Present, never loud — the same argument,
+    and so the same treatment.
 
-    THREE ITEMS ACROSS THE LINE, NOT TWO AND A CLUMP. `space-between` has been
+    EVERY ITEM ACROSS THE LINE, NOT TWO AND A CLUMP. `space-between` has been
     here since the footer was built, but rarity and the artist credit shared one
     paragraph, so it was distributing a pair: everything-but-the-count on the
-    left, the count on the right. The three facts are independent — what grade
-    this printing is, who drew it, how many printings exist — and the pairing
-    read as though the first two were one compound fact.
+    left, the count on the right. The facts are independent of one another —
+    what grade this printing is, which printing it is, who drew it, what is on
+    its back, how many printings exist — and the pairing read as though the
+    first two were one compound fact.
 
-    `CardEntry.tsx` makes them siblings, and this rule then spaces all three
+    `CardEntry.tsx` makes them siblings, and this rule then spaces all of them
     with nothing added to it. Worth stating because the fix looks like a CSS
     change and is not one: the declaration that does the work was already
-    correct, and what was wrong was how many children it had to work on.
+    correct, and what was wrong was how many children it had to work on. How
+    many there are is deliberately not written down here — the count varies by
+    printing, so a number in this comment would be false on most pages.
 
     THE GAP IS THE FLOOR, NOT THE SPACING. `space-between` distributes whatever
     is left over, which is nothing once the line is full — so the two-value
