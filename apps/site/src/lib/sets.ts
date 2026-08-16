@@ -101,6 +101,36 @@ export function editionName(code: string): string {
   return SETS.decode.edition[code] ?? code;
 }
 
+/**
+ * Upstream's code for "this printing has no edition".
+ *
+ * IT DECODES TO A SENTENCE, WHICH IS WHY THIS EXISTS. `sets.json` glosses `N`
+ * as "No specified edition (used for promos, non-set releases, etc.)" — 60
+ * characters of upstream explaining its own absence, and it is the COMMONEST
+ * edition in the corpus. Printed in a table cell it made the Edition column
+ * wider than a phone, and it said nothing a reader wanted: the answer to "which
+ * edition is this printing" is, for those rows, none.
+ */
+export const UNSPECIFIED_EDITION = "N";
+
+/**
+ * The edition a printing names, or `null` where it names none.
+ *
+ * THE DECODE IS NOT THE PRESENTATION, and keeping them apart is the point.
+ * `editionName` stays faithful to `sets.json` — it is what upstream says, and
+ * `sets.test.ts` holds it to that — while this answers the question a surface
+ * actually asks. A table prints an em dash for `null`, a list drops it, and an
+ * accessible name that would have used it picks a different fact instead.
+ *
+ * BOTH SHAPES OF ABSENCE ARE ONE ANSWER HERE. A blank edition and `N` are the
+ * same claim arrived at two ways — nothing recorded, and nothing to record —
+ * and a surface that distinguished them would be reporting on the corpus rather
+ * than on the card.
+ */
+export function editionLabel(code: string): string | null {
+  return code === "" || code === UNSPECIFIED_EDITION ? null : editionName(code);
+}
+
 export function foilingName(code: string): string {
   return SETS.decode.foiling[code] ?? code;
 }

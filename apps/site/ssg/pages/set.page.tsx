@@ -26,7 +26,7 @@ import {
   variantSuffix,
 } from "../../src/lib/cards";
 import { orientationOf } from "../../src/lib/faces";
-import { editionName, setFor } from "../../src/lib/sets";
+import { editionLabel, setFor } from "../../src/lib/sets";
 import type { CardIndexEntry } from "../components/CardIndex";
 import { Island } from "../Island";
 import { CardList } from "../islands/CardList";
@@ -268,6 +268,16 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
   */
   const entries = groupByName(listed).map((group) => entryFor(group, props.id));
 
+  /**
+   * The editions this set was released in, minus the one that is not an
+   * edition. See `editionLabel`: `N` is upstream's code for "no specified
+   * edition", glossed as a sentence, so a promo set's masthead read "Editions:
+   * No specified edition (used for promos, non-set releases, etc.)".
+   */
+  const editions = set.editions
+    .map((code) => editionLabel(code))
+    .filter((name): name is string => name !== null);
+
   /*
     TWO COUNTS, AND THE PAGE HAS TO SAY WHICH IS WHICH.
 
@@ -328,9 +338,8 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
             )}{" "}
             {counted}
             {set.outOfPrint ? " Out of print." : null}
-            {set.editions.length > 0
-              ? ` Editions: ${set.editions.map(editionName).join(", ")}.`
-              : null}
+            {/* The sentence goes when nothing is left to name. */}
+            {editions.length > 0 ? ` Editions: ${editions.join(", ")}.` : null}
           </p>
         </header>
 

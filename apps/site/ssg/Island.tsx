@@ -53,7 +53,6 @@ import { renderToString } from "react-dom/server";
 export type IslandName =
   | "RulesSearch"
   | "RandomCard"
-  | "PrintingPicker"
   | "CardSearch"
   | "CardList";
 

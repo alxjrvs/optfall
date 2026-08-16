@@ -301,10 +301,22 @@ this document's position and it is now wrong: `PLAN.md` was rewritten on
 with it. The correction is recorded rather than silently applied, because the
 old position was argued at length and a reader deserves to see what replaced it.
 
-**Two columns.** The printed face and a rail of every printing on the left; the
-name, the stat strip, the printed text and the legality verdict on the right.
-Everything answering *what is this card* is above the fold, and the apparatus —
-printings table, flavour, related cards, source — sits below it.
+**Two columns.** The printed face on the left; the name, the stat strip, the
+printed text and the legality verdict on the right. Everything answering *what
+is this card* is above the fold, and the apparatus — printings table, flavour,
+related cards, source — sits below it.
+
+**The printings table is how a reader reaches another art.** A rail of
+thumbnails under the face used to do it, and the table below did it better
+without being asked: a tile could caption three facts about a printing where a
+row names seven of them in columns, and 279 tiles in this corpus read
+identically to a sibling — a control offering two choices under one name. So
+each row's collector number is a link to the art that row is published with, and
+a card page shows ONE printing. The rarity beside the face is that printing's,
+the back named beside it is that printing's, and none of it needs scripting: the
+address decides, at build time. Where two rows share a number and reach
+different arts, the anchor carries a hidden qualifier — the edition, the foiling,
+or the art's own key, whichever actually separates the two addresses.
 
 **Pitch versions are tabs, not separate pages.** A player calls the red, yellow
 and blue versions one card, so they share one page and one heading, switched by

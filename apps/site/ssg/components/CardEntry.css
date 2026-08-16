@@ -22,7 +22,7 @@
  * heading, and was wrong for the box around it.
  */
 
-/* -- The face and its printings rail ------------------------------------- */
+/* -- The face ------------------------------------------------------------- */
 
 /*
     Layout only. `CardFace` owns everything about how a face is drawn, including
@@ -480,44 +480,22 @@
 /* -- Rarity -------------------------------------------------------------- */
 
 /*
-  ONE RARITY IS VISIBLE: THE ONE THE DISPLAYED PRINTING WAS PUBLISHED AT.
+  THE RARITY OF THE PRINTING THIS PAGE SHOWS — one bubble, rendered by the
+  server, always true of the picture above it.
 
-  Every rarity the card has is in the markup — see `CardEntry.tsx` for why the
-  whole list was wrong under a picture of one printing — and this picks between
-  them. Two states, in order:
+  A WHOLE MECHANISM USED TO LIVE HERE AND IS GONE WITH THE PICKER. Every rarity
+  the card had was published hidden, an `--initial` class marked the route's
+  own, an island stamped `data-printing-rarity` on the root element on every
+  click, and ten enumerated rules re-chose between them — all of it because the
+  picture could change without the page changing. The printings table is the
+  control now: its rows address the art they are published with, so a different
+  printing is a different page, and the caption is simply correct in the markup.
 
-  1. **Before any click**, and forever with scripting off. The server marked the
-     route's own printing with `--initial`, so that one shows and the rest do
-     not. A crawler, a reader with JS disabled and a freshly loaded page all see
-     the rarity that belongs to the face beside it.
-
-  2. **After a click.** `PrintingPicker` swaps the face in place rather than
-     navigating, so it stamps the current printing's slug on the root element
-     and the rules below re-choose. The stamp appearing at all is what retires
-     `--initial`: from that moment the picker is the authority, including when
-     it lands back on the printing the server rendered.
-
-  WHY THE ROOT ELEMENT AND NOT A CLOSER ANCESTOR. The picker is an island in the
-  face column and this line is in the facts column, so there is no shared node
-  either component owns. The root is the one element both can name without one
-  reaching into the other's tree.
-
-  SPECIFICITY DECIDES, AND SOURCE ORDER AGREES WITH IT. The reveal rule carries
-  two attribute selectors to the hide rule's one, so it wins on specificity —
-  which matters because both match the same element whenever the picker returns
-  to the server's printing. The rules are ALSO written last in this section, so
-  the two mechanisms point the same way rather than one relying on the other.
-  That placement is not only belt-and-braces: `noDescendingSpecificity` reads a
-  (0,4,0) selector standing above the (0,2,0) rarity-colour rules below as the
-  bug it usually is, and it is right to — the tell is real even where this
-  particular instance was safe.
-
-  A `data-rarity` UPSTREAM ADDS TOMORROW matches no reveal rule and stays
-  hidden, which is the failure worth choosing: an unnamed rarity showing nothing
-  is a gap, where showing all of them again is a wrong claim.
+  The colour rules below stay exactly as they were. What they style is one
+  element instead of a hidden list.
 */
 .of-card__rarity {
-  display: none;
+  display: inline-flex;
   align-items: center;
   /* No gap: the bubble and the remainder are one word interrupted, not two
        elements set beside each other. */
@@ -526,10 +504,6 @@
        every distance in the line; leaving this here would add a second one to
        the gap on one side of each rarity and not the other, which is the
        unevenness the row was introduced to remove. */
-}
-
-.of-card__rarity--initial {
-  display: inline-flex;
 }
 
 /*
@@ -607,84 +581,6 @@
 .of-card__rarity[data-rarity="promo"] {
   --rarity: var(--of-color-rarity-promo);
   --rarity-ink: var(--of-color-rarity-promo-ink);
-}
-
-/*
-  WHICH ONE IS SHOWING — the picker's answer, written last so it descends from
-  nothing. See the note at the head of this section for the two states and why
-  the root element carries the stamp.
-
-  ENUMERATED, ONE PER RARITY, because CSS cannot compare two attributes and the
-  set is closed: `sets.json` decodes exactly these ten and `raritySlug` derives
-  every slug from that table. The ten rarity-colour rules directly above are
-  written the same way for the same reason, so this is the section's existing
-  idiom rather than a new one — and a rarity added upstream is missing from both
-  lists together, which is easier to notice than a half-styled bubble.
-*/
-:root[data-printing-rarity] .of-card__rarity--initial {
-  display: none;
-}
-
-:root[data-printing-rarity="common"] .of-card__rarity[data-rarity="common"],
-:root[data-printing-rarity="rare"] .of-card__rarity[data-rarity="rare"],
-:root[data-printing-rarity="super"] .of-card__rarity[data-rarity="super"],
-:root[data-printing-rarity="majestic"] .of-card__rarity[data-rarity="majestic"],
-:root[data-printing-rarity="legendary"]
-  .of-card__rarity[data-rarity="legendary"],
-:root[data-printing-rarity="fabled"] .of-card__rarity[data-rarity="fabled"],
-:root[data-printing-rarity="token"] .of-card__rarity[data-rarity="token"],
-:root[data-printing-rarity="basic"] .of-card__rarity[data-rarity="basic"],
-:root[data-printing-rarity="marvel"] .of-card__rarity[data-rarity="marvel"],
-:root[data-printing-rarity="promo"] .of-card__rarity[data-rarity="promo"] {
-  display: inline-flex;
-}
-
-/* -- The other face ------------------------------------------------------- */
-
-/*
-  ONE OTHER FACE IS VISIBLE: THE ONE THE DISPLAYED PRINTING IS BACKED WITH.
-
-  The same two states the rarity above has, for the same reason and by the same
-  mechanism — the server marks the route's own printing with `--initial`, and
-  the moment `PrintingPicker` stamps the root it becomes the authority. What
-  differs is only the shape of the value: a rarity is one of ten words and this
-  is an index, because the set of cards a card can be backed with is not closed
-  and `:root[data-printing-other-face="inner-chi"]` would want a rule per card
-  in the corpus.
-
-  FOUR SLOTS, WHICH IS A BOUND AND NOT A GUESS. Measured across all 4,941 cards:
-  115 are backed with one card, 14 with two, 2 with three, and none with more.
-  The fourth slot is the margin, and `ssg.test.ts` fails the build if a corpus
-  sync ever needs a fifth — the failure this file cannot see on its own is a
-  link that is in the markup and can never be revealed.
-
-  A SINGLE-FACED PRINTING REVEALS NOTHING, and the empty stamp is how. The
-  picker writes `""` for a printing with no back, which matches no rule below,
-  so the line simply loses the item — 94 of those 131 cards have printings of
-  both kinds, so this is the ordinary case rather than the edge.
-
-  `flex` RATHER THAN `inline-flex`, unlike the rarity bubble. This is one of the
-  items the credits footer distributes, so it is a flex ITEM of that row and
-  lays its own two words out as a row of its own; the rarity is one thing INSIDE
-  such an item.
-*/
-.of-card__other {
-  display: none;
-}
-
-.of-card__other--initial {
-  display: flex;
-}
-
-:root[data-printing-other-face] .of-card__other--initial {
-  display: none;
-}
-
-:root[data-printing-other-face="0"] .of-card__other[data-other-face="0"],
-:root[data-printing-other-face="1"] .of-card__other[data-other-face="1"],
-:root[data-printing-other-face="2"] .of-card__other[data-other-face="2"],
-:root[data-printing-other-face="3"] .of-card__other[data-other-face="3"] {
-  display: flex;
 }
 
 .of-card__code-hint {
@@ -1139,18 +1035,21 @@
 }
 
 /*
-    NOWRAP WAS ON EVERY CELL, AND ONE CELL IS A SENTENCE.
+    NOWRAP WAS ON EVERY CELL, AND ONE CELL WAS A SENTENCE.
 
-    `N` decodes to "No specified edition (used for promos, non-set releases,
-    etc.)" — upstream's own gloss, 60 characters of it, and it is the commonest
-    edition in the corpus. Held on one line it made the Edition column wider than a
-    phone and the whole table wider than two of them — a table two and a half
-    screens across with the artist and the other face off the right of it.
+    `N` decoded to "No specified edition (used for promos, non-set releases,
+    etc.)" — upstream's own gloss, 60 characters of it, and the commonest
+    edition in the corpus. Held on one line it made the Edition column wider
+    than a phone and the whole table wider than two of them.
 
-    So cells wrap by default and only the identifiers hold their line: a
-    collector number or a set code broken across two lines is no longer a
-    citation, which is the thing nowrap was for. The table still scrolls inside
-    `.of-card__scroller` when it has to — it just very rarely has to now.
+    THE SENTENCE IS GONE NOW — the column prints an em dash where a printing
+    names no edition, which is what `editionLabel` is for — so the cell this
+    rule was written against no longer exists. The rule stays anyway, and not
+    out of caution: an artist credit is two or three names, a set name is up to
+    six words, and both are prose that a table has no business holding on one
+    line. Only the identifiers do that, because a collector number or a set code
+    broken across two lines is no longer a citation, which is the thing nowrap
+    was for. The table still scrolls inside `.of-card__scroller` when it has to.
   */
 .of-card__printings th,
 .of-card__printings td {
@@ -1159,6 +1058,51 @@
   text-align: start;
   vertical-align: baseline;
   border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
+/*
+  THE ROW THIS PAGE IS SHOWING — the printing whose art is at the top of the
+  page, and the one whose rarity the credit line up there is quoting.
+
+  IT IS THE OTHER HALF OF RETIRING THE PICKER. The table is the control now; a
+  control that cannot say which of its options is selected is a list of links.
+  The tile rail said it with an accent outline around a thumbnail, and this says
+  it in the two channels a table row has.
+
+  NOT COLOUR ALONE. The row is drawn on the sunken ground the rest of the system
+  uses for a recessed surface, and its number is set in ink rather than in the
+  link accent — but `aria-current` on that link is what actually names the
+  state, so it is announced rather than only rendered.
+
+  THE SELECTOR IS THE BARE ATTRIBUTE, NOT `[aria-current="page"]`, and that is
+  not a widening for its own sake: the markup says `"true"` because `"page"`
+  would be a false claim on `/card/<name>`, the shared page for a name, where
+  the row addresses a different URL than the one being read. A selector naming
+  the old value styled nothing at all. See `CardEntry.tsx`.
+*/
+.of-card__printings tr.of-card__printing--shown {
+  background: var(--of-color-sunken);
+}
+
+.of-card__printings tr.of-card__printing--shown [aria-current] {
+  color: var(--of-color-ink);
+  font-weight: var(--of-type-weight-medium);
+  text-decoration: none;
+}
+
+/*
+  THE HIDDEN QUALIFIER IS NOT PART OF THE CITATION.
+
+  `.of-card__collector` carries `user-select: all` so one click takes the whole
+  collector number — and the number is an anchor now, with a visually-hidden
+  suffix inside it wherever two arts share a number. A clipped element is still
+  selectable, so that select-all swept the suffix in and copying `WTR098` gave
+  "WTR098 (Alpha)" on 5,554 rows. `PitchJewel` and `.of-index__variant` both
+  carry this same rule for this same reason: hidden text that is read aloud must
+  not arrive in a paste.
+*/
+.of-card__collector .of-card__visually-hidden {
+  user-select: none;
 }
 
 /*

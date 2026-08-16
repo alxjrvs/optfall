@@ -11,7 +11,9 @@ import { CORPUS as CARDS } from "./cards";
 import {
   SETS,
   SETS_BY_RELEASE,
+  editionLabel,
   editionName,
+  UNSPECIFIED_EDITION,
   foilingName,
   hrefForSet,
   rarityName,
@@ -23,16 +25,24 @@ import {
 /**
  * THE CREDIT LINE'S "CLOSED SET" CLAIM, MADE ENFORCEABLE.
  *
- * `CardEntry.css` reveals the rarity of the printing on screen with one
- * enumerated selector per rarity, and its comment defends the enumeration by
- * saying the set is closed — `sets.json` decodes exactly these, and every slug
- * comes from that table via `raritySlug`.
+ * `CardEntry.css` colours the rarity bubble with one rule per rarity, and its
+ * comment defends the enumeration by saying the set is closed — `sets.json`
+ * decodes exactly these, and every slug comes from that table via `raritySlug`.
  *
  * That was asserted in prose and checked by nothing. A rarity added upstream
- * fails SILENTLY in the worst available way: `rarityName` falls through to the
- * raw code, the bubble renders, no build step complains, and the bubble is then
- * invisible on every page it appears on because no selector names its slug. A
- * hidden fact is exactly what this page exists not to produce.
+ * fails SILENTLY: `rarityName` falls through to the raw code, the bubble
+ * renders, no build step complains, and the bubble is then a plain grey disc on
+ * every page it appears on because no rule names its slug.
+ *
+ * HALF OF THIS BLOCK RETIRED WITH THE PICKER, and the reason is worth keeping
+ * rather than the test. A second enumeration used to REVEAL one bubble out of a
+ * hidden list — `:root[data-printing-rarity="x"] .of-card__rarity[…]`, ten
+ * paired selectors — because an island could swap the picture without the page
+ * changing, and this file asserted the pairing so a copy-paste could not wire
+ * one rarity's stamp to another's bubble. The printings table is the control
+ * now: a page shows one printing and renders one bubble, so there is nothing to
+ * reveal and no pairing to get wrong. What survives is the colour, which is the
+ * half that can still fail quietly.
  *
  * READ OUT OF THE STYLESHEET RATHER THAN RESTATED HERE, because a second
  * hand-written list of ten slugs is the thing that drifts.
@@ -60,33 +70,14 @@ describe("every rarity the corpus decodes can be shown", () => {
   const sheet = async (): Promise<string> =>
     (await Bun.file(STYLESHEET).text()).replace(/\s+/g, " ");
 
-  test("has a reveal selector pairing the root stamp to its own bubble", async () => {
+  test("has a colour, so no bubble falls back to grey unnoticed", async () => {
     const css = await sheet();
 
     /*
-     * ASSERTED AS ONE PAIRED SELECTOR, NOT AS TWO SUBSTRINGS ANYWHERE IN THE
-     * FILE, and the difference is the whole value of this test. Checking that
-     * `:root[data-printing-rarity="x"]` and `.of-card__rarity[data-rarity="x"]`
-     * each appear SOMEWHERE cannot detect the one mistake this block is likely
-     * to attract: a copy-paste into a ten-line run of near-identical lines that
-     * pairs one rarity's stamp with another's bubble. Both halves would be
-     * present, both filters would pass, and the page would reveal the wrong
-     * rarity — which is worse than revealing none.
+     * THE ONE REMAINING SILENT FAILURE. `--rarity` defaults to the muted ink of
+     * the line, so an unnamed rarity is not a missing bubble but a grey one —
+     * legible, plausible, and wrong about a fact this page exists to state.
      */
-    const missing = Object.keys(SETS.decode.rarity)
-      .map((code) => raritySlug(code))
-      .filter(
-        (slug) =>
-          !css.includes(
-            `:root[data-printing-rarity="${slug}"] .of-card__rarity[data-rarity="${slug}"]`,
-          ),
-      );
-
-    expect(missing).toEqual([]);
-  });
-
-  test("and a colour, so no bubble falls back to grey unnoticed", async () => {
-    const css = await sheet();
 
     const uncoloured = Object.keys(SETS.decode.rarity)
       .map((code) => raritySlug(code))
@@ -95,6 +86,33 @@ describe("every rarity the corpus decodes can be shown", () => {
       );
 
     expect(uncoloured).toEqual([]);
+  });
+});
+
+describe("an edition of none", () => {
+  test("`N` is a code for an absence, and reads as one", () => {
+    /*
+     * UPSTREAM EXPLAINS ITS OWN ABSENCE AT LENGTH, and `editionName` reports
+     * that faithfully because it is the decode. What a surface asks is which
+     * edition a printing names, and the answer for `N` is none — 60 characters
+     * of gloss in a table column, on the commonest edition in the corpus.
+     */
+    expect(editionName(UNSPECIFIED_EDITION)).toContain("No specified edition");
+    expect(editionLabel(UNSPECIFIED_EDITION)).toBeNull();
+  });
+
+  test("a blank edition is the same answer, reached the other way", () => {
+    /* Nothing recorded and nothing to record are one claim about the card; a
+       surface that told them apart would be reporting on the corpus. */
+    expect(editionLabel("")).toBeNull();
+  });
+
+  test("a real edition still names itself", () => {
+    expect(editionLabel("A")).toBe("Alpha");
+    expect(editionLabel("U")).toBe("Unlimited");
+    /* And an unknown code falls through to itself rather than to null: it is a
+       name this table cannot decode, not an absence. */
+    expect(editionLabel("Q")).toBe("Q");
   });
 });
 
