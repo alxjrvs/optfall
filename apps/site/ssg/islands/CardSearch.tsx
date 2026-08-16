@@ -109,29 +109,6 @@ function pagingFromUrl(): { page: number; size: PageSize } {
   };
 }
 
-/**
- * How much of a card this row is standing for — "1 of 3 versions".
- *
- * IT SAYS THE PARTIALITY, NOT THE PITCH, and that is the whole of the change.
- * This used to spell the matched versions out — "pitch 1" — which was the only
- * thing it could do back when the mark under a name was decoration. Since the
- * mark became one band per matched version, each a link to the version it is
- * drawn for, the colours already say WHICH. A row showing one red band under
- * the words "PITCH 1" states one fact twice.
- *
- * What the bands cannot say is that there are others. One band looks identical
- * whether the card has one version or three, so dropping this note entirely
- * would lose the fact it exists for: a `banned:cc` result covering one of three
- * versions has to say it is covering one of three, or it puts a card on a
- * banned list without admitting the other two are legal. The count is that
- * fact, and it is the part the reader cannot see.
- *
- * Written, never generated.
- */
-export function versionsMatched(matched: number, total: number): string {
-  return `${matched} of ${total} versions`;
-}
-
 export function CardSearch({ index, ornament = false }: CardSearchProps) {
   const cards = useMemo(() => decodeCardIndex(index), [index]);
 
@@ -231,20 +208,6 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     */
     versions: result.matchedVersions,
     stats: result.stats,
-    /*
-      ONLY SOME PITCH VERSIONS MATCHED, AND SAYING SO IS NOT OPTIONAL. Four
-      names in this corpus carry versions whose Classic Constructed ban differs.
-      A `banned:cc` row that named the card and stopped would put a card on a
-      banned list without saying which version was banned.
-
-      WHICH ONES IS THE BANDS' JOB NOW; HOW MANY OF HOW MANY IS THIS ONE'S. See
-      `versionsMatched` — the two used to say the same thing, and the mark is
-      the one that can be clicked.
-    */
-    note:
-      result.matchedVersions.length < result.totalVersions
-        ? versionsMatched(result.matchedVersions.length, result.totalVersions)
-        : undefined,
     why: WHY[result.matchedIn],
   }));
 

@@ -208,22 +208,20 @@ export interface CardIndexEntry {
    */
   readonly stats?: readonly (readonly [string, string])[] | undefined;
   /**
-   * A short qualifier under the name — which versions this row is talking
-   * about, which printing it stands for. Shown in the images and rows views.
-   *
-   * IT IS ABOUT THE CARD, which is what separates it from {@link why}. A note
-   * qualifies the row's claim, so dropping it can make the row false: a
-   * `banned:cc` result covering two of three pitch versions has to say so, or
-   * it puts a card on a banned list without naming the version that is banned.
-   */
-  readonly note?: string | undefined;
-  /**
    * Why this row is on the page, in the words of the ranking that put it there.
    *
-   * ROWS VIEW ONLY, AND IT IS ABOUT THE QUERY RATHER THAN THE CARD. That is why
-   * it is a separate field and not more `note`: a set page has no ranking and
-   * therefore nothing true to say here, while every search result does. Under a
-   * grid of faces it would be a line of engine chatter under every picture.
+   * ROWS VIEW ONLY, AND IT IS ABOUT THE QUERY RATHER THAN THE CARD — which is
+   * the distinction that decides what may appear under a name at all. A set
+   * page has no ranking and therefore nothing true to say here, while every
+   * search result does. Under a grid of faces it would be a line of engine
+   * chatter under every picture.
+   *
+   * THIS IS THE ONLY SUCH LINE LEFT. There was a `note` beside it saying which
+   * versions a partial match covered — "1 of 3 versions" — and it is gone:
+   * every card list on this site now says which versions it stands for with the
+   * mark, and the mark is the thing a reader can click. A row that draws one
+   * band draws one band; the words under it were a second telling of a fact the
+   * colour had already told, and the site would rather be read than narrated.
    */
   readonly why?: string | undefined;
 }
@@ -479,8 +477,10 @@ export function CardIndex({
                   see. The face and the name were the accessible name of the
                   link; the rule contributed its spoken values to the end of
                   it, which is the one place they were redundant — the name is
-                  the card, and which VERSIONS the row stands for is now said
-                  by controls that go to them.
+                  the card, and which VERSIONS the row stands for is said by
+                  controls that go to them, and by nothing else. The written
+                  note that used to sit under this cell is gone for that reason:
+                  see `CardIndexEntry.why`.
                 */}
                 <a className="of-index__cell-link" href={entry.href}>
                   <CardFace
@@ -505,9 +505,6 @@ export function CardIndex({
                   </span>
                 </a>
                 <PitchSplits versions={entry.versions} />
-                {entry.note !== undefined && entry.note !== "" ? (
-                  <span className="of-index__cell-note">{entry.note}</span>
-                ) : null}
               </li>
             );
           })}
@@ -542,9 +539,6 @@ export function CardIndex({
                       {label} {value}
                     </span>
                   ))}
-                  {entry.note !== undefined && entry.note !== "" ? (
-                    <span>{entry.note}</span>
-                  ) : null}
                   {entry.why !== undefined && entry.why !== "" ? (
                     <span className="of-index__row-why">{entry.why}</span>
                   ) : null}
