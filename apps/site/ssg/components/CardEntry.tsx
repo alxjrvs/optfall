@@ -162,8 +162,8 @@ function pitchRank(pitch: number): number {
  *
  * IT EXISTS TO ANSWER "IS THIS GROUP THE WHOLE CARD", which is what decides
  * where a row's NAME points, and how it is NAMED — see `groupTarget`. A related
- * list is often a subset: `page.variants` excludes the card you are looking at
- * by definition, so a Head Jab page's row for Head Jab carries two of its three
+ * list can be a subset: upstream's `referenced_cards` names card ids, not
+ * names, so a card whose text names Head Jab may pull two of its three
  * versions. Sending that name to the shared page would offer a version the list
  * is not showing; sending a WHOLE group to one of its members would pick a
  * favourite.
@@ -265,19 +265,28 @@ function versionsSuffix(links: readonly CardLink[]): string {
  * is `set.page.tsx`'s `collapsed && whole` test, arrived at for the same
  * reason: a set that printed two of three versions lands its name "on one it
  * did print", because the shared page would offer a third the surface is not
- * showing. Related lists are partial more often than a set is — `variants`
- * always excludes the card being read — so this branch is the common one here
- * and the rare one there.
+ * showing. The partial case is now the RARE one here: it was guaranteed while
+ * "Other versions" was a list, because `variants` excludes the card being read
+ * by definition, and that list is gone. What is left is partial only when
+ * upstream's `referenced_cards` names some versions of a name and not others —
+ * measured on the shipped build, 55 rows of 20,372. Rare, not gone, and the
+ * branch is what keeps those 55 from offering a version the list is not
+ * showing.
  *
  * WHAT IT IS CALLED HAD NO RULE AT ALL, AND THAT WAS THE BUG. A row prints the
  * BARE NAME — the whole point of collapsing versions into a stone. But a bare
  * name is not always a name: 900 in this corpus belong to more than one card,
  * and two anchors that differ only in where they point are a WCAG 2.4.4
- * failure. Measured on the shipped build: 3,583 card pages carried a pair.
- * `/card/count-your-blessings-1` read "Count Your Blessings" twice, once going
- * to `/card/count-your-blessings-2` in Other versions and once to
- * `/card/count-your-blessings` in References — same words, different cards, and
- * nothing on either to tell a screen reader which is which.
+ * failure. It was measured at 3,583 card pages carrying such a pair, back when
+ * a page listed Other versions and References side by side and
+ * `/card/count-your-blessings-1` read "Count Your Blessings" twice — once to
+ * `/card/count-your-blessings-2`, once to `/card/count-your-blessings`.
+ *
+ * DO NOT READ THE RETIRED LIST AS HAVING RETIRED THE HAZARD. It is this rule,
+ * not the shorter page, that holds the invariant: measured on the current
+ * build, zero pages carry two related anchors with the same accessible name
+ * and different destinations — with the qualifier still doing the work on 55
+ * rows. Delete the qualifier and pages regress.
  *
  * SO THE ANCHOR IS NAMED FOR WHAT IT STANDS FOR, which is `CardIndexEntry`'s
  * rule — "the full text the anchor must be NAMED by, qualifier and all" — and
@@ -440,8 +449,25 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
   const nameHref = hrefForSlug(page.nameSlug);
 
+  /*
+    NO "OTHER VERSIONS" ROW. It restated, at the foot of the page, a set the
+    reader has already been shown nearer the top — so it was the one related
+    list with nothing to tell anybody.
+
+    WHICH SURFACE ANSWERS IT DEPENDS ON WHICH PAGE, and both are above this one:
+    a pitch page carries the version tabs ("Pitch versions of In the Swing")
+    directly over the panel, and the shared name page's printings table lists
+    every version's printings outright. Note the pitch page's OWN printings
+    table does not — it lists that card's printings only — so the tabs, not the
+    table, are what cover it there.
+
+    `page.variants` is NOT dead: the tabs and the JSON-LD both still read it.
+    This removes a third rendering of the field, not the field.
+
+    What is left is the two lists nothing else on the page covers: the cards
+    this one's text names, and the cards that name it.
+  */
   const related: readonly (readonly [string, string, readonly CardLink[]])[] = [
-    ["Other versions", "Same name, different pitch.", page.variants],
     [
       "Names these cards",
       "Cards this card's text refers to by name.",
@@ -1575,12 +1601,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         of them is a link follows `CardIndex`'s rule rather than
                         a second one invented here.
 
-                        This listed one row per CARD, so "Other versions" on Head
-                        Jab was two rows both reading "Head Jab", and `Runechant`
-                        carried 119 rows across its three lists where 69 names
-                        exist. The pitch was the only thing that differed, which
-                        is exactly what a stone is for. Measured: 10,868 rows
-                        become 6,816.
+                        This listed one row per CARD, so `Runechant` carried 119
+                        rows across the lists it had where 69 names exist. The
+                        pitch was the only thing that differed, which is exactly
+                        what a stone is for. Grouping took 10,868 rows to 6,816
+                        at the time; retiring the Other versions list has since
+                        taken the two remaining lists to 20,372 rows across
+                        4,388 pages, 3,883 of them carrying more than one
+                        stone — so the collapse is doing MORE work here now, not
+                        less, because the list that survived is the one where
+                        one name really can mean several cards.
 
                         THE NAME IS ALWAYS THE LINK. `PitchStones` in
                         `CardIndex`: "a stone is a link only where there is

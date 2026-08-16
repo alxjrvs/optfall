@@ -1044,7 +1044,7 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
 /* Bare names in a related-cards list                                          */
 /* -------------------------------------------------------------------------- */
 
-describe("a related-cards list is one row per name, stones on the right", () => {
+describe("a related-cards list is one row per name, stones beside it", () => {
   const render = (route: string) =>
     RESOLVED.find((resolved) => resolved.route === route)?.render(
       [],
@@ -1055,11 +1055,17 @@ describe("a related-cards list is one row per name, stones on the right", () => 
 
   test("three versions of one name are one row and three stones", () => {
     /*
-     * "Other versions" on Head Jab was two rows both reading "Head Jab" — the
-     * pitch was the only thing that differed, which is exactly what a stone is
-     * for. Measured across the corpus: 10,868 rows become 6,816.
+     * A LIST THAT NAMED ONE CARD THREE TIMES BECOMES ONE ROW. The pitch was the
+     * only thing that differed between those rows, which is exactly what a
+     * stone is for. Grouping took 10,868 rows to 6,816 when it landed.
+     *
+     * THIS ASKED HEAD JAB ABOUT ITS OWN VERSIONS UNTIL "Other versions" WAS
+     * RETIRED — the printings table is the control for those now. Fist Pump
+     * names Hyper Driver, whose three pitch versions are one row here, so the
+     * shape under test is unchanged and it is now asserted on the kind of list
+     * that still exists: one about OTHER cards.
      */
-    const list = listIn(render("/card/head-jab-1"));
+    const list = listIn(render("/card/fist-pump"));
     expect(list).not.toBe("");
 
     /* One row… */
@@ -1070,15 +1076,19 @@ describe("a related-cards list is one row per name, stones on the right", () => 
     expect(
       [
         ...list.matchAll(
-          /<a class="of-card__link-name" href="[^"]+">Head Jab(<span class="of-card__visually-hidden">[^<]*<\/span>)?<\/a>/g,
+          /<a class="of-card__link-name" href="[^"]+">Hyper Driver(<span class="of-card__visually-hidden">[^<]*<\/span>)?<\/a>/g,
         ),
       ].length,
     ).toBe(1);
-    /* …and a link per remaining version. */
+    /* …and a link per version the row stands for. */
     const pitchLinks = [
       ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
     ].map((m) => m[1]);
-    expect(pitchLinks).toEqual(["/card/head-jab-2", "/card/head-jab-3"]);
+    expect(pitchLinks).toEqual([
+      "/card/hyper-driver-1",
+      "/card/hyper-driver-2",
+      "/card/hyper-driver-3",
+    ]);
   });
 
   test("each stone is a link named for the card it reaches", () => {
@@ -1086,23 +1096,23 @@ describe("a related-cards list is one row per name, stones on the right", () => 
      * THE STONE CARRIES THE ACCESSIBLE NAME, through `PitchJewel`'s `label`
      * rather than a hidden span. A `role="img"` with an `aria-label` inside an
      * anchor contributes that string to the anchor's name, so the link is
-     * called "Head Jab (pitch 2)" with no text in the DOM — which is what keeps
-     * two stones on one row from being two links called the same thing (WCAG
-     * 2.4.4), and leaves nothing for a drag-select to pick up.
+     * called "Hyper Driver (pitch 2)" with no text in the DOM — which is what
+     * keeps two stones on one row from being two links called the same thing
+     * (WCAG 2.4.4), and leaves nothing for a drag-select to pick up.
      *
      * ASSERTED AS A PAIRING, not merely as presence: the label has to match the
      * href it sits inside, since a row of stones all correctly labelled but
      * wired to the wrong cards would pass any weaker check.
      */
-    const list = listIn(render("/card/head-jab-1"));
+    const list = listIn(render("/card/fist-pump"));
     for (const [, href, label] of list.matchAll(
       /<a class="of-card__pitch-link" href="([^"]+)"><span class="of-jewel[^"]*" role="img" aria-label="([^"]+)"/g,
     )) {
       const pitch = href?.match(/-(\d)$/)?.[1];
-      expect(`${href}:${label}`).toBe(`${href}:Head Jab (pitch ${pitch})`);
+      expect(`${href}:${label}`).toBe(`${href}:Hyper Driver (pitch ${pitch})`);
     }
     /* And the loop above has to have run. */
-    expect(list).toContain('aria-label="Head Jab (pitch 2)"');
+    expect(list).toContain('aria-label="Hyper Driver (pitch 2)"');
   });
 
   test("the name is a link on every row, whatever the version count", () => {
@@ -1158,17 +1168,23 @@ describe("a related-cards list is one row per name, stones on the right", () => 
      * reason: a surface showing two of three versions must not send its name to
      * the shared page, which would offer a third it is not showing.
      *
-     * Related lists are partial more often than a set is — `variants` excludes
-     * the card being read by definition — so on Head Jab's page the row for
-     * Head Jab carries two of three and lands on one of those two, NOT on
-     * `/card/head-jab`, which would resolve to a version this row does not
-     * offer and may well be the page the reader is already on.
+     * THE PARTIAL CASE USED TO BE GUARANTEED AND IS NOW RARE, which is why this
+     * names a different card than it used to. "Other versions" was always
+     * partial — `variants` excludes the card being read by definition — and
+     * that list is retired. What is left is partial only where upstream's
+     * `referenced_cards` names some versions of a name and not others: 55 rows
+     * of 20,372 on the shipped build.
+     *
+     * Fist Pump is one of them. Four cards are called Hyper Driver — three
+     * pitch versions and a token with no pitch — and Fist Pump's text reaches
+     * only the three, so the row lands on one of those three and NOT on
+     * `/card/hyper-driver`, which would offer the token this row does not show.
      */
-    const list = listIn(render("/card/head-jab-1"));
+    const list = listIn(render("/card/fist-pump"));
     const nameHref = list.match(
       /<a class="of-card__link-name" href="([^"]+)"/,
     )?.[1];
-    expect(nameHref).toBe("/card/head-jab-2");
+    expect(nameHref).toBe("/card/hyper-driver-1");
 
     const stoneHrefs = [
       ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
@@ -1188,7 +1204,7 @@ describe("a related-cards list is one row per name, stones on the right", () => 
      * `groupTarget`. So the suffix is hidden rather than absent, exactly as
      * `of-index__variant` is in the card index.
      */
-    for (const route of ["/card/head-jab-1", "/card/runechant"]) {
+    for (const route of ["/card/fist-pump", "/card/runechant"]) {
       const list = listIn(render(route));
       /* Strip the hidden spans, then the tags: what is left is what a reader
          sees, and it carries no pitch words. */
@@ -1201,15 +1217,15 @@ describe("a related-cards list is one row per name, stones on the right", () => 
 
     /*
       And the hidden half is really there on a row that needs it — NAMED FOR
-      EVERY VERSION IT STANDS FOR, not for the one its href opens. Head Jab's
-      Other versions row covers pitch 2 and 3 (the page's own version is
-      excluded from `variants` by definition) and lands on the lower of them.
-      Calling it "(pitch 2)" would be true of the destination and false of the
-      row, and would announce the same string as the first stone beside it.
+      EVERY VERSION IT STANDS FOR, not for the one its href opens. Fist Pump's
+      row covers the three pitched Hyper Drivers, not the fourth card of that
+      name, and lands on the lowest of the three. Calling it "(pitch 1)" would
+      be true of the destination and false of the row, and would announce the
+      same string as the first stone beside it.
     */
-    const versions = listIn(render("/card/head-jab-1"));
+    const versions = listIn(render("/card/fist-pump"));
     expect(versions).toContain(
-      '<a class="of-card__link-name" href="/card/head-jab-2">Head Jab<span class="of-card__visually-hidden"> (pitch 2 and 3)</span></a>',
+      '<a class="of-card__link-name" href="/card/hyper-driver-1">Hyper Driver<span class="of-card__visually-hidden"> (pitch 1, 2 and 3)</span></a>',
     );
 
     /* And a row standing for ONE version is named for that one, through
@@ -1228,9 +1244,16 @@ describe("a related-cards list is one row per name, stones on the right", () => 
      * WCAG 2.4.4, and the exact failure `variantSuffix` exists to prevent:
      * `/card/count-your-blessings-1` carried "Count Your Blessings" twice, once
      * to `/card/count-your-blessings-2` in Other versions and once to
-     * `/card/count-your-blessings` in References. Measured on the shipped
-     * build: 3,583 card pages had a pair, and on 12 of them BOTH sides were
-     * related-list rows.
+     * `/card/count-your-blessings` in References. Measured on that build: 3,583
+     * card pages had a pair, and on 12 of them BOTH sides were related-list
+     * rows.
+     *
+     * THAT PARTICULAR PAIRING CANNOT RECUR — Other versions is retired, the
+     * printings table being the control for versions — but the hazard is not
+     * retired with it, and this test is deliberately not narrowed to match. It
+     * scans every `/card/` anchor on the page, so the qualifier is still held
+     * to account on the 55 rows that carry one, and the day a third list is
+     * added it is already covered.
      *
      * ACCESSIBLE NAMES, NOT TEXT NODES, which is what makes this test able to
      * see the stones as well as the names: a pitch link's name comes from the
@@ -1289,11 +1312,14 @@ describe("a related-cards list is one row per name, stones on the right", () => 
      * true, a group would render two stones with the same numeral and a reader
      * would have no way to tell which went where.
      *
-     * Zero today, across every list on every card page.
+     * Zero today, across every list a card page renders. `page.variants` is no
+     * longer one of them — the printings table is the control for versions —
+     * so it is not scanned here; it still feeds the version tabs, which show
+     * one card per stone and cannot group.
      */
     let collisions = 0;
     for (const page of CARD_PAGES)
-      for (const links of [page.variants, page.references, page.referencedBy]) {
+      for (const links of [page.references, page.referencedBy]) {
         const byName = new Map<string, number[]>();
         for (const link of links) {
           const found = byName.get(link.name) ?? [];
