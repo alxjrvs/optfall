@@ -11,16 +11,55 @@ import { describe, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { CARD_PAGES, CORPUS as CARDS, variantSuffix } from "../src/lib/cards";
+import {
+  CARD_PAGES,
+  CARD_REDIRECTS,
+  CARD_ROUTES,
+  CORPUS as CARDS,
+  variantSuffix,
+} from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
-import { facesOf } from "../src/lib/printings";
+import { facesOf, hrefForPrinting } from "../src/lib/printings";
 import { setFor } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document } from "./document";
 import { outputPathFor } from "./outputPath";
+import {
+  LEGACY_PRINTING_RULE,
+  matchRedirect,
+  parseRedirects,
+  redirectRules,
+  renderRedirects,
+} from "./redirects";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
 import { routes } from "./routes";
 import type { PageModule, PageResult } from "./types";
+
+/**
+ * Where a card lives, by slug.
+ *
+ * THE TESTS BELOW NAME CARDS, NOT PATHS, AND THEY HAVE TO NOW. A card's URL is
+ * `/card/<set>/<number>/<slug>` and the set and number come from whichever
+ * printing upstream lists first — so `/card/head-jab-1` is no longer something
+ * a test can spell, and a hard-coded `/card/ben/010/head-jab-1` would fail the
+ * day upstream reorders that card's printings without anything being wrong.
+ *
+ * Resolved through the router's own table, so a test asking for a card gets the
+ * page the site would actually serve.
+ */
+function addressOf(slug: string): string {
+  const route = CARD_ROUTES.find(
+    (candidate) => candidate.slug === slug && candidate.isDefault,
+  );
+  if (route === undefined) {
+    throw new Error(
+      `ssg.test.ts: no default printing route for "${slug}". Either the card ` +
+        `left the corpus or its slug changed; fix the test's card, not this ` +
+        `lookup.`,
+    );
+  }
+  return route.href;
+}
 
 /* -------------------------------------------------------------------------- */
 /* URLs to files                                                               */
@@ -31,15 +70,12 @@ describe("outputPathFor", () => {
     /*
      * `/syntax/index.html` and not `/syntax.html`. A static host serves the
      * first at both `/syntax` and `/syntax/`, and the second only at
-     * `/syntax.html`. All 13,675 URLs already shipped are the directory form,
+     * `/syntax.html`. All 12,776 URLs already shipped are the directory form,
      * so this is a compatibility requirement rather than a preference.
      */
     expect(outputPathFor("/syntax")).toBe("syntax/index.html");
-    expect(outputPathFor("/card/head-jab-1")).toBe(
-      "card/head-jab-1/index.html",
-    );
-    expect(outputPathFor("/card/head-jab-1/ksu/011")).toBe(
-      "card/head-jab-1/ksu/011/index.html",
+    expect(outputPathFor("/card/ksu/011/head-jab-1")).toBe(
+      "card/ksu/011/head-jab-1/index.html",
     );
   });
 
@@ -63,6 +99,13 @@ describe("fillPattern", () => {
     expect(fillPattern("/card/[slug]", { slug: "head-jab-1" })).toBe(
       "/card/head-jab-1",
     );
+    expect(
+      fillPattern("/card/[set]/[number]/[slug]", {
+        set: "ksu",
+        number: "011",
+        slug: "head-jab-1",
+      }),
+    ).toBe("/card/ksu/011/head-jab-1");
     expect(
       fillPattern("/card/[slug]/[set]/[number]", {
         slug: "head-jab-1",
@@ -158,8 +201,8 @@ describe("the document shell", () => {
   test("a page may point its canonical somewhere else", () => {
     // 6,437 printing pages do exactly this: they are views of a card, and they
     // say so rather than competing with it.
-    expect(canonicalFor("/card/x/omn/243-cf", "/card/x")).toBe(
-      "https://optfall.com/card/x/",
+    expect(canonicalFor("/card/omn/243-cf/x", "/card/omn/001/x")).toBe(
+      "https://optfall.com/card/omn/001/x/",
     );
   });
 
@@ -171,7 +214,7 @@ describe("the document shell", () => {
   test("no hydration markers, because no root here hydrates", () => {
     // `renderToStaticMarkup`, not `renderToString`. The pages are documents;
     // interactivity arrives as islands in their own containers. Hydration
-    // scaffolding on 13,675 pages would describe a handover that never happens.
+    // scaffolding on 12,776 pages would describe a handover that never happens.
     const html = render({ title: "t", description: "d", children: null }, "/x");
     expect(html).not.toContain("data-reactroot");
     expect(html).not.toContain("<!--$-->");
@@ -403,13 +446,15 @@ describe("the ported pages", () => {
        reader has to tell one from the next. */
     for (const pitch of [1, 2, 3]) {
       expect(html).toContain(
-        `<a class="of-index__split" href="/card/angelic-wrath-${pitch}">`,
+        `<a class="of-index__split" href="${addressOf(`angelic-wrath-${pitch}`)}">`,
       );
       expect(html).toContain(`aria-label="Angelic Wrath (pitch ${pitch})"`);
     }
 
-    /* And the name goes to the name — the page that holds all three. */
-    expect(html).toContain('href="/card/angelic-wrath"');
+    /* And the name goes to the name's own version — `/card/angelic-wrath` is a
+       301 now, so the row resolves it here rather than sending a reader
+       through a hop. It is the pitch-1 card, which is what that URL rendered. */
+    expect(html).toContain(`href="${addressOf("angelic-wrath-1")}"`);
   });
 
   test("the sets index counts what the set page lists", () => {
@@ -434,10 +479,10 @@ describe("the ported pages", () => {
 
   test("a set that printed only some versions links to one it printed", () => {
     /*
-     * `/card/<nameSlug>` RENDERS THE CORPUS'S LOWEST-PITCH VERSION, which a set
+     * A BARE NAME RESOLVES TO THE CORPUS'S LOWEST-PITCH VERSION, which a set
      * that published only the higher ones does not contain. Aurora prints Spark
      * Spray at pitch 2 and 3: the collapsed row wears AUR022's art and draws two
-     * bands, and sending its name to `/card/spark-spray` would open the pitch-1
+     * bands, and sending its name to the name's default would open the pitch-1
      * card Aurora never published — on the one page whose whole subject is what
      * this set contains. 23 (set, name) groups in this corpus are that shape.
      *
@@ -449,11 +494,14 @@ describe("the ported pages", () => {
     expect(html).not.toBe("");
 
     /* Every Spark Spray link on the page is a version Aurora printed — the
-       bare name would be the pitch-1 card, and it is nowhere. */
-    const links = html.match(/href="\/card\/spark-spray[^"]*"/g) ?? [];
+       bare name would resolve to the pitch-1 card, and it is nowhere. */
+    const links = html.match(/href="\/card\/[^"]*spark-spray[^"]*"/g) ?? [];
     expect(links.length).toBeGreaterThan(0);
     expect(new Set(links)).toEqual(
-      new Set(['href="/card/spark-spray-2"', 'href="/card/spark-spray-3"']),
+      new Set([
+        `href="${addressOf("spark-spray-2")}"`,
+        `href="${addressOf("spark-spray-3")}"`,
+      ]),
     );
   });
 
@@ -487,7 +535,7 @@ describe("a card page shows the combat positions it does not fill", () => {
   test("an action with no attack draws the power plate, empty", () => {
     /* `Absorb in Aether` is a Wizard Defense Reaction: cost and defence, no
        power. The 1,363-card case, and the reason for the change. */
-    const html = render("/card/absorb-in-aether-1");
+    const html = render(addressOf("absorb-in-aether-1"));
     expect(html).not.toBe("");
     expect(html).toContain('aria-label="No printed power"');
     /* The plate it drew is still the POWER plate — the silhouette is what says
@@ -497,7 +545,7 @@ describe("a card page shows the combat positions it does not fill", () => {
 
   test("equipment draws cost and power empty, because the frame has them", () => {
     /* `Aether Ironweave` is Runeblade Equipment: defence only. */
-    const html = render("/card/aether-ironweave");
+    const html = render(addressOf("aether-ironweave"));
     expect(html).not.toBe("");
     expect(html).toContain('aria-label="No printed cost"');
     expect(html).toContain('aria-label="No printed power"');
@@ -515,8 +563,9 @@ describe("a card page shows the combat positions it does not fill", () => {
      * Re-implementing it diverges from `slugify`'s NFKD and transliteration
      * pass — an apostrophe becomes `-` in a naive version and vanishes in the
      * real one — and the failure is SILENT: a hero sharing its name with
-     * another card lives at `/card/<slug>-<pitch>`, leaving `/card/<slug>` as
-     * the disambiguation page, which carries no stat block at all. Every
+     * another card lives under `<slug>-<pitch>`, so a hand-built path would
+     * miss the page entirely — and there is no `/card/<slug>` left to land on
+     * by accident either, since that form is a redirect now. Every
      * assertion below would then pass against a page that could never have
      * carried a socket.
      */
@@ -694,7 +743,7 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
      * crumb to "Pitch 1" on every disambiguated card — a crumb that no longer
      * names the page, and the WCAG 2.4.4 hazard `labelFor` exists to prevent.
      */
-    const crumbs = crumbsIn(render("/card/head-jab-1"));
+    const crumbs = crumbsIn(render(addressOf("head-jab-1")));
     expect(crumbs).not.toBe("");
     expect(crumbs).toContain('aria-label="Head Jab (pitch 1)"');
     /* And the name is not printed a second time beside it. */
@@ -706,7 +755,7 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
   test("a card whose name identifies it keeps the name", () => {
     /* There is no name crumb above it to avoid repeating, and its pitch — which
        may be none at all — is not what tells it apart from anything. */
-    const crumbs = crumbsIn(render("/card/crouching-tiger"));
+    const crumbs = crumbsIn(render(addressOf("crouching-tiger")));
     expect(crumbs).toContain("Crouching Tiger");
     expect(crumbs).not.toContain("of-jewel");
   });
@@ -718,7 +767,7 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
      * crumb is the grey stone with a dash, and the label is what carries the
      * distinction to anything reading it aloud.
      */
-    const crumbs = crumbsIn(render("/card/hyper-driver-0"));
+    const crumbs = crumbsIn(render(addressOf("hyper-driver-0")));
     expect(crumbs).toContain('aria-label="Hyper Driver (no pitch)"');
     expect(crumbs).toContain("of-jewel--tone-none");
   });
@@ -754,16 +803,17 @@ describe("the printings table is how a reader reaches another art", () => {
      * columns, and the number is the link. Head Jab is printed in seven places
      * and its Welcome to Rathe entry is two different arts under one number.
      */
-    const html = render("/card/head-jab-1");
+    const html = render(addressOf("head-jab-1"));
     expect(html).not.toBe("");
     expect(html).not.toContain("of-picker");
 
     const numbers = numbersIn(html);
     expect(numbers.length).toBeGreaterThan(5);
-    /* The first face is the card's own page; the rest are per-art addresses. */
-    expect(numbers.map((link) => link.href)).toContain("/card/head-jab-1");
+    /* EVERY row addresses its own art, the first one included — there is no
+       "the card's page" left for face 0 to be. */
+    expect(numbers.map((link) => link.href)).toContain(addressOf("head-jab-1"));
     expect(numbers.map((link) => link.href)).toContain(
-      "/card/head-jab-1/wtr/u-wtr098",
+      "/card/wtr/u-wtr098/head-jab-1",
     );
   });
 
@@ -778,7 +828,7 @@ describe("the printings table is how a reader reaches another art", () => {
      *
      * The qualifier is hidden, so the table still reads as bare numbers.
      */
-    const html = render("/card/head-jab-1");
+    const html = render(addressOf("head-jab-1"));
     const spoken = numbersIn(html).map((link) => link.spoken);
     expect(spoken).toContain("WTR098 (Alpha)");
     expect(spoken).toContain("WTR098 (Unlimited)");
@@ -799,7 +849,7 @@ describe("the printings table is how a reader reaches another art", () => {
      * is left off the row whose key is already the number, which would
      * otherwise be announced as "DYN088 DYN088".
      */
-    const spoken = numbersIn(render("/card/hanabi-blaster")).map(
+    const spoken = numbersIn(render(addressOf("hanabi-blaster"))).map(
       (link) => link.spoken,
     );
     expect(new Set(spoken)).toEqual(new Set(["DYN088", "DYN088 (DYN088-MV)"]));
@@ -835,7 +885,7 @@ describe("the printings table is how a reader reaches another art", () => {
      * where the reader already was, which is the one thing that attribute
      * means. The row is still the current ITEM, and says so.
      */
-    const table = tableIn(render("/card/head-jab"));
+    const table = tableIn(render(addressOf("head-jab-1")));
     expect(table).not.toContain('aria-current="page"');
     expect([...table.matchAll(/aria-current="true"/g)]).toHaveLength(1);
   });
@@ -852,7 +902,7 @@ describe("the printings table is how a reader reaches another art", () => {
      * specified edition (used for promos, non-set releases, etc.)", which is a
      * set saying it has no editions in the most words available.
      */
-    const html = render("/card/head-jab-1");
+    const html = render(addressOf("head-jab-1"));
     expect(html).not.toContain("No specified edition");
     expect(tableIn(html)).toContain("<td>—</td>");
 
@@ -877,13 +927,13 @@ describe("the printings table is how a reader reaches another art", () => {
      * for their number to open. `Toughness`'s `SUP241` is one: its row keeps
      * every other column and carries no anchor.
      */
-    const table = tableIn(render("/card/head-jab-1/lgs/017-rf"));
+    const table = tableIn(render("/card/lgs/017-rf/head-jab-1"));
     expect([...table.matchAll(/aria-current="true"/g)]).toHaveLength(1);
     expect(table).toMatch(
       /<tr class="of-card__printing--shown">.*?LGS017.*?<\/tr>/s,
     );
 
-    const faceless = tableIn(render("/card/toughness"));
+    const faceless = tableIn(render(addressOf("toughness")));
     expect(faceless).toContain("SUP241");
     expect(faceless).not.toMatch(/<a[^>]*>\s*SUP241/);
   });
@@ -925,7 +975,7 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
     [...footerOf(html).matchAll(/<p class="of-card__credit[ "]/g)].length;
 
   test("rarity, code, artist and printings are four siblings", () => {
-    const html = render("/card/adaptive-plating");
+    const html = render(addressOf("adaptive-plating"));
     expect(html).toContain("of-card__band--credits");
     expect(creditsIn(html)).toBe(4);
 
@@ -952,7 +1002,7 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
      * is sliced at its own set prefix rather than composed from `set_id` and
      * `id`, which upstream already concatenated.
      */
-    const footer = footerOf(render("/card/adaptive-plating"));
+    const footer = footerOf(render(addressOf("adaptive-plating")));
     expect(footer).toContain(
       '<span class="of-card__printing-code"><a href="/sets/evo">EVO' +
         '<span class="of-card__visually-hidden"> (Bright Lights)</span>' +
@@ -983,12 +1033,10 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
     let perArt = 0;
     for (const page of CARD_PAGES.filter((_, index) => index % 53 === 0)) {
       const faces = facesOf(page.card);
-      /* Face 0 is `/card/<slug>`; the rest have per-art routes of their own. */
+      /* Every face has a route of its own now, face 0 included — so the loop
+         no longer has to know which one is the card's own address. */
       faces.forEach((face, index) => {
-        const route =
-          index === 0
-            ? page.href
-            : `${page.href}/${face.setCode}/${face.number}`;
+        const route = hrefForPrinting(face.setCode, face.number, page.slug);
         const html = render(route);
         if (html === "") return;
         if (index > 0) perArt += 1;
@@ -1065,7 +1113,7 @@ describe("a related-cards list is one row per name, stones beside it", () => {
      * shape under test is unchanged and it is now asserted on the kind of list
      * that still exists: one about OTHER cards.
      */
-    const list = listIn(render("/card/fist-pump"));
+    const list = listIn(render(addressOf("fist-pump")));
     expect(list).not.toBe("");
 
     /* One row… */
@@ -1085,9 +1133,9 @@ describe("a related-cards list is one row per name, stones beside it", () => {
       ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
     ].map((m) => m[1]);
     expect(pitchLinks).toEqual([
-      "/card/hyper-driver-1",
-      "/card/hyper-driver-2",
-      "/card/hyper-driver-3",
+      addressOf("hyper-driver-1"),
+      addressOf("hyper-driver-2"),
+      addressOf("hyper-driver-3"),
     ]);
   });
 
@@ -1104,7 +1152,7 @@ describe("a related-cards list is one row per name, stones beside it", () => {
      * href it sits inside, since a row of stones all correctly labelled but
      * wired to the wrong cards would pass any weaker check.
      */
-    const list = listIn(render("/card/fist-pump"));
+    const list = listIn(render(addressOf("fist-pump")));
     for (const [, href, label] of list.matchAll(
       /<a class="of-card__pitch-link" href="([^"]+)"><span class="of-jewel[^"]*" role="img" aria-label="([^"]+)"/g,
     )) {
@@ -1128,7 +1176,7 @@ describe("a related-cards list is one row per name, stones beside it", () => {
      * which is the only way to assert the rule holds across them rather than
      * one shape having replaced the other.
      */
-    const list = listIn(render("/card/runechant"));
+    const list = listIn(render(addressOf("runechant")));
     const rows = [
       ...list.matchAll(/<li class="of-card__link">(.*?)<\/li>/gs),
     ].map((m) => m[1] ?? "");
@@ -1177,14 +1225,14 @@ describe("a related-cards list is one row per name, stones beside it", () => {
      *
      * Fist Pump is one of them. Four cards are called Hyper Driver — three
      * pitch versions and a token with no pitch — and Fist Pump's text reaches
-     * only the three, so the row lands on one of those three and NOT on
-     * `/card/hyper-driver`, which would offer the token this row does not show.
+     * only the three, so the row lands on one of those three and NOT on the
+     * bare name's default, which would offer the token this row does not show.
      */
-    const list = listIn(render("/card/fist-pump"));
+    const list = listIn(render(addressOf("fist-pump")));
     const nameHref = list.match(
       /<a class="of-card__link-name" href="([^"]+)"/,
     )?.[1];
-    expect(nameHref).toBe("/card/hyper-driver-1");
+    expect(nameHref).toBe(addressOf("hyper-driver-1"));
 
     const stoneHrefs = [
       ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
@@ -1223,9 +1271,9 @@ describe("a related-cards list is one row per name, stones beside it", () => {
       be true of the destination and false of the row, and would announce the
       same string as the first stone beside it.
     */
-    const versions = listIn(render("/card/fist-pump"));
+    const versions = listIn(render(addressOf("fist-pump")));
     expect(versions).toContain(
-      '<a class="of-card__link-name" href="/card/hyper-driver-1">Hyper Driver<span class="of-card__visually-hidden"> (pitch 1, 2 and 3)</span></a>',
+      `<a class="of-card__link-name" href="${addressOf("hyper-driver-1")}">Hyper Driver<span class="of-card__visually-hidden"> (pitch 1, 2 and 3)</span></a>`,
     );
 
     /* And a row standing for ONE version is named for that one, through
@@ -1233,8 +1281,8 @@ describe("a related-cards list is one row per name, stones beside it", () => {
        Tiger is referenced by Growl at pitch 1 and by no other version of it —
        the only shape in the corpus where a group has one disambiguated member,
        which is why this names an odd pair of cards. */
-    expect(render("/card/crouching-tiger")).toContain(
-      '<a class="of-card__link-name" href="/card/growl-1">Growl<span class="of-card__visually-hidden"> (pitch 1)</span></a>',
+    expect(render(addressOf("crouching-tiger"))).toContain(
+      `<a class="of-card__link-name" href="${addressOf("growl-1")}">Growl<span class="of-card__visually-hidden"> (pitch 1)</span></a>`,
     );
   });
 
@@ -1368,9 +1416,16 @@ describe("a double-faced printing names the card on its back", () => {
      * only in the printings table below the fold. A Drop in the Ocean is one
      * physical card with Inner Chi.
      */
-    const html = render("/card/a-drop-in-the-ocean");
+    const html = render(addressOf("a-drop-in-the-ocean"));
     expect(html).toContain("Backed with");
-    expect(html).toContain('<a href="/card/inner-chi">Inner Chi</a>');
+    /*
+     * INNER CHI'S OWN ADDRESS, WHICH IS THE BACK OF THIS VERY PRINTING. Under
+     * the old scheme this read `/card/inner-chi` — the card, at whatever art it
+     * happened to open on. A card link is a printing link now, and the printing
+     * `linkTo` picks for Inner Chi is ENG025's back face: the physical other
+     * side of the card this page is showing.
+     */
+    expect(html).toContain(`<a href="${addressOf("inner-chi")}">Inner Chi</a>`);
   });
 
   test("which card is on the back follows the printing the page shows", () => {
@@ -1389,16 +1444,16 @@ describe("a double-faced printing names the card on its back", () => {
         (match) => match[1],
       );
 
-    expect(backs("/card/agility/hvy/240")).toEqual(["/card/gold"]);
-    expect(backs("/card/agility/kyo/027")).toEqual(["/card/might"]);
+    expect(backs("/card/hvy/240/agility")).toEqual([addressOf("gold")]);
+    expect(backs("/card/kyo/027/agility")).toEqual([addressOf("might")]);
 
     /*
      * AND THE DEFAULT PRINTING NAMES NEITHER, which is the honest answer rather
-     * than a gap: `/card/agility` shows AKO027, an Ako printing of a token that
-     * Ako published on its own.
+     * than a gap: Agility's own address shows AKO027, an Ako printing of a
+     * token that Ako published on its own.
      */
-    expect(backs("/card/agility")).toEqual([]);
-    expect(render("/card/agility")).not.toContain("Backed with");
+    expect(backs(addressOf("agility"))).toEqual([]);
+    expect(render(addressOf("agility"))).not.toContain("Backed with");
   });
 });
 
@@ -1554,5 +1609,101 @@ describe("a card index prints the name and not the pitch qualifier", () => {
         `${display}: ${[...markup.matchAll(/class="[^"]*variant[^"]*"><\/span>/g)].length}`,
       ).toBe(`${display}: 0`);
     }
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The redirect table                                                          */
+/* -------------------------------------------------------------------------- */
+
+describe("_redirects keeps every pre-change card URL alive", () => {
+  const rules = redirectRules(CARD_REDIRECTS);
+
+  test("the table is what the build writes and what the server reads back", () => {
+    /*
+     * ROUND-TRIPPED, BECAUSE THE FILE IS THE INTERFACE. `build.ts` renders
+     * these rules to `dist/_redirects` and `serve.ts` parses that file back —
+     * two functions in this module and one artefact between them. A renderer
+     * and a parser that disagree produce a dev server that resolves a redirect
+     * nobody's host will, or misses one everybody's host applies, and neither
+     * shows up as a failure anywhere else.
+     */
+    expect(parseRedirects(renderRedirects(rules))).toEqual([...rules]);
+  });
+
+  test("comments and blank lines are not rules", () => {
+    // The rendered file leads with four comment lines and a blank one.
+    const text = renderRedirects(rules);
+    expect(text.split("\n")[0]?.startsWith("#")).toBe(true);
+    expect(parseRedirects(text).length).toBe(rules.length);
+  });
+
+  test("an old card URL resolves to the page that card is served at", () => {
+    const target = matchRedirect(rules, "/card/head-jab-1");
+    expect(target).toBe(addressOf("head-jab-1"));
+
+    // And a bare shared name lands on the version it used to render.
+    expect(matchRedirect(rules, "/card/head-jab")).toBe(
+      addressOf("head-jab-1"),
+    );
+  });
+
+  test("the one placeholder rule permutes the old printing form", () => {
+    /*
+     * 6,437 URLs, one rule. `/card/<slug>/<set>/<number>` and
+     * `/card/<set>/<number>/<slug>` are the same three segments in a different
+     * order, which is the only reason this table fits inside Netlify's
+     * guidance — see `redirects.ts`.
+     */
+    expect(LEGACY_PRINTING_RULE.status).toBe(301);
+    expect(matchRedirect(rules, "/card/head-jab-1/lgs/017-rf")).toBe(
+      "/card/lgs/017-rf/head-jab-1",
+    );
+    expect(matchRedirect(rules, "/card/a-drop-in-the-ocean/mst/095-mv")).toBe(
+      "/card/mst/095-mv/a-drop-in-the-ocean",
+    );
+  });
+
+  test("a trailing slash does not defeat a rule", () => {
+    // Netlify does not care about one, and neither may the dev server, or a
+    // link pasted with a slash on the end would 404 locally and work in
+    // production.
+    expect(matchRedirect(rules, "/card/head-jab-1/")).toBe(
+      addressOf("head-jab-1"),
+    );
+  });
+
+  test("a live page is not matched by an exact rule", () => {
+    /*
+     * The placeholder DOES match a live printing URL — both forms are three
+     * segments under `/card/` — and that is safe only because the rule is
+     * unforced and `serve.ts` tries the file first. What must never happen is
+     * an EXACT rule shadowing a page, which is why `cards.test.ts` asserts no
+     * redirect source is also a route. Asserted from this side too: the two
+     * checks fail for different reasons and a table can break either way.
+     */
+    const exact = rules.filter((rule) => !rule.from.includes(":"));
+    const addresses = new Set(CARD_ROUTES.map((route) => route.href));
+    for (const rule of exact) expect(addresses.has(rule.from)).toBe(false);
+  });
+
+  test("a duplicated source is a build failure, not a silent loser", () => {
+    expect(() =>
+      redirectRules([
+        { from: "/card/x", to: "/card/a/1/x" },
+        { from: "/card/x", to: "/card/b/2/x" },
+      ]),
+    ).toThrow(/redirected twice/);
+  });
+
+  test("matchRedirect refuses a splat rather than ignoring it", () => {
+    // A dev server that quietly drops a rule production applies is worse than
+    // one that will not start.
+    expect(() =>
+      matchRedirect(
+        [{ from: "/old/*", to: "/new/:splat", status: 301 }],
+        "/old/x",
+      ),
+    ).toThrow(/does not implement splats/);
   });
 });

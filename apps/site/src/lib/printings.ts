@@ -51,16 +51,16 @@ import type { Card, CardPrinting } from "./cards";
 export interface PrintingRef {
   /** The face key, `MST131.webp`. Unique per distinct image. */
   readonly key: string;
-  /** Set code, lowercased: the second path segment. */
+  /** Set code, lowercased: the first path segment after `/card/`. */
   readonly setCode: string;
-  /** The disambiguated collector number: the third. See {@link numberFor}. */
+  /** The disambiguated collector number: the second. See {@link numberFor}. */
   readonly number: string;
   /** The printing row this face was first reached by. */
   readonly printing: CardPrinting;
 }
 
 /**
- * The third path segment of a printing URL, derived from the face key.
+ * The second path segment of a printing URL, derived from the face key.
  *
  * THE COLLECTOR NUMBER ALONE CANNOT NAME AN ART. A set's number is shared by
  * every art of that card, so the segment is the face key with the set prefix
@@ -81,6 +81,36 @@ export function numberFor(key: string, setCode: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * The address of one printing: `/card/mst/131/head-jab`.
+ *
+ * SET AND NUMBER COME FIRST, AND THE NAME IS THE TAIL. This is Scryfall's
+ * spelling — `/card/mh3/467/wooded-foothills` — and it is the right way round
+ * for a reason that has nothing to do with imitation: **the identity of a
+ * printing is printed on the printing.** A reader holding the card can read
+ * `MST131` off it and type the URL; nobody can read a slug off anything. So the
+ * two segments that name the thing lead, and the name follows as the part that
+ * makes a pasted link legible.
+ *
+ * IT ALSO SURVIVES A RENAME. Under the old `/card/<slug>/<set>/<number>` the
+ * name was the FIRST segment, so a slug that changed — an upstream correction,
+ * a new disambiguation suffix when a second pitch version is printed — broke
+ * every printing URL beneath it. Here the identity is upstream's own set code
+ * and collector number, and the tail is the only part that can move.
+ *
+ * PURE, AND THAT IS LOAD-BEARING. `cards.ts` loads a 16 MB corpus at module
+ * scope; this module exists so the client can build a card URL without reaching
+ * it (see the note at the top of this file). Every surface that links to a card
+ * — the results page, the set pages, the random redirect — goes through here.
+ */
+export function hrefForPrinting(
+  setCode: string,
+  number: string,
+  slug: string,
+): string {
+  return `/card/${setCode}/${number}/${slug}`;
 }
 
 /**

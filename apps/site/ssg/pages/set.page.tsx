@@ -22,7 +22,7 @@ import {
   CARD_PAGES,
   type CardPage,
   facesOf,
-  hrefForSlug,
+  HREF_BY_NAME_SLUG,
   variantSuffix,
 } from "../../src/lib/cards";
 import { orientationOf } from "../../src/lib/faces";
@@ -145,7 +145,7 @@ function entryFor(
      * `/card/angelic-wrath` is the page that holds every version, and it EXISTS
      * whenever this row is collapsed: two cards in this set sharing a name is
      * two cards in the corpus sharing one, which is the exact condition
-     * `NAME_PAGES` is built on.
+     * `NAME_GROUPS` is built on.
      *
      * A PARTIAL GROUP MUST LAND ON A VERSION THIS SET ACTUALLY PRINTED, and
      * that is the same rule `card-search.ts` states at length beside its own
@@ -162,7 +162,13 @@ function entryFor(
      * the other end: there is nothing to disambiguate, and a disambiguation
      * page for one card is a stop on the way to it.
      */
-    href: collapsed && whole ? hrefForSlug(first.nameSlug) : first.href,
+    href:
+      collapsed && whole
+        ? /* The name's lowest-pitch version, by address rather than by
+             `/card/<nameSlug>` — that URL is a 301 now, and a link the page
+             draws itself should not travel through one. */
+          (HREF_BY_NAME_SLUG.get(first.nameSlug) ?? first.href)
+        : first.href,
     label: collapsed ? first.card.name : first.label,
     /* The bare name; the pitch qualifier `label` carries is hidden in the
        markup and kept for the accessible name. See `CardIndexEntry`. */

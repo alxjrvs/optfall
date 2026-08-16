@@ -65,7 +65,7 @@ import type { CardPage } from "./cards";
 /* `faces.ts` is pure and corpus-free — the same property `printings.ts` was
    split out for. Importing it here does not reach `cards.ts`. */
 import { orientationOf } from "./faces";
-import { facesOf, numberFor } from "./printings";
+import { facesOf, hrefForPrinting, numberFor } from "./printings";
 import {
   evaluate,
   leaves,
@@ -140,11 +140,13 @@ export interface EncodedCardIndex {
    * `faceKeys`, so listing it again would be 4,941 duplicated strings to say
    * something the index already says.
    *
-   * SO IT IS THE 6,437 NON-DEFAULT FACES, which is exactly the set `cards.ts`
-   * emits a URL for. That is not a coincidence worth leaving implicit: a row
-   * in `unique:art` is a link, the thing it links to is a per-printing page,
-   * and those pages exist for precisely these faces. An index carrying arts
-   * with no address would be offering the reader a result they cannot open.
+   * SO IT IS THE 6,437 NON-DEFAULT FACES. This used to be exactly the set
+   * `cards.ts` emits a URL for, and it is not any more — every one of the
+   * 11,378 has an address now, the default included. What survives the change
+   * is the omission itself: the default face's URL is DERIVABLE from
+   * `faceKeys` and `faceSets`, which ship for the picture anyway, so carrying
+   * it here would still be repetition. Every entry written here is still a page
+   * that exists; they are simply no longer the only ones.
    *
    * The set id rather than the set code, because `setDict` is already shipped
    * and 112 codes across 6,437 entries is 26 KB of repetition otherwise. The
@@ -1018,9 +1020,9 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
         /* LOWERCASED, BECAUSE THE ROUTE IS. `setDict` holds upstream's
            spelling — `WTR` — and `facesOf` lowercases when it builds the path,
            so taking the dictionary's spelling verbatim produced
-           `/card/head-jab-1/WTR/098` for a page emitted at `/wtr/098`. Every
-           `unique:art` row would have been a 404, and every one of them would
-           have looked right. */
+           `/card/WTR/098/head-jab-1` for a page emitted at `/card/wtr/098/…`.
+           Every `unique:art` row would have been a 404, and every one of them
+           would have looked right. */
         const setCode =
           setDict[Number.parseInt(entry.slice(0, first), 10)]?.toLowerCase();
         const landscape = entry.slice(first + 1, second) === "1";
@@ -2346,6 +2348,61 @@ function nameOf(label: string): string {
   return label.replace(/ \((?:no pitch|pitch \d)\)$/, "");
 }
 
+/**
+ * A card's own address: the URL of its default printing.
+ *
+ * THE INDEX ALREADY CARRIES BOTH HALVES, WHICH IS WHY THERE IS NO NEW COLUMN.
+ * `faceKeys[ordinal]` is the default face and `faceSets[ordinal]` is the set it
+ * came from — both shipped for the picture — and the collector-number segment
+ * is a pure function of the two. So the client can build `/card/<set>/<number>/
+ * <slug>` for every row without a byte added to a payload already at 934 kB.
+ *
+ * THE FALLBACK GOES THROUGH THE REDIRECT, DELIBERATELY. A row with no face key
+ * cannot have its printing URL derived here, and `/card/<slug>` is a 301 whose
+ * target was computed from the corpus at build time — so the one path that
+ * cannot be resolved locally is handed to the one table that always can. It
+ * costs a hop and cannot be wrong. No card in this corpus reaches it.
+ */
+function defaultHrefOf(index: CardIndex, ordinal: number): string {
+  const slug = index.slugs[ordinal] ?? "";
+  const key = index.faceKeys[ordinal];
+  const setCode = index.faceSets[ordinal] ?? "";
+  if (key === null || key === undefined || key === "" || setCode === "") {
+    return `/card/${slug}`;
+  }
+  return hrefForPrinting(setCode, numberFor(key, setCode), slug);
+}
+
+/**
+ * Which version a COLLAPSED row opens — the lowest-pitch one, `byPitch`'s rule.
+ *
+ * `/card/<nameSlug>` USED TO ANSWER THIS AND IT IS A 301 NOW. The old URL meant
+ * "this name, at the version the site shows first", and the router resolved it
+ * with `byPitch` in `cards.ts`. Emitting it still would work — the redirect
+ * table knows the answer — but it would send every collapsed result through a
+ * hop for a destination the row is already holding.
+ *
+ * `pitchRank`, NOT THE RAW PITCH, AND THE DIFFERENCE IS ONE REAL CARD. The
+ * caller sorts these by `pitch` ascending for DISPLAY, where a card with no
+ * pitch is 0 and therefore first. `byPitch` sorts it LAST. Across 900 shared
+ * names exactly one group mixes the two — Hyper Driver, printed at pitch 1, 2
+ * and 3 plus an unpitched version — so taking `matchedVersions[0]` would open a
+ * different card there than the tab strip calls first, on one page, silently.
+ * That is the whole reason this is a function and not an index lookup.
+ *
+ * Name + pitch is unique across the corpus (measured: zero collisions), so this
+ * needs no tiebreak; `byPitch`'s `unique_id` fallback cannot be reached within
+ * one name group.
+ */
+function nameDefaultHref(
+  versions: readonly CardResultVersion[],
+  fallback: string,
+): string {
+  const rank = (pitch: number): number => (pitch === 0 ? 4 : pitch);
+  const first = versions.toSorted((a, b) => rank(a.pitch) - rank(b.pitch))[0];
+  return first?.href ?? fallback;
+}
+
 function toResult(
   index: CardIndex,
   ordinal: number,
@@ -2522,8 +2579,10 @@ function toResult(
     qualifier: collapsed ? "" : pitchSuffix,
     href:
       art !== undefined
-        ? `/card/${slug}/${art.setCode}/${art.number}`
-        : `/card/${collapsed && !partial ? nameSlug : slug}`,
+        ? hrefForPrinting(art.setCode, art.number, slug)
+        : collapsed && !partial
+          ? nameDefaultHref(matchedVersions, defaultHrefOf(index, ordinal))
+          : defaultHrefOf(index, ordinal),
     matchedVersions,
     totalVersions,
     faceKey: shown.key,
@@ -2927,7 +2986,7 @@ export function searchCards(
     const name = index.nameSlugs[row.ordinal] ?? index.slugs[row.ordinal] ?? "";
     const version: CardResultVersion = {
       pitch: index.pitches[row.ordinal] ?? 0,
-      href: `/card/${index.slugs[row.ordinal] ?? ""}`,
+      href: defaultHrefOf(index, row.ordinal),
       label: index.labels[row.ordinal] ?? "",
     };
     const versions = matchedByName.get(name);
@@ -2992,8 +3051,9 @@ export function searchCards(
                 /* ITS OWN PAGE, NEVER THE ART ROW'S PRINTING URL. In
                    `unique:art` the row's `href` is one picture of the card;
                    the mark beside it stands for the CARD's pitch, so it points
-                   where the pitch is a fact — the card page. */
-                href: `/card/${index.slugs[row.ordinal] ?? ""}`,
+                   where the pitch is a fact — the card's own default
+                   printing. */
+                href: defaultHrefOf(index, row.ordinal),
                 label: index.labels[row.ordinal] ?? "",
               },
             ];

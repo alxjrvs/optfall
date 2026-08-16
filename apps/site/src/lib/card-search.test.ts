@@ -29,7 +29,8 @@ import {
   FORMATS,
   LAST_CONFIRMED,
   STAT_ORDER,
-  hrefForSlug,
+  hrefForPrinting,
+  numberFor,
 } from "./cards";
 import {
   buildCardIndex,
@@ -98,12 +99,55 @@ describe("the index", () => {
     expect(JSON.stringify(again)).toBe(JSON.stringify(encoded));
   });
 
-  test("every result href is a URL this build emits", () => {
-    const emitted = new Set(
-      CARD_ROUTES.map((route) => hrefForSlug(route.slug)),
-    );
-    for (const slug of index.slugs)
-      expect(emitted.has(hrefForSlug(slug))).toBe(true);
+  test("every card's derived address is a URL this build emits", () => {
+    /*
+     * THE CLIENT DERIVES A CARD URL RATHER THAN BEING HANDED ONE, and this is
+     * what says the derivation agrees with the router. `defaultHrefOf` builds
+     * `/card/<set>/<number>/<slug>` from `faceKeys` + `faceSets` + `slugs` —
+     * three columns shipped for other reasons — so a change to any of them, or
+     * to `numberFor`, silently points every result row at a 404. There is no
+     * `/card/<slug>` fallback page left to absorb that any more.
+     */
+    const emitted = new Set(CARD_ROUTES.map((route) => route.href));
+    for (let ordinal = 0; ordinal < index.slugs.length; ordinal += 1) {
+      const key = index.faceKeys[ordinal];
+      const setCode = index.faceSets[ordinal] ?? "";
+      expect(key).not.toBeNull();
+      expect(setCode).not.toBe("");
+      const href = hrefForPrinting(
+        setCode,
+        numberFor(key ?? "", setCode),
+        index.slugs[ordinal] ?? "",
+      );
+      expect(emitted.has(href)).toBe(true);
+    }
+  });
+
+  test("every result row links to a URL this build emits", () => {
+    /*
+     * THE DERIVATION AND THE ROWS ARE DIFFERENT FACTS. The check above proves
+     * a card's own address resolves; this one walks what `search` actually
+     * puts in an anchor, which includes the `unique:art` printing rows and the
+     * collapsed `unique:names` rows that pick a sibling version. Those are the
+     * two paths that do NOT go through the common case.
+     */
+    const emitted = new Set(CARD_ROUTES.map((route) => route.href));
+    for (const query of [
+      "banned:cc",
+      "head jab",
+      "hyper driver",
+      "set:mst unique:art",
+      "set:wtr unique:cards",
+    ]) {
+      const outcome = searchCards(index, query, 60);
+      expect(outcome.results.length).toBeGreaterThan(0);
+      for (const result of outcome.results) {
+        expect(emitted.has(result.href)).toBe(true);
+        for (const version of result.matchedVersions) {
+          expect(emitted.has(version.href)).toBe(true);
+        }
+      }
+    }
   });
 });
 
@@ -327,7 +371,14 @@ describe("ranking", () => {
     const headJab = outcome.results.filter((row) => row.label === "Head Jab");
 
     expect(headJab).toHaveLength(1);
-    expect(headJab[0]?.href).toBe("/card/head-jab");
+    /*
+     * THE LOWEST-PITCH VERSION'S OWN PRINTING, NOT `/card/head-jab`. That URL
+     * used to be the collapsed row's destination and is a 301 now, so the row
+     * carries the address the redirect would have sent it to. See
+     * `nameDefaultHref` — the version is picked by `byPitch`'s rule, which is
+     * the same one the tab strip on the destination is ordered by.
+     */
+    expect(headJab[0]?.href).toBe("/card/ben/010/head-jab-1");
     // The bare name, because the row stands for the card rather than for one
     // version of it — and the destination shows all three.
     expect(headJab[0]?.label).not.toContain("pitch");
@@ -350,13 +401,26 @@ describe("ranking", () => {
     );
 
     expect(headJab?.matchedVersions).toEqual([
-      { pitch: 1, href: "/card/head-jab-1", label: "Head Jab (pitch 1)" },
-      { pitch: 2, href: "/card/head-jab-2", label: "Head Jab (pitch 2)" },
-      { pitch: 3, href: "/card/head-jab-3", label: "Head Jab (pitch 3)" },
+      {
+        pitch: 1,
+        href: "/card/ben/010/head-jab-1",
+        label: "Head Jab (pitch 1)",
+      },
+      {
+        pitch: 2,
+        href: "/card/ben/017/head-jab-2",
+        label: "Head Jab (pitch 2)",
+      },
+      {
+        pitch: 3,
+        href: "/card/ben/024/head-jab-3",
+        label: "Head Jab (pitch 3)",
+      },
     ]);
-    /* The row's own link is the NAME — the page that holds all three. The
-       versions are how a reader who means one of them says so. */
-    expect(headJab?.href).toBe("/card/head-jab");
+    /* The row's own link is the LOWEST-PITCH version — which is the page
+       `/card/head-jab` used to render and now 301s to. The versions beside it
+       are how a reader who means one of the others says so. */
+    expect(headJab?.href).toBe("/card/ben/010/head-jab-1");
   });
 
   test("only the matched versions get a door, on every row", () => {
@@ -375,8 +439,8 @@ describe("ranking", () => {
       (row) => row.label === "Electromagnetic Somersault",
     );
     expect(banned?.matchedVersions.map((version) => version.href)).toEqual([
-      "/card/electromagnetic-somersault-1",
-      "/card/electromagnetic-somersault-2",
+      "/card/ast/019/electromagnetic-somersault-1",
+      "/card/ros/086/electromagnetic-somersault-2",
     ]);
   });
 
@@ -843,14 +907,14 @@ describe("unique:", () => {
      * THE TEST THAT EARNED ITS PLACE. The set code arrives here through
      * `setDict`, which holds upstream's spelling — `WTR` — while the router
      * lowercases when it builds the path. The first working version of this
-     * feature emitted `/card/head-jab-1/WTR/098` for a page built at
-     * `/wtr/098`: every alternate-art result was a 404, and every one of them
-     * looked correct in the list.
+     * feature emitted `/card/WTR/098/head-jab-1` for a page built at
+     * `/card/wtr/098/head-jab-1`: every alternate-art result was a 404, and
+     * every one of them looked correct in the list.
      *
      * Nothing inside the search module could have caught that, because both
      * halves were self-consistent. It needs the router's own route table.
      */
-    const routes = new Set(CARD_ROUTES.map((route) => `/card/${route.slug}`));
+    const routes = new Set(CARD_ROUTES.map((route) => route.href));
 
     const rows = searchCards(index, "unique:art type:guardian", 5000).results;
     expect(rows.length).toBeGreaterThan(400);
@@ -1397,7 +1461,16 @@ describe("a set-scoped search shows that set's printing", () => {
     const art = flipped.arts[target]?.[0];
     expect(art?.landscape).toBe(true);
 
-    const href = `/card/${flipped.slugs[target]}`;
+    /* The card's own address, derived exactly as `defaultHrefOf` derives it —
+       a card URL is `/card/<set>/<number>/<slug>` and the slug alone no longer
+       names a page. */
+    const targetKey = flipped.faceKeys[target] ?? "";
+    const targetSet = flipped.faceSets[target] ?? "";
+    const href = hrefForPrinting(
+      targetSet,
+      numberFor(targetKey, targetSet),
+      flipped.slugs[target] ?? "",
+    );
     const row = searchCards(
       flipped,
       `set:${art?.setCode} unique:cards`,

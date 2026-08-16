@@ -369,7 +369,7 @@ fragment the thing it claims to consolidate. Every operator we add must feel lik
 it was always part of the same language, which is a constraint on naming as much
 as on engineering.
 
-**Every view is a URL.** `/card/command-and-conquer` and `/search?q=…` are the
+**Every view is a URL.** `/card/<set>/<number>/<name>` and `/search?q=…` are the
 product, not decoration on it. Scryfall's real artefact is the link you paste
 into a conversation to settle it, and a card page that cannot be linked is a
 lookup rather than a reference.

@@ -56,7 +56,8 @@ import {
   type CardPage,
   CORPUS,
   facesOf,
-  hrefForSlug,
+  HREF_BY_NAME_SLUG,
+  hrefForPrinting,
   LAST_CONFIRMED,
   STAT_ORDER,
   variantSuffix,
@@ -88,10 +89,11 @@ export interface CardEntryProps {
    * Which art this page shows — an index into `facesOf(card)`.
    *
    * IT IS THE WHOLE OF WHAT A PER-PRINTING URL MEANS now that the picker is
-   * gone. `/card/<slug>` is face 0 and `/card/<slug>/<set>/<number>` is the
-   * face that route was emitted for, so the picture, the rarity beside it and
-   * the row marked in the printings table are all decided here, at build time,
-   * by the address.
+   * gone. Every URL is `/card/<set>/<number>/<slug>` and names exactly one
+   * face, so the picture, the rarity beside it and the row marked in the
+   * printings table are all decided here, at build time, by the address. Face 0
+   * is not special any more — it is simply the one the card's own links point
+   * at.
    */
   readonly selected?: number;
 }
@@ -322,8 +324,15 @@ function groupTarget(group: LinkGroup): {
     known !== undefined &&
     known.count === group.links.length;
 
+  /* THE NAME'S DEFAULT VERSION, RESOLVED HERE. `/card/<nameSlug>` is a 301
+     now; the map holds the address it points at, so the anchor goes straight
+     there. Falls back to the first link, which is the lowest-pitch version of
+     this group and therefore the same card the map would have named. */
   return whole
-    ? { href: hrefForSlug(known.nameSlug), qualifier: "" }
+    ? {
+        href: HREF_BY_NAME_SLUG.get(known.nameSlug) ?? first.href,
+        qualifier: "",
+      }
     : { href: first.href, qualifier: versionsSuffix(group.links) };
 }
 
@@ -447,7 +456,10 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   ];
   const soleFlavour = flavours.length === 1 ? flavours[0] : undefined;
 
-  const nameHref = hrefForSlug(page.nameSlug);
+  /* THE NAME'S DESTINATION, RESOLVED AT BUILD TIME. `/card/<nameSlug>` is a
+     301 now, and a link the page draws itself has no business travelling
+     through one — the lowest-pitch version's own address is known here. */
+  const nameHref = HREF_BY_NAME_SLUG.get(page.nameSlug) ?? page.href;
 
   /*
     NO "OTHER VERSIONS" ROW. It restated, at the foot of the page, a set the
@@ -497,9 +509,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    */
   const faces = facesOf(card);
   const hrefByFace = new Map(
-    faces.map((ref, index) => [
+    faces.map((ref) => [
       ref.key,
-      index === 0 ? page.href : `${page.href}/${ref.setCode}/${ref.number}`,
+      hrefForPrinting(ref.setCode, ref.number, page.slug),
     ]),
   );
 
@@ -532,8 +544,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    *
    * `selected` IS THE ROUTE'S OWN INDEX into `faces`, so this is decided by the
    * URL rather than by state. Out of range falls back to the first face, which
-   * is what `/card/<slug>` is; a card with no published image at all has no
-   * face here and renders the placeholder.
+   * is the one the card's own address names; a card with no published image at
+   * all has no face here and renders the placeholder.
    */
   const shown = faces[selected] ?? faces[0];
 

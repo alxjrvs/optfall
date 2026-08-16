@@ -41,8 +41,10 @@ import { dirname, join } from "node:path";
 
 import { themeStylesheet } from "optfall-theme";
 
+import { CARD_REDIRECTS } from "../src/lib/cards";
 import { GENERATED_ASSETS } from "./assets";
 import { outputPathFor } from "./outputPath";
+import { redirectRules, renderRedirects } from "./redirects";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
 
@@ -341,6 +343,17 @@ async function main(): Promise<void> {
   }
 
   /*
+   * `_redirects` IS NOT IN `GENERATED_ASSETS`, and the reason is the corpus.
+   * That registry is imported by `assets.ts`, which draws a favicon out of the
+   * theme and reaches nothing else; giving it a member derived from 4,941 cards
+   * would make every importer of it — the tests included — load 16 MB to ask
+   * what colour the tab icon is. It is written here, beside the pages it is
+   * about, from the same route table that produced them.
+   */
+  const rules = redirectRules(CARD_REDIRECTS);
+  await writeFile(join(OUT_DIR, "_redirects"), renderRedirects(rules), "utf-8");
+
+  /*
    * TOKENS FIRST, COMPONENTS SECOND. The component sheets consume `--of-*`
    * custom properties and define none of them, so the order is not cosmetic —
    * a custom property is resolved at use, so a later definition still applies,
@@ -397,7 +410,8 @@ async function main(): Promise<void> {
   const sw = await writeServiceWorker(OUT_DIR);
 
   console.log(
-    `[ssg] ${count} page(s), ${GENERATED_ASSETS.length} generated asset(s), ` +
+    `[ssg] ${count} page(s), ${rules.length} redirect(s), ` +
+      `${GENERATED_ASSETS.length} generated asset(s), ` +
       `${styles.length} stylesheet(s)` +
       `${islandScript === undefined ? ", no islands" : ", islands bundled"}` +
       `, ${sw.precached} file(s) precached (${Math.round(sw.bytes / 1024)} kB)` +

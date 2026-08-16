@@ -13,14 +13,14 @@
  * wearing a random name.
  */
 
-import { CARD_PAGES } from "../../src/lib/cards";
+import { CARD_PAGES, HREF_BY_NAME_SLUG } from "../../src/lib/cards";
 import { buildNameIndex } from "../../src/lib/typeahead";
 import { Island } from "../Island";
 import { RandomCard } from "../islands/RandomCard";
 import type { PageModule, PageResult } from "../types";
 import "./random.css";
 
-const names = buildNameIndex(CARD_PAGES);
+const names = buildNameIndex(CARD_PAGES, HREF_BY_NAME_SLUG);
 
 function page(): PageResult {
   return {
