@@ -11,6 +11,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { BevelledPlate } from "./BevelledPlate";
@@ -18,6 +19,7 @@ import { OrnamentalRule } from "./OrnamentalRule";
 import { PAGE_GAP, Pagination, pageWindow } from "./Pagination";
 import { PitchJewel } from "./PitchJewel";
 import { PitchRule } from "./PitchRule";
+import { StatGlyph } from "./StatGlyph";
 import { ResultRow } from "./ResultRow";
 
 describe("PitchJewel", () => {
@@ -437,5 +439,105 @@ describe("Pagination", () => {
     expect(html).toContain('aria-label="Show 60 per page"');
     expect(html).toContain('aria-label="Show All per page"');
     expect(html).toContain('aria-label="Page 7"');
+  });
+});
+
+describe("StatGlyph", () => {
+  test("an absent value is a dash in a recessed plate, not an empty one", () => {
+    /*
+     * THE SILHOUETTE SURVIVES, which is the whole design: the shape is what
+     * says WHICH stat is missing. So the kind class stays and only the fill
+     * changes — asserted through the class, because a plate that lost
+     * `of-stat--power` would look like an absence of nothing in particular.
+     */
+    const html = renderToStaticMarkup(<StatGlyph kind="power" value={null} />);
+    expect(html).toContain("of-stat--power");
+    expect(html).toContain("of-stat--absent");
+    expect(html).toContain(">–<");
+  });
+
+  test('`null` and `"0"` are different renderings, because they are different facts', () => {
+    /*
+     * THE POINT OF THE WHOLE CHANGE. Upstream writes an absent stat as the
+     * empty string, so "no power" and "power 0" arrive as one field carrying
+     * two facts — and 0 is not rare: 1,648 cards print a cost of 0, 191 a
+     * defence of 0, 13 a power of 0. If these two rendered alike the card page
+     * would be answering a question it had been given the answer to.
+     */
+    const zero = renderToStaticMarkup(<StatGlyph kind="cost" value="0" />);
+    const absent = renderToStaticMarkup(<StatGlyph kind="cost" value={null} />);
+
+    expect(zero).not.toBe(absent);
+    expect(zero).toContain(">0<");
+    expect(zero).not.toContain("of-stat--absent");
+    expect(absent).toContain("of-stat--absent");
+  });
+
+  test("an absent stat is spoken as an absence, never as a dash", () => {
+    /* "Cost –" is what the markup says and it is not what the card means; a
+       screen reader announcing a punctuation mark has handed the problem to
+       the listener. Same decision `PitchJewel` makes for pitch 0. */
+    expect(
+      renderToStaticMarkup(<StatGlyph kind="cost" value={null} />),
+    ).toContain('aria-label="No printed cost"');
+    expect(
+      renderToStaticMarkup(<StatGlyph kind="defence" value={null} />),
+    ).toContain('aria-label="No printed defence"');
+    expect(renderToStaticMarkup(<StatGlyph kind="cost" value="0" />)).toContain(
+      'aria-label="Cost 0"',
+    );
+  });
+
+  test("an empty string is not treated as an absence", () => {
+    /*
+     * A caller passing `""` has a bug — upstream's spelling for absent, not
+     * this component's — and the honest response is to render what it was
+     * given rather than to guess. Disguising it as an absence would make the
+     * one distinction this component exists to draw depend on which of two
+     * spellings the caller happened to use.
+     */
+    const empty = renderToStaticMarkup(<StatGlyph kind="power" value="" />);
+    expect(empty).not.toContain("of-stat--absent");
+    expect(empty).toContain('aria-label="Power "');
+  });
+});
+
+describe("the absent stat plate keeps its edge", () => {
+  test("`--absent` overrides the fill and nothing else", () => {
+    /*
+     * WHAT DRAWS THE SILHOUETTE IS THE BEVEL, NOT THE FILL, and that is the
+     * answer to an objection worth recording: `color.stat.absent` is only about
+     * 1.4:1 against the panel it sits on, so if the fill were the outline the
+     * shape would be near-invisible — and the shape is the channel this design
+     * says carries WHICH stat is missing.
+     *
+     * It is not the fill. `.of-stat` draws an inset light-above/dark-below
+     * bevel on every plate, and `.of-stat.of-stat--absent` sets `background`
+     * and `color` and stops, so the absent plate is outlined exactly as the
+     * other six are. A future edit that added `box-shadow: none` there, or
+     * moved the bevel into the per-kind rules, would take the silhouette away
+     * silently — hence a test rather than a comment.
+     *
+     * The ratio itself is not a defect to fix: the weakest EXISTING plate,
+     * cost in the dark theme, is 2.42:1 against the same panel, so
+     * fill-against-ground is not a threshold this system holds any plate to.
+     * What it holds is ink-on-plate, asserted in `tokens.test.ts`.
+     */
+    const css = readFileSync(
+      new URL("./StatGlyph.css", import.meta.url),
+      "utf-8",
+    );
+
+    const base = /\.of-stat \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(base).toContain("box-shadow");
+    expect(base).toContain("--of-bevel-light");
+    expect(base).toContain("--of-bevel-dark");
+
+    const absent = /\.of-stat\.of-stat--absent \{([^}]*)\}/.exec(css)?.[1];
+    expect(absent).toBeDefined();
+    expect(absent).toContain("--of-color-stat-absent");
+    /* The two properties it is allowed to touch, and no third. */
+    expect(absent).not.toContain("box-shadow");
+    expect(absent).not.toContain("clip-path");
   });
 });

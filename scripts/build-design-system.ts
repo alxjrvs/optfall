@@ -116,16 +116,26 @@ function statPlate(kind: string, value: string): string {
   if (spec === undefined) throw new Error(`no such stat plate: ${kind}`);
 
   const size = `calc(var(--of-ornament-stat-size) * ${spec.optical})`;
-  const surface =
-    spec.tone === null
+  /* AN EN DASH IS THE ABSENT VALUE, and it takes the empty-socket fill whatever
+     the stat's own tone is — the component overrides `background` and `color`
+     and leaves the silhouette alone, so this does the same. */
+  const absent = value === "–";
+  const surface = absent
+    ? "background:var(--of-color-stat-absent);color:var(--of-color-stat-absent-ink)"
+    : spec.tone === null
       ? "background:var(--of-color-surface-raised);color:var(--of-color-ink)"
       : `background:var(--of-color-stat-${spec.tone});color:var(--of-color-stat-${spec.tone}-ink)`;
   /* The shield's point takes the bottom of the square, so the numeral is
      centred in the BODY rather than in the box — the component's own note. */
   const seat =
     kind === "defence" ? `;padding-block-end:calc(${size} * 0.28)` : "";
+  /* THE DASH IS LIGHTER THAN A NUMERAL, exactly as `StatGlyph.css` draws it —
+     a stat that is not there should not shout as loudly as one that is. Stated
+     here because a card publishing a bold dash against a product shipping a
+     regular one is the same shape/ink/size drift this helper exists to end. */
+  const weight = absent ? "regular" : "bold";
 
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:${size};block-size:${size};${surface};font-family:var(--of-type-family-sans);font-size:var(--of-type-size-base);font-weight:var(--of-type-weight-bold);line-height:1;clip-path:${cutValue(spec.cut)};box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark)${seat}">${value}</span>`;
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:${size};block-size:${size};${surface};font-family:var(--of-type-family-sans);font-size:var(--of-type-size-base);font-weight:var(--of-type-weight-${weight});line-height:1;clip-path:${cutValue(spec.cut)};box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark)${seat}">${value}</span>`;
 }
 
 /**
@@ -850,6 +860,20 @@ cards.push({
       .map(([kind, value]) => statBadge(kind ?? "", kind ?? "", value ?? ""))
       .join("")}
   </div>
+  <p class="note" style="margin-block-start:var(--of-space-looser)"><strong>A stat the card does not print — which is not a stat printed 0.</strong></p>
+  <div class="row" style="margin-block-start:var(--of-space-tight);align-items:center;gap:var(--of-space-looser);flex-wrap:wrap">
+    ${[
+      ["cost", "0"],
+      ["cost", "–"],
+      ["power", "0"],
+      ["power", "–"],
+      ["defence", "0"],
+      ["defence", "–"],
+    ]
+      .map(([kind, value]) => statBadge(kind ?? "", kind ?? "", value ?? ""))
+      .join("")}
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-tight)">1,648 cards print a cost of 0, 191 a defence of 0 and 13 a power of 0, so both members of each pair above are real and a reader has to be able to tell them apart. <strong>The silhouette survives the absence</strong> — the shape is what says WHICH stat is missing — and only the fill changes, to a plate that recedes against the ground rather than a seventh colour with a meaning of its own. Spoken as "no printed power", never as a dash. The card page draws these three whether or not a card fills them, because the frame reserves the positions; a hero, which has none of them, gets none.</p>
   <p class="note" style="margin-block-start:var(--of-space-loose)">One vocabulary — a square plate, chamfered differently — so the six read as a family rather than as six icons. <strong>None is eight-sided:</strong> the pitch jewel owns that outline and the system promises it means pitch, so a stat glyph that happened to be an octagon would spend the one shape that is spoken for. The numeral stays the primary channel and the label stays visible; the silhouette is the third redundant carrier, never the only one.</p>
   <p class="note"><strong>Cost, power and defence break the vocabulary on purpose.</strong> They are the three a player already knows by sight, so they take the card's own geometry rather than a forward-leaning grey square that has to be read to be identified: two discs and a shield, drawn by us in tokens from our own palette. A player looking for attack is looking for a yellow disc.</p>
   <p class="note"><strong>One size, six areas, so the boxes are not all the same.</strong> The eye compares ink rather than bounding boxes, and an uncut square keeps 27% more of its box than a disc does. Each plate is therefore scaled by the square root of its silhouette's area against the disc's π/4, which is what makes the row above read as one size instead of four.</p>

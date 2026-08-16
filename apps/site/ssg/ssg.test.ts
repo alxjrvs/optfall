@@ -9,7 +9,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { CORPUS as CARDS } from "../src/lib/cards";
+import { CARD_PAGES, CORPUS as CARDS } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { setFor } from "../src/lib/sets";
 import { canonicalFor, Document } from "./document";
@@ -212,8 +212,26 @@ describe("the route registry", () => {
 /* The ported pages                                                            */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Every route the registry owns, resolved once and shared by the two describes
+ * that only need to READ the table.
+ *
+ * Each of them used to build its own — 13,676 route resolutions twice, which
+ * walks the 4,941-card corpus twice for an answer that cannot differ between
+ * them. `routes` is a module-scope constant and `resolve()` is pure over it, so
+ * one list is not merely cheaper, it is the same list.
+ *
+ * NOT "ONCE FOR THE WHOLE FILE", which is what this said first and was not
+ * true. `describe("the route registry")` calls `resolve()` itself in two tests,
+ * and should: what those assert is that resolution produces no duplicate output
+ * path and no duplicate route, which is a claim about the ACT of resolving.
+ * Handing them a list somebody else already resolved would test the list rather
+ * than the function.
+ */
+const RESOLVED = routes.flatMap((registration) => [...registration.resolve()]);
+
 describe("the ported pages", () => {
-  const all = routes.flatMap((registration) => [...registration.resolve()]);
+  const all = RESOLVED;
   const paths = all.map((resolved) => resolved.route);
 
   test("every set that carries a card has a page, and none that does not", () => {
@@ -346,5 +364,206 @@ describe("the ported pages", () => {
     // every one of them came from `CardFace` and carries the attribution.
     expect(monarchHtml).toContain("of-index__cell-link");
     expect(monarchHtml).toContain("of-pitch-rule__band");
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The card page's empty stat sockets                                          */
+/* -------------------------------------------------------------------------- */
+
+describe("a card page shows the combat positions it does not fill", () => {
+  const all = RESOLVED;
+  const render = (route: string) =>
+    all.find((resolved) => resolved.route === route)?.render([], undefined) ??
+    "";
+
+  /*
+   * ASSERTED ON REAL PAGES rather than on a fixture, because the rule is about
+   * WHICH cards get sockets and that is a fact about the corpus. Shapes
+   * measured across all 4,941 cards: 1,902 print cost+power+defence, 1,363
+   * print cost and defence and no power, 525 print defence alone, 151 are
+   * heroes printing life and intellect only, 181 print nothing at all.
+   */
+
+  test("an action with no attack draws the power plate, empty", () => {
+    /* `Absorb in Aether` is a Wizard Defense Reaction: cost and defence, no
+       power. The 1,363-card case, and the reason for the change. */
+    const html = render("/card/absorb-in-aether-1");
+    expect(html).not.toBe("");
+    expect(html).toContain('aria-label="No printed power"');
+    /* The plate it drew is still the POWER plate — the silhouette is what says
+       which stat is missing. */
+    expect(html).toContain("of-stat--power");
+  });
+
+  test("equipment draws cost and power empty, because the frame has them", () => {
+    /* `Aether Ironweave` is Runeblade Equipment: defence only. */
+    const html = render("/card/aether-ironweave");
+    expect(html).not.toBe("");
+    expect(html).toContain('aria-label="No printed cost"');
+    expect(html).toContain('aria-label="No printed power"');
+  });
+
+  test("a hero gets no sockets, because it has no combat positions", () => {
+    /*
+     * THE LIMIT ON THE RULE, and why it is not "always draw three". A hero
+     * prints life and intellect; cost, power and defence are not values it is
+     * missing but positions its frame does not have. Three dashes on a hero
+     * would be inventing slots rather than reporting an absence.
+     */
+    /*
+     * THE ADDRESS COMES FROM `CARD_PAGES`, NOT FROM SLUGGING THE NAME HERE.
+     * Re-implementing it diverges from `slugify`'s NFKD and transliteration
+     * pass — an apostrophe becomes `-` in a naive version and vanishes in the
+     * real one — and the failure is SILENT: a hero sharing its name with
+     * another card lives at `/card/<slug>-<pitch>`, leaving `/card/<slug>` as
+     * the disambiguation page, which carries no stat block at all. Every
+     * assertion below would then pass against a page that could never have
+     * carried a socket.
+     */
+    const hero = CARD_PAGES.find(
+      (page) =>
+        page.card.health !== "" &&
+        page.card.intelligence !== "" &&
+        page.card.cost === "" &&
+        page.card.power === "" &&
+        page.card.defense === "",
+    );
+    expect(hero).toBeDefined();
+
+    const html = render(hero?.href ?? "");
+    /* Not the disambiguation page and not nothing: this has to be the card. */
+    expect(html).toContain("of-card__name");
+    expect(html).not.toContain("No printed cost");
+    expect(html).not.toContain("No printed power");
+    expect(html).not.toContain("No printed defence");
+  });
+
+  test("a weapon draws cost and defence empty, and that is a decision", () => {
+    /*
+     * 81 cards print power and nothing else. They get the trio for the same
+     * reason the 525 equipment cards do — "this card has no cost" is a fact
+     * worth stating about a card you never pay for — and the case is pinned
+     * here because it is the one somebody will want to move: both are
+     * permanents, and it is arguable their printed frames carry no cost bubble
+     * at all. A card printing LIFE is where the line actually falls; see the
+     * ally test below.
+     */
+    /* `intelligence` is constrained as well as `health`, because
+       `usesCombatFrame` rejects a card printing EITHER permanent stat. No card
+       prints intellect without life today, so leaving it out passed — but a
+       resync introducing one that sorted earlier would fail this test on
+       "No printed cost" with nothing saying it was disqualified by intellect. */
+    const weapon = CARD_PAGES.find(
+      (page) =>
+        /* A DIGIT, not merely non-empty. `Plasma Barrel Shot` prints power `X`
+           and satisfies every other clause; it sorts after a numeric match
+           today, so the `Power \d+` assertion below passes by luck. Upstream
+           prints `X`, `XX` and `*` — that is why `value` is a string — so a
+           resync could turn this red for a reason with nothing to do with
+           sockets. */
+        /^\d+$/.test(page.card.power) &&
+        page.card.cost === "" &&
+        page.card.defense === "" &&
+        page.card.health === "" &&
+        page.card.intelligence === "",
+    );
+    expect(weapon).toBeDefined();
+
+    const html = render(weapon?.href ?? "");
+    expect(html).toContain("of-card__name");
+    expect(html).toContain('aria-label="No printed cost"');
+    expect(html).toContain('aria-label="No printed defence"');
+    expect(html).toMatch(/aria-label="Power \d+"/);
+  });
+
+  test("a cost-only card draws both of the positions it leaves empty", () => {
+    /*
+     * THE LARGEST GROUP THE RULE ADMITS, and the one an earlier draft of the
+     * rationale never named: 409 cards print a cost and nothing else — items,
+     * instants, tokens. They get an empty attack plate AND an empty defence
+     * shield, which is two sockets from one printed value.
+     *
+     * Pinned as an explicit decision rather than left as a side effect of
+     * "prints a combat stat and no permanent one". It is the same call as
+     * equipment and weapons: the positions exist on the frame and the card
+     * leaves them empty, which is a fact worth drawing.
+     */
+    const costOnly = CARD_PAGES.find(
+      (page) =>
+        page.card.cost !== "" &&
+        page.card.power === "" &&
+        page.card.defense === "" &&
+        page.card.health === "" &&
+        page.card.intelligence === "",
+    );
+    expect(costOnly).toBeDefined();
+
+    const html = render(costOnly?.href ?? "");
+    expect(html).toContain("of-card__name");
+    expect(html).toContain('aria-label="No printed power"');
+    expect(html).toContain('aria-label="No printed defence"');
+    expect(html).not.toContain("No printed cost");
+  });
+
+  test("an ally gets no sockets either, because its frame is not that frame", () => {
+    /*
+     * THE SHAPE THE FIRST VERSION OF THIS RULE MISSED, and the reason the test
+     * for it is a `describe` of its own rather than a line in the hero one. 198
+     * cards print life and only 154 are heroes; the other 44 are allies,
+     * angels, dragons, demons and token creatures. `Aegis, Archangel of
+     * Protection` prints power and life and nothing else, so a rule reading
+     * "prints any combat stat" qualified it on the power and handed it an empty
+     * cost bubble and an empty defence shield — the latter immediately left of
+     * the life plate, since `CORNER_FOR` puts both at `end`. An absence
+     * asserted in the exact corner the card prints life in.
+     */
+    const ally = CARD_PAGES.find(
+      (page) =>
+        page.card.health !== "" &&
+        page.card.intelligence === "" &&
+        /* A digit, for the reason the weapon probe gives: the assertion below
+           reads `Power \d+`, and upstream prints `X`, `XX` and `*`. */
+        /^\d+$/.test(page.card.power),
+    );
+    expect(ally).toBeDefined();
+
+    const html = render(ally?.href ?? "");
+    expect(html).toContain("of-card__name");
+    expect(html).not.toContain("No printed cost");
+    expect(html).not.toContain("No printed defence");
+    /* And it still shows what it DOES print. */
+    expect(html).toMatch(/aria-label="Power \d+"/);
+  });
+
+  test("a printed zero is still a printed zero", () => {
+    /*
+     * The distinction from the other side. 1,648 cards print a cost of 0, and
+     * rendering those as absences would have replaced one wrong answer with
+     * another.
+     *
+     * IT HAS TO BE A CARD THAT ACTUALLY PRINTS 0, which the first version was
+     * not: it matched `Cost \d+` against a card costing 1, so it passed however
+     * a zero rendered and could not fail for the regression its own comment
+     * described. Found from the corpus rather than hard-coded, so it cannot
+     * drift onto a card whose printed cost changes under it.
+     */
+    const zero = CARD_PAGES.find(
+      (page) =>
+        page.card.cost === "0" &&
+        page.card.health === "" &&
+        page.card.intelligence === "" &&
+        page.card.power === "",
+    );
+    expect(zero).toBeDefined();
+
+    const html = render(zero?.href ?? "");
+    expect(html).toContain("of-card__name");
+    /* The zero is drawn as a zero… */
+    expect(html).toContain('aria-label="Cost 0"');
+    expect(html).not.toContain("No printed cost");
+    /* …on the same page where a real absence is drawn as one, which is exactly
+       the pair this change exists to keep apart. */
+    expect(html).toContain('aria-label="No printed power"');
   });
 });

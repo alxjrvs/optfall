@@ -54,6 +54,7 @@ import {
   facesOf,
   hrefForSlug,
   LAST_CONFIRMED,
+  STAT_ORDER,
 } from "../../src/lib/cards";
 import {
   boxFor,
@@ -114,6 +115,27 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
   Intellect: "intellect",
 };
 
+/**
+ * The three positions the ordinary card frame has, whether or not a card fills
+ * them. Cost sits top-left, attack bottom-left, defence bottom-right.
+ *
+ * The other three stats are not here because they have no fixed position: life
+ * and intellect belong to a permanent, arcane to whatever prints it, and each
+ * is placed by what the card IS rather than by a slot the frame reserves.
+ */
+const COMBAT_STATS = ["Cost", "Power", "Defence"] as const;
+
+/**
+ * The stats that mean a card is NOT on the ordinary frame.
+ *
+ * A hero, an ally, a demi-hero and a token creature all print life, and what
+ * that says is that the card is a permanent with its own furniture rather than
+ * something you play for a cost and swing for power. `Aegis, Archangel of
+ * Protection` prints power and life and nothing else; its frame has no cost
+ * bubble and no defence shield to leave standing empty.
+ */
+const PERMANENT_STATS = ["Life", "Intellect"] as const;
+
 const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
   Power: "start",
   Intellect: "start",
@@ -143,14 +165,84 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   ];
   const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
 
-  const printedStats = page.stats.map((stat) => {
-    const kind = SYMBOL_FOR[stat.label];
-    return {
-      label: stat.label,
-      value: stat.value,
-      kind: GLYPH_FOR[stat.label] ?? null,
-      symbol: kind === undefined ? null : symbolForKind(kind),
-    };
+  /**
+   * The stat block, INCLUDING the combat positions this card leaves empty.
+   *
+   * A Flesh and Blood card frame has three fixed positions — cost top-left,
+   * attack bottom-left, defence bottom-right — and a card that prints nothing
+   * in one of them used to render nothing there at all. That left the reader
+   * inferring an absence from a gap, which is indistinguishable from a layout
+   * they had not finished looking at. Worse, it made the absence unreadable
+   * against the common case: 1,648 cards print a cost of 0, 191 a defence of 0
+   * and 13 a power of 0, so "no power" and "power 0" were a blank and a numeral
+   * with nothing to connect them. `StatGlyph` draws the empty ones now, keeping
+   * the silhouette and taking `null`.
+   *
+   * ONLY ON A CARD THAT IS ON THAT FRAME, which is what `usesCombatFrame` is
+   * for, and the test has TWO halves because one was not enough.
+   *
+   * It has to print at least one of the three, so the 181 cards printing
+   * nothing whatsoever keep the written sentence below rather than growing
+   * three sockets out of nowhere. And it has to print NO permanent stat, which
+   * is the half the first version was missing: 198 cards print life, and only
+   * 154 of those are heroes. The other 44 are allies, angels, dragons, demons
+   * and token creatures — `Aegis, Archangel of Protection` prints power and
+   * life and nothing else — and under "prints any combat stat" they qualified
+   * on their power and were handed an empty cost bubble and an empty defence
+   * shield. The defence one landed immediately left of the life plate, because
+   * `CORNER_FOR` puts both at `end`: an absence asserted in the exact corner the
+   * card prints life in. That is the "inventing slots" failure the hero case
+   * was carved out to prevent, arriving through a shape the carve-out did not
+   * name.
+   *
+   * What is left is what the change is for: 1,363 cards print cost and defence
+   * and no power — actions, instants, defence reactions — and gain the empty
+   * attack plate.
+   *
+   * EVERY OTHER SHAPE IS IN, DELIBERATELY, and this is the line somebody will
+   * want to move, so here is the whole of it rather than the two cases that
+   * prompted it. 525 cards print defence alone (equipment), 81 print power
+   * alone (weapons), and 409 print cost alone (items, instants, tokens) — the
+   * last being the largest group and the one an earlier draft of this note
+   * never named. All three draw the positions they leave empty.
+   *
+   * They do because "this card has no cost", "no attack", "no defence" are
+   * facts worth stating, which is the whole argument for the change, and
+   * because the alternative renders an absence of an absence. Cards printing
+   * LIFE are the ones that go the other way, above, and the difference is not
+   * how many stats they print: a hero or an ally has its OWN furniture in those
+   * corners, so a socket there would overwrite something rather than report a
+   * gap.
+   *
+   * Life, intellect and arcane are unchanged and appear only when printed. They
+   * have no fixed position on the frame — they are where a card's type puts
+   * them — so there is no empty slot for them to leave.
+   */
+  const printedValues = new Map(
+    page.stats.map((stat) => [stat.label, stat.value]),
+  );
+  const usesCombatFrame =
+    COMBAT_STATS.some((label) => printedValues.has(label)) &&
+    !PERMANENT_STATS.some((label) => printedValues.has(label));
+
+  const printedStats = STAT_ORDER.flatMap((label) => {
+    const printed = printedValues.get(label);
+    const shown =
+      printed !== undefined ||
+      (usesCombatFrame && (COMBAT_STATS as readonly string[]).includes(label));
+    if (!shown) return [];
+
+    const kind = SYMBOL_FOR[label];
+    return [
+      {
+        label,
+        /* `null` is the absence; `""` would be a different and wrong claim.
+           See `StatGlyphProps.value`. */
+        value: printed ?? null,
+        kind: GLYPH_FOR[label] ?? null,
+        symbol: kind === undefined ? null : symbolForKind(kind),
+      },
+    ];
   });
 
   const costStat = printedStats.find((stat) => stat.kind === "cost");

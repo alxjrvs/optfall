@@ -801,26 +801,54 @@ export interface NamePage {
 }
 
 /**
- * A card's stats, in the order `docs/DESIGN.md` reads a card face, and only the
- * ones it has.
+ * Every stat a card can print, in the order `docs/DESIGN.md` reads a card face.
+ *
+ * EXPORTED BECAUSE A SECOND SURFACE NEEDS THE ORDER AND NOT THE VALUES. The
+ * card page draws the three combat stats whether or not a card prints them —
+ * see `COMBAT_STATS` in `CardEntry` — so it has to know the full list and where
+ * each member sits. Deriving that from a card would mean deriving it from a
+ * card that happens to print all six.
+ *
+ * `card-search.ts` keeps its own copy as `STAT_LABELS` and cannot import this
+ * one: a VALUE import from this module drags the 16 MB corpus into the island
+ * bundle, which is the failure `printings.ts` was split out to prevent. The two
+ * are pinned against each other in `card-search.test.ts` instead.
+ */
+export const STAT_ORDER = [
+  "Cost",
+  "Power",
+  "Defence",
+  "Life",
+  "Intellect",
+  "Arcane",
+] as const;
+
+/**
+ * A card's stats, in {@link STAT_ORDER}, and only the ones it has.
  *
  * Upstream writes an absent stat as `""` rather than omitting it, so "the card
  * has no power" and "the card has power 0" are the same field with different
  * values — 13 cards genuinely have `power: "0"`. Testing for the empty string
  * rather than for falsiness is what keeps those thirteen from losing a stat.
+ *
+ * IT STILL DROPS THE ABSENT ONES, and the card page's empty sockets are not a
+ * change to that. A row in a search result or a set index shows what a card
+ * HAS; only the card page has a frame with fixed positions to leave standing
+ * empty. Adding nulls here would push them into every list on the site.
  */
 function statsOf(card: Card): readonly Stat[] {
-  const candidates: readonly (readonly [string, string])[] = [
-    ["Cost", card.cost],
-    ["Power", card.power],
-    ["Defence", card.defense],
-    ["Life", card.health],
-    ["Intellect", card.intelligence],
-    ["Arcane", card.arcane],
-  ];
-  return candidates
-    .filter(([, value]) => value !== "")
-    .map(([label, value]) => ({ label, value }));
+  const printed: Readonly<Record<(typeof STAT_ORDER)[number], string>> = {
+    Cost: card.cost,
+    Power: card.power,
+    Defence: card.defense,
+    Life: card.health,
+    Intellect: card.intelligence,
+    Arcane: card.arcane,
+  };
+  return STAT_ORDER.filter((label) => printed[label] !== "").map((label) => ({
+    label,
+    value: printed[label],
+  }));
 }
 
 /** Slug groups, built once. */

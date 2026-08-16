@@ -28,6 +28,7 @@ import {
   CORPUS,
   FORMATS,
   LAST_CONFIRMED,
+  STAT_ORDER,
   hrefForSlug,
 } from "./cards";
 import {
@@ -1126,6 +1127,23 @@ describe("one card index, one stat vocabulary", () => {
        the version it was written against. */
     expect(fromCorpus.size).toBeGreaterThan(3);
     expect([...fromCorpus].toSorted()).toEqual([...fromIndex].toSorted());
+  });
+
+  test("and they name them in the same ORDER, which is the load-bearing half", () => {
+    /*
+     * THE TEST ABOVE SORTS BOTH SIDES, so it pins membership and not sequence —
+     * and sequence is the whole reason `STAT_ORDER` exists as a named export.
+     * `toResult` maps `STAT_LABELS` against a positional tuple, `passesFilter`
+     * and the sort keys read cost, power and defence at indices 0-2, and the
+     * card page draws its sockets in this order. Two lists agreeing on their
+     * contents while disagreeing on their order would put a card's defence
+     * under the word "Power" and pass the check next to this one.
+     */
+    expect([...STAT_LABELS]).toEqual([...STAT_ORDER]);
+
+    /* The three the comparison operators index positionally, stated separately
+       so a reordering of the tail cannot quietly move them. */
+    expect([...STAT_ORDER].slice(0, 3)).toEqual(["Cost", "Power", "Defence"]);
   });
 
   test("a hero carries its life and intellect on a search row", () => {

@@ -264,6 +264,29 @@ const CASES: readonly Case[] = [
     component: StatGlyph,
     props: { kind: "arcane", value: "1" },
   },
+  /*
+   * The empty socket. NOT here for contrast — this harness disables
+   * `color-contrast` outright, because jsdom answers it `incomplete` rather
+   * than with a verdict, and the header above says so. What axe does check on
+   * these is what it checks on every other case: that a `role="img"` carrying
+   * only an `aria-hidden` glyph still has a name. The colour pair is asserted
+   * in `packages/theme/src/tokens.test.ts`, where contrast lives.
+   */
+  {
+    name: "StatGlyph cost absent",
+    component: StatGlyph,
+    props: { kind: "cost", value: null },
+  },
+  {
+    name: "StatGlyph power absent",
+    component: StatGlyph,
+    props: { kind: "power", value: null },
+  },
+  {
+    name: "StatGlyph defence absent",
+    component: StatGlyph,
+    props: { kind: "defence", value: null },
+  },
   // `X` and `*` are printed values upstream, which is why `value` is a string.
   {
     name: "StatGlyph variable",

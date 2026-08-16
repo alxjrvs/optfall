@@ -236,6 +236,49 @@ describe("the pitch numeral is the primary channel", () => {
   });
 });
 
+describe("the stat numeral is the primary channel too", () => {
+  /*
+   * THE SAME CLAIM `StatGlyph` MAKES, AND IT HAD NO TEST. The component's own
+   * header says the numeral is primary and the silhouette redundant, and every
+   * `color.stat.*` pair went unchecked here while the pitch stones two blocks
+   * up were pinned. A numeral failing contrast on its own plate would leave the
+   * shape carrying the value alone — precisely the arrangement the component
+   * says it is not.
+   *
+   * `absent` MATTERS MOST OF THE FOUR and is why this block exists now. Its
+   * stated design goal is to RECEDE against the ground, and recede is the
+   * direction that drifts under 4.5:1 without anybody noticing: the dash is
+   * small, and a reader who cannot make it out has been told nothing at all
+   * rather than something wrong.
+   */
+  const PLATES: readonly (readonly [TokenId, TokenId])[] = [
+    ["color.stat.cost.ink", "color.stat.cost"],
+    ["color.stat.power.ink", "color.stat.power"],
+    ["color.stat.defence.ink", "color.stat.defence"],
+    ["color.stat.absent.ink", "color.stat.absent"],
+  ];
+
+  for (const [mode, tokens] of MODES) {
+    for (const [ink, plate] of PLATES) {
+      test(`${mode}: ${ink} on ${plate} meets AA`, () => {
+        const ratio = contrastRatio(token(tokens, ink), token(tokens, plate));
+        expect(ratio).toBeGreaterThanOrEqual(4.5);
+      });
+    }
+
+    test(`${mode}: the empty socket is not mistakable for the steel shield`, () => {
+      /* Defence is the other neutral in this set. If the two converged, an
+         absent defence and a printed one would differ only by the glyph — and
+         the glyph is the channel this plate has least of. */
+      const absent = relativeLuminance(token(tokens, "color.stat.absent"));
+      const defence = relativeLuminance(token(tokens, "color.stat.defence"));
+      expect(`${mode}:${Math.abs(absent - defence) > 0.08}`).toBe(
+        `${mode}:true`,
+      );
+    });
+  }
+});
+
 describe("state colours are distinguishable", () => {
   const STATE_TOKENS: readonly TokenId[] = [
     "color.state.legal",
