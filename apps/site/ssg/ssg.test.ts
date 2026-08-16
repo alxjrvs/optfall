@@ -1311,4 +1311,24 @@ describe("a card index prints the name and not the pitch qualifier", () => {
       variantSuffix(versioned?.pitch ?? 0, versioned?.disambiguated ?? false),
     ).toMatch(/^ \((?:no pitch|pitch \d)\)$/);
   });
+
+  test("a row with nothing to qualify renders no span at all", () => {
+    /*
+     * THE EMPTY ONE USED TO SHIP ANYWAY. Most rows have nothing to qualify — a
+     * collapsed row stands for every version it draws a band for, and a unique
+     * name never needed a suffix — and both views rendered the span regardless,
+     * so `<span class="of-index__variant"></span>` went out on the majority of
+     * rows. `ResultRow` has always guarded the identical case, so the rows view
+     * was clean while the grid and the names list were not.
+     *
+     * ASSERTED AS A COUNT OF THE EMPTY FORM, not as the absence of the class:
+     * the same page must still carry real qualifiers, which the test above it
+     * pins. One number says both things only if it counts the empty ones.
+     */
+    expect(html).not.toBe("");
+    expect(html).toContain("of-index__variant");
+    expect(
+      [...html.matchAll(/<span class="of-index__variant"><\/span>/g)].length,
+    ).toBe(0);
+  });
 });
