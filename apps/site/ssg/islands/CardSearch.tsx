@@ -38,11 +38,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  OrnamentalRule,
-  Pagination,
-  SearchField,
-} from "optfall-components/react";
+import { OrnamentalRule, Pagination } from "optfall-components/react";
 
 import {
   type CardDisplayMode,
@@ -67,6 +63,22 @@ import {
 import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
 
 import "./CardSearch.css";
+
+/**
+ * The shell's search input, which this island drives on `/search`.
+ *
+ * A STRING SHARED WITH `SiteHeader.tsx` AND NOTHING ENFORCES IT, which is worth
+ * saying out loud rather than hiding behind a constant. The header is rendered
+ * by the document shell and this island is mounted inside `<main>`, so there is
+ * no prop between them; if the id changes there and not here the field simply
+ * stops being adopted — the form still submits and navigates, so the page keeps
+ * working and gets slower, which is the failure mode to prefer but also the
+ * kind that goes unnoticed. `ssg.test.ts` asserts the two agree.
+ */
+export const HEADER_FIELD_ID = "site-search";
+
+/** Ties the header's field to the operator examples rendered on this page. */
+const HINT_ID = "cards-search-hint";
 
 export interface CardSearchProps {
   readonly index: EncodedCardIndex;
@@ -128,7 +140,111 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     what hydration checks.
   */
   const [interactive, setInteractive] = useState(false);
-  const field = useRef<HTMLInputElement>(null);
+  /**
+   * THE HEADER'S FIELD, NOT ONE THIS COMPONENT RENDERS.
+   *
+   * `docs/SCRYFALL-GAP.md` §5.2 says the front door's hero is a search field
+   * and every other screen carries the header's. This page used to have both:
+   * a hero field of its own, with the header's suppressed by
+   * `headerSearch: false`, which meant the results page looked like a second
+   * front door rather than like the rest of the site.
+   *
+   * So the island ADOPTS the field the shell already renders. It is a real
+   * `<form action="/search" method="get">` with `id="site-search"` inside it,
+   * so with no JavaScript it submits and navigates — which is exactly what
+   * Scryfall does, since Scryfall renders its results on a server. With
+   * JavaScript the island takes it over and the submit is answered in place,
+   * as it already was.
+   *
+   * REACHING OUTSIDE THE ISLAND'S OWN TREE IS THE COST, and it is worth naming.
+   * The header is rendered by `document.tsx` outside `<main>`, so no island can
+   * contain both the field and the results; the alternatives were two islands
+   * sharing a store, or a full page load per search. `id="site-search"` is the
+   * contract between them, and {@link HEADER_FIELD_ID} is where it is written
+   * down on this side.
+   */
+  const field = useRef<HTMLInputElement | null>(null);
+
+  /*
+   * THE SUBMIT HANDLER, HELD BY REF SO THE LISTENER IS WIRED ONCE.
+   *
+   * The DOM listener below is attached on mount and never rebound; reading
+   * `query` from its closure would read the value at mount forever. A ref
+   * holding the latest handler is the standard shape for that, and it keeps the
+   * effect's dependency list empty — which matters here because rebinding a
+   * listener on the SHELL's input every keystroke is a side effect on a node
+   * this component does not own.
+   *
+   * **THE SUBMITTED TEXT IS PASSED IN RATHER THAN READ FROM STATE, AND THAT IS
+   * A BUG THIS BRANCH ALREADY HAD.** `input` and `submit` can arrive in ONE
+   * task — a paste followed by Enter, or any programmatic submit — and
+   * `setQuery` only schedules a render, so the ref still holds the previous
+   * render's closure when the submit handler runs. Measured: submitting a new
+   * query immediately after setting the field re-ran the OLD one, left the URL
+   * alone, and looked from the outside like the field had stopped working.
+   *
+   * So the handler takes the field's own value. That is also just what a form
+   * is: at submit, the input is the truth and React state is a copy of it.
+   */
+  const submitRef = useRef<(raw: string) => void>(() => {});
+  const escapeRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    const input = document.getElementById(HEADER_FIELD_ID);
+    if (!(input instanceof HTMLInputElement)) return;
+
+    field.current = input;
+    const form = input.form;
+
+    /* The hint belongs to this field now, so the field has to say so. It is
+       rendered on the page rather than in the shell, because the operator
+       examples are about THIS page and the header is on every page. */
+    const described = input.getAttribute("aria-describedby");
+    input.setAttribute("aria-describedby", HINT_ID);
+
+    const onInput = () => setQuery(input.value);
+    const onSubmit = (event: Event) => {
+      event.preventDefault();
+      submitRef.current(input.value);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") escapeRef.current();
+    };
+
+    input.addEventListener("input", onInput);
+    input.addEventListener("keydown", onKeyDown);
+    form?.addEventListener("submit", onSubmit);
+
+    return () => {
+      input.removeEventListener("input", onInput);
+      input.removeEventListener("keydown", onKeyDown);
+      form?.removeEventListener("submit", onSubmit);
+      if (described === null) input.removeAttribute("aria-describedby");
+      else input.setAttribute("aria-describedby", described);
+      field.current = null;
+    };
+  }, []);
+
+  /*
+   * THE FIELD SHOWS THE QUERY IT IS ANSWERING, which is the whole reason a
+   * results page has a field in it at all.
+   *
+   * The header's input is server-rendered empty — it is on every page, and the
+   * query lives in `?q=`, which a static document cannot know. So the value is
+   * written here, from the state that `?q=` populates on mount, and rewritten
+   * whenever the query changes for a reason other than typing: Escape clears
+   * it, `display:` switches rewrite it, and `popstate` restores it. Without
+   * this a reader lands on `/search?q=banned:cc`, sees 35 results and an EMPTY
+   * box, and cannot edit the query that produced them.
+   *
+   * Guarded on inequality so typing does not fight the caret: the `input`
+   * listener sets state from the field, and writing the same string back would
+   * move the cursor to the end mid-word.
+   */
+  useEffect(() => {
+    const input = field.current;
+    if (input !== null && input.value !== query) input.value = query;
+  }, [query]);
 
   useEffect(() => {
     setInteractive(true);
@@ -348,101 +464,107 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     syncUrl("push", written, true, page, size);
   }
 
+  /**
+   * What a submit does, lifted out of the JSX it used to live in.
+   *
+   * NAMED RATHER THAN INLINE BECAUSE THE FIELD IS NO LONGER OURS. The header's
+   * input is a DOM node this island adopts, so the handler reaches it through
+   * `submitRef` instead of through a prop — and a listener bound once on mount
+   * would otherwise close over the first render's `query` forever.
+   *
+   * `raw` IS THE FIELD'S OWN VALUE AT SUBMIT, not `query`. See the note on
+   * `submitRef`: state lags the input by a render, and the two can be read in
+   * the same task.
+   */
+  function submitQuery(raw: string): void {
+    /*
+      THE NEW QUERY IS RANKED HERE, NOT READ OFF `outcome`, and that is a
+      React correction rather than a detail of the port.
+
+      `outcome` is a `useMemo` over `submitted`, so inside this handler it
+      still holds the PREVIOUS query's results: `setSubmitted` schedules a
+      re-render, it does not recompute anything synchronously. The Svelte
+      original could read its `$derived` on the line after assigning
+      because a `$derived` recomputes when read; reading the memo here is
+      one submit behind.
+
+      That staleness is not cosmetic in either place it was used. The
+      redirect would send the reader to the PREVIOUS query's single match
+      — asking `dominate` right after a one-result query navigates to that
+      earlier card and discards what was just typed — and `display` would
+      decide whether to strip the legacy `?display=` parameter from the
+      previous query's parse, leaving exactly the self-contradicting URL
+      the operator exists to remove.
+
+      It does mean the index is ranked twice per submit — here, and again
+      in the memo when the re-render lands. That is accepted rather than
+      overlooked: `searchCards` is pure, this is a submit rather than a
+      keystroke, and the alternative is caching machinery to save one pass
+      over an index the same interaction already pays for once.
+    */
+    const next = searchCards(cards, raw, requestFor(1, size).limit);
+    setQuery(raw);
+    setSubmitted(raw);
+    /*
+      A NEW QUERY IS PAGE ONE. Keeping the page across a submit would land
+      the reader on page 6 of an answer they have not seen the top of —
+      and on a shorter answer, on a page that does not exist. The SIZE is
+      kept, because that is a preference about how they read rather than a
+      position in one particular answer.
+    */
+    setPage(1);
+    /*
+      THE LEGACY PARAMETER IS FORGOTTEN EXACTLY WHEN IT IS DROPPED, and
+      those two have to be one condition rather than two.
+
+      `paramDisplay` was cleared in `show()` and on `popstate` but not
+      here, so it outlived the URL it came from: arrive at
+      `?q=x&display=list`, submit `x display:text` — the parameter is
+      stripped from the address bar — then submit a plain `winter`, and the
+      URL says nothing about display while the retained state still
+      resolves it to `list`.
+
+      Clearing it unconditionally produces the mirror image of that bug:
+      arrive at `?q=winter&display=list` and press Enter without editing,
+      and `next.display` is null so the parameter STAYS in the URL while
+      the cleared state falls back to `grid` — the view changes under the
+      reader and now contradicts the address bar it did not leave.
+
+      So the state is forgotten on precisely the submits that drop the
+      parameter, which is the same expression `syncUrl` is given.
+    */
+    const droppingParam = next.display !== null;
+    if (droppingParam) setParamDisplay(null);
+    syncUrl("push", raw, droppingParam, 1, size);
+    field.current?.blur();
+
+    const only = next.total === 1 ? next.results[0] : undefined;
+    if (only) window.location.assign(only.href);
+  }
+
+  submitRef.current = submitQuery;
+  /* UNCONDITIONAL, for the same reason `submitQuery` takes its argument: a
+     guard on `query` reads state that may lag the field by a render, and
+     "clear a field that is already empty" costs nothing. */
+  escapeRef.current = () => {
+    setQuery("");
+    if (field.current !== null) field.current.value = "";
+  };
+
   return (
     <>
-      <SearchField
-        label="Search the cards"
-        region="Flesh and Blood cards"
-        action="/search"
-        placeholder="command and conquer"
-        value={query}
-        onValueChange={setQuery}
-        inputRef={field}
-        onSubmit={(event) => {
-          event.preventDefault();
-          /*
-            THE NEW QUERY IS RANKED HERE, NOT READ OFF `outcome`, and that is a
-            React correction rather than a detail of the port.
+      {/*
+        THE HINT STAYS ON THE PAGE, THE FIELD DOES NOT.
 
-            `outcome` is a `useMemo` over `submitted`, so inside this handler it
-            still holds the PREVIOUS query's results: `setSubmitted` schedules a
-            re-render, it does not recompute anything synchronously. The Svelte
-            original could read its `$derived` on the line after assigning
-            because a `$derived` recomputes when read; reading the memo here is
-            one submit behind.
-
-            That staleness is not cosmetic in either place it was used. The
-            redirect would send the reader to the PREVIOUS query's single match
-            — asking `dominate` right after a one-result query navigates to that
-            earlier card and discards what was just typed — and `display` would
-            decide whether to strip the legacy `?display=` parameter from the
-            previous query's parse, leaving exactly the self-contradicting URL
-            the operator exists to remove.
-
-            It does mean the index is ranked twice per submit — here, and again
-            in the memo when the re-render lands. That is accepted rather than
-            overlooked: `searchCards` is pure, this is a submit rather than a
-            keystroke, and the alternative is caching machinery to save one pass
-            over an index the same interaction already pays for once.
-          */
-          const next = searchCards(cards, query, requestFor(1, size).limit);
-          setSubmitted(query);
-          /*
-            A NEW QUERY IS PAGE ONE. Keeping the page across a submit would land
-            the reader on page 6 of an answer they have not seen the top of —
-            and on a shorter answer, on a page that does not exist. The SIZE is
-            kept, because that is a preference about how they read rather than a
-            position in one particular answer.
-          */
-          setPage(1);
-          /*
-            THE LEGACY PARAMETER IS FORGOTTEN EXACTLY WHEN IT IS DROPPED, and
-            those two have to be one condition rather than two.
-
-            `paramDisplay` was cleared in `show()` and on `popstate` but not
-            here, so it outlived the URL it came from: arrive at
-            `?q=x&display=list`, submit `x display:text` — the parameter is
-            stripped from the address bar — then submit a plain `winter`, and the
-            URL says nothing about display while the retained state still
-            resolves it to `list`.
-
-            Clearing it unconditionally produces the mirror image of that bug:
-            arrive at `?q=winter&display=list` and press Enter without editing,
-            and `next.display` is null so the parameter STAYS in the URL while
-            the cleared state falls back to `grid` — the view changes under the
-            reader and now contradicts the address bar it did not leave.
-
-            So the state is forgotten on precisely the submits that drop the
-            parameter, which is the same expression `syncUrl` is given.
-          */
-          const droppingParam = next.display !== null;
-          if (droppingParam) setParamDisplay(null);
-          syncUrl("push", query, droppingParam, 1, size);
-          field.current?.blur();
-
-          const only = next.total === 1 ? next.results[0] : undefined;
-          if (only) window.location.assign(only.href);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && query !== "") {
-            event.preventDefault();
-            setQuery("");
-          }
-        }}
-        hint={
-          /*
-            THE PAGE'S ONE HINT LINE, AND IT IS THREE EXAMPLES AND A LINK. The
-            first is Card Vault's, the second is ours, the third is the one
-            nobody guesses. What it stopped doing is teaching the grammar in a
-            paragraph — a hint is a doorway, not a manual, and `/syntax` is the
-            manual it points at.
-          */
-          <>
-            <code>pitch:3 class:guardian</code> · <code>banned:cc</code> ·{" "}
-            <code>text:dominate</code> — <a href="/syntax">all operators</a>
-          </>
-        }
-      />
+        Three example queries and a link to the grammar. It belonged to the hero
+        field and is described BY the header's field now — the adoption effect
+        points `aria-describedby` at this element — because the examples are
+        about what this page can be asked, and the header is on every page.
+      */}
+      <p className="of-search__hint of-cards__hint" id={HINT_ID}>
+        <code>pitch:3 class:guardian</code> · <code>banned:cc</code> ·{" "}
+        <code>text:dominate</code> — <a href="/syntax">all operators</a>
+      </p>
 
       {/* Always present, never emptied. */}
       <p className="of-cards__announcement" role="status" aria-live="polite">

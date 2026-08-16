@@ -31,6 +31,7 @@ import {
   redirectRules,
   renderRedirects,
 } from "./redirects";
+import { HEADER_FIELD_ID } from "./islands/CardSearch";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
 import { routes } from "./routes";
 import type { PageModule, PageResult } from "./types";
@@ -1840,5 +1841,79 @@ describe("_redirects keeps every pre-change card URL alive", () => {
     expect(() =>
       redirectIndex([{ from: "/old/*", to: "/new/x", status: 301 }]),
     ).toThrow(/pattern/);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The header's search field                                                   */
+/* -------------------------------------------------------------------------- */
+
+describe("every screen but the front door carries the header's search", () => {
+  const all = RESOLVED;
+  const render = (route: string) =>
+    all
+      .find((resolved) => resolved.route === route)
+      ?.render([], "islands.js") ?? "";
+
+  test("the id CardSearch adopts is the id SiteHeader renders", () => {
+    /*
+     * THE ONE THING NOTHING ELSE CAN CATCH. The header is rendered by the
+     * document shell and `CardSearch` is mounted inside `<main>`, so there is
+     * no prop between them — the island finds its field with
+     * `document.getElementById(HEADER_FIELD_ID)`. If the id changes on one side
+     * only the field stops being adopted: the form still submits and the page
+     * still works, just with a full navigation, which is a regression nobody
+     * would notice from the output.
+     */
+    expect(render("/search")).toContain(`id="${HEADER_FIELD_ID}"`);
+  });
+
+  test("/search has exactly one field, and it is the header's", () => {
+    /*
+     * IT USED TO HAVE TWO. The page rendered a hero field of its own and
+     * suppressed the header's, which made the results screen look like a second
+     * front door. `docs/SCRYFALL-GAP.md` §5.2 gives the hero to the door.
+     */
+    const html = render("/search");
+    expect([...html.matchAll(/<input\b/g)]).toHaveLength(1);
+    expect(html).toContain(`id="${HEADER_FIELD_ID}"`);
+
+    /* And the operator examples survived the field they used to hang off, with
+       the header's input pointed at them by the adoption effect. */
+    expect(html).toContain('id="cards-search-hint"');
+  });
+
+  test("the front door has a hero and no header at all", () => {
+    /*
+     * `section: "none"` removes the whole bar there, so the door cannot have
+     * two fields by construction — which is the case `headerSearch` exists to
+     * refuse the day the door grows a header.
+     */
+    const html = render("/");
+    expect(html).not.toContain(`id="${HEADER_FIELD_ID}"`);
+    expect(html).not.toContain("of-bar__find");
+    expect(html).toContain("of-search__field");
+  });
+
+  test("/cr carries both, because they search different corpora", () => {
+    /*
+     * The usual objection to two fields — two places to type and one of them
+     * wrong — does not apply here: the hero searches the Comprehensive Rules
+     * and the header searches cards, neither can answer the other's question,
+     * and each says which it is in its `aria-label`.
+     */
+    const html = render("/cr");
+    expect(html).toContain(`id="${HEADER_FIELD_ID}"`);
+    expect(html).toContain("of-search__field");
+    expect(html).toContain('aria-label="Flesh and Blood cards"');
+  });
+
+  test("every other screen carries the header field", () => {
+    /* The rule is "all screens after the landing page", so it is asserted over
+       the screens rather than over the two that were changed. */
+    for (const route of ["/sets", "/syntax", "/about", "/data-terms"]) {
+      const has = render(route).includes(`id="${HEADER_FIELD_ID}"`);
+      expect(`${route}: ${has}`).toBe(`${route}: true`);
+    }
   });
 });

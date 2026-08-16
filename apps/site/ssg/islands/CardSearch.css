@@ -10,6 +10,20 @@
  */
 
 /*
+  THE HINT LEADS THE PAGE NOW, AND IT USED TO TRAIL A FIELD.
+
+  `.of-search__hint` is written to sit tight under the input it describes —
+  `margin-block: tight 0` — which is right when there is a field above it and
+  wrong when it is the first thing in `<main>`. The field moved to the header
+  (see `CardSearch.tsx`), so the hint needs the space the field used to occupy
+  above it, and nothing below it: the ornamental rule that follows brings its
+  own.
+*/
+.of-cards__hint {
+  margin-block-start: var(--of-space-looser);
+}
+
+/*
   The announcement is for assistive technology; the same words are printed
   visibly by `CardIndex` beside the results, so this one is off-screen rather
   than duplicated on the page. Sized from `space.hair` rather than collapsed to

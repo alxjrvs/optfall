@@ -96,7 +96,13 @@ function page(): PageResult {
     description:
       "Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from.",
     section: "cards",
-    headerSearch: false,
+    /*
+      THE HEADER'S FIELD IS THIS PAGE'S FIELD. It was suppressed here because
+      the page rendered a hero of its own, which made the results screen look
+      like a second front door — `docs/SCRYFALL-GAP.md` §5.2 gives the hero to
+      the door and the header's field to every other screen. The island adopts
+      it; see `HEADER_FIELD_ID` in `CardSearch.tsx`.
+    */
     islands: true,
     children: (
       <>

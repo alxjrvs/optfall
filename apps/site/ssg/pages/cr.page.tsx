@@ -54,7 +54,16 @@ function page(): PageResult {
     description:
       "Lexical search over the Flesh and Blood Comprehensive Rules. Every section has a permanent, citable URL.",
     section: "rules",
-    headerSearch: false,
+    /*
+      THE CARD FIELD STAYS IN THE HEADER HERE, BESIDE A RULES FIELD, and the two
+      searches are the reason. This page's hero searches the Comprehensive
+      Rules; the header searches cards. They are different corpora with
+      different grammars, so the usual objection to two fields on one screen —
+      two places to type and one of them wrong — does not apply: neither can
+      answer the other's question, and both say which they are in their
+      `aria-label`. A reader who arrives at the rules and then wants a card
+      should not have to go somewhere else to type.
+    */
     islands: true,
     children: (
       <>
