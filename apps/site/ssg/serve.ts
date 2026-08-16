@@ -28,7 +28,7 @@
 import { join, normalize } from "node:path";
 
 import { outputPathFor } from "./outputPath";
-import { matchRedirect, parseRedirects, type RedirectRule } from "./redirects";
+import { matchRedirect, parseRedirects, redirectIndex } from "./redirects";
 
 const ROOT = new URL("../dist/", import.meta.url).pathname;
 
@@ -73,18 +73,19 @@ function fileFor(pathname: string): string | undefined {
 /**
  * The generated redirect table, read from the artefact the build wrote.
  *
- * READ ONCE, AT STARTUP, rather than per request: it is 5,953 rules and the
- * server is long-lived. A rebuild while the server is up therefore serves the
- * previous table — acceptable, and the same restart this server already needs
- * to pick up new pages.
+ * READ AND INDEXED ONCE, AT STARTUP, rather than per request: it is 12,278
+ * rules and the server is long-lived. A rebuild while the server is up
+ * therefore serves the previous table — acceptable, and the same restart this
+ * server already needs to pick up new pages.
  *
  * ABSENT IS NOT AN ERROR. `dist/` may not have been built yet, and a dev server
  * that refuses to start because a file it only needs for 301s is missing is a
  * worse failure than one that 404s a redirect.
  */
-const REDIRECTS: readonly RedirectRule[] = await (async () => {
+const REDIRECTS: ReadonlyMap<string, string> = await (async () => {
   const file = Bun.file(join(ROOT, "_redirects"));
-  return (await file.exists()) ? parseRedirects(await file.text()) : [];
+  if (!(await file.exists())) return new Map<string, string>();
+  return redirectIndex(parseRedirects(await file.text()));
 })();
 
 Bun.serve({
@@ -100,11 +101,10 @@ Bun.serve({
 
     /*
      * THE FILE WINS, AND ONLY THEN THE TABLE — which is Netlify's own order for
-     * an unforced rule, and it is not a detail. Both the old printing form and
-     * the new one are three segments under `/card/`, so the permutation rule
-     * matches a LIVE page as readily as a moved one. A server that consulted
-     * the table first would 301 every alternate-art URL to a path that does not
-     * exist, locally, while production served it.
+     * an unforced rule. Every rule here is an exact path that names no page, so
+     * the two can no longer overlap the way they did while the old printing
+     * form was matched by a pattern; the order is kept because it is the host's,
+     * not because this table still needs it.
      */
     const target = matchRedirect(REDIRECTS, pathname);
     if (target !== undefined) {

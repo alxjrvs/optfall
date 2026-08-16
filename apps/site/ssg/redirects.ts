@@ -1,5 +1,5 @@
 /**
- * `_redirects` — the 5,953 rules that keep every pre-change card URL working.
+ * `_redirects` — the 12,278 rules that keep every pre-change card URL working.
  *
  * WHY THERE IS A REDIRECT TABLE AT ALL. The card scheme moved from
  * `/card/<slug>` (+ `/card/<slug>/<set>/<number>` for alternate arts) to
@@ -9,30 +9,48 @@
  * promise, it is a broken one — so every old form 301s to the page it named.
  *
  * WHY IT IS A FILE AND NOT `netlify.toml`. `netlify.toml` is hand-written and
- * reviewed; this is 5,953 machine-derived lines that change whenever the corpus
- * does. Netlify merges both and processes the toml first, which is the right way
- * round: the handful of deliberate rules win, and the generated bulk sits behind
- * them. Mixing the two would put a diff nobody can read in a file whose whole
- * value is that a human checks it.
+ * reviewed; this is 12,278 machine-derived lines that change whenever the
+ * corpus does. Netlify merges both and processes the toml first, which is the
+ * right way round: the handful of deliberate rules win, and the generated bulk
+ * sits behind them. Mixing the two would put a diff nobody can read in a file
+ * whose whole value is that a human checks it.
  *
- * THE ARITHMETIC, BECAUSE THE COUNT IS THE DESIGN CONSTRAINT. Netlify's
- * guidance is to reach for wildcards "if you need to set up 10,000 redirects or
- * more", and warns that a large enough serialised output fails the deploy. The
- * naive table is 12,278 rules. What gets it to 5,953:
+ * **EVERY RULE IS AN EXACT PATH. THERE ARE NO PATTERNS, AND THAT IS THE WHOLE
+ * DESIGN — arrived at after two attempts at the clever version each shipped an
+ * infinite redirect.**
  *
- * - **4,941** card slugs → that card's default printing. Irreducible: mapping
- *   `head-jab-1` to `wtr/098` needs the corpus, not a pattern.
- * - **900** shared names → the lowest-pitch version's default printing. Same.
- * - **112** rules — one per set code — for all **6,437** old printing URLs,
- *   because `/card/<slug>/<set>/<number>` → `/card/<set>/<number>/<slug>` is a
- *   permutation of three segments. See {@link legacyPrintingRules} for why it
- *   is 112 rules and not the one that would obviously do.
+ * The 6,437 old printing URLs are a pure permutation of three segments, so they
+ * look like one placeholder rule. They are not:
  *
- * NOTHING HERE IS FORCED, AND THAT IS WHAT MAKES THE PATTERNS SAFE. A `!` rule
- * beats an existing file; a plain rule loses to one. Both the old printing form
- * and the new one are three segments under `/card/`, so a pattern over them can
- * match a LIVE page too — and because the rules are unforced, Netlify serves
- * the page and never consults them. They fire only where no file exists.
+ * - `/card/:slug/:set/:number` → `/card/:set/:number/:slug` is a **3-cycle**.
+ *   An unforced Netlify rule is skipped only when a FILE exists at the REQUEST
+ *   path; the target is never checked. So any three-segment `/card/` path
+ *   naming nothing real — a typo, a crawler's guess — 301s round that ring
+ *   forever and the reader gets `ERR_TOO_MANY_REDIRECTS` instead of a 404.
+ * - Pinning the set code to segment two, one rule per code, fixed exactly that
+ *   case and left a narrower one. `/card/wtr/lgs/mst` → `/card/lgs/mst/wtr` →
+ *   `/card/mst/wtr/lgs` → back, because every segment is a set code and the
+ *   permuted output satisfies the same rule; `/card/wtr/wtr/wtr` rewrites to
+ *   itself in one hop.
+ *
+ * **BOTH WERE FOUND IN REVIEW, NOT BY THE GUARD WRITTEN TO CATCH THEM**, and
+ * that is the argument against patterns rather than an argument for a third
+ * one. A guard over placeholders has to INVENT bindings to probe with; the
+ * cycle lives in the bindings it did not think of, and the second version
+ * probed with the literal `x`, which is not a set code. Enumerating removes the
+ * question: with no placeholders, "does any rule's target match a rule?" is set
+ * membership over two finite lists, and {@link redirectRules} checks all 12,278
+ * of them exhaustively.
+ *
+ * THE COST, STATED PLAINLY. A 790 kB `_redirects`, and a rule count above the
+ * "if you need to set up 10,000 redirects or more, we recommend using wildcards
+ * or placeholders" line in Netlify's own docs. That is guidance about
+ * processing cost, not a limit — the documented hard failure is a serialised
+ * output "too large" to deploy, with no number attached. Two infinite-redirect
+ * bugs is a steep price for staying under an advisory.
+ *
+ * WHAT IT BUYS BESIDES CORRECTNESS: a dead URL 404s immediately rather than
+ * taking a hop first, and `matchRedirect` is a `Map` lookup.
  *
  * WHAT IS DELIBERATELY NOT REDIRECTED: `/card/<set>/<number>` with no name tail.
  * It reads like the obvious convenience — set code and collector number are both
@@ -43,7 +61,7 @@
  * collision check in `cards.ts`.
  */
 
-/** One rule, in Netlify's terms. `from`/`to` may carry `:placeholders`. */
+/** One rule, in Netlify's terms. `from` and `to` are both exact paths. */
 export interface RedirectRule {
   readonly from: string;
   readonly to: string;
@@ -51,60 +69,7 @@ export interface RedirectRule {
 }
 
 /**
- * `/card/<slug>/<set>/<number>` → `/card/<set>/<number>/<slug>`, per set code.
- *
- * **THE OBVIOUS VERSION OF THIS IS ONE RULE AND IT IS AN INFINITE LOOP.**
- * `/card/:slug/:set/:number` → `/card/:set/:number/:slug` is a 3-CYCLE over
- * unconstrained placeholders: `(a,b,c) → (b,c,a) → (c,a,b) → (a,b,c)`. An
- * unforced rule is skipped only when a FILE exists at the request path —
- * Netlify never checks whether the TARGET resolves — so any three-segment
- * `/card/` path that names nothing real, a typo or a dead guess, would 301
- * around that cycle forever and the reader would get `ERR_TOO_MANY_REDIRECTS`
- * instead of the 404. `serve.ts` reproduces it exactly, because the browser
- * comes back with the permuted path and the same rule matches again.
- *
- * That version shipped in the first draft of this file with a doc-block calling
- * it "one extra hop". It was a loop, and the review caught it.
- *
- * **THE FIX IS TO PIN THE SET SEGMENT, and it costs 111 more rules.** The old
- * form has the set code SECOND; the new form has it FIRST, with a collector
- * number second. Spelling the code literally in position two means a rule
- * matches the old form and cannot match the new one:
- *
- *     /card/:slug/wtr/:number    /card/wtr/:number/:slug    301
- *
- * so `/card/wtr/098/head-jab-1` — segment two is `098` — matches nothing here
- * and a dead path 404s after exactly one hop.
- *
- * **THE INVARIANT THAT MAKES IT ACYCLIC IS ASSERTED, NOT ASSUMED.** The whole
- * argument rests on no collector-number segment being spelled like a set code;
- * if one ever were, that rule's own output would re-enter the table and the
- * loop would be back. Measured on this corpus: zero of 11,378. `cards.ts`
- * throws if that stops being true, and `ssg.test.ts` walks every rule's target
- * back through the table to prove none of them matches anything.
- *
- * Note this is NOT threatened by the reverse overlap, which does exist: three
- * card slugs — `fai`, `nuu`, `zen` — are spelled like set codes. Segment one is
- * an unconstrained `:slug` here, so those cards' old URLs match on their set
- * segment like every other card's and permute correctly.
- */
-export function legacyPrintingRules(
-  setCodes: readonly string[],
-): readonly RedirectRule[] {
-  return [...new Set(setCodes)].toSorted().map((code) => ({
-    from: `/card/:slug/${code}/:number`,
-    to: `/card/${code}/:number/:slug`,
-    status: 301,
-  }));
-}
-
-/**
- * The whole table: the corpus-derived rules, then the permutation.
- *
- * ORDER IS LOAD-BEARING — Netlify takes the first match. The exact rules are
- * two segments and the placeholder is three, so they cannot actually compete
- * today; putting the specific ones first anyway means that stays true if a
- * future rule is less tidy.
+ * The whole table, with the two things that make it safe asserted here.
  *
  * IT TAKES THE CARD REDIRECTS AS AN ARGUMENT rather than importing them, and
  * that is the same rule `printings.ts` exists to keep: `cards.ts` loads a 16 MB
@@ -114,11 +79,10 @@ export function legacyPrintingRules(
  */
 export function redirectRules(
   cardRedirects: readonly { readonly from: string; readonly to: string }[],
-  setCodes: readonly string[],
 ): readonly RedirectRule[] {
-  const seen = new Map<string, string>();
+  const targets = new Map<string, string>();
   for (const redirect of cardRedirects) {
-    const clash = seen.get(redirect.from);
+    const clash = targets.get(redirect.from);
     if (clash !== undefined) {
       throw new Error(
         `apps/site/ssg/redirects.ts: ${redirect.from} is redirected twice — to ` +
@@ -126,68 +90,54 @@ export function redirectRules(
           `of these would silently never apply.`,
       );
     }
-    seen.set(redirect.from, redirect.to);
+    if (redirect.from.includes(":") || redirect.from.includes("*")) {
+      throw new Error(
+        `apps/site/ssg/redirects.ts: "${redirect.from}" is a pattern, and this ` +
+          `table is exact-path only. See the note at the top of this file: two ` +
+          `versions of it used placeholders and both were infinite redirects.`,
+      );
+    }
+    targets.set(redirect.from, redirect.to);
   }
 
-  const rules = [
-    ...cardRedirects.map((redirect) => ({ ...redirect, status: 301 })),
-    ...legacyPrintingRules(setCodes),
-  ];
-
   /*
-   * NO RULE'S TARGET MAY MATCH ANOTHER RULE. This is the acyclicity check, and
-   * it is here rather than only in the tests because the failure it catches —
-   * the 3-cycle described on `legacyPrintingRules` — is invisible in the built
-   * output and presents to a reader as `ERR_TOO_MANY_REDIRECTS` on a URL that
-   * should simply have 404'd. A redirect table is one of the few artefacts
-   * whose worst failure mode is a browser loop, so it is worth a build step.
+   * NO RULE MAY POINT AT ANOTHER RULE'S SOURCE. This is the acyclicity check,
+   * and because every rule is an exact path it is EXHAUSTIVE rather than a
+   * sample: a chain of length two is impossible, so a cycle of any length is.
    *
-   * A concrete target is checked directly; a target carrying placeholders is
-   * checked with each one filled by a token that cannot be a real segment, so
-   * the SHAPE is tested rather than one instantiation of it.
-   *
-   * THE EXACT SOURCES ARE A SET, WHICH IS NOT A MICRO-OPTIMISATION. Walking
-   * every rule against every rule is 5,953² string comparisons, and it made
-   * this run for seconds on a build — enough that the first version of the
-   * matching test in `ssg.test.ts` hit bun's 5s timeout and reported as a
-   * FAILURE rather than as slowness, on a table with no cycle in it. A guard
-   * expensive enough to look broken gets deleted. Only the 112 pattern rules
-   * need real matching; the other 5,841 are exact strings and answer in O(1).
+   * It is a build step and not only a test because the failure it catches is
+   * invisible in the output and presents to a reader as `ERR_TOO_MANY_REDIRECTS`
+   * on a URL that should simply have 404'd. Two versions of this table had that
+   * bug; neither was caught by the checks that existed at the time, because
+   * both of those checks probed patterns with bindings they chose themselves.
    */
-  const exact = new Set(
-    rules.filter((rule) => !rule.from.includes(":")).map((rule) => rule.from),
-  );
-  const patterns = rules.filter((rule) => rule.from.includes(":"));
-
-  for (const rule of rules) {
-    const probe = rule.to.replace(/:[a-z]+/gi, "x");
-    const next = exact.has(probe) ? probe : matchRedirect(patterns, probe);
-    if (next !== undefined) {
+  for (const [from, to] of targets) {
+    if (targets.has(to)) {
       throw new Error(
-        `apps/site/ssg/redirects.ts: the redirect table has a cycle. ` +
-          `"${rule.from}" sends a reader to "${rule.to}", which itself matches ` +
-          `a rule and would be redirected again. Netlify does not check that a ` +
-          `redirect target resolves, so this is an infinite loop in a browser ` +
-          `rather than a 404. See legacyPrintingRules.`,
+        `apps/site/ssg/redirects.ts: the redirect table has a chain. ` +
+          `"${from}" sends a reader to "${to}", which is itself redirected (to ` +
+          `"${targets.get(to)}"). Netlify does not check that a redirect target ` +
+          `resolves, so a chain that closes is an infinite loop in a browser ` +
+          `rather than a 404. Every rule must land on a page.`,
       );
     }
   }
 
-  return rules;
+  return [...targets].map(([from, to]) => ({ from, to, status: 301 }));
 }
 
 /**
  * The file Netlify reads: `<from> <to> <status>`, one rule per line.
  *
- * A COMMENT HEADER, BECAUSE SOMEBODY WILL OPEN THIS IN A DEPLOY. 5,953 lines of
- * generated paths with no provenance is the kind of artefact that gets deleted
- * by someone who cannot tell what wrote it.
+ * A COMMENT HEADER, BECAUSE SOMEBODY WILL OPEN THIS IN A DEPLOY. 12,278 lines
+ * of generated paths with no provenance is the kind of artefact that gets
+ * deleted by someone who cannot tell what wrote it.
  */
 export function renderRedirects(rules: readonly RedirectRule[]): string {
   const header = [
     "# Generated by apps/site/ssg/build.ts — do not edit.",
     "# Deliberate, hand-written rules live in netlify.toml, which is processed first.",
-    "# See apps/site/ssg/redirects.ts for why these exist and why there are this many.",
+    "# See apps/site/ssg/redirects.ts for why these exist and why they are not wildcards.",
     `# ${rules.length} rule(s).`,
   ];
 
@@ -220,54 +170,41 @@ export function parseRedirects(text: string): readonly RedirectRule[] {
 }
 
 /**
- * The target for a request path, or `undefined` if no rule matches.
+ * The lookup {@link matchRedirect} reads. Built once, by a caller that serves.
  *
- * PLACEHOLDERS ONLY — no splats, because the table has none and a matcher that
- * quietly supports a syntax nothing emits is a second, untested implementation
- * of Netlify's behaviour. If a `/*` rule is ever added, this throws on it rather
- * than ignoring it, so the dev server cannot drift from the host without saying
- * so.
+ * A TRAILING SLASH IS THE SAME URL. Netlify does not care about one and neither
+ * may this, or a link pasted with a slash on the end would 404 locally and work
+ * in production.
+ *
+ * EXACT KEYS ONLY, AND A PATTERN THROWS RATHER THAN BEING IGNORED. The table
+ * has no placeholders by design; a matcher that quietly supported a syntax
+ * nothing emits would be a second, untested implementation of Netlify's
+ * behaviour — which is precisely how two infinite redirects got past a green
+ * suite. If one is ever added this refuses to run rather than silently
+ * disagreeing with the host.
  */
-export function matchRedirect(
+export function redirectIndex(
   rules: readonly RedirectRule[],
-  pathname: string,
-): string | undefined {
-  const path = pathname.replace(/\/+$/, "") || "/";
-  /* SPLIT ONCE, NOT PER RULE. This sat inside the loop, so a request that
-     matches nothing — every 404 the dev server serves — re-split the same
-     string 5,953 times. */
-  const pathParts = path.split("/");
-
+): ReadonlyMap<string, string> {
+  const index = new Map<string, string>();
   for (const rule of rules) {
-    if (rule.from.includes("*")) {
+    if (rule.from.includes(":") || rule.from.includes("*")) {
       throw new Error(
-        `apps/site/ssg/redirects.ts: matchRedirect does not implement splats, and ` +
-          `"${rule.from}" has one. Either teach it, or keep the table to exact ` +
-          `paths and :placeholders — a dev server that silently ignores a rule ` +
-          `production applies is worse than one that refuses to start.`,
+        `apps/site/ssg/redirects.ts: the redirect table is exact-path only, and ` +
+          `"${rule.from}" is a pattern. Netlify would apply it; this would not, ` +
+          `and a dev server that silently ignores a rule production applies is ` +
+          `worse than one that refuses to start.`,
       );
     }
-
-    const fromParts = rule.from.split("/");
-    if (fromParts.length !== pathParts.length) continue;
-
-    const bindings = new Map<string, string>();
-    const matched = fromParts.every((part, index) => {
-      const actual = pathParts[index] ?? "";
-      if (!part.startsWith(":")) return part === actual;
-      if (actual === "") return false;
-      bindings.set(part.slice(1), actual);
-      return true;
-    });
-    if (!matched) continue;
-
-    return rule.to
-      .split("/")
-      .map((part) =>
-        part.startsWith(":") ? bindings.get(part.slice(1)) : part,
-      )
-      .join("/");
+    index.set(rule.from.replace(/\/+$/, "") || "/", rule.to);
   }
+  return index;
+}
 
-  return undefined;
+/** The target for a request path, or `undefined` if no rule matches. */
+export function matchRedirect(
+  index: ReadonlyMap<string, string>,
+  pathname: string,
+): string | undefined {
+  return index.get(pathname.replace(/\/+$/, "") || "/");
 }

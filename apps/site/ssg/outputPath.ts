@@ -7,7 +7,7 @@
  * live URLs are all directory form, and every canonical, sitemap entry and
  * pasted link already assumes it. Changing it would be a redirect table — and
  * the card scheme change proved that is not idle: moving 12,278 card URLs cost
- * a generated `_redirects` file with 5,953 rules in it.
+ * a generated `_redirects` file with 12,278 rules in it.
  */
 export function outputPathFor(route: string): string {
   if (route === "/") return "index.html";

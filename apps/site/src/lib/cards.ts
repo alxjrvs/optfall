@@ -1361,7 +1361,7 @@ export const CARD_ROUTES: readonly CardRoute[] = (() => {
  * per card forever, which is the duplication the whole scheme change is
  * removing.
  *
- * TWO KINDS, AND BOTH LAND ON A PRINTING:
+ * THREE KINDS, AND ALL OF THEM LAND ON A PRINTING:
  *
  * - **A card slug** — `/card/head-jab-1` → that card's default printing. The
  *   page it rendered and the page it now moves you to are the same page.
@@ -1369,31 +1369,30 @@ export const CARD_ROUTES: readonly CardRoute[] = (() => {
  *   printing, which is exactly what that URL used to render. Not the whole
  *   group's first-listed card, and not the best-ranked one: `byPitch`, the same
  *   rule the tab strip is ordered by.
+ * - **The old printing form** — `/card/head-jab-1/lgs/017-rf` →
+ *   `/card/lgs/017-rf/head-jab-1`. The same three segments, reordered.
  *
- * THE OLD PRINTING FORM IS NOT IN HERE, and it is the one class that is not.
- * `/card/<slug>/<set>/<number>` → `/card/<set>/<number>/<slug>` is a pure
- * permutation of three segments, so it is one Netlify placeholder rule covering
- * all 6,437 of them rather than 6,437 lines. See `ssg/redirects.ts`, which is
- * also where the arithmetic for keeping this table under Netlify's guidance
- * lives.
+ * **THE THIRD KIND IS ENUMERATED, AND TWO ATTEMPTS TO BE CLEVER ABOUT IT BOTH
+ * SHIPPED AN INFINITE REDIRECT.** It is a pure permutation, so it looks like
+ * one Netlify placeholder rule — and `/card/:a/:b/:c` → `/card/:b/:c/:a` is a
+ * 3-cycle over any path that names no file. Pinning the set code to segment two
+ * (112 rules) fixed that case and left a narrower one: `/card/wtr/lgs/mst`
+ * still permutes forever, because every segment is a set code and the permuted
+ * output satisfies the same rule. Both were found in review, not by the guards
+ * written to catch them — a probe over placeholders only tests the bindings the
+ * probe happens to produce.
+ *
+ * So all 6,437 are spelled out. 12,278 exact rules, no patterns anywhere, and
+ * acyclicity stops being an argument: it is set membership over two finite
+ * lists, checked exhaustively in `ssg/redirects.ts`. The cost is a 790 kB
+ * `_redirects` and a rule count above Netlify's "reach for wildcards" advice,
+ * which is guidance about performance rather than a limit. That is the trade,
+ * and after two loops it is the right side of it.
  */
 export interface CardRedirect {
   readonly from: string;
   readonly to: string;
 }
-
-/**
- * The set codes that appear in a card URL, which is not every set there is.
- *
- * `ssg/redirects.ts` needs one rule per code and has to take the list from
- * HERE rather than from `sets.ts`: the sets corpus carries 118 sets and only
- * 112 of them are named by a route, and a rule for a code no URL ever used
- * would be a line in the table that can never fire. Taking it from the routes
- * means the redirect table covers exactly the URLs that existed.
- */
-export const ROUTE_SET_CODES: readonly string[] = [
-  ...new Set(CARD_ROUTES.map((route) => route.setCode)),
-].toSorted();
 
 export const CARD_REDIRECTS: readonly CardRedirect[] = [
   ...CARD_PAGES.map((page) => ({
@@ -1403,6 +1402,16 @@ export const CARD_REDIRECTS: readonly CardRedirect[] = [
   ...NAME_GROUPS.map((page) => ({
     from: legacyHrefForSlug(page.slug),
     to: page.href,
+  })),
+  /*
+   * The old per-art addresses. ONLY THE NON-DEFAULT ONES EVER EXISTED: the old
+   * scheme gave face 0 no printing URL of its own, because `/card/<slug>` was
+   * already showing it. Emitting a redirect from a URL that was never served
+   * would be a line that can never fire.
+   */
+  ...CARD_ROUTES.filter((route) => !route.isDefault).map((route) => ({
+    from: `${legacyHrefForSlug(route.slug)}/${route.setCode}/${route.number}`,
+    to: route.href,
   })),
 ];
 

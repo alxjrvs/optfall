@@ -411,9 +411,10 @@ describe("addressing", () => {
     const addresses = new Set(CARD_ROUTES.map((route) => route.href));
     const froms = CARD_REDIRECTS.map((redirect) => redirect.from);
 
-    // 4,941 card slugs + 900 shared names. The 6,437 old printing URLs are one
-    // Netlify placeholder rule instead — see `ssg/redirects.ts`.
-    expect(CARD_REDIRECTS.length).toBe(5841);
+    // 4,941 card slugs + 900 shared names + 6,437 old per-art addresses. All
+    // enumerated: see `ssg/redirects.ts` for the two infinite redirects that
+    // the pattern versions of that last group shipped.
+    expect(CARD_REDIRECTS.length).toBe(12278);
     expect(new Set(froms).size).toBe(froms.length);
 
     for (const redirect of CARD_REDIRECTS) {
