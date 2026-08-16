@@ -1,30 +1,33 @@
 /**
- * The card's printed text, in two views: **Text** and **Raw text**. React port.
+ * The card's printed text, rendered.
  *
- * WHY BOTH, rather than the rendered one replacing the raw. Rendering `{p}` as a
- * power plate is a JOIN — the same kind of claim this site already makes when it
- * says a keyword is governed by a rule — and a reference work should let you see
- * the thing a claim was derived from. `CardEntry` refused to interpret the
- * markers at all for several phases, on the stated grounds that no published
- * table mapped them to words. One does: the Comprehensive Rules, already in this
- * repository, at 1.12.4a–h. So the interpretation is defensible, and the raw
- * bytes stay one click away so it is also checkable.
+ * ONE VIEW, NOT TWO. This shipped as a pair — "Text" and "Raw text" — behind a
+ * radio toggle, on the argument that rendering `{p}` as a power plate is a JOIN
+ * and a reference work should let you see the thing a claim was derived from.
+ * The join is still a join and that is still worth stating; what did not hold up
+ * is the idea that a second copy of the same sentence is how you state it.
  *
- * NO JAVASCRIPT, AND THAT SURVIVES THE PORT INTACT. The toggle is two radio
- * inputs and one `:has()` selector, so both views are in the HTML and switching
- * between them is a CSS state change. This is worth defending precisely because
- * the port makes the alternative easy: a `useState` here would be four lines,
- * and it would turn the card page — 12,278 of them — into an island. A reader
- * with scripting off would get a dead control, and every card page would ship
- * JavaScript to toggle a class. The radio pair does it for nothing.
+ * The raw view existed to be CHECKABLE, and it was the weakest available way to
+ * be. It sat behind a control most readers never touched, it duplicated every
+ * card's text into the markup of all 12,278 pages, and what it proved — that
+ * `{p}` was in the bytes — is not the part anybody doubts. The part worth
+ * checking is the MAPPING, `{p}` → power, and that is not in the raw text at
+ * all: it is in the Comprehensive Rules at 1.12.4a–h, which the card page cites
+ * by rule number next to the symbols themselves. The citation is the audit
+ * trail. The duplicate paragraph was a copy of the evidence's less useful half.
  *
- * `defaultChecked`, NOT `checked`. In React `checked` makes an input controlled,
- * which needs an `onChange` and therefore state and therefore an island. The
- * uncontrolled form is what keeps the DOM in charge, which is the whole point.
+ * WHAT IS STILL GUARANTEED, so removing the view does not quietly remove the
+ * promise it carried. `parseCardText` does not paraphrase: it splits blocks and
+ * swaps markers for the symbols the rules name, and `white-space: pre-line`
+ * below keeps the published line breaks, which are the only formatting the
+ * printed text carries. `card-symbols.test.ts` reads 1.12.4 out of the corpus
+ * and fails if this site's table stops matching it. So the text a reader sees
+ * is upstream's, and the one interpretation applied to it is one the rules
+ * document underwrites.
  *
- * THE RADIO NAME IS PER-CARD. A card page renders several versions, and two radio
- * groups sharing a `name` on one document are ONE group — picking "Raw" on the
- * pitch-2 tab would silently flip the pitch-1 tab with it.
+ * STILL NO JAVASCRIPT, and now trivially so. The toggle was two radio inputs and
+ * a `:has()` selector precisely to avoid turning a 12,278-page static route into
+ * an island; with one view there is no state left to hold.
  */
 
 import { BevelledPlate } from "optfall-components/react";
@@ -36,39 +39,13 @@ import "./PrintedText.css";
 export interface PrintedTextProps {
   /** The printed text, exactly as upstream published it. */
   readonly text: string;
-  /** Distinguishes this card's radio group from every other on the page. */
-  readonly uid: string;
 }
 
-export function PrintedText({ text, uid }: PrintedTextProps) {
+export function PrintedText({ text }: PrintedTextProps) {
   const blocks = parseCardText(text);
-  const name = `view-${uid}`;
 
   return (
     <div className="of-printed">
-      {/*
-        A radio group, not a button pair: this is a choice between two mutually
-        exclusive views, which is what radios mean. `role="radiogroup"` comes
-        free from the fieldset, arrow keys work with no code, and the state is
-        real form state rather than a class somebody has to remember to keep in
-        sync.
-      */}
-      <fieldset className="of-printed__views">
-        <legend className="of-printed__sr-only">
-          How to show the printed text
-        </legend>
-        <input
-          type="radio"
-          id={`${name}-rendered`}
-          name={name}
-          value="rendered"
-          defaultChecked
-        />
-        <label htmlFor={`${name}-rendered`}>Text</label>
-        <input type="radio" id={`${name}-raw`} name={name} value="raw" />
-        <label htmlFor={`${name}-raw`}>Raw text</label>
-      </fieldset>
-
       <BevelledPlate emphasis="raised">
         <div className="of-printed__rendered">
           {blocks.map((block, index) =>
@@ -90,13 +67,6 @@ export function PrintedText({ text, uid }: PrintedTextProps) {
             ),
           )}
         </div>
-
-        {/*
-          Upstream's bytes. `white-space: pre-wrap` rather than reflowed, because
-          the line breaks are part of what was published — this is the view whose
-          entire purpose is to be unaltered.
-        */}
-        <p className="of-printed__raw">{text}</p>
       </BevelledPlate>
     </div>
   );

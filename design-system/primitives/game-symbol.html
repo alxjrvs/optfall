@@ -119,6 +119,10 @@
   --of-color-stat-defence-ink: #141414;
   --of-color-stat-cost: #5e5e5e;
   --of-color-stat-cost-ink: #ededed;
+  --of-color-stat-intellect: #7ec4e6;
+  --of-color-stat-intellect-ink: #0b1519;
+  --of-color-stat-life: #5aa544;
+  --of-color-stat-life-ink: #0a1405;
   --of-color-stat-absent: #3a3a3a;
   --of-color-stat-absent-ink: #c8c8c8;
   --of-color-rarity-common: #6e6e6e;
@@ -259,6 +263,10 @@
   --of-color-stat-defence-ink: #ffffff;
   --of-color-stat-cost: #5c5c5c;
   --of-color-stat-cost-ink: #ffffff;
+  --of-color-stat-intellect: #3f96bd;
+  --of-color-stat-intellect-ink: #0b1519;
+  --of-color-stat-life: #2f6b28;
+  --of-color-stat-life-ink: #ffffff;
   --of-color-stat-absent: #b8b8b8;
   --of-color-stat-absent-ink: #2a2a2a;
   --of-color-rarity-common: #5c5c5c;
@@ -400,6 +408,10 @@
     --of-color-stat-defence-ink: #ffffff;
     --of-color-stat-cost: #5c5c5c;
     --of-color-stat-cost-ink: #ffffff;
+    --of-color-stat-intellect: #3f96bd;
+    --of-color-stat-intellect-ink: #0b1519;
+    --of-color-stat-life: #2f6b28;
+    --of-color-stat-life-ink: #ffffff;
     --of-color-stat-absent: #b8b8b8;
     --of-color-stat-absent-ink: #2a2a2a;
     --of-color-rarity-common: #5c5c5c;
@@ -542,6 +554,10 @@
 --of-color-stat-defence-ink: #ffffff;
 --of-color-stat-cost: #5c5c5c;
 --of-color-stat-cost-ink: #ffffff;
+--of-color-stat-intellect: #3f96bd;
+--of-color-stat-intellect-ink: #0b1519;
+--of-color-stat-life: #2f6b28;
+--of-color-stat-life-ink: #ffffff;
 --of-color-stat-absent: #b8b8b8;
 --of-color-stat-absent-ink: #2a2a2a;
 --of-color-rarity-common: #5c5c5c;
@@ -809,42 +825,42 @@ ul.results { list-style: none; margin: 0; padding: 0; }
   <p class="note">The markers upstream prints inside card text — <code>{p}</code>, <code>{r}</code>, <code>{t}</code> — as struck plates. <strong>The same silhouettes the stat glyph uses</strong>, read from <code>ornament.cut.*</code> in the token layer so the two cannot drift: the plate you meet inline in <code>+1{p}</code> is the plate carrying <code>4</code> in the stat block above it.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:flex-start;gap:var(--of-space-looser);flex-wrap:wrap">
     <div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0, 100% 0, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">P</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-stat-power);color:var(--of-color-stat-power-ink);font-weight:var(--of-type-weight-bold);clip-path:circle(50% at 50% 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">P</span>
           <span class="eyebrow" style="margin:0">power</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{p}</code>
         </div><div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">R</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-stat-cost);color:var(--of-color-stat-cost-ink);font-weight:var(--of-type-weight-bold);clip-path:circle(50% at 50% 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">R</span>
           <span class="eyebrow" style="margin:0">resource</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{r}</code>
         </div><div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0, 100% 0, 100% 100%, 0.5rem 100%, 0 calc(100% - 0.5rem));box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">D</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-stat-defence);color:var(--of-color-stat-defence-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);padding-block-end:calc(2.25rem * 0.28);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">D</span>
           <span class="eyebrow" style="margin:0">defence</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{d}</code>
         </div><div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:none;box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">H</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-stat-life);color:var(--of-color-stat-life-ink);font-weight:var(--of-type-weight-bold);clip-path:circle(50% at 50% 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">H</span>
           <span class="eyebrow" style="margin:0">life</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{h}</code>
         </div><div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0.5rem 0, 100% 0, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%, 0 0.5rem);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">I</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-stat-intellect);color:var(--of-color-stat-intellect-ink);font-weight:var(--of-type-weight-bold);clip-path:circle(50% at 50% 50%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">I</span>
           <span class="eyebrow" style="margin:0">intellect</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{i}</code>
         </div><div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0.5rem 0, calc(100% - 0.5rem) 0, 100% 0.5rem, 100% 100%, 0 100%, 0 0.5rem);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">C</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0.5rem 0, calc(100% - 0.5rem) 0, 100% 0.5rem, 100% 100%, 0 100%, 0 0.5rem);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">C</span>
           <span class="eyebrow" style="margin:0">chi</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{c}</code>
         </div><div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0, calc(100% - 0.5rem) 0, 100% 0.5rem, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">T</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0 0, calc(100% - 0.5rem) 0, 100% 0.5rem, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">T</span>
           <span class="eyebrow" style="margin:0">tap</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{t}</code>
         </div><div style="display:flex;flex-direction:column;align-items:center;gap:var(--of-space-tight)">
-          <span style="display:inline-flex;align-items:center;justify-content:center;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0.5rem 0, 100% 0, 100% 100%, 0.5rem 100%, 0 calc(100% - 0.5rem), 0 0.5rem);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">U</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:2.25rem;block-size:2.25rem;background:var(--of-color-surface-raised);color:var(--of-color-ink);font-weight:var(--of-type-weight-bold);clip-path:polygon(0.5rem 0, 100% 0, 100% 100%, 0.5rem 100%, 0 calc(100% - 0.5rem), 0 0.5rem);box-shadow:inset 0 1px 0 0 var(--of-bevel-light), inset 0 -1px 0 0 var(--of-bevel-dark)">U</span>
           <span class="eyebrow" style="margin:0">untap</span>
           <code style="font-size:var(--of-type-size-micro);color:var(--of-color-ink-faint)">{u}</code>
         </div>
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>The table is the rules', not ours.</strong> The Comprehensive Rules defines all eight at 1.12.4a&ndash;h — "the power symbol is {p} and represents a power value" — so rendering them is the same join this site already makes between a keyword and the rule that governs it, and every symbol on a card page links to the rule that defines it. A ninth marker, <code>{x}</code>, appears on two cards and is <em>not</em> in that table; it is drawn as a plain italic letter and flagged as inferred rather than filed with the rest.</p>
   <p class="note"><strong>The last two are cut differently on purpose.</strong> The rules distinguish symbols that represent a <em>value</em> from those that represent an <em>effect</em> — 1.12.4g says tap "represents the tap effect" — so tap and untap are cut down a whole side rather than at a corner, and read as verbs before the letter is read. None is eight-sided: that outline belongs to the pitch jewel, which is why chi takes two corners rather than the four it wants.</p>
-  <p class="note">The letter is upstream's, never a tidier one: life is <strong>H</strong> because the marker is <code>{h}</code>. Calling it L would break the one job the plate has, which is to connect the rendered view to the raw one. The accessible name says "life" in full.</p>
+  <p class="note">The letter is upstream's, never a tidier one: life is <strong>H</strong> because the marker is <code>{h}</code>. Calling it L would make this the one surface in the project that spells the game's own marker differently. The accessible name says "life" in full.</p>
   <p class="note">No LSS symbol is reproduced. These are not redrawn resource or attack pips — they are the system's own plates carrying the letter upstream itself writes between the braces.</p>
 </div>
 </body>

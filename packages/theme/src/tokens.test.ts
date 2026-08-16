@@ -256,6 +256,8 @@ describe("the stat numeral is the primary channel too", () => {
     ["color.stat.power.ink", "color.stat.power"],
     ["color.stat.defence.ink", "color.stat.defence"],
     ["color.stat.absent.ink", "color.stat.absent"],
+    ["color.stat.intellect.ink", "color.stat.intellect"],
+    ["color.stat.life.ink", "color.stat.life"],
   ];
 
   for (const [mode, tokens] of MODES) {
@@ -276,6 +278,46 @@ describe("the stat numeral is the primary channel too", () => {
         `${mode}:true`,
       );
     });
+
+    /*
+     * THE DISCS ARE SEPARABLE BY LUMINANCE WHERE THEY SHARE A CARD.
+     *
+     * Cost, power, intellect and life are all `ornament.cut.disc`, so between
+     * those four the silhouette has stopped being a channel and the plate is
+     * carrying its meaning on colour and the numeral alone. That is the trade
+     * the tokens comment argues for — the card prints them as discs and the
+     * reader has the card — but it puts the whole weight of the colour channel
+     * on these two comparisons, so they are pinned rather than left to a hex
+     * value somebody nudges later.
+     *
+     * ONLY THE PAIRS THAT SHARE A CARD, and deliberately not all six. Four
+     * discs cannot be pairwise separable at 0.08 in both themes, and a test
+     * asserting they are would either fail honestly or be weakened to a
+     * threshold that proves nothing. `intellect / power` is the pair left out:
+     * no card prints both.
+     */
+    const SHARED: readonly (readonly [string, TokenId, TokenId])[] = [
+      /* Every hero prints both. */
+      [
+        "a hero's intellect and life",
+        "color.stat.intellect",
+        "color.stat.life",
+      ],
+      /* 44 non-hero permanents print both — `Aegis, Archangel of Protection`
+         among them — and green against yellow is the deuteranopia pair, so hue
+         alone is not an answer here. */
+      ["an ally's power and life", "color.stat.power", "color.stat.life"],
+    ];
+
+    for (const [what, left, right] of SHARED) {
+      test(`${mode}: ${what} are separable by luminance, not only by hue`, () => {
+        const separation = Math.abs(
+          relativeLuminance(token(tokens, left)) -
+            relativeLuminance(token(tokens, right)),
+        );
+        expect(`${mode}:${separation > 0.08}`).toBe(`${mode}:true`);
+      });
+    }
   }
 });
 

@@ -31,12 +31,19 @@
      rather than bounding boxes and these six silhouettes keep very different
      fractions of the square they are cut from.
 
-     Six plates in a row at an identical `--stat-size` therefore read as four
-     sizes: the shield noticeably heavier than the disc beside it, the plain
-     plate heavier still, and the two diagonals between. On the card panel those
-     plates sit on ONE LINE — power at the start, defence at the end, or
-     intellect and life on a hero — which is the arrangement that makes the
-     mismatch impossible not to see.
+     Six plates in a row at an identical `--stat-size` therefore read as three
+     sizes: the shield noticeably heavier than the disc beside it, and the
+     chamfered plate heavier still. On the card panel those plates sit on ONE
+     LINE — power at the start, defence at the end — which is the arrangement
+     that makes the mismatch impossible not to see.
+
+     THE SET THIS CORRECTS HAS SHRUNK, because four of the six are now discs.
+     Cost, power, intellect and life all take `ornament.cut.disc` and therefore
+     all take the reference factor, so the hero pair — intellect beside life —
+     matches by construction rather than by two hand-checked numbers that had to
+     stay equal. Only defence and arcane are still being compensated, and the
+     `plain` row below is retained for reference rather than because a stat uses
+     it: life did, and took the disc instead.
 
      So each cut declares how much of the square it keeps, and the box is scaled
      by the square root of the ratio to the reference. The reference is the disc,
@@ -131,29 +138,51 @@
   --optical: 0.956;
 }
 
-/* Life — the plain plate. Nothing is cut, which is its own signal in a set where
-   everything else is.
+/* -- The two the card prints as discs ---------------------------------------
+   INTELLECT AND LIFE JOIN THE THREE ABOVE, on the same argument and by the same
+   test: does the game print a notation for this stat?
 
-   It is also the one that has to give back the most: an uncut square keeps all
-   of its box, so at the shared size it carries 27% more ink than the disc it
-   sits opposite. */
-.of-stat--life {
-  clip-path: var(--of-ornament-cut-plain);
-  --optical: 0.886;
+   For these two it does. The CR names `{i}` at 1.12.4b and `{h}` at 1.12.4c,
+   LSS publishes both as discs on their rules site — light blue and green — and
+   this repository already serves those exact files inline in card text. So the
+   old plates put a grey forward-leaning square carrying `4` directly under the
+   blue disc that means intellect, and a reader who had glanced at a hero card
+   was being asked to learn a second alphabet for a value the first one already
+   named.
+
+   Life gave up the most in the trade and it is worth being explicit about what:
+   the uncut square WAS a signal, the only silhouette in the set that was not
+   cut. It was a signal in a private language. A green disc says the same thing
+   to somebody who has never read this file.
+
+   Both take `--optical: 1` with the disc, which is the reference the factor is
+   measured against — so the hero pair now matches by construction rather than
+   by two numbers that had to agree. */
+.of-stat--intellect {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-intellect);
+  color: var(--of-color-stat-intellect-ink);
 }
 
-/* Intellect and Arcane — opposed diagonals, so the two hero stats are
-   distinguishable from each other and from the three combat stats.
+.of-stat--life {
+  clip-path: var(--of-ornament-cut-disc);
+  background: var(--of-color-stat-life);
+  color: var(--of-color-stat-life-ink);
+}
+
+/* Arcane — the house plate, and now the ONLY stat wearing one.
 
    ARCANE IS THE ONE STAT WITH NO PRINTED SYMBOL. The CR's table at 1.12.4 names
-   eight and arcane is not among them, so this plate has no `GameSymbol`
-   counterpart and never appears inline in card text. The silhouette is ours
-   alone, which is exactly why it is worth saying here. */
-.of-stat--intellect {
-  clip-path: var(--of-ornament-cut-diagonal-start);
-  --optical: 0.908;
-}
+   eight and arcane is not among them, so LSS publishes no icon for it, it has no
+   `GameSymbol` counterpart, and it never appears inline in card text. There is
+   no printed register to take, so it keeps the chamfered square it has always
+   had.
 
+   That used to be one of a matched pair of opposed diagonals — the other was
+   intellect, which has gone to its disc above. Left alone the pairing is gone,
+   and that is an improvement rather than a loss: a chamfered plate in the
+   default ink is now exactly what "this stat has no notation of its own" looks
+   like, and arcane is the only stat that means it. */
 .of-stat--arcane {
   clip-path: var(--of-ornament-cut-diagonal-end);
   --optical: 0.908;

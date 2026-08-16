@@ -456,8 +456,45 @@
 
 /* -- Rarity -------------------------------------------------------------- */
 
+/*
+  ONE RARITY IS VISIBLE: THE ONE THE DISPLAYED PRINTING WAS PUBLISHED AT.
+
+  Every rarity the card has is in the markup — see `CardEntry.tsx` for why the
+  whole list was wrong under a picture of one printing — and this picks between
+  them. Two states, in order:
+
+  1. **Before any click**, and forever with scripting off. The server marked the
+     route's own printing with `--initial`, so that one shows and the rest do
+     not. A crawler, a reader with JS disabled and a freshly loaded page all see
+     the rarity that belongs to the face beside it.
+
+  2. **After a click.** `PrintingPicker` swaps the face in place rather than
+     navigating, so it stamps the current printing's slug on the root element
+     and the rules below re-choose. The stamp appearing at all is what retires
+     `--initial`: from that moment the picker is the authority, including when
+     it lands back on the printing the server rendered.
+
+  WHY THE ROOT ELEMENT AND NOT A CLOSER ANCESTOR. The picker is an island in the
+  face column and this line is in the facts column, so there is no shared node
+  either component owns. The root is the one element both can name without one
+  reaching into the other's tree.
+
+  SPECIFICITY DECIDES, AND SOURCE ORDER AGREES WITH IT. The reveal rule carries
+  two attribute selectors to the hide rule's one, so it wins on specificity —
+  which matters because both match the same element whenever the picker returns
+  to the server's printing. The rules are ALSO written last in this section, so
+  the two mechanisms point the same way rather than one relying on the other.
+  That placement is not only belt-and-braces: `noDescendingSpecificity` reads a
+  (0,4,0) selector standing above the (0,2,0) rarity-colour rules below as the
+  bug it usually is, and it is right to — the tell is real even where this
+  particular instance was safe.
+
+  A `data-rarity` UPSTREAM ADDS TOMORROW matches no reveal rule and stays
+  hidden, which is the failure worth choosing: an unnamed rarity showing nothing
+  is a gap, where showing all of them again is a wrong claim.
+*/
 .of-card__rarity {
-  display: inline-flex;
+  display: none;
   align-items: center;
   /* No gap: the bubble and the remainder are one word interrupted, not two
        elements set beside each other. */
@@ -466,6 +503,10 @@
        every distance in the line; leaving this here would add a second one to
        the gap on one side of each rarity and not the other, which is the
        unevenness the row was introduced to remove. */
+}
+
+.of-card__rarity--initial {
+  display: inline-flex;
 }
 
 /*
@@ -543,6 +584,36 @@
 .of-card__rarity[data-rarity="promo"] {
   --rarity: var(--of-color-rarity-promo);
   --rarity-ink: var(--of-color-rarity-promo-ink);
+}
+
+/*
+  WHICH ONE IS SHOWING — the picker's answer, written last so it descends from
+  nothing. See the note at the head of this section for the two states and why
+  the root element carries the stamp.
+
+  ENUMERATED, ONE PER RARITY, because CSS cannot compare two attributes and the
+  set is closed: `sets.json` decodes exactly these ten and `raritySlug` derives
+  every slug from that table. The ten rarity-colour rules directly above are
+  written the same way for the same reason, so this is the section's existing
+  idiom rather than a new one — and a rarity added upstream is missing from both
+  lists together, which is easier to notice than a half-styled bubble.
+*/
+:root[data-printing-rarity] .of-card__rarity--initial {
+  display: none;
+}
+
+:root[data-printing-rarity="common"] .of-card__rarity[data-rarity="common"],
+:root[data-printing-rarity="rare"] .of-card__rarity[data-rarity="rare"],
+:root[data-printing-rarity="super"] .of-card__rarity[data-rarity="super"],
+:root[data-printing-rarity="majestic"] .of-card__rarity[data-rarity="majestic"],
+:root[data-printing-rarity="legendary"]
+  .of-card__rarity[data-rarity="legendary"],
+:root[data-printing-rarity="fabled"] .of-card__rarity[data-rarity="fabled"],
+:root[data-printing-rarity="token"] .of-card__rarity[data-rarity="token"],
+:root[data-printing-rarity="basic"] .of-card__rarity[data-rarity="basic"],
+:root[data-printing-rarity="marvel"] .of-card__rarity[data-rarity="marvel"],
+:root[data-printing-rarity="promo"] .of-card__rarity[data-rarity="promo"] {
+  display: inline-flex;
 }
 
 .of-card__code-hint {

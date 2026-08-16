@@ -56,6 +56,15 @@ export interface Printing {
   readonly thumbHeight: number;
   /** This printing's own page — `/card/<slug>/<set>/<number>`. */
   readonly href: string;
+  /**
+   * The rarity slug this printing was published at, or `""` where upstream
+   * records none.
+   *
+   * Carried so the credit line can name the rarity of the printing actually on
+   * screen. The picker does not RENDER it — that line lives in the other column
+   * — it publishes it; see the effect below.
+   */
+  readonly rarity: string;
 }
 
 export interface PrintingPickerProps {
@@ -127,6 +136,44 @@ export function PrintingPicker({
 
   const current = printings[selected] ?? printings[0];
   const uid = useId();
+
+  /**
+   * PUBLISH WHICH RARITY IS ON SCREEN, for the credit line in the other column.
+   *
+   * The rarity of a card is a fact about a PRINTING, and this component is the
+   * only thing on the page that knows which printing is being displayed once a
+   * reader has clicked. The credit line renders every rarity the card has and
+   * hides all but one; the slug stamped here is what chooses. `CardEntry.css`
+   * holds the rules, and `CardEntry.tsx` explains why the whole list stopped
+   * being shown at once.
+   *
+   * A DATA ATTRIBUTE ON THE ROOT, WHICH IS A DELIBERATE ESCAPE HATCH AND THE
+   * SMALLEST ONE AVAILABLE. This island owns the face column and the credit
+   * line is in the facts column, so there is no common ancestor either
+   * component renders. The alternatives were worse in kind rather than in
+   * degree: lifting both into one island would make most of the card page
+   * interactive to move a five-letter word, and a custom event would need a
+   * listener, which needs a second island to hold it.
+   *
+   * WRITTEN IN AN EFFECT, NOT DURING RENDER. Touching `document` while
+   * rendering is a side effect in the body of a component, and on the server
+   * there is no `document` at all — the page is built by `render.tsx` in Bun.
+   *
+   * NOT CLEANED UP ON UNMOUNT, and that is correct rather than overlooked. The
+   * attribute describes what the page is showing; this island unmounts only
+   * when the page goes away, and clearing it would hand control back to the
+   * server's `--initial` rarity, which is the one printing that may well not be
+   * on screen.
+   */
+  useEffect(() => {
+    const rarity = printings[selected]?.rarity;
+    if (rarity === undefined || rarity === "") return;
+    /* `setAttribute` rather than `dataset.printingRarity`, so the string here is
+       the string in the stylesheet. `dataset` would spell it `printingRarity`
+       and rely on the reader knowing the camelCase-to-kebab rule to connect the
+       two — a rename in either place would then miss the other silently. */
+    document.documentElement.setAttribute("data-printing-rarity", rarity);
+  }, [printings, selected]);
 
   /**
    * `replaceState`, not `pushState`.
