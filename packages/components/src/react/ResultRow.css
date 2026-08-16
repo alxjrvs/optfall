@@ -71,6 +71,12 @@
   entirely and leave three anchors reading alike.
 */
 .of-result__qualifier {
+  /* NOT SELECTABLE, for the reason `PitchJewel` carries the same rule: text the
+     reader cannot see must not arrive in their paste. A drag over these rows
+     otherwise yields "Head Jab (pitch 2)" from a line reading "Head Jab". It
+     does not affect what a screen reader announces — `user-select` governs
+     selection, not the accessibility tree. */
+  user-select: none;
   position: absolute;
   inline-size: var(--of-space-hair);
   block-size: var(--of-space-hair);

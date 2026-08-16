@@ -146,8 +146,7 @@ const upstream = `https://github.com/${CORPUS.source.repository}`;
  * One real face key, taken from the corpus rather than typed, so the sample
  * link in the sources table points at an image that exists.
  */
-const SAMPLE_FACE =
-  CARD_PAGES.find((page) => page.face.key !== null)?.face.key ?? "";
+const SAMPLE_FACE = CARD_PAGES.find((page) => page.face.key !== null)?.face.key;
 
 /** This site's own source. Linked from the sources table and from the foot. */
 const OPTFALL_REPO = "https://github.com/alxjrvs/optfall";
@@ -161,12 +160,21 @@ const OPTFALL_REPO = "https://github.com/alxjrvs/optfall";
  * actually read, pulled from the corpus metadata rather than typed, so a
  * re-sync moves the link with the data.
  *
- * NO RETRIEVAL DATES. They were a fact about the last sync rather than about
- * the data, they went stale the moment one ran, and nothing on the page could
- * tell a reader whether "last confirmed" three months ago meant the corpus was
- * old or merely that nobody had re-run a script. The COMMIT is the honest
- * version of the same claim: it identifies the exact bytes, it cannot drift,
- * and it is checkable.
+ * NO RETRIEVAL DATE ON THIS PAGE, and the scope of that is worth stating
+ * because the site has not stopped recording one everywhere.
+ *
+ * The date was a fact about the last sync rather than about the data. On a page
+ * whose job is "here is what Optfall is built from", it went stale the moment a
+ * script ran and told a reader nothing they could act on: "last confirmed"
+ * three months ago does not distinguish an old corpus from a script nobody
+ * re-ran. The COMMIT answers the same question honestly — it identifies the
+ * exact bytes, cannot drift, and is checkable.
+ *
+ * `/search` and every card page still print `LAST_CONFIRMED`, deliberately.
+ * There it sits beside a specific claim about a specific card — this legality
+ * verdict, confirmed against upstream on this date — and a date is exactly the
+ * right qualifier for that. What was wrong was using it as a summary of the
+ * whole dataset's freshness, which is a question it cannot answer.
  */
 const SOURCES: readonly {
   readonly what: string;
@@ -202,15 +210,26 @@ const SOURCES: readonly {
     label: "rules.fabtcg.com",
     note: "The resource, attack and defence markers the printed text carries, ingested from the rules site and recorded in data/symbols/symbols.json.",
   },
-  {
-    what: "Card images",
-    /* A FACE, NOT THE HOST ROOT. `/` on that site answers a plain-text 404 —
-       the function only serves `<tier>/<name>` — and a table claiming every row
-       is a link you can open should not have one that opens an error. */
-    href: `${FACE_HOST}/normal/${SAMPLE_FACE}`,
-    label: "optfall-images.netlify.app",
-    note: "Faces published by Legend Story Studios, reached through the URLs the card compilation carries and re-served from a store of our own so the page does not hotlink theirs.",
-  },
+  /*
+    A FACE, NOT THE HOST ROOT. `/` on that site answers a plain-text 404 — the
+    function only serves `<tier>/<name>` — and a table claiming every row is a
+    link you can open must not contain one that opens an error.
+
+    SO THE ROW IS DROPPED RATHER THAN POINTED AT NOTHING when the corpus has no
+    face to sample. That cannot happen today; it could after a bad sync, and a
+    missing row is a smaller lie than a broken link on the one table whose claim
+    is that every entry opens.
+  */
+  ...(SAMPLE_FACE === undefined
+    ? []
+    : [
+        {
+          what: "Card images",
+          href: `${FACE_HOST}/normal/${SAMPLE_FACE}`,
+          label: "optfall-images.netlify.app",
+          note: "Faces published by Legend Story Studios, reached through the URLs the card compilation carries and re-served from a store of our own so the page does not hotlink theirs.",
+        },
+      ]),
   {
     what: "Typeface",
     href: "https://fonts.google.com/specimen/Grenze",
