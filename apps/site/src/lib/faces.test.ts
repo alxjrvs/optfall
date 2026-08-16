@@ -200,20 +200,25 @@ describe("over the whole corpus", () => {
 
 describe("a face key identifies a printing within its card", () => {
   test("no card has two distinct printings sharing a face key", () => {
-    // THE INVARIANT `?printing=` RESTS ON. The picker resolves the param by
-    // scanning one card's printings for a matching key, so two different
-    // printings of the SAME card sharing a key would make the link ambiguous —
-    // it would silently select whichever came first.
+    // THE INVARIANT THE PER-ART ROUTES REST ON. `facesOf` dedupes a card's
+    // printings by face key and `CARD_ROUTES` emits one URL per survivor, so
+    // two different printings of the SAME card sharing a key would make the
+    // address ambiguous — it would silently show whichever came first.
+    //
+    // IT USED TO BE STATED ABOUT `?printing=`, which the picker read. The
+    // picker is gone and the parameter with it; the claim is unchanged, because
+    // the routes are derived from the same dedupe the parameter was resolved
+    // against.
     //
     // This is the per-card version of the corpus-wide claim above, and the
     // known mirror is allowed by name rather than by loosening the test.
     //
     // `LGS387` on Batter to a Pulp is reached by two URLs — the same image on
     // two hosts, fetched and hashed while the key rule was written and found
-    // byte-identical. The picker dedupes by key, so it renders ONE tile and
-    // `?printing=LGS387` is unambiguous in every sense that matters. Anything
+    // byte-identical. `facesOf` dedupes by key, so the card has ONE address for
+    // that picture and it is unambiguous in every sense that matters. Anything
     // else appearing here would be two different pictures fighting over one
-    // parameter value, which is the thing this test exists to catch.
+    // URL, which is the thing this test exists to catch.
     const KNOWN_MIRROR = "Batter to a Pulp: LGS387.webp";
     const ambiguous: string[] = [];
 
@@ -235,9 +240,11 @@ describe("a face key identifies a printing within its card", () => {
   });
 
   test("the key is a clean URL parameter once its extension is dropped", () => {
-    // `?printing=U-WTR098`. The param strips `.webp`, so what is left has to be
-    // safe in a query string without escaping — otherwise a pasted link would
-    // arrive percent-encoded and fail the lookup.
+    // `/card/scour-the-battlescape-2/wtr/u-wtr098`. `numberFor` builds a path
+    // segment out of the key with the extension dropped, so what is left has to
+    // be safe in a URL without escaping — otherwise a pasted link would arrive
+    // percent-encoded and miss the page. (Written when the same string was a
+    // `?printing=` value; the requirement survived the parameter.)
     const params = new Set(
       CORPUS.cards
         .flatMap((card) => card.printings)

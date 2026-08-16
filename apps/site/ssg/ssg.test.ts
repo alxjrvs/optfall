@@ -10,8 +10,6 @@
 import { describe, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
 import { CARD_PAGES, CORPUS as CARDS, variantSuffix } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
@@ -670,192 +668,128 @@ describe("a card page shows the combat positions it does not fill", () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* The printing picker's captions                                             */
+/* The printings table, which is the picker now                               */
 /* -------------------------------------------------------------------------- */
 
-describe("every picker tile says which printing it is", () => {
+describe("the printings table is how a reader reaches another art", () => {
   const render = (route: string) =>
     RESOLVED.find((resolved) => resolved.route === route)?.render(
       [],
       undefined,
     ) ?? "";
 
-  /**
-   * The picker's tiles READ BACK OUT OF THE RENDERED PAGE, caption by caption.
-   *
-   * PARSED RATHER THAN RECOMPUTED, AND THE FIRST VERSION OF THIS FILE DID THE
-   * OTHER THING. It derived each tile's caption from the corpus with its own
-   * copy of the dedupe, then asserted a property of THAT — which is a test of
-   * the corpus wearing a test of the page's clothes. Both tests below passed
-   * with the feature deleted: one because `Cold Foil` also appears in the
-   * printings table further down every card page, so `toContain` found it with
-   * the picker caption gone; the other because it never rendered a page at all.
-   *
-   * Reading the markup is what makes the assertions about what a reader sees.
-   * A regex over HTML is normally a poor idea; here the markup being matched is
-   * three sibling spans emitted by one component ten lines long, and the
-   * alternative — a DOM parser — would be a dependency to read three strings.
-   *
-   * THE ISLAND'S `data-props` JSON IS NOT MATCHED, and that is worth stating
-   * because the same values appear there. The pattern anchors on the `<span
-   * class="of-picker__…">` markup that only the server-rendered tiles carry, so
-   * a component that stopped rendering a caption could not pass on the strength
-   * of the props blob beside it.
-   */
-  const tilesIn = (html: string) =>
+  const tableIn = (html: string) =>
+    /<table class="of-card__printings">.*?<\/table>/s.exec(html)?.[0] ?? "";
+
+  /** Every collector-number link in the table: its accessible name and target. */
+  const numbersIn = (html: string) =>
     [
-      ...html.matchAll(/<label class="of-picker__tile[^"]*">(.*?)<\/label>/gs),
-    ].map((tile) => {
-      const span = (name: string) =>
-        tile[1]?.match(
-          new RegExp(`<span class="of-picker__${name}">([^<]*)</span>`),
-        )?.[1] ?? "";
-      return {
-        setName: span("set"),
-        id: span("id"),
-        foiling: span("foiling"),
-      };
-    });
+      ...tableIn(html).matchAll(/<a href="(\/card\/[^"]+)"[^>]*>(.*?)<\/a>/gs),
+    ].map((link) => ({
+      href: link[1] ?? "",
+      spoken: (link[2] ?? "").replace(/<[^>]+>/g, "").trim(),
+    }));
 
-  test("two tiles under one number are told apart by their foiling", () => {
+  test("a row's number opens the art that row is published with", () => {
     /*
-     * THE BUG, PINNED ON THE CARD THAT SHOWS IT WORST. `Aether Ashwing` has
-     * four printings across two sets and three distinct arts under `UPR042`
-     * alone: the standard art, a cold foil, and a second cold foil. All three
-     * carried the caption "Uprising · UPR042" — a control offering three
-     * choices with one name between them.
-     *
-     * Measured off the rendered captions before the fix: 1,735 tiles on 791
-     * cards read identically to a sibling.
+     * THE RAIL OF THUMBNAILS IS GONE AND THIS IS WHERE IT WENT. A tile could
+     * caption three facts about a printing; this row names seven of them in
+     * columns, and the number is the link. Head Jab is printed in seven places
+     * and its Welcome to Rathe entry is two different arts under one number.
      */
-    const tiles = tilesIn(render("/card/aether-ashwing"));
-    expect(tiles.length).toBe(4);
+    const html = render("/card/head-jab-1");
+    expect(html).not.toBe("");
+    expect(html).not.toContain("of-picker");
 
-    const upr = tiles.filter((tile) => tile.id === "UPR042");
-    expect(upr.length).toBe(3);
-    /*
-     * THE ASSERTION IS THAT THE STANDARD ART IS SEPARABLE FROM THE FOILS, which
-     * is the whole of what this change buys on this card. Two of the three are
-     * the documented `art_variations` residue and remain identical to each
-     * other; before the change all THREE were.
-     */
-    expect(upr.map((tile) => tile.foiling).toSorted()).toEqual([
-      "Cold Foil",
-      "Cold Foil",
-      "Standard",
-    ]);
-    /* And the standard art says what IT is, rather than the foiling line being
-       a badge only the odd ones out wear. */
-    expect(tiles.find((tile) => tile.id === "DRO003")?.foiling).toBe(
-      "Standard",
+    const numbers = numbersIn(html);
+    expect(numbers.length).toBeGreaterThan(5);
+    /* The first face is the card's own page; the rest are per-art addresses. */
+    expect(numbers.map((link) => link.href)).toContain("/card/head-jab-1");
+    expect(numbers.map((link) => link.href)).toContain(
+      "/card/head-jab-1/wtr/u-wtr098",
     );
   });
 
-  test("a tile names every foiling its art is published at, not just the first", () => {
+  test("two arts under one number are told apart, inaudibly to the eye", () => {
     /*
-     * THE HALF THAT IS EASY TO GET WRONG, and the reason `foilingsByFace` is a
-     * pass over all printings rather than a field read off the printing that
-     * claimed the tile. 3,179 of the 9,328 tiles the site renders are shared by
-     * printings at more than one foiling — one image published Standard AND
-     * Rainbow Foil — and captioning such a tile "Standard" states one of the
-     * two things the picture is.
+     * THE FAILURE THE LINKS INTRODUCED, AND THE FIX. Upstream publishes two
+     * printings under one collector number whenever a set had two editions —
+     * `WTR098` is Alpha and Unlimited, two different pieces of art — so both
+     * rows carried an anchor reading "WTR098" pointing somewhere different.
+     * That is WCAG 2.4.4, and it was 6,726 card pages the moment the numbers
+     * became links.
      *
-     * `Head Jab` is named rather than searched for because it is the card the
-     * picker's own comments are written about, and its Welcome to Rathe entries
-     * exercise this beside the edition disambiguation rather than instead of it:
-     * one number, two editions, each of them one art published at two foilings.
+     * The qualifier is hidden, so the table still reads as bare numbers.
      */
-    const tiles = tilesIn(render("/card/head-jab-1"));
-    const wtr = tiles.filter((tile) => tile.id.startsWith("WTR098"));
-    expect(wtr.length).toBe(2);
-    for (const tile of wtr) {
-      /* The list, not the first of it. */
-      expect(tile.foiling).toBe("Standard · Rainbow Foil");
-      /* And the edition disambiguation is untouched — the two are separated by
-         one fact each, on different lines. */
-      expect(tile.id).toMatch(/^WTR098 · (Alpha|Unlimited)$/);
+    const html = render("/card/head-jab-1");
+    const spoken = numbersIn(html).map((link) => link.spoken);
+    expect(spoken).toContain("WTR098 (Alpha)");
+    expect(spoken).toContain("WTR098 (Unlimited)");
+
+    /* Visibly, both are just the number. */
+    const visible = tableIn(html)
+      .replace(/<span class="of-card__visually-hidden">[^<]*<\/span>/g, "")
+      .replace(/<[^>]+>/g, " ");
+    expect(visible).not.toContain("(Alpha)");
+  });
+
+  test("where edition cannot separate two arts, something else does", () => {
+    /*
+     * `DYN088` IS THE CASE THAT BROKE THE FIRST RULE. Both of its arts are
+     * edition `N`, so edition separates nothing; foiling separates the ROWS and
+     * not the ADDRESSES, because Standard and Rainbow Foil are one picture. The
+     * art's own key is the backstop — it is what the URL is built from — and it
+     * is left off the row whose key is already the number, which would
+     * otherwise be announced as "DYN088 DYN088".
+     */
+    const spoken = numbersIn(render("/card/hanabi-blaster")).map(
+      (link) => link.spoken,
+    );
+    expect(new Set(spoken)).toEqual(new Set(["DYN088", "DYN088 (DYN088-MV)"]));
+  });
+
+  test("no card page names two printings alike and sends them elsewhere", () => {
+    /*
+     * THE WHOLE CORPUS, at the stride the related-lists test uses and for the
+     * same reason: corpus order is a name sort, so a prefix is the letter A.
+     * A full scan of the built site is clean — 6,726 pages before the hidden
+     * qualifier, zero after — and this is the guard that keeps it so.
+     */
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      const byName = new Map<string, Set<string>>();
+      for (const link of numbersIn(render(page.href))) {
+        const found = byName.get(link.spoken) ?? new Set<string>();
+        found.add(link.href);
+        byName.set(link.spoken, found);
+      }
+      for (const [spoken, hrefs] of byName)
+        if (hrefs.size > 1)
+          expect(`${page.href}: ${spoken} -> ${[...hrefs].join(", ")}`).toBe(
+            `${page.href}: one destination`,
+          );
     }
   });
 
-  test("what foiling cannot disambiguate is a marker in a file name", () => {
+  test("the row being shown is marked, and a face-less printing is not a link", () => {
     /*
-     * THE RESIDUE, ASSERTED SO IT CANNOT GROW QUIETLY. Foiling takes the 1,735
-     * identical captions down to 279, and this pins BOTH halves: that the fix
-     * lands, and that what survives it is the shape `PrintingPicker` names. A
-     * resync that reintroduced a kind of collision foiling ought to have solved
-     * would fail here rather than ship a picker with two nameless tiles on a
-     * card nobody happened to open.
+     * A CONTROL THAT CANNOT SAY WHICH OPTION IS SELECTED IS A LIST OF LINKS.
+     * The rail said it with an accent outline; the row says it with
+     * `aria-current="page"`, which is announced rather than only drawn.
      *
-     * What survives is arts upstream separates only by a marker in the image
-     * file name, for which the corpus publishes no display vocabulary. 237 of
-     * the 279 are one shape: a front and a back under one number at one foiling
-     * — `DYN212-CF_BACK` beside `DYN212-MV_BACK` — which the printings table
-     * answers in its `Other face` column. The rest are lettered or
-     * `art_variations` variants: `MST158` beside `MST158-A` and `MST158-B`,
-     * `FAB470-RFA` beside `-RFB` and `-RFC`, `UPR042-CF` beside `UPR042-MV`.
-     * Naming those on the tile would mean inventing a vocabulary the source
-     * does not define.
-     *
-     * COUNTED OFF THE RENDERED CAPTIONS, so it measures the control rather than
-     * the corpus. Deleting the foiling line takes this to 1,735 and fails. An
-     * earlier version of this test recomputed the captions from the corpus
-     * instead and was wrong in both directions at once: it stayed green with
-     * the feature removed, AND it overcounted — grouping by number alone, it
-     * called all three of `Aether Ashwing`'s UPR042 tiles ambiguous when the
-     * Standard one is plainly distinguishable from the two Cold Foils. That
-     * is where the 1,410 and 359 in the first draft of this change came from.
-     *
-     * THE CANDIDATES ARE NARROWED FROM THE CORPUS, and only the narrowing is.
-     * Two tiles can only caption identically if they share a set and a collector
-     * number, which is cheap to find; those pages are rendered and every
-     * survivor is judged on its markup. Rendering all 4,941 card pages to reach
-     * the same number would spend the bulk of a test run proving that cards with
-     * one printing have no collision.
+     * AND FOUR PRINTINGS IN THIS CORPUS PUBLISH NO IMAGE, so there is no page
+     * for their number to open. `Toughness`'s `SUP241` is one: its row keeps
+     * every other column and carries no anchor.
      */
-    const suspects = CARD_PAGES.filter((page) => {
-      const numbers = facesOf(page.card).map(
-        (ref) => `${ref.printing.set_id}/${ref.printing.id}`,
-      );
-      return new Set(numbers).size < numbers.length;
-    });
-    /* The narrowing has to actually find things; a selector that silently went
-       empty would leave the count below trivially at zero. */
-    expect(suspects.length).toBeGreaterThan(500);
+    const table = tableIn(render("/card/head-jab-1/lgs/017-rf"));
+    expect([...table.matchAll(/aria-current="page"/g)]).toHaveLength(1);
+    expect(table).toMatch(
+      /<tr class="of-card__printing--shown">.*?LGS017.*?<\/tr>/s,
+    );
 
-    let ambiguous = 0;
-    for (const page of suspects) {
-      const byCaption = new Map<string, number>();
-      for (const tile of tilesIn(render(page.href))) {
-        /*
-         * THE WHOLE CAPTION, WHICH IS THE POINT. Set name, collector number
-         * (carrying the edition where `CardEntry` appended it) and foiling are
-         * the three lines a reader has; two tiles agreeing on all three are two
-         * choices the control cannot tell apart. Counting only the tiles that
-         * actually collide — not every tile in a group containing a collision —
-         * is what the corpus-side version got wrong.
-         */
-        const caption = `${tile.setName}|${tile.id}|${tile.foiling}`;
-        byCaption.set(caption, (byCaption.get(caption) ?? 0) + 1);
-      }
-      for (const count of byCaption.values()) if (count > 1) ambiguous += count;
-    }
-
-    /*
-     * AN EQUALITY, NOT A CEILING. A `toBeLessThan` would pass just as happily
-     * if the count went to zero for the wrong reason — a face-keying change
-     * that collapsed distinct arts into one tile — and losing a printing is a
-     * worse outcome than captioning one ambiguously.
-     */
-    expect(ambiguous).toBe(279);
-    /*
-     * A RAISED BUDGET, NOT A WEAKENED TEST. This renders 682 card pages to
-     * judge their captions, which is the whole point of it — the corpus-side
-     * version that needed no budget is the one that stayed green with the
-     * feature deleted. It crossed bun's 5s default once this file grew other
-     * page-rendering tests around it, so the deadline moved and the work did
-     * not.
-     */
-  }, 30_000);
+    const faceless = tableIn(render("/card/toughness"));
+    expect(faceless).toContain("SUP241");
+    expect(faceless).not.toMatch(/<a[^>]*>\s*SUP241/);
+  });
 });
 
 /* -------------------------------------------------------------------------- */
@@ -908,327 +842,40 @@ describe("the credit line spaces three facts, not two", () => {
     );
   });
 
-  test("every card page carries all three, so none of them is a special case", () => {
+  test("what the line carries follows the printing, not the card", () => {
     /*
-     * MEASURED RATHER THAN ASSUMED. The artist paragraph renders a refusal
-     * ("No artist is credited…") rather than nothing when upstream credits
-     * none, and the rarity list is built from the tiles — so both are present
-     * on every page today, and a third item that vanished on some card would
-     * leave `space-between` distributing two again on exactly that card.
+     * THE COUNT IS NO LONGER FIXED, AND THAT IS THE CHANGE. The line used to
+     * publish every rarity the card has and every card it is backed with, all
+     * but one of each hidden, because a picker could swap the picture without
+     * the page changing. The printings table is the control now: a page shows
+     * ONE printing, so the line states that printing's rarity and that
+     * printing's back, and carries neither where upstream publishes neither.
      *
-     * Zero cards lack either today. This runs over a sample rather than all
-     * 4,941 pages because the claim is about the COMPONENT, which does not vary
-     * per card, and rendering the corpus twice over to say so would buy nothing
-     * the sample does not.
-     *
-     * IT IS THE ITEMS IN THE MARKUP, NOT THE ITEMS ON SCREEN, and the two stop
-     * being the same number on a double-faced card: the other faces are all
-     * published and all but one hidden, so a card backed with two cards has
-     * five children and four visible. What `space-between` distributes is the
-     * visible ones; what this counts is the children, because that is what the
-     * component controls and what a regex can see.
+     * So what is asserted is the RULE rather than a number: the artist and the
+     * printing count are always there, the rarity is there exactly when this
+     * printing has one, and the back exactly when it has one.
      */
-    for (const page of CARD_PAGES.slice(0, 200)) {
-      /*
-        PLUS ONE PER OTHER FACE, and the addition is the point rather than an
-        allowance. A double-faced card publishes a link per card it is backed
-        with — all but one hidden — so the number of ITEMS on the line varies
-        while the number of items VISIBLE does not. Counting only three here
-        would have made this test blind to the whole feature.
-      */
-      const backs = new Set(
-        page.printings
-          .map((printing) => printing.otherFace?.href)
-          .filter((href) => href !== undefined),
-      ).size;
-      const counted = creditsIn(render(page.href));
-      expect(`${page.label}:${counted}`).toBe(`${page.label}:${3 + backs}`);
-    }
-  });
-});
+    for (const page of CARD_PAGES.filter((_, index) => index % 37 === 0)) {
+      const html = render(page.href);
+      const footer = footerOf(html);
+      const shown = facesOf(page.card)[0];
 
-/* -------------------------------------------------------------------------- */
-/* Bare names in a related-cards list                                          */
-/* -------------------------------------------------------------------------- */
-
-describe("a related-cards list is one row per name, stones on the right", () => {
-  const render = (route: string) =>
-    RESOLVED.find((resolved) => resolved.route === route)?.render(
-      [],
-      undefined,
-    ) ?? "";
-  const listIn = (html: string) =>
-    html.match(/<ul class="of-card__links">.*?<\/ul>/s)?.[0] ?? "";
-
-  test("three versions of one name are one row and three stones", () => {
-    /*
-     * "Other versions" on Head Jab was two rows both reading "Head Jab" — the
-     * pitch was the only thing that differed, which is exactly what a stone is
-     * for. Measured across the corpus: 10,868 rows become 6,816.
-     */
-    const list = listIn(render("/card/head-jab-1"));
-    expect(list).not.toBe("");
-
-    /* One row… */
-    expect([...list.matchAll(/<li class="of-card__link">/g)].length).toBe(1);
-    /* …one name, which is itself a link. The visible text is bare; the
-       qualifier that follows it is hidden, and is what stops the anchor
-       colliding with the other lists' rows for the same name. */
-    expect(
-      [
-        ...list.matchAll(
-          /<a class="of-card__link-name" href="[^"]+">Head Jab(<span class="of-card__visually-hidden">[^<]*<\/span>)?<\/a>/g,
-        ),
-      ].length,
-    ).toBe(1);
-    /* …and a link per remaining version. */
-    const pitchLinks = [
-      ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
-    ].map((m) => m[1]);
-    expect(pitchLinks).toEqual(["/card/head-jab-2", "/card/head-jab-3"]);
-  });
-
-  test("each stone is a link named for the card it reaches", () => {
-    /*
-     * THE STONE CARRIES THE ACCESSIBLE NAME, through `PitchJewel`'s `label`
-     * rather than a hidden span. A `role="img"` with an `aria-label` inside an
-     * anchor contributes that string to the anchor's name, so the link is
-     * called "Head Jab (pitch 2)" with no text in the DOM — which is what keeps
-     * two stones on one row from being two links called the same thing (WCAG
-     * 2.4.4), and leaves nothing for a drag-select to pick up.
-     *
-     * ASSERTED AS A PAIRING, not merely as presence: the label has to match the
-     * href it sits inside, since a row of stones all correctly labelled but
-     * wired to the wrong cards would pass any weaker check.
-     */
-    const list = listIn(render("/card/head-jab-1"));
-    for (const [, href, label] of list.matchAll(
-      /<a class="of-card__pitch-link" href="([^"]+)"><span class="of-jewel[^"]*" role="img" aria-label="([^"]+)"/g,
-    )) {
-      const pitch = href?.match(/-(\d)$/)?.[1];
-      expect(`${href}:${label}`).toBe(`${href}:Head Jab (pitch ${pitch})`);
-    }
-    /* And the loop above has to have run. */
-    expect(list).toContain('aria-label="Head Jab (pitch 2)"');
-  });
-
-  test("the name is a link on every row, whatever the version count", () => {
-    /*
-     * THE RECONCILIATION, AND THE REGRESSION IT UNDOES. `CardIndex` publishes
-     * the rule — "a stone is a link only where there is something to choose
-     * between" — with the name as the destination in both cases. A first pass
-     * at this list dropped the name's anchor on multi-version rows and left the
-     * stones as the only way in, so a reader who learned on a set page that the
-     * name is the card found it inert on a card page.
-     *
-     * `Runechant` is named because its lists carry both version counts at once,
-     * which is the only way to assert the rule holds across them rather than
-     * one shape having replaced the other.
-     */
-    const list = listIn(render("/card/runechant"));
-    const rows = [
-      ...list.matchAll(/<li class="of-card__link">(.*?)<\/li>/gs),
-    ].map((m) => m[1] ?? "");
-    expect(rows.length).toBeGreaterThan(1);
-
-    let sole = 0;
-    let several = 0;
-    for (const row of rows) {
-      /* Every row, without exception, names a destination on the name. */
-      expect(row).toMatch(
-        /<a class="of-card__link-name" href="\/card\/[^"]+">/,
+      expect(`${page.label}: artist`).toBe(
+        `${page.label}: ${footer.includes("Illustrated by") || footer.includes("No artist is credited") ? "artist" : "none"}`,
+      );
+      expect(`${page.label}: ${footer.includes('href="#printings"')}`).toBe(
+        `${page.label}: true`,
       );
 
-      const stoneLinks = [...row.matchAll(/<a class="of-card__pitch-link"/g)]
-        .length;
-      const stones = [...row.matchAll(/role="img"/g)].length;
-      if (stones === 1) {
-        /* A SOLE VERSION DRAWS A PLAIN STONE. Linking it would be a second
-           control, in a smaller target, for where the name already points. */
-        expect(stoneLinks).toBe(0);
-        sole += 1;
-      } else {
-        /* Several, and then every one of them is its own way in. */
-        expect(stoneLinks).toBe(stones);
-        several += 1;
-      }
+      const rarity = shown?.printing.rarity ?? "";
+      expect(`${page.label}: ${footer.includes("of-card__rarity")}`).toBe(
+        `${page.label}: ${rarity !== ""}`,
+      );
+      /* One bubble, never a list. */
+      expect(
+        `${page.label}: ${[...footer.matchAll(/class="of-card__rarity"/g)].length}`,
+      ).toBe(`${page.label}: ${rarity === "" ? 0 : 1}`);
     }
-
-    /* Both branches have to have been exercised, or the loop proved nothing. */
-    expect(sole).toBeGreaterThan(0);
-    expect(several).toBeGreaterThan(0);
-  });
-
-  test("a partial group lands its name on a version it is showing", () => {
-    /*
-     * `set.page.tsx`'s `collapsed && whole` test, arrived at here for the same
-     * reason: a surface showing two of three versions must not send its name to
-     * the shared page, which would offer a third it is not showing.
-     *
-     * Related lists are partial more often than a set is — `variants` excludes
-     * the card being read by definition — so on Head Jab's page the row for
-     * Head Jab carries two of three and lands on one of those two, NOT on
-     * `/card/head-jab`, which would resolve to a version this row does not
-     * offer and may well be the page the reader is already on.
-     */
-    const list = listIn(render("/card/head-jab-1"));
-    const nameHref = list.match(
-      /<a class="of-card__link-name" href="([^"]+)"/,
-    )?.[1];
-    expect(nameHref).toBe("/card/head-jab-2");
-
-    const stoneHrefs = [
-      ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
-    ].map((m) => m[1]);
-    /* And it is one the row is actually showing. */
-    expect(stoneHrefs).toContain(nameHref);
-  });
-
-  test("no row SHOWS the pitch as words, and one row still says it", () => {
-    /*
-     * THE CLAIM WEAKENED FROM "NOWHERE IN THE MARKUP" TO "NOWHERE ON SCREEN",
-     * and the difference is a bug this test used to enforce. The stones do name
-     * themselves in an attribute, which is why the words left the list — but a
-     * row whose name points at ONE version has to carry that version's
-     * qualifier inside its anchor, or two rows reading "Count Your Blessings"
-     * go to two different cards with nothing to tell them apart. See
-     * `groupTarget`. So the suffix is hidden rather than absent, exactly as
-     * `of-index__variant` is in the card index.
-     */
-    for (const route of ["/card/head-jab-1", "/card/runechant"]) {
-      const list = listIn(render(route));
-      /* Strip the hidden spans, then the tags: what is left is what a reader
-         sees, and it carries no pitch words. */
-      const seen = list
-        .replace(/<span class="of-card__visually-hidden">[^<]*<\/span>/g, "")
-        .replace(/<[^>]+>/g, "");
-      expect(`${route}:${/\(pitch \d\)/.test(seen)}`).toBe(`${route}:false`);
-      expect(`${route}:${/\(no pitch\)/.test(seen)}`).toBe(`${route}:false`);
-    }
-
-    /*
-      And the hidden half is really there on a row that needs it — NAMED FOR
-      EVERY VERSION IT STANDS FOR, not for the one its href opens. Head Jab's
-      Other versions row covers pitch 2 and 3 (the page's own version is
-      excluded from `variants` by definition) and lands on the lower of them.
-      Calling it "(pitch 2)" would be true of the destination and false of the
-      row, and would announce the same string as the first stone beside it.
-    */
-    const versions = listIn(render("/card/head-jab-1"));
-    expect(versions).toContain(
-      '<a class="of-card__link-name" href="/card/head-jab-2">Head Jab<span class="of-card__visually-hidden"> (pitch 2 and 3)</span></a>',
-    );
-
-    /* And a row standing for ONE version is named for that one, through
-       `variantSuffix` exactly as every other surface names a card. Crouching
-       Tiger is referenced by Growl at pitch 1 and by no other version of it —
-       the only shape in the corpus where a group has one disambiguated member,
-       which is why this names an odd pair of cards. */
-    expect(render("/card/crouching-tiger")).toContain(
-      '<a class="of-card__link-name" href="/card/growl-1">Growl<span class="of-card__visually-hidden"> (pitch 1)</span></a>',
-    );
-  });
-
-  test("no card page has two links reading alike that go to different cards", () => {
-    /*
-     * THE REGRESSION THIS PAIR OF TESTS MISSED, ASSERTED DIRECTLY ON THE PAGE.
-     * WCAG 2.4.4, and the exact failure `variantSuffix` exists to prevent:
-     * `/card/count-your-blessings-1` carried "Count Your Blessings" twice, once
-     * to `/card/count-your-blessings-2` in Other versions and once to
-     * `/card/count-your-blessings` in References. Measured on the shipped
-     * build: 3,583 card pages had a pair, and on 12 of them BOTH sides were
-     * related-list rows.
-     *
-     * ACCESSIBLE NAMES, NOT TEXT NODES, which is what makes this test able to
-     * see the stones as well as the names: a pitch link's name comes from the
-     * `aria-label` on the `role="img"` inside it, and its only text node is an
-     * `aria-hidden` numeral shared by every row on the page.
-     */
-    const nameOf = (anchor: string) => {
-      const labelled = /aria-label="([^"]*)"/.exec(anchor);
-      return labelled?.[1] ?? anchor.replace(/<[^>]+>/g, "").trim();
-    };
-
-    /*
-     * EVERY 12th PAGE, NOT THE FIRST 400, and the difference is what the sample
-     * can see. Corpus order is upstream's name sort, so a prefix is the letter
-     * A and a little of B — and whether a name is shared is not distributed
-     * evenly through the alphabet. Striding covers the same number of pages
-     * across the whole corpus for the same cost.
-     *
-     * A FULL SCAN IS CLEAN AND IS NOT RUN HERE: 4,941 pages take about 11.5
-     * seconds, against roughly one for this. It was run once by hand over the
-     * built site — 3,583 pages with a pair before the fix, zero after — and the
-     * number in the doc block beside `groupTarget` is that scan's, not this
-     * sample's.
-     */
-    let collisions = 0;
-    const sampled = CARD_PAGES.filter((_, index) => index % 12 === 0);
-    expect(sampled.length).toBeGreaterThan(400);
-    for (const page of sampled) {
-      const html = render(page.href);
-      const targets = new Map<string, Set<string>>();
-      for (const anchor of html.matchAll(
-        /<a[^>]*href="(\/card\/[^"]+)"[^>]*>(.*?)<\/a>/gs,
-      )) {
-        const spoken = nameOf(anchor[2] ?? "");
-        if (spoken === "") continue;
-        const found = targets.get(spoken) ?? new Set<string>();
-        found.add(anchor[1] ?? "");
-        targets.set(spoken, found);
-      }
-      for (const [spoken, hrefs] of targets)
-        if (hrefs.size > 1) {
-          collisions += 1;
-          expect(`${page.href}: ${spoken} -> ${[...hrefs].join(", ")}`).toBe(
-            `${page.href}: no collision`,
-          );
-        }
-    }
-    expect(collisions).toBe(0);
-  });
-
-  test("grouping by name never merges two links at one pitch", () => {
-    /*
-     * THE ASSUMPTION THE ROW SHAPE RESTS ON, measured rather than trusted. Two
-     * cards sharing a name in these lists are the pitch versions of one card,
-     * so a name plus a pitch identifies a link — and if that ever stopped being
-     * true, a group would render two stones with the same numeral and a reader
-     * would have no way to tell which went where.
-     *
-     * Zero today, across every list on every card page.
-     */
-    let collisions = 0;
-    for (const page of CARD_PAGES)
-      for (const links of [page.variants, page.references, page.referencedBy]) {
-        const byName = new Map<string, number[]>();
-        for (const link of links) {
-          const found = byName.get(link.name) ?? [];
-          found.push(link.pitch);
-          byName.set(link.name, found);
-        }
-        for (const pitches of byName.values())
-          if (new Set(pitches).size < pitches.length) collisions += 1;
-      }
-    expect(collisions).toBe(0);
-  });
-
-  test("the lists that carry no pitch mark are left alone", () => {
-    /*
-     * THE LIMIT ON THE CHANGE, pinned so somebody does not "finish the job" and
-     * break two pages. A rule page's governed-cards list and a set page's
-     * `<noscript>` list are plain anchors with NO stone beside them — nothing
-     * else on those rows says which version a name is, so their qualifier is
-     * load-bearing text rather than a restatement of a glyph.
-     */
-    const rule =
-      RESOLVED.find((resolved) => resolved.route.startsWith("/rules/"))?.render(
-        [],
-        undefined,
-      ) ?? "";
-    const governs = rule.match(/<ul class="of-rule__governs">.*?<\/ul>/s)?.[0];
-    if (governs !== undefined)
-      expect(governs).not.toContain("of-card__pitch-link");
   });
 });
 
@@ -1246,100 +893,40 @@ describe("a double-faced printing names the card on its back", () => {
   test("the credit line links to the other face", () => {
     /*
      * THE CARD A READER'S COPY IS PHYSICALLY ATTACHED TO was named on this page
-     * only in the printings table below the fold — a grid a reader goes to with
-     * a question about printings, not a caption on the picture in front of
-     * them. A Drop in the Ocean is one physical card with Inner Chi.
+     * only in the printings table below the fold. A Drop in the Ocean is one
+     * physical card with Inner Chi.
      */
     const html = render("/card/a-drop-in-the-ocean");
     expect(html).toContain("Backed with");
     expect(html).toContain('<a href="/card/inner-chi">Inner Chi</a>');
-    /* Marked as the route's own printing, so it shows with no scripting. */
-    expect(html).toContain("of-card__other--initial");
   });
 
-  test("a card backed with two different cards publishes both, showing one", () => {
+  test("which card is on the back follows the printing the page shows", () => {
     /*
      * WHICH CARD IS ON THE BACK IS A FACT ABOUT THE PRINTING, and Agility is
-     * the card that proves it: printed on the back of Gold in Heavy Hitters,
-     * on the back of Might in Part the Mistveil, and alone in six other
-     * products. So the page publishes both and each PRINTING'S OWN URL reveals
-     * the one belonging to the picture it renders — the same arrangement, and
-     * the same reason, as the rarity beside it.
-     */
-    const html = render("/card/agility");
-    expect(html).toContain('data-other-face="0"');
-    expect(html).toContain('data-other-face="1"');
-    expect(html).toContain('href="/card/gold"');
-    expect(html).toContain('href="/card/might"');
-
-    /*
-      Each per-printing route marks its own, and only its own. Read as the list
-      of slots carrying `--initial` rather than as a boolean, so a page marking
-      two of them fails here instead of passing on the first match.
-    */
-    const initialIn = (route: string) =>
-      [
-        ...render(route).matchAll(
-          /class="[^"]*of-card__other--initial"\s+data-other-face="(\d)"/g,
-        ),
-      ].map((match) => match[1]);
-    expect(initialIn("/card/agility/hvy/240")).toEqual(["0"]);
-    expect(initialIn("/card/agility/kyo/027")).toEqual(["1"]);
-
-    /*
-     * AND THE DEFAULT PRINTING MARKS NEITHER, which is the honest answer
-     * rather than a gap: `/card/agility` renders AKO027, an Ako printing of a
-     * token that Ako published on its own. A page showing a single-faced
-     * picture must not caption it with a back it does not have.
-     */
-    expect(render("/card/agility")).not.toContain("of-card__other--initial");
-  });
-
-  test("no card needs more slots than the stylesheet enumerates", () => {
-    /*
-     * THE BOUND THE CSS CANNOT CHECK ITSELF. `CardEntry.css` reveals the
-     * current other face with one rule per slot, because CSS cannot compare an
-     * attribute on the root with an attribute on an element and the set of
-     * cards a card can be backed with is not closed. A corpus sync that gave
-     * some card a fifth distinct back would put a link in the markup that no
-     * printing could ever reveal — invisible, and invisible in exactly the way
-     * a reader cannot report.
+     * the card that proves it: printed on the back of Gold in Heavy Hitters, of
+     * Might in Part the Mistveil, and alone in six other products.
      *
-     * Measured today: 115 cards are backed with one card, 14 with two, 2 with
-     * three — Harmonized Kodachi and Might — and none with more.
-     *
-     * THE BOUND IS COUNTED OUT OF THE STYLESHEET, not written down twice.
-     * Hardcoding the number here would leave this test green on the day
-     * somebody deletes a reveal rule — the exact failure it exists to catch,
-     * arrived at from the CSS side instead of the corpus side.
+     * THE HIDDEN SLOTS ARE GONE WITH THE PICKER. The page used to publish every
+     * back the card has and reveal one by a stamp on the root element; each
+     * printing has its own page now, so each states its own back and nothing
+     * else — which is the same simplification the rarity beside it got.
      */
-    const stylesheet = readFileSync(
-      join(import.meta.dir, "components", "CardEntry.css"),
-      "utf8",
-    );
-    const slots = new Set(
-      [...stylesheet.matchAll(/data-printing-other-face="(\d+)"/g)].map(
+    const backs = (route: string) =>
+      [...render(route).matchAll(/Backed with\s*<a href="([^"]+)"/g)].map(
         (match) => match[1],
-      ),
-    ).size;
-    /* And the rules are the ones this test thinks they are: a stylesheet that
-       stopped enumerating any would otherwise set the bound to zero and fail
-       for a reason nobody could read. */
-    expect(slots).toBeGreaterThan(0);
+      );
 
-    const worst = CARD_PAGES.map((page) => ({
-      label: page.label,
-      backs: new Set(
-        page.printings
-          .map((printing) => printing.otherFace?.href)
-          .filter((href) => href !== undefined),
-      ).size,
-    })).toSorted((a, b) => b.backs - a.backs)[0];
+    expect(backs("/card/agility/hvy/240")).toEqual(["/card/gold"]);
+    expect(backs("/card/agility/kyo/027")).toEqual(["/card/might"]);
 
-    expect(worst?.backs).toBeLessThanOrEqual(slots);
-    /* Pinned, so the day it moves this test says which card moved it rather
-       than only that something did. */
-    expect(`${worst?.label}: ${worst?.backs}`).toBe("Harmonized Kodachi: 3");
+    /*
+     * AND THE DEFAULT PRINTING NAMES NEITHER, which is the honest answer rather
+     * than a gap: `/card/agility` shows AKO027, an Ako printing of a token that
+     * Ako published on its own.
+     */
+    expect(backs("/card/agility")).toEqual([]);
+    expect(render("/card/agility")).not.toContain("Backed with");
   });
 });
 

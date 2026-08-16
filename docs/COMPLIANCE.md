@@ -354,7 +354,7 @@ was moved to one notice per page.
 
 *What that bought:* a card grid of sixty faces carried sixty short notices, and
 they read as noise on every surface that shows more than one card — the grid,
-the printings rail, the front-door fan. The requirement is that the disclaimer be
+the front-door fan. The requirement is that the disclaimer be
 **provided wherever card images are used**, and a page that states it once,
 unmissably, in the same footer as the rest of the rights position satisfies that.
 
@@ -418,14 +418,14 @@ tempting — sixty separate notices look like a cost — and closing it needs a
 rendered-DOM check. The check covers server-rendered faces, which is where the
 incident happened, and not every face the site can show.
 
-**The one grouping that was on the wrong side of our own rule has been fixed.**
+**The grouping that was on the wrong side of our own rule no longer exists.**
 `PrintingPicker` grouped the whole printings rail under one hoisted notice as a
 wrapping four-up grid — up to 22 tiles, six rows, notice last — which is exactly
-the scrolling case `CardFaceGroup`'s rule excludes. The rail is now a single row
-that scrolls inside its own box, one tile tall at every width, so the notice is
-adjacent to the strip at any scroll position. The rule was written down first
-and the caller corrected second, which is the order that makes a rule worth
-having.
+the scrolling case `CardFaceGroup`'s rule excludes. It was corrected to a single
+scrolling row, and then the rail was retired outright: the printings table is
+how a reader reaches another art now, and a card page renders ONE face carrying
+its own notice. The rule outlived the caller it was written for, which is the
+better of the two ways that can end.
 
 *(This line previously said "enforced when Phase 1 … and Phase 3 … land". Both
 landed. `/data-terms` defers to this document where the two differ, so a stale

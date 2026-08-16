@@ -66,7 +66,7 @@ transfers is the *operating model*, which decomposes into eight things:
    switches to checklist, text or full for people who want density instead.
 3. **The printing is the addressable unit.** `/card/mh3/197/ajani-nacatl-pariah`.
    `unique:cards|prints|art` controls how duplicates collapse, and the card page
-   has a printings rail that swaps the image.
+   addresses every art of a card at its own URL.
 4. **Search is an algebra, not a filter set.** Negation, `OR`, parentheses,
    comparisons, regex, exact-name `!`, plus `unique:`, `order:`, `dir:`,
    `display:` and `prefer:` as query terms rather than as UI chrome.
@@ -380,9 +380,13 @@ a stopgap rather than left implicit.
 
 **Three things follow, and they are the printings feature:**
 
-- **A printings rail on the card page.** Every printing, as a thumb, with set,
-  collector number, rarity, edition, foiling and artist. Selecting one swaps the
-  primary face. It is the one interactive element the card page gets.
+- **The printings table on the card page.** Every printing in a row, with set,
+  collector number, rarity, edition, foiling, artist and other face. The number
+  is a link to the art that printing is published with. *(This was specified as
+  a rail of thumbnails, and shipped as one: "the one interactive element the
+  card page gets". The rail was retired — the table already named more per row
+  than a tile could caption, and the card page now gets no interactive element
+  at all.)*
 - **Per-printing URLs** — `/card/<slug>/<set>/<number>`, resolving to the card
   page with that printing selected. This is Scryfall's canonical form and the
   thing that makes "the alternate art one" linkable.

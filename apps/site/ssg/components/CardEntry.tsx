@@ -22,10 +22,13 @@
  * beside a column at least as wide as a face — no breakpoint, because the token
  * layer publishes none.
  *
- * THE PICKER IS THE ONLY ISLAND ON THIS PAGE, and the rest is static. That is
- * the whole economy of the generator applied to its heaviest route: 12,278 card
- * pages, one interactive control between them, and the printed-text toggle done
- * in CSS so it costs nothing.
+ * THERE IS NO ISLAND ON THIS PAGE AT ALL, which is the end of a direction the
+ * previous note recorded halfway. It said the printing picker was the only
+ * island here — one interactive control across 12,278 pages, with the
+ * printed-text toggle done in CSS so it cost nothing. The picker is gone: the
+ * printings table below is how a reader reaches another art, each row
+ * addressing the art it is published with, so the heaviest route in the build
+ * ships no JavaScript of its own and every caption on it is server-rendered.
  *
  * ONE PORT DIFFERENCE WORTH NAMING. Astro's `<script is:inline define:vars>`
  * carried the `?pitch=` redirect. React has no equivalent, so it is a
@@ -75,8 +78,6 @@ import {
   raritySlug,
   setName,
 } from "../../src/lib/sets";
-import { Island } from "../Island";
-import { PrintingPicker } from "../islands/PrintingPicker";
 import { CardTextInline } from "./CardTextInline";
 import "./CardEntry.css";
 import { PrintedText } from "./PrintedText";
@@ -84,11 +85,13 @@ import { PrintedText } from "./PrintedText";
 export interface CardEntryProps {
   readonly page: CardPage;
   /**
-   * Which face the page arrives showing — an index into the picker's list.
+   * Which art this page shows — an index into `facesOf(card)`.
    *
-   * This is what makes the per-printing URL a page rather than a hint. The
-   * picker has read `?printing=` since it shipped, but it read it in the
-   * browser, so the server sent the default art every time.
+   * IT IS THE WHOLE OF WHAT A PER-PRINTING URL MEANS now that the picker is
+   * gone. `/card/<slug>` is face 0 and `/card/<slug>/<set>/<number>` is the
+   * face that route was emitted for, so the picture, the rarity beside it and
+   * the row marked in the printings table are all decided here, at build time,
+   * by the address.
    */
   readonly selected?: number;
 }
@@ -463,308 +466,215 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
   /**
    * THE ROUTER'S LIST, NOT A SECOND ONE. `facesOf` is what `CARD_ROUTES` emits a
-   * URL from, so taking the addresses from it makes "every tile has an address
-   * and every address has a tile" true by construction.
+   * URL from, so taking the addresses from it makes "every art has an address
+   * and every address has an art" true by construction.
    */
+  const faces = facesOf(card);
   const hrefByFace = new Map(
-    facesOf(card).map((ref, index) => [
+    faces.map((ref, index) => [
       ref.key,
       index === 0 ? page.href : `${page.href}/${ref.setCode}/${ref.number}`,
     ]),
   );
 
   /**
-   * Every foiling that reaches each art, in words, keyed by face.
+   * THE PRINTING THIS PAGE IS SHOWING, AND THERE IS EXACTLY ONE OF THEM NOW.
    *
-   * BUILT OVER ALL PRINTINGS BEFORE THE TILES ARE, AND THAT ORDER IS THE POINT.
-   * The tile list below is deduped by image and keeps the FIRST printing to
-   * reach each one; asking that printing for its foiling would caption
-   * `MST131` — one image published Standard and Rainbow Foil — as merely
-   * "Standard". A full pass first means the tile names both, so the caption
-   * describes the picture rather than the row that happened to claim it.
+   * THE PICKER IS GONE, AND WITH IT AN ENTIRE MECHANISM. A rail of thumbnails
+   * used to sit under the face and swap the picture in place, which meant this
+   * component could not know at build time what the reader was looking at: the
+   * credit line therefore published EVERY rarity the card has and hid all but
+   * one, the other faces the same way, and an island stamped the root element
+   * on every click so two CSS enumerations could re-choose between them. Three
+   * copies of "which printing is on screen", kept in step by attribute
+   * selectors.
    *
-   * DEDUPED AND ORDERED BY THE CORPUS, not sorted. Two rows at the same foiling
-   * would otherwise say it twice, and imposing an alphabet would put "Cold Foil"
-   * before "Standard" — an order that means nothing, where corpus order at least
-   * means the order upstream lists the printings in.
+   * The printings table below was always the better control and was already on
+   * the page. It is the complete record — every printing in its own row, with
+   * its set, number, rarity, edition, foiling, artist and other face named in
+   * columns — where a tile could caption three of those and, on 279 tiles,
+   * could not tell a reader which of two identical captions they had clicked.
+   * So the table's collector number is the link now, each row addressing the
+   * art it is published with, and a page shows ONE printing.
+   *
+   * WHAT THAT BUYS IS THAT EVERY CAPTION IS TRUE OF THE PICTURE ABOVE IT,
+   * server-rendered, with no scripting and no second copy: the rarity, the
+   * other face and the art are all read off this one printing.
+   *
+   * WHAT IT COSTS IS NAMED IN THE TABLE'S OWN COMMENT: an address is per ART,
+   * so two printings published with one image share a page.
+   *
+   * `selected` IS THE ROUTE'S OWN INDEX into `faces`, so this is decided by the
+   * URL rather than by state. Out of range falls back to the first face, which
+   * is what `/card/<slug>` is; a card with no published image at all has no
+   * face here and renders the placeholder.
    */
-  const foilingsByFace = (() => {
-    const codes = new Map<string, Set<string>>();
-    for (const printing of card.printings) {
-      const key = faceKeyFor(printing.image_url);
-      if (key === null || printing.foiling === "") continue;
-      const found = codes.get(key) ?? new Set<string>();
-      found.add(printing.foiling);
-      codes.set(key, found);
-    }
-    return new Map(
-      [...codes].map(([key, found]) => [
-        key,
-        [...found].map((code) => foilingName(code)).join(" · "),
-      ]),
-    );
-  })();
+  const shown = faces[selected] ?? faces[0];
 
   /**
-   * The cards this one is printed back-to-back with, in tile order.
-   *
-   * A CARD SHARES A PHYSICAL CARD WITH ANOTHER CARD, AND THAT IS A FACT ABOUT
-   * THE PRINTING RATHER THAN ABOUT EITHER CARD. Measured on this corpus: 131
-   * cards have at least one double-faced printing; 94 of them ALSO have
-   * single-faced printings, because a token printed on the back of a hero in
-   * one product is printed alone in another; and 16 are backed with more than
-   * one different card across their printings — Agility is on the back of Gold
-   * and on the back of Might. So "the other face of this card" is not a
-   * question this page can answer once. It is answered per printing, beside the
-   * rarity, which is per printing for the same kind of reason.
-   *
-   * FILLED BY THE TILE LOOP BELOW RATHER THAN BY A SECOND PASS. The list has to
-   * be deduped by IMAGE exactly as the tiles are — a slot no tile can select is
-   * markup that is `display: none` for the life of the page, which is the dead
-   * markup the rarity list was rebuilt to stop emitting — and doing that here
-   * would be a second copy of a rule that has one home ten lines down.
-   *
-   * NOTHING IS LOST TO THE DEDUPE, and it was checked rather than assumed: no
-   * tile in this corpus carries two different other faces, and no card has an
-   * other face reachable only through a printing with no image. So the set on
-   * the page equals the set the card has.
+   * The other faces of this card's printings, keyed by the printing they belong
+   * to. `page.printings` is `card.printings` mapped one-for-one, so the lookup
+   * is by the printing's own id rather than by position.
    */
-  const otherFaces: CardLink[] = [];
+  const otherFaceById = new Map(
+    page.printings.map(({ printing, otherFace }) => [
+      printing.unique_id,
+      otherFace,
+    ]),
+  );
 
-  const printings = (() => {
-    const seen = new Set<string>();
-    const entries: {
-      key: string;
-      id: string;
-      edition: string;
-      setName: string;
-      setCode: string;
-      thumb: string;
-      normal: string;
-      width: number;
-      height: number;
-      thumbWidth: number;
-      thumbHeight: number;
-      href: string;
-      /** This printing's rarity slug, for the credit line. `""` where upstream
-       *  publishes none. */
-      rarity: string;
-      /** Upstream's own rarity code, kept so the credit line can decode the
-       *  display name from the same record the slug came from. */
-      rarityCode: string;
-      /**
-       * Which of this card's other faces this printing is backed with, as an
-       * index into {@link otherFaces} — or `""` where this printing is
-       * single-faced.
-       *
-       * AN INDEX RATHER THAN A SLUG, WHICH IS THE ONE PLACE THIS DIFFERS FROM
-       * `rarity` BESIDE IT, and the reason is CSS. The credit line publishes
-       * every other face this card has and hides all but one, exactly as it
-       * does for rarity, and the rule that chooses has to compare the stamp on
-       * the root with an attribute on the element — which CSS cannot do, so
-       * both are written out one rule per value. Rarity can be: `sets.json`
-       * decodes exactly ten and the set is closed. A card slug is not a closed
-       * set, and `:root[data-printing-other="inner-chi"]` would need a rule per
-       * card in the corpus. An index closes it: no card in this corpus is
-       * backed with more than three different cards, and `CardEntry.css`
-       * enumerates four slots against a test that fails if a fourth is ever
-       * needed.
-       */
-      otherFace: string;
-      /** Every foiling this art is published at, in words. See
-       *  {@link foilingsByFace}. */
-      foiling: string;
-    }[] = [];
+  /**
+   * The rarity of the printing on screen, in the parts the credit line sets.
+   *
+   * ONE RARITY, NOT A LIST, and that is the whole of what the picker's removal
+   * changes here. The line used to carry every rarity the card has ever been
+   * printed at with all but one hidden; it carries the one belonging to the
+   * picture above it, because there is now no way for that picture to change
+   * without the page changing with it.
+   *
+   * `null` WHERE UPSTREAM PUBLISHES NONE, so the line degrades to the artist
+   * credit with no stray separator rather than printing a dash. The printings
+   * table is still the complete record and lists every printing's rarity in its
+   * own row, including the face-less ones a page can never show.
+   */
+  const shownRarity = (() => {
+    const code = shown?.printing.rarity ?? "";
+    if (code === "") return null;
+    const name = rarityName(code);
+    return {
+      name,
+      initial: name.slice(0, 1),
+      rest: name.slice(1),
+      slug: raritySlug(code),
+    };
+  })();
 
-    for (const [index, printing] of card.printings.entries()) {
+  /** The card printed on the back of THIS printing, or `null`. */
+  const shownOtherFace =
+    shown === undefined
+      ? null
+      : (otherFaceById.get(shown.printing.unique_id) ?? null);
+
+  /**
+   * What tells two rows apart when they share a collector number.
+   *
+   * THE TABLE'S NUMBER IS A LINK NOW, AND A LINK IS NAMED BY ITS TEXT. Upstream
+   * publishes two printings under one collector number whenever a set was
+   * released in more than one edition — `WTR098` is Alpha and Unlimited, two
+   * different pieces of art — and again where one number carries an alternate
+   * treatment: `DYN088` beside `DYN088-MV`. Each row's anchor then read the same
+   * word and pointed somewhere different: WCAG 2.4.4, measured at 6,726 card
+   * pages the moment the numbers became links.
+   *
+   * SO AN AMBIGUOUS NUMBER SAYS WHAT SEPARATES IT, hidden inside the anchor
+   * exactly as `of-index__variant` and the related lists do it — the visible
+   * table still reads as bare numbers, and the links are told apart by anything
+   * reading them aloud.
+   *
+   * THE AXIS HAS TO BE A PROPERTY OF THE ADDRESS, NOT OF THE ROW, and getting
+   * that wrong is why this is a pass rather than an expression. A first attempt
+   * qualified each row with whatever differed among the ambiguous rows, which
+   * named `DYN088`'s three rows "Standard", "Rainbow Foil" and "Cold Foil" —
+   * three true statements, two of which point at the SAME art. Two links with
+   * different names and one destination is harmless; the collision it left
+   * unfixed is that "Standard" and "Rainbow Foil" still had to be told apart
+   * from a third row they do not differ from in the way the reader is choosing.
+   * Measured: 6,726 pages became 1,342, not zero.
+   *
+   * So an axis is usable only when it is CONSTANT within each address and
+   * DISTINCT between them. Edition passes on the Alpha/Unlimited pairs — every
+   * Alpha row is the Alpha art — and fails on `DYN088`, where Standard and
+   * Rainbow Foil share one picture. Foiling fails there for the same reason.
+   * The art's own key is the backstop and cannot fail: the address is BUILT
+   * from it, so it is by construction one value per address.
+   *
+   * KEYED ON THE ADDRESS, NOT ON THE ROW. Four rows share `WTR098` and only two
+   * arts: Alpha standard and Alpha rainbow foil are one picture and one URL, so
+   * they are not ambiguous with each other and are named alike on purpose.
+   */
+  const numberQualifier = ((): ReadonlyMap<string, string> => {
+    const byNumber = new Map<
+      string,
+      {
+        id: string;
+        href: string;
+        edition: string;
+        foiling: string;
+        key: string;
+      }[]
+    >();
+    for (const { printing } of page.printings) {
       const key = faceKeyFor(printing.image_url);
-      if (key === null || seen.has(key)) continue;
-      seen.add(key);
-
-      /*
-        THE OTHER FACE OF THIS PRINTING, SLOTTED. `page.printings` is
-        `card.printings` mapped one-for-one — see `cards.ts` — so the index is
-        the same row, and `otherFace` there is already resolved through the
-        PRINTING index rather than the card one, which is the lookup that field
-        exists to have done once.
-      */
-      const other = page.printings[index]?.otherFace ?? null;
-      let slot = "";
-      if (other !== null) {
-        const found = otherFaces.findIndex((face) => face.href === other.href);
-        slot = String(found === -1 ? otherFaces.push(other) - 1 : found);
-      }
-
-      const orientation = orientationOf({
-        playedHorizontally: card.played_horizontally,
-        rotationDegrees: printing.image_rotation_degrees,
-      });
-      const normalBox = boxFor("normal", orientation);
-      const thumbBox = boxFor("thumb", orientation);
-
-      entries.push({
-        key,
-        id: printing.id,
+      const href = key === null ? undefined : hrefByFace.get(key);
+      if (key === null || href === undefined) continue;
+      const rows = byNumber.get(printing.id) ?? [];
+      rows.push({
+        id: printing.unique_id,
+        href,
         edition: printing.edition,
-        setName: setName(printing.set_id),
-        setCode: printing.set_id,
-        thumb: faceUrl(key, "thumb"),
-        normal: faceUrl(key, "normal"),
-        width: normalBox.width,
-        height: normalBox.height,
-        thumbWidth: thumbBox.width,
-        thumbHeight: thumbBox.height,
-        href: hrefByFace.get(key) ?? page.href,
-        /* THE RARITY OF THE PRINTING THAT CLAIMED THIS FACE, which is a real
-           choice rather than a lookup, because this list is deduped by IMAGE
-           and rarity is a property of the PRINTING. Two printings sharing one
-           piece of art can carry different rarities — a card reprinted at the
-           same art in a different product — and only the first is represented
-           here, because only the first has a tile.
-
-           That is the same granularity the picker itself works at: the reader
-           is choosing a picture, and this reports the rarity of the printing
-           that picture is addressed as. The printings table below is the
-           complete record, and it lists every printing's rarity separately. */
-        rarity: raritySlug(printing.rarity),
-        rarityCode: printing.rarity,
-        otherFace: slot,
-        /* NOT `printing.foiling`, and the difference is 3,179 tiles. See
-           `foilingsByFace` — a tile is an art, and an art can be published at
-           more than one foiling. */
-        foiling: foilingsByFace.get(key) ?? "",
+        foiling: printing.foiling,
+        key,
       });
+      byNumber.set(printing.id, rows);
     }
 
-    /*
-      DISAMBIGUATED ONLY WHERE IT IS NEEDED, AND ONLY WHERE IT WORKS. Set and
-      collector number identify a printing almost always — but not always: Head
-      Jab's Welcome to Rathe entry is Alpha AND Unlimited, two different pieces
-      of art under one number.
+    const qualifiers = new Map<string, string>();
+    for (const [number, rows] of byNumber) {
+      const addresses = [...new Set(rows.map((row) => row.href))];
+      if (addresses.length < 2) continue;
 
-      The edition is appended only when the colliding printings actually differ
-      by it. Arakni's HNT264 collides with itself because upstream publishes a
-      front and a back face under one number, both edition `N` — appending the
-      same edition to both would distinguish nothing.
-    */
-    const editionsPerNumber = new Map<string, Set<string>>();
-    for (const entry of entries) {
-      const key = `${entry.setCode}/${entry.id}`;
-      const seenEditions = editionsPerNumber.get(key) ?? new Set<string>();
-      seenEditions.add(entry.edition);
-      editionsPerNumber.set(key, seenEditions);
-    }
+      /** The value an axis takes for one address, or `null` if it takes two. */
+      const soleValue = (
+        href: string,
+        field: "edition" | "foiling",
+      ): string | null => {
+        const values = new Set(
+          rows.filter((row) => row.href === href).map((row) => row[field]),
+        );
+        const only = [...values][0];
+        return values.size === 1 && only !== undefined && only !== ""
+          ? only
+          : null;
+      };
 
-    for (const entry of entries) {
-      if (
-        (editionsPerNumber.get(`${entry.setCode}/${entry.id}`)?.size ?? 0) > 1
-      ) {
-        entry.id = `${entry.id} · ${editionName(entry.edition)}`;
+      const axis = (["edition", "foiling"] as const).find((field) => {
+        const named = addresses.map((href) => soleValue(href, field));
+        return (
+          named.every((value) => value !== null) &&
+          new Set(named).size === addresses.length
+        );
+      });
+
+      for (const row of rows) {
+        const said =
+          axis === undefined
+            ? row.key.replace(/\.webp$/, "")
+            : axis === "edition"
+              ? editionName(row.edition)
+              : foilingName(row.foiling);
+        /*
+          A KEY THAT IS ALREADY THE NUMBER ADDS A WORD AND NO INFORMATION.
+          `DYN088`'s standard art keys to `DYN088`, so the backstop named it
+          "DYN088 (DYN088)" — heard aloud, the number twice. Left bare it is
+          still unique, because every OTHER address under this number is keyed
+          differently by construction and says so.
+        */
+        if (said !== number) qualifiers.set(row.id, ` (${said})`);
       }
     }
-
-    return entries;
+    return qualifiers;
   })();
 
-  /**
-   * THE RARITIES THE CREDIT LINE CAN SHOW — of which exactly one is visible at
-   * a time, and it is the one belonging to the printing on screen.
-   *
-   * This used to render the whole list at once: "(C)ommon (R)are (M)ajestic"
-   * strung along the credit line of a card that is, at that moment, showing one
-   * specific printing. Read against the picture above it, that is three claims
-   * where the page supports one, and the two most-reprinted cards in the game
-   * carried five bubbles apiece. Worse, it was ambiguous in the direction a
-   * reference work must never be ambiguous in: a reader looking at a Majestic
-   * face had no way to tell which of the three letters described what they were
-   * looking at, so the honest reading of the line was "this card exists at these
-   * rarities somewhere", which is not what a credit line under a picture says.
-   *
-   * BUILT FROM THE TILE LIST, NOT FROM `card.printings`, and the difference is
-   * one real card rather than a hypothetical. `printings` above is deduped by
-   * IMAGE, so a printing upstream publishes with no `image_url` never gets a
-   * tile and can never be the printing on screen. Deriving this from every
-   * printing therefore emitted bubbles that no selector could ever reveal —
-   * markup that is `display: none` for the life of the page.
-   *
-   * Measured: four cards have a face-less printing, and on exactly one of them
-   * — `Toughness`, whose `SUP241` is Basic and has no image — that was the only
-   * source of a rarity. Its Basic bubble would have been dead markup. Building
-   * from the tiles makes the set on the page equal to the set that can be
-   * displayed, which is the claim the line is making anyway.
-   *
-   * A CARD WITH NO FACE AT ALL WOULD CARRY NO RARITY HERE, and that is the
-   * intended reading rather than an unconsidered edge. `printings` is empty on
-   * such a card — the page renders the placeholder branch below instead of the
-   * picker — so there is no printing on screen for a caption to describe, and
-   * the line degrades to the artist credit with no stray separator. The
-   * printings table still carries every rarity. Measured at zero today: every
-   * card in the corpus has at least one printing with an image, so this is the
-   * behaviour the code would have, not behaviour anybody has seen.
-   *
-   * WHAT THAT GIVES UP, stated rather than left for somebody to find: the credit
-   * line is no longer a complete list of every rarity this card exists at, and
-   * on `Toughness` "Basic" now appears only in the printings table below. That
-   * is the right home for it. The table is the complete record, it lists every
-   * printing's rarity in its own row including the face-less ones, and a credit
-   * line under a picture is a caption rather than an index.
-   *
-   * ALL OF THEM ARE IN THE MARKUP, HIDDEN, and that is what makes the
-   * client-side picker work without an island of its own. `PrintingPicker` swaps
-   * the face in place — it does not navigate — so a server-rendered rarity would
-   * be correct on load and wrong one click later. Publishing the set and letting
-   * one CSS rule choose between them keeps the two in step with no second copy
-   * of the data and no second island. See `CardEntry.css`.
-   *
-   * `display: none` RATHER THAN AN ATTRIBUTE, because it takes the hidden ones
-   * out of the accessibility tree as well as off the page. A screen reader
-   * announces the current rarity and nothing else; hiding them any other way
-   * would read all five aloud.
-   */
-  const rarities = (() => {
-    const seen = new Set<string>();
-    const found: {
-      name: string;
-      initial: string;
-      rest: string;
-      slug: string;
-    }[] = [];
-    for (const printing of printings) {
-      if (printing.rarity === "" || seen.has(printing.rarity)) continue;
-      seen.add(printing.rarity);
-      const name = rarityName(printing.rarityCode);
-      found.push({
-        name,
-        initial: name.slice(0, 1),
-        rest: name.slice(1),
-        slug: printing.rarity,
-      });
-    }
-    return found;
-  })();
-
-  /**
-   * The rarity the page is rendered against, before any clicking happens.
-   *
-   * `selected` is the printing the ROUTE names — every printing has its own URL
-   * and its own build of this page — so this is correct on load, correct in a
-   * crawler, and correct with scripting off, which is the state the CSS below
-   * treats as the default. From there `PrintingPicker` owns it.
-   *
-   * FALLING BACK TO THE FIRST PRINTING RATHER THAN TO NOTHING, matching what the
-   * picker itself does one column over when an index it cannot resolve arrives:
-   * the two have to agree about which face is showing, and disagreeing by
-   * rendering a rarity for a picture the reader is not looking at is the exact
-   * failure this whole block exists to end.
-   */
-  const currentRarity =
-    printings[selected]?.rarity ?? printings[0]?.rarity ?? "";
-
-  /** The other face the page is rendered against. Same rule, same fallback. */
-  const currentOtherFace =
-    printings[selected]?.otherFace ?? printings[0]?.otherFace ?? "";
-
-  const facelessBox = boxFor("normal", page.face.orientation);
+  /** The box the face is drawn in — this printing's own orientation. */ /** The box the face is drawn in — this printing's own orientation. */
+  const shownBox = boxFor(
+    "normal",
+    shown === undefined
+      ? page.face.orientation
+      : orientationOf({
+          playedHorizontally: card.played_horizontally,
+          rotationDegrees: shown.printing.image_rotation_degrees,
+        }),
+  );
 
   const versions = [
     { pitch: page.pitch, href: page.href, current: true },
@@ -833,32 +743,29 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       <article>
         <div className="of-card__page">
           <div className="of-card__face-column">
-            {printings.length > 0 ? (
-              <Island
-                name="PrintingPicker"
-                props={{
-                  printings,
-                  alt: faceAlt,
-                  label: page.label,
-                  selected,
-                }}
-              >
-                <PrintingPicker
-                  printings={printings}
-                  alt={faceAlt}
-                  label={page.label}
-                  selected={selected}
-                />
-              </Island>
-            ) : (
-              <CardFace
-                src={placeholderUrl(page.face.orientation)}
-                alt={faceAlt}
-                width={facelessBox.width}
-                height={facelessBox.height}
-                loading="eager"
-              />
-            )}
+            {/*
+              ONE PICTURE, SERVER-RENDERED, WITH NO CONTROL ON TOP OF IT. The
+              rail of thumbnails that used to sit here is gone; the printings
+              table below is the control, and each of its rows addresses the art
+              it is published with. So this column is a picture again — the last
+              island on the heaviest route in the build, retired.
+
+              `CardFace` remains the only sanctioned way to put a card image on
+              a page: COMPLIANCE.md §5 forbids a variant that drops the
+              attribution, and the notice this component carries is now carried
+              once for one image rather than hoisted over a strip of them.
+            */}
+            <CardFace
+              src={
+                shown === undefined
+                  ? placeholderUrl(page.face.orientation)
+                  : faceUrl(shown.key, "normal")
+              }
+              alt={faceAlt}
+              width={shownBox.width}
+              height={shownBox.height}
+              loading="eager"
+            />
           </div>
 
           <div className="of-card__facts-column">
@@ -1087,47 +994,51 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     changed: the rarity list is still a flex row of its own with
                     one member visible, because it is one item on this line.
                   */}
-                  <p className="of-card__credit">
-                    {/*
-                      RARITY LEADS THE CREDIT LINE, initial in a bubble and the
-                      rest of the word beside it — "(M)ajestic" as one word. The
-                      letter is the form the card itself prints in its bottom
-                      margin; the rest is there because a letter alone is a
-                      lookup, and this is a reference work. The colour is a
-                      grouping and not a claim.
+                  {/*
+                    RARITY LEADS THE CREDIT LINE, initial in a bubble and the
+                    rest of the word beside it — "(M)ajestic" as one word. The
+                    letter is the form the card itself prints in its bottom
+                    margin; the rest is there because a letter alone is a
+                    lookup, and this is a reference work. The colour is a
+                    grouping and not a claim.
 
-                      ONE OF THESE IS VISIBLE AT A TIME — the one belonging to
-                      the printing shown above. The rest are published hidden so
-                      the picker can switch between them without a round trip.
-                    */}
-                    {rarities.map((rarity) => (
+                    ONE RARITY: THE ONE THIS PAGE'S PRINTING WAS PUBLISHED AT.
+                    The line used to carry every rarity the card has ever been
+                    printed at, all but one hidden, with an island stamping the
+                    root element on every click so a CSS enumeration could
+                    re-choose. That existed because the picture could change
+                    without the page changing. It cannot any more — see `shown`
+                    — so the caption is simply true, in the markup, with no
+                    scripting and no second copy of the data.
+
+                    NOTHING AT ALL where upstream publishes no rarity for this
+                    printing, so the line degrades to the artist credit rather
+                    than printing a dash under a picture.
+                  */}
+                  {shownRarity === null ? null : (
+                    <p className="of-card__credit">
                       <span
-                        className={
-                          rarity.slug === currentRarity
-                            ? "of-card__rarity of-card__rarity--initial"
-                            : "of-card__rarity"
-                        }
-                        data-rarity={rarity.slug}
-                        key={rarity.name}
+                        className="of-card__rarity"
+                        data-rarity={shownRarity.slug}
                       >
                         <span
                           className="of-card__rarity-mark"
                           aria-hidden="true"
                         >
-                          {rarity.initial}
+                          {shownRarity.initial}
                         </span>
                         <span className="of-card__visually-hidden">
-                          {rarity.name}
+                          {shownRarity.name}
                         </span>
                         <span
                           className="of-card__rarity-rest"
                           aria-hidden="true"
                         >
-                          {rarity.rest}
+                          {shownRarity.rest}
                         </span>
                       </span>
-                    ))}
-                  </p>
+                    </p>
+                  )}
                   {/*
                     ITS OWN PARAGRAPH NOW, WHICH RETIRES A NOTE RATHER THAN
                     CONTRADICTING IT. The old note here defended leaving the
@@ -1158,32 +1069,23 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     and the rules join, in a grid a reader goes to when they
                     have a question about printings. This is a caption on the
                     picture: it names the back of the ONE printing on screen, in
-                    the line that already says what grade that printing is. The
-                    same split the rarity makes, for the same reason.
+                    the line that already says what grade that printing is.
 
-                    IT BELONGS ON THIS LINE BECAUSE IT IS A FACT ABOUT THE
-                    PRINTING, which is what the rarity beside it is. And it is
-                    published the same way for the same reason: every other face
-                    this card has is in the markup, all but one hidden, so the
-                    picker can move between printings without a round trip and
-                    without this column knowing the picker exists. `--initial`
-                    marks the route's own printing, so a crawler and a reader
-                    with no scripting see the face that belongs to the picture.
+                    ONE OF THEM, FOR THE SAME REASON THE RARITY IS ONE. Which
+                    card is on the back is a fact about the PRINTING — 16 cards
+                    in this corpus are backed with different cards in different
+                    printings, and 94 have single-faced printings as well as
+                    double-faced ones — and this page shows one printing, so it
+                    states that printing's back and nothing else. The four hidden
+                    slots and the root stamp that used to choose between them
+                    went with the picker.
 
                     THE ANCHOR IS NAMED WITH THE QUALIFIED LABEL, never the bare
                     name: 900 names in this corpus belong to more than one card,
                     and `CardLink.label` is the string composed for exactly this.
                   */}
-                  {otherFaces.map((face, slot) => (
-                    <p
-                      className={
-                        String(slot) === currentOtherFace
-                          ? "of-card__credit of-card__other of-card__other--initial"
-                          : "of-card__credit of-card__other"
-                      }
-                      data-other-face={slot}
-                      key={face.href}
-                    >
+                  {shownOtherFace === null ? null : (
+                    <p className="of-card__credit">
                       {/*
                         NO SPAN AROUND THE WORDS. `.of-card__credit` is a flex
                         row and flexbox wraps a contiguous run of text in an
@@ -1191,9 +1093,10 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         stylesheet records an earlier attempt to add one here
                         and why it bought nothing.
                       */}
-                      Backed with <a href={face.href}>{face.label}</a>
+                      Backed with{" "}
+                      <a href={shownOtherFace.href}>{shownOtherFace.label}</a>
                     </p>
-                  ))}
+                  )}
                   <p className="of-card__credit">
                     <a href="#printings">
                       {printingCount} printing{printingCount === 1 ? "" : "s"}
@@ -1384,52 +1287,113 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               </tr>
             </thead>
             <tbody>
-              {page.printings.map(({ printing, otherFace }) => (
-                <tr key={printing.unique_id}>
-                  <th scope="row" className="of-card__collector">
-                    {printing.id}
-                  </th>
-                  {/*
+              {page.printings.map(({ printing, otherFace }) => {
+                /*
+                  THE COLLECTOR NUMBER IS THE CONTROL — this is where the
+                  picker went.
+
+                  A rail of thumbnails under the face used to do this job and
+                  did it worse. A tile could caption three facts and this row
+                  names seven; 279 tiles in the corpus read identically to a
+                  sibling, so a reader could see two pictures differ, select
+                  either, and not learn which they had chosen. Here the row IS
+                  the answer, and clicking its number opens the page that shows
+                  that art.
+
+                  AN ADDRESS IS PER ART, NOT PER PRINTING, and that is the cost
+                  of the trade rather than an oversight. `facesOf` dedupes by
+                  image and `CARD_ROUTES` emits one URL per art, so a Standard
+                  and a Rainbow Foil published from one picture share a page —
+                  the rarity in the caption up there is then the one belonging
+                  to the printing that claimed the art, which is the row marked
+                  current. Both rows still tell the truth in their own cells,
+                  which is what the table is for.
+
+                  A PRINTING WITH NO PUBLISHED IMAGE IS NOT A LINK, because
+                  there is no picture for it to open. Four printings in this
+                  corpus are that shape; their rows keep every other column.
+                */
+                const key = faceKeyFor(printing.image_url);
+                const href = key === null ? undefined : hrefByFace.get(key);
+                const current =
+                  shown !== undefined &&
+                  shown.printing.unique_id === printing.unique_id;
+                const qualifier = numberQualifier.get(printing.unique_id) ?? "";
+
+                return (
+                  <tr
+                    key={printing.unique_id}
+                    className={current ? "of-card__printing--shown" : undefined}
+                  >
+                    <th scope="row" className="of-card__collector">
+                      {href === undefined ? (
+                        printing.id
+                      ) : (
+                        /*
+                          `aria-current="page"` ON THE ONE BEING SHOWN, which is
+                          the row whose art is at the top of this page. It is
+                          still a link: it addresses the page it is on, which is
+                          what makes it copyable and what makes the marked row
+                          mean something on arrival rather than only after a
+                          click.
+                        */
+                        <a
+                          href={href}
+                          aria-current={current ? "page" : undefined}
+                        >
+                          {printing.id}
+                          {qualifier === "" ? null : (
+                            <span className="of-card__visually-hidden">
+                              {qualifier}
+                            </span>
+                          )}
+                        </a>
+                      )}
+                    </th>
+                    {/*
                     IN WORDS, WITH THE CODE KEPT BESIDE IT. The name is what a
                     reader wants; the code is what a printing is CITED by, so
                     both are here. An unknown code falls back to itself rather
                     than to a blank.
                   */}
-                  <td>
-                    <a href={hrefForSet(printing.set_id)}>
-                      {setName(printing.set_id)}
-                    </a>
-                    <span className="of-card__code-hint">
-                      {printing.set_id}
-                    </span>
-                  </td>
-                  <td>
-                    {printing.rarity === "" ? "—" : rarityName(printing.rarity)}
-                  </td>
-                  <td>
-                    {printing.edition === ""
-                      ? "—"
-                      : editionName(printing.edition)}
-                  </td>
-                  <td>
-                    {printing.foiling === ""
-                      ? "—"
-                      : foilingName(printing.foiling)}
-                  </td>
-                  <td>
-                    {printing.artists.length === 0
-                      ? "—"
-                      : printing.artists.join(", ")}
-                  </td>
-                  <td>
-                    {otherFace === null ? (
-                      "—"
-                    ) : (
-                      <a href={otherFace.href}>{otherFace.label}</a>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    <td>
+                      <a href={hrefForSet(printing.set_id)}>
+                        {setName(printing.set_id)}
+                      </a>
+                      <span className="of-card__code-hint">
+                        {printing.set_id}
+                      </span>
+                    </td>
+                    <td>
+                      {printing.rarity === ""
+                        ? "—"
+                        : rarityName(printing.rarity)}
+                    </td>
+                    <td>
+                      {printing.edition === ""
+                        ? "—"
+                        : editionName(printing.edition)}
+                    </td>
+                    <td>
+                      {printing.foiling === ""
+                        ? "—"
+                        : foilingName(printing.foiling)}
+                    </td>
+                    <td>
+                      {printing.artists.length === 0
+                        ? "—"
+                        : printing.artists.join(", ")}
+                    </td>
+                    <td>
+                      {otherFace === null ? (
+                        "—"
+                      ) : (
+                        <a href={otherFace.href}>{otherFace.label}</a>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
