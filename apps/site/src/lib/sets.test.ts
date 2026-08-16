@@ -38,24 +38,55 @@ import {
  * hand-written list of ten slugs is the thing that drifts.
  */
 describe("every rarity the corpus decodes can be shown", () => {
-  const STYLESHEET = "apps/site/ssg/components/CardEntry.css";
+  /*
+   * RESOLVED AGAINST THIS FILE, NOT THE WORKING DIRECTORY. A bare
+   * `apps/site/ssg/…` path only resolves when `bun test` is invoked from the
+   * repo root; run from `apps/site` it is an ENOENT rather than a failed
+   * assertion, which is a test that reports the wrong thing when it breaks.
+   * `symbol-assets.test.ts` reaches for its fixtures the same way.
+   */
+  const STYLESHEET = new URL(
+    "../../ssg/components/CardEntry.css",
+    import.meta.url,
+  );
 
-  test("has a reveal selector in CardEntry.css", async () => {
-    const css = await Bun.file(STYLESHEET).text();
+  /*
+   * WHITESPACE-NORMALISED BEFORE MATCHING, because the formatter decides where
+   * these selectors wrap and the test must not. `legendary` is long enough that
+   * biome breaks it across two lines while its nine siblings stay on one, so a
+   * literal substring match would pass for nine rarities and fail for the tenth
+   * on nothing but line length.
+   */
+  const sheet = async (): Promise<string> =>
+    (await Bun.file(STYLESHEET).text()).replace(/\s+/g, " ");
 
+  test("has a reveal selector pairing the root stamp to its own bubble", async () => {
+    const css = await sheet();
+
+    /*
+     * ASSERTED AS ONE PAIRED SELECTOR, NOT AS TWO SUBSTRINGS ANYWHERE IN THE
+     * FILE, and the difference is the whole value of this test. Checking that
+     * `:root[data-printing-rarity="x"]` and `.of-card__rarity[data-rarity="x"]`
+     * each appear SOMEWHERE cannot detect the one mistake this block is likely
+     * to attract: a copy-paste into a ten-line run of near-identical lines that
+     * pairs one rarity's stamp with another's bubble. Both halves would be
+     * present, both filters would pass, and the page would reveal the wrong
+     * rarity — which is worse than revealing none.
+     */
     const missing = Object.keys(SETS.decode.rarity)
       .map((code) => raritySlug(code))
       .filter(
         (slug) =>
-          !css.includes(`:root[data-printing-rarity="${slug}"]`) ||
-          !css.includes(`.of-card__rarity[data-rarity="${slug}"]`),
+          !css.includes(
+            `:root[data-printing-rarity="${slug}"] .of-card__rarity[data-rarity="${slug}"]`,
+          ),
       );
 
     expect(missing).toEqual([]);
   });
 
   test("and a colour, so no bubble falls back to grey unnoticed", async () => {
-    const css = await Bun.file(STYLESHEET).text();
+    const css = await sheet();
 
     const uncoloured = Object.keys(SETS.decode.rarity)
       .map((code) => raritySlug(code))
