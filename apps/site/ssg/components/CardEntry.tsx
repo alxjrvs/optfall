@@ -841,6 +841,22 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   that cannot take you to what it counted is decoration.
                 */}
                 <footer className="of-card__band of-card__band--credits">
+                  {/*
+                    THREE PARTS, THREE ELEMENTS, ONE `space-between`.
+
+                    Rarity and the artist credit used to share a paragraph, so
+                    the row the footer distributes had only TWO items in it: a
+                    clump on the left and the printing count on the right. The
+                    three facts down here are independent of one another — what
+                    grade this printing is, who drew it, how many printings
+                    exist — and reading them as two-and-one made the first two
+                    look like one compound fact.
+
+                    They are siblings now, so `justify-content: space-between`
+                    on the footer spaces all three rather than two. Nothing else
+                    changed: the rarity list is still a flex row of its own with
+                    one member visible, because it is one item on this line.
+                  */}
                   <p className="of-card__credit">
                     {/*
                       RARITY LEADS THE CREDIT LINE, initial in a bubble and the
@@ -881,14 +897,21 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         </span>
                       </span>
                     ))}
-                    {/*
-                      A BARE TEXT NODE, DELIBERATELY. It was briefly wrapped in a
-                      span on the theory that `gap` only spaces elements — which
-                      is wrong: flexbox wraps each contiguous run of text in an
-                      ANONYMOUS flex item, and the gap applies to it like any
-                      other. The span bought nothing, styled nothing, and left a
-                      class name in the sheet that no rule matched.
-                    */}
+                  </p>
+                  {/*
+                    ITS OWN PARAGRAPH NOW, WHICH RETIRES A NOTE RATHER THAN
+                    CONTRADICTING IT. The old note here defended leaving the
+                    credit as a bare text node: a span around it bought nothing,
+                    because flexbox already wraps a run of text in an ANONYMOUS
+                    flex item and the gap applied to it regardless. That was
+                    true and is still true — a span INSIDE the paragraph would
+                    still be pointless. What changed is that the artist is no
+                    longer a second thing inside the rarity's paragraph; it is
+                    one of three items the FOOTER distributes, and an item the
+                    footer spaces has to be an element, because the footer's
+                    children are elements.
+                  */}
+                  <p className="of-card__credit">
                     {artists.length === 0
                       ? "No artist is credited in the published dataset."
                       : `Illustrated by ${artists.join(", ")}`}
