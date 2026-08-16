@@ -1229,13 +1229,19 @@
   flex-wrap: wrap;
   align-items: center;
   /*
-    THE STONES SIT AT THE RIGHT-HAND END, and `space-between` is what puts them
-    there rather than a margin on one child. A row is a name and its versions;
-    the name reads from the start of the line, the stones align down the right
-    so a reader scanning the list compares stones against each other rather than
-    against ragged name lengths.
+    THE STONES FOLLOW THE NAME, in the next space along, rather than being
+    flung to the right-hand end.
+
+    They were right-aligned on the argument that a column of stones is easier
+    to compare than one that tracks ragged name lengths. That argument was
+    about a list of one name's pitch versions — and that list is gone, since
+    the printings table is the control for it. What is left names OTHER cards,
+    where the stone qualifies the name beside it rather than being a value to
+    scan down a column; at this measure `space-between` opened a gap of most of
+    the line between the two, so the mark read as unrelated to the word it
+    belongs to.
   */
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--of-space-tight);
 }
 
