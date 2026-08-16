@@ -711,8 +711,37 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             </li>
           ) : null}
           <li>
+            {/*
+              THE LAST CRUMB IS THE STONE, NOT THE NAME AGAIN. On a
+              disambiguated card the trail used to end "Celestial Reprimand ›
+              Celestial Reprimand (pitch 1)": the name printed twice, the second
+              time with the one fact that distinguishes the two crumbs spelled
+              out in parentheses at the end of it. The version is what this crumb
+              is FOR, so it says the version — in the reserved silhouette the
+              rest of the page already uses for exactly this, the same stone the
+              tab strip below puts on each version and the panel puts in its
+              corner.
+
+              THE STONE IS STILL NAMED BY THE WHOLE LABEL. `PitchJewel` defaults
+              to speaking its numeral, which is right beside two other jewels in
+              a version strip and wrong as the terminal crumb of a trail: what a
+              screen reader should announce for the current page is the page,
+              "Celestial Reprimand (pitch 1)", not "Pitch 1". The `label` prop is
+              the component's sanctioned way to say so, and it is `page.label`
+              rather than a string built here for the reason `CardLink.label`
+              exists — one spelling of "which card this is", used everywhere.
+
+              AN UNDISAMBIGUATED CARD KEEPS ITS NAME. There is no name crumb
+              above it to avoid repeating, `page.label` is the bare name, and its
+              pitch — which may be none at all — is not what tells it apart from
+              anything.
+            */}
             <span className="of-card__crumb-current" aria-current="page">
-              {page.label}
+              {page.disambiguated ? (
+                <PitchJewel value={page.pitch} size="sm" label={page.label} />
+              ) : (
+                page.label
+              )}
             </span>
           </li>
         </ol>
