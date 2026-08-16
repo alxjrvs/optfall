@@ -197,6 +197,7 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     href: result.href,
     label: result.label,
     name: result.name,
+    qualifier: result.qualifier,
     typeLine: result.typeLine,
     faceKey: result.faceKey,
     faceLandscape: result.faceLandscape,

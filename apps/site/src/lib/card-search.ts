@@ -2182,6 +2182,21 @@ export interface CardResult {
    * genuinely named something ending in "(pitch 2)" would be mangled by it.
    */
   readonly name: string;
+  /**
+   * The part of {@link label} a surface may hide — " (pitch 2)", or `""`.
+   *
+   * CARRIED RATHER THAN DERIVED, and the first version of this derived it by
+   * subtracting `name` from `label`, which was wrong in a way only `unique:art`
+   * showed: an art row's label is `"Head Jab (pitch 2) · MST131"`, so the
+   * subtraction hid the ART KEY as well as the pitch and left several rows of
+   * one card reading identically in every text view. The key is the only thing
+   * telling those rows apart once the picture is not on screen.
+   *
+   * So the two halves are stated separately. `name` is everything a reader must
+   * SEE — bare name, plus the art key where the row stands for one picture —
+   * and this is the pitch qualifier alone, which a mark can carry instead.
+   */
+  readonly qualifier: string;
   readonly href: string;
   /**
    * Which pitch versions of this card matched, and how many the corpus has.
@@ -2357,6 +2372,18 @@ function toResult(
    */
   const partial = matchedPitches.length < totalVersions;
 
+  /*
+   * The label's two halves, split once.
+   *
+   * `nameOf` strips exactly the suffix `labelFor` added, so whatever is left
+   * over IS that suffix — which means there is no second pattern here to keep
+   * in step with `variantSuffix`, only the one already in `nameOf`.
+   */
+  const fullLabel = index.labels[ordinal] ?? "";
+  const bareName = nameOf(fullLabel);
+  const pitchSuffix = fullLabel.slice(bareName.length);
+  const artStem = art === undefined ? "" : art.key.replace(/\.webp$/, "");
+
   /**
    * THE FACE THE QUERY ASKED FOR, WHICH IS NOT ALWAYS THE CARD'S OWN.
    *
@@ -2442,14 +2469,22 @@ function toResult(
      */
     label:
       art !== undefined
-        ? `${index.labels[ordinal] ?? ""} · ${art.key.replace(/\.webp$/, "")}`
+        ? `${fullLabel} · ${artStem}`
         : collapsed
-          ? nameOf(index.labels[ordinal] ?? "")
-          : (index.labels[ordinal] ?? ""),
-    /* The bare name, whatever the label ended up being. An art row's label
-       carries the face key as well as the qualifier, and neither belongs in a
-       heading. */
-    name: nameOf(index.labels[ordinal] ?? ""),
+          ? bareName
+          : fullLabel,
+    /*
+      WHAT A READER MUST SEE, which is not the same as what the anchor is named.
+      The bare name, plus the art key where the row stands for one PICTURE
+      rather than for the card — that key is the only thing telling one card's
+      art rows apart in a view that has no pictures in it. The pitch is
+      deliberately not here: it rides in `qualifier`, because a mark can carry
+      it and four words on every row cannot.
+    */
+    name: art === undefined ? bareName : `${bareName} · ${artStem}`,
+    /* Empty where the row already stands for the whole name and there is
+       nothing left to qualify. */
+    qualifier: collapsed ? "" : pitchSuffix,
     href:
       art !== undefined
         ? `/card/${slug}/${art.setCode}/${art.number}`

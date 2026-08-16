@@ -1445,3 +1445,62 @@ describe("offset pages the ranked rows without changing the answer", () => {
     expect(past.total).toBeGreaterThan(0);
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* What a row shows and what it is called                                      */
+/* -------------------------------------------------------------------------- */
+
+describe("name, qualifier and label are three different jobs", () => {
+  test("an art row keeps its art key in the VISIBLE half", () => {
+    /*
+     * THE BUG THIS PINS SURVIVED A REVIEW ROUND. `qualifier` was derived as
+     * `label` minus `name`, which looks equivalent and is not: an art row's
+     * label is "Head Jab (pitch 2) · MST131", so the subtraction hid the art
+     * key along with the pitch. In a view with no pictures in it — rows, names
+     * — every art row of one card then read identically: same name, same
+     * stones, same type line, same stats, differing only in where they pointed.
+     * The picture separates them in the grid, and the KEY has to separate them
+     * without one.
+     */
+    const arts = searchCards(index, "set:lgs unique:art", 20000).results;
+    const withKey = arts.filter((row) => row.name.includes(" · "));
+    expect(withKey.length).toBeGreaterThan(0);
+
+    for (const row of withKey.slice(0, 50)) {
+      /* The key is visible… */
+      expect(row.name).toMatch(/ · [A-Za-z0-9._-]+$/);
+      /* …and the hidden half is only ever the pitch. */
+      expect(row.qualifier).not.toContain("·");
+      expect(
+        row.qualifier === "" ||
+          /^ \((?:no pitch|pitch \d)\)$/.test(row.qualifier),
+      ).toBe(true);
+    }
+  });
+
+  test("visible plus hidden names the card as fully as the label does", () => {
+    /*
+     * The property the split has to preserve: whatever a surface chooses to
+     * show, the anchor is still NAMED by something that identifies the card.
+     * 900 names in this corpus belong to more than one card, so a bare name on
+     * its own is a WCAG 2.4.4 failure waiting for a second version to exist.
+     */
+    for (const row of searchCards(index, "head jab unique:cards", 200)
+      .results) {
+      expect(`${row.name}${row.qualifier}`).toBe(row.label);
+    }
+  });
+
+  test("a row standing for a whole name has nothing to qualify", () => {
+    /* `unique:names` collapses the pitch versions, so the row IS the card and
+       the bare name is already unambiguous. A qualifier there would be naming a
+       version the row does not stand for. */
+    const collapsed = searchCards(index, "head jab", 200).results;
+    expect(collapsed.length).toBeGreaterThan(0);
+    for (const row of collapsed) {
+      if (row.matchedPitches.length === row.totalVersions) {
+        expect(row.qualifier).toBe("");
+      }
+    }
+  });
+});

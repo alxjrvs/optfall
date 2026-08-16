@@ -169,7 +169,11 @@ const SOURCES: readonly {
 }[] = [
   {
     what: "Cards",
-    href: CORPUS.source.url,
+    /* THE BLOB VIEW, NOT `source.url`. That field is the raw address the build
+       fetched — 23 MB of JSON, which a browser downloads rather than shows. It
+       is the same bytes at the same commit either way; this one is the one a
+       reader can open. */
+    href: `${upstream}/blob/${CORPUS.source.commit}/${CORPUS.source.path}`,
     label: `${CORPUS.source.repository}/${CORPUS.source.path}`,
     note: `The compilation this site's card data is read from, pinned at commit ${CORPUS.source.commit.slice(0, 7)}. Community-maintained; it publishes no licence of its own.`,
   },

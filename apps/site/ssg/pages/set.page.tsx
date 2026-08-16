@@ -18,7 +18,12 @@
  * Astro did. 112 pages, from one pass over the corpus.
  */
 
-import { CARD_PAGES, type CardPage, facesOf } from "../../src/lib/cards";
+import {
+  CARD_PAGES,
+  type CardPage,
+  facesOf,
+  variantSuffix,
+} from "../../src/lib/cards";
 import { orientationOf } from "../../src/lib/faces";
 import { editionName, setFor } from "../../src/lib/sets";
 import type { CardIndexEntry } from "../components/CardIndex";
@@ -93,6 +98,9 @@ function entryFor(page: CardPage, setId: string): CardIndexEntry {
     /* The bare name; the pitch qualifier `label` carries is hidden in the
        markup and kept for the accessible name. See `CardIndexEntry`. */
     name: page.card.name,
+    /* The pitch suffix `label` carries, taken from the function that composes
+       it rather than sliced back off the label — one evaluation of the rule. */
+    qualifier: variantSuffix(page.pitch, page.disambiguated),
     typeLine: page.card.type_text ?? "",
     faceKey: face.key,
     faceLandscape: face.landscape,

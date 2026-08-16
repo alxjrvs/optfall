@@ -100,6 +100,18 @@ export interface CardIndexEntry {
    * the mark carries its own written name.
    */
   readonly name: string;
+  /**
+   * The part of {@link label} this index may hide — " (pitch 2)", or `""`.
+   *
+   * SUPPLIED, NOT SUBTRACTED. Deriving it as `label` minus `name` looked
+   * equivalent and was not: an `unique:art` row's label carries the art key as
+   * well as the pitch, so the subtraction hid the key too and left several rows
+   * of one card reading identically in both text views — same name, same
+   * stones, same type line, same stats, differing only in where they pointed.
+   * The picture is what separates them in the grid, and the key is what has to
+   * separate them without one.
+   */
+  readonly qualifier: string;
   readonly typeLine: string;
   /** Face blob key, or `null` where no printing publishes art. */
   readonly faceKey: string | null;
@@ -237,20 +249,6 @@ function PitchStones({ pitches }: { readonly pitches: readonly PitchValue[] }) {
   );
 }
 
-/**
- * The part of a label the reader does not see: " (pitch 3)", or nothing.
- *
- * Taken as the DIFFERENCE between the two strings the caller supplied rather
- * than by matching the suffix pattern again — `variantSuffix` in `cards.ts` is
- * where that rule lives, and re-implementing it here would be a second
- * evaluation that a card genuinely named "… (pitch 2)" would break.
- */
-function qualifierOf(entry: CardIndexEntry): string {
-  return entry.label.startsWith(entry.name)
-    ? entry.label.slice(entry.name.length)
-    : "";
-}
-
 function altFor(entry: CardIndexEntry): string {
   return entry.typeLine === ""
     ? entry.label
@@ -340,9 +338,7 @@ export function CardIndex({
                   */}
                   <span className="of-index__cell-name">
                     {entry.name}
-                    <span className="of-index__variant">
-                      {qualifierOf(entry)}
-                    </span>
+                    <span className="of-index__variant">{entry.qualifier}</span>
                   </span>
                   <PitchRule values={entry.pitches} />
                   {entry.note !== undefined && entry.note !== "" ? (
@@ -373,7 +369,7 @@ export function CardIndex({
               key={entry.href}
               href={entry.href}
               label={entry.name}
-              qualifier={qualifierOf(entry)}
+              qualifier={entry.qualifier}
               lead={<PitchStones pitches={entry.pitches} />}
               meta={
                 <>
@@ -416,7 +412,7 @@ export function CardIndex({
               <PitchStones pitches={entry.pitches} />
               <a href={entry.href}>
                 {entry.name}
-                <span className="of-index__variant">{qualifierOf(entry)}</span>
+                <span className="of-index__variant">{entry.qualifier}</span>
               </a>
             </li>
           ))}
