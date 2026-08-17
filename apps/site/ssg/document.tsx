@@ -104,6 +104,7 @@ export function Document({
             <SiteHeader
               section={result.section}
               field={result.headerSearch ?? true}
+              fieldDescribedBy={result.headerSearchDescribedBy}
             />
           )}
           <main data-width={result.width ?? "measure"}>{result.children}</main>

@@ -13,11 +13,20 @@
  * the index of a thing sits at the root of the thing. That is the same
  * arrangement `/sets` has with `/sets/<code>`.
  *
- * NO `<h1>`, for the reason `/search` has none: it read "Search the rules" and
- * the field's own visible `<label>` — the one that names the control to a screen
- * reader — says the same words directly beneath it, under a nav that says
- * "Rules" and a document title that says "Search the rules — Optfall". The label
- * is the one worth keeping; the display-sized duplicate was pure fold.
+ * NO `<h1>`, AND THIS PAGE'S REASON IS NO LONGER `/search`'s. It read "Search
+ * the rules", and the field's own VISIBLE `<label>` — the one that names the
+ * control to a screen reader — says the same words directly beneath it, under a
+ * nav that says "Rules" and a document title that says "Search the rules —
+ * Optfall". The label is the one worth keeping; the display-sized duplicate was
+ * pure fold.
+ *
+ * That argument used to be shared with `/search` and is not any more: `/search`
+ * gave its field to the header, where the label is clipped to a pixel, so it had
+ * no visible heading of any kind left and now carries a hidden `<h1>`. This
+ * page's label is still on screen, so the premise still holds here. Whether a
+ * visible label should count as a heading in the document OUTLINE is a fair
+ * question and a separate one; it is not answered by the header-search change,
+ * so it is not answered here.
  *
  * THE ISLAND IS RENDERED ON THE SERVER AND HYDRATED IN THE BROWSER, which is
  * what `Island` buys and what a bare mount point would not. Arriving here with
@@ -54,7 +63,16 @@ function page(): PageResult {
     description:
       "Lexical search over the Flesh and Blood Comprehensive Rules. Every section has a permanent, citable URL.",
     section: "rules",
-    headerSearch: false,
+    /*
+      THE CARD FIELD STAYS IN THE HEADER HERE, BESIDE A RULES FIELD, and the two
+      searches are the reason. This page's hero searches the Comprehensive
+      Rules; the header searches cards. They are different corpora with
+      different grammars, so the usual objection to two fields on one screen —
+      two places to type and one of them wrong — does not apply: neither can
+      answer the other's question, and both say which they are in their
+      `aria-label`. A reader who arrives at the rules and then wants a card
+      should not have to go somewhere else to type.
+    */
     islands: true,
     children: (
       <>

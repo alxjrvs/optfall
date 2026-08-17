@@ -13,11 +13,18 @@
  * keyword and trait memberships, per-format verdict vectors. Somebody looking up
  * "head jab" never downloads the machinery.
  *
- * NO `<h1>`. It read "Search the cards", and the field's own visible `<label>` —
- * the one a screen reader announces — says the same words immediately beneath
- * it, under a nav that says "Cards" and a title that says "Search the cards —
- * Optfall". Four statements of one fact, and the display-sized one cost the most
- * fold on the page that can least afford it.
+ * THE `<h1>` IS HIDDEN, NOT ABSENT, AND IT USED TO BE ABSENT FOR A REASON THAT
+ * EXPIRED. It read "Search the cards" at display size, and the argument for
+ * deleting it was that the field's own VISIBLE `<label>` said the same words
+ * immediately beneath it — four statements of one fact, and the display-sized
+ * one cost the most fold on the page that can least afford it.
+ *
+ * That label moved into the header when the field did, where it is clipped to a
+ * pixel (`.of-bar__sr`). So the page briefly had no heading at all: the first
+ * thing in `<main>` was the operator hint, and a screen reader's heading list
+ * for the site's busiest surface was empty. The fold argument still holds, so
+ * the heading is back at the same visual weight it had — none — and present in
+ * the document where it belongs.
  *
  * NO RIGHTS NOTICE IN THE BODY, for the same reason. `CORPUS.rights` closed this
  * page in faint legal type, and `ssg/document.tsx` then emitted the identical
@@ -44,7 +51,11 @@ import {
 import type { RulesCorpus } from "../../src/lib/search";
 import { SETS } from "../../src/lib/sets";
 import { Island } from "../Island";
-import { CardSearch } from "../islands/CardSearch";
+import {
+  CARDS_HINT_ID,
+  CardSearch,
+  HEADER_FIELD_ID,
+} from "../islands/CardSearch";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
 
@@ -96,10 +107,67 @@ function page(): PageResult {
     description:
       "Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from.",
     section: "cards",
-    headerSearch: false,
+    headerSearchDescribedBy: CARDS_HINT_ID,
+    /*
+      THE HEADER'S FIELD IS THIS PAGE'S FIELD. It was suppressed here because
+      the page rendered a hero of its own, which made the results screen look
+      like a second front door — `docs/SCRYFALL-GAP.md` §5.2 gives the hero to
+      the door and the header's field to every other screen. The island adopts
+      it; see `HEADER_FIELD_ID` in `CardSearch.tsx`.
+    */
     islands: true,
     children: (
       <>
+        {/*
+          THE PAGE'S HEADING, CARRIED BY THE DOCUMENT AND NOT BY THE LAYOUT.
+          See the note at the top of this file: it is hidden rather than absent,
+          because the fold argument that deleted it still holds and the reason
+          it was safe to delete — a visible label saying the same words — left
+          with the field.
+        */}
+        <h1 className="of-search-page__heading">Search the cards</h1>
+
+        {/*
+          THE FIELD SHOWS THE QUERY BEFORE ANY BUNDLE LOADS, and until this
+          existed it did not.
+
+          The header's input is in the shell, which is one document serving
+          every query — so it cannot be server-rendered with a value the way
+          Scryfall's is. The island filled it in an effect, which is correct and
+          far too late: this page's HTML is 934 kB and its island bundle another
+          230, so a reader who searched "banned:cc" on the front door arrived at
+          a results page whose SEARCH BOX WAS EMPTY until all of that had landed.
+          The results were right and the field looked like it had forgotten the
+          question.
+
+          IT DOES NOT FIX THE NO-JS CASE, AND CANNOT: an inline script is still
+          a script. With scripting off the box stays empty — though so do the
+          results, which is what the `noscript` block below is for, so the field
+          is not the thing that has failed there.
+
+          What it DOES cover besides the slow bundle is a hydration FAILURE:
+          `islands.client.ts` swallows those and keeps the static markup, and
+          this has already run by then, so the field still says what was asked.
+
+          Four lines, inline, running during parse and therefore before the first
+          paint. Same trade and same shape as the `?pitch=` redirect in
+          `CardEntry`: an island to do this would ship a runtime to beat the
+          runtime it is compensating for.
+
+          IT DOES NOT FIGHT THE ISLAND. `CardSearch`'s adoption effect seeds its
+          state from whatever is in the field, so this becomes the island's
+          starting query rather than something it overwrites.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `{
+  const asked = new URLSearchParams(window.location.search).get("q");
+  const field = document.getElementById(${JSON.stringify(HEADER_FIELD_ID)});
+  if (asked !== null && field !== null) field.value = asked;
+}`,
+          }}
+        />
+
         {/*
           THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form submits here, so
           a reader with scripting off arrives at `/search?q=…` with a query in

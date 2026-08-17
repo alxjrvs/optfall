@@ -76,10 +76,29 @@ export interface PageResult {
    */
   readonly section?: HeaderSection | "none";
   /**
-   * The header's search field. Off on the page whose hero IS a search field —
-   * two fields on one screen is two places to type and one of them wrong.
+   * The header's search field, on by default, and nothing turns it off now.
+   *
+   * IT USED TO BE OFF ON `/search` AND `/cr`, on the rule that two fields is
+   * two places to type and one of them wrong. `docs/SCRYFALL-GAP.md` §5.2 puts
+   * the hero on the FRONT DOOR and the header's field on every other screen, so
+   * `/search` adopts the header's field rather than rendering a second one, and
+   * `/cr` keeps both — its hero searches the rules and the header searches
+   * cards, which is two questions rather than two places to ask one.
+   *
+   * The flag stays because the door still needs it the moment it grows a
+   * header: `section: "none"` currently removes the whole bar there, and a
+   * page with a hero AND a header field is the case this exists to refuse.
    */
   readonly headerSearch?: boolean;
+  /**
+   * The id of an element on this page that describes the header's field.
+   *
+   * Only `/search` sets it: the operator examples belong to that page, and a
+   * field with no description is the ordinary case everywhere else. Emitted
+   * server-side rather than attached on hydration, so the association survives
+   * scripting being off — see {@link SiteHeaderProps.fieldDescribedBy}.
+   */
+  readonly headerSearchDescribedBy?: string | undefined;
   /** `measure` (prose) or `wide` (a face beside a column). See the tokens. */
   readonly width?: "measure" | "wide";
   /**

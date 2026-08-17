@@ -27,8 +27,30 @@ export type HeaderSection = "cards" | "sets" | "rules" | "syntax";
 export interface SiteHeaderProps {
   /** Which section is current, for `aria-current`. */
   readonly section?: HeaderSection | undefined;
-  /** The search field. Off on the page that already has one as its hero. */
+  /**
+   * The search field. On everywhere; nothing turns it off today.
+   *
+   * IT USED TO READ "off on the page that already has one as its hero", which
+   * is now false in both halves: no page passes `false`, and `/cr` is
+   * specifically a page with a hero AND this field — its hero searches the
+   * rules and this one searches cards. See `PageResult.headerSearch` for the
+   * whole argument; the flag survives for the front door, which removes the bar
+   * entirely today and would need this the moment it grew one.
+   */
   readonly field?: boolean;
+  /**
+   * The id of a page element describing the field, for `aria-describedby`.
+   *
+   * THE SHELL CANNOT KNOW WHAT THE HINT SAYS, BUT IT HAS TO EMIT THE LINK.
+   * `/search` renders the operator examples — they are about that page, and the
+   * header is on every page — and `CardSearch` used to attach this when it
+   * adopted the field. That made the association depend on JavaScript, on the
+   * one page whose no-JS path is deliberately designed for (see the `noscript`
+   * block in `search.page.tsx`) and on a hydration failure that
+   * `islands.client.ts` deliberately swallows. `SearchField` wired its own hint
+   * server-side; an adopted field has to be given the same thing by the page.
+   */
+  readonly fieldDescribedBy?: string | undefined;
 }
 
 const LINKS: readonly {
@@ -46,7 +68,11 @@ const LINKS: readonly {
   { href: "/about", label: "About" },
 ];
 
-export function SiteHeader({ section, field = true }: SiteHeaderProps) {
+export function SiteHeader({
+  section,
+  field = true,
+  fieldDescribedBy,
+}: SiteHeaderProps) {
   return (
     <header className="of-bar">
       <a className="of-bar__wordmark" href="/">
@@ -94,10 +120,40 @@ export function SiteHeader({ section, field = true }: SiteHeaderProps) {
             name="q"
             type="search"
             autoComplete="off"
+            /*
+              OFF, BECAUSE THE QUERY IS THE ARTEFACT. Without it a phone
+              capitalises the first character of every search, and this site's
+              whole design treats `?q=…` as the thing you paste. The parser
+              lowercases field names and operands, so `Banned:cc` still works —
+              it just puts a stray capital in the URL somebody shares.
+              `SearchField` has always carried this; the header's field did not,
+              and that only started to matter when `/search` began using it.
+            */
+            autoCapitalize="off"
             spellCheck={false}
             enterKeyHint="search"
             placeholder="Search cards"
+            aria-describedby={fieldDescribedBy}
           />
+          {/*
+            NO VISIBLE SUBMIT, AND STILL A REAL ONE — the same argument
+            `SearchField` makes, now that this field has inherited its job.
+
+            A single-input form submits on Enter, and a button would be the
+            widest thing in the bar for an action nobody clicks. But implicit
+            submission is a browser BEHAVIOUR, not a guarantee, and a form whose
+            only way in is a key press is a form some assistive technology
+            cannot submit at all. That was fine while this field was a
+            convenience and `/search` had a `SearchField` of its own carrying a
+            hidden button; it stopped being fine when this became the only way
+            to search on that page.
+
+            Hidden rather than deleted, and it reappears on `:focus-visible` so
+            a keyboard reader who tabs to it can see what they have landed on.
+          */}
+          <button className="of-bar__submit" type="submit">
+            Search
+          </button>
         </form>
       ) : null}
 
