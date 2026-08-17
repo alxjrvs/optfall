@@ -165,8 +165,6 @@ jobs:
       # deliberately does NOT grep source or documentation: docs/PLAN.md
       # discusses language models at length and by name, and a content grep
       # would fail the build on the very document that states the rule.
-      # Enforces the project-wide rule in docs/PLAN.md ("Rules that hold across
-      # every phase"): no language model in the shipped product.
       #
       # The scanner is scripts/check-no-llm-deps.ts, not a heredoc in this file.
       # It lived here as ~240 lines of TypeScript written to $RUNNER_TEMP, which

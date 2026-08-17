@@ -81,16 +81,6 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
 /* -------------------------------------------------------------------------- */
 
 /**
- * Corner ids in CSS logical order — block axis first, then inline, exactly as
- * `border-start-start-radius` names them. Not `top-left`, because a plate flips
- * with writing direction and its ornament flips with it.
- *
- * It lives in the contract layer rather than inside either component because
- * two of them have to agree about it: `BevelledPlate` passes one of these ids
- * to its `corner` snippet, and `FiligreeCorner` consumes it to decide which way
- * to mirror the motif. Declared twice, the two sets agreed by coincidence.
- */
-/**
  * The symbols the Comprehensive Rules names, at 1.12.4a-h plus 1.12.2.
  *
  * Kept beside `StatKind` deliberately: the two overlap on `power`, `defence`,
@@ -130,6 +120,16 @@ export type StatKind =
   | "intellect"
   | "arcane";
 
+/**
+ * Corner ids in CSS logical order — block axis first, then inline, exactly as
+ * `border-start-start-radius` names them. Not `top-left`, because a plate flips
+ * with writing direction and its ornament flips with it.
+ *
+ * It lives in the contract layer rather than inside either component because
+ * two of them have to agree about it: `BevelledPlate` passes one of these ids
+ * to its `corner` snippet, and `FiligreeCorner` consumes it to decide which way
+ * to mirror the motif. Declared twice, the two sets agreed by coincidence.
+ */
 export type PlateCorner = "start-start" | "start-end" | "end-start" | "end-end";
 
 /**

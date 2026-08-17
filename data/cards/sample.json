@@ -13,7 +13,7 @@
   "sample": {
     "of": "data/cards/cards.json",
     "generator": "scripts/build-card-sample.ts",
-    "note": "A derived, deterministic subset for reading and for agent context. Not used by the build or the test suite. Do not hand-edit — run `bun run corpus:sample`."
+    "note": "A derived, deterministic subset, for reading and for agent context. The site build does not read it; `scripts/build-card-sample.test.ts` does, to assert it still matches this generator. Do not hand-edit — run `bun run corpus:sample`."
   },
   "legalityFlags": [
     "blitz_legal",

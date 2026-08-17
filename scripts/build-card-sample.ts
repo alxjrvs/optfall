@@ -1,21 +1,23 @@
 #!/usr/bin/env bun
 /**
- * Writes `data/cards/sample.json` — fifty cards, same schema as the corpus.
+ * Writes `data/cards/sample.json` — twenty cards, same schema as the corpus.
  *
- * WHY THIS EXISTS, AND IT IS NOT ABOUT TESTS. Nothing in the build or the test
- * suite reads this file. It exists because `data/cards/cards.json` is 16 MB,
+ * WHY THIS EXISTS, AND IT IS NOT ABOUT TESTS. The site build does not read this
+ * file, and no test asserts behaviour through it — the one test that opens it,
+ * `build-card-sample.test.ts`, is checking this generator rather than using the
+ * sample as a fixture. It exists because `data/cards/cards.json` is 16 MB,
  * and the obvious first move against an unfamiliar corpus — open it, or grep it
  * for a card name — costs an agent its entire context in one call, with no
  * warning and nothing smaller to reach for. `CLAUDE.md` names this file as the
  * thing to reach for instead.
  *
  * IT IS DERIVED, NOT CURATED, so that it cannot quietly stop resembling the
- * corpus. The selection below is deterministic: same corpus in, same fifty
+ * corpus. The selection below is deterministic: same corpus in, same twenty
  * cards out, byte for byte. `build-card-sample.test.ts` regenerates and
  * compares, so a corpus refresh that changes the sample is a diff somebody
  * reviews rather than a fixture that silently describes last quarter's data.
  *
- * THE SELECTION IS COVERAGE-FIRST, NOT RANDOM. A random fifty out of 4,941 is
+ * THE SELECTION IS COVERAGE-FIRST, NOT RANDOM. A random twenty out of 4,941 is
  * ninety-five per cent ordinary cards: every pitch is 1, 2 or 3, nothing is
  * banned, nothing is double-faced, and an agent reasoning from it concludes the
  * shapes it never saw do not exist. So the buckets below claim one card each
@@ -38,7 +40,7 @@ const OUT_PATH = join(import.meta.dir, "..", "data", "cards", "sample.json");
  *
  * TWENTY IS A CONTEXT BUDGET, NOT A ROUND NUMBER. Cards run ~3.4 kB each, so
  * fifty came to 164 kB — a hundredfold better than the corpus and still ~41k
- * tokens, which is not a file anyone reads. Twenty is ~67 kB: enough to hold
+ * tokens, which is not a file anyone reads. Twenty is ~79 kB: enough to hold
  * every axis below plus a few ordinary cards, and cheap enough that reading the
  * whole thing is a decision rather than an accident.
  *
@@ -111,11 +113,16 @@ for (const [, matches] of AXES) {
 /**
  * Fill the remainder by walking the sorted corpus at a fixed stride.
  *
- * A stride rather than a slice: the first fifty cards in id order are an
+ * A stride rather than a slice: the first twenty cards in id order are an
  * alphabetical clump from one or two sets, which is its own kind of
  * unrepresentative.
+ *
+ * The `|| 1` is not decoration. On a corpus smaller than `SAMPLE_SIZE` the
+ * floor is 0, and `i += 0` never advances — so a shrunken or partially-built
+ * corpus would hang this script rather than fail it. At 4,941 cards that is
+ * unreachable; it costs two characters to make it stay unreachable.
  */
-const stride = Math.floor(byId.length / SAMPLE_SIZE);
+const stride = Math.floor(byId.length / SAMPLE_SIZE) || 1;
 for (let i = 0; chosen.size < SAMPLE_SIZE && i < byId.length; i += stride) {
   const card = byId[i];
   if (card && !chosen.has(card.unique_id)) chosen.set(card.unique_id, card);
@@ -143,7 +150,7 @@ const sample = {
   sample: {
     of: "data/cards/cards.json",
     generator: "scripts/build-card-sample.ts",
-    note: "A derived, deterministic subset for reading and for agent context. Not used by the build or the test suite. Do not hand-edit — run `bun run corpus:sample`.",
+    note: "A derived, deterministic subset, for reading and for agent context. The site build does not read it; `scripts/build-card-sample.test.ts` does, to assert it still matches this generator. Do not hand-edit — run `bun run corpus:sample`.",
   },
   legalityFlags: source["legalityFlags"],
   counts: {
