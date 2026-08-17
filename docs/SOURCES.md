@@ -180,9 +180,35 @@ has deliberately migrated off, and it is the host Optfall's committed
 against.
 
 **Re-pinning to `develop` HEAD is the single largest "use official resources"
-win available**, and it costs one script run: it moves ~10,000 image URLs onto
-the official LSS host and picks up card text reconciled against the official
-database, without adopting a new dependency or changing a line of ingest code.
+win available**: it moves ~10,000 image URLs onto the official LSS host and
+picks up card text reconciled against the official database, without adopting a
+new dependency or changing a line of ingest code.
+
+**It is not, however, one script run, and the measurements above are what say
+so.** The pin covers 16,502 printings; `develop` HEAD has 16,544. The suite
+asserts the current figures as exact invariants — `faces.test.ts:196` fixes
+`printings.length` at 16,502, `:197` fixes `keys.size` at 11,376, `:161` fixes
+the null-image count at 4, and `cards.test.ts:83-84` fixes `counts.printings`
+and `counts.names` at 16,502 and 3,158. Each of those has to be re-measured and
+updated with the corpus.
+
+One assertion needs more than a new number. `faces.test.ts:184-185` requires
+**exactly one** face key reachable by two URLs — `LGS387.webp` on Batter to a
+Pulp, which is a duplicate *only* because the same image is mirrored across two
+hosts. Collapsing four hosts into one is precisely what upstream did, so that
+count goes to zero and the assertion needs rewriting rather than retuning.
+
+**And the two corpora must move together.** `data/sets/sets.json` pins the
+**identical commit** `7a4822f3` and is joined against the card corpus at
+runtime — `card-search.test.ts:48-50` and `pagination.test.ts:59-61` pair
+`CORPUS.source.commit` against `SETS.sets` release dates, and
+`card-search.ts:788` records "53 of 4,941 cards have no release date" as a
+measured invariant. Re-pin cards alone and the two corpora describe different
+upstream commits, so any printing in a newly-added set resolves to no release
+date. Re-pin both, in one change.
+
+None of this is an argument against doing it. It is the difference between an
+afternoon and a script run, and it is worth knowing before starting.
 
 ---
 
@@ -200,8 +226,13 @@ recorded:
 | `rules.fabtcg.com/en/` | 200 |
 
 The PDF title page still reads **Comprehensive Rules 2026-6-10, 2.14.0**. The
-SHA-256 is identical to the one Phase 2 computed, so the parser's 1,269 sections
-remain valid and no re-parse is required. **No 2.15 release exists** — a search
+SHA-256 is identical to the one Phase 2 computed, so the parsed corpus in
+`data/rules/cr-2.14.0.json` — **1,278 records**, being 9 chapters, 87 sections,
+548 rules and 634 subrules — remains valid and no re-parse is required. (1,269
+is the same corpus with the 9 chapter records excluded; it is the figure
+[`PHASE-2-STATUS.md`](PHASE-2-STATUS.md) uses when reconciling against a grep of
+the extracted text. Both are correct about different things, and the shipped
+record count is 1,278.) **No 2.15 release exists** — a search
 for one returns nothing, and the `2.15.x` tokens in the extracted text are
 *rule numbers* in chapter 2 (`2.15.6 Types are functional keywords…`), not
 versions. Anyone grepping the text for a version string will find those and
@@ -240,9 +271,12 @@ Worth adding to any eventual request to LSS for automated access.
 
 Nothing structural. In priority order:
 
-1. **Re-pin the card corpus to `develop` HEAD** and rebuild. Highest value,
-   lowest cost, and it is the change that most increases how much of Optfall
-   comes from official LSS resources.
+1. **Re-pin the card *and set* corpora to `develop` HEAD together**, rebuild,
+   and update the printing-count invariants the suite hard-codes — including
+   the mirrored-image assertion in `faces.test.ts`, which the host migration
+   drops to zero. This is the change that most increases how much of Optfall
+   comes from official LSS resources. It is a contained afternoon, not a script
+   run; see §3.
 2. **Record CardVault in `COMPLIANCE.md`** as a known official source with
    unknown API terms, before anything depends on it.
 3. **Evaluate CardVault as the source of card text and card ids** when Phase 3
