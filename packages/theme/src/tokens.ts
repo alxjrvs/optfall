@@ -447,22 +447,25 @@ export const DARK_TOKENS: TokenTable = {
   "color.pitch.three": "#3277bd",
   "color.pitch.three.ink": "#ffffff",
 
-  /* PITCH FOUR IS ONE CARD, AND IT IS A TOKEN RATHER THAN A SPECIAL CASE.
+  /* PITCH FOUR IS A TOKEN NOBODY CAN RENDER YET, AND THAT IS THE POINT OF IT.
      A fourth pitch value has been shown on a preview of a Shadow resource gem
      — a purple strip, card code IAR000.
 
-     WHAT THIS REPOSITORY CAN ACTUALLY BACK IS LESS THAN "PRINTED", and the
-     sentence above is worded to claim only that. `data/sets/sets.json` records
-     `IAR` as "??? Set 20 ???" with `released: null`, and `data/cards` holds no
-     card from it: every one of the current 4,941 pitches 1, 2, 3 or nothing, so
-     nothing in this repository renders this stone today. Whether that card
-     ships as previewed is upstream's business and not ours to assert.
+     THE ONE THING THIS REPOSITORY CAN BACK IS THE NARROW CLAIM: no card in
+     `data/cards` carries `pitch: "4"` — zero of the current 4,941 — so nothing
+     here renders this stone today. Note what is NOT claimed, because an earlier
+     wording claimed it and was wrong: the corpus does hold `IAR` cards already
+     (Baalghor, Omen of the End among them), so "no card from that set" is
+     false. What `data/sets/sets.json` says is set-level and still true — `IAR`
+     is "??? Set 20 ???" with `released: null`. Whether the gem ships as
+     previewed is upstream's business and not ours to assert.
 
      THE PALETTE IS READY AHEAD OF THE DATA ON PURPOSE. The alternative is
-     discovering the gap on the day `IAR` lands, in a decoder that answers `0`
-     and a stylesheet that answers grey — neither of which fails anything. Cheap
-     now, silent later; that is the whole trade, and it does not need the card to
-     be certain to be worth taking.
+     discovering the gap on the day a `pitch: "4"` card enters the corpus — that
+     is the trigger, not the day `IAR` lands, which has partly happened already —
+     in a decoder that answers `0` and a stylesheet that answers grey, neither of
+     which fails anything. Cheap now, silent later; that is the whole trade, and
+     it does not need the card to be certain to be worth taking.
 
      It is a token because it is exactly the shape of fact that gets hard-coded
      at the call site and then found again, wrong, in four places: the jewel,

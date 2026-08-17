@@ -174,9 +174,9 @@ export type BevelEdge = "top" | "bottom";
  *
  * `4` IS RARE AND IT IS NOT HERE YET — a purple strip on a previewed Shadow
  * resource gem, card code `IAR000`, from a set `data/sets` still records as
- * unreleased. The corpus pinned in `data/cards` carries no such card, so this
- * widening is the renderers being ready ahead of the data rather than a
- * response to a card on screen today.
+ * unreleased. No card in `data/cards` carries `pitch: "4"`, so this widening is
+ * the renderers being ready ahead of the data rather than a response to a card
+ * on screen today.
  *
  * It is in the union rather than handled as an exception because the union is
  * what every renderer switches on: widened here, a jewel or a band that forgot
