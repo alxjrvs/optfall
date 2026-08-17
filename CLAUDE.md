@@ -114,6 +114,28 @@ All enforced somewhere, all easy to violate on a first pass.
   the network, CI never runs them, and dozens of assertions are written against
   the committed figures.
 
+## Skills
+
+Two procedures in this repository are mechanical, multi-file, and have been
+performed enough times to be worth encoding. Both are in `.claude/skills/`:
+
+- **`add-a-search-filter`** — the four files a card-search operator touches, and
+  the one of them with no test behind it.
+- **`add-a-design-system-primitive`** — the seven places a primitive touches,
+  all test-enforced.
+
+## Pre-approved commands, and the two that are not
+
+`.claude/settings.json` pre-approves the read-only and build commands that
+recur here — `bun run check*`, `bun test`, `bun run build`, `rg`, and the
+read-only `gh` subcommands.
+
+**`bun run corpus:*` and `bun run symbols` are deliberately excluded.** Both hit
+the network, and both rewrite committed provenance data —
+`data/symbols/symbols.json` carries a per-file SHA-256 and a rights statement
+that `check:provenance` verifies. Regenerating either is a decision with a diff
+attached, not a step in a loop.
+
 ## Adding a search operator — four files, and one has no test
 
 `apps/site/ssg/pages/syntax.page.tsx` says it outright: when the parser changes,
