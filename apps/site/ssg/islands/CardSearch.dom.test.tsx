@@ -472,4 +472,70 @@ describe("the control bar writes the query it is a picture of", () => {
 
     await act(async () => root.unmount());
   });
+
+  test("the view is a term, and the label is the operand it writes", async () => {
+    /*
+     * THE ROUND TRIP THAT DID NOT USED TO HOLD. The switch was labelled with
+     * the operator's SYNONYMS — "Images", "Rows", "Names" — while `show()`
+     * wrote the canonical spelling, so a reader who clicked "Names" got
+     * `display:text` in the box and had to work out for themselves that the two
+     * were the same thing. The labels are the operands now, so what is on the
+     * control and what is in the query are one word, and this is the assertion
+     * that keeps them that way.
+     *
+     * THE OPTION VALUES ARE ASSERTED AS A SET, not just driven, because the
+     * bug this change fixes was a LABEL collision rather than a behaviour one:
+     * a third option reappearing here is the regression, and a test that only
+     * drove two of them would not see it.
+     */
+    const root = await ask("wrath");
+
+    const select = document.getElementById("display-display");
+    if (!(select instanceof HTMLSelectElement)) throw new Error("no switch");
+    expect([...select.options].map((option) => option.value)).toEqual([
+      "grid",
+      "list",
+    ]);
+    expect([...select.options].map((option) => option.textContent)).toEqual([
+      "Grid",
+      "List",
+    ]);
+
+    await choose("display-display", "list");
+    expect(box()).toBe("wrath display:list");
+    expect(document.querySelectorAll(".of-index__rows").length).toBe(1);
+
+    /* And back — the term is REPLACED rather than dropped, so the box says
+       `display:grid` rather than falling silent. That is the right way round
+       for a view: unlike `order:relevance`, which names the absence of an
+       ordering and therefore cannot be written, `grid` is a real operand and a
+       reader who switched back deliberately should get an address that says so
+       rather than one that merely happens to default there. It also proves the
+       replace: two `display:` terms would apply the last and ignore the first. */
+    await choose("display-display", "grid");
+    expect(box()).toBe("wrath display:grid");
+    expect(document.querySelectorAll(".of-index__grid").length).toBe(1);
+
+    await act(async () => root.unmount());
+  });
+
+  test("a retired view spelling still answers, and says where it went", async () => {
+    /*
+     * `display:text` NAMED A VIEW THAT NO LONGER EXISTS. It is documented at
+     * `/syntax` and sitting in links, so it resolves to the nearest real thing
+     * rather than erroring — and it says so, because resolving it in silence
+     * would leave a reader who typed it wondering why the page ignored them.
+     */
+    const root = await ask("wrath display:text");
+
+    expect(document.querySelectorAll(".of-index__rows").length).toBe(1);
+    const notices = [...document.querySelectorAll(".of-cards__notice")].map(
+      (node) => node.textContent ?? "",
+    );
+    expect(notices.some((text) => text.includes("display:list"))).toBe(true);
+    /* And it does not promise anything this layer does not ship. */
+    expect(notices.some((text) => text.includes("copy"))).toBe(false);
+
+    await act(async () => root.unmount());
+  });
 });

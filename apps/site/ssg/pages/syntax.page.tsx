@@ -172,9 +172,9 @@ const ORDERING: readonly Row[] = [
     meaning: "How much one row stands for — names, cards or art. See below.",
   },
   {
-    example: "display:text",
-    meaning: "The shape of the results — grid, list or text. See below.",
-    aliases: ["display:checklist"],
+    example: "display:list",
+    meaning: "The shape of the results — grid or list. See below.",
+    aliases: ["display:rows"],
   },
 ];
 
@@ -323,21 +323,20 @@ function page(): PageResult {
           </dd>
 
           <dt>
-            <code>display:list</code>
+            <code>display:list</code> (also <code>display:rows</code>)
           </dt>
           <dd>
             A dense row: pitch, name, type line and the printed stats, plus why
             the card matched.
           </dd>
-
-          <dt>
-            <code>display:text</code> (also <code>display:checklist</code>)
-          </dt>
-          <dd>
-            Names, one per line, and nothing else — the mode whose output is
-            meant to leave the page. Select it and paste it into a deck list.
-          </dd>
         </dl>
+
+        <p>
+          <code>display:text</code>, <code>display:checklist</code> and{" "}
+          <code>display:names</code> used to name a third view — names one per
+          line, and nothing else. They still work and now mean{" "}
+          <code>display:list</code>, which is the same rows with more on them.
+        </p>
 
         <h2 id="uniqueness">How much one row stands for</h2>
 

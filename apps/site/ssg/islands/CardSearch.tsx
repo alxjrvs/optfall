@@ -109,11 +109,22 @@ function queryFromUrl(): string {
   return new URLSearchParams(window.location.search).get("q") ?? "";
 }
 
+/**
+ * The legacy `?display=` parameter, which predates the operator.
+ *
+ * `text` AND `checklist` LAND ON `list` NOW, silently, and the silence is the
+ * one difference from the operator's own handling. `parseCardQuery` raises an
+ * `operand-retired` notice for a TYPED `display:text`, because somebody chose
+ * those words just now and deserves to be told they moved. This is a parameter
+ * on a link somebody followed — very likely one they did not write — so a
+ * notice here would explain a vocabulary change to a reader who never used the
+ * old vocabulary.
+ */
 function displayFromUrl(): CardDisplayMode | null {
   if (typeof window === "undefined") return null;
   const wanted = new URLSearchParams(window.location.search).get("display");
-  if (wanted === "list") return "list";
-  if (wanted === "text" || wanted === "checklist") return "text";
+  if (wanted === "list" || wanted === "text" || wanted === "checklist")
+    return "list";
   if (wanted === "grid") return "grid";
   return null;
 }
@@ -399,7 +410,7 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       else url.searchParams.set("q", written);
       withPageParams(url.searchParams, nextPage, nextSize);
       /* The parameter is never written again, only read. A stale
-         `?display=list` beside a `display:text` query is exactly the ambiguity
+         `?display=list` beside a `display:grid` query is exactly the ambiguity
          the operator removed. */
       if (dropParam) url.searchParams.delete("display");
       const target = `${url.pathname}${url.search}`;
@@ -495,7 +506,7 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
    * Switching view rewrites the QUERY, because the view is part of the query.
    *
    * The control and the syntax are two ways of saying one thing, so clicking
-   * "Text" has to leave the box reading `dominate display:text` — otherwise the
+   * "List" has to leave the box reading `dominate display:list` — otherwise the
    * reader copies what is on screen and gets a link that does not reproduce what
    * they were looking at. Any existing `display:` term is replaced rather than
    * appended: two of them would apply the last and silently ignore the first.
@@ -552,13 +563,14 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
    * Switching view rewrites the QUERY, because the view is part of the query.
    *
    * The control and the syntax are two ways of saying one thing, so choosing
-   * "Names" has to leave the box reading `dominate display:text` — otherwise the
+   * "List" has to leave the box reading `dominate display:list` — otherwise the
    * reader copies what is on screen and gets a link that does not reproduce what
-   * they were looking at.
+   * they were looking at. The label and the operand are now the same word, so
+   * what the bar says and what the box says agree letter for letter.
    *
    * THE PAGE IS KEPT, and that is the point of switching views: the rows are the
    * same rows in a different shape, so a reader six pages into an answer who
-   * wants to read the names instead of look at the faces has not asked to start
+   * wants to read the rows instead of look at the faces has not asked to start
    * over.
    */
   function show(next: CardDisplayMode): void {
@@ -620,7 +632,7 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
 
       `paramDisplay` was cleared in `show()` and on `popstate` but not
       here, so it outlived the URL it came from: arrive at
-      `?q=x&display=list`, submit `x display:text` — the parameter is
+      `?q=x&display=list`, submit `x display:grid` — the parameter is
       stripped from the address bar — then submit a plain `winter`, and the
       URL says nothing about display while the retained state still
       resolves it to `list`.
@@ -706,14 +718,14 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
             {/*
               EVERY LIST OF CARDS ON THIS SITE IS THIS COMPONENT, and search is
               one of its two callers rather than the only place a card grid
-              exists. What was a hundred lines of grid, rows and names markup
+              exists. What was a hundred lines of grid and rows markup
               here is a mapping from `CardResult` to `CardIndexEntry` — see
               `entries` below — and the pager is handed in as a slot, because
               only this surface knows that a page of a search is
               `?q=…&page=…&per=…`.
 
               THE DISPLAY MODE STAYS HERE, because on this page it lives in the
-              QUERY. `display:text` is a search operator, so clicking "Names"
+              QUERY. `display:` is a search operator, so clicking "List"
               has to rewrite the box; a component that owned the mode would have
               no way to know that and the URL would stop reproducing the screen.
             */}

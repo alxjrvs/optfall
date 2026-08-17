@@ -78,14 +78,25 @@ export interface CardListProps {
 /**
  * `?display=`, in every spelling the search operator accepts.
  *
- * `card-search.ts` maps `images`, `rows` and `names` onto grid, list and text,
- * and the switch is labelled with those words — so a reader who learned them on
- * `/search` and typed one here should not find that only one of the site's two
- * card lists understands it.
+ * `card-search.ts` maps `images` onto grid and `rows` onto list, so a reader
+ * who learned a word on `/search` and typed it here should not find that only
+ * one of the site's two card lists understands it.
+ *
+ * `text`, `names` AND `checklist` LAND ON `list` FOR THE SAME REASON THEY DO
+ * IN THE ENGINE: they named a names-only view that turned out to be this one
+ * with its metadata removed. They resolve rather than fall through to `null` —
+ * falling through would answer "the reader said nothing", which is a different
+ * claim from "the reader asked for a view that moved", and would silently hand
+ * back the grid to somebody who explicitly asked not to see pictures.
+ *
+ * NO NOTICE HERE, UNLIKE THE OPERATOR. A set page has no query, so it has
+ * nowhere to put one and no parse to attach it to — and this is a parameter on
+ * a followed link rather than something typed just now. `CardSearch`'s
+ * `displayFromUrl` makes the same call for the same reason.
  */
 function displayFrom(raw: string | null): CardIndexDisplay | null {
   if (raw === "list" || raw === "rows") return "list";
-  if (raw === "text" || raw === "names" || raw === "checklist") return "text";
+  if (raw === "text" || raw === "names" || raw === "checklist") return "list";
   if (raw === "grid" || raw === "images") return "grid";
   return null;
 }

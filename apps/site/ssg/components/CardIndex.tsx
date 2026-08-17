@@ -13,10 +13,10 @@
  * difference between this and every text-list card tool in the game". That was
  * true of one page.
  *
- * SO WHAT A LIST OF CARDS *IS* LIVES HERE: the three views, the switch between
+ * SO WHAT A LIST OF CARDS *IS* LIVES HERE: the two views, the switch between
  * them, the pagination, the density of the grid, and how a row that stands for
  * several pitch versions offers them. A caller supplies rows and owns the
- * state; it does not get to invent a fourth way to show a card.
+ * state; it does not get to invent a third way to show a card.
  *
  * A ROW IS A NAME, AND HOW THE READER PICKS A VERSION IS THE OTHER HALF OF IT.
  * Both callers hand over the pitch versions a row stands for — a search hands
@@ -26,15 +26,14 @@
  * cell that opens into the three cards it stands for.
  *
  * THE TWO VIEWS DRAW IT DIFFERENTLY BECAUSE THEY CAN AFFORD DIFFERENT THINGS.
- * The text views have a line of type and no picture competing with it, so they
- * put a numbered stone per version beside the name. The images view has a card,
- * so it draws the versions AS cards: stacked behind the front one, fanned on
- * hover, each face its own link. See {@link CardIndexEntry.versions} and
- * `CardStack`.
+ * The list view has a line of type to sit a mark beside, so it puts a numbered
+ * stone per version there. The grid has a whole card, so it draws the versions
+ * AS cards: stacked behind the front one, fanned on hover, each face its own
+ * link. See {@link CardIndexEntry.versions} and `CardStack`.
  *
  * IT IS PRESENTATIONAL AND CONTROLLED, WHICH IS WHAT LETS BOTH CALLERS USE IT.
  * The two disagree about where the state lives and they are both right:
- * `CardSearch` keeps the display mode in the QUERY, because `display:text` is a
+ * `CardSearch` keeps the display mode in the QUERY, because `display:` is a
  * search operator and the URL is the product; the set page keeps it in the
  * address bar's parameters, because a set page has no query to put it in.
  * Owning that state here would have forced one of them to lie about its own
@@ -59,21 +58,24 @@ import { FACE_TIERS, faceUrl, placeholderUrl } from "../../src/lib/faces";
 import "./CardIndex.css";
 
 /**
- * The three shapes a list of cards comes in.
+ * The two shapes a list of cards comes in.
  *
- * The same union `card-search.ts` parses `display:` into. The buttons are
- * labelled with the operator's own synonyms — see `VIEWS` — so a reader meets
- * the vocabulary before the syntax.
+ * The same union `card-search.ts` parses `display:` into, and it argues there
+ * at length for why two is the honest count. The short version: there was a
+ * third, `text`, which printed names one per line — and that is this view with
+ * its metadata removed, so the difference between them was DENSITY rather than
+ * kind. A density knob offered as a peer of "show me pictures" is what let the
+ * bar be driven to say "Names as Names".
  *
- * IT DOES NOT ROUND-TRIP, AND THIS NOTE USED TO CLAIM IT DID. Clicking "Names"
- * writes the CANONICAL spelling into the box, `display:text`, not `display:names`
- * — `show()` composes from these three values, and it should, because the URL
- * is the product and one view wants one address rather than three synonyms of
- * it. So the labels teach the words and the box teaches the canonical form.
- * That is a weaker claim than "the reader has learned the grammar without being
- * taught it", and it is the true one.
+ * IT ROUND-TRIPS NOW, WHICH IT DID NOT BEFORE. The labels are "Grid" and
+ * "List" — see `VIEWS` — and those are the CANONICAL operands rather than
+ * synonyms of them, so what a reader clicks and what `show()` writes into the
+ * box are the same word. The old labels were "Images", "Rows" and "Names":
+ * real synonyms the grammar accepts, but clicking one wrote a different
+ * spelling into the query, so the bar taught a vocabulary the URL then
+ * contradicted.
  */
-export type CardIndexDisplay = "grid" | "list" | "text";
+export type CardIndexDisplay = "grid" | "list";
 
 /**
  * How much of the corpus one row stands for. The union `unique:` parses into.
@@ -119,11 +121,11 @@ export interface CardIndexVersion {
   /**
    * This version's own picture, or `null` where it publishes none.
    *
-   * REQUIRED BECAUSE THE IMAGES VIEW DRAWS THE VERSIONS AS CARDS. A row
+   * REQUIRED BECAUSE THE GRID DRAWS THE VERSIONS AS CARDS. A row
    * standing for three pitch versions is a stack of three faces that fans on
    * hover, and the three Head Jabs are three different paintings — a stack of
    * one image repeated would be a decoration rather than a choice between
-   * cards. The two text views never look at this; they draw stones.
+   * cards. The list view never looks at this; it draws stones.
    */
   readonly faceKey: string | null;
   /** True where this version's face is landscape and needs a transposed box. */
@@ -175,14 +177,14 @@ export interface CardIndexEntry {
    * the anchor exactly as `label` does and the versions are still told apart by
    * anything reading them aloud.
    *
-   * THE IMAGES VIEW PRINTS NEITHER, AND IS WHERE THIS FIELD IS NOT USED. It
+   * THE GRID PRINTS NEITHER, AND IS WHERE THIS FIELD IS NOT USED. It
    * carries no caption at all now — the face is the row, and the anchor's
    * accessible name is the face's `alt`, which has always carried the qualified
-   * {@link label}. So the two text views are the whole of this field's audience.
+   * {@link label}. So the list view is the whole of this field's audience.
    *
-   * WHAT A SIGHTED READER HAS IN THE IMAGES VIEW IS THE ART, and that is worth
-   * stating plainly rather than leaving to be discovered. The rows and names
-   * views carry a numbered stone, so hue is redundant there; the grid has no
+   * WHAT A SIGHTED READER HAS IN THE GRID IS THE ART, and that is worth
+   * stating plainly rather than leaving to be discovered. The list view
+   * carries a numbered stone, so hue is redundant there; the grid has no
    * mark of any kind, so two cells the reader is comparing are told apart by
    * their pictures. That is a stronger channel than the coloured bands it
    * replaced — the versions of a name are DIFFERENT PAINTINGS, not one painting
@@ -198,7 +200,7 @@ export interface CardIndexEntry {
    * SUPPLIED, NOT SUBTRACTED. Deriving it as `label` minus `name` looked
    * equivalent and was not: an `unique:art` row's label carries the art key as
    * well as the pitch, so the subtraction hid the key too and left several rows
-   * of one card reading identically in both text views — same name, same
+   * of one card reading identically in the list view — same name, same
    * stones, same type line, same stats, differing only in where they pointed.
    * The picture is what separates them in the grid, and the key is what has to
    * separate them without one.
@@ -221,7 +223,7 @@ export interface CardIndexEntry {
    * one specifically had to arrive at the name and then find it in the strip.
    * Now the row still goes to the row — the address for "this card", whichever
    * version you meant — and each MARK goes to the version it is drawn for: a
-   * stone in the text views, the version's own card face in the images view.
+   * stone in the list view, the version's own card face in the grid.
    *
    * THE FIELD WAS `pitches: PitchValue[]` AND THE HREFS ARE NOT BESIDE IT.
    * Two arrays — values here, links there — is two orderings of one fact and
@@ -229,14 +231,14 @@ export interface CardIndexEntry {
    * of versions cannot disagree with itself.
    *
    * TWO RENDERINGS, CHOSEN BY VIEW, AND THAT IS A DESIGN DECISION RATHER THAN
-   * AN INCONSISTENCY. The two text views have a line of type to put a jewel
-   * beside and no picture to compete with, so they draw {@link PitchJewel},
-   * which carries the numeral `docs/DESIGN.md` calls the primary channel. The
-   * images view has a card, so it draws the versions as CARDS — a stack that
+   * AN INCONSISTENCY. The list view has a line of type to put a jewel beside,
+   * so it draws {@link PitchJewel}, which carries the numeral `docs/DESIGN.md`
+   * calls the primary channel. The grid has a whole card, so it draws the
+   * versions as CARDS — a stack that
    * fans on hover, each face a link to its own version. The information is
    * identical; what differs is what the surface can afford to say it with.
    *
-   * THE IMAGES VIEW USED TO DRAW BANDS — one `PitchRule` per version, as an
+   * THE GRID USED TO DRAW BANDS — one `PitchRule` per version, as an
    * underline, on the argument that there was no room under a face for a stone
    * carrying a numeral. That was true and it answered the wrong question: the
    * thing a band stood for was a card, and there was room for the card. See
@@ -257,7 +259,7 @@ export interface CardIndexEntry {
   /**
    * Why this row is on the page, in the words of the ranking that put it there.
    *
-   * ROWS VIEW ONLY, AND IT IS ABOUT THE QUERY RATHER THAN THE CARD — which is
+   * LIST VIEW ONLY, AND IT IS ABOUT THE QUERY RATHER THAN THE CARD — which is
    * the distinction that decides what may appear under a name at all. A set
    * page has no ranking and therefore nothing true to say here, while every
    * search result does. Under a grid of faces it would be a line of engine
@@ -345,17 +347,22 @@ export interface CardIndexProps {
 /**
  * The views, and what to call them.
  *
- * THE LABELS ARE THE OPERATOR'S OWN SYNONYMS, not new words. `card-search.ts`
- * already accepts `display:images`, `display:rows` and `display:names` as
- * spellings of grid, list and text, so these three buttons say exactly what a
- * reader would type. They used to read "Grid", "List" and "Text" — three words
- * describing the MARKUP rather than the content, and none of the three is what
- * the grammar calls them.
+ * THE LABELS ARE THE OPERATOR'S CANONICAL OPERANDS, which is a correction of
+ * the rule rather than an abandonment of it. The old labels were "Images",
+ * "Rows" and "Names" under a comment arguing that a button should say what a
+ * reader would type — right in principle, wrong in execution, because those
+ * are SYNONYMS the grammar accepts and `show()` writes the canonical spelling.
+ * So the bar said "Names" and the box then said `display:text`. "Grid" and
+ * "List" are what the URL actually carries, so the sentence, the query and the
+ * address finally agree.
+ *
+ * AND THERE IS NO THIRD ROW HERE ANY MORE. See {@link CardIndexDisplay}: the
+ * third view was this one at a lower density, and naming it cost the word the
+ * `unique:` control was already using.
  */
 const VIEWS = [
-  ["grid", "Images"],
-  ["list", "Rows"],
-  ["text", "Names"],
+  ["grid", "Grid"],
+  ["list", "List"],
 ] as const;
 
 /**
@@ -371,10 +378,32 @@ const VIEWS = [
  * each card matched, which is a real ordering and the default. Choosing it
  * removes the term rather than writing `order:relevance`, which would not parse.
  */
+/**
+ * THESE ARE PHRASES RATHER THAN BARE NOUNS, AND THAT IS THE WHOLE FIX.
+ *
+ * They read "Names", "Cards" and "Art", which is the operand and nothing else —
+ * and a bare noun cannot be relied on to survive the sentence it is dropped
+ * into. "Art as Rows" is not a sentence. "Cards as Names" does not say whether
+ * "Names" is the unit or the rendering. Both were legible only to somebody who
+ * already knew which control was which.
+ *
+ * The reference solves this and it is not luck: Scryfall's list is "Cards",
+ * "All prints", "Unique art" — two of the three are phrases, chosen so that
+ * every combination with its display list still parses as English, and no word
+ * appears on both axes. "Pitch versions" is our "All prints": what
+ * `unique:cards` actually expands a row into here is the pitch versions of a
+ * name, which is the same relationship Scryfall's printings have to a card and
+ * is worth saying in the label rather than leaving to `/syntax`.
+ *
+ * "Names" KEEPS ITS BARE NOUN because it is the one that already worked in
+ * every position — "Names as Grid", "Names as List" — and because it is the
+ * default, so it is the phrase most readers will see and the one with least to
+ * gain from being longer.
+ */
 const UNIQUES = [
   ["names", "Names"],
-  ["cards", "Cards"],
-  ["art", "Art"],
+  ["cards", "Pitch versions"],
+  ["art", "Unique art"],
 ] as const;
 
 const ORDERS = [
@@ -467,7 +496,7 @@ function versionsOf(
  * The pitch versions as jewels — the rendering the two TEXT views use.
  *
  * ONE STONE PER VERSION, so a row standing for three pitch versions of a name
- * carries three, exactly as the images view draws three cards. `PitchJewel` is
+ * carries three, exactly as the grid draws three cards. `PitchJewel` is
  * singular by contract because a card page shows one card; the plurality is a
  * fact about a list, so it lives in the list.
  *
@@ -479,10 +508,10 @@ function versionsOf(
  * feature, and the numeral in the stone is what says which one is under the
  * pointer before it is clicked.
  *
- * BOTH TEXT VIEWS PUT THE STONES OUTSIDE THE NAME'S ANCHOR ALREADY —
- * `ResultRow` renders its `lead` before the link rather than inside it, and the
- * names view lists them as siblings — so this needs no markup contortion to
- * avoid nesting an anchor in an anchor. The grid did need one; see the cell.
+ * THE LIST VIEW PUTS THE STONES OUTSIDE THE NAME'S ANCHOR ALREADY —
+ * `ResultRow` renders its `lead` before the link rather than inside it — so
+ * this needs no markup contortion to avoid nesting an anchor in an anchor. The
+ * grid did need one; see the cell.
  */
 function PitchStones({
   versions,
@@ -512,7 +541,7 @@ function PitchStones({
 
 /**
  * The pitch versions as a STACK OF CARDS that fans on hover — the rendering the
- * images view uses, and what replaced the row of coloured bands under the name.
+ * grid uses, and what replaced the row of coloured bands under the name.
  *
  * WHY THE BANDS ARE GONE. They were an underline: three hairlines saying, in
  * hue alone, that this cell stood for three cards, with each one a link to the
@@ -643,45 +672,6 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
   );
 }
 
-/**
- * The pitch qualifier, hidden inside the anchor — and NOTHING where there is
- * none to carry.
- *
- * MOST ROWS HAVE NOTHING TO QUALIFY. A collapsed row stands for every version
- * it draws a band for, and a card whose name is unique never needed a suffix;
- * both hand over `""`. The two views below rendered the span regardless, so an
- * empty `<span class="of-index__variant"></span>` — 39 bytes saying nothing —
- * shipped on the majority of rows.
- *
- * THE SAVING IS SMALL AND IS STATED AS SMALL. Measured across the build: 3,096
- * empty spans over 112 set pages, 121 kB in total, and 55 of them (2.1 kB) on
- * the largest page of the largest set. That is not why the guard is here — dead
- * markup that says nothing is worth removing at any size, and `ResultRow` has
- * always guarded the identical case — but a comment that implied a budget
- * problem would be overselling it.
- *
- * THE BIGGER NUMBER IS NOT THIS ONE, and it is worth naming so nobody reads
- * this as having dealt with it. A set page hands the whole set to its island as
- * JSON in an attribute, and `"qualifier":""` appears there once per row with
- * every quote escaped to `&quot;` — 324 times on `/sets/lgs`, about 13 kB. That
- * is the entry FIELD rather than this markup, so removing the span does not
- * touch it; shrinking it means making `qualifier` optional in the props, which
- * is a change to what crosses the island boundary and belongs on its own.
- *
- * `ResultRow` GUARDS THE IDENTICAL CASE — `qualifier === undefined ||
- * qualifier === ""` — so the rows view was already clean and the other two were
- * not. This is that guard, in the one place both of them can share it, rather
- * than a third spelling of it.
- *
- * IT CHANGES NOTHING A READER OR A SCREEN READER GETS. An empty span
- * contributes no text to an anchor's accessible name; what names the versions
- * apart is the suffix, and the suffix is still rendered wherever there is one.
- */
-function Variant({ qualifier }: { readonly qualifier: string }) {
-  if (qualifier === "") return null;
-  return <span className="of-index__variant">{qualifier}</span>;
-}
-
 function altFor(entry: CardIndexEntry): string {
   return entry.typeLine === ""
     ? entry.label
@@ -689,7 +679,7 @@ function altFor(entry: CardIndexEntry): string {
 }
 
 /**
- * THE IMAGES VIEW ASKS FOR THE `normal` TIER, AND IT USED TO ASK FOR `thumb`.
+ * THE GRID ASKS FOR THE `normal` TIER, AND IT USED TO ASK FOR `thumb`.
  *
  * The grid draws a card at `layout.card.cell` — 240px, the size the reference
  * settled on and the size at which a face reads as a card rather than as a
@@ -868,23 +858,23 @@ export function CardIndex({
               used to need a suffix is a fan inside a single cell instead of two
               cells that read alike. Where a query deliberately expands a name
               back into its versions — `unique:cards`, `unique:art` — the cells
-              are told apart by their art, and by the two views whose entire job
-              is names.
+              are told apart by their art, and by the list view, which prints
+              the name and the qualifier in full.
             */
             <li className="of-index__cell" key={entry.href}>
               <CardStack entry={entry} />
             </li>
           ))}
         </ul>
-      ) : display === "list" ? (
+      ) : (
         /*
           Dense rows: the view for comparing printed values down a column, and
           `ResultRow` is exactly the primitive for it — a leading slot, a name,
           and facts underneath. THE JEWEL LEADS, because this view has a line of
-          type to sit a stone beside and no card face to compete with, so it can
-          afford the rendering that carries the numeral.
+          type to sit a stone beside, so it can afford the rendering that
+          carries the numeral.
 
-          ONE JEWEL PER PITCH VALUE, exactly as the images view draws one card
+          ONE JEWEL PER PITCH VALUE, exactly as the grid draws one card
           per value. A row stands for a NAME and a name is commonly three cards, so
           a single stone would be picking one of the three versions to speak for
           the other two — which is the same "collapses two true facts into one"
@@ -912,33 +902,6 @@ export function CardIndex({
                 </>
               }
             />
-          ))}
-        </ol>
-      ) : (
-        /*
-          NAMES, ONE PER LINE. The view whose output is meant to LEAVE the page:
-          a player writing a deck list wants forty names they can select and
-          paste. Each name is still a link, because a text list that cannot be
-          clicked would be a worse version of the other views rather than a
-          different one.
-
-          THE JEWEL SURVIVES THE PASTE, WHICH IS WHY IT CAN BE HERE AT ALL. Its
-          numeral is a real text node, so a drag-select across this list would
-          ordinarily yield "1Head Jab" and forty lines needing cleaning
-          afterwards — the exact thing this view exists to avoid. `PitchJewel`
-          sets `user-select: none` on itself, so the selection skips it and what
-          leaves the page is the names. That property was there before this view
-          used it; it is load-bearing now.
-        */
-        <ol className="of-index__names">
-          {entries.map((entry) => (
-            <li key={entry.href}>
-              <PitchStones versions={entry.versions} />
-              <a href={entry.href}>
-                {entry.name}
-                <Variant qualifier={entry.qualifier} />
-              </a>
-            </li>
           ))}
         </ol>
       )}

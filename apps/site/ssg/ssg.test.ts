@@ -1828,33 +1828,41 @@ describe("a card index prints the name and not the pitch qualifier", () => {
      * collapsed row stands for every version it draws a band for, and a unique
      * name never needed a suffix — and two of the three views rendered the span
      * regardless, so `<span class="of-index__variant"></span>` went out on the
-     * majority of rows. `ResultRow` has always guarded the identical case, so
-     * the rows view was clean while the grid and the names list were not.
+     * majority of rows.
      *
-     * THE GRID IS NO LONGER ONE OF THE TWO, WHICH IS WHY THIS ASSERTS ZERO OF
-     * EVERY FORM RATHER THAN ZERO OF THE EMPTY ONE. It prints no caption, so
-     * there is no anchor text for a qualifier to be hidden inside and the
-     * class does not appear on this page at all — the test above pins that,
-     * and the one below is what still proves the guard in the two views that
-     * do render it. A route render can only ever exercise the default view.
+     * THE CLASS IS GONE NOW AND THIS STILL ASSERTS ON IT, DELIBERATELY. The
+     * grid stopped printing a caption and the names view was retired, so the
+     * one surface left that hides a qualifier is `ResultRow`, which has always
+     * guarded the case. Zero is therefore trivially true today — and that is
+     * the point: this is the assertion that fails if somebody reintroduces a
+     * hand-rolled qualifier span in this component rather than using the
+     * primitive. The test below is what proves the guard is actually working
+     * where the qualifier IS rendered.
      */
     expect(html).not.toBe("");
     expect([...html.matchAll(/class="of-index__variant"/g)].length).toBe(0);
   });
 
-  test("in every view, and the names view needs its own render to say so", () => {
+  test("in both views, which needs its own render to reach the list", () => {
     /*
-     * THE SET PAGE ONLY EVER PROVES THE GRID. `CardIndex` has three views and
-     * the switch between them is client state, so a route render can only ever
-     * exercise the default one — the test above would stay green with the guard
-     * reverted in the names list alone, which is exactly the shape of the bug
-     * it is meant to catch. Measured: it does. So this renders the COMPONENT,
-     * which is the only way to reach the other two.
+     * THE SET PAGE ONLY EVER PROVES THE GRID. The switch between views is
+     * client state, so a route render can only ever exercise the default one —
+     * the test above would stay green with the guard reverted in the list. So
+     * this renders the COMPONENT, which is the only way to reach the other view.
      *
-     * ROWS IS HERE TOO, AND IT IS THE CONTROL. `ResultRow` has always guarded
-     * this case, so that view was correct before the change and must still be —
-     * a fixture that produced an empty span there would mean the primitive had
-     * regressed rather than this component.
+     * WHAT IS BEING GUARDED MOVED WHEN THE NAMES VIEW WENT. This component used
+     * to carry its own `Variant` helper, because the grid and the names list
+     * both hid the qualifier inside an anchor and neither guarded the empty
+     * case. The grid stopped printing a caption, the names view is gone, and
+     * what is left renders the qualifier through `ResultRow` — which has always
+     * guarded it. So the helper is deleted rather than kept, and this test now
+     * pins the two facts that outlived it: the suffix still reaches the
+     * accessible name in BOTH views, and no empty span is emitted in either.
+     *
+     * IT IS WORTH KEEPING RATHER THAN DELETING WITH THE HELPER. 900 names in
+     * this corpus belong to more than one card, so anchors that differ only in
+     * where they point are a live WCAG 2.4.4 hazard here — the guard moving
+     * into a primitive is not the same as the requirement going away.
      */
     const entries = [
       {
@@ -1898,7 +1906,7 @@ describe("a card index prints the name and not the pitch qualifier", () => {
       },
     ];
 
-    for (const display of ["grid", "list", "text"] as const) {
+    for (const display of ["grid", "list"] as const) {
       /* `createElement` rather than JSX: this file is `.ts`, and renaming it to
          `.tsx` to render one component would be a change to every other test in
          it. */
@@ -1912,11 +1920,16 @@ describe("a card index prints the name and not the pitch qualifier", () => {
           interactive: false,
         }),
       );
+      /* The suffix is on the page in both views — as a face's `alt` in the
+         grid, as `ResultRow`'s hidden span in the list. */
       expect(`${display}: ${markup.includes(" (pitch 2)")}`).toBe(
         `${display}: true`,
       );
+      /* And Anothos, which has nothing to qualify, contributes no empty one.
+         Matches ANY class, so it cannot be satisfied by the guarded element
+         merely being renamed. */
       expect(
-        `${display}: ${[...markup.matchAll(/class="[^"]*variant[^"]*"><\/span>/g)].length}`,
+        `${display}: ${[...markup.matchAll(/<span class="[^"]*"><\/span>/g)].length}`,
       ).toBe(`${display}: 0`);
     }
   });

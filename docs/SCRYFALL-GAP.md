@@ -97,7 +97,7 @@ row's subject changes, not when someone notices.*
 | Card search on the homepage | yes | a plain field on `/` that submits to `/search` | **have** |
 | Card images | six variants | two tiers, rendered | **narrowed** |
 | Image grid results | default view | grid is the default | **have** |
-| Display modes | `display:grid/checklist/text/full` | `display:grid/list/text`, a query term | **have** |
+| Display modes | `display:grid/checklist/text/full` | `display:grid/list`, a query term | **narrowed** |
 | Sort control | `order:` × 15, `dir:` | `order:` × 9, `dir:`, documented | **have** |
 | Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<set>/<num>/<name>`, 11,378 of them — every distinct art, the default included | **have** |
 | Duplicate collapsing | `unique:cards/prints/art` | `unique:names` (default), `cards`, `art` | **have** |
@@ -468,9 +468,22 @@ and on load from `?q=`, rather than on input.
   lives in `apps/site/ssg/pages/home.page.tsx`, whose header argues the door's
   job is to be the way in to the search page rather than a surface in its own
   right.
-- **`display:grid` (default) / `list` / `text`**, in the URL. The existing dense
+- **`display:grid` (default) / `list`**, in the URL. The existing dense
   row is not thrown away — it becomes `display:list`, and it is genuinely better
   than Scryfall's checklist.
+  - **This asked for three and shipped two, and the third was a mistake rather
+    than a cut.** `display:text` printed names one per line, which is
+    `display:list` with the metadata removed — a DENSITY, not a kind. Scryfall's
+    four modes really are four kinds of page (a grid of faces, a sortable table,
+    a grid of text-only card boxes, a per-card dossier); ours were one picture
+    mode and two grades of one text list. The cost was concrete: `unique:` and
+    `display:` both had an option called "Names", so the control bar could be
+    driven to read **"Names as Names"**. Scryfall's two lists share no word at
+    all — `Cards / All prints / Unique art` against
+    `Images / Checklist / Text Only / Full` — and that is the transferable part.
+    The retired spellings resolve to `list` with a notice.
+  - What `display:text` was *for* — selecting forty names and pasting them into
+    a deck list — is a real job, and it is now a control rather than a view.
 - **`order:` and `dir:`** — name, set, released, rarity, pitch, cost, power,
   defence. Every one must be a *total* order so two browsers cannot disagree,
   which is the same discipline the current corpus-order tiebreak already keeps.
