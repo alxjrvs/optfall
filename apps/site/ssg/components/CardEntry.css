@@ -164,11 +164,11 @@
   --card-pitch: var(--of-color-pitch-three);
 }
 
-/* Pitch four is one card in the printed game and none in the pinned corpus —
-     see `color.pitch.four` in `tokens.ts` for both halves of that. It is
-     enumerated here rather than left to the default because the default is the
-     no-pitch grey, and a card that HAS a pitch value must not be drawn as one
-     that does not. */
+/* Pitch four is one previewed card and none in the pinned corpus — see
+     `color.pitch.four` in `tokens.ts` for how much of that this repository can
+     actually back. It is enumerated here rather than left to the default
+     because the default is the no-pitch grey, and a card that HAS a pitch value
+     must not be drawn as one that does not. */
 .of-card__panel[data-pitch="4"] {
   --card-pitch: var(--of-color-pitch-four);
 }
@@ -278,7 +278,14 @@
   /* The one heading on the site a reader looks AT rather than scans past, so it
      takes the display face even though it is not an `h1`. */
   font-family: var(--of-type-family-display);
-  margin-block: 0;
+  /* An `h1`'s own margin, zeroed — and written as the ONE longhand it needs to
+     zero, because the block-start margin belongs to the pitch stroke at the
+     bottom of this rule. As `margin-block: 0` it was a shorthand competing with
+     that longhand sixty lines below, correct only by source order: moving
+     either declaration, or consolidating the two, would silently restore the
+     6px the stroke exists not to add. Two longhands cannot be reordered into
+     disagreement. */
+  margin-block-end: 0;
   overflow-wrap: anywhere;
   text-align: center;
   font-size: clamp(
@@ -333,10 +340,20 @@
       stopped being level with the two corners it sits between.
 
       The negative margin is exactly what the two declarations above add and
-      nothing else, so the TEXT lands where it landed before this stroke existed
-      and the stroke occupies space that was already the plate's top padding.
+      nothing else, so the TEXT lands where it landed before this stroke existed.
       Written as the same two terms rather than as a number, so it cannot drift
-      out of agreement with them.
+      out of agreement with them, and as a longhand rather than a shorthand — see
+      `margin-block-end` at the top of this rule for why that matters.
+
+      IT SPENDS 6px OF `BevelledPlate`'s PADDING, AND THAT IS A DEPENDENCY RATHER
+      THAN A COINCIDENCE. The stroke now paints outside `.of-card__panel`'s
+      content box, into the plate's `--plate-pad` — `space.loose`, so there is
+      16px there and 6px is taken. That is comfortable and it is not enforced:
+      a plate that ever shrank its padding below `space.tighter` plus two bevels
+      would put this stroke on its bevel, and nothing would fail. The panel
+      cannot read the plate's padding to clamp itself against it, so the honest
+      form of the guarantee is this sentence — "compose, never restyle" is why
+      the alternative (reaching into `BevelledPlate` from here) is not taken.
     */
   margin-block-start: calc(
     -1 *

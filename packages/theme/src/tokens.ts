@@ -448,17 +448,21 @@ export const DARK_TOKENS: TokenTable = {
   "color.pitch.three.ink": "#ffffff",
 
   /* PITCH FOUR IS ONE CARD, AND IT IS A TOKEN RATHER THAN A SPECIAL CASE.
-     Legend Story Studios has printed a fourth pitch value — a purple strip, on
-     a Shadow resource gem (Soul of Existence, IAR000).
+     A fourth pitch value has been shown on a preview of a Shadow resource gem
+     — a purple strip, card code IAR000.
 
-     THE CORPUS PINNED IN `data/cards` DOES NOT CARRY IT YET, and that is stated
-     rather than glossed: every card in the current 4,941 pitches 1, 2, 3 or
-     nothing, so nothing in this repository renders this stone today. The
-     palette is ready ahead of the data on purpose — the alternative is
-     discovering the gap on the day the corpus is re-pinned, in a decoder that
-     answers `0` and a stylesheet that answers grey, neither of which fails
-     anything. Treat "one card" as a fact about the game, not about the JSON,
-     and re-check that sentence rather than this one when the pin moves.
+     WHAT THIS REPOSITORY CAN ACTUALLY BACK IS LESS THAN "PRINTED", and the
+     sentence above is worded to claim only that. `data/sets/sets.json` records
+     `IAR` as "??? Set 20 ???" with `released: null`, and `data/cards` holds no
+     card from it: every one of the current 4,941 pitches 1, 2, 3 or nothing, so
+     nothing in this repository renders this stone today. Whether that card
+     ships as previewed is upstream's business and not ours to assert.
+
+     THE PALETTE IS READY AHEAD OF THE DATA ON PURPOSE. The alternative is
+     discovering the gap on the day `IAR` lands, in a decoder that answers `0`
+     and a stylesheet that answers grey — neither of which fails anything. Cheap
+     now, silent later; that is the whole trade, and it does not need the card to
+     be certain to be worth taking.
 
      It is a token because it is exactly the shape of fact that gets hard-coded
      at the call site and then found again, wrong, in four places: the jewel,
