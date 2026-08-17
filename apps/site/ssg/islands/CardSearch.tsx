@@ -205,35 +205,26 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     const form = input.form;
 
     /*
-     * SEEDED FROM THE FIELD, WHICH IS NOT A FORMALITY — IT IS A RACE.
+     * NOTHING IS SEEDED FROM THE FIELD, AND A VERSION OF THIS DID SEED IT.
      *
-     * The header's input is static markup: it is on screen and typeable from
-     * the first paint, before `islands.js` has loaded. The value-sync effect
-     * below writes `query` INTO that input whenever the two differ, and `query`
-     * starts as `""` — so a reader who lands on `/search` with no `?q=` and
-     * starts typing during hydration had their text erased the moment this
-     * island mounted, with nothing to restore it.
+     * The problem is real: the header's input is static markup, on screen and
+     * typeable from the first paint, before `islands.js` lands. React guards
+     * that for inputs it renders itself — its DOM host skips the value
+     * assignment while hydrating — and an adopted node gets none of it, so text
+     * typed during hydration was being erased.
      *
-     * React guards against exactly this for inputs it renders ITSELF — its DOM
-     * host skips the value assignment while hydrating — and the controlled
-     * `SearchField` that used to be here inherited that protection. (An earlier
-     * version of this note credited React 18 and named the internal that does
-     * it; this repo pins React 19, and citing a version it does not run is the
-     * kind of detail that rots a comment into folklore.) An adopted node gets
-     * none of it either way, so it is written out here: take whatever is in the
-     * field as the starting state.
+     * The fix for that is the FIRST-RUN SKIP on the value-sync effect below,
+     * and a `setQuery(input.value)` here was belt on top of braces. Mutation
+     * testing is what settled it: deleting this line changed no assertion in
+     * `CardSearch.dom.test.tsx`, while deleting the skip broke it immediately.
+     * `query` is READ in exactly one place — that effect, to write it back into
+     * the field — so state that merely agrees with the field buys nothing, and
+     * every later write to it (`onInput`, `?q=`, `show`, `submitQuery`,
+     * `popstate`, Escape) already carries the value it wants.
      *
-     * **IT ONLY COVERS THE NO-`?q=` CASE, and that is a scope rather than an
-     * oversight.** Landing on `/search?q=dominate` and typing before the script
-     * loads still loses the text, because the URL effect below sets
-     * `setQuery(fromUrl)` in the same commit this seed ran in and the sync
-     * effect then writes `dominate` back over it. That is arguably the right
-     * answer — the address says `dominate`, the results say `dominate`, and a
-     * box saying something else would contradict both — and it is what the
-     * controlled `SearchField` did too. What is fixed here is the case with no
-     * query in the URL, where nothing else has a claim on the field.
+     * Left as a note rather than as code, because the line looked necessary and
+     * the next person to notice the hydration race will reach for it again.
      */
-    if (input.value !== "") setQuery(input.value);
 
     const onInput = () => setQuery(input.value);
     const onSubmit = (event: Event) => {
