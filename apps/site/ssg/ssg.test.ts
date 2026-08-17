@@ -1893,8 +1893,12 @@ describe("every screen but the front door carries the header's search", () => {
      * 934 kB of HTML plus a 230 kB bundle, so a reader who searched on the door
      * arrived at a results page whose search box was empty until all of it
      * landed — right answers, and a field that looked like it had forgotten the
-     * question. With scripting off, which this page's `noscript` expects, it
-     * never filled at all.
+     * question. It also covers a hydration FAILURE, which `islands.client.ts`
+     * swallows in favour of the static markup.
+     *
+     * It does NOT cover scripting being off — an inline script is still a
+     * script — and it does not need to: the results are gone in that case too,
+     * which is what the page's `noscript` block is for.
      *
      * Asserted on the SERVED MARKUP rather than through a DOM, because that is
      * the whole claim: the fix has to be in the bytes, ahead of the bundle.

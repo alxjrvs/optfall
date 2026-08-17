@@ -140,10 +140,14 @@ function page(): PageResult {
           The results were right and the field looked like it had forgotten the
           question.
 
-          Worse without scripting at all, which this page has a `noscript` block
-          precisely because it expects: the box stayed empty for good, and so did
-          it after any hydration failure — `islands.client.ts` swallows those and
-          keeps the static markup.
+          IT DOES NOT FIX THE NO-JS CASE, AND CANNOT: an inline script is still
+          a script. With scripting off the box stays empty — though so do the
+          results, which is what the `noscript` block below is for, so the field
+          is not the thing that has failed there.
+
+          What it DOES cover besides the slow bundle is a hydration FAILURE:
+          `islands.client.ts` swallows those and keeps the static markup, and
+          this has already run by then, so the field still says what was asked.
 
           Four lines, inline, running during parse and therefore before the first
           paint. Same trade and same shape as the `?pitch=` redirect in
