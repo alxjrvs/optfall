@@ -166,8 +166,22 @@ let facePages = 0;
 const MAX_REPORTED = 10;
 
 let failures = 0;
+
+/**
+ * Annotations withheld by the cap, counted rather than inferred.
+ *
+ * `failures - MAX_REPORTED` would be wrong here: the missing-notice branch
+ * below does NOT `continue`, so one page can raise two failures, and the
+ * subtraction would report a count of "pages" larger than the number of pages
+ * that actually failed.
+ */
+let suppressed = 0;
 const report = (message: string): void => {
-  if (verbose || failures < MAX_REPORTED) console.log(message);
+  if (verbose || failures < MAX_REPORTED) {
+    console.log(message);
+    return;
+  }
+  suppressed += 1;
 };
 
 for (const page of pages) {
@@ -211,9 +225,9 @@ for (const page of pages) {
   }
 }
 
-if (!verbose && failures > MAX_REPORTED) {
+if (suppressed > 0) {
   console.log(
-    `::error::…and ${failures - MAX_REPORTED} more page(s) with the same failure. Re-run with --verbose to annotate every one.`,
+    `::error::…and ${suppressed} further annotation(s) withheld. Re-run with --verbose to print every one.`,
   );
 }
 

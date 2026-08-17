@@ -515,16 +515,30 @@ export const CARD_IMAGE_COPYRIGHT = "Card images © Legend Story Studios.";
  * the two are kept in step by nobody.
  *
  * That matters more here than it would elsewhere, because `index.test.ts`
- * asserts the two compliance guarantees above — that `copyright` is not
- * caller-suppliable, and that no legality data rides along — **against this
- * type**. Both assertions are therefore true of a type no page renders. The
- * other nine `*Props` interfaces in this file were exact duplicates of their
- * components' and have been deleted; this one is not a duplicate, it is a
- * second, divergent shape, so removing it would delete the assertions with it.
+ * points its two compliance cases at **this** type rather than at the one that
+ * renders. Only one of them actually holds:
  *
- * Reconciling them is a decision about which type is the contract, not a
- * cleanup: repointing the tests at `CardFaceProps` fails today, because the
- * "carries no legality or rules data" case asserts exactly three keys.
+ * - *"is not caller-supplied"* is real. It is a type-level assertion that
+ *   `"copyright" extends keyof CardImageProps` is `false`, so re-adding the
+ *   prop stops it compiling.
+ * - *"carries no legality or rules data"* **asserts nothing.** Its body is
+ *   `const keys: Keys[] = ["src", "alt", "pitch"]` followed by
+ *   `expect(keys).toHaveLength(3)` — a hand-written three-element array is
+ *   three elements long. This interface already has eight fields, so the case
+ *   is not even describing the type it names; adding a `legality` field would
+ *   leave it green.
+ *
+ * Left as found rather than quietly strengthened, because making that case
+ * mean what its title says is a decision about what the contract is — the
+ * honest version is a `Record<keyof …, true>` exhaustiveness check, and it
+ * would fail on the eight fields that exist today.
+ *
+ * Nine other `*Props` interfaces in this file duplicated their components'
+ * shape and have been deleted. This one is a second, divergent shape, so
+ * removing it would delete the `copyright` assertion with it. (`FiligreeProps`
+ * was a tenth case again: same shape as the component's, but a different name
+ * — the component declares `FiligreeCornerProps` — so that deletion dropped a
+ * name from this package's surface rather than shedding a duplicate of one.)
  */
 export interface CardImageProps {
   readonly src: string;

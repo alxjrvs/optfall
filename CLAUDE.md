@@ -127,14 +127,21 @@ performed enough times to be worth encoding. Both are in `.claude/skills/`:
 ## Pre-approved commands, and the two that are not
 
 `.claude/settings.json` pre-approves the read-only and build commands that
-recur here — `bun run check*`, `bun test`, `bun run build`, `rg`, and the
-read-only `gh` subcommands.
+recur here — `bun test`, `bun run build`, `rg`, the read-only `gh` subcommands,
+and the `check:*` scripts **enumerated one by one**.
 
-**`bun run corpus:*` and `bun run symbols` are deliberately excluded.** Both hit
-the network, and both rewrite committed provenance data —
-`data/symbols/symbols.json` carries a per-file SHA-256 and a rights statement
-that `check:provenance` verifies. Regenerating either is a decision with a diff
-attached, not a step in a loop.
+**The `check:*` entries are listed individually rather than globbed, and that is
+deliberate.** A `Bash(bun run check:*)` wildcard reads as "the safe local
+checks" and is not: it also covers `check:symbols`, which re-fetches every game
+symbol from `rules.fabtcg.com`, and `check:repo-settings`, which makes
+authenticated `gh api` calls against the live repository. Neither is a loop
+command, and neither should run without someone deciding to run it.
+
+**`bun run corpus:*` and `bun run symbols` are excluded for the same reason,
+plus one more.** Both hit the network, and both rewrite committed provenance
+data — `data/symbols/symbols.json` carries a per-file SHA-256 and a rights
+statement that `check:provenance` verifies. Regenerating either is a decision
+with a diff attached, not a step in a loop.
 
 ## Adding a search operator — four files, and one has no test
 
