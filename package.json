@@ -51,6 +51,7 @@
     "corpus:rules": "bun scripts/build-rules-corpus.ts",
     "corpus:cards": "bun scripts/build-card-corpus.ts",
     "corpus:sets": "bun scripts/build-sets-corpus.ts",
+    "corpus:sample": "bun scripts/build-card-sample.ts",
     "design-system": "bun scripts/build-design-system.ts"
   },
   "devDependencies": {
