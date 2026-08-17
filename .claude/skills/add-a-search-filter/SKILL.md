@@ -19,12 +19,12 @@ rather than as a design problem.
 
 ## Before you start
 
-Read `apps/site/src/lib/card-search.ts`'s header. It is a 3,100-line file with
-labelled sections; the ones you need are **The query language** and
-**Matching**. You do not need to read the wire format or the ranking sections
-to add an operator.
+Read `apps/site/src/lib/card-search/index.ts` — the barrel, which carries the
+argument the whole module rests on. Then open `card-search/grammar.ts`, which
+is where the operator tables live. You do not need `wire.ts`, `build.ts` or
+`rank.ts` to add an operator.
 
-## 1. `apps/site/src/lib/card-search.ts` — the tables
+## 1. `apps/site/src/lib/card-search/grammar.ts` — the tables
 
 Nine tables define the grammar. Add your operator to whichever ones apply:
 
@@ -73,7 +73,7 @@ deciding the other has already cost a follow-up PR (#117, "Refuse `year!=` and
 `date!=`").
 
 For each operator ask: does negating it mean anything consistent? For dates it
-does not — `card-search.ts` argues the case at the `year!=` branch: a card can
+does not — `grammar.ts` argues the case at the `year!=` branch: a card can
 be returned by both `year:2024` and `year!=2024`, which is a query and its own
 negation matching the same card. Where the answer is "no meaning that is both
 consistent and honest", add it to `PENDING_OPERATORS` so it is **refused with a
@@ -81,7 +81,7 @@ reason** rather than silently accepted and quietly wrong.
 
 ## The import rule that has already cost 9 MB
 
-`card-search.ts` must import `./cards` **type-only**:
+`card-search/build.ts` and `decode.ts` must import `./cards` **type-only**:
 
 ```ts
 import type { CardPage } from "./cards";

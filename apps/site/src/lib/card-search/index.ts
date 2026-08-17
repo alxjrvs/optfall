@@ -13,7 +13,7 @@
  * - **Explicable.** Every result carries {@link CardResult.matchedIn}: which
  *   field put it on the page. A user can look at a row and say why it is there.
  *
- * THE SPLIT. {@link buildCardIndex} runs once, in Astro's frontmatter, at build
+ * THE SPLIT. {@link buildCardIndex} runs once, in the page module, at build
  * time, over the same {@link CardPage} objects the card pages themselves render
  * — so the search and the page cannot disagree about a card's slug, its label
  * or its legality. {@link decodeCardIndex} and {@link searchCards} run in the

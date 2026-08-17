@@ -148,7 +148,7 @@ with a diff attached, not a step in a loop.
 `apps/site/ssg/pages/syntax.page.tsx` says it outright: when the parser changes,
 that page is wrong and no test will say so.
 
-1. `apps/site/src/lib/card-search.ts` — `FIELD_OPERATORS`, `STATE_OPERATORS`,
+1. `apps/site/src/lib/card-search/grammar.ts` — `FIELD_OPERATORS`, `STATE_OPERATORS`,
    `FORMAT_ALIASES`, `STAT_FIELDS`, `SORT_KEYS`, `DISPLAY_MODES`,
    `UNIQUE_MODES`, `WORD_VALUED`
 2. the hand-written `Supported: …` string in the unknown-operator error
@@ -158,8 +158,8 @@ that page is wrong and no test will say so.
 Decide the negated form (`-op:`, `op!=`) in the same change. A filter once
 shipped without one and needed a follow-up PR to refuse it.
 
-`card-search.ts` must import `./cards` **type-only**. A value import once
-shipped a 9.28 MB bundle to every reader.
+Every module under `card-search/` must import `./cards` **type-only**. A value
+import once shipped a 9.28 MB bundle to every reader.
 
 ## Adding a primitive — seven places, all test-enforced
 

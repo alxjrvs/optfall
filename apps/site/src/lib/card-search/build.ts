@@ -68,7 +68,7 @@ function assertFormatsAgree(pages: readonly CardPage[]): void {
     actual.every((name, index) => name === FORMAT_NAMES[index]);
   if (agrees) return;
   throw new Error(
-    `apps/site/src/lib/card-search.ts: FORMAT_NAMES is [${FORMAT_NAMES.join(", ")}] but ` +
+    `apps/site/src/lib/card-search/grammar.ts: FORMAT_NAMES is [${FORMAT_NAMES.join(", ")}] but ` +
       `apps/site/src/lib/cards.ts publishes [${actual.join(", ")}]. The state filters ` +
       `(legal:, banned:, suspended:, restricted:) index the verdict vector by ` +
       `position, so this mismatch would make every one of them read the wrong ` +

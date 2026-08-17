@@ -8,8 +8,8 @@ import type { StateTone } from "optfall-theme";
  * The index as it crosses from the build into the page.
  *
  * NEWLINE-JOINED STRINGS AND BASE-36 IDS, NOT AN ARRAY OF OBJECTS, for the
- * reason `./search.ts` measures: an Astro island's props are JSON-serialised
- * into an HTML attribute, so every `"` in the payload becomes six bytes of
+ * reason `../search.ts` measures: an island's props are JSON-serialised into
+ * an HTML attribute, so every `"` in the payload becomes six bytes of
  * `&quot;`. An object per card would carry roughly a hundred thousand quotes;
  * this carries about twenty.
  *

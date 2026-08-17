@@ -1,3 +1,21 @@
+/**
+ * The query language: the operator tables, and the parser that reads them.
+ *
+ * ADDING AN OPERATOR TOUCHES FOUR FILES AND ONE OF THEM HAS NO TEST. The tables
+ * below, the hand-written `Supported:` string in the unknown-operator error,
+ * `../query.ts` if tokenising changes, and `ssg/pages/syntax.page.tsx` — which
+ * nothing checks against this file. See `.claude/skills/add-a-search-filter`.
+ *
+ * NOTHING HERE MAY IMPORT `../cards` BY VALUE. That module pulls the 16 MB
+ * corpus at module scope, and this one is reached from a client island, so a
+ * value import would put the corpus in the browser bundle. It did once: 9.28 MB
+ * shipped to every reader. `import type` is erased before the bundler sees it.
+ *
+ * That rule is why {@link FORMAT_NAMES} is restated below rather than imported
+ * from `../cards`, and why `build.ts` asserts the restatement against the real
+ * list at build time so it cannot drift.
+ */
+
 import type { StateTone } from "optfall-theme";
 
 import {
@@ -45,7 +63,7 @@ const PENDING_OPERATORS: Readonly<Record<string, string>> = {
 /**
  * The six format names, in `FORMATS` order — restated rather than imported, for
  * the reason at the top of this file, and asserted against the real list by
- * { @link buildCardIndex } so the restatement cannot drift.
+ * {@link buildCardIndex} in `./build` so the restatement cannot drift.
  */
 export const FORMAT_NAMES: readonly string[] = [
   "Classic Constructed",
