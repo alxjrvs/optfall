@@ -108,11 +108,24 @@ function page(): PageResult {
           silent failure, which is the one shape "degrade visibly" forbids.
         */}
         <noscript>
+          {/*
+            THE SCHEME IS WORTH SPELLING OUT HERE SPECIFICALLY. This paragraph
+            is read by somebody who cannot search, so "type the URL" is the only
+            route they have left — and the URL is now derivable from the card in
+            their hand, which is the one thing the old `/card/<slug>` form could
+            never offer. Set code and collector number are printed on every
+            Flesh and Blood card.
+
+            The name is still named as a way in, because it still works: it is a
+            redirect rather than a page, and a reader does not need to be told
+            the difference to use it.
+          */}
           <p className="of-search-page__noscript">
-            Live results need JavaScript. Every card is addressable without it:{" "}
-            <code>/card/command-and-conquer</code> is that card, and a name
-            shared by several cards — <code>/card/head-jab</code> — is that card
-            too, with its pitch versions as tabs.
+            Live results need JavaScript. Every printing is addressable without
+            it: <code>/card/mst/131/10-000-year-reunion</code> is the set code
+            and collector number printed on the card, then its name. Typing a
+            name alone — <code>/card/head-jab</code> — still finds the card, at
+            its first printing, with its pitch versions as tabs.
           </p>
         </noscript>
 

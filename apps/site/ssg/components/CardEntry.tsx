@@ -24,7 +24,7 @@
  *
  * THERE IS NO ISLAND ON THIS PAGE AT ALL, which is the end of a direction the
  * previous note recorded halfway. It said the printing picker was the only
- * island here — one interactive control across 12,278 pages, with the
+ * island here — one interactive control across 11,378 pages, with the
  * printed-text toggle done in CSS so it cost nothing. The picker is gone: the
  * printings table below is how a reader reaches another art, each row
  * addressing the art it is published with, so the heaviest route in the build
@@ -56,7 +56,8 @@ import {
   type CardPage,
   CORPUS,
   facesOf,
-  hrefForSlug,
+  HREF_BY_NAME_SLUG,
+  hrefForPrinting,
   LAST_CONFIRMED,
   STAT_ORDER,
   variantSuffix,
@@ -88,15 +89,16 @@ export interface CardEntryProps {
    * Which art this page shows — an index into `facesOf(card)`.
    *
    * IT IS THE WHOLE OF WHAT A PER-PRINTING URL MEANS now that the picker is
-   * gone. `/card/<slug>` is face 0 and `/card/<slug>/<set>/<number>` is the
-   * face that route was emitted for, so the picture, the rarity beside it and
-   * the row marked in the printings table are all decided here, at build time,
-   * by the address.
+   * gone. Every URL is `/card/<set>/<number>/<slug>` and names exactly one
+   * face, so the picture, the rarity beside it and the row marked in the
+   * printings table are all decided here, at build time, by the address. Face 0
+   * is not special any more — it is simply the one the card's own links point
+   * at.
    */
   readonly selected?: number;
 }
 
-/** The keyword vocabulary, built once for all 12,278 card pages. */
+/** The keyword vocabulary, built once for all 11,378 card pages. */
 const KEYWORD_VOCABULARY = buildKeywordVocabulary(
   corpusJson as unknown as RulesCorpus,
 );
@@ -322,8 +324,15 @@ function groupTarget(group: LinkGroup): {
     known !== undefined &&
     known.count === group.links.length;
 
+  /* THE NAME'S DEFAULT VERSION, RESOLVED HERE. `/card/<nameSlug>` is a 301
+     now; the map holds the address it points at, so the anchor goes straight
+     there. Falls back to the first link, which is the lowest-pitch version of
+     this group and therefore the same card the map would have named. */
   return whole
-    ? { href: hrefForSlug(known.nameSlug), qualifier: "" }
+    ? {
+        href: HREF_BY_NAME_SLUG.get(known.nameSlug) ?? first.href,
+        qualifier: "",
+      }
     : { href: first.href, qualifier: versionsSuffix(group.links) };
 }
 
@@ -447,7 +456,10 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   ];
   const soleFlavour = flavours.length === 1 ? flavours[0] : undefined;
 
-  const nameHref = hrefForSlug(page.nameSlug);
+  /* THE NAME'S DESTINATION, RESOLVED AT BUILD TIME. `/card/<nameSlug>` is a
+     301 now, and a link the page draws itself has no business travelling
+     through one — the lowest-pitch version's own address is known here. */
+  const nameHref = HREF_BY_NAME_SLUG.get(page.nameSlug) ?? page.href;
 
   /*
     NO "OTHER VERSIONS" ROW. It restated, at the foot of the page, a set the
@@ -497,9 +509,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    */
   const faces = facesOf(card);
   const hrefByFace = new Map(
-    faces.map((ref, index) => [
+    faces.map((ref) => [
       ref.key,
-      index === 0 ? page.href : `${page.href}/${ref.setCode}/${ref.number}`,
+      hrefForPrinting(ref.setCode, ref.number, page.slug),
     ]),
   );
 
@@ -532,8 +544,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    *
    * `selected` IS THE ROUTE'S OWN INDEX into `faces`, so this is decided by the
    * URL rather than by state. Out of range falls back to the first face, which
-   * is what `/card/<slug>` is; a card with no published image at all has no
-   * face here and renders the placeholder.
+   * is the one the card's own address names; a card with no published image at
+   * all has no face here and renders the placeholder.
    */
   const shown = faces[selected] ?? faces[0];
 
@@ -1485,28 +1497,30 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         printing.id
                       ) : (
                         /*
-                          `aria-current="true"`, NOT `"page"`, and the name page
-                          is why. `"page"` claims the link addresses the URL
-                          being rendered, which is true of `/card/head-jab-1`
-                          and its per-art routes and FALSE of `/card/head-jab` —
-                          the shared page for a name, which renders the first
-                          version's card and would have marked a row pointing
-                          somewhere else as the page you are on.
+                          `aria-current="page"`, AND IT USED TO BE `"true"`
+                          BECAUSE OF A PAGE THAT NO LONGER EXISTS. `"page"`
+                          claims the link addresses the URL being rendered. That
+                          was true of a card's own route and its per-art routes
+                          and FALSE of `/card/head-jab` — the shared page for a
+                          name, which rendered the first version's card and so
+                          would have marked a row pointing somewhere else as the
+                          page you are on. `"true"`, the weaker "current item
+                          within a set", was the only claim true on every route.
 
-                          `"true"` is the weaker and accurate claim: the current
-                          item within a set. That is what the row is on every
-                          route — the printing whose art is at the top of this
-                          page — and it is the state a control has to expose
-                          however it is reached.
+                          Every route is a printing now and every printing's row
+                          addresses itself, so the stronger claim is simply
+                          accurate — and it is the one a screen reader can do
+                          something with, since "page" is the value that gets
+                          announced as *this page* rather than as an unspecified
+                          currency.
 
-                          It is still a link. On most routes it addresses the
-                          page it is on, which is what makes the row copyable
-                          and what makes the marking mean something on arrival
-                          rather than only after a click.
+                          It is still a link, which is what makes the row
+                          copyable: the marked row is the permalink for the art
+                          at the top of this page.
                         */
                         <a
                           href={href}
-                          aria-current={current ? "true" : undefined}
+                          aria-current={current ? "page" : undefined}
                         >
                           {printing.id}
                           {qualifier === "" ? null : (

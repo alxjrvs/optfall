@@ -162,7 +162,7 @@ matched, so the ordinary case said nothing and a reader could not tell a
 single-version card from a collapsed one.
 
 **Where the row stands for several versions, the mark is a control.** The name
-goes to the name — `/card/head-jab`, the page that holds all three — and each
+goes to the name's lowest-pitch version — the page `/card/head-jab` now 301s to — and each
 band goes to the version it is drawn in the colour of, so a reader who means the
 blue one aims at the blue third of the rule instead of arriving at red and
 correcting. The stones in the two text views are the same control drawn the way
@@ -293,7 +293,7 @@ updates here are consequential and currently arrive as a changelog nobody can
 cross-reference against cards. Note the reverse link — a rule knows which
 interactions cite it, so a change tells you exactly what it invalidates.
 
-### 5. Card page — `optfall.com/card/command-and-conquer`
+### 5. Card page — `optfall.com/card/arc/159/command-and-conquer`
 
 **The destination.** ~~Supporting cast, explicitly not a destination.~~ That was
 this document's position and it is now wrong: `PLAN.md` was rewritten on

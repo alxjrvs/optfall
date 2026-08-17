@@ -13,7 +13,7 @@
  * Astro inlined the whole generated stylesheet into every page with
  * `<style is:global set:html={tokens}>`, so "the tokens are defined" and "the
  * tokens reached this page" were one string to grep for. The generator writes
- * `assets/tokens.css` once and links it — 18 kB against 13,675 pages was 235 MB
+ * `assets/tokens.css` once and links it — 18 kB against 12,776 pages was 220 MB
  * of one repeated stylesheet, and it could not be cached separately from the
  * document it lived in.
  *
@@ -69,7 +69,7 @@ function stylesheetHrefs(html: string): string[] {
   return found;
 }
 
-/** Read once per file rather than once per page — there are 13,675 pages. */
+/** Read once per file rather than once per page — there are 12,776 pages. */
 const sheetCache = new Map<string, string | undefined>();
 
 function sheetContents(href: string): string | undefined {

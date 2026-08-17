@@ -29,7 +29,8 @@ import {
   FORMATS,
   LAST_CONFIRMED,
   STAT_ORDER,
-  hrefForSlug,
+  hrefForPrinting,
+  numberFor,
 } from "./cards";
 import {
   buildCardIndex,
@@ -49,6 +50,26 @@ const encoded = buildCardIndex(CARD_PAGES, {
   releasedBySet: new Map(SETS.sets.map((set) => [set.id, set.released])),
 });
 const index: CardIndex = decodeCardIndex(encoded);
+
+/**
+ * A card's address, derived exactly as the search module derives it.
+ *
+ * THREE TESTS BUILT THIS BY HAND AS `/card/${slug}` AND ALL THREE WENT QUIET
+ * when the scheme moved: they select rows by `href`, no href has that shape any
+ * more, the selection returns nothing, and an assertion loop over nothing
+ * passes. That is worse than a failure — the bug each of them was written to
+ * catch could come back with the suite green. One helper, so there is one place
+ * for this to be wrong and it is a place that fails loudly.
+ */
+function addressOf(ordinal: number): string {
+  const key = index.faceKeys[ordinal] ?? "";
+  const setCode = index.faceSets[ordinal] ?? "";
+  return hrefForPrinting(
+    setCode,
+    numberFor(key, setCode),
+    index.slugs[ordinal] ?? "",
+  );
+}
 
 const total = (query: string) => searchCards(index, query).total;
 const labels = (query: string) =>
@@ -98,12 +119,55 @@ describe("the index", () => {
     expect(JSON.stringify(again)).toBe(JSON.stringify(encoded));
   });
 
-  test("every result href is a URL this build emits", () => {
-    const emitted = new Set(
-      CARD_ROUTES.map((route) => hrefForSlug(route.slug)),
-    );
-    for (const slug of index.slugs)
-      expect(emitted.has(hrefForSlug(slug))).toBe(true);
+  test("every card's derived address is a URL this build emits", () => {
+    /*
+     * THE CLIENT DERIVES A CARD URL RATHER THAN BEING HANDED ONE, and this is
+     * what says the derivation agrees with the router. `defaultHrefOf` builds
+     * `/card/<set>/<number>/<slug>` from `faceKeys` + `faceSets` + `slugs` —
+     * three columns shipped for other reasons — so a change to any of them, or
+     * to `numberFor`, silently points every result row at a 404. There is no
+     * `/card/<slug>` fallback page left to absorb that any more.
+     */
+    const emitted = new Set(CARD_ROUTES.map((route) => route.href));
+    for (let ordinal = 0; ordinal < index.slugs.length; ordinal += 1) {
+      const key = index.faceKeys[ordinal];
+      const setCode = index.faceSets[ordinal] ?? "";
+      expect(key).not.toBeNull();
+      expect(setCode).not.toBe("");
+      const href = hrefForPrinting(
+        setCode,
+        numberFor(key ?? "", setCode),
+        index.slugs[ordinal] ?? "",
+      );
+      expect(emitted.has(href)).toBe(true);
+    }
+  });
+
+  test("every result row links to a URL this build emits", () => {
+    /*
+     * THE DERIVATION AND THE ROWS ARE DIFFERENT FACTS. The check above proves
+     * a card's own address resolves; this one walks what `search` actually
+     * puts in an anchor, which includes the `unique:art` printing rows and the
+     * collapsed `unique:names` rows that pick a sibling version. Those are the
+     * two paths that do NOT go through the common case.
+     */
+    const emitted = new Set(CARD_ROUTES.map((route) => route.href));
+    for (const query of [
+      "banned:cc",
+      "head jab",
+      "hyper driver",
+      "set:mst unique:art",
+      "set:wtr unique:cards",
+    ]) {
+      const outcome = searchCards(index, query, 60);
+      expect(outcome.results.length).toBeGreaterThan(0);
+      for (const result of outcome.results) {
+        expect(emitted.has(result.href)).toBe(true);
+        for (const version of result.matchedVersions) {
+          expect(emitted.has(version.href)).toBe(true);
+        }
+      }
+    }
   });
 });
 
@@ -327,7 +391,14 @@ describe("ranking", () => {
     const headJab = outcome.results.filter((row) => row.label === "Head Jab");
 
     expect(headJab).toHaveLength(1);
-    expect(headJab[0]?.href).toBe("/card/head-jab");
+    /*
+     * THE LOWEST-PITCH VERSION'S OWN PRINTING, NOT `/card/head-jab`. That URL
+     * used to be the collapsed row's destination and is a 301 now, so the row
+     * carries the address the redirect would have sent it to. See
+     * `nameDefaultHref` — the version is picked by `byPitch`'s rule, which is
+     * the same one the tab strip on the destination is ordered by.
+     */
+    expect(headJab[0]?.href).toBe("/card/ben/010/head-jab-1");
     // The bare name, because the row stands for the card rather than for one
     // version of it — and the destination shows all three.
     expect(headJab[0]?.label).not.toContain("pitch");
@@ -350,13 +421,26 @@ describe("ranking", () => {
     );
 
     expect(headJab?.matchedVersions).toEqual([
-      { pitch: 1, href: "/card/head-jab-1", label: "Head Jab (pitch 1)" },
-      { pitch: 2, href: "/card/head-jab-2", label: "Head Jab (pitch 2)" },
-      { pitch: 3, href: "/card/head-jab-3", label: "Head Jab (pitch 3)" },
+      {
+        pitch: 1,
+        href: "/card/ben/010/head-jab-1",
+        label: "Head Jab (pitch 1)",
+      },
+      {
+        pitch: 2,
+        href: "/card/ben/017/head-jab-2",
+        label: "Head Jab (pitch 2)",
+      },
+      {
+        pitch: 3,
+        href: "/card/ben/024/head-jab-3",
+        label: "Head Jab (pitch 3)",
+      },
     ]);
-    /* The row's own link is the NAME — the page that holds all three. The
-       versions are how a reader who means one of them says so. */
-    expect(headJab?.href).toBe("/card/head-jab");
+    /* The row's own link is the LOWEST-PITCH version — which is the page
+       `/card/head-jab` used to render and now 301s to. The versions beside it
+       are how a reader who means one of the others says so. */
+    expect(headJab?.href).toBe("/card/ben/010/head-jab-1");
   });
 
   test("only the matched versions get a door, on every row", () => {
@@ -375,8 +459,8 @@ describe("ranking", () => {
       (row) => row.label === "Electromagnetic Somersault",
     );
     expect(banned?.matchedVersions.map((version) => version.href)).toEqual([
-      "/card/electromagnetic-somersault-1",
-      "/card/electromagnetic-somersault-2",
+      "/card/ast/019/electromagnetic-somersault-1",
+      "/card/ros/086/electromagnetic-somersault-2",
     ]);
   });
 
@@ -843,14 +927,14 @@ describe("unique:", () => {
      * THE TEST THAT EARNED ITS PLACE. The set code arrives here through
      * `setDict`, which holds upstream's spelling — `WTR` — while the router
      * lowercases when it builds the path. The first working version of this
-     * feature emitted `/card/head-jab-1/WTR/098` for a page built at
-     * `/wtr/098`: every alternate-art result was a 404, and every one of them
-     * looked correct in the list.
+     * feature emitted `/card/WTR/098/head-jab-1` for a page built at
+     * `/card/wtr/098/head-jab-1`: every alternate-art result was a 404, and
+     * every one of them looked correct in the list.
      *
      * Nothing inside the search module could have caught that, because both
      * halves were self-consistent. It needs the router's own route table.
      */
-    const routes = new Set(CARD_ROUTES.map((route) => `/card/${route.slug}`));
+    const routes = new Set(CARD_ROUTES.map((route) => route.href));
 
     const rows = searchCards(index, "unique:art type:guardian", 5000).results;
     expect(rows.length).toBeGreaterThan(400);
@@ -1039,8 +1123,27 @@ describe("release dates", () => {
   });
 
   test("order:released is oldest first, and dir:desc reverses it", () => {
-    const asc = searchCards(index, "dominate order:released", 5000);
-    const desc = searchCards(index, "dominate order:released dir:desc", 5000);
+    /*
+     * `unique:cards`, SO EVERY ROW STANDS FOR THE CARD IT WAS SORTED BY.
+     *
+     * The default mode collapses pitch siblings, and a collapsed row's href is
+     * the LOWEST-PITCH sibling's address while the row itself is the
+     * BEST-RANKED one — under `order:released`, the earliest-released. So
+     * looking a row's date up by its href reads a different card's date, and
+     * the monotonicity claim is checked against the wrong card. It passes today
+     * only because siblings are almost always printed in the same sets, which
+     * is the kind of accident that makes a test look like it works.
+     */
+    const asc = searchCards(
+      index,
+      "dominate order:released unique:cards",
+      5000,
+    );
+    const desc = searchCards(
+      index,
+      "dominate order:released dir:desc unique:cards",
+      5000,
+    );
     expect(asc.sort.key).toBe("released");
     expect(asc.total).toBe(desc.total);
     expect(asc.results[0]?.label).not.toBe(desc.results[0]?.label);
@@ -1048,11 +1151,24 @@ describe("release dates", () => {
     /* The ordering is the claim, so it is checked over the whole page rather
        than at the ends: every card's first release is at least as late as the
        one before it. */
+    /* KEYED ON THE ROW'S HREF, WHICH IS NOW A PRINTING URL. This used to strip
+       `/card/` and look the remainder up in `slugs`; that returned -1 for every
+       row the moment addresses gained segments, so `dated` was empty and the
+       assertion compared [] to []. The ordering claim went unchecked. Every row
+       is one card here, so its href IS its own address. */
+    const ordinalByHref = new Map(
+      index.slugs.map((_, ordinal) => [addressOf(ordinal), ordinal]),
+    );
     const dates = asc.results.map((row) => {
-      const ordinal = index.slugs.indexOf(row.href.replace("/card/", ""));
-      return index.released[ordinal]?.[0] ?? "";
+      const ordinal = ordinalByHref.get(row.href);
+      return ordinal === undefined ? "" : (index.released[ordinal]?.[0] ?? "");
     });
     const dated = dates.filter((date) => date !== "");
+    /* EVERY row has to resolve, not merely one — a lookup that silently missed
+       some rows would check monotonicity over a subsequence, which is a weaker
+       claim that can hold while the sort is wrong. */
+    expect(dates.filter((date) => date === "")).toEqual([]);
+    expect(dated.length).toBeGreaterThan(0);
     expect(dated).toEqual([...dated].toSorted());
   });
 
@@ -1304,8 +1420,9 @@ describe("a set-scoped search shows that set's printing", () => {
      * of the pairs the card actually has. Pairing an art's key with the default
      * face's orientation — exactly the bug — produces a pair that is in neither.
      */
+    let checked = 0;
     for (const [ordinal, arts] of index.arts.entries()) {
-      const href = `/card/${index.slugs[ordinal]}`;
+      const href = addressOf(ordinal);
       /* Every face this card could legitimately be shown by, as a pair. */
       const known = [
         {
@@ -1322,6 +1439,7 @@ describe("a set-scoped search shows that set's printing", () => {
           20000,
         ).results.find((result) => result.href === href);
         if (row === undefined) continue;
+        checked += 1;
         expect({
           href,
           setCode,
@@ -1342,6 +1460,12 @@ describe("a set-scoped search shows that set's printing", () => {
          covers both orientations proves the wiring. */
       if (ordinal > 40) break;
     }
+
+    /* AND IT LOOKED AT SOMETHING. The row lookup is by href, so a scheme change
+       that leaves `addressOf` out of step with the search module makes every
+       `find` return undefined and every iteration `continue` — the loop passes
+       having asserted nothing, which is exactly how this test died once. */
+    expect(checked).toBeGreaterThan(0);
   });
 
   test("a divergent art is drawn at ITS orientation, not the default face's", () => {
@@ -1397,7 +1521,16 @@ describe("a set-scoped search shows that set's printing", () => {
     const art = flipped.arts[target]?.[0];
     expect(art?.landscape).toBe(true);
 
-    const href = `/card/${flipped.slugs[target]}`;
+    /* The card's own address, derived exactly as `defaultHrefOf` derives it —
+       a card URL is `/card/<set>/<number>/<slug>` and the slug alone no longer
+       names a page. */
+    const targetKey = flipped.faceKeys[target] ?? "";
+    const targetSet = flipped.faceSets[target] ?? "";
+    const href = hrefForPrinting(
+      targetSet,
+      numberFor(targetKey, targetSet),
+      flipped.slugs[target] ?? "",
+    );
     const row = searchCards(
       flipped,
       `set:${art?.setCode} unique:cards`,
@@ -1430,17 +1563,30 @@ describe("a set-scoped search shows that set's printing", () => {
     const arts = searchCards(index, "set:lgs unique:art", 20000);
     expect(arts.total).toBeGreaterThan(0);
 
-    /* Every row for one card shares `/card/<slug>`; an art row appends the
-       printing to that path, so the first three segments identify the card. */
+    /*
+     * THE CARD IS THE LAST SEGMENT, AND IT USED TO BE THE FIRST THREE.
+     * `/card/<slug>/…` meant the leading `/card/<slug>` identified the card;
+     * addresses are `/card/<set>/<number>/<slug>` now, so the same expression
+     * yields `/card/lgs` and buckets every row in the set together. That breaks
+     * this test in BOTH directions: the regression it guards escapes whenever a
+     * card's default printing comes from another set (its two rows land in
+     * different buckets), and two distinct cards sharing one image inside `lgs`
+     * would fail it spuriously.
+     *
+     * The slug is unique per card — `SLUG_BY_ID` throws otherwise — so the
+     * trailing segment is the card, exactly as the leading one used to be.
+     */
     const byCard = new Map<string, string[]>();
     for (const row of arts.results) {
       if (row.faceKey === null) continue;
-      const card = row.href.split("/").slice(0, 3).join("/");
+      const card = row.href.split("/").at(-1) ?? "";
       const seen = byCard.get(card);
       if (seen) seen.push(row.faceKey);
       else byCard.set(card, [row.faceKey]);
     }
-    expect(byCard.size).toBeGreaterThan(0);
+    /* Grouped by CARD, so there are many buckets — one per set would be one,
+       which is what the broken expression produced and what nothing caught. */
+    expect(byCard.size).toBeGreaterThan(50);
 
     const duplicated = [...byCard.entries()].filter(
       ([, keys]) => new Set(keys).size !== keys.length,

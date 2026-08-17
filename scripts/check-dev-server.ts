@@ -28,7 +28,7 @@
  *   for the multi-segment printing routes, which are the shape most likely to
  *   be got wrong.
  * - **A generated non-page file goes missing.** This is not hypothetical
- *   either: `document.tsx` linked `/favicon.svg` on all 13,675 pages for four
+ *   either: `document.tsx` linked `/favicon.svg` on all 12,776 pages for four
  *   layers of the port while nothing emitted it, because a favicon is not a
  *   page and page-count parity could not see it.
  *
@@ -74,7 +74,7 @@ import { CARD_ROUTES } from "../apps/site/src/lib/cards";
 const PORT = 4399;
 
 /**
- * Generous, because `dev` BUILDS before it serves — 13,675 pages plus a Vite
+ * Generous, because `dev` BUILDS before it serves — 12,776 pages plus a Vite
  * bundle, on a cold CI runner. The old value was 120s and covered a dev server
  * that rendered nothing up front.
  */
@@ -83,36 +83,46 @@ const STARTUP_TIMEOUT_MS = 420_000;
 interface Check {
   path: string;
   /** Asserted with `startsWith`, so `; charset=utf-8` does not fail a match. */
-  contentType: string;
+  contentType?: string;
+  /** Expected status. Defaults to 200. */
+  status?: number;
+  /** Expected `Location` header, for a redirect. */
+  location?: string;
 }
 
-const slug = CARD_ROUTES[0]?.slug;
+/*
+ * ONE DEFAULT PRINTING AND ONE ALTERNATE, BECAUSE THEY ARE DIFFERENT FACTS.
+ *
+ * Every card URL is `/card/<set>/<number>/<slug>` — three segments, always —
+ * so the old "one segment versus three" asymmetry is gone. What replaced it is
+ * that the default printing is where every link and every redirect LANDS, while
+ * an alternate is a route nothing points at but a reader's address bar. A check
+ * that only covered one of them would leave the other free to stop resolving.
+ */
+const defaultRoute = CARD_ROUTES.find((route) => route.isDefault);
+const alternateRoute = CARD_ROUTES.find((route) => !route.isDefault);
 
-if (!slug) {
+if (!defaultRoute || !alternateRoute) {
   console.log(
-    "::error::CARD_ROUTES is empty, so there is no card route to check. That is a broken corpus, not a reason to skip.",
+    "::error::CARD_ROUTES has no default and/or no alternate printing route, so the card paths are unchecked. That is a broken corpus, not a reason to skip.",
   );
   process.exit(1);
 }
 
 /*
- * A PRINTING ROUTE TOO, BECAUSE IT IS A DIFFERENT SHAPE OF ROUTE.
+ * A REDIRECT IS A ROUTE THE SITE OWNS, AND NOTHING WAS CHECKING ONE.
  *
- * `/card/<slug>` is one path segment; a printing is three. "A multi-segment
- * path resolves to the right file" is exactly the kind of assumption that holds
- * in the generator's own output map and fails in whatever serves it, which is
- * the asymmetry this file now exists to catch.
+ * The emitted table is 12,278 exact rules, and they reach the reader
+ * through a mechanism no other check here touches: a `_redirects` file written
+ * by the build and read back by the server. Emitting it, parsing it and acting
+ * on it are three separate things that can each silently stop happening, and
+ * the failure is invisible — the site still serves every page it knows about,
+ * and only the links people already pasted are dead.
+ *
+ * The old CARD address is the one asserted, because it is the one 4,941 of
+ * those rules are for and because its target is knowable here.
  */
-const printingSlug = CARD_ROUTES.find(
-  (route) => route.kind === "printing",
-)?.slug;
-
-if (!printingSlug) {
-  console.log(
-    "::error::No printing route exists, so the multi-segment card path is unchecked. See PRINTING_ROUTES in cards.ts.",
-  );
-  process.exit(1);
-}
+const legacyCardPath = `/card/${defaultRoute.slug}`;
 
 const checks: Check[] = [
   { path: "/", contentType: "text/html" },
@@ -134,7 +144,7 @@ const checks: Check[] = [
    * THE PWA SURFACE, which is a fourth mechanism: the manifest and the install
    * icon are derived like the favicon, and `sw.js` is written by Workbox after
    * everything else exists. Every page links the manifest and registers the
-   * worker, so a missing one of these is 13,675 pages pointing at nothing.
+   * worker, so a missing one of these is 12,776 pages pointing at nothing.
    */
   { path: "/manifest.webmanifest", contentType: "application/manifest+json" },
   { path: "/icon.svg", contentType: "image/svg+xml" },
@@ -145,8 +155,9 @@ const checks: Check[] = [
   /* The worker `importScripts` this at startup, so a worker that registers and a
      worker that WORKS are different facts if this file stops being emitted. */
   { path: "/sw-purge.js", contentType: "text/javascript" },
-  { path: `/card/${slug}`, contentType: "text/html" },
-  { path: `/card/${printingSlug}`, contentType: "text/html" },
+  { path: defaultRoute.href, contentType: "text/html" },
+  { path: alternateRoute.href, contentType: "text/html" },
+  { path: legacyCardPath, status: 301, location: defaultRoute.href },
 ];
 
 /*
@@ -220,16 +231,25 @@ await waitForServer();
 
 let failed = false;
 
-for (const { path, contentType } of checks) {
+for (const check of checks) {
+  const { path, contentType } = check;
+  const expectedStatus = check.status ?? 200;
   let status = 0;
   let type = "";
+  let location: string | null = null;
 
   try {
     const response = await fetch(`${origin}${path}`, {
       signal: AbortSignal.timeout(30_000),
+      /* MANUAL, OR A 301 CHECK CHECKS NOTHING. `fetch` follows redirects by
+         default and reports the FINAL response, so a rule pointing anywhere
+         that happens to serve HTML would pass while sending readers to the
+         wrong card. */
+      redirect: "manual",
     });
     status = response.status;
     type = response.headers.get("content-type") ?? "";
+    location = response.headers.get("location");
     // Drained so the connection is not left open across the next iteration.
     await response.arrayBuffer();
   } catch (error) {
@@ -238,13 +258,21 @@ for (const { path, contentType } of checks) {
     continue;
   }
 
-  if (status !== 200) {
-    console.log(`::error::${path} — expected 200, got ${status}`);
+  if (status !== expectedStatus) {
+    console.log(`::error::${path} — expected ${expectedStatus}, got ${status}`);
     failed = true;
     continue;
   }
 
-  if (!type.startsWith(contentType)) {
+  if (check.location !== undefined && location !== check.location) {
+    console.log(
+      `::error::${path} — expected a redirect to ${check.location}, got ${location ?? "no Location header"}`,
+    );
+    failed = true;
+    continue;
+  }
+
+  if (contentType !== undefined && !type.startsWith(contentType)) {
     console.log(
       `::error::${path} — expected ${contentType}, got ${type || "no content-type"}`,
     );
@@ -252,7 +280,7 @@ for (const { path, contentType } of checks) {
     continue;
   }
 
-  console.log(`  ${path} → ${status} ${type}`);
+  console.log(`  ${path} → ${status} ${location ?? type}`);
 }
 
 server.kill();

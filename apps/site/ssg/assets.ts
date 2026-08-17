@@ -208,7 +208,7 @@ function iconSvg(safeZone: number): string {
  * PNG comes from `iconSvg()` rather than from a designer's export.
  *
  * `display: "minimal-ui"` RATHER THAN `"standalone"`, and this one is about what
- * the site IS. Optfall's thesis is that every view is a URL — 13,675 of them,
+ * the site IS. Optfall's thesis is that every view is a URL — 12,776 of them,
  * each meant to be pasted. `standalone` removes the address bar, which removes
  * the affordance the product is built around. `minimal-ui` keeps a way to see
  * and copy the URL while still installing to a home screen.

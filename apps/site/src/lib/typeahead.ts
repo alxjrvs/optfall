@@ -12,8 +12,8 @@
  * twenty-four browse links. This index carries labels, slugs and pitches, which
  * is what a name suggestion is made of.
  *
- * IT SUGGESTS, IT DOES NOT SEARCH. Every suggestion is a destination — a card
- * page — and the field's own submit goes to the results page. Nothing here
+ * IT SUGGESTS, IT DOES NOT SEARCH. Every suggestion is a destination — one
+ * printing of one card — and the field's own submit goes to the results page. Nothing here
  * re-ranks a corpus while somebody types, and nothing renders results in place;
  * `docs/SCRYFALL-GAP.md` §5.2 settled that, and a typeahead that navigates is
  * the one affordance that survives it, because it shortens the path to a
@@ -39,8 +39,22 @@ import type { CardPage } from "./cards";
 export interface EncodedNameIndex {
   /** One per CARD, deduplicated by bare name. Display form, no pitch suffix. */
   readonly names: string;
-  /** The URL for each name — the card page, which carries every version. */
-  readonly slugs: string;
+  /**
+   * The URL for each name, in full — not a slug to be pasted into a template.
+   *
+   * IT WAS THE SLUG, AND A TEMPLATE, AND THAT STOPPED WORKING. Every consumer
+   * built `/card/<slug>`, which was the card's page for the life of the site
+   * and is a 301 now: card URLs are `/card/<set>/<number>/<slug>`, and the set
+   * and number of a name's default printing are not derivable from the name.
+   *
+   * So the index carries the ANSWER rather than the input — the same move the
+   * full search index's `faceKeys` note argues for, and here it is not an
+   * optimisation but the only correct option. About 30 characters per name
+   * against 12; on a payload whose whole point is being small enough for a
+   * front door, that is 55 kB of a page that exists to be 47 kB, and it is the
+   * price of the destination being knowable at all.
+   */
+  readonly hrefs: string;
   /**
    * Pitches present for each name, concatenated: `"123"` where a card has red,
    * yellow and blue versions, `"0"` where it has none.
@@ -55,7 +69,7 @@ export interface NameIndex {
   readonly names: readonly string[];
   /** Lowercased, punctuation-folded, for matching. Built once. */
   readonly folded: readonly string[];
-  readonly slugs: readonly string[];
+  readonly hrefs: readonly string[];
   readonly pitches: readonly (readonly PitchValue[])[];
   readonly size: number;
 }
@@ -71,8 +85,25 @@ function fold(text: string): string {
  * Keyed on `nameSlug` rather than `slug`, so the three pitch versions of Head
  * Jab are ONE suggestion pointing at the card — the same collapse the results
  * page makes, for the same reason: a player calls them one card.
+ *
+ * THE DESTINATION IS PASSED IN, NOT DERIVED, and that is deliberate rather than
+ * awkward. A name's URL is now its lowest-pitch version's default printing, and
+ * "lowest-pitch" is `byPitch` in `cards.ts` — which ranks an UNPITCHED card
+ * last where `CardPage.pitch` reports it as 0 and would rank it first. One card
+ * group in the corpus mixes the two. Recomputing the rule here would be a
+ * second spelling of it, and this module cannot import `cards.ts` anyway: it is
+ * reachable from the island bundle, and `cards.ts` loads a 16 MB corpus at
+ * module scope. `HREF_BY_NAME_SLUG` is that map.
+ *
+ * A NAME WITH NO ENTRY IS DROPPED RATHER THAN LINKED NOWHERE. It cannot happen
+ * — the map is built from the same corpus these pages come from — and a
+ * suggestion whose `href` is `""` navigates to the current page, which is the
+ * kind of silent nothing this file is otherwise written to avoid.
  */
-export function buildNameIndex(pages: readonly CardPage[]): EncodedNameIndex {
+export function buildNameIndex(
+  pages: readonly CardPage[],
+  hrefByNameSlug: ReadonlyMap<string, string>,
+): EncodedNameIndex {
   const byName = new Map<string, { name: string; pitches: Set<PitchValue> }>();
 
   for (const page of pages) {
@@ -87,25 +118,29 @@ export function buildNameIndex(pages: readonly CardPage[]): EncodedNameIndex {
     });
   }
 
-  const entries = [...byName.entries()];
+  const entries = [...byName.entries()].flatMap(([slug, value]) => {
+    const href = hrefByNameSlug.get(slug);
+    return href === undefined ? [] : [{ href, ...value }];
+  });
+
   return {
-    names: entries.map(([, value]) => value.name).join("\n"),
-    slugs: entries.map(([slug]) => slug).join("\n"),
+    names: entries.map((entry) => entry.name).join("\n"),
+    hrefs: entries.map((entry) => entry.href).join("\n"),
     pitches: entries
-      .map(([, value]) => [...value.pitches].toSorted((a, b) => a - b).join(""))
+      .map((entry) => [...entry.pitches].toSorted((a, b) => a - b).join(""))
       .join("\n"),
   };
 }
 
 export function decodeNameIndex(encoded: EncodedNameIndex): NameIndex {
   const names = encoded.names === "" ? [] : encoded.names.split("\n");
-  const slugs = encoded.slugs === "" ? [] : encoded.slugs.split("\n");
+  const hrefs = encoded.hrefs === "" ? [] : encoded.hrefs.split("\n");
   const pitchLines = encoded.pitches === "" ? [] : encoded.pitches.split("\n");
 
   return {
     names,
     folded: names.map(fold),
-    slugs,
+    hrefs,
     pitches: names.map((_, index) =>
       [...(pitchLines[index] ?? "")].map(
         (digit) => (Number(digit) || 0) as PitchValue,
@@ -154,7 +189,7 @@ export function suggest(
 
   return [...prefix, ...contains].slice(0, limit).map((i) => ({
     name: index.names[i] ?? "",
-    href: `/card/${index.slugs[i] ?? ""}`,
+    href: index.hrefs[i] ?? "",
     pitches: index.pitches[i] ?? [],
   }));
 }

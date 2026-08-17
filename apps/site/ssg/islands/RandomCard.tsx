@@ -37,9 +37,11 @@ export function RandomCard({ index }: RandomCardProps) {
   useEffect(() => {
     if (names.size === 0) return;
     const pick = Math.floor(Math.random() * names.size);
-    const slug = names.slugs[pick];
-    if (slug === undefined) return;
-    const target = `/card/${slug}`;
+    /* The index carries the destination outright — a card's URL is
+       `/card/<set>/<number>/<slug>` and its set and number are not derivable
+       from a name, so there is no template to fill in here. */
+    const target = names.hrefs[pick];
+    if (target === undefined) return;
     setHref(target);
     window.location.replace(target);
   }, [names]);

@@ -73,6 +73,19 @@
   NODE_VERSION = "22"
   BUN_VERSION = "1.3.14"
 
+# THE REDIRECTS BELOW ARE NOT ALL OF THEM, and the rest are not in this file on
+# purpose. `apps/site/ssg/build.ts` writes `dist/_redirects` with 12,278 rules in
+# it — one per pre-change card URL, because the card scheme moved to
+# `/card/<set>/<number>/<name>` and that many live URLs changed spelling. Every
+# rule is an exact path and none is a wildcard: see `apps/site/ssg/redirects.ts`
+# for the two infinite redirect loops the pattern versions of this table
+# shipped, and why 790 kB of exact rules is the better side of that trade.
+#
+# Netlify merges the two and processes THIS FILE FIRST, which is the right way
+# round: the handful of rules a human decided on win, and the generated bulk
+# sits behind them. Keeping 12,278 machine-derived lines out of a file whose
+# whole value is that somebody reads it is the point of the split.
+#
 # `/cards` was the results page until it moved to `/search`, which is where
 # every other card site puts it and therefore where people look. Permanent, so
 # links already pasted survive — and a redirect rather than a deleted route,

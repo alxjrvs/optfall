@@ -20,6 +20,8 @@ import "./CardFan.css";
 
 export interface FanCard {
   readonly slug: string;
+  /** The card's own address — its default printing. Never built from `slug`. */
+  readonly href: string;
   readonly label: string;
   readonly typeLine: string;
   readonly faceKey: string;
@@ -81,7 +83,7 @@ export function CardFan({ cards }: CardFanProps) {
                   } as React.CSSProperties
                 }
               >
-                <a href={`/card/${card.slug}`}>
+                <a href={card.href}>
                   <CardFace
                     src={faceUrl(card.faceKey, "thumb")}
                     alt={altFor(card)}

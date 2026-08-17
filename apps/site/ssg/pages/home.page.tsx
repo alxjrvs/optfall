@@ -75,6 +75,7 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
 
   return {
     slug: page.slug,
+    href: page.href,
     label: page.label,
     /* Nullable upstream — four cards publish no type line, and an alt text
        reading "Semblance — null" is worse than one that is just the name. */

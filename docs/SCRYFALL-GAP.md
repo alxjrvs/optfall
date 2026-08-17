@@ -99,7 +99,7 @@ row's subject changes, not when someone notices.*
 | Image grid results | default view | grid is the default | **have** |
 | Display modes | `display:grid/checklist/text/full` | `display:grid/list/text`, a query term | **have** |
 | Sort control | `order:` × 15, `dir:` | `order:` × 9, `dir:`, documented | **have** |
-| Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<name>/<set>/<num>`, 6,437 of them | **have** |
+| Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<set>/<num>/<name>`, 11,378 of them — every distinct art, the default included | **have** |
 | Duplicate collapsing | `unique:cards/prints/art` | `unique:names` (default), `cards`, `art` | **have** |
 | Negation, `OR`, parentheses | yes | all three, documented at `/syntax` | **have** |
 | Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, against a number **or against each other** | **have** |
@@ -387,9 +387,41 @@ a stopgap rather than left implicit.
   card page gets". The rail was retired — the table already named more per row
   than a tile could caption, and the card page now gets no interactive element
   at all.)*
-- **Per-printing URLs** — `/card/<slug>/<set>/<number>`, resolving to the card
+- **Per-printing URLs** — `/card/<set>/<number>/<slug>`, resolving to the card
   page with that printing selected. This is Scryfall's canonical form and the
   thing that makes "the alternate art one" linkable.
+
+  **Shipped in two steps, and the first one got the segment order wrong.** The
+  original build emitted `/card/<slug>/<set>/<number>` and only for the 6,437
+  NON-default arts, keeping `/card/<slug>` as the card's own page. That is not
+  what this paragraph asked for and the table above said so for months: the
+  printing was addressable, but the CARD was still the addressable unit, and the
+  name led the path.
+
+  It is now `/card/<set>/<number>/<slug>` for all 11,378 distinct arts, and
+  there is no card-level URL at all — `/card/<slug>` and `/card/<name>` are
+  301s. Three things fall out of the order that did not out of the old one:
+
+  - **The identity is printed on the card.** A reader holding MST131 can type
+    its URL. Nothing about a slug is legible off a physical object.
+  - **A rename moves the tail, not the path.** Under the old form the slug led,
+    so an upstream name correction — or a new pitch version forcing a
+    disambiguation suffix — broke every printing URL beneath it.
+  - **It is upstream's identifier, not ours.** Set code and collector number
+    come from Legend Story Studios; the slug is a thing this project invented.
+
+  **The name tail is not decoration, and the corpus proves it.** `ros/257-v2`
+  and `ros/257-v2-back` are each claimed by two different cards — Runechant and
+  the Embodiments share one physical double-sided token and therefore one art —
+  so Scryfall's bare `/card/<set>/<num>` form would be ambiguous here. The slug
+  is what tells those four addresses apart, which is also why the bare form is
+  not offered as a convenience redirect.
+
+  **A non-default art canonicals to the card's default printing**, which is
+  where this deliberately does NOT follow Scryfall. Scryfall lets every printing
+  self-canonical and indexes all of them; 11,378 pages differing only in one
+  image would bury the 4,941 that stand for a card. The address is a printing;
+  the indexed unit is still the card.
 - **`unique:cards` (default) and `unique:prints`** in search — collapse to one
   row per card, or show every printing as its own result.
 

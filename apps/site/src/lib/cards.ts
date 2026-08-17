@@ -1,10 +1,19 @@
 /**
- * The card corpus, shaped once for the 12,278 pages that serve it.
+ * The card corpus, shaped once for the 11,378 pages that serve it.
  *
  * `docs/PLAN.md` Phase 2: **cards are what people arrive for**, and "every view
- * is a URL" — `/card/command-and-conquer` is the product, not decoration on it.
- * Everything in this module exists to make one permanent URL per card cheap
- * enough that emitting all of them statically is unremarkable.
+ * is a URL" — `/card/arc/159/command-and-conquer` is the product, not
+ * decoration on it. Everything in this module exists to make one permanent URL
+ * per PRINTING cheap enough that emitting all of them statically is
+ * unremarkable.
+ *
+ * THE PRINTING IS THE ADDRESSABLE UNIT, WHICH IT WAS NOT UNTIL RECENTLY. There
+ * is no card-level URL: `/card/<slug>` and `/card/<name>` were pages for the
+ * life of the site and are 301s now (see {@link CARD_REDIRECTS}), and every
+ * distinct art has an address of the form `/card/<set>/<number>/<slug>`. The
+ * argument for the order is in `printings.ts` beside the function that builds
+ * it; the short version is that set and number are printed on the card and the
+ * slug is not.
  *
  * It follows `./rules.ts` deliberately and closely: the corpus is imported as
  * committed JSON and resolved by the bundler at build time, the shaping is one
@@ -17,7 +26,11 @@
  * **The slug is derived from the name, and a collision is a build failure.**
  * See {@link slugify} and {@link CARD_ROUTES}. Two cards sharing a URL would
  * make one of them silently unreachable, which is the one failure a reference
- * work cannot absorb, so the assertion runs at module load and throws.
+ * work cannot absorb, so the assertion runs at module load and throws. There
+ * are now TWO such assertions and they catch different things: the slug rule
+ * guards the tail, and `CARD_ROUTES` guards the whole path — set and number
+ * lead, so the corpus shares one namespace across every card rather than each
+ * card owning its own.
  *
  * **Legality is derived per format, and the derivation is the whole product.**
  * See {@link FORMATS} and {@link verdictFor}. `cc_legal` does NOT mean "you may
@@ -51,7 +64,7 @@ import type { PitchValue, StateTone } from "optfall-theme";
 import { faceKeyFor, orientationOf } from "./faces";
 /* Imported as well as re-exported: a re-export creates no local binding, and
    `CARD_ROUTES` below both calls `facesOf` and names `PrintingRef`. */
-import { facesOf, type PrintingRef } from "./printings";
+import { facesOf, hrefForPrinting, type PrintingRef } from "./printings";
 
 import corpus from "../../../../data/cards/cards.json";
 
@@ -62,7 +75,12 @@ import corpus from "../../../../data/cards/cards.json";
  * island bundle pulls in) a path that does not drag the corpus with it. Making
  * everyone else change their import would have been churn for nothing.
  */
-export { facesOf, numberFor, type PrintingRef } from "./printings";
+export {
+  facesOf,
+  hrefForPrinting,
+  numberFor,
+  type PrintingRef,
+} from "./printings";
 
 /* -------------------------------------------------------------------------- */
 /* The corpus                                                                  */
@@ -259,8 +277,17 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** The permalink for a slug — `/card/head-jab-1`. */
-export function hrefForSlug(slug: string): string {
+/**
+ * The address a slug USED to have — `/card/head-jab-1`. It is a redirect now.
+ *
+ * KEPT, AND KEPT NAMED "LEGACY", BECAUSE 5,841 OF THESE ARE ALREADY PASTED
+ * SOMEWHERE. Every card and every shared name was served at one of these for the
+ * life of the site, so they are exactly the URLs {@link CARD_REDIRECTS} has to
+ * enumerate. Nothing links here any more; the only caller builds the redirect
+ * table, and that is the whole reason the function still exists rather than the
+ * paths being spelled inline where nobody would find them.
+ */
+export function legacyHrefForSlug(slug: string): string {
   return `/card/${slug}`;
 }
 
@@ -792,11 +819,20 @@ export interface CardPage {
   readonly ordinal: number;
 }
 
-/** A disambiguation page: one name, several cards. */
-export interface NamePage {
+/**
+ * One name, several cards. A GROUP, and it used to be a PAGE.
+ *
+ * `/card/head-jab` was a real document listing three pitch versions; it is a
+ * 301 now, so nothing here is rendered at a URL of its own. The name is
+ * retained because the grouping is still what builds the tab strip on a card
+ * page and what tells {@link CARD_REDIRECTS} which version a bare name means.
+ */
+export interface NameGroup {
   readonly name: string;
   readonly slug: string;
+  /** Where the bare name resolves: the lowest-pitch card's default printing. */
   readonly href: string;
+  /** Every version, `byPitch` order. `cards[0]` is what the name means. */
   readonly cards: readonly CardPage[];
 }
 
@@ -925,6 +961,44 @@ const CARD_BY_PRINTING_ID: ReadonlyMap<string, Card> = (() => {
   return index;
 })();
 
+/**
+ * A card's address: the URL of its DEFAULT PRINTING.
+ *
+ * THERE IS NO SUCH THING AS A CARD URL ANY MORE, WHICH IS THE WHOLE CHANGE.
+ * `/card/head-jab-1` was a page for the life of the site; it is a redirect now,
+ * and every link the site draws points at a printing instead. So "where does
+ * this card live" is answered here, once, and it is answered by picking one of
+ * the card's printings rather than by spelling a slug into a path.
+ *
+ * THE DEFAULT IS `facesOf(card)[0]` AND THAT IS UNCHANGED. It is the same face
+ * `faceOf` already picks for the picture on every surface — first printing in
+ * upstream order that actually publishes art — so the printing a card page
+ * OPENS on is the printing whose URL it lives at, and the two cannot disagree.
+ * `docs/SCRYFALL-GAP.md` §5.1c calls that ordering a stopgap pending set release
+ * dates, and it still is; what changed is the stakes, because the default face
+ * now decides a URL and not only a picture. Moving it is a separate decision
+ * from moving the scheme, so it is deliberately not made here.
+ *
+ * A CARD WITH NO ADDRESSABLE FACE THROWS rather than returning a fallback path.
+ * Measured: all 4,941 cards publish at least one image, so this cannot fire
+ * today — and if a resync lands a card that publishes none, the honest outcome
+ * is a stopped build rather than a card that is silently absent from a
+ * reference index. That is the same trade {@link SLUG_BY_ID} already makes.
+ */
+function defaultAddressOf(card: Card, slug: string): string {
+  const face = facesOf(card)[0];
+  if (face === undefined) {
+    throw new Error(
+      `apps/site/src/lib/cards.ts: ${card.name} (${card.unique_id}) publishes no ` +
+        `image on any of its ${card.printings.length} printing(s), so it has no ` +
+        `printing URL and would be absent from the site. Every card URL is now ` +
+        `/card/<set>/<number>/<slug> — see hrefForPrinting in printings.ts — so a ` +
+        `card with no addressable face has no address at all.`,
+    );
+  }
+  return hrefForPrinting(face.setCode, face.number, slug);
+}
+
 function linkTo(card: Card): CardLink {
   const nameSlug = slugify(card.name);
   const slug = SLUG_BY_ID.get(card.unique_id) ?? nameSlug;
@@ -933,7 +1007,7 @@ function linkTo(card: Card): CardLink {
   return {
     name: card.name,
     label: labelFor(card.name, pitch, disambiguated),
-    href: hrefForSlug(slug),
+    href: defaultAddressOf(card, slug),
     pitch,
     disambiguated,
   };
@@ -1018,7 +1092,7 @@ export const CARD_PAGES: readonly CardPage[] = CORPUS.cards.map(
       card,
       slug,
       label: labelFor(card.name, pitchValueOf(card), disambiguated),
-      href: hrefForSlug(slug),
+      href: defaultAddressOf(card, slug),
       nameSlug,
       disambiguated,
       variants: group
@@ -1069,96 +1143,244 @@ const PAGE_BY_ID: ReadonlyMap<string, CardPage> = new Map(
 );
 
 /**
- * One page per shared name, at the bare name slug.
+ * The shared-name groups. See {@link NameGroup} for why they are not pages.
  *
- * WHY THESE EXIST. `/card/head-jab` is the URL a person guesses, types and
- * pastes — it is the card's name with the punctuation taken out. Emitting only
- * `/card/head-jab-1`, `-2` and `-3` would make the guessable form a 404, and a
- * reference work whose most obvious URL is a dead end is a lookup tool
- * pretending to be a reference.
+ * WHAT THESE WERE. `/card/head-jab` was the URL a person guesses, types and
+ * pastes, and it was served as the card itself at its lowest-pitch version.
+ * It is a 301 now (see {@link CARD_REDIRECTS}), because there is exactly one
+ * kind of card page left and it is a printing. So the guessable form still
+ * resolves — it just resolves by moving you to an address that names a real,
+ * specific object rather than by rendering a second copy of one.
  *
- * WHAT THEY COST, STATED PLAINLY. A name that is unique today is served at its
- * bare slug; if upstream later prints a second pitch variant of it, that URL
- * stops being the card and becomes this index instead. The link still resolves,
- * still names the card and still lists every variant one click away — but it is
- * a change of meaning, and the alternative (suffixing all 4,941 cards, forever,
- * so that `/card/command-and-conquer-1` is the only spelling) buys stability by
- * making every URL in the product uglier for a case that affects a minority of
- * names. This is the trade; a reviewer may want the other side of it.
+ * WHAT THE GROUPING IS STILL FOR. Two things, both real: the tab strip on a
+ * card page is built from it, and the redirect table needs to know which
+ * version a bare name should land on. `cards[0]` is the lowest-pitch version
+ * under {@link byPitch}, which is the version `/card/head-jab` used to render —
+ * so the 301 lands on the page the old URL showed, and nobody's bookmark
+ * changes meaning.
  */
-export const NAME_PAGES: readonly NamePage[] = [...BY_NAME_SLUG.entries()]
+export const NAME_GROUPS: readonly NameGroup[] = [...BY_NAME_SLUG.entries()]
   .filter(([, group]) => group.length > 1)
-  .map(([slug, group]) => ({
-    name: group[0]?.name ?? "",
-    slug,
-    href: hrefForSlug(slug),
-    cards: group
+  .map(([slug, group]) => {
+    const cards = group
       .toSorted(byPitch)
       .map((card) => PAGE_BY_ID.get(card.unique_id))
-      .filter((page): page is CardPage => page !== undefined),
-  }));
-
-/** Every URL the `/card/` route emits: the cards, the shared names, the printings. */
-export type CardRoute =
-  | { readonly kind: "card"; readonly slug: string; readonly page: CardPage }
-  | { readonly kind: "name"; readonly slug: string; readonly page: NamePage }
-  | {
-      readonly kind: "printing";
-      readonly slug: string;
-      readonly page: CardPage;
-      readonly ref: PrintingRef;
-      /** Index into the picker's list — what the page renders on arrival. */
-      readonly index: number;
+      .filter((page): page is CardPage => page !== undefined);
+    return {
+      name: group[0]?.name ?? "",
+      slug,
+      /* The lowest-pitch version's own address, which is what this name used
+         to render. Never `/card/<slug>` — nothing is served there any more. */
+      href: cards[0]?.href ?? "",
+      cards,
     };
+  });
 
 /**
- * The per-printing routes, and the assertion that they are addresses.
+ * Where a bare NAME goes — every name, not only the shared ones.
  *
- * ONLY THE NON-DEFAULT FACES GET ONE. A card's first face is what
- * `/card/<slug>` already shows, so emitting `/card/<slug>/<set>/<number>` for
- * it would be a second address for a page that has one — 4,941 duplicates, and
- * every one of them a request to a search engine to pick a winner. 6,437 routes
- * rather than 11,378.
+ * THE TYPEAHEAD AND `/random` BOTH PICK A NAME, NOT A CARD, and both used to
+ * turn one into `/card/<nameSlug>` and let the router work out the rest. That
+ * URL is a redirect now, so a surface that emitted it would be pointing every
+ * suggestion and every random card through a 301 — working, and wrong, because
+ * the destination is knowable at build time and a link the site draws itself
+ * should never need a hop.
  *
- * THE COLLISION CHECK IS A THROW, NOT A FILTER. Two faces of one card reaching
- * the same path is a corpus shape this rule did not anticipate, and the two
- * quiet outcomes are both bad: Astro would emit one page and silently drop the
- * other, or the reader would get whichever won. A build that stops is the only
- * honest response, and it stops here — at the point where the rule is written —
- * rather than in Astro's route table where the message would name a path and
- * not a reason. Zero collisions across the corpus today.
+ * `byPitch` RATHER THAN `CardPage.pitch`, which is the trap this map exists to
+ * avoid. They disagree: `pitchRank` sorts a card with NO pitch LAST (4), while
+ * `pitchValueOf` reports it as 0 and would sort it first. Deriving the answer
+ * here from the same comparator {@link NAME_GROUPS} uses means the typeahead, the
+ * tab strip and the redirect table cannot pick three different versions of one
+ * name.
  */
-const PRINTING_ROUTES: readonly CardRoute[] = CARD_PAGES.flatMap((page) => {
-  const faces = facesOf(page.card);
+export const HREF_BY_NAME_SLUG: ReadonlyMap<string, string> = new Map(
+  [...BY_NAME_SLUG.entries()].flatMap(([slug, group]) => {
+    const first = group.toSorted(byPitch)[0];
+    if (first === undefined) return [];
+    const href = PAGE_BY_ID.get(first.unique_id)?.href;
+    return href === undefined ? [] : [[slug, href] as const];
+  }),
+);
+
+/**
+ * Every URL the `/card/` route emits. One kind, and it names a printing.
+ *
+ * IT USED TO BE A THREE-WAY UNION — card, shared name, printing — and the
+ * union's exhaustiveness was doing real work: a fourth kind added here failed
+ * the typecheck in `card.page.tsx` rather than silently rendering as a card.
+ * There is nothing left to discriminate. `/card/<slug>` and `/card/<name>` are
+ * redirects, so a route is a printing or it is not a route, and the shape says
+ * so instead of a comment claiming it.
+ */
+export interface CardRoute {
+  /** The full path — `/card/wtr/098/head-jab-1`. */
+  readonly href: string;
+  /** Set code, lowercased. First segment after `/card/`. */
+  readonly setCode: string;
+  /** The face-derived collector number. Second segment. */
+  readonly number: string;
+  /** The card's slug. Third segment — the human-readable tail. */
+  readonly slug: string;
+  readonly page: CardPage;
+  readonly ref: PrintingRef;
+  /** Index into `facesOf(page.card)` — which art this URL shows. */
+  readonly index: number;
+  /** True for `facesOf(card)[0]`, the face the card's own address points at. */
+  readonly isDefault: boolean;
+}
+
+/**
+ * Every printing, as an address, and the assertion that they are distinct.
+ *
+ * EVERY FACE GETS ONE, INCLUDING THE FIRST, and that is what "the printing is
+ * the addressable unit" means. The previous scheme deliberately skipped face 0 —
+ * `/card/<slug>` already showed it, so a second URL for it would have been
+ * 4,941 duplicates — and that argument dies with the page it was defending.
+ * 11,378 routes rather than 6,437, and the card's own address is now simply the
+ * first of them.
+ *
+ * IT IS A FACE, NOT A PRINTING ROW. `facesOf` collapses the 16,502 rows onto
+ * 11,378 distinct arts, because Regular / Rainbow Foil / Cold Foil in one set
+ * are three rows sharing one picture and three URLs rendering one page is the
+ * definition of a duplicate. See `printings.ts`.
+ *
+ * THE COLLISION CHECK IS A THROW, NOT A FILTER, and it is now GLOBAL where it
+ * used to be per-card. Under `/card/<slug>/<set>/<number>` the slug led, so two
+ * cards could not collide by construction and only a card's own faces had to be
+ * told apart. Set and number lead now, so the whole corpus shares one namespace
+ * — and it is not hypothetical: **`ros/257-v2` and `ros/257-v2-back` are each
+ * claimed by two different cards**, because Runechant and the Embodiments are
+ * printed on one physical double-sided token and share its art. The name tail is
+ * what keeps those four URLs distinct, which is the strongest argument for
+ * keeping it that this scheme has: `/card/ros/257-v2` alone could not name
+ * either card, so the bare form is not merely undecorated, it is ambiguous.
+ *
+ * A build that stops is the only honest response to a genuine clash. The two
+ * quiet outcomes are both bad — one page emitted and the other silently
+ * dropped, or whichever won — and the generator's own duplicate-output guard
+ * would catch it later, at the file level, where the message could name a path
+ * but not a reason.
+ */
+export const CARD_ROUTES: readonly CardRoute[] = (() => {
+  const routes: CardRoute[] = [];
   const taken = new Map<string, string>();
 
-  return faces.flatMap((ref, index): CardRoute[] => {
-    // Face 0 is the card's own page. It is not a second address for it.
-    if (index === 0) return [];
+  for (const page of CARD_PAGES) {
+    facesOf(page.card).forEach((ref, index) => {
+      const route = hrefForPrinting(ref.setCode, ref.number, page.slug);
+      const clash = taken.get(route);
+      if (clash !== undefined) {
+        throw new Error(
+          `apps/site/src/lib/cards.ts: two printings both address ${route} — ` +
+            `${clash} and ${page.label} (${ref.key}). Set code and collector ` +
+            `number share one namespace across the whole corpus now, and the ` +
+            `slug tail is the only thing disambiguating them. numberFor() in ` +
+            `printings.ts derives the number segment from the face key; this ` +
+            `corpus has a shape it does not tell apart.`,
+        );
+      }
+      taken.set(route, page.label);
 
-    const slug = `${page.slug}/${ref.setCode}/${ref.number}`;
-    const clash = taken.get(slug);
-    if (clash !== undefined) {
-      throw new Error(
-        `Two faces of ${page.label} both address /card/${slug}: ${clash} and ${ref.key}. ` +
-          `numberFor() in printings.ts derives a printing's path segment from its face key; ` +
-          `this corpus has a shape it does not disambiguate.`,
-      );
-    }
-    taken.set(slug, ref.key);
+      routes.push({
+        href: route,
+        setCode: ref.setCode,
+        number: ref.number,
+        slug: page.slug,
+        page,
+        ref,
+        index,
+        isDefault: index === 0,
+      });
+    });
+  }
 
-    return [{ kind: "printing", slug, page, ref, index }];
-  });
-});
+  /*
+   * EVERY CARD MUST HAVE AT LEAST ONE ADDRESS. `defaultAddressOf` already
+   * throws for a card with no face, so this cannot fire independently of it
+   * today — it is here because the two failures are different sizes and only
+   * one of them is loud. A card missing from this list is missing from the
+   * SITE, and a reference index that has quietly stopped carrying a card is
+   * precisely the "stale by silence" failure `docs/PLAN.md` is written against.
+   */
+  const addressed = new Set(routes.map((route) => route.page.card.unique_id));
+  if (addressed.size !== CARD_PAGES.length) {
+    const missing = CARD_PAGES.filter(
+      (page) => !addressed.has(page.card.unique_id),
+    ).map((page) => page.label);
+    throw new Error(
+      `apps/site/src/lib/cards.ts: ${missing.length} card(s) have no printing ` +
+        `URL and would not be served anywhere: ${missing.slice(0, 5).join(", ")}` +
+        `${missing.length > 5 ? ", …" : ""}.`,
+    );
+  }
 
-export const CARD_ROUTES: readonly CardRoute[] = [
-  ...CARD_PAGES.map(
-    (page): CardRoute => ({ kind: "card", slug: page.slug, page }),
-  ),
-  ...NAME_PAGES.map(
-    (page): CardRoute => ({ kind: "name", slug: page.slug, page }),
-  ),
-  ...PRINTING_ROUTES,
+  return routes;
+})();
+
+/**
+ * The 5,841 addresses this site used to serve, and where each one goes now.
+ *
+ * WHY THEY ARE 301s AND NOT PAGES. Every one of these was a live URL for the
+ * life of the site, and `docs/PLAN.md`'s thesis is that a URL here is permanent
+ * and citable. "Permanent" cannot mean "still renders something" — it has to
+ * mean the link keeps taking you to the thing it named. A 301 does that and
+ * says, to a crawler and to a reader, that the address MOVED. Leaving them as
+ * pages with a canonical pointing elsewhere would have kept two documents alive
+ * per card forever, which is the duplication the whole scheme change is
+ * removing.
+ *
+ * THREE KINDS, AND ALL OF THEM LAND ON A PRINTING:
+ *
+ * - **A card slug** — `/card/head-jab-1` → that card's default printing. The
+ *   page it rendered and the page it now moves you to are the same page.
+ * - **A shared name** — `/card/head-jab` → the LOWEST-PITCH version's default
+ *   printing, which is exactly what that URL used to render. Not the whole
+ *   group's first-listed card, and not the best-ranked one: `byPitch`, the same
+ *   rule the tab strip is ordered by.
+ * - **The old printing form** — `/card/head-jab-1/lgs/017-rf` →
+ *   `/card/lgs/017-rf/head-jab-1`. The same three segments, reordered.
+ *
+ * **THE THIRD KIND IS ENUMERATED, AND TWO ATTEMPTS TO BE CLEVER ABOUT IT BOTH
+ * SHIPPED AN INFINITE REDIRECT.** It is a pure permutation, so it looks like
+ * one Netlify placeholder rule — and `/card/:a/:b/:c` → `/card/:b/:c/:a` is a
+ * 3-cycle over any path that names no file. Pinning the set code to segment two
+ * (112 rules) fixed that case and left a narrower one: `/card/wtr/lgs/mst`
+ * still permutes forever, because every segment is a set code and the permuted
+ * output satisfies the same rule. Both were found in review, not by the guards
+ * written to catch them — a probe over placeholders only tests the bindings the
+ * probe happens to produce.
+ *
+ * So all 6,437 are spelled out. 12,278 exact rules, no patterns anywhere, and
+ * acyclicity stops being an argument: it is set membership over two finite
+ * lists, checked exhaustively in `ssg/redirects.ts`. The cost is a 790 kB
+ * `_redirects` and a rule count above Netlify's "reach for wildcards" advice,
+ * which is guidance about performance rather than a limit. That is the trade,
+ * and after two loops it is the right side of it.
+ */
+export interface CardRedirect {
+  readonly from: string;
+  readonly to: string;
+}
+
+export const CARD_REDIRECTS: readonly CardRedirect[] = [
+  ...CARD_PAGES.map((page) => ({
+    from: legacyHrefForSlug(page.slug),
+    to: page.href,
+  })),
+  ...NAME_GROUPS.map((page) => ({
+    from: legacyHrefForSlug(page.slug),
+    to: page.href,
+  })),
+  /*
+   * The old per-art addresses. ONLY THE NON-DEFAULT ONES EVER EXISTED: the old
+   * scheme gave face 0 no printing URL of its own, because `/card/<slug>` was
+   * already showing it. Emitting a redirect from a URL that was never served
+   * would be a line that can never fire.
+   */
+  ...CARD_ROUTES.filter((route) => !route.isDefault).map((route) => ({
+    from: `${legacyHrefForSlug(route.slug)}/${route.setCode}/${route.number}`,
+    to: route.href,
+  })),
 ];
 
 /* -------------------------------------------------------------------------- */

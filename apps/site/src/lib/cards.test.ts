@@ -35,9 +35,11 @@ import {
   CORPUS,
   FORMATS,
   LAST_CONFIRMED,
-  NAME_PAGES,
+  NAME_GROUPS,
   facesOf,
-  hrefForSlug,
+  CARD_REDIRECTS,
+  hrefForPrinting,
+  legacyHrefForSlug,
   labelFor,
   pitchValueOf,
   slugify,
@@ -355,20 +357,95 @@ describe("the derived tone census", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("addressing", () => {
-  test("every route has a distinct slug, so no card is unreachable", () => {
-    const slugs = CARD_ROUTES.map((route) => route.slug);
-    expect(new Set(slugs).size).toBe(slugs.length);
+  test("every route has a distinct address, so no printing is unreachable", () => {
+    const hrefs = CARD_ROUTES.map((route) => route.href);
+    expect(new Set(hrefs).size).toBe(hrefs.length);
 
-    const printings = CARD_ROUTES.filter((route) => route.kind === "printing");
-    expect(CARD_ROUTES.length).toBe(
-      CARD_PAGES.length + NAME_PAGES.length + printings.length,
-    );
+    /*
+     * ONE ROUTE PER DISTINCT FACE, AND THE DEFAULT IS NOT SPECIAL. The old
+     * table was 4,941 card pages + 900 shared names + 6,437 non-default
+     * printings; it is 11,378 printings and nothing else, because
+     * `/card/<slug>` and `/card/<name>` are 301s.
+     */
     expect(CARD_PAGES.length).toBe(4941);
-    expect(NAME_PAGES.length).toBe(900);
-    // One per NON-DEFAULT face: 11,378 distinct arts less the 4,941 that are
-    // already a card page's own picture. See `PRINTING_ROUTES`.
-    expect(printings.length).toBe(6437);
-    expect(CARD_ROUTES.length).toBe(12278);
+    expect(NAME_GROUPS.length).toBe(900);
+    expect(CARD_ROUTES.length).toBe(11378);
+    expect(CARD_ROUTES.filter((route) => route.isDefault).length).toBe(4941);
+  });
+
+  test("set and number alone are NOT unique, which is why the name tail exists", () => {
+    /*
+     * THE MEASUREMENT BEHIND THE SCHEME. Runechant and the Embodiments are
+     * printed on one physical double-sided token and share its art, so
+     * `ros/257-v2` and `ros/257-v2-back` are each claimed by two different
+     * cards. Scryfall's bare `/card/<set>/<number>` would be ambiguous here;
+     * the slug tail is what makes these four addresses distinct.
+     *
+     * Asserted rather than noted, because the day this becomes true of a
+     * hundred more printings is the day somebody proposes dropping the tail.
+     */
+    const bare = CARD_ROUTES.map((route) => `${route.setCode}/${route.number}`);
+    const shared = new Set(
+      bare.filter((address, index) => bare.indexOf(address) !== index),
+    );
+    expect([...shared].toSorted()).toEqual(["ros/257-v2", "ros/257-v2-back"]);
+  });
+
+  test("every card is addressable, and its own href is its default printing", () => {
+    const byCard = new Map(
+      CARD_ROUTES.filter((route) => route.isDefault).map((route) => [
+        route.page.card.unique_id,
+        route,
+      ]),
+    );
+    expect(byCard.size).toBe(CARD_PAGES.length);
+
+    for (const page of CARD_PAGES) {
+      const route = byCard.get(page.card.unique_id);
+      expect(route?.href).toBe(page.href);
+      expect(route?.index).toBe(0);
+    }
+  });
+
+  test("every legacy URL redirects, exactly once, to a route that exists", () => {
+    const addresses = new Set(CARD_ROUTES.map((route) => route.href));
+    const froms = CARD_REDIRECTS.map((redirect) => redirect.from);
+
+    // 4,941 card slugs + 900 shared names + 6,437 old per-art addresses. All
+    // enumerated: see `ssg/redirects.ts` for the two infinite redirects that
+    // the pattern versions of that last group shipped.
+    expect(CARD_REDIRECTS.length).toBe(12278);
+    expect(new Set(froms).size).toBe(froms.length);
+
+    for (const redirect of CARD_REDIRECTS) {
+      expect(addresses.has(redirect.to)).toBe(true);
+      // A redirect whose source is also a live page is a rule that never fires.
+      expect(addresses.has(redirect.from)).toBe(false);
+    }
+  });
+
+  test("a shared name lands on the version that URL used to render", () => {
+    const jab = CARD_REDIRECTS.find(
+      (redirect) => redirect.from === "/card/head-jab",
+    );
+    const lowest = NAME_GROUPS.find((page) => page.slug === "head-jab")
+      ?.cards[0];
+    expect(lowest?.slug).toBe("head-jab-1");
+    expect(jab?.to).toBe(lowest?.href);
+
+    /*
+     * THE ONE GROUP WHERE PITCH ORDER AND `byPitch` DISAGREE. Hyper Driver is
+     * printed at pitch 1, 2 and 3 plus an unpitched version, and `pitchValueOf`
+     * reports that last one as 0 — first by a naive sort, last by the rule the
+     * site actually uses. `/card/hyper-driver` rendered the pitch 1 version
+     * before the change and has to keep landing there.
+     */
+    const hyper = CARD_REDIRECTS.find(
+      (redirect) => redirect.from === "/card/hyper-driver",
+    );
+    const hyperGroup = NAME_GROUPS.find((page) => page.slug === "hyper-driver");
+    expect(hyperGroup?.cards[0]?.pitch).toBe(1);
+    expect(hyper?.to).toBe(hyperGroup?.cards[0]?.href);
   });
 
   test("no slug is empty, and none contains anything but a-z, 0-9 and hyphen", () => {
@@ -387,27 +464,28 @@ describe("addressing", () => {
      */
     for (const route of CARD_ROUTES) {
       expect(route.slug).not.toBe("");
-      for (const segment of route.slug.split("/")) {
+      for (const segment of [route.setCode, route.number, route.slug]) {
         expect(segment).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
       }
+      expect(route.href).toBe(
+        `/card/${route.setCode}/${route.number}/${route.slug}`,
+      );
     }
   });
 
-  test("a printing route names a face the card's picker actually shows", () => {
+  test("a printing route names a face the card actually publishes", () => {
     /*
      * The invariant that makes these addresses rather than guesses: every
-     * printing route points at a face of the card it hangs off, and never at
-     * face 0 — which has the card's own URL and does not need a second one.
+     * route points at a face of the card it hangs off, at the index the page
+     * will render, and its path is built from that face's own set and number.
      */
     for (const route of CARD_ROUTES) {
-      if (route.kind !== "printing") continue;
-
       const faces = facesOf(route.page.card);
       expect(faces[route.index]?.key).toBe(route.ref.key);
-      expect(route.index).toBeGreaterThan(0);
-      expect(route.slug).toBe(
-        `${route.page.slug}/${route.ref.setCode}/${route.ref.number}`,
-      );
+      expect(route.setCode).toBe(route.ref.setCode);
+      expect(route.number).toBe(route.ref.number);
+      expect(route.slug).toBe(route.page.slug);
+      expect(route.isDefault).toBe(route.index === 0);
     }
   });
 
@@ -418,18 +496,21 @@ describe("addressing", () => {
     expect(slugify("Nature's Path")).toBe("natures-path");
     expect(slugify("Ærlig")).toBe("aerlig");
     expect(slugify("Bloodrush Bellow")).toBe("bloodrush-bellow");
-    expect(hrefForSlug("head-jab-1")).toBe("/card/head-jab-1");
+    expect(legacyHrefForSlug("head-jab-1")).toBe("/card/head-jab-1");
+    expect(hrefForPrinting("wtr", "098", "head-jab-1")).toBe(
+      "/card/wtr/098/head-jab-1",
+    );
   });
 
   test("a disambiguated card's slug carries its pitch, and 0 means none", () => {
-    const jab = NAME_PAGES.find((page) => page.slug === "head-jab");
+    const jab = NAME_GROUPS.find((page) => page.slug === "head-jab");
     expect(jab?.cards.map((card) => card.slug)).toEqual([
       "head-jab-1",
       "head-jab-2",
       "head-jab-3",
     ]);
 
-    const driver = NAME_PAGES.find((page) => page.slug === "hyper-driver");
+    const driver = NAME_GROUPS.find((page) => page.slug === "hyper-driver");
     expect(driver?.cards.map((card) => card.slug)).toContain("hyper-driver-0");
   });
 });
@@ -441,7 +522,7 @@ describe("addressing", () => {
 describe("links to same-named cards are distinguishable by their text alone", () => {
   test("no disambiguation page has two links with the same accessible name", () => {
     const offenders: string[] = [];
-    for (const page of NAME_PAGES) {
+    for (const page of NAME_GROUPS) {
       const labels = page.cards.map((card) => card.label);
       if (new Set(labels).size !== labels.length) {
         offenders.push(`${page.slug}: ${labels.join(" / ")}`);
@@ -500,9 +581,7 @@ describe("links to same-named cards are distinguishable by their text alone", ()
   });
 
   test("every link resolves to a page this build emits", () => {
-    const emitted = new Set(
-      CARD_ROUTES.map((route) => hrefForSlug(route.slug)),
-    );
+    const emitted = new Set(CARD_ROUTES.map((route) => route.href));
     for (const page of CARD_PAGES) {
       for (const link of [
         ...page.variants,

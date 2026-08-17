@@ -13,7 +13,7 @@
  * is going to take over the tree. Nothing takes over these trees: the pages are
  * documents, and the interactive parts are islands mounted into their own
  * containers. Emitting hydration scaffolding for a root that never hydrates
- * would put bytes on 13,675 pages to describe a handover that does not happen.
+ * would put bytes on 12,776 pages to describe a handover that does not happen.
  */
 
 import type { ReactElement } from "react";

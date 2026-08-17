@@ -369,7 +369,7 @@ fragment the thing it claims to consolidate. Every operator we add must feel lik
 it was always part of the same language, which is a constraint on naming as much
 as on engineering.
 
-**Every view is a URL.** `/card/command-and-conquer` and `/search?q=…` are the
+**Every view is a URL.** `/card/<set>/<number>/<name>` and `/search?q=…` are the
 product, not decoration on it. Scryfall's real artefact is the link you paste
 into a conversation to settle it, and a card page that cannot be linked is a
 lookup rather than a reference.
@@ -619,7 +619,7 @@ So "the TanStack one" and "the SSG, static, offline one" are different
 programs, and only one of them can be copied here.
 
 **IT IS `apps/srd`, AND THE DECIDING ARGUMENT IS OPTFALL'S OWN THESIS.** "Every
-view is a URL" is the first line of Phase 2 and the reason 13,675 pages are
+view is a URL" is the first line of Phase 2 and the reason 12,776 pages are
 emitted at build time. A SPA cannot serve those: a pasted card link has to
 arrive as HTML carrying that card's `<title>`, description and canonical,
 because the thing reading it is a chat client's unfurler that runs no
@@ -719,7 +719,7 @@ reviewable. 5c is separate because a compiler swap that lands in the same diff a
 a framework deletion cannot be bisected.
 
 **What 5b found that page-count parity could not see.** The generator had linked
-`/favicon.svg` from every one of its 13,675 pages since layer 2 and never emitted
+`/favicon.svg` from every one of its 12,776 pages since layer 2 and never emitted
 it. Astro produced that file from an endpoint route — a `.ts` under `src/pages/`
 exporting `GET` — and the port had no equivalent, so the file was not a page, no
 count included it, and nothing missed it. It is now an explicit
@@ -744,7 +744,7 @@ that can each fail in silence.
 **Precache the shell, never the pages.** `apps/srd` globs
 `**/*.{js,css,woff2,svg}` and deliberately excludes HTML and images, with
 `navigateFallback: null` — an unvisited page should 404 offline rather than
-resolve to a stale shell that lies. Optfall has **13,675 pages**, so this is not
+resolve to a stale shell that lies. Optfall has **12,776 pages**, so this is not
 a preference here, it is the only option.
 
 *As implemented, with the two amendments the review of layer 6 forced.* Visited
@@ -767,12 +767,12 @@ rendering layer exactly as "Survive revocation" says it should.
 ### Exit criteria
 
 `bun run typecheck` passes on TypeScript 7 with no Astro in the dependency
-tree; all 13,675 URLs still resolve with their titles and canonicals intact;
+tree; all 12,776 URLs still resolve with their titles and canonicals intact;
 the site installs to a home screen and a card page visited once opens again
 with the network off.
 
 ✅ **Met.** TypeScript 7.0.2 across every workspace with `astro`, `svelte` and
-`storybook` absent from the lockfile; 13,675 pages built and checked by
+`storybook` absent from the lockfile; 12,776 pages built and checked by
 `check-disclaimer`, `check-built-tokens` and `check-card-notice`; the manifest
 parses and the worker activates; and both halves of the offline claim were
 verified by killing the origin server rather than by reading the config — a

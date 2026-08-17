@@ -1,19 +1,28 @@
 /**
- * The `/card/` route — 12,278 URLs, every one a permalink. Ported.
+ * The `/card/` route — 11,378 URLs, every one of them a printing.
  *
- * `docs/PLAN.md` Phase 2: **"Every view is a URL. `/card/command-and-conquer`
- * and `/search?q=…` are the product, not decoration on it … a card page that
- * cannot be linked is a lookup rather than a reference."**
+ * `docs/PLAN.md` Phase 2: **"Every view is a URL … a card page that cannot be
+ * linked is a lookup rather than a reference."** `docs/SCRYFALL-GAP.md` §5.1c
+ * says which URL: **"Scryfall treats the printing as the addressable unit; so
+ * should we."** This file is where that stopped being half true.
  *
- * THREE KINDS OF ROUTE, AND THE UNION IS EXHAUSTIVE BY CONSTRUCTION. `CardRoute`
- * is a discriminated union, so a fourth kind added to `cards.ts` fails the
- * typecheck here rather than silently rendering as a card. That guard paid off
- * literally during Stack E: adding the printing route broke this file's build,
- * which is exactly what it was written to do.
+ * WHAT CHANGED, IN ONE LINE. The address was `/card/head-jab-1`, with
+ * `/card/head-jab-1/wtr/098` bolted on for the alternate arts; it is
+ * `/card/wtr/098/head-jab-1` for every art, and the two old forms are 301s. Set
+ * and number lead because they are printed on the card — a reader holding one
+ * can type its URL — and because they are upstream's identifiers rather than
+ * ours, so a slug correction moves the tail and breaks nothing.
+ *
+ * ONE KIND OF ROUTE NOW, WHERE THERE WERE THREE. The old `CardRoute` was a
+ * discriminated union of card / shared-name / printing, and its exhaustiveness
+ * was load-bearing: it caught the printing route's own arrival at build time.
+ * There is nothing left to discriminate — `/card/<slug>` and `/card/<name>` are
+ * redirects — so the union collapsed to a record and the branching in this file
+ * went with it.
  *
  * EVERY PATH IS EMITTED AT BUILD TIME. There is no fallback renderer: a URL
- * either names a card Legend Story Studios has printed or it 404s, which is the
- * honest behaviour for a reference index.
+ * either names a printing Legend Story Studios has published or it 404s, which
+ * is the honest behaviour for a reference index.
  *
  * THE `<title>` AND THE DESCRIPTION ARE BUILT IN `cards.ts`, NOT HERE. They are
  * fixed labels wrapped around verbatim values, and they live beside the data so
@@ -27,98 +36,72 @@ import {
   CARD_ROUTES,
   type CardRoute,
   descriptionFor,
-  hrefForSlug,
-  NAME_PAGES,
   titleFor,
 } from "../../src/lib/cards";
 import { setName } from "../../src/lib/sets";
 import { CardEntry } from "../components/CardEntry";
 import type { PageModule, PageResult, RouteContext } from "../types";
 
-type Params = { readonly slug: string };
+type Params = {
+  readonly set: string;
+  readonly number: string;
+  readonly slug: string;
+};
 type Props = { readonly route: CardRoute };
 
 function getStaticPaths() {
   return CARD_ROUTES.map((route) => ({
-    params: { slug: route.slug },
+    params: { set: route.setCode, number: route.number, slug: route.slug },
     props: { route },
   }));
 }
 
-/**
- * `/card/head-jab` and `/card/head-jab-1` render the same card at the same
- * version, so one of them has to say which is the real address.
- *
- * The BARE NAME wins, because it is the URL a person guesses, types and pastes —
- * `slugify` exists to make it guessable — and because it is the one that
- * survives upstream printing a fourth pitch version. Roughly 900 pairs; without
- * this they are 900 requests to a search engine to pick for us.
- */
-const DEFAULT_SLUG_BY_NAME = new Map(
-  NAME_PAGES.map((name) => [name.slug, name.cards[0]?.slug]),
-);
-
 function page({ props }: RouteContext<Params, Props>): PageResult {
   const { route } = props;
+  const card = route.page;
 
   /**
-   * THE BARE NAME SLUG IS THE CARD, NOT AN INDEX OF CARDS.
+   * AN ALTERNATE ART CANONICALS TO THE CARD'S DEFAULT PRINTING, and the
+   * argument for that survived the scheme change unchanged.
    *
-   * `/card/head-jab` used to be a disambiguation page: a list of links asking
-   * the reader to pick a pitch before they were shown anything. That was the
-   * wrong document, because a player calls the red, yellow and blue versions ONE
-   * card — so the guessable URL serves the card itself, at its lowest-pitch
-   * version, with the tab strip in `CardEntry` switching between them.
+   * A printing page is a VIEW of a card, not a second card. It carries the same
+   * name, rules text, legality and rulings as every other printing of it; one
+   * image differs. That is a near-duplicate by every measure a search engine
+   * has, and there are 6,437 non-default ones — enough to bury the 4,941 pages
+   * that are the actual index if each competed on its own.
+   *
+   * WHAT IS DIFFERENT IS WHERE THEY POINT. They used to canonical to
+   * `/card/<slug>`, a page that no longer exists; they point at
+   * `card.href` — the default printing — which is also where the 301s from the
+   * old card and name URLs land. So every signal about a card, from a pasted
+   * pre-change link and from an alternate art alike, consolidates on one
+   * address, and that address names a real printing.
+   *
+   * A REVIEWER MAY WANT THE OTHER SIDE OF THIS. Scryfall lets every printing
+   * self-canonical and indexes all of them. Doing that here is deleting this
+   * block; the trade is 11,378 competing near-duplicates against 4,941 pages
+   * that each stand for a card.
    */
-  const card = route.kind === "name" ? route.page.cards[0] : route.page;
-
-  if (card === undefined) {
-    /* Unreachable — a name page exists only where a group has more than one
-       card — and written rather than asserted, because a `!` here would be a
-       claim about another module's invariant. */
-    return { title: "", description: "", children: null };
-  }
-
-  const canonical = (() => {
-    // The name route IS the bare name; it canonicals to itself by default.
-    if (route.kind === "name") return hrefForSlug(card.nameSlug);
-
-    const isDefault = DEFAULT_SLUG_BY_NAME.get(card.nameSlug) === card.slug;
-
-    /*
-     * A PRINTING PAGE IS A VIEW OF A CARD, NOT A SECOND CARD. It carries the
-     * same name, rules text, legality and rulings as the card's own page; one
-     * image differs. That is a near-duplicate by every measure a search engine
-     * has, and there are 6,437 of them — enough to bury the 4,941 pages that are
-     * the actual index if each competed on its own.
-     */
-    if (route.kind === "printing") {
-      return hrefForSlug(isDefault ? card.nameSlug : card.slug);
-    }
-
-    // A variant page duplicates the bare name ONLY if it is the version that
-    // page renders — the lowest-pitch one. Pitch 2 and pitch 3 are different
-    // cards with different text and different legality.
-    return isDefault ? hrefForSlug(card.nameSlug) : undefined;
-  })();
+  const canonical = route.isDefault ? undefined : card.href;
 
   /**
-   * A PRINTING PAGE SAYS WHICH PRINTING IN ITS TITLE, and it has to. 6,437 of
-   * these exist and every one shares a name with the card. A browser with three
-   * of them open, a bookmark bar, a pasted link's preview card — each shows the
-   * title and nothing else.
+   * A PRINTING PAGE SAYS WHICH PRINTING IN ITS TITLE, and it has to. Every one
+   * of the 11,378 shares a name with the card. A browser with three of them
+   * open, a bookmark bar, a pasted link's preview card — each shows the title
+   * and nothing else.
+   *
+   * THE DEFAULT PRINTING IS THE ONE EXCEPTION, and it is not an inconsistency.
+   * That page is where the card LIVES: it is what every search result, every
+   * reference link and every redirected old URL opens, so its title is the
+   * card's title. Qualifying it would put a set code in front of a reader who
+   * never chose a printing, on the 4,941 pages most likely to be seen.
    */
-  const title = (() => {
-    if (route.kind === "name") return titleFor(card, route.page.name);
-    if (route.kind === "printing") {
-      const { printing } = route.ref;
-      return titleFor(
+  const title = route.isDefault
+    ? titleFor(card)
+    : titleFor(
         card,
-        `${card.label} · ${setName(printing.set_id)} ${printing.id}`,
+        `${card.label} · ${setName(route.ref.printing.set_id)} ${route.ref.printing.id}`,
       );
-    }
-    return titleFor(card);
-  })();
 
   return {
     title,
@@ -129,22 +112,17 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     /*
       NO ISLANDS, AND THIS LINE WENT WITH THE PICKER. It asked the shell for
       `islands.js`, which was right while the printing picker lived in the face
-      column and is now a script tag on 18,700 pages that hydrates nothing —
+      column and is now a script tag on 11,378 pages that hydrates nothing —
       the largest route in the build fetching a bundle to find no
       `data-island` in the document. The printings table is the control, and it
       is markup.
     */
-    children: (
-      <CardEntry
-        page={card}
-        selected={route.kind === "printing" ? route.index : 0}
-      />
-    ),
+    children: <CardEntry page={card} selected={route.index} />,
   };
 }
 
 export const cardPage: PageModule<Params, Props> = {
-  pattern: "/card/[slug]",
+  pattern: "/card/[set]/[number]/[slug]",
   getStaticPaths,
   page,
 };

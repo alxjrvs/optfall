@@ -3,7 +3,7 @@
  * The static generator. `bun ssg/build.ts`.
  *
  * `docs/PLAN.md` Phase 6. **This is the build now.** It rendered alongside Astro
- * into `dist-next/` for four layers, matched it at 13,675 pages, and layer 5
+ * into `dist-next/` for four layers, matched it at 12,776 pages, and layer 5
  * deleted the other one — so the output is `dist/`, which is what Netlify
  * publishes and what every compliance check reads.
  *
@@ -28,7 +28,7 @@
  *
  * THE DUPLICATE-OUTPUT GUARD IS NOT DEFENSIVE PROGRAMMING. Two routes resolving
  * to one file is silent by default: the second write wins and a page vanishes
- * from a site that reported success. This project has 13,675 URLs derived from a
+ * from a site that reported success. This project has 12,776 URLs derived from a
  * corpus that resyncs on a schedule, and `cards.ts` already throws on exactly
  * this hazard at the route level. The generator asserts it again at the FILE
  * level, because that is where the collision actually lands and where a rule
@@ -41,8 +41,10 @@ import { dirname, join } from "node:path";
 
 import { themeStylesheet } from "optfall-theme";
 
+import { CARD_REDIRECTS } from "../src/lib/cards";
 import { GENERATED_ASSETS } from "./assets";
 import { outputPathFor } from "./outputPath";
+import { redirectRules, renderRedirects } from "./redirects";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
 
@@ -54,7 +56,7 @@ const VITE_BIN = new URL("../node_modules/.bin/vite", import.meta.url).pathname;
  * THE TOKEN STYLESHEET IS A FILE, WHERE ASTRO INLINED IT INTO EVERY PAGE.
  *
  * `BaseLayout.astro` rendered `themeStylesheet()` into a `<style is:global>` on
- * every page it built. That is 18 kB, and there are 13,675 pages: **235 MB of
+ * every page it built. That is 18 kB, and there are 12,776 pages: **235 MB of
  * the shipped output was the same stylesheet, repeated.** It also could not be
  * cached separately from the document it lived in, so every navigation
  * re-downloaded it — the identical argument that had already moved Astro's own
@@ -152,7 +154,7 @@ async function assetsFromManifest(): Promise<{
  * corpus in the client. Every reader who opened the front page, `/search`, `/cr`
  * or any card page downloaded it.
  *
- * Every check was green while that shipped. The build succeeded, 13,675 pages
+ * Every check was green while that shipped. The build succeeded, 12,776 pages
  * rendered, the islands hydrated, the disclaimer was on every page and the
  * tokens reached all of them. **A bundle nobody measures is a bundle that can be
  * any size at all**, and it was found only because Workbox refused to precache
@@ -212,7 +214,7 @@ async function assertIslandBudget(chunks: readonly string[]): Promise<void> {
  * baseline covers only the pages its author was working on is a budget that has
  * not looked at the others, which is the whole failure it exists to prevent.
  *
- * Measured across all 13,676: `/search` 934 kB (see the exceptions below),
+ * Measured across all 12,776: `/search` 934 kB (see the exceptions below),
  * `/sets/lgs` 273 kB, `/sets/fab` 243 kB, `/sets/1hp` 238 kB, `/sets/pen` 231
  * kB, `/cr` 215 kB, and a 40 kB median set page.
  *
@@ -332,13 +334,24 @@ async function main(): Promise<void> {
 
   /*
    * The non-page files, written before the pages so a failure to derive one
-   * stops the build before it emits 13,675 documents linking it.
+   * stops the build before it emits 12,776 documents linking it.
    */
   for (const asset of GENERATED_ASSETS) {
     const target = join(OUT_DIR, asset.path);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, asset.contents, "utf-8");
   }
+
+  /*
+   * `_redirects` IS NOT IN `GENERATED_ASSETS`, and the reason is the corpus.
+   * That registry is imported by `assets.ts`, which draws a favicon out of the
+   * theme and reaches nothing else; giving it a member derived from 4,941 cards
+   * would make every importer of it — the tests included — load 16 MB to ask
+   * what colour the tab icon is. It is written here, beside the pages it is
+   * about, from the same route table that produced them.
+   */
+  const rules = redirectRules(CARD_REDIRECTS);
+  await writeFile(join(OUT_DIR, "_redirects"), renderRedirects(rules), "utf-8");
 
   /*
    * TOKENS FIRST, COMPONENTS SECOND. The component sheets consume `--of-*`
@@ -397,7 +410,8 @@ async function main(): Promise<void> {
   const sw = await writeServiceWorker(OUT_DIR);
 
   console.log(
-    `[ssg] ${count} page(s), ${GENERATED_ASSETS.length} generated asset(s), ` +
+    `[ssg] ${count} page(s), ${rules.length} redirect(s), ` +
+      `${GENERATED_ASSETS.length} generated asset(s), ` +
       `${styles.length} stylesheet(s)` +
       `${islandScript === undefined ? ", no islands" : ", islands bundled"}` +
       `, ${sw.precached} file(s) precached (${Math.round(sw.bytes / 1024)} kB)` +

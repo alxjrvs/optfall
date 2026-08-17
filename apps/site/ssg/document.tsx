@@ -163,7 +163,7 @@ export function Document({
             <p className="legal">{CARD_IMAGE_COPYRIGHT}</p>
             {/*
             Unchanged, and still last: `check-disclaimer.ts` reads this string
-            verbatim off all 13,675 built pages.
+            verbatim off all 12,776 built pages.
           */}
             <p className="legal">{LSS_DISCLAIMER}</p>
           </div>
@@ -185,7 +185,7 @@ export function Document({
           THE SERVICE WORKER, REGISTERED INLINE AND ON EVERY PAGE.
 
           Inline because the alternative — a one-line module fetched from a
-          hashed url — costs a round trip on every one of 13,675 pages to
+          hashed url — costs a round trip on every one of 12,776 pages to
           deliver about two hundred bytes, and this is the one script that has
           to run everywhere rather than only where an island lives.
 

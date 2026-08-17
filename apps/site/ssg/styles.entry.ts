@@ -46,7 +46,7 @@ import "./SiteHeader.css";
  * bundle only if something Vite CAN see imports it. `ssg/islands/*` arrives
  * through `islands.client.ts`, which is an entry; `ssg/components/*` arrives
  * through nothing at all. `CardEntry.css` was written, correct, imported by its
- * component, and absent from the build — 12,278 pages of unstyled markup from a
+ * component, and absent from the build — 11,378 pages of unstyled markup from a
  * build that reported success.
  *
  * Globbed rather than listed, so the next component's sheet is collected on the
