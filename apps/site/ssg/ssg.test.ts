@@ -1933,6 +1933,108 @@ describe("a card index prints the name and not the pitch qualifier", () => {
       ).toBe(`${display}: 0`);
     }
   });
+
+  test("the list row leads with a face, at the tier a 44px box wants", () => {
+    /*
+     * THE VIEW USED TO CARRY NO PICTURE, which made the densest card list on
+     * this site the one screen contradicting `docs/DESIGN.md`'s claim that
+     * recognising a card by its face is what separates this from every
+     * text-list card tool in the game.
+     *
+     * THE TIER IS THE HALF WORTH PINNING. `thumb` is 180px and the box is
+     * 44px; `normal` is 450px and is what the GRID asks for, because a 240px
+     * cell upscaled the smaller one. Getting that backwards costs nothing
+     * visible and ships a 450px picture sixty times a page to paint 44 points
+     * of it, so it would survive any test that only looked at the markup.
+     */
+    /*
+     * A FIXTURE WITH A REAL FACE KEY AND ONE WITHOUT, because the two take
+     * different paths — `faceUrl` for the first, `placeholderUrl` for the
+     * second — and a row that publishes no art must still hold the column open
+     * rather than collapsing and leaving one name out of line with the rest.
+     */
+    const faced = [
+      {
+        href: "/card/head-jab-2",
+        label: "Head Jab (pitch 2)",
+        name: "Head Jab",
+        qualifier: " (pitch 2)",
+        typeLine: "Ninja Attack Action",
+        faceKey: "WTR166",
+        faceLandscape: false,
+        versions: [
+          {
+            pitch: 2 as const,
+            href: "/card/head-jab-2",
+            label: "Head Jab (pitch 2)",
+            faceKey: "WTR166",
+            faceLandscape: false,
+          },
+        ],
+      },
+      {
+        href: "/card/anothos",
+        label: "Anothos",
+        name: "Anothos",
+        qualifier: "",
+        typeLine: "Guardian Weapon - Hammer (2H)",
+        /* Four printings in the corpus publish no image at all. */
+        faceKey: null,
+        faceLandscape: false,
+        versions: [
+          {
+            pitch: 0 as const,
+            href: "/card/anothos",
+            label: "Anothos",
+            faceKey: null,
+            faceLandscape: false,
+          },
+        ],
+      },
+    ];
+
+    const markup = renderToStaticMarkup(
+      createElement(CardIndex, {
+        entries: faced,
+        display: "list" as const,
+        onDisplayChange: () => undefined,
+        summary: "2 cards",
+        controlName: "test",
+        interactive: false,
+      }),
+    );
+
+    expect([...markup.matchAll(/of-index__row-face/g)]).toHaveLength(
+      faced.length,
+    );
+    expect(markup).toContain("/thumb/");
+    expect(markup).not.toContain("/normal/");
+
+    /*
+     * AND IT IS NOT A LINK, which is the accessibility half. The name beside
+     * it already points at the row, so an anchor here would be a second
+     * control for one destination in a smaller target. `alt=""` follows: the
+     * picture repeats what the row says in text.
+     */
+    expect(markup).not.toMatch(/<a[^>]*>\s*<img[^>]*of-index__row-face/);
+    for (const fragment of markup.split("of-index__row-face").slice(1)) {
+      expect(fragment.slice(0, 200)).toContain('alt=""');
+    }
+
+    /* The grid is untouched by any of this and still asks for the big tier. */
+    const grid = renderToStaticMarkup(
+      createElement(CardIndex, {
+        entries: faced,
+        display: "grid" as const,
+        onDisplayChange: () => undefined,
+        summary: "2 cards",
+        controlName: "test",
+        interactive: false,
+      }),
+    );
+    expect(grid).not.toContain("of-index__row-face");
+    expect(grid).toContain("/normal/");
+  });
 });
 
 /* -------------------------------------------------------------------------- */
