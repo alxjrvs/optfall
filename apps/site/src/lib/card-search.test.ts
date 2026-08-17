@@ -1002,12 +1002,46 @@ describe("unique:", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("display:", () => {
-  test("the three modes parse, and Scryfall's word for the third one works", () => {
+  test("the two modes parse, under either of their spellings", () => {
     expect(parseCardQuery("dominate display:grid").display).toBe("grid");
+    expect(parseCardQuery("dominate display:images").display).toBe("grid");
     expect(parseCardQuery("dominate display:list").display).toBe("list");
-    expect(parseCardQuery("dominate display:text").display).toBe("text");
-    // A reader arriving with Scryfall's vocabulary should not have to learn ours.
-    expect(parseCardQuery("dominate display:checklist").display).toBe("text");
+    expect(parseCardQuery("dominate display:rows").display).toBe("list");
+  });
+
+  test("the retired names-only view resolves to list, and says so", () => {
+    /*
+     * THE BOOKMARK KEEPS WORKING AND THE READER IS TOLD WHY. `display:text`
+     * named a third view — names one per line — that turned out to be `list`
+     * with the metadata removed rather than a kind of its own. Refusing these
+     * spellings would break links that are documented at `/syntax`; resolving
+     * them in silence would leave a reader who typed one wondering why the
+     * page ignored them.
+     */
+    for (const spelling of ["text", "checklist", "names"]) {
+      const out = searchCards(index, `dominate display:${spelling}`, 5000);
+      expect(out.display).toBe("list");
+      expect(
+        out.notices.some((notice) => notice.kind === "operand-retired"),
+      ).toBe(true);
+      // Translated, not dropped: the query still answers.
+      expect(out.total).toBeGreaterThan(0);
+    }
+  });
+
+  test("the surviving spellings are quiet — a synonym is not a retirement", () => {
+    /*
+     * `rows` and `list` have always been one view under two names, so neither
+     * has anything to announce. Without this the notice would fire on every
+     * spelling in the table and the distinction it exists to draw would be
+     * lost.
+     */
+    for (const spelling of ["grid", "images", "list", "rows"]) {
+      const out = searchCards(index, `dominate display:${spelling}`, 5000);
+      expect(
+        out.notices.some((notice) => notice.kind === "operand-retired"),
+      ).toBe(false);
+    }
   });
 
   test("silence is null, not grid", () => {
@@ -1024,7 +1058,7 @@ describe("display:", () => {
   test("it is an option, not a term — it never becomes something to match", () => {
     // The whole hazard of an option: left in the token stream it would be a
     // text search for the literal string on every card that does not carry it.
-    const parsed = parseCardQuery("dominate display:text");
+    const parsed = parseCardQuery("dominate display:list");
     expect(parsed.terms).toEqual(["dominate"]);
     expect(parsed.filters.some((filter) => filter.field === "text")).toBe(
       false,
@@ -1032,7 +1066,7 @@ describe("display:", () => {
 
     // And it does not change WHICH cards match, only how they are shown.
     const plain = searchCards(index, "dominate", 5000);
-    const shown = searchCards(index, "dominate display:text", 5000);
+    const shown = searchCards(index, "dominate display:list", 5000);
     expect(shown.total).toBe(plain.total);
     expect(shown.results.map((row) => row.href)).toEqual(
       plain.results.map((row) => row.href),
@@ -1050,9 +1084,9 @@ describe("display:", () => {
 
   test("it composes with the other two options", () => {
     const parsed = parseCardQuery(
-      "type:guardian display:text unique:art order:cost",
+      "type:guardian display:list unique:art order:cost",
     );
-    expect(parsed.display).toBe("text");
+    expect(parsed.display).toBe("list");
     expect(parsed.unique).toBe("art");
     expect(parsed.sort.key).toBe("cost");
     expect(parsed.filters.some((filter) => filter.field === "type")).toBe(true);

@@ -40,7 +40,7 @@
 
   A HAIRLINE UNDER IT, WHICH IS THE SITE'S ONLY DEVICE FOR THIS. The reference
   paints its control bar on a tinted band; this system separates with rules
-  rather than with fills — see `ResultRow`, `.of-index__names`, the browse list
+  rather than with fills — see `ResultRow`, `.of-index__rows`, the browse list
   — so the bar is closed with the same hairline everything else is.
 */
 .of-index__controls {
@@ -66,8 +66,7 @@
   out of that sentence names nothing.
 
   Sized from `space.hair` rather than collapsed to zero: a zero-area element is
-  skipped by some screen readers, which is the same reason `.of-index__variant`
-  is.
+  skipped by some screen readers.
 */
 .of-index__choice-label {
   position: absolute;
@@ -477,86 +476,32 @@
   A STONE THAT IS A LINK, in the two text views — the same control the grid's
   fanned card faces are, drawn as the object those views use.
 
-  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX, and the names view is why:
-  its rows align on the baseline so a stone sits against the first line of a
-  wrapped name, and an inline anchor would offer its own baseline instead of the
-  jewel's numeral's. The anchor has to be as transparent to layout as the stone
-  it wraps.
+  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX. The row aligns on the
+  baseline so a stone sits against the first line of a wrapped name, and an
+  inline anchor would offer its own baseline instead of the jewel's numeral's.
+  The anchor has to be as transparent to layout as the stone it wraps.
 
   NO UNDERLINE AND NO COLOUR CHANGE, because there is no text here to decorate —
   the affordance is the pointer and the ring, and the jewel already carries its
   numeral at full contrast.
 
-  THE SELECTOR HAS TO NAME THE LIST, and a bare `.of-index__stone` did not.
-  `.of-index__names a:hover` is (0,2,1) against this rule's (0,1,0), so the
-  names view drew an underline under a stone on hover while the rows view drew
-  none — one control behaving two ways, under a comment claiming it behaved one.
-  The same specificity trap `.of-index__row-why` records a few rules above.
+  IT USED TO NEED THREE SELECTORS, AND THE REASON IS GONE WITH THE NAMES VIEW.
+  That view set `text-decoration: underline` on `a:hover` at (0,2,1), which beat
+  this rule's (0,1,0) — so one control drew an underline in one view and not in
+  the other, under a comment claiming it behaved the same in both. With a single
+  list view there is no competing rule left, so the two overrides that fought it
+  are deleted rather than kept as insurance against a view that no longer exists.
 
-  THE RING IS WRITTEN FIRST so specificity ascends with source order. It is
-  (0,2,0) against the (0,3,0) below it and they set different properties, so
-  nothing was actually overridden — but `noDescendingSpecificity` reads the
-  shape as the bug it usually is, and the fix is free.
+  THE RING IS WRITTEN FIRST so specificity ascends with source order.
 */
 .of-index__stone:focus-visible {
   outline: var(--of-bevel-width) solid var(--of-color-accent);
   outline-offset: var(--of-space-tightest);
 }
 
-.of-index__stone,
-.of-index__names .of-index__stone:hover,
-.of-index__names .of-index__stone:focus-visible {
+.of-index__stone {
   display: inline-flex;
   text-decoration: none;
-}
-
-/* -- Names ----------------------------------------------------------------- */
-
-/*
-  A LIST THAT IS MEANT TO BE COPIED. No markers, tight leading — so a drag-select
-  over it yields the names and nothing that has to be cleaned out of the paste
-  afterwards. The jewels sit inside that selection and survive it: `PitchJewel`
-  carries `user-select: none`, so the numeral is skipped rather than pasted.
-
-  Columns where there is room, because four hundred names in one column is a
-  scroll rather than a list. The column width is the card thumb plus room for
-  the stones, which is the measure the rest of this component is already built
-  on.
-*/
-.of-index__names {
-  list-style: none;
-  margin: var(--of-space-loose) 0 0;
-  padding: 0;
-  columns: calc(var(--of-card-face-thumb) + var(--of-ornament-jewel-base));
-  column-gap: var(--of-space-loosest);
-  font-family: var(--of-type-family-serif);
-  font-size: var(--of-type-size-small);
-}
-
-.of-index__names li {
-  break-inside: avoid;
-  display: flex;
-  /*
-    BASELINE, NOT CENTRE, AND THE LONG NAMES ARE WHY. "Convulsions from the
-    Bellows of Hell (pitch 3)" wraps to two lines in a column this narrow, and a
-    centred stone then floats in the gutter between them, pointing at neither.
-    Aligned on the baseline it sits against the FIRST line, which is where the
-    name starts — and `PitchJewel` is an `inline-flex` whose baseline is its
-    numeral's, so the digit lines up with the type rather than the box does.
-  */
-  align-items: baseline;
-  gap: var(--of-space-tight);
-  padding-block: var(--of-space-tightest);
-}
-
-.of-index__names a {
-  color: var(--of-color-ink);
-  text-decoration: none;
-}
-
-.of-index__names a:hover,
-.of-index__names a:focus-visible {
-  text-decoration: underline;
 }
 
 /*
@@ -569,43 +514,3 @@
   hydration. `Pagination` is built from real `<a href>`s instead, which is the
   better shape and not one worth having twice.
 */
-
-/*
-  THE PITCH QUALIFIER, READ BUT NOT SEEN.
-
-  Every title used to print "Belly Buster (pitch 3)" — four words saying what
-  the rule under the name and the stone beside it already say in a glyph, three
-  times over on the three versions of a card, in the one view whose job is
-  scanning names rather than reading them.
-
-  It is hidden rather than removed. 900 names in this corpus belong to more than
-  one card, so a bare name is up to four anchors differing only in where they
-  point, which is a WCAG 2.4.4 failure. Kept inside the anchor, it is still part
-  of the accessible name and the links are still told apart by anything reading
-  them aloud.
-
-  Sized from `space.hair` rather than collapsed to zero: a zero-area element is
-  skipped by some screen readers, which would lose the disambiguation entirely.
-*/
-.of-index__variant {
-  /*
-    NOT SELECTABLE, and the names view is why. That view exists so a drag-select
-    yields forty names and nothing that has to be cleaned out of the paste —
-    `PitchJewel` carries this same rule for exactly that reason. Without it a
-    line reading "Belly Buster" pastes as "Belly Buster (pitch 3)", which is
-    text the reader cannot see arriving in their deck list.
-
-    It does not affect what a screen reader announces: `user-select` governs
-    selection, not the accessibility tree.
-  */
-  user-select: none;
-  position: absolute;
-  inline-size: var(--of-space-hair);
-  block-size: var(--of-space-hair);
-  margin: calc(var(--of-space-hair) * -1);
-  padding: 0;
-  border: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}

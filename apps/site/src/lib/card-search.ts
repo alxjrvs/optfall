@@ -1143,6 +1143,14 @@ export interface CardNotice {
     | "operator-pending"
     | "operator-unknown"
     | "operand-unknown"
+    /* THE WORD PARSED AND MEANS SOMETHING ELSE NOW. Distinct from
+       `operand-unknown`, which means the engine did not recognise it, and from
+       `term-ignored`, which means the engine dropped it: the term was honoured,
+       at a value the reader did not type. `display:text` is the case this was
+       added for — it named a view that no longer exists, and resolving it to
+       the nearest one silently would leave a reader wondering why the page
+       ignored them. */
+    | "operand-retired"
     | "term-ignored"
     | "phrase-approximate"
     /* The engine answered, and is telling you what it could not see. Distinct
@@ -1284,28 +1292,60 @@ const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
  *
  * - **`grid`** — the card face IS the row. The default, because recognising a
  *   card by its picture is faster than reading its name.
- * - **`list`** — the dense row: jewel, name, type line, printed stats. The
- *   plan is right that this is better than Scryfall's checklist, so it is kept
- *   exactly as it was and merely given a name that can be typed.
- * - **`text`** — names, one per line, and nothing else. This is the mode that
- *   is not a nicer version of the others: it is the one you can SELECT AND
- *   COPY. A player building a deck list wants forty names, not forty pictures.
+ * - **`list`** — the dense row: a small face, the pitch stones, the name, the
+ *   type line and the printed stats.
  *
- * `checklist` is accepted as a spelling of `text` because that is what
- * Scryfall calls it and a reader arriving with that vocabulary should not have
- * to discover ours.
+ * IT WAS THREE MODES AND THE THIRD WAS NOT A KIND. `text` printed names one
+ * per line and nothing else — which is to say it was `list` with the metadata
+ * removed. The difference between them was DENSITY, and offering a density
+ * knob as a peer of "show me pictures" is what made the control read as
+ * nonsense: `unique:` already collapses to a row per NAME, so the bar could be
+ * driven to say "Names as Names", and the only reason that sentence could be
+ * built is that there was no third KIND left to name the third position after.
+ *
+ * Scryfall has four modes and they are four different kinds of page — a grid
+ * of faces, a sortable table, a grid of text-only card boxes, and a per-card
+ * dossier. Ours were one picture mode and two grades of one text list. Two is
+ * the honest count.
+ *
+ * WHAT `text` WAS ACTUALLY FOR IS NOT LOST, AND IT IS WORTH NAMING BECAUSE IT
+ * WAS REAL. Its job was to be SELECTED AND COPIED: a player building a deck
+ * list wants forty names, not forty pictures, and `PitchJewel` carries
+ * `user-select: none` specifically so the stone's numeral stayed out of the
+ * paste. That job is now a control rather than a rendering — see `CardIndex`'s
+ * copy button — which does it better than a view could: it reaches the rows
+ * below the fold, needs no drag, and cannot pick up a stray glyph.
+ *
+ * ITS THREE SPELLINGS STILL PARSE, AND THEY RESOLVE TO `list` WITH A NOTICE.
+ * `display:text`, `display:checklist` and `display:names` are in the wild and
+ * documented at `/syntax`, so refusing them would break bookmarks over a
+ * vocabulary change; resolving them SILENTLY would leave a reader wondering
+ * why the page ignored what they typed. {@link RETIRED_DISPLAY_MODES} carries
+ * the ones that say so.
  */
-export type CardDisplayMode = "grid" | "list" | "text";
+export type CardDisplayMode = "grid" | "list";
 
 const DISPLAY_MODES: Readonly<Record<string, CardDisplayMode>> = {
   grid: "grid",
   images: "grid",
   list: "list",
   rows: "list",
-  text: "text",
-  checklist: "text",
-  names: "text",
+  text: "list",
+  checklist: "list",
+  names: "list",
 };
+
+/**
+ * The spellings that used to mean a third view, and now mean `list`.
+ *
+ * SEPARATE FROM {@link DISPLAY_MODES} RATHER THAN A FLAG ON IT, because the two
+ * answer different questions: that table says what a word resolves to, this one
+ * says whether resolving it is worth telling the reader about. `display:rows`
+ * and `display:list` are the same view under two names and always were, so
+ * neither earns a notice; `display:text` used to be a different view, so it
+ * does.
+ */
+const RETIRED_DISPLAY_MODES: readonly string[] = ["text", "checklist", "names"];
 
 export type CardUniqueMode = "names" | "cards" | "art";
 
@@ -1788,9 +1828,15 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
       if (mode === undefined) {
         note(
           "operand-unknown",
-          `display:${token.value} is not a way to show results. The three are grid, list and text.`,
+          `display:${token.value} is not a way to show results. The two are grid and list.`,
         );
       } else {
+        if (RETIRED_DISPLAY_MODES.includes(operand)) {
+          note(
+            "operand-retired",
+            `display:${operand} named a names-only view. It is now display:list, which is the same rows with more on each of them.`,
+          );
+        }
         display = mode;
       }
       return false;
