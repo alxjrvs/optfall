@@ -155,7 +155,6 @@ function page(): PageResult {
           starting query rather than something it overwrites.
         */}
         <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string with no interpolation.
           dangerouslySetInnerHTML={{
             __html: `{
   const asked = new URLSearchParams(window.location.search).get("q");

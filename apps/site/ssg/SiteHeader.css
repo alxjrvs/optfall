@@ -113,3 +113,37 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/*
+  THE SUBMIT IS IN THE ACCESSIBILITY TREE AND NOT IN THE LAYOUT.
+
+  Same shape and same reasoning as `.of-search__submit` in the components
+  package — see the comment beside the button in `SiteHeader.tsx`. It is sized
+  from `space.hair` rather than collapsed to zero because a zero-area element is
+  skipped by some screen readers, and it comes back at full size on
+  `:focus-visible` so a keyboard reader can see the control they have reached.
+*/
+.of-bar__submit {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.of-bar__submit:focus-visible {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  margin: 0;
+  padding-block: var(--of-space-tighter);
+  padding-inline: var(--of-space-base);
+  clip-path: none;
+  color: var(--of-color-ink);
+  background: var(--of-color-surface);
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+}

@@ -120,11 +120,40 @@ export function SiteHeader({
             name="q"
             type="search"
             autoComplete="off"
+            /*
+              OFF, BECAUSE THE QUERY IS THE ARTEFACT. Without it a phone
+              capitalises the first character of every search, and this site's
+              whole design treats `?q=…` as the thing you paste. The parser
+              lowercases field names and operands, so `Banned:cc` still works —
+              it just puts a stray capital in the URL somebody shares.
+              `SearchField` has always carried this; the header's field did not,
+              and that only started to matter when `/search` began using it.
+            */
+            autoCapitalize="off"
             spellCheck={false}
             enterKeyHint="search"
             placeholder="Search cards"
             aria-describedby={fieldDescribedBy}
           />
+          {/*
+            NO VISIBLE SUBMIT, AND STILL A REAL ONE — the same argument
+            `SearchField` makes, now that this field has inherited its job.
+
+            A single-input form submits on Enter, and a button would be the
+            widest thing in the bar for an action nobody clicks. But implicit
+            submission is a browser BEHAVIOUR, not a guarantee, and a form whose
+            only way in is a key press is a form some assistive technology
+            cannot submit at all. That was fine while this field was a
+            convenience and `/search` had a `SearchField` of its own carrying a
+            hidden button; it stopped being fine when this became the only way
+            to search on that page.
+
+            Hidden rather than deleted, and it reappears on `:focus-visible` so
+            a keyboard reader who tabs to it can see what they have landed on.
+          */}
+          <button className="of-bar__submit" type="submit">
+            Search
+          </button>
         </form>
       ) : null}
 

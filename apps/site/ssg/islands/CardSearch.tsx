@@ -214,11 +214,14 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
      * starts typing during hydration had their text erased the moment this
      * island mounted, with nothing to restore it.
      *
-     * React 18 guards against exactly this for inputs it renders itself
-     * (`postMountWrapper` skips the value assignment while hydrating), and the
-     * controlled `SearchField` that used to be here inherited that protection.
-     * An adopted node gets none of it, so it is written out here: take whatever
-     * is in the field as the starting state.
+     * React guards against exactly this for inputs it renders ITSELF — its DOM
+     * host skips the value assignment while hydrating — and the controlled
+     * `SearchField` that used to be here inherited that protection. (An earlier
+     * version of this note credited React 18 and named the internal that does
+     * it; this repo pins React 19, and citing a version it does not run is the
+     * kind of detail that rots a comment into folklore.) An adopted node gets
+     * none of it either way, so it is written out here: take whatever is in the
+     * field as the starting state.
      *
      * **IT ONLY COVERS THE NO-`?q=` CASE, and that is a scope rather than an
      * oversight.** Landing on `/search?q=dominate` and typing before the script
@@ -238,7 +241,14 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       submitRef.current(input.value);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") escapeRef.current();
+      if (event.key !== "Escape") return;
+      /* PREVENTED, AS THE OLD HANDLER DID. `type="search"` has native Escape
+         behaviour of its own — WebKit and Blink clear the field, Firefox treats
+         it as "stop" — so without this the browser's action runs alongside
+         ours. It reaches the same place today, which is exactly why dropping
+         the guard was easy not to notice. */
+      event.preventDefault();
+      escapeRef.current();
     };
 
     input.addEventListener("input", onInput);
@@ -590,14 +600,27 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     if (only) window.location.assign(only.href);
   }
 
-  submitRef.current = submitQuery;
-  /* UNCONDITIONAL, for the same reason `submitQuery` takes its argument: a
-     guard on `query` reads state that may lag the field by a render, and
-     "clear a field that is already empty" costs nothing. */
-  escapeRef.current = () => {
-    setQuery("");
-    if (field.current !== null) field.current.value = "";
-  };
+  /*
+   * ASSIGNED IN AN EFFECT, NOT DURING RENDER, and the difference is a rule
+   * rather than a preference. React documents ref writes during render as
+   * unsupported: a render that is abandoned or replayed would still have
+   * written its closure into the ref, for a commit that never happened. Nothing
+   * in this app renders concurrently today, so the previous spelling was latent
+   * rather than broken — and this is the same code with the guarantee.
+   *
+   * NO DEPENDENCY ARRAY, deliberately: the point is to hold the LATEST closure,
+   * so it has to run after every render.
+   */
+  useEffect(() => {
+    submitRef.current = submitQuery;
+    /* UNCONDITIONAL, for the same reason `submitQuery` takes its argument: a
+       guard on `query` reads state that may lag the field by a render, and
+       "clear a field that is already empty" costs nothing. */
+    escapeRef.current = () => {
+      setQuery("");
+      if (field.current !== null) field.current.value = "";
+    };
+  });
 
   return (
     <>
