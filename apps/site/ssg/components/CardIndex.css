@@ -355,17 +355,32 @@
   were on screen and could not be seen, which is the one thing this feature
   exists to do. Rotation alone cannot separate cards that share a pivot.
 
-  So the cards are MOVED apart — 46% of a card between neighbours, which shows
-  just under half of every version behind the front one: enough of the art and
-  the pitch-coloured frame to know which card it is, and a target big enough to
-  click without aiming. The rotation stays at a token 6 degrees because it is
-  what makes the row of cards read as a HAND rather than as a filmstrip, and at
-  that angle it costs almost nothing in width.
+  So the cards are MOVED apart, and the distance is the whole of the tuning.
+
+  26% OF A CARD BETWEEN NEIGHBOURS, AND IT WAS 46%. Measured on screen at 46%: a
+  three-version name opened to 530px inside a 240px cell, which in a four-across
+  grid covered most of the card to its left AND most of the card to its right —
+  hovering one result erased half the row, and the gesture read as damage rather
+  than as a hand opening. 26% shows a quarter of each version — the frame edge,
+  the pitch stone and the top of the name, which is what tells them apart — and
+  keeps the whole hand inside about a third of a neighbour on each side.
+
+  THE SHOWN SLICE IS SMALL BECAUSE THE VERSIONS ARE ALIKE, which is the fact that
+  settled this. The pitch versions of a name usually SHARE their artwork —
+  Angelic Wrath's three are the same painting with different numbers — so
+  spreading far enough to show half of each bought nothing except width: three
+  large near-identical cards across the row read as a duplication bug. What
+  actually distinguishes them is at the edges, and the edges are what a narrow
+  spread shows.
+
+  Four degrees of rotation, down from six for the same reason: it is what makes
+  the row read as a HAND rather than as a filmstrip, and past that it is only
+  buying width.
 
   THE LIFT SAYS THE HAND HAS BEEN PICKED UP rather than merely spread.
 
-  IT OVERHANGS THE CELL, DELIBERATELY, and `.shell`'s `overflow-x: clip` is what
-  bounds it — see `document.css`. A fan that fitted inside one cell would be
+  IT STILL OVERHANGS THE CELL, DELIBERATELY, and `.shell`'s `overflow-x: clip` is
+  what bounds it — see `document.css`. A fan that fitted inside one cell would be
   three cards at a third of a card each, which is the sliver problem again.
 
   `:focus-within` CARRIES THE KEYBOARD, and it is not a courtesy: every version
@@ -376,10 +391,10 @@
 .of-index__stack:hover .of-index__card,
 .of-index__stack:focus-within .of-index__card {
   transform: translate(
-      calc(var(--tilt) * 46%),
+      calc(var(--tilt) * 26%),
       calc(-1 * var(--of-space-tight))
     )
-    rotate(calc(var(--tilt) * 6deg));
+    rotate(calc(var(--tilt) * 4deg));
 }
 
 /*
