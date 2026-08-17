@@ -21,17 +21,22 @@
  * documentation describes.
  */
 
-/* -- The head: the view switch, and the count under it -------------------- */
+/* -- The head: the control bar, and the count under it -------------------- */
 
 /*
   A BAR OF ITS OWN, ABOVE THE COUNT RATHER THAN OPPOSITE IT.
 
-  The switch and the count shared one `space-between` line, which read well at
-  one width and badly at every other: the control sat at the far right of a
-  sentence it was not part of, and the flex wrap moved it BELOW the count on a
-  narrow viewport — so the only piece of chrome on the page changed position
-  depending on the window. Stacked, it is where chrome belongs, first and at the
-  start of the line, and it does not move.
+  The lone view switch and the count shared one `space-between` line, which read
+  well at one width and badly at every other: the control sat at the far right of
+  a sentence it was not part of, and the flex wrap moved it BELOW the count on a
+  narrow viewport — so the page's only piece of chrome changed position depending
+  on the window. Stacked, it is where chrome belongs, first and at the start of
+  the line, and it does not move.
+
+  IT IS FOUR CONTROLS NOW AND THEY READ AS A SENTENCE — "Names as Images sorted
+  by Cost, Descending" — so the wrap matters more than it did: `flex-wrap` breaks
+  the sentence across lines on a narrow screen rather than scrolling it, and the
+  `gap` is the word space that holds it together when it does.
 
   A HAIRLINE UNDER IT, WHICH IS THE SITE'S ONLY DEVICE FOR THIS. The reference
   paints its control bar on a tinted band; this system separates with rules
@@ -53,18 +58,18 @@
   font-size: var(--of-type-size-small);
 }
 
-.of-index__views {
-  display: flex;
-  align-items: center;
-  gap: var(--of-space-base);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
+/*
+  EACH CONTROL'S NAME IS FOR ASSISTIVE TECHNOLOGY AND NOT FOR THE SCREEN, and
+  the two are different words on purpose. What a sighted reader sees is the
+  sentence the joiners make — "Names as Images sorted by Cost" — and what a
+  screen reader announces is "Order by, combo box", because "sorted by" pulled
+  out of that sentence names nothing.
 
-/* The group needs a name for assistive technology and no name on screen — the
-   three labels beside it already say what it does. */
-.of-index__views-legend {
+  Sized from `space.hair` rather than collapsed to zero: a zero-area element is
+  skipped by some screen readers, which is the same reason `.of-index__variant`
+  is.
+*/
+.of-index__choice-label {
   position: absolute;
   inline-size: var(--of-space-hair);
   block-size: var(--of-space-hair);
@@ -74,19 +79,74 @@
   white-space: nowrap;
 }
 
-.of-index__view {
+.of-index__choice {
   display: inline-flex;
   align-items: center;
-  gap: var(--of-space-tight);
+}
+
+/*
+  THE JOINERS ARE THE SENTENCE, and they are set in the quiet voice the rest of
+  the bar's furniture uses. Lower case, because they are the middle of a
+  sentence rather than labels — the one place in this system where sans at this
+  size is NOT wide-tracked uppercase, since a tracked "sorted by" would read as
+  a heading between two controls rather than as the word joining them.
+*/
+.of-index__joiner {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  color: var(--of-color-ink-faint);
+}
+
+/*
+  A NATIVE `<select>`, DRESSED DOWN RATHER THAN REPLACED.
+
+  `appearance: none` and a transparent ground, so it reads as a word in the
+  sentence with a rule under it rather than as a form field bolted into a page
+  of prose — but it is still a real `<select>`, which is what buys the keyboard
+  behaviour, the platform's own picker on a phone, and a control that works
+  before any of our CSS loads. A div with a listbox role would have to
+  re-implement all three and would get one of them wrong.
+
+  THE UNDERLINE IS THE AFFORDANCE. There is no border and no chevron; what says
+  "this is a control" is the hairline beneath it, which is the same device the
+  site uses for every other row it wants read as separable.
+*/
+.of-index__select {
+  appearance: none;
+  border: 0;
+  border-block-end: var(--of-ornament-rule-width) solid
+    var(--of-color-rule-strong);
+  border-radius: var(--of-bevel-radius);
+  background: transparent;
+  padding-block: var(--of-space-tightest);
+  padding-inline: 0 var(--of-space-tightest);
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-muted);
+  color: var(--of-color-ink);
   cursor: pointer;
 }
 
-.of-index__view:has(input:checked) {
+.of-index__select:hover {
+  border-block-end-color: var(--of-color-accent);
+}
+
+.of-index__select:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: var(--of-space-tightest);
+}
+
+/*
+  THE OPTIONS ARE A PLATFORM POPUP AND THE PAGE DOES NOT STYLE IT — except for
+  the ground and the ink, which it MUST. The bar inherits `color: ink` from a
+  transparent select, and a popup that took the page's ink onto the platform's
+  own default white would be dark-on-dark in this theme: unreadable, and
+  invisible to every check that looks at the document rather than at a native
+  menu. Stating both together is the only safe pairing.
+*/
+.of-index__select option {
+  background: var(--of-color-surface);
   color: var(--of-color-ink);
 }
 
@@ -205,45 +265,77 @@
 }
 
 /*
-  ONE CARD IN THE FAN.
+  ONE CARD IN THE STACK.
 
   `--tilt` IS THE CARD'S DISTANCE FROM THE MIDDLE OF THE HAND, in cards, and it
-  is what makes the fan symmetric: with `--n` cards, the tilts run from
+  is what makes the open fan symmetric: with `--n` cards the tilts run from
   `-(n-1)/2` to `+(n-1)/2` whatever `n` is. Computed here rather than handed
-  down as a finished angle so the arithmetic sits beside the values it is made
-  of — and so adding a fourth version to a name changes nothing anywhere.
+  down as a finished offset so the arithmetic sits beside the values it is made
+  of — and so a name with a fourth version changes nothing anywhere.
 
-  SYMMETRIC RATHER THAN FANNING ONE WAY, AND THE REASON IS FOOTPRINT. A fan that
-  opens only to the right displaces its outermost card by the full spread; one
-  that opens both ways displaces by half of it in each direction, so a
-  four-version name overhangs its cell by about a third of a card each side
-  instead of by most of a card on one. That is the difference between a fan that
-  covers one neighbour and a fan that covers two.
-
-  `transform-origin: 50% 100%` — the bottom edge, which is where a hand of cards
-  is actually held. Rotating about the centre would swing the bottoms out as far
-  as the tops and double the footprint for the same spread.
+  SYMMETRIC RATHER THAN FANNING ONE WAY, AND THE REASON IS FOOTPRINT. Adjacent
+  cards are always one `--tilt` apart, so the spacing between them is the same
+  at every `--n`; what changes is how far the whole hand reaches, and opening
+  both ways halves that in each direction. A four-version name covers part of
+  one neighbour each side instead of most of two on one.
 
   THE DEFAULTS MATTER: a single-version row renders no `--n` and no `--i` at
-  all, so the fallbacks have to resolve to a card that is upright and on top.
+  all, so the fallbacks have to resolve to a card that is upright, unmoved and
+  on top.
 */
 .of-index__card {
   position: relative;
   display: block;
   --tilt: calc(var(--i, 0) - (var(--n, 1) - 1) / 2);
-  /* The front card is `--i: 0`, so it takes the top of the ladder and every
-     version behind it steps down one. */
-  z-index: calc(var(--n, 1) - var(--i, 0));
   transform-origin: 50% 100%;
   /*
-    AT REST THE FAN IS NEARLY CLOSED, WHICH IS THE WHOLE OF WHAT REPLACED THE
-    BANDS. Two degrees per card shows a sliver of each version behind the front
-    one — enough that a stack is visibly a stack and a single card is visibly a
-    single card, which is the fact the coloured rule used to carry, said in the
-    object it is a fact about.
+    AT REST IT IS A DECK, NOT A FAN, AND THE FIRST VERSION OF THIS WAS A FAN.
+
+    Each version behind the front one sits a few percent up and to the right, so
+    the cell shows the stepped edges of a stack — enough that a multi-version
+    cell is visibly several cards and a single-version cell is visibly one,
+    which is the fact the coloured rule used to carry, said in the object it is
+    a fact about.
+
+    IT IS A TRANSLATE AND NOT A ROTATION, and that is the correction. The resting
+    state used to tilt every card by `--tilt * 2deg`, which put the FRONT card of
+    every multi-version row a couple of degrees off square — so in a grid whose
+    whole discipline is that the cards line up, a handful of cells sat visibly
+    crooked and read as a rendering fault rather than as a stack. Nothing rotates
+    until the hand is picked up.
+
+    `--i` RATHER THAN `--tilt` HERE, for the same reason: `--tilt` is symmetric
+    about the middle of the hand, so it would move the front card at rest. `--i`
+    is zero for the front card by construction.
   */
-  transform: rotate(calc(var(--tilt) * 2deg));
+  transform: translate(calc(var(--i, 0) * 2%), calc(var(--i, 0) * -2%));
   transition: transform var(--of-motion-base) var(--of-motion-ease);
+}
+
+/*
+  THE LADDER IS SCOPED TO THE STACK, AND SCOPING IT IS A BUG FIX RATHER THAN
+  TIDINESS.
+
+  It used to sit on `.of-index__card` itself, which meant a row with ONE version
+  — which renders a bare anchor with no `.of-index__stack` around it, because
+  there is nothing to stack — got `calc(1 - 0)`, a real `z-index: 1` on a
+  `position: relative` element whose ancestors form no stacking context. So it
+  competed directly with the hovered cell's own `z-index: 1`, the tie broke on
+  document order, and every fan was painted over by whatever cell came after it:
+  the open hand appeared to be CROPPED at the next column's edge, which read as
+  the grid clipping it rather than as a paint-order accident.
+
+  A z-index is a claim about siblings. A card with no siblings should not make
+  one, so it does not.
+
+  The front card is `--i: 0`, so it takes the top of the ladder and every version
+  behind it steps down one. Ordering by `--i` rather than by `--tilt` is what
+  makes the open fan legible: the hand is held at its left edge, so each card
+  overlaps the one after it and every card shows a leading edge rather than being
+  buried under the middle of its neighbour.
+*/
+.of-index__stack .of-index__card {
+  z-index: calc(var(--n, 1) - var(--i, 0));
 }
 
 .of-index__card--behind {
@@ -254,11 +346,27 @@
 }
 
 /*
-  OPEN. Eleven degrees per card, which on a card this shape spreads a
-  three-version name about a quarter of a card either side of its cell and a
-  four-version name about a third — over the neighbour, never over the one
-  beyond it. The lift is what says the hand has been picked up rather than
-  merely spread.
+  OPEN — AND THE SPREAD IS A TRANSLATION, WHICH IS THE WHOLE OF THIS FIX.
+
+  The first version of this rotated and did nothing else: 11 degrees per card
+  about the bottom edge. A card is three times taller than the rotation displaces
+  it sideways, so the top card still covered its siblings almost completely and
+  what "fanning out" produced was one card and two dark slivers — the versions
+  were on screen and could not be seen, which is the one thing this feature
+  exists to do. Rotation alone cannot separate cards that share a pivot.
+
+  So the cards are MOVED apart — 46% of a card between neighbours, which shows
+  just under half of every version behind the front one: enough of the art and
+  the pitch-coloured frame to know which card it is, and a target big enough to
+  click without aiming. The rotation stays at a token 6 degrees because it is
+  what makes the row of cards read as a HAND rather than as a filmstrip, and at
+  that angle it costs almost nothing in width.
+
+  THE LIFT SAYS THE HAND HAS BEEN PICKED UP rather than merely spread.
+
+  IT OVERHANGS THE CELL, DELIBERATELY, and `.shell`'s `overflow-x: clip` is what
+  bounds it — see `document.css`. A fan that fitted inside one cell would be
+  three cards at a third of a card each, which is the sliver problem again.
 
   `:focus-within` CARRIES THE KEYBOARD, and it is not a courtesy: every version
   is a real anchor in the document at rest, so tabbing reaches a card that is
@@ -267,8 +375,11 @@
 */
 .of-index__stack:hover .of-index__card,
 .of-index__stack:focus-within .of-index__card {
-  transform: translateY(calc(-1 * var(--of-space-tight)))
-    rotate(calc(var(--tilt) * 11deg));
+  transform: translate(
+      calc(var(--tilt) * 46%),
+      calc(-1 * var(--of-space-tight))
+    )
+    rotate(calc(var(--tilt) * 6deg));
 }
 
 /*

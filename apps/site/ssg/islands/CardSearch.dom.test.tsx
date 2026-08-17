@@ -363,3 +363,113 @@ describe("the island drives the field the shell renders", () => {
     await act(async () => root.unmount());
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* The control bar                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * THE BAR AND THE BOX SAY THE SAME THING, WHICH IS THE WHOLE CONTRACT.
+ *
+ * `unique:`, `display:`, `order:` and `dir:` are query TERMS, so a control that
+ * changed the list without rewriting the query would leave the reader looking at
+ * one answer and copying a link to another. `show()` has been guarded against
+ * that since it was the only control; there are four now, and they share one
+ * rewriter precisely so they cannot drift apart.
+ *
+ * DRIVEN THROUGH THE `<select>`s RATHER THAN THROUGH THE HANDLERS, because the
+ * wiring between them is what can regress silently: a control can be rendered
+ * with the right options and the right current value and no `onChange` at all,
+ * and every assertion about the query would still pass if the test called the
+ * handler itself.
+ */
+describe("the control bar writes the query it is a picture of", () => {
+  /** Choose an option the way a person does: set it, then fire `change`. */
+  async function choose(id: string, value: string): Promise<void> {
+    const select = document.getElementById(id);
+    if (!(select instanceof HTMLSelectElement)) throw new Error(`no ${id}`);
+    await act(async () => {
+      select.value = value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
+
+  /** The query as it stands, read off the field the reader would copy. */
+  function box(): string {
+    const field = document.getElementById(HEADER_FIELD_ID);
+    return field instanceof HTMLInputElement ? field.value : "";
+  }
+
+  /** Ask a question, so there is an answer for the bar to be about. */
+  async function ask(text: string): Promise<Root> {
+    const field = shell();
+    const root = await mount();
+    await type(field, text);
+    await act(async () => {
+      field.form?.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+    return root;
+  }
+
+  test("an ordering is written as an operator, in the box and the address", async () => {
+    const root = await ask("wrath");
+
+    await choose("display-order", "cost");
+    expect(box()).toBe("wrath order:cost");
+    expect(decodeURIComponent(window.location.search)).toContain("order:cost");
+
+    /* The direction only exists once there is an ordering to reverse — see the
+       guard in `CardIndex`. */
+    await choose("display-direction", "desc");
+    expect(box()).toBe("wrath order:cost dir:desc");
+
+    await act(async () => root.unmount());
+  });
+
+  test("relevance takes the direction with it, leaving nothing behind", async () => {
+    /*
+     * THE BUG THIS IS FOR. Dropping `order:` on its own left `wrath dir:desc`
+     * in the address bar with the direction control hidden — because there is
+     * nothing to reverse without an ordering — so the reader could neither see
+     * that state nor clear it, and choosing an ordering again would silently
+     * come back descending. State that outlives the URL it came from is the
+     * failure `paramDisplay` is documented against; this is the same one.
+     *
+     * ASSERTED ON THE WHOLE STRING rather than with `not.toContain("dir")`,
+     * because the second passes on `"wrath  "` — two spaces where a term was
+     * lifted out, which is what the reader copies.
+     */
+    const root = await ask("wrath");
+    await choose("display-order", "cost");
+    await choose("display-direction", "desc");
+    expect(box()).toBe("wrath order:cost dir:desc");
+
+    await choose("display-order", "relevance");
+    expect(box()).toBe("wrath");
+    expect(decodeURIComponent(window.location.search)).toBe("?q=wrath");
+
+    await act(async () => root.unmount());
+  });
+
+  test("the collapse level is a term too, and it changes the rows", async () => {
+    /*
+     * `unique:` IS THE ONE CONTROL THAT CHANGES HOW MANY ROWS THERE ARE, which
+     * is why the count is asserted beside the query: a bar that wrote the term
+     * without re-running the search would look right and answer the old
+     * question. A name is one row; its pitch versions are several.
+     */
+    const root = await ask("head jab");
+    const collapsed = document.querySelectorAll(".of-index__cell").length;
+    expect(collapsed).toBeGreaterThan(0);
+
+    await choose("display-unique", "cards");
+    expect(box()).toBe("head jab unique:cards");
+    expect(document.querySelectorAll(".of-index__cell").length).toBeGreaterThan(
+      collapsed,
+    );
+
+    await act(async () => root.unmount());
+  });
+});
