@@ -500,17 +500,69 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
    * they were looking at. Any existing `display:` term is replaced rather than
    * appended: two of them would apply the last and silently ignore the first.
    */
+  /**
+   * Rewrite one operator in the submitted query, and answer the new one.
+   *
+   * ONE FUNCTION FOR ALL FOUR CONTROLS, and it started as `show()` for
+   * `display:` alone. The bar now drives `unique:`, `display:`, `order:` and
+   * `dir:`, and four copies of this would be four chances for one of them to
+   * forget to strip the term it is replacing — which does not error, it silently
+   * applies the LAST of two contradicting operators.
+   *
+   * `value === null` REMOVES THE TERM, which is what "Relevance" means. There is
+   * no `order:relevance` to write: the absence of `order:` IS ranking by match,
+   * so the option that says so has to delete rather than assign. Writing a term
+   * the parser would reject as an unknown operand is the one outcome worse than
+   * the control not existing.
+   *
+   * The page is KEPT, and that is deliberate for the view but arguable for the
+   * others — see the call sites, which is where the difference is decided.
+   */
+  const rewrite = useCallback(
+    (
+      changes: readonly (readonly [string, string | null])[],
+      resetPage: boolean,
+    ): void => {
+      let text = submitted;
+      for (const [field, value] of changes) {
+        const pattern = new RegExp(`(^|\\s)${field}:\\S+`, "gi");
+        text = text.replace(pattern, "$1");
+        if (value !== null) text = `${text} ${field}:${value}`;
+      }
+      /*
+        THE SPACES ARE COLLAPSED, AND THAT IS NOT TIDINESS — IT IS THE PRODUCT.
+        Stripping a term replaces " order:cost" with the single space that
+        preceded it, so removing one from the middle left `wrath  dir:desc`:
+        two spaces in the address bar, two spaces in the box the reader copies
+        out of, and a link that does not look like something a person typed.
+        The parser tokenises on whitespace and never minded; the reader would.
+      */
+      const written = text.replace(/\s+/g, " ").trim();
+      const nextPage = resetPage ? 1 : page;
+      setQuery(written);
+      setSubmitted(written);
+      setParamDisplay(null);
+      if (resetPage) setPage(1);
+      syncUrl("push", written, true, nextPage, size);
+    },
+    [page, size, submitted, syncUrl],
+  );
+
+  /**
+   * Switching view rewrites the QUERY, because the view is part of the query.
+   *
+   * The control and the syntax are two ways of saying one thing, so choosing
+   * "Names" has to leave the box reading `dominate display:text` — otherwise the
+   * reader copies what is on screen and gets a link that does not reproduce what
+   * they were looking at.
+   *
+   * THE PAGE IS KEPT, and that is the point of switching views: the rows are the
+   * same rows in a different shape, so a reader six pages into an answer who
+   * wants to read the names instead of look at the faces has not asked to start
+   * over.
+   */
   function show(next: CardDisplayMode): void {
-    const withoutMode = submitted.replace(/(^|\s)display:\S+/gi, "$1").trim();
-    const written = `${withoutMode} display:${next}`.trim();
-    setQuery(written);
-    setSubmitted(written);
-    setParamDisplay(null);
-    /* THE PAGE IS KEPT, and that is the point of switching views: the rows are
-       the same rows in a different shape, so a reader six pages into an answer
-       who wants to read the names instead of look at the faces has not asked to
-       start over. */
-    syncUrl("push", written, true, page, size);
+    rewrite([["display", next]], false);
   }
 
   /**
@@ -669,6 +721,53 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
               entries={entries}
               display={display}
               onDisplayChange={show}
+              /*
+                THE OTHER THREE CONTROLS, WHICH ONLY THIS SURFACE CAN OFFER.
+                `unique:` and `order:` are answered by the query engine, so a
+                page with no query has nothing to hand over — see the props on
+                `CardIndex`. All three read their CURRENT value off the outcome
+                rather than off state of their own, exactly as `display` does:
+                the query is the state, and a second copy of it is a second
+                thing that can disagree with the address bar.
+
+                EVERY ONE OF THESE RESETS TO PAGE ONE, and the view switch does
+                not, which is not an inconsistency. A view shows the same rows
+                in a different shape, so page 6 is still page 6. Re-ordering or
+                re-collapsing changes WHICH rows are on a page — page 6 of a
+                cost-sorted answer holds different cards than page 6 of a
+                relevance-sorted one — so keeping the number would land the
+                reader somewhere they did not ask to be, and `unique:art` can
+                make the page they were on stop existing.
+              */
+              unique={outcome.unique}
+              onUniqueChange={(next) => rewrite([["unique", next]], true)}
+              order={outcome.sort.key ?? "relevance"}
+              /*
+                GOING BACK TO RELEVANCE TAKES `dir:` WITH IT, and it has to be
+                one act rather than two.
+
+                `dir:` only means anything beside an `order:`; relevance is the
+                ranking's own order and reverses for nobody. Dropping the order
+                alone left `wrath dir:desc` in the address bar with the direction
+                control hidden — state that outlived the URL it came from, which
+                a reader could neither see nor clear, and which would silently
+                re-apply the moment they chose an ordering again. It is the same
+                failure `paramDisplay` documents above, arrived at from the other
+                side.
+              */
+              onOrderChange={(next) =>
+                rewrite(
+                  next === "relevance"
+                    ? [
+                        ["order", null],
+                        ["dir", null],
+                      ]
+                    : [["order", next]],
+                  true,
+                )
+              }
+              direction={outcome.sort.direction}
+              onDirectionChange={(next) => rewrite([["dir", next]], true)}
               summary={summary}
               controlName="display"
               interactive={interactive}

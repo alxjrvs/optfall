@@ -76,6 +76,38 @@ import "./CardIndex.css";
 export type CardIndexDisplay = "grid" | "list" | "text";
 
 /**
+ * How much of the corpus one row stands for. The union `unique:` parses into.
+ *
+ * `names` IS THE DEFAULT AND IT IS THE INTERESTING ONE: Head Jab's red, yellow
+ * and blue versions are one row, because that is what a player means by a card.
+ * `cards` expands them; `art` expands further, to one row per distinct picture.
+ * `card-search.ts` states the argument at length beside `CardUniqueMode`.
+ */
+export type CardIndexUnique = "names" | "cards" | "art";
+
+/**
+ * What the list is ordered by, or `relevance` where the reader has not asked.
+ *
+ * `relevance` IS A REAL VALUE HERE AND IS `null` IN THE ENGINE, which is a
+ * deliberate translation rather than a leak. `CardSort.key` is nullable because
+ * "no ordering was requested" is not the same claim as "ordered by name" — but a
+ * `<select>` cannot offer `null`, and the option has to say what the list is
+ * actually doing. The caller maps the two; see `CardSearch`.
+ */
+export type CardIndexOrder =
+  | "relevance"
+  | "name"
+  | "released"
+  | "pitch"
+  | "cost"
+  | "power"
+  | "defence"
+  | "rarity"
+  | "set";
+
+export type CardIndexDirection = "asc" | "desc";
+
+/**
  * One pitch version of the card a row stands for: which pitch, and where it is.
  *
  * A ROW WITH ONE OF THESE IS A CARD; A ROW WITH SEVERAL IS A NAME. That is the
@@ -248,6 +280,30 @@ export interface CardIndexProps {
   readonly display: CardIndexDisplay;
   readonly onDisplayChange: (display: CardIndexDisplay) => void;
   /**
+   * How much of the corpus one row stands for, and how the list is ordered.
+   *
+   * OPTIONAL IN PAIRS, AND THAT IS THE WHOLE OF HOW TWO SURFACES SHARE ONE BAR.
+   * A control appears when its value AND its handler are supplied, so `/search`
+   * — where all four are terms in a query the reader can also type — gets the
+   * full sentence, and a set page gets the one control it can honour. The
+   * ORDER of the controls is fixed here rather than composed by the caller: a
+   * slot would let two card lists grow two different bars, which is the exact
+   * divergence this component exists to end.
+   *
+   * WHY THE SET PAGE HAS ONLY `display`. `unique:` collapses pitch versions and
+   * `order:` re-ranks, and both are answered by the QUERY ENGINE — a set page
+   * has no query, it has a set, and its rows are grouped by the build. Offering
+   * a sort it cannot perform would be a control that looks operable and is not.
+   */
+  readonly unique?: CardIndexUnique | undefined;
+  readonly onUniqueChange?: ((unique: CardIndexUnique) => void) | undefined;
+  readonly order?: CardIndexOrder | undefined;
+  readonly onOrderChange?: ((order: CardIndexOrder) => void) | undefined;
+  readonly direction?: CardIndexDirection | undefined;
+  readonly onDirectionChange?:
+    | ((direction: CardIndexDirection) => void)
+    | undefined;
+  /**
    * The pager, rendered under the list. A `Pagination` from the library.
    *
    * A SLOT RATHER THAN PROPS, BECAUSE THE PAGER'S URLS ARE THE SURFACE'S.
@@ -301,6 +357,91 @@ const VIEWS = [
   ["list", "Rows"],
   ["text", "Names"],
 ] as const;
+
+/**
+ * The other three controls, and what to call each option.
+ *
+ * SAME RULE AS `VIEWS`: every label is a word the operator already accepts, so
+ * a reader who learns the bar has learned the grammar. `unique:names`,
+ * `order:defence`, `dir:desc` are all typable, and all three appear in
+ * `/syntax`.
+ *
+ * "RELEVANCE" IS THE ONE LABEL THAT IS NOT AN OPERAND, because the thing it
+ * names is the ABSENCE of one — a query with no `order:` is ranked by how well
+ * each card matched, which is a real ordering and the default. Choosing it
+ * removes the term rather than writing `order:relevance`, which would not parse.
+ */
+const UNIQUES = [
+  ["names", "Names"],
+  ["cards", "Cards"],
+  ["art", "Art"],
+] as const;
+
+const ORDERS = [
+  ["relevance", "Relevance"],
+  ["name", "Name"],
+  ["released", "Released"],
+  ["pitch", "Pitch"],
+  ["cost", "Cost"],
+  ["power", "Power"],
+  ["defence", "Defence"],
+  ["rarity", "Rarity"],
+  ["set", "Set"],
+] as const;
+
+const DIRECTIONS = [
+  ["asc", "Ascending"],
+  ["desc", "Descending"],
+] as const;
+
+/**
+ * One labelled `<select>` in the control bar.
+ *
+ * A SELECT RATHER THAN THE RADIO GROUP THE VIEW SWITCH USED TO BE, and the
+ * reason is arithmetic rather than taste. One control with three options is a
+ * legible row of radios; four such controls is sixteen radios in a line, which
+ * is a wall. The reference solves it with four dropdowns reading as a sentence —
+ * "Cards as Images sorted by Name" — and that is what this is.
+ *
+ * THE LABEL IS OFF-SCREEN AND THE CONNECTIVE WORDS ARE NOT. What a sighted
+ * reader sees is the sentence; what a screen reader announces is "Order by,
+ * combo box", because "sorted by" as an accessible name would be read out of the
+ * sentence that gives it meaning. Both need naming, and they are not the same
+ * name.
+ */
+function Choice<T extends string>({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  readonly id: string;
+  readonly label: string;
+  readonly value: T;
+  readonly options: readonly (readonly [T, string])[];
+  readonly onChange: (value: T) => void;
+}) {
+  return (
+    <span className="of-index__choice">
+      <label className="of-index__choice-label" htmlFor={id}>
+        {label}
+      </label>
+      <select
+        className="of-index__select"
+        id={id}
+        value={value}
+        onChange={(event) => onChange(event.target.value as T)}
+      >
+        {options.map(([option, text]) => (
+          <option key={option} value={option}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+}
 
 /**
  * The versions a row stands for, one per pitch, ascending.
@@ -570,6 +711,12 @@ export function CardIndex({
   entries,
   display,
   onDisplayChange,
+  unique,
+  onUniqueChange,
+  order,
+  onOrderChange,
+  direction,
+  onDirectionChange,
   pagination,
   summary,
   controlName,
@@ -578,40 +725,83 @@ export function CardIndex({
   return (
     <>
       {/*
-        THE SWITCH COMES FIRST, ON ITS OWN ROW, AND THE COUNT FOLLOWS IT.
+        EVERY CONTROL THAT SHAPES THE LIST, IN ONE BAR, ABOVE THE COUNT.
 
-        The two used to share one line — count at the start, views at the end,
-        `space-between`. That put the control that changes what you are looking
-        at at the far right of a sentence about what you are looking at, and on
-        a narrow viewport the flex wrap dropped it BELOW the count, so the one
-        piece of chrome on the page moved depending on how wide the window was.
+        WHAT THIS REPLACED. A single view switch sharing one `space-between` line
+        with the count — so the control that changes what you are looking at sat
+        at the far right of a sentence about what you are looking at, and on a
+        narrow viewport the flex wrap dropped it BELOW that sentence, moving the
+        page's only piece of chrome depending on the window width. Ordering
+        controls did not exist on screen at all: `order:`, `dir:` and `unique:`
+        were typable operators and nothing else, so a reader who did not read
+        `/syntax` could not sort a result set.
 
-        Stacked, the bar is the first thing under the field: chrome, then the
-        answer, then the answer's rows — which is the order the reference puts
-        them in and the order they are read in. It is also the order they are
-        used in, since a reader picks a view once and reads counts many times.
+        A SENTENCE RATHER THAN A TOOLBAR, which is the reference's shape and the
+        right one: these four values are not independent switches, they compose
+        into one statement about the list — "Names as Images sorted by Cost,
+        Descending" — and reading them in a row is how you check you asked for
+        what you meant.
 
-        A radio group rather than a row of buttons, because that is what "pick
-        exactly one" is, and it gets arrow keys and a group name for free.
-        Hidden until hydration for the reason `interactive` gives.
+        THE ORDER IS FIXED HERE AND THE CONTROLS ARE OPTIONAL. A caller supplies
+        the pairs it can honour; it does not get to arrange them. See the props.
+
+        Hidden until hydration for the reason `interactive` gives — these are
+        `<select>`s driven by JavaScript, and the pager beneath is what stays
+        operable without it, because it is made of links.
       */}
       {interactive ? (
         <div className="of-index__controls">
-          <fieldset className="of-index__views">
-            <legend className="of-index__views-legend">Show cards as</legend>
-            {VIEWS.map(([mode, label]) => (
-              <label className="of-index__view" key={mode}>
-                <input
-                  type="radio"
-                  name={controlName}
-                  value={mode}
-                  checked={display === mode}
-                  onChange={() => onDisplayChange(mode)}
-                />
-                <span>{label}</span>
-              </label>
-            ))}
-          </fieldset>
+          {unique !== undefined && onUniqueChange !== undefined ? (
+            <>
+              <Choice
+                id={`${controlName}-unique`}
+                label="One row per"
+                value={unique}
+                options={UNIQUES}
+                onChange={onUniqueChange}
+              />
+              <span className="of-index__joiner">as</span>
+            </>
+          ) : null}
+
+          <Choice
+            id={`${controlName}-display`}
+            label="Show cards as"
+            value={display}
+            options={VIEWS}
+            onChange={onDisplayChange}
+          />
+
+          {order !== undefined && onOrderChange !== undefined ? (
+            <>
+              <span className="of-index__joiner">sorted by</span>
+              <Choice
+                id={`${controlName}-order`}
+                label="Order by"
+                value={order}
+                options={ORDERS}
+                onChange={onOrderChange}
+              />
+            </>
+          ) : null}
+
+          {/*
+            THE DIRECTION IS HIDDEN WHILE THE ORDER IS RELEVANCE, because there
+            is nothing for it to reverse. Relevance is the ranking's own order —
+            best match first — and `dir:desc` beside it would be a control that
+            reads as if it would put the worst matches at the top and does not.
+          */}
+          {direction !== undefined &&
+          onDirectionChange !== undefined &&
+          order !== "relevance" ? (
+            <Choice
+              id={`${controlName}-direction`}
+              label="Sort direction"
+              value={direction}
+              options={DIRECTIONS}
+              onChange={onDirectionChange}
+            />
+          ) : null}
         </div>
       ) : null}
 
