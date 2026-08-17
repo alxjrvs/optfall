@@ -102,7 +102,7 @@ All enforced somewhere, all easy to violate on a first pass.
   destroy your context in one call.
   - To see the **shape** — field names, how an absent stat is encoded, what a
     banned card looks like — read `data/cards/sample.json`. Twenty cards, same
-    schema, ~79 kB, chosen to cover every axis that has needed its own branch.
+    schema, ~90 kB, chosen to cover every axis that has needed its own branch.
     Regenerate with `bun run corpus:sample`.
   - To look up a **particular card**, query the real corpus through `cards.ts`'s
     exports with `bun -e`. The card you want is almost certainly not one of the

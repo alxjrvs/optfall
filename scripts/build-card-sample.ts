@@ -40,7 +40,7 @@ const OUT_PATH = join(import.meta.dir, "..", "data", "cards", "sample.json");
  *
  * TWENTY IS A CONTEXT BUDGET, NOT A ROUND NUMBER. Cards run ~3.4 kB each, so
  * fifty came to 164 kB — a hundredfold better than the corpus and still ~41k
- * tokens, which is not a file anyone reads. Twenty is ~79 kB: enough to hold
+ * tokens, which is not a file anyone reads. Twenty is ~90 kB: enough to hold
  * every axis below plus a few ordinary cards, and cheap enough that reading the
  * whole thing is a decision rather than an accident.
  *

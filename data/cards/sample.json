@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "repository": "the-fab-cube/flesh-and-blood-cards",
     "path": "json/english/card.json",
@@ -108,7 +108,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/1HP351.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "270918",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/270918?Language=English&Printing=Normal"
         },
         {
           "unique_id": "F69MCwDhpNtkg9rjnzkDK",
@@ -142,7 +144,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/BRI006.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "262534",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/262534?Language=English&Printing=Normal"
         },
         {
           "unique_id": "6GJDhG8FktnFq9tJdQHDF",
@@ -158,7 +162,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/FAB063-GF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "275540",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/275540?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "dMtgtHrghRgBMGmdcJqLd",
@@ -174,7 +180,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/KSU006.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225751",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225751?Language=English&Printing=Normal"
         },
         {
           "unique_id": "CJWb9LNcKwtQgkBBMTNrj",
@@ -190,7 +198,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/MPG119.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "647433",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/647433?Language=English&Printing=Normal"
         },
         {
           "unique_id": "KbzNN6zRNmJNqRdKpMzcW",
@@ -206,7 +216,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/PSM005.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "238505",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/238505?Language=English&Printing=Normal"
         },
         {
           "unique_id": "nnNGTD8wjWzF8hnnhLfkM",
@@ -222,7 +234,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2019-WTR/WTR152.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "7cpTfP68BHMNQPtWbPJkB",
@@ -238,7 +252,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2019-WTR/WTR152.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=1st+Edition+Cold+Foil"
         },
         {
           "unique_id": "p7GkkfpL7pnjHGbC9wL86",
@@ -254,7 +270,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-U-WTR/U-WTR152.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "KmbcTLCwLg9KPGwpLTcfK",
@@ -270,7 +288,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-U-WTR/U-WTR152.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
         }
       ]
     },
@@ -338,7 +358,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/SUP079.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "653956",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/653956?Language=English&Printing=Normal"
         },
         {
           "unique_id": "BfKM86gpnqggkhkRmKrqp",
@@ -356,7 +378,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/SUP079-CF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "653957",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/653957?Language=English&Printing=Cold+Foil"
         }
       ]
     },
@@ -423,7 +447,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/AUA015.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577188",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577188?Language=English&Printing=Normal"
         },
         {
           "unique_id": "kQKn688GJTc7WFWGpP9tP",
@@ -455,7 +481,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/FLR009.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577210",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577210?Language=English&Printing=Normal"
         },
         {
           "unique_id": "WBjK8L8pk7QdbBNHpm87G",
@@ -489,7 +517,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS149.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "565586",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/565586?Language=English&Printing=Normal"
         },
         {
           "unique_id": "mmdfh8h9jHQ78FpHJwjbw",
@@ -505,7 +535,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS149.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "565586",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/565586?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "6f6chqzCmNcwNm7JRBHjj",
@@ -521,7 +553,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SVI014.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "676800",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/676800?Language=English&Printing=Normal"
         }
       ]
     },
@@ -589,7 +623,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/BRI031.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "262559",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/262559?Language=English&Printing=Normal"
         },
         {
           "unique_id": "cdw7tKw9Q7w6MWm6C7KWh",
@@ -605,7 +641,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/ELE178.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "TFwgdmwRM8P7kqGk7p8DL",
@@ -621,7 +659,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/ELE178.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=1st+Edition+Rainbow+Foil"
         },
         {
           "unique_id": "zDLDWgM6fWwTMBF8T8kQb",
@@ -637,7 +677,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-ELE178.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "hfNMmqKMLGJnD9HL9Tzdn",
@@ -653,7 +695,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-ELE178.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
         },
         {
           "unique_id": "hPPqNbRhkjBrDjFCMKTrK",
@@ -669,7 +713,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS108.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "567097",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/567097?Language=English&Printing=Normal"
         }
       ]
     },
@@ -736,7 +782,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/SMP013.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "648176",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/648176?Language=English&Printing=Normal"
         }
       ]
     },
@@ -801,7 +849,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/1HP180.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "270923",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/270923?Language=English&Printing=Normal"
         },
         {
           "unique_id": "TkqJLhWpbm9F67RtGhgLH",
@@ -824,7 +874,9 @@
               "is_front": true,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "225652",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225652?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "TkWJLCDLgGHmmGHrKndnQ",
@@ -847,7 +899,9 @@
               "is_front": true,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "225652",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225652?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "NBNg9HgWhmnLJz9zqRLJt",
@@ -863,7 +917,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-CRU/CRU098.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225999",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225999?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "RCFN7nCGr8NzBGJPkq966",
@@ -879,7 +935,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2021-U-CRU/U-CRU098.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225999",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225999?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "Kn7kRjMkrkCnwc6zF68CK",
@@ -895,7 +953,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER009-CF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225524",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225524?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "Pwj9BdQCdpCMGLQ7jB9Dg",
@@ -911,7 +971,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER017-RF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225545",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225545?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "nRtBqCWG9mBnLjbMg7nTw",
@@ -997,7 +1059,9 @@
           "art_variations": [],
           "flavor_text": "The Kraken's Barrel serves every flavor of swashbuckling bravado.",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA159.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633296",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633296?Language=English&Printing=Normal"
         },
         {
           "unique_id": "P6GcrpdtbJCf9hgfBTTh7",
@@ -1013,7 +1077,9 @@
           "art_variations": [],
           "flavor_text": "The Kraken's Barrel serves every flavor of swashbuckling bravado.",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA159.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633296",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633296?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "7jGMHBKwF9PMptfrwgkgR",
@@ -1031,7 +1097,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SEA159-TP.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633650",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633650?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "GnKbMQpJqCJNkwkWGKQrR",
@@ -1112,7 +1180,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/AGB013.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633704",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633704?Language=English&Printing=Normal"
         },
         {
           "unique_id": "TDNCtJkMTwBk7T7TMFLJg",
@@ -1130,7 +1200,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ANQ037.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "678590",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/678590?Language=English&Printing=Normal"
         },
         {
           "unique_id": "9gN9dLNCdKTCDLcPDkPKz",
@@ -1148,7 +1220,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/GEM066.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "634079",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/634079?Language=English&Printing=Normal"
         },
         {
           "unique_id": "ggRnMLKGgpBrRBkjLJnQz",
@@ -1166,7 +1240,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/GEM066-RF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "634079",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/634079?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "MMrN7PkNmgDDzGbKRdJ8f",
@@ -1182,7 +1258,9 @@
           "art_variations": [],
           "flavor_text": "In the floating gardens of Coralysi, time has lost its way.",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA212.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "631890",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/631890?Language=English&Printing=Normal"
         },
         {
           "unique_id": "8LRzHPjrWmbLmmmMwkTrn",
@@ -1198,7 +1276,9 @@
           "art_variations": [],
           "flavor_text": "In the floating gardens of Coralysi, time has lost its way.",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA212.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "631890",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/631890?Language=English&Printing=Rainbow+Foil"
         }
       ]
     },
@@ -1274,7 +1354,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/APS003-RF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "653803",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/653803?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "KnjrHRhbzqqGkmG6jFLrk",
@@ -1380,7 +1462,9 @@
               "is_front": false,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "510040",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/510040?Language=English&Printing=Normal"
         },
         {
           "unique_id": "dBcwdhcRLfdmMwzgfthRm",
@@ -1396,7 +1480,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER093-CF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "526142",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/526142?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "9JdtzPgq8bwKMjtBQJRKK",
@@ -1412,7 +1498,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER099-RF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "518856",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/518856?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "PqGHcrLGf8THgMbPdRDdT",
@@ -1437,7 +1525,9 @@
               "is_front": true,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "677675",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/677675?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "d6MTTGRJWmtHTthdrhMfk",
@@ -1462,7 +1552,9 @@
               "is_front": false,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "677675",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/677675?Language=English&Printing=Cold+Foil"
         }
       ]
     },
@@ -1553,7 +1645,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS225.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "575195",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/575195?Language=English&Printing=Normal"
         },
         {
           "unique_id": "kng8Gtzgr7rnmnhJmbCpF",
@@ -1569,7 +1663,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS225.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "575195",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/575195?Language=English&Printing=Rainbow+Foil"
         }
       ]
     },
@@ -1641,7 +1737,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/BRI001-RF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "262530",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/262530?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "wpPrrKKKjcbqMHGWcCfmc",
@@ -1664,7 +1762,9 @@
               "is_front": true,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "250019",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/250019?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "6bKpqt6znbc9PBrqCzKHW",
@@ -1687,7 +1787,9 @@
               "is_front": true,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "250019",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/250019?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "BBG6b78G76jbLBPTLC7tJ",
@@ -1703,7 +1805,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER047-CF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "257321",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/257321?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "RhDqDH7jnqdhTkz6hJ9Pm",
@@ -1719,7 +1823,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER064-CF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "391834",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/391834?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "kgJKDWj6JpLQLGcbgckDQ",
@@ -1735,7 +1841,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS255-MV.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577789",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577789?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "fGKt9rcjnkLg6tDcD7zHR",
@@ -1753,7 +1861,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS255-MV_BACK.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577789",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577789?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "9kcKWwFjChc6zKgmrbb7T",
@@ -1792,7 +1902,9 @@
               "is_front": true,
               "is_DFC": false
             }
-          ]
+          ],
+          "tcgplayer_product_id": "493521",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/493521?Language=English&Printing=Normal"
         }
       ]
     },
@@ -1859,7 +1971,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS059-RF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "250027",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/250027?Language=English&Printing=Rainbow+Foil"
         },
         {
           "unique_id": "mmkbtgRtHWrK8JqgfCwjq",
@@ -1875,7 +1989,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON234.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "rPMwTCLqQ8r7zQbtgcknr",
@@ -1891,7 +2007,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON234.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Rainbow+Foil"
         },
         {
           "unique_id": "pkhqMMzhMQNkTzdQW6FNQ",
@@ -1907,7 +2025,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON234.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "cktnBQBPCC7zqNzN6rJbq",
@@ -1923,7 +2043,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON234.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
         },
         {
           "unique_id": "BFbh6QtPWB8PMDWgbGfcj",
@@ -1939,7 +2061,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SVI028.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "676830",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/676830?Language=English&Printing=Normal"
         }
       ]
     },
@@ -2014,7 +2138,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON267.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "86THjrMdg6qwwDTN6Jgdn",
@@ -2030,7 +2156,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON267.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=1st+Edition+Rainbow+Foil"
         },
         {
           "unique_id": "HWK8kprrnnqr6Lwwb9hfw",
@@ -2046,7 +2174,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON267.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "c8tM7GrgRhH8nnbDzJjfF",
@@ -2062,7 +2192,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON267.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
         }
       ]
     },
@@ -2149,7 +2281,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS017.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577713",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577713?Language=English&Printing=Normal"
         },
         {
           "unique_id": "BWmkptqzdjDT7pdRLzbr9",
@@ -2166,7 +2300,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS017.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577713",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577713?Language=English&Printing=Rainbow+Foil"
         }
       ]
     },
@@ -2235,7 +2371,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN115.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695189",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695189?Language=English&Printing=Normal"
         },
         {
           "unique_id": "TNmC9PBcdFRtDL6WRTrcL",
@@ -2251,7 +2389,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN115.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695189",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695189?Language=English&Printing=Rainbow+Foil"
         }
       ]
     },
@@ -2319,7 +2459,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/media/images/1HP299.width-450.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "271147",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/271147?Language=English&Printing=Normal"
         },
         {
           "unique_id": "WthmGTk7kjFpjjnWF6z9t",
@@ -2335,7 +2477,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-CRU/CRU156.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=1st+Edition+Normal"
         },
         {
           "unique_id": "pGrQpJKbtkh8fRQmFwdrG",
@@ -2353,7 +2497,9 @@
           ],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-CRU/CRU156-RF.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=1st+Edition+Rainbow+Foil"
         },
         {
           "unique_id": "7bdNdPMqjmdFQCKLQgnnT",
@@ -2369,7 +2515,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2021-U-CRU/U-CRU156.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
           "unique_id": "bfLfK9k6pTLzjtpMhBLD7",
@@ -2385,7 +2533,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2021-U-CRU/U-CRU156.png",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
         }
       ]
     },
@@ -2454,7 +2604,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN170.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695224",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695224?Language=English&Printing=Normal"
         },
         {
           "unique_id": "dHz8wjDcQMfndTQjc886H",
@@ -2470,7 +2622,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN170.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695224",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695224?Language=English&Printing=Rainbow+Foil"
         }
       ]
     },
@@ -2541,7 +2695,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/PEN082.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "664619",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/664619?Language=English&Printing=Normal"
         },
         {
           "unique_id": "K6ChKDjK7JrRCbW6JhhnH",
@@ -2557,7 +2713,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/PEN082.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "664619",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/664619?Language=English&Printing=Cold+Foil"
         },
         {
           "unique_id": "HbH7jLjWbTCTTKh9ckpBb",
@@ -2573,7 +2731,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SAZ008.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "676547",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/676547?Language=English&Printing=Normal"
         }
       ]
     },
@@ -2638,7 +2798,9 @@
           "art_variations": [],
           "flavor_text": "",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LSS002-RF.webp",
-          "image_rotation_degrees": 0
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225624",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225624?Language=English&Printing=Rainbow+Foil"
         }
       ]
     }
