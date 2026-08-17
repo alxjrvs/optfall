@@ -4,7 +4,14 @@
  * MOST OF THIS IS MOVED RATHER THAN WRITTEN, out of `CardSearch.css`, and the
  * move is the point: the grid, the view switch and the name list were styles
  * belonging to one PAGE that turned out to be describing a component. What is
- * genuinely new is the pager, the centring, and the jewels in the name list.
+ * genuinely new is the pager, the jewels in the name list, and the fan.
+ *
+ * THE IMAGES VIEW IS THE ONE THAT HAS CHANGED SHAPE SINCE. It was a grid of
+ * thumbnails each captioned with its name and underlined with a row of coloured
+ * bands; it is a dense grid of cards drawn at the size a card is legible at,
+ * with no caption and no underline, and a name's pitch versions stacked behind
+ * the front one and fanned on hover. The captions and the bands went together
+ * because they were two ways of saying what the picture says.
  *
  * THE ROWS VIEW HAS ALMOST NOTHING HERE, because `ResultRow` owns it — the
  * hairline, the baseline alignment, the two type voices. What is left is the
@@ -14,18 +21,34 @@
  * documentation describes.
  */
 
-/* -- The head: the count, and the view switch ---------------------------- */
+/* -- The head: the view switch, and the count under it -------------------- */
 
-.of-index__head {
+/*
+  A BAR OF ITS OWN, ABOVE THE COUNT RATHER THAN OPPOSITE IT.
+
+  The switch and the count shared one `space-between` line, which read well at
+  one width and badly at every other: the control sat at the far right of a
+  sentence it was not part of, and the flex wrap moved it BELOW the count on a
+  narrow viewport — so the only piece of chrome on the page changed position
+  depending on the window. Stacked, it is where chrome belongs, first and at the
+  start of the line, and it does not move.
+
+  A HAIRLINE UNDER IT, WHICH IS THE SITE'S ONLY DEVICE FOR THIS. The reference
+  paints its control bar on a tinted band; this system separates with rules
+  rather than with fills — see `ResultRow`, `.of-index__names`, the browse list
+  — so the bar is closed with the same hairline everything else is.
+*/
+.of-index__controls {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--of-space-base);
+  padding-block-end: var(--of-space-tight);
+  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
 
 .of-index__count {
-  margin-block: 0 var(--of-space-base);
+  margin-block: var(--of-space-tight) var(--of-space-base);
   color: var(--of-color-ink-muted);
   font-size: var(--of-type-size-small);
 }
@@ -70,168 +93,216 @@
 /* -- Images ---------------------------------------------------------------- */
 
 /*
-  Sized from the thumb tier so a cell is the width of the face it holds, and the
-  track count follows the viewport rather than being chosen. `auto-fill` rather
-  than `auto-fit` so a single result stays card-sized instead of stretching
-  across the row.
+  FOUR CARDS ACROSS, TIGHT, AND NOTHING BETWEEN THEM BUT A GUTTER.
+
+  The track is `layout.card.cell` — the width a card is DRAWN at, which is not
+  one of the two widths the host serves; see the token for why those are
+  different questions. It used to be `card.face.thumb`, so the grid fitted its
+  four columns by drawing every card at 180px, which is a contact sheet.
+
+  `min(…, 45%)` IS WHAT KEEPS A PHONE FROM SHOWING ONE CARD PER ROW. With a bare
+  240px track, `auto-fill` on a 351px content box fits exactly one column and
+  then stretches it to the full width — a single enormous card per row, on the
+  screen with the least room to spend. The `min()` caps the track at just under
+  half the container instead, so there are always at least two columns and the
+  cards shrink rather than the list lengthening. A percentage is a layout
+  relationship rather than a design value, which is why it is a legal literal
+  here and a breakpoint would not be: this theme publishes no breakpoint tokens.
+
+  `auto-fill` rather than `auto-fit`, unchanged and for the unchanged reason: a
+  single result stays card-sized instead of stretching across the row.
+
+  THE GAP IS `tight`, WHICH IS THE DENSITY. `loose` put a full line of space
+  between pictures that are already separated by their own printed borders, so
+  the grid read as a page of framed items rather than as a spread of cards. The
+  reference sets ~7px between columns and ~9px between rows at this card size;
+  this is 8px both ways.
+
+  `isolation: isolate` FOR THE FAN. A hovered cell lifts above its neighbours,
+  and `CardFan.css` records at length what happens when a card-stacking ladder
+  is left to compete with the document: the footer lost to it and artwork
+  painted over the rights notice. The ladder is confined to this grid.
 */
 .of-index__grid {
   display: grid;
   grid-template-columns: repeat(
       auto-fill,
-      minmax(var(--of-card-face-thumb), 1fr)
+      minmax(min(var(--of-layout-card-cell), 45%), 1fr)
     );
-  gap: var(--of-space-loose);
+  /*
+    THE TRACK MAY STRETCH; THE CARD MAY NOT. Measured across widths with the
+    `1fr` alone: 4 cards of 240px at the full container, and then 2 cards of
+    346px at 700px — bigger than at any other width, on a screen with less room,
+    because two tracks were sharing the slack between them. A card list whose
+    cards change size as the window moves is a list with no unit.
+
+    So the track keeps the slack and the CELL is capped at the drawn size, then
+    centred in whatever track it lands in. The reference does the same thing by
+    a different mechanism — fixed-width flex items with `space-between` — and
+    for the same reason: the card is the constant.
+  */
+  justify-items: center;
+  gap: var(--of-space-tight);
   margin-block-start: var(--of-space-loose);
   padding: 0;
   list-style: none;
+  isolation: isolate;
 }
 
 /*
-  THE CELL IS THE STACK NOW, NOT THE ANCHOR. The anchor used to wrap the whole
-  cell and own this layout; it stops at the name so the pitch mark under it can
-  be links, which cannot be nested inside another anchor. So the flex column
-  moves out one level and the anchor keeps its own — the two are the same rules
-  because they are the same stack, cut in two places.
+  A CELL IS A CARD, AND WHERE A NAME HAS SEVERAL VERSIONS IT IS A STACK OF THEM.
 
-  THE GAP IS `tighter` RATHER THAN `tight`, and it is not a change of spacing.
-  The name used to carry a negative bottom margin cancelling most of the
-  anchor's gap, precisely so the mark sat closer to the name than the name did
-  to the face; with the mark outside the anchor that arithmetic is just this
-  value, stated once. A caption's underline belongs to the caption.
+  It used to be a flex column holding a face, a name and a row of coloured
+  bands. All three of those are gone: the face is the row, the name was a
+  caption repeating what the face already says, and the bands were an underline
+  standing in for cards this now simply draws. See `CardStack` for the argument.
+
+  `position: relative` SO THE HOVERED CELL CAN LEAVE ITS TRACK. A fan is wider
+  than the cell it opens out of — that is what makes it a fan — so it has to
+  paint over its neighbours, and a cell that could not raise itself would open
+  its fan UNDER the card to its right.
 */
 .of-index__cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--of-space-tighter);
-}
-
-.of-index__cell-link {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  display: block;
   /*
-    CENTRED, WHICH IS THE WHOLE OF THE CELL'S LAYOUT CHANGE. The face is
-    centred in its track by the grid; the name used to be start-aligned under
-    it, so wherever a track was wider than a card the type sat off to one side
-    of its own picture and every cell in the row did it by a different amount.
-    A caption belongs under the middle of the thing it captions.
+    FULL TRACK UP TO THE DRAWN SIZE, AND NO FURTHER — the cap the grid's
+    `justify-items` comment describes. Both halves are needed: without the
+    `100%` the cell shrink-wraps the image's 450px intrinsic width and every
+    card is drawn at the served tier; without the maximum it takes whatever
+    slack the track was given.
   */
-  align-items: center;
-  text-align: center;
-  gap: var(--of-space-tight);
-  text-decoration: none;
-  color: inherit;
+  inline-size: 100%;
+  max-inline-size: var(--of-layout-card-cell);
 }
 
 /*
-  The name is the accessible name of the link along with the face's alt text,
-  and it is visible because recognising art is not the same as being sure.
-
-  WHAT TELLS TWO SAME-NAMED CELLS APART IS NO LONGER THE SUFFIX — it used to be,
-  and this comment used to say so. The suffix is hidden now (see
-  `.of-index__variant`) and what remains in the grid is the pitch rule under the
-  name, plus the card face above it, which is itself printed in the pitch's
-  colour.
-
-  BOTH OF THOSE ARE COLOUR, AND THAT IS THE COST OF THE CHANGE RATHER THAN AN
-  OVERSIGHT. In the rows and names views the stone carries a numeral, so hue is
-  redundant there; in the grid it is not, and a reader who cannot separate red
-  from yellow has the accessible name and the card art and nothing else. It is
-  recorded here rather than in a commit message because this is where somebody
-  will stand when they decide whether to change it back.
+  Only while it is being used, so at rest every cell is level with every other
+  and the paint order is document order. Raised on `:focus-within` as well as
+  `:hover`, because the fan opens for the keyboard too.
 */
-.of-index__cell-name {
-  font-family: var(--of-type-family-serif);
-  font-size: var(--of-type-size-small);
-  line-height: var(--of-type-leading-tight);
-  color: var(--of-color-ink);
+.of-index__cell:hover,
+.of-index__cell:focus-within {
+  z-index: 1;
+}
+
+/* -- The stack, and the fan ------------------------------------------------ */
+
+/*
+  THE STACK'S BOX IS THE FRONT CARD'S. That card is in normal flow and every
+  other version is absolutely positioned over it, so the grid track is sized by
+  one card whatever the fan does — which is the property that lets the fan
+  overflow without moving anything.
+
+  `isolation: isolate` for the same reason the grid has it, one level down: the
+  cards carry a `z-index` ladder among themselves and it has no business
+  competing with the page.
+*/
+.of-index__stack {
+  position: relative;
+  display: block;
+  isolation: isolate;
 }
 
 /*
-  -- The split mark: one band per version, each one a link ------------------
+  ONE CARD IN THE FAN.
 
-  WHAT THIS IS FOR. A cell that stands for three pitch versions of a name is one
-  picture, one name and three destinations. The name goes to the name — the
-  page that holds all three — and each band goes to the version it is drawn in
-  the colour of, so a reader who wants the blue one gets it in one click instead
-  of two. Before this, the same reader saw three separate cells of the same card
-  and had to read the pitch qualifier off each to tell which was which.
+  `--tilt` IS THE CARD'S DISTANCE FROM THE MIDDLE OF THE HAND, in cards, and it
+  is what makes the fan symmetric: with `--n` cards, the tilts run from
+  `-(n-1)/2` to `+(n-1)/2` whatever `n` is. Computed here rather than handed
+  down as a finished angle so the arithmetic sits beside the values it is made
+  of — and so adding a fourth version to a name changes nothing anywhere.
 
-  THE GAP IS `PitchRule`'s OWN. A split mark is three rules laid in a row where
-  an unsplit one is three bands laid in a row, and if the two spacings differed
-  the reader would be able to see which cells were clickable — a distinction
-  that means nothing to them and that we would be drawing in the one place the
-  design is trying to keep quiet.
+  SYMMETRIC RATHER THAN FANNING ONE WAY, AND THE REASON IS FOOTPRINT. A fan that
+  opens only to the right displaces its outermost card by the full spread; one
+  that opens both ways displaces by half of it in each direction, so a
+  four-version name overhangs its cell by about a third of a card each side
+  instead of by most of a card on one. That is the difference between a fan that
+  covers one neighbour and a fan that covers two.
+
+  `transform-origin: 50% 100%` — the bottom edge, which is where a hand of cards
+  is actually held. Rotating about the centre would swing the bottoms out as far
+  as the tops and double the footprint for the same spread.
+
+  THE DEFAULTS MATTER: a single-version row renders no `--n` and no `--i` at
+  all, so the fallbacks have to resolve to a card that is upright and on top.
 */
-.of-index__splits {
-  display: flex;
-  justify-content: center;
-  gap: var(--of-space-tighter);
+.of-index__card {
+  position: relative;
+  display: block;
+  --tilt: calc(var(--i, 0) - (var(--n, 1) - 1) / 2);
+  /* The front card is `--i: 0`, so it takes the top of the ladder and every
+     version behind it steps down one. */
+  z-index: calc(var(--n, 1) - var(--i, 0));
+  transform-origin: 50% 100%;
+  /*
+    AT REST THE FAN IS NEARLY CLOSED, WHICH IS THE WHOLE OF WHAT REPLACED THE
+    BANDS. Two degrees per card shows a sliver of each version behind the front
+    one — enough that a stack is visibly a stack and a single card is visibly a
+    single card, which is the fact the coloured rule used to carry, said in the
+    object it is a fact about.
+  */
+  transform: rotate(calc(var(--tilt) * 2deg));
+  transition: transform var(--of-motion-base) var(--of-motion-ease);
+}
+
+.of-index__card--behind {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 100%;
 }
 
 /*
-  A BAND IS THREE HAIRLINES TALL, WHICH IS A LEGIBLE MARK AND AN UNUSABLE
-  TARGET. The padding gives the pointer and the focus ring something to land
-  on, and the negative margin gives the same amount back to the layout — so the
-  cell is spaced by the mark it can see rather than by the target it cannot.
-  Only the block axis is padded: the inline axis is what tells one version from
-  the next, and widening the bands into each other would make the hit areas
-  overlap the neighbour they are meant to be distinguished from.
+  OPEN. Eleven degrees per card, which on a card this shape spreads a
+  three-version name about a quarter of a card either side of its cell and a
+  four-version name about a third — over the neighbour, never over the one
+  beyond it. The lift is what says the hand has been picked up rather than
+  merely spread.
+
+  `:focus-within` CARRIES THE KEYBOARD, and it is not a courtesy: every version
+  is a real anchor in the document at rest, so tabbing reaches a card that is
+  stacked underneath another one. Opening the fan on focus is what makes the
+  focused card visible, which is the same job the ring does and cannot do alone.
 */
-.of-index__split {
-  display: inline-flex;
-  padding-block: var(--of-space-tighter);
-  margin-block: calc(var(--of-space-tighter) * -1);
+.of-index__stack:hover .of-index__card,
+.of-index__stack:focus-within .of-index__card {
+  transform: translateY(calc(-1 * var(--of-space-tight)))
+    rotate(calc(var(--tilt) * 11deg));
 }
 
 /*
-  THE HOVER STATE IS THE ONLY THING THAT SAYS THESE ARE CONTROLS, so it has to
-  be visible on a mark 20px wide and 3px tall — and it has to be visible on ALL
-  THREE BANDS, which is what rules out the obvious answers. A brighter fill
-  fails the readers `PitchJewel` documents at length, since red and yellow at
-  two brightnesses are still red and yellow. Accent alone fails worse and fails
-  precisely: the accent IS red, so a red hairline under the pitch-1 band is a
-  hover state that does not exist on the one band a reader is most likely to
-  reach for. Tested rather than assumed — it is why this rule is two properties
-  and not one.
-
-  SO THE PRIMARY CHANNEL IS POSITION. The hovered band lifts clear of the two
-  beside it, which is a shape a reader sees whatever they can see of hue, and
-  the accent edge underneath it is the secondary confirmation for everyone else.
-
-  IT REACHES INTO `PitchRule`'s CLASS, and that is deliberate rather than lazy.
-  The primitive draws a band; whether a band is a control is a fact about this
-  index, and pushing a `--interactive` variant into the design system would put
-  a card-list concern inside a component the card page also uses. The same
-  reasoning, and the same shape of selector, is already here for
-  `.of-index__row-why`.
-
-  A TRANSFORM RATHER THAN A MARGIN, because the mark sits under a name in a grid
-  of them: moving a band in the layout would shift the note under it and, in the
-  row a cell sits in, every cell whose own mark is on the same line.
+  THE RING IS WRITTEN FIRST so specificity ascends with source order. It is
+  (0,2,0) against the (0,3,0) below it and they set different properties, so
+  nothing is actually overridden — but `noDescendingSpecificity` reads the shape
+  as the bug it usually is, and the fix is free. `.of-index__stone` a few rules
+  down records the same trade.
 */
-.of-index__split:hover .of-pitch-rule__band,
-.of-index__split:focus-visible .of-pitch-rule__band {
-  transform: translateY(calc(-1 * var(--of-space-tightest)));
-  box-shadow:
-    0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light),
-    0 var(--of-bevel-width) 0 0 var(--of-color-accent);
-}
-
-/*
-  The focus ring goes on the anchor rather than on the band, so it surrounds the
-  whole target — a ring drawn tight around three hairlines is a ring nobody can
-  find.
-*/
-.of-index__split:focus-visible {
-  outline: var(--of-bevel-width) solid var(--of-color-accent);
+.of-index__card:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
   outline-offset: var(--of-space-tightest);
 }
 
-.of-index__cell-link:hover .of-index__cell-name,
-.of-index__cell-link:focus-visible .of-index__cell-name {
-  color: var(--of-color-accent);
+/*
+  THE CARD UNDER THE POINTER COMES TO THE FRONT, which is the only way to be
+  sure what a click will open: a fanned card is mostly covered by the one in
+  front of it, and the visible sliver is not enough to recognise a version by.
+  `--n + 1` beats every card in the stack, including the front one.
+*/
+.of-index__stack .of-index__card:hover,
+.of-index__stack .of-index__card:focus-visible {
+  z-index: calc(var(--n, 1) + 1);
+}
+
+/*
+  Honour a reduced-motion preference by removing the TRANSITION and not the
+  fan — the fan is information, so the cards still spread, they just arrive
+  rather than travel. `CardFan.css` makes the same call for the same reason.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .of-index__card {
+    transition: none;
+  }
 }
 
 /* -- Rows ------------------------------------------------------------------ */
@@ -278,7 +349,7 @@
 
 /*
   A STONE THAT IS A LINK, in the two text views — the same control the grid's
-  split bands are, drawn as the object those views use.
+  fanned card faces are, drawn as the object those views use.
 
   `inline-flex` RATHER THAN THE DEFAULT INLINE BOX, and the names view is why:
   its rows align on the baseline so a stone sits against the first line of a

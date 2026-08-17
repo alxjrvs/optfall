@@ -95,6 +95,28 @@ body {
 */
 body > .shell {
   flex: 1 0 auto;
+
+  /*
+    NOTHING MAY EVER SCROLL THE DOCUMENT SIDEWAYS — `docs/PLAN.md`'s mobile rule,
+    stated as the one thing that must not happen, and until now enforced only by
+    each overflowing thing clipping itself.
+
+    `CardIndex`'s fan is what made that insufficient. A cell in the last column
+    opens a hand of cards wider than the cell, deliberately, and the whole point
+    is that it paints over its neighbours rather than being cropped by them — so
+    it cannot clip itself and there is slack for it everywhere except at the
+    edge of the viewport. This is the backstop for that one case: the fan gets
+    the full width of the shell to open into, and the shell is what stops it.
+
+    `clip`, NOT `hidden`, AND THE DIFFERENCE IS LOAD-BEARING TWICE OVER.
+    `hidden` would make this a scroll container, so `scrollIntoView` on a
+    focused card could drag the layout sideways with no way back — and, per CSS
+    Overflow 3, it would force the BLOCK axis to `auto` as well, which would
+    crop `CardFan`'s deliberate downward bleed on the front door and break the
+    sticky footer's height. `clip` leaves the other axis genuinely `visible`.
+    `CardFan.css` documents the same trap from the other side.
+  */
+  overflow-x: clip;
 }
 
 /*
@@ -117,6 +139,25 @@ main {
 */
 main[data-width="wide"] {
   max-inline-size: var(--of-layout-page-wide);
+}
+
+/*
+  THE WIDTH A LIST OF CARDS WANTS, WHICH IS NEITHER OF THE OTHER TWO.
+
+  `measure` is a column of prose and `wide` is a face beside one. A card index
+  is a grid of pictures and has no prose in it at all, so both of the existing
+  containers were answering a question it does not ask: at `measure` the grid
+  fitted four faces only by drawing them at the thumb's 180px, which reads as a
+  contact sheet rather than as cards, and `wide` would have taken its width from
+  `type.measure` — so tuning the reading line length anywhere on the site would
+  have changed how many cards fit in a row here.
+
+  See `layout.page.index` in the token table for what the number is made of. The
+  grid inside is `auto-fill`, so this is a ceiling rather than a count: a narrow
+  viewport takes three cells or two, and nothing takes five.
+*/
+main[data-width="index"] {
+  max-inline-size: var(--of-layout-page-index);
 }
 
 /* Serif for names, questions and headings — one of the two assigned voices.

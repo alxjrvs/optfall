@@ -441,30 +441,48 @@ describe("the ported pages", () => {
      * written; this page was where the two surfaces disagreed.
      *
      * WHAT THE COLLAPSE MAY NOT COST is any version's address, which is the
-     * half worth asserting: the row names the card, and each band names and
-     * opens the version it is drawn for.
+     * half worth asserting: the row is one cell, and every version it stands for
+     * is reachable from inside that cell.
+     *
+     * ASSERTED INSIDE ONE `<li>` RATHER THAN ACROSS THE PAGE, which is stricter
+     * than it looks. The old version of this counted captions globally and then
+     * checked three hrefs anywhere in the document — so a page that had gone
+     * back to rendering three separate cells would have passed every line of it
+     * except the caption count. Cutting the cell out first is what makes "one
+     * row, with a door each" a single claim instead of two that happen to agree.
      */
     const lgs = all.find((resolved) => resolved.route === "/sets/lgs");
     const html = lgs?.render([], "islands.js") ?? "";
     expect(html).not.toBe("");
 
-    const cells = html.match(/of-index__cell-name[^>]*>Angelic Wrath/g) ?? [];
+    const cells = [...html.matchAll(/<li class="of-index__cell">(.*?)<\/li>/gs)]
+      .map((match) => match[1] ?? "")
+      .filter((cell) => cell.includes("Angelic Wrath"));
     expect(cells).toHaveLength(1);
+    const cell = cells[0] ?? "";
 
-    /* The three versions, each a link, each named for the card and not merely
-       for a pitch value — a band carries no text, so its label is all a screen
-       reader has to tell one from the next. */
+    /* Three cards in the one cell — the front one and the two stacked behind
+       it — and three anchors, so every version is a door rather than a
+       picture. */
+    expect([...cell.matchAll(/<a class="of-index__card/g)]).toHaveLength(3);
+
     for (const pitch of [1, 2, 3]) {
-      expect(html).toContain(
-        `<a class="of-index__split" href="${addressOf(`angelic-wrath-${pitch}`)}">`,
-      );
-      expect(html).toContain(`aria-label="Angelic Wrath (pitch ${pitch})"`);
+      expect(cell).toContain(`href="${addressOf(`angelic-wrath-${pitch}`)}"`);
     }
 
-    /* And the name goes to the name's own version — `/card/angelic-wrath` is a
+    /* Each named for the CARD and not merely for a pitch value: a fanned face
+       carries no text, so its `alt` is all a screen reader has to tell one
+       version from the next. The front card is the row itself, so it wears the
+       bare name and its type line; the two behind it name their pitch. */
+    expect(cell).toContain('alt="Angelic Wrath (pitch 2)"');
+    expect(cell).toContain('alt="Angelic Wrath (pitch 3)"');
+
+    /* And the row goes to the name's own version — `/card/angelic-wrath` is a
        301 now, so the row resolves it here rather than sending a reader
        through a hop. It is the pitch-1 card, which is what that URL rendered. */
-    expect(html).toContain(`href="${addressOf("angelic-wrath-1")}"`);
+    expect(cell).toContain(
+      `<a class="of-index__card" href="${addressOf("angelic-wrath-1")}"`,
+    );
   });
 
   test("the sets index counts what the set page lists", () => {
@@ -519,8 +537,15 @@ describe("the ported pages", () => {
     // The whole point of the change, asserted at its coarsest: there are
     // images of cards on a set page. `check-card-notice.ts` separately proves
     // every one of them came from `CardFace` and carries the attribution.
-    expect(monarchHtml).toContain("of-index__cell-link");
-    expect(monarchHtml).toContain("of-pitch-rule__band");
+    //
+    // NAMED FOR THE CARD RATHER THAN FOR THE CAPTION IT USED TO HAVE. This read
+    // `of-index__cell-link` and `of-pitch-rule__band` — the anchor around a
+    // face-and-name pair, and the coloured rule under it. The images view has
+    // neither now: a cell is a card, and a name's versions are the cards behind
+    // it rather than a stripe. So the coarse claim is asserted against what
+    // carries it, which is the face itself.
+    expect(monarchHtml).toContain("of-index__card");
+    expect(monarchHtml).toContain("of-card-face");
   });
 });
 
@@ -1510,26 +1535,35 @@ describe("a card index prints the name and not the pitch qualifier", () => {
   const promos = RESOLVED.find((resolved) => resolved.route === "/sets/lgs");
   const html = promos?.render([], "islands.js") ?? "";
 
-  test("the visible title is bare, and the qualifier is still in the anchor", () => {
+  test("the images view prints no title, and the alt still carries the pitch", () => {
     /*
      * WHY THE QUALIFIER CANNOT SIMPLY BE DELETED. 900 names in this corpus
      * belong to more than one card, so "Belly Buster" is three anchors that
      * differ only in where they point — a WCAG 2.4.4 failure, and the exact one
-     * `variantSuffix` was written to prevent. What changed is that the pitch is
-     * carried by the rule under the name and the stone beside it instead of by
-     * four words repeated on every row, so the text is hidden rather than
-     * dropped: still inside the anchor, still part of its accessible name.
+     * `variantSuffix` was written to prevent.
+     *
+     * WHERE IT LIVES IN THIS VIEW CHANGED, AND THAT IS WHAT THIS PINS. The
+     * grid used to print the name under every face with the suffix hidden
+     * inside the anchor as `.of-index__variant`; it prints no name at all now,
+     * so the anchor's accessible name is the face's `alt` alone — and `alt` has
+     * always carried the QUALIFIED label. So the disambiguation did not move
+     * house, it lost its duplicate: what the reader used to see twice, they now
+     * see once, and what a screen reader announces is unchanged.
+     *
+     * BOTH HALVES ARE ASSERTED, because either alone would pass on a page that
+     * had simply stopped listing cards. The caption must be absent AND the
+     * suffix must be in an `alt`.
      *
      * A ROW THAT STANDS FOR EVERY VERSION HAS NOTHING TO QUALIFY and carries no
      * suffix at all — see the collapse tests above. This is about the other
      * kind: one version of a name whose siblings were printed somewhere else.
      */
     expect(html).not.toBe("");
-    /* The suffix is present in the markup… */
-    expect(html).toContain("of-index__variant");
-    expect(html).toMatch(/of-index__variant[^>]*>\s*\(pitch \d\)/);
-    /* …and never sits loose in a title, which is what the reader was seeing. */
-    expect(html).not.toMatch(/of-index__cell-name[^>]*>[^<]*\(pitch \d\)/);
+    /* No printed caption, and therefore no hidden span inside one. */
+    expect(html).not.toContain("of-index__cell-name");
+    expect(html).not.toContain("of-index__variant");
+    /* And the suffix is still in the accessible name of a face. */
+    expect(html).toMatch(/alt="[^"]*\(pitch \d\)[^"]*"/);
   });
 
   test("a card whose name is unique carries no qualifier at all", () => {
@@ -1559,20 +1593,20 @@ describe("a card index prints the name and not the pitch qualifier", () => {
     /*
      * THE EMPTY ONE USED TO SHIP ANYWAY. Most rows have nothing to qualify — a
      * collapsed row stands for every version it draws a band for, and a unique
-     * name never needed a suffix — and both views rendered the span regardless,
-     * so `<span class="of-index__variant"></span>` went out on the majority of
-     * rows. `ResultRow` has always guarded the identical case, so the rows view
-     * was clean while the grid and the names list were not.
+     * name never needed a suffix — and two of the three views rendered the span
+     * regardless, so `<span class="of-index__variant"></span>` went out on the
+     * majority of rows. `ResultRow` has always guarded the identical case, so
+     * the rows view was clean while the grid and the names list were not.
      *
-     * ASSERTED AS A COUNT OF THE EMPTY FORM, not as the absence of the class:
-     * the same page must still carry real qualifiers, which the test above it
-     * pins. One number says both things only if it counts the empty ones.
+     * THE GRID IS NO LONGER ONE OF THE TWO, WHICH IS WHY THIS ASSERTS ZERO OF
+     * EVERY FORM RATHER THAN ZERO OF THE EMPTY ONE. It prints no caption, so
+     * there is no anchor text for a qualifier to be hidden inside and the
+     * class does not appear on this page at all — the test above pins that,
+     * and the one below is what still proves the guard in the two views that
+     * do render it. A route render can only ever exercise the default view.
      */
     expect(html).not.toBe("");
-    expect(html).toContain("of-index__variant");
-    expect(
-      [...html.matchAll(/<span class="of-index__variant"><\/span>/g)].length,
-    ).toBe(0);
+    expect([...html.matchAll(/class="of-index__variant"/g)].length).toBe(0);
   });
 
   test("in every view, and the names view needs its own render to say so", () => {
@@ -1600,7 +1634,13 @@ describe("a card index prints the name and not the pitch qualifier", () => {
         faceKey: null,
         faceLandscape: false,
         versions: [
-          { pitch: 0 as const, href: "/card/anothos", label: "Anothos" },
+          {
+            pitch: 0 as const,
+            href: "/card/anothos",
+            label: "Anothos",
+            faceKey: null,
+            faceLandscape: false,
+          },
         ],
       },
       {
@@ -1618,6 +1658,8 @@ describe("a card index prints the name and not the pitch qualifier", () => {
             pitch: 2 as const,
             href: "/card/head-jab-2",
             label: "Head Jab (pitch 2)",
+            faceKey: null,
+            faceLandscape: false,
           },
         ],
       },

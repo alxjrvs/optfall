@@ -14,17 +14,23 @@
  * true of one page.
  *
  * SO WHAT A LIST OF CARDS *IS* LIVES HERE: the three views, the switch between
- * them, the pagination, the centred name, the pitch rule under it. A caller
- * supplies rows and owns the state; it does not get to invent a fourth way to
- * show a card.
+ * them, the pagination, the density of the grid, and how a row that stands for
+ * several pitch versions offers them. A caller supplies rows and owns the
+ * state; it does not get to invent a fourth way to show a card.
  *
- * A ROW IS A NAME, AND THE MARK UNDER IT IS HOW THE READER PICKS A VERSION.
+ * A ROW IS A NAME, AND HOW THE READER PICKS A VERSION IS THE OTHER HALF OF IT.
  * Both callers hand over the pitch versions a row stands for — a search hands
  * the ones that matched, a set page the ones that set printed — and where there
- * is more than one, the bands and stones this component draws are LINKS to
- * them. That is the difference between "three cells of Angelic Wrath that look
- * identical" and one cell whose red, yellow and blue thirds each open the card
- * they are the colour of. See {@link CardIndexEntry.versions}.
+ * is more than one, what this component draws for them are LINKS. That is the
+ * difference between "three cells of Angelic Wrath that look identical" and one
+ * cell that opens into the three cards it stands for.
+ *
+ * THE TWO VIEWS DRAW IT DIFFERENTLY BECAUSE THEY CAN AFFORD DIFFERENT THINGS.
+ * The text views have a line of type and no picture competing with it, so they
+ * put a numbered stone per version beside the name. The images view has a card,
+ * so it draws the versions AS cards: stacked behind the front one, fanned on
+ * hover, each face its own link. See {@link CardIndexEntry.versions} and
+ * `CardStack`.
  *
  * IT IS PRESENTATIONAL AND CONTROLLED, WHICH IS WHAT LETS BOTH CALLERS USE IT.
  * The two disagree about where the state lives and they are both right:
@@ -45,15 +51,10 @@
 
 import type { ReactNode } from "react";
 
-import {
-  CardFace,
-  PitchJewel,
-  PitchRule,
-  ResultRow,
-} from "optfall-components/react";
+import { CardFace, PitchJewel, ResultRow } from "optfall-components/react";
 import type { PitchValue } from "optfall-theme";
 
-import { boxFor, faceUrl, placeholderUrl } from "../../src/lib/faces";
+import { FACE_TIERS, faceUrl, placeholderUrl } from "../../src/lib/faces";
 
 import "./CardIndex.css";
 
@@ -83,6 +84,18 @@ export type CardIndexDisplay = "grid" | "list" | "text";
  */
 export interface CardIndexVersion {
   readonly pitch: PitchValue;
+  /**
+   * This version's own picture, or `null` where it publishes none.
+   *
+   * REQUIRED BECAUSE THE IMAGES VIEW DRAWS THE VERSIONS AS CARDS. A row
+   * standing for three pitch versions is a stack of three faces that fans on
+   * hover, and the three Head Jabs are three different paintings — a stack of
+   * one image repeated would be a decoration rather than a choice between
+   * cards. The two text views never look at this; they draw stones.
+   */
+  readonly faceKey: string | null;
+  /** True where this version's face is landscape and needs a transposed box. */
+  readonly faceLandscape: boolean;
   /** This version's own page. `/card/head-jab-2`. */
   readonly href: string;
   /**
@@ -90,10 +103,10 @@ export interface CardIndexVersion {
    *
    * IT IS THE ACCESSIBLE NAME OF THIS VERSION'S MARK, which is why it is
    * qualified and why it is supplied rather than composed here. A row standing
-   * for three versions renders three links that carry no text at all — a band
-   * is a coloured rectangle — so each one's name is the only thing telling them
-   * apart, and "Pitch 2" alone would give a screen-reader user three links
-   * named for a value with no card attached to it.
+   * for three versions renders three links that carry no text at all — a stone
+   * is a numeral in a shape, a fanned card is a picture — so each one's name is
+   * the only thing telling them apart, and "Pitch 2" alone would give a
+   * screen-reader user three links named for a value with no card attached.
    */
   readonly label: string;
 }
@@ -130,23 +143,21 @@ export interface CardIndexEntry {
    * the anchor exactly as `label` does and the versions are still told apart by
    * anything reading them aloud.
    *
-   * VISUALLY, THE GRID IS LEFT WITH COLOUR, and that is worth stating plainly.
-   * The rows and names views carry a numbered stone, so hue is redundant there.
-   * The grid carries `PitchRule`, which is bands — its accessible name spells
-   * the values out, but a sighted reader comparing two same-named cells has the
-   * band colour and the card art, both of which are hue. See the note in
-   * `CardIndex.css` beside the cell name.
+   * THE IMAGES VIEW PRINTS NEITHER, AND IS WHERE THIS FIELD IS NOT USED. It
+   * carries no caption at all now — the face is the row, and the anchor's
+   * accessible name is the face's `alt`, which has always carried the qualified
+   * {@link label}. So the two text views are the whole of this field's audience.
    *
-   * THE CASE THAT NOTE WAS WRITTEN ABOUT IS NARROWER THAN IT WAS. Two cells
-   * with the same name were, in practice, the pitch versions of one card, and
-   * both callers now hand those over as ONE row with a band per version — so
-   * the comparison the reader was making with hue alone is a comparison between
-   * bands inside a single cell instead of between cells. It still happens: a
-   * search asking for `unique:cards` or `unique:art` deliberately expands a name
-   * back into its versions, and that is the surface the paragraph above is now
-   * about. What is new in both is that each band is a link carrying the version
-   * in its accessible name, so "which one is this" has an answer that is not
-   * colour, on hover and to anything reading the page aloud.
+   * WHAT A SIGHTED READER HAS IN THE IMAGES VIEW IS THE ART, and that is worth
+   * stating plainly rather than leaving to be discovered. The rows and names
+   * views carry a numbered stone, so hue is redundant there; the grid has no
+   * mark of any kind, so two cells the reader is comparing are told apart by
+   * their pictures. That is a stronger channel than the coloured bands it
+   * replaced — the versions of a name are DIFFERENT PAINTINGS, not one painting
+   * in three colours — but it is a picture rather than a value, and a reader who
+   * wants the value has two views that print it. It is recorded here because
+   * this is where somebody will stand when they decide whether to put a caption
+   * back.
    */
   readonly name: string;
   /**
@@ -174,26 +185,30 @@ export interface CardIndexEntry {
    * IT CARRIES HREFS BECAUSE THE MARK IS A CONTROL WHEN THERE IS MORE THAN ONE
    * OF THEM, and that is the change this type exists to record. A row standing
    * for three versions used to be one destination: the name went to the shared
-   * page and the three coloured bands under it were decoration, so a reader who
-   * wanted the blue one specifically had to arrive at the name and then find it
-   * in the strip. Now the name still goes to the name — the address for "this
-   * card", whichever version you meant — and each BAND goes to the version it
-   * is drawn for. The colour was already saying which version; this makes the
-   * thing it says clickable.
+   * page and the marks under it were decoration, so a reader who wanted the blue
+   * one specifically had to arrive at the name and then find it in the strip.
+   * Now the row still goes to the row — the address for "this card", whichever
+   * version you meant — and each MARK goes to the version it is drawn for: a
+   * stone in the text views, the version's own card face in the images view.
    *
    * THE FIELD WAS `pitches: PitchValue[]` AND THE HREFS ARE NOT BESIDE IT.
    * Two arrays — values here, links there — is two orderings of one fact and
-   * an invitation for a caller to supply three bands and two links. One array
+   * an invitation for a caller to supply three marks and two links. One array
    * of versions cannot disagree with itself.
    *
    * TWO RENDERINGS, CHOSEN BY VIEW, AND THAT IS A DESIGN DECISION RATHER THAN
-   * AN INCONSISTENCY. Under a card face there is no room for a stone carrying a
-   * numeral without it competing with the art, so the grid draws
-   * {@link PitchRule} — coloured bands, one per value, as an underline. The two
-   * text views have a line of type to put a jewel beside and no picture to
-   * compete with, so they keep {@link PitchJewel}, which carries the numeral
-   * that `docs/DESIGN.md` calls the primary channel. The information is
+   * AN INCONSISTENCY. The two text views have a line of type to put a jewel
+   * beside and no picture to compete with, so they draw {@link PitchJewel},
+   * which carries the numeral `docs/DESIGN.md` calls the primary channel. The
+   * images view has a card, so it draws the versions as CARDS — a stack that
+   * fans on hover, each face a link to its own version. The information is
    * identical; what differs is what the surface can afford to say it with.
+   *
+   * THE IMAGES VIEW USED TO DRAW BANDS — one `PitchRule` per version, as an
+   * underline, on the argument that there was no room under a face for a stone
+   * carrying a numeral. That was true and it answered the wrong question: the
+   * thing a band stood for was a card, and there was room for the card. See
+   * `CardStack`.
    */
   readonly versions: readonly CardIndexVersion[];
   /**
@@ -218,10 +233,11 @@ export interface CardIndexEntry {
    *
    * THIS IS THE ONLY SUCH LINE LEFT. There was a `note` beside it saying which
    * versions a partial match covered — "1 of 3 versions" — and it is gone:
-   * every card list on this site now says which versions it stands for with the
-   * mark, and the mark is the thing a reader can click. A row that draws one
-   * band draws one band; the words under it were a second telling of a fact the
-   * colour had already told, and the site would rather be read than narrated.
+   * every card list on this site now says which versions it stands for by
+   * drawing them, and what it draws is what a reader can click. A row standing
+   * for one version draws one stone or one card; the words under it were a
+   * second telling of a fact the object had already told, and the site would
+   * rather be read than narrated.
    */
   readonly why?: string | undefined;
 }
@@ -294,7 +310,7 @@ const VIEWS = [
  * a row rendering blue before red would be stating one fact in two orders on
  * one screen. A card printed twice in one set arrives with its pitch twice, and
  * the two arrivals are the same destination — so the first wins and the second
- * is dropped rather than drawn as a fourth band.
+ * is dropped rather than drawn as a fourth stone or a fourth card in the fan.
  */
 function versionsOf(
   versions: readonly CardIndexVersion[],
@@ -310,7 +326,7 @@ function versionsOf(
  * The pitch versions as jewels — the rendering the two TEXT views use.
  *
  * ONE STONE PER VERSION, so a row standing for three pitch versions of a name
- * carries three, exactly as the grid carries three bands. `PitchJewel` is
+ * carries three, exactly as the images view draws three cards. `PitchJewel` is
  * singular by contract because a card page shows one card; the plurality is a
  * fact about a list, so it lives in the list.
  *
@@ -354,40 +370,108 @@ function PitchStones({
 }
 
 /**
- * The pitch versions as bands — the rendering the IMAGES view uses.
+ * The pitch versions as a STACK OF CARDS that fans on hover — the rendering the
+ * images view uses, and what replaced the row of coloured bands under the name.
  *
- * ONE `PitchRule` PER BAND WHERE THE BANDS ARE LINKS, WHICH IS NOT THE SAME
- * COMPONENT USED TWICE BY ACCIDENT. `PitchRule` is a `role="img"` with a
- * written name, and the children of a `role="img"` are not exposed — so three
- * anchors INSIDE one rule would be three links no assistive technology could
- * reach, which is the failure mode that looks fine in a browser and is a wall
- * to everyone else. A rule per version instead makes each band an image with
- * its own name inside its own link, and the link takes that name as its own.
+ * WHY THE BANDS ARE GONE. They were an underline: three hairlines saying, in
+ * hue alone, that this cell stood for three cards, with each one a link to the
+ * version it was drawn the colour of. That worked and it was quiet to the point
+ * of being invisible — a reader had to already know what the mark meant, the
+ * colour was the entire channel, and the thing the mark stood for was a CARD
+ * while the mark was a stripe. This draws the cards instead. The cell is a
+ * stack; the versions behind the front one show as slivers at rest, so a
+ * multi-version cell is legibly a stack of cards rather than a single one; and
+ * hovering spreads them into a hand, each face its own link to its own version.
  *
- * The row of them is spaced by the same token `PitchRule` puts between its own
- * bands, so a split mark and an unsplit one are the same object on screen.
+ * THE FRONT CARD IS THE ROW'S OWN, NOT `versions[0]`, and the difference is a
+ * feature rather than pedantry. `toResult` may swap a row's picture for the art
+ * of the set a query named — `set:MST` shows what Mistveil printed — and the
+ * versions behind it deliberately wear their own default faces, because each one
+ * is a link to a CARD and a card page shows its own art. So the front is handed
+ * over whole and the tail is every version that is not already it, matched by
+ * address rather than by position: a caller whose first version is not the row
+ * would otherwise have drawn the same card twice.
  *
- * A SINGLE-VERSION ROW DRAWS THE PLAIN RULE, unlinked, for the reason the
- * stones do: there is nothing to choose between, and the cell's own anchor is
- * already the destination.
+ * A ONE-VERSION ROW IS ONE CARD AND ONE LINK, with no stack, no fan and no
+ * hover behaviour — there is nothing to choose between, and a cell that
+ * gestured at a choice it does not have would be worse than the plain one.
+ *
+ * A TOUCH READER NEVER HOVERS, AND THAT IS AN ACCEPTED BOUND RATHER THAN AN
+ * OVERSIGHT. The resting slivers still say the cell is a stack, and tapping it
+ * opens the row's card, whose own page carries every version. What a pointer
+ * buys is skipping that page; it is a shortcut, so losing it costs a tap rather
+ * than a destination.
  */
-function PitchSplits({
-  versions,
-}: {
-  readonly versions: readonly CardIndexVersion[];
-}) {
-  const shown = versionsOf(versions);
-  if (shown.length === 0) return null;
-  if (shown.length === 1) {
-    const only = shown[0];
-    return only === undefined ? null : <PitchRule values={[only.pitch]} />;
+function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
+  /*
+    Matched by ADDRESS rather than by index — see the note above. `versionsOf`
+    has already deduplicated and sorted, so this preserves pitch order.
+  */
+  const behind = versionsOf(entry.versions).filter(
+    (version) => version.href !== entry.href,
+  );
+
+  const face = (
+    <CardFace
+      src={faceSrc(entry.faceKey, entry.faceLandscape)}
+      alt={altFor(entry)}
+      width={GRID_BOX.width}
+      height={GRID_BOX.height}
+      loading="lazy"
+    />
+  );
+
+  if (behind.length === 0) {
+    return (
+      <a className="of-index__card" href={entry.href}>
+        {face}
+      </a>
+    );
   }
 
+  /*
+    `--n` IS ON THE STACK AND `--i` IS ON EACH CARD, because the tilt of one
+    card is a function of BOTH — a fan is symmetric about its middle, so a card
+    needs to know how many it is one of. Two custom properties rather than a
+    pre-computed angle per card so the arithmetic lives in the stylesheet
+    beside the value it is made of; see `.of-index__card` for what it computes.
+  */
+  const total = behind.length + 1;
+
   return (
-    <span className="of-index__splits">
-      {shown.map((version) => (
-        <a className="of-index__split" href={version.href} key={version.pitch}>
-          <PitchRule values={[version.pitch]} label={version.label} />
+    <span
+      className="of-index__stack"
+      style={{ "--n": total } as React.CSSProperties}
+    >
+      <a
+        className="of-index__card"
+        href={entry.href}
+        style={{ "--i": 0 } as React.CSSProperties}
+      >
+        {face}
+      </a>
+      {behind.map((version, position) => (
+        <a
+          className="of-index__card of-index__card--behind"
+          href={version.href}
+          key={version.href}
+          style={{ "--i": position + 1 } as React.CSSProperties}
+        >
+          {/*
+            THE VERSION'S LABEL IS THE WHOLE ALT TEXT, with no type line after
+            it. The row's own face carries `label — type line` because it is the
+            cell's primary destination and the type line is a fact about the
+            card; these are a choice BETWEEN versions of one card, which share
+            a type line, so repeating it three times would be three identical
+            suffixes on the one axis the reader is trying to tell apart.
+          */}
+          <CardFace
+            src={faceSrc(version.faceKey, version.faceLandscape)}
+            alt={version.label}
+            width={GRID_BOX.width}
+            height={GRID_BOX.height}
+            loading="lazy"
+          />
         </a>
       ))}
     </span>
@@ -439,12 +523,48 @@ function altFor(entry: CardIndexEntry): string {
     : `${entry.label} — ${entry.typeLine}`;
 }
 
-function faceSrc(entry: CardIndexEntry): string {
-  const orientation = entry.faceLandscape ? "landscape" : "portrait";
-  return entry.faceKey === null
-    ? placeholderUrl(orientation)
-    : faceUrl(entry.faceKey, "thumb");
+/**
+ * THE IMAGES VIEW ASKS FOR THE `normal` TIER, AND IT USED TO ASK FOR `thumb`.
+ *
+ * The grid draws a card at `layout.card.cell` — 240px, the size the reference
+ * settled on and the size at which a face reads as a card rather than as a
+ * stamp. The thumb tier is 180px, so every cell was upscaling by a third: soft
+ * art, soft type, and a grid that looked like a contact sheet of a card list
+ * rather than a list of cards.
+ *
+ * THE COST IS BANDWIDTH AND IT IS REAL. Sixty normal faces is several megabytes
+ * where sixty thumbs was a fraction of that. Three things make it the right
+ * trade rather than an oversight: `CardFace` is `loading="lazy"`, so a reader
+ * pays for the rows they scroll to; the page size is the reader's to choose and
+ * defaults to the same 60 the reference uses; and the reference itself serves a
+ * ~490px image into a 245px cell for exactly this reason.
+ *
+ * NO `srcset`, DELIBERATELY, AND THE REASON IS THE TOKEN RULE RATHER THAN THE
+ * BROWSER. A `sizes` attribute has to carry a CSS LENGTH, and a length written
+ * in this file is precisely what `scripts/check-tokens.ts` fails the build on —
+ * it cannot be `var(--of-layout-card-cell)`, because `sizes` is parsed before
+ * the cascade and custom properties are not available to it. So the choice was
+ * a raw `15rem` smuggled past the design system, or one tier that is right at
+ * the size the grid draws. The second is not a workaround: it is the honest
+ * answer while the host publishes two tiers and the grid uses one of them.
+ */
+function faceSrc(key: string | null, landscape: boolean): string {
+  const orientation = landscape ? "landscape" : "portrait";
+  return key === null ? placeholderUrl(orientation) : faceUrl(key, "normal");
 }
+
+/**
+ * The intrinsic box every face in the grid declares.
+ *
+ * ONE BOX FOR EVERY CELL, PORTRAIT, AND THE LANDSCAPE CARDS KEEP IT. `CardFace`
+ * turns `width`/`height` into an `aspect-ratio` and letterboxes anything that
+ * disagrees, which is what this needs: a grid whose cells changed shape for the
+ * 15 horizontally-played cards would reflow its rows around them, and a fan
+ * stacks faces on top of one another so a transposed member would not sit under
+ * the card it is stacked with. The face itself is still drawn the right way
+ * round inside the box — that is `object-fit: contain` doing its job.
+ */
+const GRID_BOX = FACE_TIERS.normal;
 
 export function CardIndex({
   entries,
@@ -457,15 +577,26 @@ export function CardIndex({
 }: CardIndexProps) {
   return (
     <>
-      <div className="of-index__head">
-        <p className="of-index__count">{summary}</p>
+      {/*
+        THE SWITCH COMES FIRST, ON ITS OWN ROW, AND THE COUNT FOLLOWS IT.
 
-        {/*
-          A radio group rather than a row of buttons, because that is what "pick
-          exactly one" is, and it gets arrow keys and a group name for free.
-          Hidden until hydration for the reason `interactive` gives.
-        */}
-        {interactive ? (
+        The two used to share one line — count at the start, views at the end,
+        `space-between`. That put the control that changes what you are looking
+        at at the far right of a sentence about what you are looking at, and on
+        a narrow viewport the flex wrap dropped it BELOW the count, so the one
+        piece of chrome on the page moved depending on how wide the window was.
+
+        Stacked, the bar is the first thing under the field: chrome, then the
+        answer, then the answer's rows — which is the order the reference puts
+        them in and the order they are read in. It is also the order they are
+        used in, since a reader picks a view once and reads counts many times.
+
+        A radio group rather than a row of buttons, because that is what "pick
+        exactly one" is, and it gets arrow keys and a group name for free.
+        Hidden until hydration for the reason `interactive` gives.
+      */}
+      {interactive ? (
+        <div className="of-index__controls">
           <fieldset className="of-index__views">
             <legend className="of-index__views-legend">Show cards as</legend>
             {VIEWS.map(([mode, label]) => (
@@ -481,8 +612,10 @@ export function CardIndex({
               </label>
             ))}
           </fieldset>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
+
+      <p className="of-index__count">{summary}</p>
 
       {display === "grid" ? (
         /*
@@ -496,57 +629,38 @@ export function CardIndex({
           universal footer carries.
         */
         <ul className="of-index__grid">
-          {entries.map((entry) => {
-            const box = boxFor(
-              "thumb",
-              entry.faceLandscape ? "landscape" : "portrait",
-            );
-            return (
-              <li className="of-index__cell" key={entry.href}>
-                {/*
-                  THE ANCHOR STOPS AT THE NAME, AND THE MARK IS ITS SIBLING.
-                  It used to wrap the whole cell — face, name, rule and note —
-                  which was the right shape while the rule was decoration. It
-                  cannot survive the rule becoming a set of links: an anchor
-                  inside an anchor is invalid HTML, and browsers repair it by
-                  closing the outer one early, so the markup that reaches the
-                  reader is not the markup that was written.
+          {entries.map((entry) => (
+            /*
+              A CELL IS A PICTURE AND NOTHING ELSE — no printed name under it,
+              no coloured rule under that. Both were removed together and for
+              one reason: the face IS the row. A card is designed to be
+              identified at a glance by its art and its frame, which is the
+              claim `docs/DESIGN.md` makes for showing pictures at all, and a
+              caption under every cell was the list saying it did not quite
+              believe its own argument. The reference has carried captionless
+              image results for a decade.
 
-                  What the cell loses by the split is nothing a reader can
-                  see. The face and the name were the accessible name of the
-                  link; the rule contributed its spoken values to the end of
-                  it, which is the one place they were redundant — the name is
-                  the card, and which VERSIONS the row stands for is said by
-                  controls that go to them, and by nothing else. The written
-                  note that used to sit under this cell is gone for that reason:
-                  see `CardIndexEntry.why`.
-                */}
-                <a className="of-index__cell-link" href={entry.href}>
-                  <CardFace
-                    src={faceSrc(entry)}
-                    alt={altFor(entry)}
-                    width={box.width}
-                    height={box.height}
-                    loading="lazy"
-                  />
-                  {/*
-                    CENTRED UNDER THE FACE, which is a real change and not a
-                    preference. The name used to be start-aligned under a
-                    centred image, so in a row of six cells the type sat six
-                    different distances from the art above it wherever a face
-                    was narrower than its track. Centring binds the name to its
-                    picture; the pitch rule under it is centred for the same
-                    reason and would look like a stray mark otherwise.
-                  */}
-                  <span className="of-index__cell-name">
-                    {entry.name}
-                    <Variant qualifier={entry.qualifier} />
-                  </span>
-                </a>
-                <PitchSplits versions={entry.versions} />
-              </li>
-            );
-          })}
+              NOTHING IS LOST TO ANYTHING READING THE PAGE ALOUD. The name was
+              never the accessible name on its own — the face's `alt` carries
+              the qualified label and the type line, and it still does — so the
+              anchor announces exactly what it announced before. What is gone is
+              a visible duplicate of it, and `Variant`, which existed to hide
+              the pitch suffix inside that duplicate.
+
+              WHAT A SIGHTED READER LOSES IS THE SPELLING OF A NAME THEY CAN
+              SEE, and it is worth stating rather than glossing. 900 names in
+              this corpus belong to more than one card; those versions are now
+              ONE cell with the others stacked behind it, so the comparison that
+              used to need a suffix is a fan inside a single cell instead of two
+              cells that read alike. Where a query deliberately expands a name
+              back into its versions — `unique:cards`, `unique:art` — the cells
+              are told apart by their art, and by the two views whose entire job
+              is names.
+            */
+            <li className="of-index__cell" key={entry.href}>
+              <CardStack entry={entry} />
+            </li>
+          ))}
         </ul>
       ) : display === "list" ? (
         /*
@@ -556,8 +670,8 @@ export function CardIndex({
           type to sit a stone beside and no card face to compete with, so it can
           afford the rendering that carries the numeral.
 
-          ONE JEWEL PER PITCH VALUE, exactly as the grid draws one band per
-          value. A row stands for a NAME and a name is commonly three cards, so
+          ONE JEWEL PER PITCH VALUE, exactly as the images view draws one card
+          per value. A row stands for a NAME and a name is commonly three cards, so
           a single stone would be picking one of the three versions to speak for
           the other two — which is the same "collapses two true facts into one"
           failure the engine builds its whole verdict model to avoid.

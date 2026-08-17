@@ -26,29 +26,39 @@
  * the heading is back at the same visual weight it had — none — and present in
  * the document where it belongs.
  *
- * NO RIGHTS NOTICE IN THE BODY, for the same reason. `CORPUS.rights` closed this
- * page in faint legal type, and `ssg/document.tsx` then emitted the identical
- * paragraph in the footer immediately beneath it — the corpus's own envelope,
- * printed twice, once as content. The provenance paragraphs above stay: those
- * are facts about THIS page's data, computed at build time. The rights notice is
- * a fact about the whole site, and the shell is where the whole site's notices
- * live, because a page has no way to omit what the shell emits.
+ * NO RIGHTS NOTICE IN THE BODY. `CORPUS.rights` closed this page in faint legal
+ * type, and `ssg/document.tsx` then emitted the identical paragraph in the
+ * footer immediately beneath it — the corpus's own envelope, printed twice, once
+ * as content. The rights notice is a fact about the whole site, and the shell is
+ * where the whole site's notices live, because a page has no way to omit what
+ * the shell emits.
+ *
+ * AND NO PROVENANCE PARAGRAPHS EITHER, WHICH IS A REVERSAL AND IS WORTH SAYING
+ * SO. The note here used to argue they stayed — "facts about THIS page's data,
+ * computed at build time" — and `docs/SCRYFALL-GAP.md` §"Deletions first" is
+ * more explicit still: "The provenance and rights lines stay — 'degrade
+ * visibly' is not negotiable — but they belong under the results".
+ *
+ * WHAT CHANGED IS THAT THEY WERE NOT UNDER THE RESULTS, THEY WERE UNDER SIXTY
+ * OF THEM. This page paginates now, so the two paragraphs sat at the foot of a
+ * grid the reader scrolls past rather than reads to the end of — nine lines of
+ * build metadata and a list of eight unresolvable keywords, addressed to
+ * somebody who came here to look up a card. That is not degrading visibly, it is
+ * filing the disclosure where it will not be read.
+ *
+ * NOTHING IS UNSAID AS A RESULT, WHICH IS THE CONDITION FOR REMOVING THEM.
+ * The corpus's pin — count, commit, last-confirmed date — is printed by
+ * `CardSearch`'s own empty state, which is what this page shows before it is
+ * asked anything, so it is the first thing a reader sees rather than the last.
+ * "Legality is present day only" is said by the query engine itself, at the
+ * moment it matters, as the notice `legal:cc@2024-01-01` returns. The keyword
+ * coverage figure and the eight it cannot resolve are on `/about`, beside the
+ * rest of the method, along with the upstream link and the pinned commit. Every
+ * claim keeps a surface; each one moved to the surface that is about it.
  */
 
-import rulesJson from "../../../../data/rules/cr-2.14.0.json";
-
 import { buildCardIndex } from "../../src/lib/card-search";
-import {
-  CARD_PAGES,
-  CARD_ROUTES,
-  CORPUS,
-  LAST_CONFIRMED,
-} from "../../src/lib/cards";
-import {
-  buildKeywordVocabulary,
-  keywordCoverage,
-} from "../../src/lib/keywords";
-import type { RulesCorpus } from "../../src/lib/search";
+import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
 import { SETS } from "../../src/lib/sets";
 import { Island } from "../Island";
 import {
@@ -77,30 +87,6 @@ const index = buildCardIndex(CARD_PAGES, {
   releasedBySet: new Map(SETS.sets.map((set) => [set.id, set.released])),
 });
 
-const cards = CORPUS.counts.cards.toLocaleString("en-GB");
-const printings = CORPUS.counts.printings.toLocaleString("en-GB");
-/*
- * EVERY ROUTE, NOT EVERY CARD ROUTE — because the sentence this feeds names the
- * printings in the same breath, and "16,502 printings at 5,841 permanent URLs"
- * invites exactly the conclusion that the printings are not addressable.
- */
-const permalinks = CARD_ROUTES.length.toLocaleString("en-GB");
-const upstream = `https://github.com/${CORPUS.source.repository}`;
-
-/**
- * THE JOIN'S COVERAGE, STATED RATHER THAN IMPLIED. A join that quietly drops
- * what it cannot answer is asserting a completeness it does not have. The number
- * is computed rather than typed, so it cannot rot when either document is
- * re-synced.
- */
-const coverage = keywordCoverage(
-  buildKeywordVocabulary(rulesJson as unknown as RulesCorpus),
-  CORPUS.cards.flatMap((card) =>
-    card.card_keywords.concat(card.ability_and_effect_keywords),
-  ),
-);
-const unmatchedList = coverage.unmatched.join(", ");
-
 function page(): PageResult {
   return {
     title: "Search the cards — Optfall",
@@ -108,6 +94,15 @@ function page(): PageResult {
       "Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from.",
     section: "cards",
     headerSearchDescribedBy: CARDS_HINT_ID,
+    /*
+      THE COLUMN IS THE GRID'S, NOT PROSE'S. This page's content is a list of
+      card faces; at the reading measure the grid fitted its four columns only by
+      drawing every card at 180px, which is a contact sheet rather than a list of
+      cards. `index` is four cells and the gutters between them — see
+      `layout.page.index`. The one paragraph left on the page, the empty state,
+      is short enough not to mind the extra width.
+    */
+    width: "index",
     /*
       THE HEADER'S FIELD IS THIS PAGE'S FIELD. It was suppressed here because
       the page rendered a hero of its own, which made the results screen look
@@ -200,30 +195,6 @@ function page(): PageResult {
         <Island name="CardSearch" props={{ index, ornament: true }}>
           <CardSearch index={index} ornament />
         </Island>
-
-        {/*
-          Degrade visibly, on the surface that serves the data rather than on the
-          one that links to it.
-        */}
-        <p className="of-search-page__provenance">
-          {cards} cards and {printings} printings at {permalinks} permanent
-          URLs, from <a href={upstream}>{CORPUS.source.repository}</a> at{" "}
-          <code>{CORPUS.source.commit}</code>, confirmed {LAST_CONFIRMED}.
-          Legality is present day only; the query language says so rather than
-          guessing.
-        </p>
-
-        <p className="of-search-page__provenance">
-          Card keywords are matched to the Comprehensive Rules section that
-          defines each one, and every card page cites the rules that govern it.
-          Coverage is <strong>{coverage.percent}%</strong> —{" "}
-          {coverage.direct + coverage.viaFamily} of {coverage.baseForms}{" "}
-          distinct keywords, {coverage.direct} matched directly and{" "}
-          {coverage.viaFamily} through a rule the document parameterises. The{" "}
-          {coverage.unmatched.length} it cannot resolve are named rather than
-          hidden: {unmatchedList}. A keyword the rules do not define carries no
-          citation instead of a guessed one.
-        </p>
       </>
     ),
   };

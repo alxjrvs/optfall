@@ -2183,6 +2183,22 @@ export interface CardResultVersion {
   readonly pitch: PitchValue;
   readonly href: string;
   readonly label: string;
+  /**
+   * THIS VERSION'S OWN PICTURE, because the versions of a name do not share one.
+   *
+   * The three Head Jabs are three different paintings, which is the fact that
+   * makes a fan of them worth drawing at all — a stack of one image repeated
+   * three times in three colours would be a decoration, and this is a choice
+   * between cards. `faceKeys` is indexed by corpus ordinal and the loop that
+   * builds these versions is walking ordinals, so the key is a lookup rather
+   * than a second derivation.
+   *
+   * `null` where the version publishes no art. Four cards in the corpus are in
+   * that state and the placeholder is the honest rendering of it.
+   */
+  readonly faceKey: string | null;
+  /** True where this version's face is landscape and needs a transposed box. */
+  readonly faceLandscape: boolean;
 }
 
 export interface CardResult {
@@ -2999,6 +3015,15 @@ export function searchCards(
       pitch: index.pitches[row.ordinal] ?? 0,
       href: defaultHrefOf(index, row.ordinal),
       label: index.labels[row.ordinal] ?? "",
+      /* THE VERSION'S OWN FACE, NOT THE ROW'S. `toResult` may swap the row's
+         picture for the one the focus set printed — see `shown` — and this
+         deliberately does not: a fanned version is a link to a CARD, so it
+         wears that card's default art the same way its own page does. Making
+         the two agree would mean re-running the focus-set resolution per
+         version, which is a printing question asked of a row that is answering
+         a name question. */
+      faceKey: index.faceKeys[row.ordinal] ?? null,
+      faceLandscape: index.faceLandscape[row.ordinal] === true,
     };
     const versions = matchedByName.get(name);
     if (versions) versions.push(version);
@@ -3066,6 +3091,16 @@ export function searchCards(
                    printing. */
                 href: defaultHrefOf(index, row.ordinal),
                 label: index.labels[row.ordinal] ?? "",
+                /* THE CARD'S OWN FACE, FOR THE SAME REASON THE HREF IS ITS OWN
+                   PAGE. An `unique:art` row is one picture of the card and the
+                   mark beside it stands for the card, so the version behind it
+                   wears the default art rather than the alternate this row
+                   happens to be showing. A single-version row draws no fan
+                   either way — there is nothing to choose between — so this is
+                   the type being kept honest rather than a picture anybody
+                   sees. */
+                faceKey: index.faceKeys[row.ordinal] ?? null,
+                faceLandscape: index.faceLandscape[row.ordinal] === true,
               },
             ];
       const versions =

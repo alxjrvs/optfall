@@ -181,11 +181,30 @@ function entryFor(
     typeLine: first.card.type_text ?? "",
     faceKey: face.key,
     faceLandscape: face.landscape,
-    versions: group.map((version) => ({
-      pitch: version.pitch,
-      href: version.href,
-      label: version.label,
-    })),
+    /*
+      EACH VERSION WEARS THIS SET'S ART, NOT ITS OWN DEFAULT, which is the same
+      rule `faceForSet` states for the row and applied to every card in the fan
+      rather than only to the one on top. The images view stacks these behind
+      the row's face and spreads them on hover, so a Mistveil page whose fanned
+      versions carried Welcome to Rathe art would be the exact defect
+      `faceForSet` exists to fix, one layer down and only visible on hover.
+
+      This is deliberately the opposite choice from `card-search.ts`, and the two
+      surfaces are answering different questions. A search result is a row about
+      a NAME and its fan is a set of links to cards, so each one shows the art
+      its own page shows. A set page is about a PRINT RUN: every picture on it,
+      fanned or not, is what this set printed.
+    */
+    versions: group.map((version) => {
+      const versionFace = faceForSet(version, setId);
+      return {
+        pitch: version.pitch,
+        href: version.href,
+        label: version.label,
+        faceKey: versionFace.key,
+        faceLandscape: versionFace.landscape,
+      };
+    }),
     stats: first.stats.map(
       (stat) => [stat.label, stat.value] as readonly [string, string],
     ),
@@ -309,6 +328,14 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
        page that also says 307 is the disagreement `counted` exists to end. */
     description: `The ${rows} Flesh and Blood cards Optfall carries from ${set.name} (${set.id})${versions === rows ? "" : `, ${versions} counting each pitch version`}, each with its printed text, its printings and its per-format legality.`,
     section: "sets",
+    /*
+      THE SAME COLUMN `/search` USES, because it is the same `CardIndex` showing
+      the same grid — and a set page is the surface the argument for pictures is
+      strongest on, since a set is a print run. Two card lists at two widths
+      would be the split this component was written to end, reappearing in the
+      layout.
+    */
+    width: "index",
     /*
       THE FIRST PAGE OF THIS SET IS STILL IN THE HTML, because `Island` renders
       its child on the server. What the script adds is the view switch and the
