@@ -14,7 +14,7 @@ one more thing to drift.
 bun-version, provenance, the CI-aggregator assertion, typecheck and tests.
 Ordered cheapest first, so the commonest failures surface in under two seconds.
 
-The other four need a full 13,676-page build and are `bun run check:full`
+The other four need a full 12,776-page build and are `bun run check:full`
 (~3 min): `build` itself, the `disclaimer`, `built-tokens` and `card-notice`
 checks that read its output, and `dev-server`.
 
