@@ -48,7 +48,7 @@
  * `faces.ts` records what that costs: the corpus is 16 MB and it once shipped.
  */
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import { CardFace, PitchJewel, ResultRow } from "optfall-components/react";
 import type { PitchValue } from "optfall-theme";
@@ -785,6 +785,107 @@ function rowFaceSrc(key: string | null, landscape: boolean): string {
   return key === null ? placeholderUrl(orientation) : faceUrl(key, "thumb");
 }
 
+/** How long the button admits it has copied something, in milliseconds. */
+const COPIED_FOR = 2000;
+
+/**
+ * TAKE THE NAMES OFF THE PAGE — the job the retired names view existed for.
+ *
+ * A PLAYER BUILDING A DECK LIST WANTS FORTY NAMES, NOT FORTY PICTURES, and
+ * that was a real capability rather than a nicer rendering. `display:text`
+ * served it by printing names one per line so they could be dragged over and
+ * copied, and it is worth recording how load-bearing that was: `PitchJewel`
+ * carries `user-select: none` specifically so the stone's numeral did not
+ * arrive in somebody's deck list. The view is gone because it was `list` at a
+ * lower density rather than a kind of its own; the job is not.
+ *
+ * A CONTROL IS BETTER AT IT THAN A VIEW WAS, which is why this is not a
+ * consolation prize. It takes every row on the page rather than the ones the
+ * reader managed to drag across, so nothing below the fold is missed; it needs
+ * no drag at all, which is the part that was actually tedious; it cannot pick
+ * up a stray glyph, because it copies the DATA rather than the rendering; and
+ * it works from whichever view you are already in, so you no longer have to
+ * change what you are looking at in order to take something away from it.
+ *
+ * ONE NAME PER LINE AND NOTHING ELSE — no pitch, no qualifier, no count. That
+ * is what a deck list wants and what the old view produced. Duplicates are
+ * kept: a page of `unique:art` rows legitimately repeats a name, and silently
+ * collapsing that would be this control second-guessing the query.
+ *
+ * IT IS ONLY EVER RENDERED BEHIND `interactive`, exactly as the selects are.
+ * There is no clipboard without JavaScript, and a button that looks operable
+ * and is not is the one shape "degrade visibly" forbids.
+ *
+ * THE FAILURE PATH IS VISIBLE RATHER THAN SILENT. `navigator.clipboard`
+ * rejects on an insecure origin and where the browser withholds permission,
+ * and a copy button that quietly does nothing is worse than one that admits
+ * it — the reader would paste stale clipboard contents into a deck list and
+ * not know why it was wrong.
+ */
+function CopyNames({
+  entries,
+  controlName,
+}: {
+  readonly entries: readonly CardIndexEntry[];
+  readonly controlName: string;
+}) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+
+  /*
+    CLEARED ON UNMOUNT, because the timer outlives the component otherwise and
+    React warns about setting state on something that is gone. Keyed on `state`
+    so a second click while the first is still counting restarts the clock
+    rather than being cut short by it.
+  */
+  useEffect(() => {
+    if (state === "idle") return undefined;
+    const timer = setTimeout(() => setState("idle"), COPIED_FOR);
+    return () => clearTimeout(timer);
+  }, [state]);
+
+  if (entries.length === 0) return null;
+
+  const copy = () => {
+    const text = entries.map((entry) => entry.name).join("\n");
+    /*
+      OPTIONAL-CHAINED because `navigator.clipboard` is undefined outright on
+      an insecure origin rather than present-and-rejecting, and reading
+      `.writeText` off it would throw synchronously inside an event handler.
+    */
+    const written = navigator.clipboard?.writeText(text);
+    if (written === undefined) {
+      setState("failed");
+      return;
+    }
+    written.then(
+      () => setState("copied"),
+      () => setState("failed"),
+    );
+  };
+
+  return (
+    <button
+      className="of-index__copy"
+      id={`${controlName}-copy`}
+      type="button"
+      onClick={copy}
+      /*
+        LIVE, SO THE OUTCOME IS ANNOUNCED. The button's own label is what
+        changes, and a label changing under a screen reader's cursor is not
+        otherwise reported — which would make this control silent to exactly
+        the reader who cannot see the word change.
+      */
+      aria-live="polite"
+    >
+      {state === "copied"
+        ? `Copied ${entries.length}`
+        : state === "failed"
+          ? "Cannot copy"
+          : `Copy ${entries.length} names`}
+    </button>
+  );
+}
+
 export function CardIndex({
   entries,
   display,
@@ -880,6 +981,16 @@ export function CardIndex({
               onChange={onDirectionChange}
             />
           ) : null}
+
+          {/*
+            LAST IN THE BAR AND AFTER A SEPARATOR, because it is the one control
+            here that does not describe the list. The other four compose into a
+            sentence about what you are looking at; this one takes something
+            away from it. Putting it inside that sentence would make the
+            sentence stop parsing, which is the mistake this whole change
+            exists to undo.
+          */}
+          <CopyNames entries={entries} controlName={controlName} />
         </div>
       ) : null}
 

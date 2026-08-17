@@ -533,8 +533,65 @@ describe("the control bar writes the query it is a picture of", () => {
       (node) => node.textContent ?? "",
     );
     expect(notices.some((text) => text.includes("display:list"))).toBe(true);
-    /* And it does not promise anything this layer does not ship. */
-    expect(notices.some((text) => text.includes("copy"))).toBe(false);
+    /* And it points at the control that took the retired view's job — which
+       has to actually be on the page, or the notice is sending the reader
+       somewhere that does not exist. */
+    expect(notices.some((text) => text.includes("copy control"))).toBe(true);
+    expect(document.querySelectorAll(".of-index__copy").length).toBe(1);
+
+    await act(async () => root.unmount());
+  });
+
+  test("the copy control puts the page's names on the clipboard, one per line", async () => {
+    /*
+     * THE JOB THE NAMES VIEW EXISTED FOR, and the reason retiring that view
+     * was not a removal. A player writing a deck list wants the names and
+     * nothing else.
+     *
+     * ASSERTED ON WHAT REACHES THE CLIPBOARD rather than on the button's
+     * label, because the label is the part that cannot be wrong in an
+     * interesting way. The failure worth catching is copying the wrong TEXT —
+     * qualifiers, type lines, the pitch stones' numerals — which is exactly
+     * what a drag-select over the old view risked and what this is supposed
+     * to be better than.
+     */
+    let written = "";
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: (text: string) => {
+          written = text;
+          return Promise.resolve();
+        },
+      },
+    });
+
+    const root = await ask("head jab");
+
+    const button = document.querySelector(".of-index__copy");
+    if (!(button instanceof HTMLButtonElement)) throw new Error("no button");
+    /* It says how many it will take, so the reader knows before clicking
+       whether they are getting the page or the whole answer. */
+    expect(button.textContent).toMatch(/^Copy \d+ names$/);
+
+    await act(async () => {
+      button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const lines = written.split("\n");
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines).toContain("Head Jab");
+    /* NOTHING BUT NAMES. No pitch suffix, no type line, no stray numeral from
+       a stone — the three things the old drag-select could pick up. */
+    for (const line of lines) {
+      expect(line).not.toMatch(/\(pitch|Attack Action|^\d/);
+    }
+    /* And it copied every row the page is showing, not the visible few. */
+    expect(lines.length).toBe(
+      document.querySelectorAll(".of-index__cell").length,
+    );
+
+    expect(button.textContent).toBe(`Copied ${lines.length}`);
 
     await act(async () => root.unmount());
   });

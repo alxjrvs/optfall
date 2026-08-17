@@ -1834,7 +1834,7 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
         if (RETIRED_DISPLAY_MODES.includes(operand)) {
           note(
             "operand-retired",
-            `display:${operand} named a names-only view. It is now display:list, which is the same rows with more on each of them.`,
+            `display:${operand} named a names-only view. It is now display:list, which is the same rows with more on each of them — and to take just the names off the page, there is a copy control at the end of the bar above.`,
           );
         }
         display = mode;
