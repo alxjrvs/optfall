@@ -3,7 +3,26 @@
  * declaration and every comment is the original's.
  */
 
+/*
+  THE BAR IS A CONTAINER, AND THAT IS THE FIRST WIDTH QUERY IN THIS CODEBASE.
+  Worth saying plainly, because the house rule is the other way: every `@media`
+  in this repo is a PREFERENCE query, and `CardEntry` says why — "no breakpoint,
+  because the token layer publishes none." Layout here collapses when the
+  content stops fitting, not when a number is crossed.
+
+  A nav that becomes a menu cannot be expressed that way. "These six links no
+  longer fit beside a wordmark and a field" has no intrinsic CSS signal; the
+  honest options were a width query or JavaScript measuring the bar, and a
+  script in the shell is the worse of the two.
+
+  So it is a CONTAINER query rather than a media query, which keeps as much of
+  the rule as can be kept: the header responds to the width IT is given, not to
+  the viewport's. Put this bar in a narrow column one day and it collapses
+  correctly without knowing anything about the window.
+*/
 .of-bar {
+  container-type: inline-size;
+  container-name: bar;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -53,9 +72,16 @@
   align-items: center;
 }
 
+/*
+  A CONTROL, NOT A CAPTION. This was 26.5px tall in a 51.5px bar — a field with
+  the padding of a table cell, which read as small next to the wordmark and gave
+  a thumb almost nothing to hit. The type stays at `small`, because the bar's
+  scale is right and the field should not shout; what grows is the box around
+  it, which is what makes it look like something you can type into.
+*/
 .of-bar__field {
   inline-size: 100%;
-  padding: var(--of-space-tighter) var(--of-space-tight);
+  padding: var(--of-space-tight) var(--of-space-base);
   border: var(--of-bevel-width) solid var(--of-color-rule);
   border-radius: var(--of-bevel-radius);
   background: var(--of-color-sunken);
@@ -68,9 +94,23 @@
   color: var(--of-color-ink-faint);
 }
 
+/*
+  THE RING SITS ON THE FIELD, AND IT USED TO FLOAT OFF IT.
+
+  `outline-offset: tightest` put two transparent pixels between the input's
+  border and the ring, and on this bar that gap is the SUNKEN fill against the
+  ground — both near-black, a couple of shades apart. The result reads as a
+  yellow rectangle drawn slightly too big around a box you cannot quite see the
+  edge of, which is exactly how it was reported.
+
+  Zero offset makes the ring the field's own edge: the same shape, at the same
+  radius, so what lights up on focus is the control rather than a box near it.
+  The offset is a good default where a focused thing sits on a busy background
+  and needs separating from it; a field in a bar is not that case.
+*/
 .of-bar__field:focus {
   outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
-  outline-offset: var(--of-space-tightest);
+  outline-offset: 0;
 }
 
 .of-bar__field::-webkit-search-cancel-button {
@@ -78,11 +118,93 @@
   appearance: none;
 }
 
-.of-bar__links {
-  display: flex;
-  gap: var(--of-space-loose);
+.of-bar__nav {
   flex: 0 0 auto;
   font-size: var(--of-type-size-small);
+}
+
+/* The anchor for the panel, which is positioned against this rather than
+   against the bar: the menu should hang under the button that opened it. */
+.of-bar__menu {
+  position: relative;
+}
+
+.of-bar__menu-button {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--of-space-tighter);
+  border-radius: var(--of-bevel-radius);
+  color: var(--of-color-ink-muted);
+  cursor: pointer;
+  /* The disclosure triangle is the browser's idea of what this control looks
+     like; three rules are ours. */
+  list-style: none;
+}
+
+/* Safari still needs the vendor pseudo to drop the marker. */
+.of-bar__menu-button::-webkit-details-marker {
+  display: none;
+}
+
+.of-bar__menu-button:hover {
+  color: var(--of-color-ink);
+}
+
+.of-bar__menu-button:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: 0;
+}
+
+.of-bar__menu-glyph {
+  inline-size: var(--of-space-loose);
+  block-size: var(--of-space-loose);
+  fill: none;
+}
+
+/*
+  THE PANEL. Absolutely positioned so opening the menu does not shove the page
+  down — a bar that changes height when you look at it is a bar that moves the
+  thing you were about to read.
+*/
+.of-bar__links {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + var(--of-space-tighter));
+  z-index: 1;
+  /*
+    HIDDEN BY THIS RULE, NOT BY THE BROWSER'S, and that is not belt and braces —
+    it is the only version that works in both engines.
+
+    A closed `<details>` hides its content two different ways depending on how
+    new the browser is: the old way is a UA `display: none`, which ANY class
+    selector here outranks, and the new way is `::details-content` with
+    `content-visibility: hidden`, which no `display` can touch. Relying on the
+    UA therefore fails in opposite directions — on an older engine the panel
+    would hang open permanently, and on a current one it vanished from the
+    layout even when the container query said it should be a row. Measured: the
+    links ended up 12px past the right edge of a 1414px window, in a nav box of
+    zero width, which is what a `content-visibility: hidden` subtree does to
+    anything that tries to lay it out.
+
+    So the state is owned here. Closed is `display: none`; open is a panel; wide
+    is a row regardless of either.
+  */
+  display: none;
+  flex-direction: column;
+  gap: var(--of-space-tight);
+  margin: 0;
+  padding: var(--of-space-tight) var(--of-space-base);
+  list-style: none;
+  background: var(--of-color-surface);
+  border: var(--of-bevel-width) solid var(--of-color-rule);
+  border-radius: var(--of-bevel-radius);
+  /* Wide enough that the links do not wrap, narrow enough not to cover the
+     field it sits beside. */
+  min-inline-size: max-content;
+}
+
+.of-bar__menu[open] .of-bar__links {
+  display: flex;
 }
 
 .of-bar__links a {
@@ -99,6 +221,49 @@
   color: var(--of-color-ink);
   box-shadow: inset 0 calc(-1 * var(--of-bevel-width)) 0 0
     var(--of-color-accent);
+}
+
+/*
+  WIDE ENOUGH TO SEAT THE LINKS: the menu stops being a menu.
+
+  The number is the bar's own width, and it is where the six links, the
+  wordmark and a field wide enough to hold a query stop competing — measured on
+  this nav rather than chosen from a device. Below it the summary is the
+  control; at and above it the summary is gone and the list is the row it always
+  used to be, so a desktop reader never has to open anything.
+*/
+@container bar (inline-size >= 44rem) {
+  .of-bar__menu-button {
+    display: none;
+  }
+
+  /* `[open]` is irrelevant up here: the links are the bar's nav, not a panel,
+     whether or not somebody opened the disclosure before the window grew. */
+  .of-bar__menu .of-bar__links,
+  .of-bar__links {
+    position: static;
+    display: flex;
+    flex-direction: row;
+    gap: var(--of-space-loose);
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+}
+
+/*
+  AND THE NEW WAY OF HIDING IT, UNDONE.
+
+  Its own rule, on purpose: `::details-content` is unknown to older engines, and
+  an unknown pseudo-element invalidates the whole selector it appears in. Folded
+  into the block above it would take the real rules down with it in exactly the
+  browsers that still need them.
+*/
+@container bar (inline-size >= 44rem) {
+  .of-bar__menu::details-content {
+    content-visibility: visible;
+    block-size: auto;
+  }
 }
 
 /* Visible to a screen reader, not on screen: the placeholder is not a label, and

@@ -157,20 +157,69 @@ export function SiteHeader({
         </form>
       ) : null}
 
-      <nav className="of-bar__links" aria-label="Sections">
-        {LINKS.map((link) => (
-          <a
-            key={link.href}
-            href={link.href}
-            aria-current={
-              link.key !== undefined && link.key === section
-                ? "page"
-                : undefined
-            }
-          >
-            {link.label}
-          </a>
-        ))}
+      {/*
+        A DISCLOSURE, NOT A SCRIPT. Six links do not fit beside a wordmark and a
+        search field on a phone, and the bar's answer used to be `flex-wrap` —
+        the nav dropped to a second row and the header doubled in height on the
+        surface with the least of it to spare.
+
+        `<details>` is the collapse, because it is the only one the platform
+        gives us for free: it opens on click and on Enter/Space, it is in the
+        accessibility tree as a disclosure with its state announced, and it
+        needs no JavaScript on a header that is rendered by the shell into
+        12,776 static documents. A checkbox and a label would look the same and
+        announce as a checkbox; a real `<button>` would need an island in the
+        one component that must never depend on one.
+
+        IT IS ONLY A MENU WHEN THERE IS NO ROOM. See `SiteHeader.css`: a
+        container query hides the summary and lays the list out as a row as soon
+        as the bar is wide enough to seat it, so the disclosure is inert on a
+        desktop rather than a thing to click before you can navigate.
+      */}
+      <nav className="of-bar__nav" aria-label="Sections">
+        <details className="of-bar__menu" name="of-bar__menu">
+          <summary className="of-bar__menu-button">
+            {/*
+              THE GLYPH IS DRAWN, NOT TYPED. `☰` is a CJK character that a
+              screen reader may read aloud as "trigram for heaven" and that a
+              font may simply not have; three rules are three rules everywhere.
+              The accessible name comes from the text beside it, which is
+              clipped rather than absent for the same reason the field's label
+              is.
+            */}
+            <svg
+              className="of-bar__menu-glyph"
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M1 3h14M1 8h14M1 13h14"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="of-bar__sr">Sections</span>
+          </summary>
+
+          <ul className="of-bar__links">
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  aria-current={
+                    link.key !== undefined && link.key === section
+                      ? "page"
+                      : undefined
+                  }
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
       </nav>
     </header>
   );

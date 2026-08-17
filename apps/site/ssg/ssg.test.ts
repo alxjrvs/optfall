@@ -2010,3 +2010,74 @@ describe("every screen but the front door carries the header's search", () => {
     }
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* The header's menu                                                           */
+/* -------------------------------------------------------------------------- */
+
+describe("the nav collapses to a disclosure without a script", () => {
+  const all = RESOLVED;
+  const render = (route: string) =>
+    all
+      .find((resolved) => resolved.route === route)
+      ?.render([], "islands.js") ?? "";
+
+  test("every link is in the markup, open or closed", () => {
+    /*
+     * THE POINT OF USING `<details>` RATHER THAN A SCRIPT. The panel is closed
+     * on arrival and the links are still in the document — crawlable, findable,
+     * and reachable with scripting off, which a JavaScript menu cannot promise.
+     * A collapse that removes the nav from the page is a collapse that removes
+     * the site's navigation from anything that does not run JavaScript.
+     */
+    const html = render("/sets");
+    for (const label of [
+      "Cards",
+      "Sets",
+      "Rules",
+      "Syntax",
+      "Random",
+      "About",
+    ]) {
+      expect(`${label}: ${html.includes(`>${label}</a>`)}`).toBe(
+        `${label}: true`,
+      );
+    }
+  });
+
+  test("the toggle is a summary, and it is named", () => {
+    /*
+     * A `<summary>` is a real disclosure control: focusable, operable with
+     * Enter and Space, and announced with its expanded state — none of which a
+     * `<div>` with a glyph in it would be, and none of which we would have to
+     * reimplement. The glyph is `aria-hidden` and the name comes from text
+     * beside it, because a screen reader cannot read three lines.
+     */
+    const html = render("/sets");
+    expect(html).toContain('<summary class="of-bar__menu-button"');
+    expect(html).toContain("of-bar__menu-glyph");
+    expect(html).toContain('<span class="of-bar__sr">Sections</span>');
+  });
+
+  test("the glyph is drawn rather than typed", () => {
+    /* `☰` is a CJK character a screen reader may announce as "trigram for
+       heaven" and a font may not carry at all. Three paths are three paths. */
+    const html = render("/sets");
+    expect(html).not.toContain("☰");
+    expect(html).toContain('stroke="currentColor"');
+  });
+
+  test("the current section is still marked inside the menu", () => {
+    /* The collapse may not cost the one thing the nav says about where you
+       are. `aria-current` has to survive being wrapped in a disclosure. */
+    expect(render("/sets")).toMatch(
+      /<a href="\/sets" aria-current="page">Sets<\/a>/,
+    );
+  });
+
+  test("the front door has no bar at all, so it has no menu", () => {
+    const html = render("/");
+    expect(html).not.toContain("of-bar__menu");
+    expect(html).not.toContain("of-bar__nav");
+  });
+});
