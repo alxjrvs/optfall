@@ -307,16 +307,24 @@ const READY_LINE = serveReadyLine(PORT);
  * not entitled to that, so the honest move is to say plainly that the port is
  * still held and let the next run's preflight name it too.
  *
- * AND THE WARNING ASSERTS NEITHER HALF OF WHAT IT DOES NOT KNOW, because this
- * also runs on the path where the server exited on its own without ever
- * binding. Two things are unknown there and both were once stated as fact: the
- * port may be held by whatever the check lost the race to rather than by an
- * orphan of its own, AND the server may have ended by its own failure rather
- * than by the `kill` above — where `server.kill()` reached a process that was
- * already gone. So the line says the server STOPPED, which is true however it
- * ended, and offers both readings of who holds the port. Either assertion would
- * be the same confident wrong diagnosis `assertPortFree` was fixed to stop
- * making.
+ * AND THE WARNING SAYS NOTHING ABOUT THE STATE OF THE SERVER, which took three
+ * attempts to get right and is worth writing down as a rule rather than as a
+ * third correction. Every path reaching this line disagrees about what the
+ * server is doing:
+ *
+ * - `was killed` was false where the wrapper had already exited on its own and
+ *   `server.kill()` signalled a process that was gone.
+ * - `stopped` was false in the very case the next clause describes — a
+ *   surviving grandchild is the likeliest reason the port is held, and it has
+ *   demonstrably NOT stopped.
+ *
+ * Each fix moved the false claim rather than removing it, because both were
+ * claims about something this function cannot observe: it knows what IT did and
+ * what the port is doing, and nothing else. So the line reports exactly that —
+ * the check finished with the server, the port is still held — and offers the
+ * two readings of who holds it without asserting either. That is the same
+ * discipline `assertPortFree` was fixed to follow when it called every bind
+ * failure a collision.
  */
 async function shutdown(): Promise<void> {
   server.kill();
@@ -333,8 +341,8 @@ async function shutdown(): Promise<void> {
   }
 
   console.log(
-    `::warning::Port ${PORT} is still held ${SHUTDOWN_TIMEOUT_MS / 1000}s after the dev server stopped — ` +
-      `either something this check started outlived it, or whatever the check was competing with still has the port. ` +
+    `::warning::Port ${PORT} is still held ${SHUTDOWN_TIMEOUT_MS / 1000}s after this check finished with the dev server — ` +
+      `either something it started is still running, or whatever it was competing with still has the port. ` +
       `Either way the next run will fail its port preflight, and this line is the reason.`,
   );
 }
