@@ -525,13 +525,25 @@ function PitchStones({
  * hovering spreads them into a hand, each face its own link to its own version.
  *
  * THE FRONT CARD IS THE ROW'S OWN, NOT `versions[0]`, and the difference is a
- * feature rather than pedantry. `toResult` may swap a row's picture for the art
- * of the set a query named — `set:MST` shows what Mistveil printed — and the
- * versions behind it deliberately wear their own default faces, because each one
- * is a link to a CARD and a card page shows its own art. So the front is handed
- * over whole and the tail is every version that is not already it, matched by
- * address rather than by position: a caller whose first version is not the row
- * would otherwise have drawn the same card twice.
+ * feature rather than pedantry. The front is handed over whole and the tail is
+ * every version that is not already it, matched by address rather than by
+ * position: a caller whose first version is not the row would otherwise have
+ * drawn the same card twice.
+ *
+ * EVERY CARD IN THE HAND COMES FROM ONE PRINT RUN, AND THAT IS THE CALLER'S
+ * JOB RATHER THAN THIS COMPONENT'S. `set:MST` shows what Mistveil printed, so
+ * the row's picture is Mistveil's — and so is every version's, because
+ * `card-search.ts` resolves them all through one rule. This note used to say
+ * the versions "deliberately wear their own default faces, because each one is
+ * a link to a CARD", which shipped a fan holding one card from the set the
+ * reader named and two from a set they did not. A fan is a comparison between
+ * siblings; siblings drawn from different print runs is a rendering fault
+ * wearing the costume of a design decision.
+ *
+ * WHAT THE FAN HOLDS IS WHAT MATCHED, for the same reason and by the same
+ * route: the caller passes the versions the query returned, so a filter that
+ * excludes a pitch excludes it from the hand as well as from the page. This
+ * component draws what it is given and never reaches for a sibling.
  *
  * A ONE-VERSION ROW IS ONE CARD AND ONE LINK, with no stack, no fan and no
  * hover behaviour — there is nothing to choose between, and a cell that
@@ -547,10 +559,22 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
   /*
     Matched by ADDRESS rather than by index — see the note above. `versionsOf`
     has already deduplicated and sorted, so this preserves pitch order.
+
+    THE LENGTH GUARD IS NOT REDUNDANT WITH THE ADDRESS FILTER, and an
+    `unique:art` row is where the difference showed. Such a row stands for ONE
+    picture of one card: its own `href` is that printing's URL while its single
+    version points at the card's default page, so the two addresses differ and
+    the filter kept the version — dealing a two-card "fan" whose back card was
+    the same card's default art, on a cell with no choice in it at all. A row
+    standing for one version is one card and one link; that is a fact about how
+    many versions it has, so it is asked of the count.
   */
-  const behind = versionsOf(entry.versions).filter(
-    (version) => version.href !== entry.href,
-  );
+  const behind =
+    entry.versions.length < 2
+      ? []
+      : versionsOf(entry.versions).filter(
+          (version) => version.href !== entry.href,
+        );
 
   const face = (
     <CardFace

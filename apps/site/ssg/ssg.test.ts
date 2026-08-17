@@ -1802,6 +1802,136 @@ describe("a card index prints the name and not the pitch qualifier", () => {
 });
 
 /* -------------------------------------------------------------------------- */
+/* The fan                                                                     */
+/* -------------------------------------------------------------------------- */
+
+describe("a fan holds the versions it was handed, once each", () => {
+  /**
+   * The grid, rendered on its own, and the cards it dealt.
+   *
+   * Returns the `src` of every face in document order — the front card first,
+   * then the ones behind it — which is the whole of what these tests assert on.
+   */
+  const dealt = (entry: Parameters<typeof CardIndex>[0]["entries"][number]) => {
+    const markup = renderToStaticMarkup(
+      createElement(CardIndex, {
+        entries: [entry],
+        display: "grid" as const,
+        onDisplayChange: () => undefined,
+        summary: "1 card",
+        controlName: "test",
+        interactive: false,
+      }),
+    );
+    return [...markup.matchAll(/<img[^>]*\ssrc="([^"]*)"/g)].map(
+      (match) => match[1] ?? "",
+    );
+  };
+
+  /* The address is DERIVED FROM THE FACE, so a fixture cannot quietly hand the
+     component a version whose picture and page are different cards — which is
+     the exact defect these tests are about, and it would make them pass by
+     accident if it were written out twice by hand. */
+  const version = (pitch: 1 | 2 | 3, faceKey: string) => ({
+    pitch,
+    href: `/card/mpw/${faceKey.slice(3, 6)}/hit-and-run-${pitch}`,
+    label: `Hit and Run (pitch ${pitch})`,
+    faceKey,
+    faceLandscape: false,
+  });
+
+  test("every card in the hand is a different one", () => {
+    /*
+     * THE HAND HELD A DUPLICATE AND WAS MISSING A CARD, and both came from one
+     * cause: the row's picture and the row's link were resolved from different
+     * versions. `card-search.ts` now takes a row's face from the version it
+     * opens, so this is that fix seen from the surface it broke — the engine
+     * test names the mechanism, this names the symptom.
+     *
+     * Three versions in, three DISTINCT faces out, and the one the cell points
+     * at is the one in front.
+     */
+    const faces = dealt({
+      href: "/card/mpw/112/hit-and-run-1",
+      label: "Hit and Run",
+      name: "Hit and Run",
+      qualifier: "",
+      typeLine: "Warrior Action",
+      faceKey: "MPW112.webp",
+      faceLandscape: false,
+      versions: [
+        version(1, "MPW112.webp"),
+        version(2, "MPW113.webp"),
+        version(3, "MPW114.webp"),
+      ],
+    });
+
+    expect(faces.length).toBe(3);
+    expect(new Set(faces).size).toBe(3);
+    /* The front card is the row's own, so the cell's picture and its
+       destination are one card. */
+    expect(faces[0]?.includes("MPW112")).toBe(true);
+  });
+
+  test("a row standing for one version deals no hand at all", () => {
+    /*
+     * THE ADDRESS FILTER ALONE WAS NOT ENOUGH, and `unique:art` is where that
+     * showed. Such a row stands for ONE picture of one card: its href is that
+     * printing's URL while its single version points at the card's default
+     * page, so the two differ, the filter kept the version, and a cell with no
+     * choice in it dealt a two-card fan whose back card was the same card's
+     * other art. A row with one version is one card and one link.
+     */
+    const faces = dealt({
+      href: "/card/mpw/112/hit-and-run-1",
+      label: "Hit and Run · MPW112",
+      name: "Hit and Run · MPW112",
+      qualifier: "",
+      typeLine: "Warrior Action",
+      faceKey: "MPW112.webp",
+      faceLandscape: false,
+      /* The address an `unique:art` row's version carries: the card's own
+         default page, which is NOT the printing the row is showing. */
+      versions: [
+        {
+          pitch: 1 as const,
+          href: "/card/cru/091/hit-and-run-1",
+          label: "Hit and Run (pitch 1)",
+          faceKey: "CRU091.png",
+          faceLandscape: false,
+        },
+      ],
+    });
+
+    expect(faces.length).toBe(1);
+    expect(faces[0]?.includes("MPW112")).toBe(true);
+  });
+
+  test("what the caller hands over is the whole hand, and nothing else", () => {
+    /*
+     * A FILTER THAT EXCLUDES A PITCH EXCLUDES IT FROM THE FAN. This component
+     * draws the versions it is given and never reaches for a sibling, so a
+     * `pitch:1` search cannot be answered with a picture of the blue one — the
+     * same promise `card-search.ts` keeps on its side of the boundary, pinned
+     * here so neither half can start assuming the other does it.
+     */
+    const faces = dealt({
+      href: "/card/mpw/112/hit-and-run-1",
+      label: "Hit and Run",
+      name: "Hit and Run",
+      qualifier: "",
+      typeLine: "Warrior Action",
+      faceKey: "MPW112.webp",
+      faceLandscape: false,
+      versions: [version(1, "MPW112.webp"), version(3, "MPW114.webp")],
+    });
+
+    expect(faces.length).toBe(2);
+    expect(faces.some((src) => src.includes("MPW113"))).toBe(false);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
 /* The redirect table                                                          */
 /* -------------------------------------------------------------------------- */
 
