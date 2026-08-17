@@ -77,8 +77,16 @@ import "./CardSearch.css";
  */
 export const HEADER_FIELD_ID = "site-search";
 
-/** Ties the header's field to the operator examples rendered on this page. */
-const HINT_ID = "cards-search-hint";
+/**
+ * Ties the header's field to the operator examples rendered on this page.
+ *
+ * EXPORTED, BECAUSE THE LINK IS EMITTED BY THE SHELL AND NOT BY THIS ISLAND.
+ * `search.page.tsx` hands it to `SiteHeader` as `headerSearchDescribedBy`, so
+ * the association is in the served HTML rather than attached on hydration —
+ * which matters on the one page whose no-JS path is deliberately designed for.
+ * The island renders the element; the page wires the field to it.
+ */
+export const CARDS_HINT_ID = "cards-search-hint";
 
 export interface CardSearchProps {
   readonly index: EncodedCardIndex;
@@ -196,11 +204,23 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
     field.current = input;
     const form = input.form;
 
-    /* The hint belongs to this field now, so the field has to say so. It is
-       rendered on the page rather than in the shell, because the operator
-       examples are about THIS page and the header is on every page. */
-    const described = input.getAttribute("aria-describedby");
-    input.setAttribute("aria-describedby", HINT_ID);
+    /*
+     * SEEDED FROM THE FIELD, WHICH IS NOT A FORMALITY — IT IS A RACE.
+     *
+     * The header's input is static markup: it is on screen and typeable from
+     * the first paint, before `islands.js` has loaded. The value-sync effect
+     * below writes `query` INTO that input whenever the two differ, and `query`
+     * starts as `""` — so a reader who lands on `/search` with no `?q=` and
+     * starts typing during hydration had their text erased the moment this
+     * island mounted, with nothing to restore it.
+     *
+     * React 18 guards against exactly this for inputs it renders itself
+     * (`postMountWrapper` skips the value assignment while hydrating), and the
+     * controlled `SearchField` that used to be here inherited that protection.
+     * An adopted node gets none of it, so the protection has to be written out:
+     * take whatever is in the field as the starting state.
+     */
+    if (input.value !== "") setQuery(input.value);
 
     const onInput = () => setQuery(input.value);
     const onSubmit = (event: Event) => {
@@ -219,8 +239,6 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
       input.removeEventListener("input", onInput);
       input.removeEventListener("keydown", onKeyDown);
       form?.removeEventListener("submit", onSubmit);
-      if (described === null) input.removeAttribute("aria-describedby");
-      else input.setAttribute("aria-describedby", described);
       field.current = null;
     };
   }, []);
@@ -241,9 +259,29 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
    * listener sets state from the field, and writing the same string back would
    * move the cursor to the end mid-word.
    */
+  const synced = useRef(false);
   useEffect(() => {
     const input = field.current;
-    if (input !== null && input.value !== query) input.value = query;
+    if (input === null) return;
+    /*
+     * THE FIRST RUN WRITES NOTHING, AND SEEDING ALONE DOES NOT COVER THAT.
+     *
+     * Effects flush in declaration order within one commit, so on mount this
+     * runs immediately after the adoption effect above — with `query` still the
+     * pre-seed `""`, because `setQuery` schedules a render rather than
+     * performing one. It would therefore blank a field the adoption effect had
+     * just read text out of, and restore it a render later: the text survives,
+     * but it flickers and the caret jumps to the end mid-word.
+     *
+     * On mount the FIELD is the source of truth — that is what the seed says —
+     * so there is nothing for this to write. Every later run is a query that
+     * changed for a reason other than typing, which is exactly what it is for.
+     */
+    if (!synced.current) {
+      synced.current = true;
+      return;
+    }
+    if (input.value !== query) input.value = query;
   }, [query]);
 
   useEffect(() => {
@@ -561,7 +599,7 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
         points `aria-describedby` at this element — because the examples are
         about what this page can be asked, and the header is on every page.
       */}
-      <p className="of-search__hint of-cards__hint" id={HINT_ID}>
+      <p className="of-search__hint of-cards__hint" id={CARDS_HINT_ID}>
         <code>pitch:3 class:guardian</code> · <code>banned:cc</code> ·{" "}
         <code>text:dominate</code> — <a href="/syntax">all operators</a>
       </p>

@@ -21,3 +21,29 @@
   color: var(--of-color-ink-muted);
   font-size: var(--of-type-size-small);
 }
+
+/*
+  THE HEADING IS FOR THE DOCUMENT, NOT THE SCREEN.
+
+  `/search` carried no `<h1>` at all for a while, on the argument that the
+  field's visible label said the same words a few pixels below it. That label is
+  in the header now and clipped to a pixel, so the page had no heading in its
+  outline — on the site's busiest surface, where a screen reader's heading list
+  is a real way to navigate. The display-sized version genuinely did cost the
+  most valuable fold on the page, so it comes back weightless: present in the
+  document, absent from the layout.
+
+  Not collapsed to zero: a zero-area element is skipped by some screen readers,
+  which is the same reason `.of-cards__announcement` is sized from `space.hair`.
+*/
+.of-search-page__heading {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

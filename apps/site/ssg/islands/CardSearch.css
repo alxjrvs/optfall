@@ -18,9 +18,23 @@
   (see `CardSearch.tsx`), so the hint needs the space the field used to occupy
   above it, and nothing below it: the ornamental rule that follows brings its
   own.
+
+  TWO CLASSES, AND THE FIRST VERSION OF THIS RULE HAD ONE — which made it DEAD.
+  A bare `.of-cards__hint` ties on specificity with `.of-search__hint`, and the
+  shared stylesheet emits this file BEFORE `SearchField.css` (both entry graphs
+  agree: `styles.entry.ts` globs `./islands/*.css` first, and
+  `islands.client.ts` reaches `CardSearch` before `RulesSearch`). So the
+  component's `margin-block` SHORTHAND won and reset the start edge back to
+  `tight` — the hint kept exactly the spacing the paragraph above calls wrong,
+  and the built CSS said so plainly if anyone had looked.
+
+  Doubling the selector wins on specificity rather than on order, which is the
+  fix that does not depend on a glob's iteration order staying put. The
+  shorthand is restated for the same reason: overriding one edge of a shorthand
+  with a longhand is what made this fragile in the first place.
 */
-.of-cards__hint {
-  margin-block-start: var(--of-space-looser);
+.of-search__hint.of-cards__hint {
+  margin-block: var(--of-space-looser) 0;
 }
 
 /*

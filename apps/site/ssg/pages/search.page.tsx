@@ -13,11 +13,18 @@
  * keyword and trait memberships, per-format verdict vectors. Somebody looking up
  * "head jab" never downloads the machinery.
  *
- * NO `<h1>`. It read "Search the cards", and the field's own visible `<label>` —
- * the one a screen reader announces — says the same words immediately beneath
- * it, under a nav that says "Cards" and a title that says "Search the cards —
- * Optfall". Four statements of one fact, and the display-sized one cost the most
- * fold on the page that can least afford it.
+ * THE `<h1>` IS HIDDEN, NOT ABSENT, AND IT USED TO BE ABSENT FOR A REASON THAT
+ * EXPIRED. It read "Search the cards" at display size, and the argument for
+ * deleting it was that the field's own VISIBLE `<label>` said the same words
+ * immediately beneath it — four statements of one fact, and the display-sized
+ * one cost the most fold on the page that can least afford it.
+ *
+ * That label moved into the header when the field did, where it is clipped to a
+ * pixel (`.of-bar__sr`). So the page briefly had no heading at all: the first
+ * thing in `<main>` was the operator hint, and a screen reader's heading list
+ * for the site's busiest surface was empty. The fold argument still holds, so
+ * the heading is back at the same visual weight it had — none — and present in
+ * the document where it belongs.
  *
  * NO RIGHTS NOTICE IN THE BODY, for the same reason. `CORPUS.rights` closed this
  * page in faint legal type, and `ssg/document.tsx` then emitted the identical
@@ -44,7 +51,7 @@ import {
 import type { RulesCorpus } from "../../src/lib/search";
 import { SETS } from "../../src/lib/sets";
 import { Island } from "../Island";
-import { CardSearch } from "../islands/CardSearch";
+import { CARDS_HINT_ID, CardSearch } from "../islands/CardSearch";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
 
@@ -96,6 +103,7 @@ function page(): PageResult {
     description:
       "Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from.",
     section: "cards",
+    headerSearchDescribedBy: CARDS_HINT_ID,
     /*
       THE HEADER'S FIELD IS THIS PAGE'S FIELD. It was suppressed here because
       the page rendered a hero of its own, which made the results screen look
@@ -106,6 +114,15 @@ function page(): PageResult {
     islands: true,
     children: (
       <>
+        {/*
+          THE PAGE'S HEADING, CARRIED BY THE DOCUMENT AND NOT BY THE LAYOUT.
+          See the note at the top of this file: it is hidden rather than absent,
+          because the fold argument that deleted it still holds and the reason
+          it was safe to delete — a visible label saying the same words — left
+          with the field.
+        */}
+        <h1 className="of-search-page__heading">Search the cards</h1>
+
         {/*
           THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form submits here, so
           a reader with scripting off arrives at `/search?q=…` with a query in

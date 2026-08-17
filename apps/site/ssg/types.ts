@@ -90,6 +90,15 @@ export interface PageResult {
    * page with a hero AND a header field is the case this exists to refuse.
    */
   readonly headerSearch?: boolean;
+  /**
+   * The id of an element on this page that describes the header's field.
+   *
+   * Only `/search` sets it: the operator examples belong to that page, and a
+   * field with no description is the ordinary case everywhere else. Emitted
+   * server-side rather than attached on hydration, so the association survives
+   * scripting being off — see {@link SiteHeaderProps.fieldDescribedBy}.
+   */
+  readonly headerSearchDescribedBy?: string | undefined;
   /** `measure` (prose) or `wide` (a face beside a column). See the tokens. */
   readonly width?: "measure" | "wide";
   /**

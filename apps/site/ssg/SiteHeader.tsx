@@ -29,6 +29,19 @@ export interface SiteHeaderProps {
   readonly section?: HeaderSection | undefined;
   /** The search field. Off on the page that already has one as its hero. */
   readonly field?: boolean;
+  /**
+   * The id of a page element describing the field, for `aria-describedby`.
+   *
+   * THE SHELL CANNOT KNOW WHAT THE HINT SAYS, BUT IT HAS TO EMIT THE LINK.
+   * `/search` renders the operator examples — they are about that page, and the
+   * header is on every page — and `CardSearch` used to attach this when it
+   * adopted the field. That made the association depend on JavaScript, on the
+   * one page whose no-JS path is deliberately designed for (see the `noscript`
+   * block in `search.page.tsx`) and on a hydration failure that
+   * `islands.client.ts` deliberately swallows. `SearchField` wired its own hint
+   * server-side; an adopted field has to be given the same thing by the page.
+   */
+  readonly fieldDescribedBy?: string | undefined;
 }
 
 const LINKS: readonly {
@@ -46,7 +59,11 @@ const LINKS: readonly {
   { href: "/about", label: "About" },
 ];
 
-export function SiteHeader({ section, field = true }: SiteHeaderProps) {
+export function SiteHeader({
+  section,
+  field = true,
+  fieldDescribedBy,
+}: SiteHeaderProps) {
   return (
     <header className="of-bar">
       <a className="of-bar__wordmark" href="/">
@@ -97,6 +114,7 @@ export function SiteHeader({ section, field = true }: SiteHeaderProps) {
             spellCheck={false}
             enterKeyHint="search"
             placeholder="Search cards"
+            aria-describedby={fieldDescribedBy}
           />
         </form>
       ) : null}
