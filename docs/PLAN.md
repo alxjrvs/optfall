@@ -11,11 +11,26 @@ each with a permanent URL.
 |---|---|---|
 | 0 | Repo and infrastructure | **done** |
 | 1 | Theme and components | **done** |
-| 2 | The card layer — search, cards, printings | next |
-| 3 | Legality that remembers | after 2 |
-| 4 | The rules, made addressable | parser done; surface in progress |
+| 2 | The card layer — search, cards, printings | **done** |
+| 3 | Legality that remembers | not started |
+| 4 | The rules, made addressable | **built**; exit criterion is external |
 | — | *Gate: are the questions actually novel?* | days |
-| 5 | The interaction record | quarter → ongoing |
+| 5 | The interaction record | not started |
+| 6 | Off Astro | **done** |
+
+> **The state column describes what is BUILT, which is not the same as what
+> has EXITED.** Phases 3 and 4 both exit on adoption — "at least one other
+> tool has adopted the library", "a citation appears in a community discussion
+> without you putting it there" — and neither is a fact this repository can
+> report on itself. Phase 4's surface is live at `/cr` and `/rule/:number`
+> against a committed CR 2.14.0 corpus; whether anyone has cited it is not
+> something a status table should claim.
+>
+> Phase 3 is *not started* rather than in progress: `packages/legality` exists
+> and is tested, but its headline export `isLegal` throws `NotImplementedError`
+> and nothing under `apps/` imports the package. The live legality logic is
+> `apps/site/src/lib/cards.ts`, which reads upstream's flags rather than
+> computing a timeline.
 
 > **This document was reordered on 2026-08-11**, when the owner settled the
 > positioning: Optfall is *mostly a card browser and lookup with a rules engine

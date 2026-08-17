@@ -197,11 +197,14 @@ export type StateTone =
   | "verified"
   | "unverified";
 
-/**
- * Brass is reserved for authority — the verified judge seal and nothing else.
+/*
+ * BRASS IS RESERVED FOR AUTHORITY — the verified judge seal, and nothing else.
  * A material used once is a signal; used twice it is a theme.
+ *
+ * This was a `BRASS_RESERVED_FOR` constant that nothing imported, which made it
+ * a rule written in the shape of code that could not enforce it. The rule is
+ * real and worth keeping; the constant was not carrying it.
  */
-export const BRASS_RESERVED_FOR: StateTone = "verified";
 
 /* -------------------------------------------------------------------------- */
 /* Compliance, enforced in the token layer                                     */

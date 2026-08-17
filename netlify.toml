@@ -39,12 +39,16 @@
   # workspace only resolves from the root.
   #
   # The root `build` script fans out across the workspaces that DECLARE a build
-  # script — today that is `apps/site` and nothing else, since `theme`,
-  # `components` and `legality` are consumed from source. An earlier version of
-  # this comment claimed it built "every workspace in dependency order", which
-  # was not true then and would matter the day one of those packages needs a
-  # compile step: the site would bundle a stale artefact and the deploy would
-  # still be green.
+  # script. Which ones those are is not written here on purpose: two earlier
+  # versions of this comment enumerated them and both were wrong by the time
+  # anyone read them — the first claimed "every workspace in dependency order",
+  # the second named `apps/site` "and nothing else" while `legality` and `rules`
+  # also declared one. `bun run --filter` reads the manifests; a list in prose
+  # cannot. Run `bun run build` to see what it covers today.
+  #
+  # The hazard the enumeration was gesturing at is real: a workspace consumed
+  # from source needs no build step, but the day one needs a compile the site
+  # would bundle a stale artefact and the deploy would still be green.
   #
   # This is deliberately the same command CI runs. A deploy that succeeds where
   # the aggregate gate fails would be a lie about the state of `main`.

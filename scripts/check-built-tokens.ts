@@ -36,7 +36,10 @@ import { join } from "node:path";
 
 import { DARK_TOKENS } from "../packages/theme/src/index";
 
-const outputDirectory = process.argv[2] ?? "apps/site/dist";
+const args = process.argv.slice(2);
+const verbose = args.includes("--verbose");
+const outputDirectory =
+  args.find((arg) => !arg.startsWith("--")) ?? "apps/site/dist";
 
 const pages = [
   ...new Bun.Glob("**/*.html").scanSync({ cwd: outputDirectory, dot: false }),
@@ -90,14 +93,30 @@ function sheetContents(href: string): string | undefined {
   return contents;
 }
 
+/**
+ * How many failing pages get their own `::error` line.
+ *
+ * The failures below are systemic by construction — "the generated theme
+ * stylesheet did not reach this page" is not a property one page has and its
+ * neighbour does not — so the realistic failure is all 12,776 at once, where
+ * the first annotation already carries the whole diagnosis. Twelve thousand
+ * copies of it bury the summary underneath rather than reinforcing it.
+ *
+ * `--verbose` annotates every one.
+ */
+const MAX_REPORTED = 10;
+
 let failures = 0;
+const report = (message: string): void => {
+  if (verbose || failures < MAX_REPORTED) console.log(message);
+};
 
 for (const page of pages) {
   const html = readFileSync(`${outputDirectory}/${page}`, "utf8");
   const hrefs = stylesheetHrefs(html);
 
   if (hrefs.length === 0) {
-    console.log(
+    report(
       `::error file=${outputDirectory}/${page}::${page} links no stylesheet at all, so every var(--of-*) on it resolves to nothing.`,
     );
     failures += 1;
@@ -106,7 +125,7 @@ for (const page of pages) {
 
   const dangling = hrefs.filter((href) => sheetContents(href) === undefined);
   if (dangling.length > 0) {
-    console.log(
+    report(
       `::error file=${outputDirectory}/${page}::${page} links ${dangling.length} stylesheet(s) that do not exist in the build: ${dangling.join(", ")}. The hrefs are content-hashed, so this page looks correct and renders unstyled.`,
     );
     failures += 1;
@@ -118,11 +137,17 @@ for (const page of pages) {
   const missing = expected.filter((name) => !css.includes(`${name}:`));
 
   if (missing.length > 0) {
-    console.log(
+    report(
       `::error file=${outputDirectory}/${page}::${page} links stylesheets that define only ${expected.length - missing.length} of ${expected.length} tokens (missing e.g. ${missing.slice(0, 3).join(", ")}). The generated theme stylesheet did not reach this page.`,
     );
     failures += 1;
   }
+}
+
+if (!verbose && failures > MAX_REPORTED) {
+  console.log(
+    `::error::…and ${failures - MAX_REPORTED} more page(s) with the same failure. Re-run with --verbose to annotate every one.`,
+  );
 }
 
 if (failures > 0) {

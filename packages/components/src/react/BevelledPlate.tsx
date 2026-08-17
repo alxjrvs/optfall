@@ -42,9 +42,9 @@
  * can see the whole screen rather than by a plate that can only see itself.
  *
  * **THE PLATE OWNS PLACEMENT AND SIZE; THE ORNAMENT OWNS THE DRAWING.** That
- * split is the contract, it is recorded in `FiligreeProps` in
- * `packages/components/src/index.ts`, and it is the reason the id passed to the
- * render prop has somewhere to go:
+ * split is the contract — this component's `corner` render prop hands out a
+ * `PlateCorner`, and `FiligreeCorner` consumes one — and it is the reason the
+ * id passed to the render prop has somewhere to go:
  *
  * ```tsx
  * <BevelledPlate

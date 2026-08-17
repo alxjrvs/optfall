@@ -2,7 +2,7 @@
  * Assert that every built HTML page carries the Legend Story Studios
  * disclaimer, verbatim.
  *
- *   bun scripts/check-disclaimer.ts [output-directory]
+ *   bun scripts/check-disclaimer.ts [output-directory] [--verbose]
  *
  * This is the check `docs/COMPLIANCE.md` §4 names as an enforcement point. It
  * is the one that catches what review does not: a well-meaning reflow, an
@@ -23,7 +23,32 @@ import {
   normalizeHtmlWhitespace,
 } from "./canonical-disclaimer";
 
-const outputDirectory = process.argv[2] ?? "apps/site/dist";
+const args = process.argv.slice(2);
+
+/**
+ * `--verbose` restores the full page listing.
+ *
+ * WITHOUT IT THIS CHECK PRINTED 12,779 LINES ON SUCCESS, because the listing
+ * sat above the pass/fail branch and ran unconditionally. A passing check that
+ * costs more to read than most failures is one an agent learns to scroll past,
+ * and scrolling past a compliance check is the habit this file exists to
+ * prevent. The count still prints; the enumeration is now something you ask
+ * for.
+ */
+const verbose = args.includes("--verbose");
+const outputDirectory =
+  args.find((arg) => !arg.startsWith("--")) ?? "apps/site/dist";
+
+/**
+ * How many failing pages get their own `::error` line.
+ *
+ * The failures this check catches are systemic by construction — a layout that
+ * lost the disclaimer, a formatter that reflowed it — so the realistic failure
+ * is every page at once, and the first line already carries the whole
+ * diagnosis. Twelve thousand identical annotations bury it rather than
+ * reinforce it.
+ */
+const MAX_REPORTED = 10;
 
 const expected = readCanonicalDisclaimer();
 
@@ -56,20 +81,28 @@ for (const page of pages) {
   // still a compliance failure, but it is a different one and deserves a
   // different message.
   if (html.includes(expected)) continue;
-  if (normalizeHtmlWhitespace(html).includes(expected)) {
-    console.log(
-      `::error file=${file}::${file} contains the disclaimer only after whitespace normalisation — it has been reflowed or split across elements. Render it as one text node.`,
-    );
-  } else {
-    console.log(
-      `::error file=${file}::${file} does not contain the required disclaimer.`,
-    );
+  if (verbose || missing.length < MAX_REPORTED) {
+    if (normalizeHtmlWhitespace(html).includes(expected)) {
+      console.log(
+        `::error file=${file}::${file} contains the disclaimer only after whitespace normalisation — it has been reflowed or split across elements. Render it as one text node.`,
+      );
+    } else {
+      console.log(
+        `::error file=${file}::${file} does not contain the required disclaimer.`,
+      );
+    }
   }
   missing.push(page);
 }
 
-console.log(`Checked ${pages.length} built page(s) under ${outputDirectory}:`);
-for (const page of pages) console.log(`  ${page}`);
+if (!verbose && missing.length > MAX_REPORTED) {
+  console.log(
+    `::error::…and ${missing.length - MAX_REPORTED} more page(s) with the same failure. Re-run with --verbose to annotate every one.`,
+  );
+}
+
+console.log(`Checked ${pages.length} built page(s) under ${outputDirectory}.`);
+if (verbose) for (const page of pages) console.log(`  ${page}`);
 
 if (missing.length === 0) {
   console.log(

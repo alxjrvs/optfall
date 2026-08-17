@@ -1,0 +1,2808 @@
+{
+  "schemaVersion": 2,
+  "source": {
+    "repository": "the-fab-cube/flesh-and-blood-cards",
+    "path": "json/english/card.json",
+    "commit": "7a4822f3dab483a52a78206b7ad8696394e02dc0",
+    "committedAt": "2026-08-10T00:57:39Z",
+    "url": "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/7a4822f3dab483a52a78206b7ad8696394e02dc0/json/english/card.json",
+    "bytes": 23148532,
+    "sha256": "8547eb5cfd11ea055a7b97d64ce23b56951bfce7c8530e039ab67369598c3ceb"
+  },
+  "rights": "Card names, card text and card images are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. This dataset displays that content under LSS's third-party application policy and does not relicense it. Only Optfall's structural work over the dataset — the field selection, the upstream pin and this envelope — is openly licensed. The upstream compilation is https://github.com/the-fab-cube/flesh-and-blood-cards, which publishes no licence of its own.",
+  "sample": {
+    "of": "data/cards/cards.json",
+    "generator": "scripts/build-card-sample.ts",
+    "note": "A derived, deterministic subset, for reading and for agent context. The site build does not read it; `scripts/build-card-sample.test.ts` does, to assert it still matches this generator. Do not hand-edit — run `bun run corpus:sample`."
+  },
+  "legalityFlags": [
+    "blitz_legal",
+    "cc_legal",
+    "commoner_legal",
+    "ll_legal",
+    "silver_age_legal",
+    "blitz_living_legend",
+    "cc_living_legend",
+    "blitz_banned",
+    "cc_banned",
+    "commoner_banned",
+    "ll_banned",
+    "silver_age_banned",
+    "upf_banned",
+    "blitz_suspended",
+    "cc_suspended",
+    "commoner_suspended",
+    "ll_restricted",
+    "ll_restricted_affects_full_cycle"
+  ],
+  "counts": {
+    "cards": 20,
+    "printings": 91,
+    "names": 20
+  },
+  "cards": [
+    {
+      "unique_id": "666mgFjKrrLQhdkpGzNzf",
+      "name": "Heartened Cross Strap",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "0",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Generic",
+        "Equipment",
+        "Chest"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [
+        "Action"
+      ],
+      "ability_and_effect_keywords": [
+        "Go again"
+      ],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "**Action** - Destroy this: The next attack action card you play this turn costs {r}{r} less to play. **Go again**",
+      "type_text": "Generic Equipment - Chest",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": true,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": true,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false,
+        "blitz_banned_start": "2022-05-02T00:00:00.000Z",
+        "silver_age_banned_start": "2025-10-19T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "WCPMkMcbm9PkKw7h9bd7N",
+          "id": "1HP351",
+          "set_id": "1HP",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/1HP351.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "270918",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/270918?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "F69MCwDhpNtkg9rjnzkDK",
+          "id": "APR004",
+          "set_id": "APR",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "M",
+          "expansion_slot": false,
+          "artists": [
+            "Firaz M. Rasyid"
+          ],
+          "art_variations": [
+            "AA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/APR004.webp",
+          "image_rotation_degrees": 0
+        },
+        {
+          "unique_id": "jmBKQqcMF6CBDK7QK8BgB",
+          "id": "BRI006",
+          "set_id": "BRI",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/BRI006.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "262534",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/262534?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "6GJDhG8FktnFq9tJdQHDF",
+          "id": "FAB063",
+          "set_id": "FAB",
+          "edition": "N",
+          "foiling": "G",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/FAB063-GF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "275540",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/275540?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "dMtgtHrghRgBMGmdcJqLd",
+          "id": "KSU006",
+          "set_id": "KSU",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/KSU006.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225751",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225751?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "CJWb9LNcKwtQgkBBMTNrj",
+          "id": "MPG119",
+          "set_id": "MPG",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/MPG119.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "647433",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/647433?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "KbzNN6zRNmJNqRdKpMzcW",
+          "id": "PSM005",
+          "set_id": "PSM",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/PSM005.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "238505",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/238505?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "nnNGTD8wjWzF8hnnhLfkM",
+          "id": "WTR152",
+          "set_id": "WTR",
+          "edition": "A",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2019-WTR/WTR152.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "7cpTfP68BHMNQPtWbPJkB",
+          "id": "WTR152",
+          "set_id": "WTR",
+          "edition": "A",
+          "foiling": "C",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2019-WTR/WTR152.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=1st+Edition+Cold+Foil"
+        },
+        {
+          "unique_id": "p7GkkfpL7pnjHGbC9wL86",
+          "id": "WTR152",
+          "set_id": "WTR",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-U-WTR/U-WTR152.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "KmbcTLCwLg9KPGwpLTcfK",
+          "id": "WTR152",
+          "set_id": "WTR",
+          "edition": "U",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Nikolai Maslakov"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-U-WTR/U-WTR152.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225219",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225219?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "667jCHDNcTc6zNTcjFk8m",
+      "name": "Horns of the Despised",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Reviled",
+        "Equipment",
+        "Head"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "The Crowd Boos",
+        "Blade Break"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "When this defends, **the crowd boos** you.\n\n**Blade Break**",
+      "type_text": "Reviled Equipment - Head",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "KWtfgMJbBKhTrRcpdNqRC",
+          "id": "SUP079",
+          "set_id": "SUP",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Brian Adriel"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/SUP079.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "653956",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/653956?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "BfKM86gpnqggkhkRmKrqp",
+          "id": "SUP079",
+          "set_id": "SUP",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Brian Adriel"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/SUP079-CF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "653957",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/653957?Language=English&Printing=Cold+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "66LHrpFckMQ8WNWhPjbD6",
+      "name": "Runerager Swarm",
+      "color": "Red",
+      "pitch": "1",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Runeblade",
+        "Action",
+        "Attack"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Go again"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "If you've played or created an aura this turn, this gets **go again**.",
+      "type_text": "Runeblade Action - Attack",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "tKd8PJDnpqnJgBwLw9kMh",
+          "id": "AUA015",
+          "set_id": "AUA",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sandeep Karunakaran"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/AUA015.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577188",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577188?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "kQKn688GJTc7WFWGpP9tP",
+          "id": "AVS012",
+          "set_id": "AVS",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sandeep Karunakaran"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AVS012.webp",
+          "image_rotation_degrees": 0
+        },
+        {
+          "unique_id": "g6kQRpccBQGnPt8kzLqKc",
+          "id": "FLR009",
+          "set_id": "FLR",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sandeep Karunakaran"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/FLR009.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577210",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577210?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "WBjK8L8pk7QdbBNHpm87G",
+          "id": "LGS362",
+          "set_id": "LGS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Sandeep Karunakaran"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS362-RF.webp",
+          "image_rotation_degrees": 0
+        },
+        {
+          "unique_id": "w77ffgFDqtRzC77WQhMnt",
+          "id": "ROS149",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sandeep Karunakaran"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS149.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "565586",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/565586?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "mmdfh8h9jHQ78FpHJwjbw",
+          "id": "ROS149",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sandeep Karunakaran"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS149.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "565586",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/565586?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "6f6chqzCmNcwNm7JRBHjj",
+          "id": "SVI014",
+          "set_id": "SVI",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sandeep Karunakaran"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SVI014.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "676800",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/676800?Language=English&Printing=Normal"
+        }
+      ]
+    },
+    {
+      "unique_id": "67fGrFQnnpt8PLBckjKdG",
+      "name": "Flash",
+      "color": "Yellow",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Lightning",
+        "Action"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Go again"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [
+        "Go again"
+      ],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "The next action card you play this turn with cost 1 or greater gets **go again**.\n\n**Go again**",
+      "type_text": "Lightning Action",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "DLf8JLqTBpPbmQLJRmjrL",
+          "id": "BRI031",
+          "set_id": "BRI",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Patchanee Treedet"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/BRI031.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "262559",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/262559?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "cdw7tKw9Q7w6MWm6C7KWh",
+          "id": "ELE178",
+          "set_id": "ELE",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Patchanee Treedet"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/ELE178.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "TFwgdmwRM8P7kqGk7p8DL",
+          "id": "ELE178",
+          "set_id": "ELE",
+          "edition": "F",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Patchanee Treedet"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/ELE178.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=1st+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "zDLDWgM6fWwTMBF8T8kQb",
+          "id": "ELE178",
+          "set_id": "ELE",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Patchanee Treedet"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-ELE178.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "hfNMmqKMLGJnD9HL9Tzdn",
+          "id": "ELE178",
+          "set_id": "ELE",
+          "edition": "U",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Patchanee Treedet"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-ELE178.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248377",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248377?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "hPPqNbRhkjBrDjFCMKTrK",
+          "id": "ROS108",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Patchanee Treedet"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS108.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "567097",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/567097?Language=English&Printing=Normal"
+        }
+      ]
+    },
+    {
+      "unique_id": "69MBWzRNRPKgtQhz8PbML",
+      "name": "Visit the 'Winner Takes All'",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Event"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [
+        "Wager"
+      ],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "Until end of turn, your attacks get \"When this attacks a hero, you each create a Gold token, then you **wager** with them. The winner gains control of all Gold tokens the other hero controls.\"",
+      "type_text": "Event",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "8qdmprPg7kckn8ktMTKQh"
+      ],
+      "legality": {
+        "blitz_legal": false,
+        "cc_legal": false,
+        "commoner_legal": false,
+        "ll_legal": false,
+        "silver_age_legal": false,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "7qH97cmGtGWntTLfDGLhk",
+          "id": "SMP013",
+          "set_id": "SMP",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "M",
+          "expansion_slot": false,
+          "artists": [
+            "Tanapon Wachirakul"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/SMP013.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "648176",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/648176?Language=English&Printing=Normal"
+        }
+      ]
+    },
+    {
+      "unique_id": "6CcjWGnThrTmTQFQ9zHMN",
+      "name": "Dash, Inventor Extraordinaire",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "40",
+      "intelligence": "4",
+      "arcane": "",
+      "types": [
+        "Mechanologist",
+        "Hero"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "You may start the game with a Mechanologist item with cost 2 or less in the arena.",
+      "type_text": "Mechanologist Hero",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": false,
+        "cc_legal": true,
+        "commoner_legal": false,
+        "ll_legal": true,
+        "silver_age_legal": false,
+        "blitz_living_legend": false,
+        "cc_living_legend": true,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false,
+        "cc_living_legend_start": "2025-07-11T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "pD89CRQwpw688bHj7Pt6C",
+          "id": "1HP180",
+          "set_id": "1HP",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/1HP180.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "270923",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/270923?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "TkqJLhWpbm9F67RtGhgLH",
+          "id": "ARC001",
+          "set_id": "ARC",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "T",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-ARC/ARC001.png",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "rDdghQjpzfDhnTWt8JWzN",
+              "is_front": true,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "225652",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225652?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "TkWJLCDLgGHmmGHrKndnQ",
+          "id": "ARC001",
+          "set_id": "ARC",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "T",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-U-ARC/U-ARC001.png",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "Cj6C9tJQnD8KpghLCzb7P",
+              "is_front": true,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "225652",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225652?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "NBNg9HgWhmnLJz9zqRLJt",
+          "id": "CRU098",
+          "set_id": "CRU",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-CRU/CRU098.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225999",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225999?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "RCFN7nCGr8NzBGJPkq966",
+          "id": "CRU098",
+          "set_id": "CRU",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2021-U-CRU/U-CRU098.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225999",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225999?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "Kn7kRjMkrkCnwc6zF68CK",
+          "id": "HER009",
+          "set_id": "HER",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER009-CF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225524",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225524?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "Pwj9BdQCdpCMGLQ7jB9Dg",
+          "id": "HER017",
+          "set_id": "HER",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER017-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225545",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225545?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "nRtBqCWG9mBnLjbMg7nTw",
+          "id": "WIN005",
+          "set_id": "WIN",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Sam Yang"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/WIN005-CF.webp",
+          "image_rotation_degrees": 0
+        }
+      ]
+    },
+    {
+      "unique_id": "6CpcdCrJKFkpkdkdLPQqT",
+      "name": "Golden Tipple",
+      "color": "Red",
+      "pitch": "1",
+      "cost": "1",
+      "power": "3",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Pirate",
+        "Action",
+        "Attack"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Go again"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "When this attacks, you may discard a yellow card. If you do, draw a card and create a Gold token.\n\n**Go again**",
+      "type_text": "Pirate Action - Attack",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "8qdmprPg7kckn8ktMTKQh"
+      ],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": true,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false,
+        "cc_banned_start": "2025-09-01T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "cL8Q9FGtz6r89BbBC6DkG",
+          "id": "SEA159",
+          "set_id": "SEA",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Aluísio Cervelle"
+          ],
+          "art_variations": [],
+          "flavor_text": "The Kraken's Barrel serves every flavor of swashbuckling bravado.",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA159.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633296",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633296?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "P6GcrpdtbJCf9hgfBTTh7",
+          "id": "SEA159",
+          "set_id": "SEA",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Aluísio Cervelle"
+          ],
+          "art_variations": [],
+          "flavor_text": "The Kraken's Barrel serves every flavor of swashbuckling bravado.",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA159.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633296",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633296?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "7jGMHBKwF9PMptfrwgkgR",
+          "id": "SEA159",
+          "set_id": "SEA",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Aluísio Cervelle"
+          ],
+          "art_variations": [
+            "AB"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SEA159-TP.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633650",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633650?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "GnKbMQpJqCJNkwkWGKQrR",
+          "id": "SGB011",
+          "set_id": "SGB",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Aluísio Cervelle"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SGB011.webp",
+          "image_rotation_degrees": 0
+        }
+      ]
+    },
+    {
+      "unique_id": "6dNCtnqWjTwr88JCckKDG",
+      "name": "Fiddler's Green",
+      "color": "Red",
+      "pitch": "1",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Generic",
+        "Block"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "When this is put into your graveyard from anywhere, gain 3{h}.",
+      "type_text": "Generic Block",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": false,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": true,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false,
+        "silver_age_banned_start": "2025-10-19T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "HtzNCTN7qG779ccpRWBHj",
+          "id": "AGB013",
+          "set_id": "AGB",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/AGB013.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "633704",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/633704?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "TDNCtJkMTwBk7T7TMFLJg",
+          "id": "ANQ037",
+          "set_id": "ANQ",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [
+            "AB"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ANQ037.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "678590",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/678590?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "9gN9dLNCdKTCDLcPDkPKz",
+          "id": "GEM066",
+          "set_id": "GEM",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/GEM066.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "634079",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/634079?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "ggRnMLKGgpBrRBkjLJnQz",
+          "id": "GEM066",
+          "set_id": "GEM",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/GEM066-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "634079",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/634079?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "MMrN7PkNmgDDzGbKRdJ8f",
+          "id": "SEA212",
+          "set_id": "SEA",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [],
+          "flavor_text": "In the floating gardens of Coralysi, time has lost its way.",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA212.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "631890",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/631890?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "8LRzHPjrWmbLmmmMwkTrn",
+          "id": "SEA212",
+          "set_id": "SEA",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [],
+          "flavor_text": "In the floating gardens of Coralysi, time has lost its way.",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2025-SEA/EN/SEA212.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "631890",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/631890?Language=English&Printing=Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "6kFn87DgtCPtJ9J9M6zGL",
+      "name": "Moment Maker",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "4",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Revered",
+        "Guardian",
+        "Weapon",
+        "Hammer",
+        "Axe",
+        "2H"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "The Crowd Cheers"
+      ],
+      "abilities_and_effects": [
+        "Once per Turn Action"
+      ],
+      "ability_and_effect_keywords": [
+        "Attack"
+      ],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [
+        "Suspense"
+      ],
+      "functional_text": "**Once per Turn Action** - {r}{r}{r}: **Attack**\n\nIf you control 3 or more auras of suspense, this gets +2{p} and \"When this hits a hero, **the crowd cheers** you.\"",
+      "type_text": "Revered Guardian Weapon - Hammer Axe (2H)",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": false,
+        "ll_legal": true,
+        "silver_age_legal": false,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "96wTzz7qhn9pNRrtN8gHm",
+          "id": "APS003",
+          "set_id": "APS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "M",
+          "expansion_slot": false,
+          "artists": [
+            "Jessketchin"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/APS003-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "653803",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/653803?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "KnjrHRhbzqqGkmG6jFLrk",
+          "id": "GEM071",
+          "set_id": "GEM",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Jessketchin"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/GEM071-CF.webp",
+          "image_rotation_degrees": 0
+        },
+        {
+          "unique_id": "wtPjQ8NWqBDdjDRDcgt7T",
+          "id": "GEM071",
+          "set_id": "GEM",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Jessketchin"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://d2wlb52bya4y8z.cloudfront.net/media/cards/large/GEM071-CF.webp",
+          "image_rotation_degrees": 0
+        }
+      ]
+    },
+    {
+      "unique_id": "6PPFnJ8tNtPKN6Km7NWpp",
+      "name": "Teklovossen",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "20",
+      "intelligence": "4",
+      "arcane": "",
+      "types": [
+        "Mechanologist",
+        "Hero",
+        "Young"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [
+        "Once per Turn Instant"
+      ],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "You may play Evos from your banished zone.\n\n**Once per Turn Instant** - {r}{r}{r}: You may play your next Evo this turn as though it were an instant. When you do, draw a card.",
+      "type_text": "Mechanologist Hero - Young",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": false,
+        "commoner_legal": true,
+        "ll_legal": false,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "tTDjnrMDGhH786kJcGMb6",
+          "id": "EVO008",
+          "set_id": "EVO",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "T",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2023-EVO/EN/EVO008.png",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "tTDjnrMDGhH786kJcGMb6",
+              "is_front": false,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "510040",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/510040?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "dBcwdhcRLfdmMwzgfthRm",
+          "id": "HER093",
+          "set_id": "HER",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER093-CF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "526142",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/526142?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "9JdtzPgq8bwKMjtBQJRKK",
+          "id": "HER099",
+          "set_id": "HER",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER099-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "518856",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/518856?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "PqGHcrLGf8THgMbPdRDdT",
+          "id": "PEN339",
+          "set_id": "PEN",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "V",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic"
+          ],
+          "art_variations": [
+            "FA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/PEN339-MV.webp",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "d6MTTGRJWmtHTthdrhMfk",
+              "is_front": true,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "677675",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/677675?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "d6MTTGRJWmtHTthdrhMfk",
+          "id": "PEN339",
+          "set_id": "PEN",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "V",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic"
+          ],
+          "art_variations": [
+            "FA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/PEN339-MV_BACK.webp",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "d6MTTGRJWmtHTthdrhMfk",
+              "is_front": false,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "677675",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/677675?Language=English&Printing=Cold+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "7c9ChFNmpbPDdgD7DNKth",
+      "name": "Count Your Blessings",
+      "color": "Blue",
+      "pitch": "3",
+      "cost": "2",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Generic",
+        "Instant"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "Gain X{h}, where X is 1 plus the number of Count Your Blessings in your graveyard.",
+      "type_text": "Generic Instant",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "cP6jRNBkfK9L8HzGjgpmw",
+        "gFm9BtgB7HbP6CkbjG8gC",
+        "7c9ChFNmpbPDdgD7DNKth"
+      ],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": false,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": true,
+        "cc_banned": true,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": true,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": true,
+        "ll_restricted_affects_full_cycle": false,
+        "blitz_banned_start": "2025-05-20T00:00:00.000Z",
+        "cc_banned_start": "2024-11-11T00:00:00.000Z",
+        "silver_age_banned_start": "2025-10-19T00:00:00.000Z",
+        "ll_restricted_start": "2025-10-06T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "dwWrMdzJDLdCRH8fzdMcr",
+          "id": "LGS359",
+          "set_id": "LGS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Eilene Cherie"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS359-RF.webp",
+          "image_rotation_degrees": 0
+        },
+        {
+          "unique_id": "jPwtfbChKj76L8dD9KDhz",
+          "id": "ROS225",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Eilene Cherie"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS225.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "575195",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/575195?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "kng8Gtzgr7rnmnhJmbCpF",
+          "id": "ROS225",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Eilene Cherie"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS225.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "575195",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/575195?Language=English&Printing=Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "7TjkgnbJ8tghfrkMRnTfW",
+      "name": "Briar",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "20",
+      "intelligence": "4",
+      "arcane": "",
+      "types": [
+        "Elemental",
+        "Runeblade",
+        "Hero",
+        "Young"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Essence of Earth and Lightning"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "**Essence of Earth and Lightning**\n\nThe first time an attack action card you control deals damage to an opposing hero, create an Embodiment of Earth token.\n\nWhenever you play your second 'non-attack' action card each turn, create an Embodiment of Lightning token.",
+      "type_text": "Elemental Runeblade Hero - Young",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "jrcdWNnMQCtrjQqKjd9Fw",
+        "QBwTWNc9FMGQfwHRTTdHj"
+      ],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": false,
+        "commoner_legal": true,
+        "ll_legal": false,
+        "silver_age_legal": true,
+        "blitz_living_legend": true,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false,
+        "blitz_living_legend_start": "2024-09-06T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "bBjrdNFwKD9KF6jqjHWpt",
+          "id": "BRI001",
+          "set_id": "BRI",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/BRI001-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "262530",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/262530?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "wpPrrKKKjcbqMHGWcCfmc",
+          "id": "ELE063",
+          "set_id": "ELE",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "T",
+          "expansion_slot": false,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ELE063.webp",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "MzRGcjhC7LG8dCMHzzcDT",
+              "is_front": true,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "250019",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/250019?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "6bKpqt6znbc9PBrqCzKHW",
+          "id": "ELE063",
+          "set_id": "ELE",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "T",
+          "expansion_slot": false,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-ELE063.width-450.png",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "qtKNrDCHh6cKfLpT6wBHR",
+              "is_front": true,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "250019",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/250019?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "BBG6b78G76jbLBPTLC7tJ",
+          "id": "HER047",
+          "set_id": "HER",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER047-CF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "257321",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/257321?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "RhDqDH7jnqdhTkz6hJ9Pm",
+          "id": "HER064",
+          "set_id": "HER",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/HER064-CF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "391834",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/391834?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "kgJKDWj6JpLQLGcbgckDQ",
+          "id": "ROS255",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "V",
+          "expansion_slot": true,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS255-MV.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577789",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577789?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "fGKt9rcjnkLg6tDcD7zHR",
+          "id": "ROS255",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "V",
+          "expansion_slot": true,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [
+            "FA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS255-MV_BACK.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577789",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577789?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "9kcKWwFjChc6zKgmrbb7T",
+          "id": "SBA001",
+          "set_id": "SBA",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "T",
+          "expansion_slot": false,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SBA001.webp",
+          "image_rotation_degrees": 0
+        },
+        {
+          "unique_id": "FbdrqRkHpWtHtcDr7cFfb",
+          "id": "XXX012",
+          "set_id": "XXX",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Othon Nikolaidis"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/promos/XXX012.png",
+          "image_rotation_degrees": 0,
+          "double_sided_card_info": [
+            {
+              "other_face_unique_id": "PjFp96NmJ7BR6TwPQHnKg",
+              "is_front": true,
+              "is_DFC": false
+            }
+          ],
+          "tcgplayer_product_id": "493521",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/493521?Language=English&Printing=Normal"
+        }
+      ]
+    },
+    {
+      "unique_id": "7zjjndpnJwKGK9gLzmzKq",
+      "name": "Vexing Malice",
+      "color": "Blue",
+      "pitch": "3",
+      "cost": "1",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "2",
+      "types": [
+        "Runeblade",
+        "Action",
+        "Attack"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "Deal 2 arcane damage to target hero.",
+      "type_text": "Runeblade Action - Attack",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": false,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "jqJqgr9cLWMNzk7JBbLGR",
+          "id": "LGS059",
+          "set_id": "LGS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS059-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "250027",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/250027?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "mmkbtgRtHWrK8JqgfCwjq",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON234.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "rPMwTCLqQ8r7zQbtgcknr",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "F",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON234.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "pkhqMMzhMQNkTzdQW6FNQ",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON234.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "cktnBQBPCC7zqNzN6rJbq",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "U",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON234.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "BFbh6QtPWB8PMDWgbGfcj",
+          "id": "SVI028",
+          "set_id": "SVI",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SVI028.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "676830",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/676830?Language=English&Printing=Normal"
+        }
+      ]
+    },
+    {
+      "unique_id": "8b9Fj6hL8WbNF6zDgzJFp",
+      "name": "Belittle",
+      "color": "Yellow",
+      "pitch": "2",
+      "cost": "1",
+      "power": "2",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Generic",
+        "Action",
+        "Attack"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Go again"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "As an additional cost to play Belittle, you may reveal an attack action card with 3 or less base {p} from your hand. If you do, search your deck for a card named Minnowism, reveal it, put it into your hand, then shuffle your deck.\n\n**Go again**",
+      "type_text": "Generic Action - Attack",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "hFFjjMfRw6J8KhBC7Tdzj",
+        "CbJgbPBCGkgwbwkLRPd8m",
+        "BNMTzb6WbFTGp7PFnHD6d"
+      ],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": true,
+        "cc_banned": true,
+        "commoner_banned": true,
+        "ll_banned": false,
+        "silver_age_banned": true,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false,
+        "blitz_banned_start": "2024-11-11T00:00:00.000Z",
+        "cc_banned_start": "2023-01-30T00:00:00.000Z",
+        "commoner_banned_start": "2022-07-01T00:00:00.000Z",
+        "silver_age_banned_start": "2025-10-19T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "dJgWrqzcNPWbfPQQKJmj8",
+          "id": "MON267",
+          "set_id": "MON",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Alief Rusdiatama"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON267.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "86THjrMdg6qwwDTN6Jgdn",
+          "id": "MON267",
+          "set_id": "MON",
+          "edition": "F",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Alief Rusdiatama"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/MON267.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=1st+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "HWK8kprrnnqr6Lwwb9hfw",
+          "id": "MON267",
+          "set_id": "MON",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Alief Rusdiatama"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON267.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "c8tM7GrgRhH8nnbDzJjfF",
+          "id": "MON267",
+          "set_id": "MON",
+          "edition": "U",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Alief Rusdiatama"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/U-MON267.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237798",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237798?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "8CTr7nqzhbgDkPtb8WpCN",
+      "name": "Rampant Growth // Life",
+      "color": "Yellow",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Wizard",
+        "Instant",
+        "Earth",
+        "Instant"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Meld",
+        "Amp X"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "**Meld**\n\n**Amp X**, where X is the total {h} you've gained this turn.\n\n//\n\nGain 1{h}",
+      "type_text": "Wizard Instant // Earth Instant",
+      "played_horizontally": true,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": false,
+        "ll_legal": true,
+        "silver_age_legal": false,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "bTNBRddPHpMtJKgFJfgJF",
+          "id": "LGS341",
+          "set_id": "LGS",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic",
+            "Olga Tereshenko"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS341-CF.webp",
+          "image_rotation_degrees": 0
+        },
+        {
+          "unique_id": "CrPTqHQzNHDH9Qwf87rC9",
+          "id": "ROS017",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "M",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic",
+            "Olga Tereshenko"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS017.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577713",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577713?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "BWmkptqzdjDT7pdRLzbr9",
+          "id": "ROS017",
+          "set_id": "ROS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "M",
+          "expansion_slot": false,
+          "artists": [
+            "Simon Dominic",
+            "Olga Tereshenko"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2024-ROS/EN/ROS017.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "577713",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/577713?Language=English&Printing=Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "9TcGzWhGzwHnn7FqfPbfR",
+      "name": "Lightning Overload",
+      "color": "Red",
+      "pitch": "1",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "4",
+      "types": [
+        "Lightning",
+        "Wizard",
+        "Action"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Starfall"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "Deal 4 arcane damage to any target.\n\n**Starfall** - If an instant card has been put into your graveyard this turn, create a Lightning Flow token.",
+      "type_text": "Lightning Wizard Action",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "NzHWJJzD6JwJ88LmRTTGQ"
+      ],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "Wh9GgWbdFL67pqbjQ7Fmm",
+          "id": "OMN115",
+          "set_id": "OMN",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Orson CaptainSass"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN115.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695189",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695189?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "TNmC9PBcdFRtDL6WRTrcL",
+          "id": "OMN115",
+          "set_id": "OMN",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Orson CaptainSass"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN115.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695189",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695189?Language=English&Printing=Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "brKBKrnCrpggpqBPwbpjN",
+      "name": "Sutcliffe's Research Notes",
+      "color": "Blue",
+      "pitch": "3",
+      "cost": "1",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Runeblade",
+        "Action"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Go again"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "Reveal the top card of your deck. Create a Runechant token for each Runeblade attack action card revealed this way, then put the cards on top of your deck in any order.\n\n**Go again**",
+      "type_text": "Runeblade Action",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "zfrHQjbPkpBmdQGrWcTMB"
+      ],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "bkWBDWLTJk6PmFnJrzggC",
+          "id": "1HP299",
+          "set_id": "1HP",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Marco Wulfr"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/media/images/1HP299.width-450.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "271147",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/271147?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "WthmGTk7kjFpjjnWF6z9t",
+          "id": "CRU156",
+          "set_id": "CRU",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Marco Wulfr"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-CRU/CRU156.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "pGrQpJKbtkh8fRQmFwdrG",
+          "id": "CRU156",
+          "set_id": "CRU",
+          "edition": "F",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Marco Wulfr"
+          ],
+          "art_variations": [
+            "AT"
+          ],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2020-CRU/CRU156-RF.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=1st+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "7bdNdPMqjmdFQCKLQgnnT",
+          "id": "CRU156",
+          "set_id": "CRU",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Marco Wulfr"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2021-U-CRU/U-CRU156.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "bfLfK9k6pTLzjtpMhBLD7",
+          "id": "CRU156",
+          "set_id": "CRU",
+          "edition": "U",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Marco Wulfr"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://storage.googleapis.com/fabmaster/cardfaces/2021-U-CRU/U-CRU156.png",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "226075",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/226075?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "cq6dc8kNzfPMfDcBNBpHM",
+      "name": "Glide Through Starlight",
+      "color": "Yellow",
+      "pitch": "2",
+      "cost": "1",
+      "power": "4",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Lightning",
+        "Action",
+        "Attack"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [
+        "Instant"
+      ],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "**Instant** - {r}, discard this: Prevent the next 1 damage that would be dealt to you this turn. If you prevent damage this way, create a Lightning Flow token.",
+      "type_text": "Lightning Action - Attack",
+      "played_horizontally": false,
+      "referenced_cards": [
+        "NzHWJJzD6JwJ88LmRTTGQ"
+      ],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "mpNJwTtbpkn87WR7TMbqP",
+          "id": "OMN170",
+          "set_id": "OMN",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN170.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695224",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695224?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "dHz8wjDcQMfndTQjc886H",
+          "id": "OMN170",
+          "set_id": "OMN",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Ramza Ardyputra"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN170.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "695224",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695224?Language=English&Printing=Rainbow+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "dMgNNhpNmBbDpjQHKC8j7",
+      "name": "Bolt'n Boots",
+      "color": "",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Ranger",
+        "Equipment",
+        "Legs"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Battleworn"
+      ],
+      "abilities_and_effects": [
+        "Attack Reaction"
+      ],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [
+        "Go again"
+      ],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "**Attack Reaction** - {r}, destroy this: Target arrow attack with {p} greater than its base gets **go again**.\n\n**Battleworn**",
+      "type_text": "Ranger Equipment - Legs",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": true,
+        "ll_legal": true,
+        "silver_age_legal": true,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "JLK6hpt7c7nbJtJHJrWq8",
+          "id": "PEN082",
+          "set_id": "PEN",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Mariusz Gandzel"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/PEN082.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "664619",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/664619?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "K6ChKDjK7JrRCbW6JhhnH",
+          "id": "PEN082",
+          "set_id": "PEN",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Mariusz Gandzel"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/PEN082.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "664619",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/664619?Language=English&Printing=Cold+Foil"
+        },
+        {
+          "unique_id": "HbH7jLjWbTCTTKh9ckpBb",
+          "id": "SAZ008",
+          "set_id": "SAZ",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Mariusz Gandzel"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SAZ008.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "676547",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/676547?Language=English&Printing=Normal"
+        }
+      ]
+    },
+    {
+      "unique_id": "Ngk6PkmH6JQnfdC9zg8fQ",
+      "name": "Go Bananas",
+      "color": "Yellow",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Generic",
+        "Instant"
+      ],
+      "traits": [],
+      "card_keywords": [],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
+      "interacts_with_keywords": [],
+      "functional_text": "Name an action card. Open and reveal a booster pack of Flesh and Blood and put all cards with the chosen name into your hand. If the booster pack does not contain a card with the chosen name, you may repeat this process.",
+      "type_text": "Generic Instant",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": false,
+        "cc_legal": false,
+        "commoner_legal": false,
+        "ll_legal": false,
+        "silver_age_legal": false,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": true,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false,
+        "upf_banned_start": "2023-05-05T00:00:00.000Z"
+      },
+      "printings": [
+        {
+          "unique_id": "bjpdwt6hgp8GMhDj6hjpg",
+          "id": "LSS002",
+          "set_id": "LSS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Rachel Alderson"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LSS002-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225624",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225624?Language=English&Printing=Rainbow+Foil"
+        }
+      ]
+    }
+  ]
+}

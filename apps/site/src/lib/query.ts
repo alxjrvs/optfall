@@ -322,13 +322,3 @@ export function leaves(node: QueryNode): readonly QueryLeaf[] {
       return node.children.flatMap(leaves);
   }
 }
-
-/**
- * Whether the tree contains anything that could restrict the corpus.
- *
- * An empty query and a query made entirely of rejected tokens are different
- * situations with the same tree, and only the first should show the browse.
- */
-export function isEmpty(node: QueryNode | null): boolean {
-  return node === null || leaves(node).length === 0;
-}

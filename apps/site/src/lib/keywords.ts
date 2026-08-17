@@ -40,9 +40,10 @@
  * in the vocabulary, so resolving to it is reading the rules correctly rather
  * than approximating them. That pass takes coverage from 71/145 to 137/145.
  *
- * WHAT IS LEFT OVER IS PUBLISHED, NOT SWALLOWED. {@link unmatchedKeywords}
- * exists so the gap is a number on a page rather than a silence.
- * `docs/PLAN.md`: "A stale Optfall must look stale."
+ * WHAT IS LEFT OVER IS PUBLISHED, NOT SWALLOWED. {@link keywordCoverage}
+ * returns the gap as `unmatched`, and `/about` renders it, so it is a number on
+ * a page rather than a silence. `docs/PLAN.md`: "A stale Optfall must look
+ * stale."
  */
 
 import { RULE_NAMESPACE, type CorpusSection, type RulesCorpus } from "./search";
@@ -325,14 +326,6 @@ export function keywordCoverage(
         ? 0
         : Math.round((matched / baseForms.length) * 100),
   };
-}
-
-/** Card keywords that resolve to no rule, sorted. The published gap. */
-export function unmatchedKeywords(
-  vocabulary: ReadonlyMap<string, CorpusSection>,
-  allCardKeywords: readonly string[],
-): readonly string[] {
-  return keywordCoverage(vocabulary, allCardKeywords).unmatched;
 }
 
 /* -------------------------------------------------------------------------- */

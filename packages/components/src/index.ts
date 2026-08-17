@@ -81,59 +81,6 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
 /* -------------------------------------------------------------------------- */
 
 /**
- * The pitch jewel — an eight-sided cut stone carrying its numeral. Shape,
- * number and colour state the same fact three times.
- *
- * `value` is required and the numeral is always rendered: colour is the
- * redundant channel, not the primary one. There is deliberately no prop that
- * hides the numeral, because the accessible rendering is the only rendering.
- */
-export interface PitchJewelProps {
-  readonly value: PitchValue;
-  /** Rendered size, in token steps rather than pixels. */
-  readonly size?: "sm" | "md" | "lg";
-  /** Accessible label. Defaults to the pitch value spoken in full. */
-  readonly label?: string;
-}
-
-/**
- * The pitch rule — the same fact as the jewel, rendered for UNDER A CARD FACE.
- *
- * The two divide by what the surface can afford, not by preference. Wherever
- * there is a line of type, the jewel goes beside it and carries its numeral;
- * under a picture there is no line and no room, and a scattering of stones over
- * a grid of card art competes with the art. So the mark becomes an underline
- * under the name, which is what a caption's mark looks like.
- *
- * `values` is plural where the jewel's `value` is singular, and that is the
- * other half of why this is a second primitive rather than a variant: a card
- * page shows one card, so it has one pitch; a cell in a card index stands for a
- * NAME, and a name in this game is commonly three cards at three pitches.
- *
- * There is deliberately no prop that turns the accessible name off. On the
- * jewel the numeral is the primary channel and colour the redundant one; here
- * there is no room for a numeral, so the written name IS the redundant channel
- * and removing it would leave meaning carried by fill colour alone.
- */
-export interface PitchRuleProps {
-  readonly values: readonly PitchValue[];
-  /** Rendered size, in token steps rather than pixels. */
-  readonly size?: "sm" | "md";
-  /** Accessible label. Defaults to the values spoken in full. */
-  readonly label?: string;
-}
-
-/**
- * Corner ids in CSS logical order — block axis first, then inline, exactly as
- * `border-start-start-radius` names them. Not `top-left`, because a plate flips
- * with writing direction and its ornament flips with it.
- *
- * It lives in the contract layer rather than inside either component because
- * two of them have to agree about it: `BevelledPlate` passes one of these ids
- * to its `corner` snippet, and `FiligreeCorner` consumes it to decide which way
- * to mirror the motif. Declared twice, the two sets agreed by coincidence.
- */
-/**
  * The symbols the Comprehensive Rules names, at 1.12.4a-h plus 1.12.2.
  *
  * Kept beside `StatKind` deliberately: the two overlap on `power`, `defence`,
@@ -173,14 +120,17 @@ export type StatKind =
   | "intellect"
   | "arcane";
 
+/**
+ * Corner ids in CSS logical order — block axis first, then inline, exactly as
+ * `border-start-start-radius` names them. Not `top-left`, because a plate flips
+ * with writing direction and its ornament flips with it.
+ *
+ * It lives in the contract layer rather than inside either component because
+ * two of them have to agree about it: `BevelledPlate` passes one of these ids
+ * to its `corner` snippet, and `FiligreeCorner` consumes it to decide which way
+ * to mirror the motif. Declared twice, the two sets agreed by coincidence.
+ */
 export type PlateCorner = "start-start" | "start-end" | "end-start" | "end-end";
-
-export const PLATE_CORNERS: readonly PlateCorner[] = [
-  "start-start",
-  "start-end",
-  "end-start",
-  "end-end",
-];
 
 /**
  * How many rows a page of results carries — a count, or every one of them.
@@ -203,196 +153,6 @@ export const PLATE_CORNERS: readonly PlateCorner[] = [
  * the surface states them.
  */
 export type PageSize = number | "all";
-
-/**
- * A struck plate: square corners, light top edge, dark bottom edge.
- *
- * **The plate hosts panel filigree; it does not draw it.** With
- * `ornament="panel-corner"` it opens four slots — placed *and sized* by the
- * plate, since only the plate knows where its corners are — and renders a
- * `corner` render prop into each, passing the {@link PlateCorner} id. The
- * caller composes `FiligreeCorner role="panel-corner" corner={id}` in, which
- * keeps scrollwork rationed by the call site that can see the whole screen
- * rather than by a plate that can only see itself. The render prop is
- * deliberately not typed here: it is a rendering concern and stays local to the
- * component, exactly as `children` does. (It was a Svelte `snippet` until
- * Phase 6; the division of labour is unchanged.)
- */
-export interface BevelledPlateProps {
-  readonly emphasis?: "flat" | "raised" | "sunken";
-  /** Which edges carry the bevel highlight. Defaults to both. */
-  readonly edges?: readonly BevelEdge[];
-  /** Feature panels may carry filigree at their corners; nothing else may. */
-  readonly ornament?: Extract<OrnamentRole, "panel-corner">;
-}
-
-/**
- * A notched state pill. The clipped corner is the only ornament in the system
- * and it always means something: this thing carries state.
- */
-export interface StatePillProps {
-  readonly tone: StateTone;
-  /**
-   * Label text, supplied by the caller and never composed by a component — the
-   * corpus owns the wording of a verdict — and it must *name the state*
-   * (`"Banned"`, not `"Blitz"`), because the text is the primary channel and
-   * colour is the redundant one.
-   *
-   * Required is not the same as non-empty, and the implementation closes that
-   * gap: `label=""` type-checks but renders the tone spoken in full rather than
-   * an empty coloured chip, which would leave colour and the notch as the sole
-   * carriers of meaning. Same argument as {@link CARD_IMAGE_COPYRIGHT} — a
-   * required prop a caller can satisfy incorrectly is a convention, not a
-   * contract.
-   */
-  readonly label: string;
-}
-
-/**
- * The brass seal — judge attribution on a verified ruling, and the single
- * place brass is allowed to appear.
- */
-export interface BrassSealProps {
-  /** The judge's name, exactly as they gave it. */
-  readonly judge: string;
-  /** Date the ruling was given, `YYYY-MM-DD`. */
-  readonly date: string;
-  /** The rules version the ruling was answered under. */
-  readonly rulesVersion: string;
-}
-
-/**
- * A citation: a permanent identifier you can paste into an argument.
- *
- * It used to be marked by the monospace face, on the rule "if it is monospaced
- * in this system, you can cite it". That rule stopped being true as the same
- * face spread to eyebrows, pills and stat labels — chrome, not identifiers — so
- * the face was retired. A citation is now marked by being one: a link, in the
- * accent, next to the thing it cites.
- */
-export interface CitationProps {
-  /** Permanent rule identifier, such as `cr:8.3.4b`. */
-  readonly ruleId: string;
-  /** Permalink to the addressable section. */
-  readonly href: string;
-  /** Document version the citation was read from. */
-  readonly version?: string;
-}
-
-/**
- * Filigree, in one of its three sanctioned roles. Never on a control.
- *
- * **It draws scrollwork and owns no layout.** One instance is *one* ornament,
- * and every role is hosted by a primitive that already knows where the ornament
- * goes — which is the contract both sides kept getting wrong, so it is written
- * here rather than in either component:
- *
- * | Role | Host | What the host owns | What this owns |
- * |---|---|---|---|
- * | `panel-corner` | `BevelledPlate` (`ornament="panel-corner"`) | Four slots, placed and sized; passes the {@link PlateCorner} id to its `corner` snippet | The drawing, mirrored per corner |
- * | `card-corner` | The card frame | The same four slots, at the lighter card size | The drawing, mirrored per corner |
- * | `section-rule` | `OrnamentalRule` (`ornament`) | The `<hr>`, both hairlines, the vertical rhythm | A bare centred figure — no lines, no `role="separator"` |
- *
- * There is deliberately no label prop, and this is the one primitive where an
- * absent accessible name is correct: the ornament carries no information, so it
- * is `aria-hidden` unconditionally in all three roles. Remove every ornament in
- * the library and nothing is lost — which is what "decoration" has to mean.
- */
-export interface FiligreeProps {
-  readonly role: OrnamentRole;
-  /**
-   * Which corner of the frame this instance draws. Selects the mirroring of the
-   * motif and nothing else; the host slot supplies the position. Defaults to
-   * `start-start`, and is ignored in the `section-rule` role.
-   */
-  readonly corner?: PlateCorner;
-}
-
-/**
- * The section rule — a hairline divider, optionally carrying the centred
- * filigree ornament. This is the primitive that replaces the card: where a
- * lesser system would box a section, this one draws a line and moves on.
- *
- * It owns every part of a rule that is not the drawing — the `<hr>`, both
- * hairlines and the vertical rhythm — because a rule is structure. See
- * {@link FiligreeProps} for the division of labour with the ornament.
- */
-export interface OrnamentalRuleProps {
-  /**
-   * Open the centre of the rule and mount the filigree. Defaults to `false`
-   * because ornament is rationed: a screen gets one of these at most, and the
-   * plain hairline is overwhelmingly the common case.
-   */
-  readonly ornament?: boolean;
-  /**
-   * Render a line that is *not* a thematic break — furniture inside a plate
-   * rather than a division between sections. Hidden from assistive technology
-   * entirely, which is the honest rendering of a decoration.
-   *
-   * It defaults to `false` because the expensive mistake runs in one direction
-   * only. A screen reader announcing "separator" between every header and its
-   * body, on every card page, is noise that trains people to ignore the one
-   * that meant something — so a decorative line has to be *asked for*, and the
-   * default is the semantic `<hr>`.
-   */
-  readonly decorative?: boolean;
-  /**
-   * Accessible name for the break, such as the section it introduces.
-   *
-   * **Its default is deliberately absence**, which is the one place this
-   * library departs from "the accessible name is a prop with a sensible
-   * default". A `separator` needs no name to be understood — it is already
-   * announced by its role — so a default here would be invented text read
-   * aloud on every rule in the interface, which is the same noise `decorative`
-   * exists to prevent. Supply one only when the break genuinely names
-   * something, and never as a description of the line itself.
-   */
-  readonly label?: string;
-}
-
-/**
- * The mark — three interlocked links.
- *
- * It says what the tool DOES rather than what the game is: Optfall's whole
- * claim is the joins it makes, and a chain is that drawn. `docs/DESIGN.md`
- * records why the cut jewel it replaced was retired.
- *
- * It is drawn from a game *mechanic* and from plain geometry rather than from
- * Legend Story Studios' visual identity, which is what keeps it clear of the
- * policy's prohibition on any close semblance to their logos.
- */
-export interface MarkProps {
-  readonly size?: "sm" | "md" | "lg";
-  /**
-   * Which fill set.
-   *
-   * `pitch` is canonical — one link per pitch value — and is the one place this
-   * system spends the pitch palette on something that is not a pitch value; see
-   * `docs/DESIGN.md`. `ink` fills the outer links with `currentColor`, so a
-   * lockup takes the colour of the word beside it and lights up as one object.
-   *
-   * It is on the published type because it was missing from it: the component
-   * accepted `variant` and this interface did not, so a consumer typing against
-   * the package could not express `variant="ink"` at all.
-   */
-  readonly variant?: "pitch" | "ink";
-  /**
-   * Accessible name, defaulting to the product's own. A blank falls back to
-   * that default rather than through it — `title=""` must not be able to strip
-   * the name off a `role="img"`.
-   */
-  readonly title?: string;
-  /**
-   * Render the mark as pure decoration: `aria-hidden`, no role, no name.
-   *
-   * It exists so that "hide it" and "name it" are two questions rather than
-   * one. Without it, the caller who legitimately wants a silent mark — beside a
-   * visible "Optfall" wordmark, where announcing the name twice is noise —
-   * reaches for `title=""`, which is the single spelling that produces an
-   * unnamed image instead of a hidden one.
-   */
-  readonly decorative?: boolean;
-}
 
 /**
  * The mark's geometry, in `viewBox` units — the one place it is written down.
@@ -745,6 +505,41 @@ export const CARD_IMAGE_COPYRIGHT = "Card images © Legend Story Studios.";
  *
  * The pitch jewel stays an Optfall-drawn overlay rather than a crop of the
  * printed one, so the accessible rendering travels with the component.
+ *
+ * ---
+ *
+ * **THIS IS THE CONTRACT, AND `CardFaceProps` IS WHAT RENDERS.** Nothing
+ * implements this type. `react/CardFace.tsx` declares its own
+ * {@link CardFaceProps}, which is what `react/index.ts` exports and what every
+ * card page actually uses; it carries nine fields where this carries eight, and
+ * the two are kept in step by nobody.
+ *
+ * That matters more here than it would elsewhere, because `index.test.ts`
+ * points its two compliance cases at **this** type rather than at the one that
+ * renders. Only one of them actually holds:
+ *
+ * - *"is not caller-supplied"* is real. It is a type-level assertion that
+ *   `"copyright" extends keyof CardImageProps` is `false`, so re-adding the
+ *   prop stops it compiling.
+ * - *"carries no legality or rules data"* **asserts nothing.** Its body is
+ *   `const keys: Keys[] = ["src", "alt", "pitch"]` followed by
+ *   `expect(keys).toHaveLength(3)` — a hand-written three-element array is
+ *   three elements long. This interface already has eight fields, so the case
+ *   is not even describing the type it names; adding a `legality` field would
+ *   leave it green.
+ *
+ * Left as found rather than quietly strengthened, because making that case
+ * mean what its title says is a decision about what the contract is — the
+ * honest version is a `Record<keyof …, true>` exhaustiveness check, and it
+ * would fail on the eight fields that exist today.
+ *
+ * Nine other `*Props` interfaces in this file duplicated their components'
+ * shape and have been deleted: eight same-named, plus `FiligreeProps`, which
+ * matched `FiligreeCornerProps` in shape but not in name — so that one dropped
+ * a name from this package's surface rather than shedding a duplicate of one.
+ *
+ * This interface is neither. It is a second, divergent shape that nothing
+ * implements, so removing it would delete the `copyright` assertion with it.
  */
 export interface CardImageProps {
   readonly src: string;
