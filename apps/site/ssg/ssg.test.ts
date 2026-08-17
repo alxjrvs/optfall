@@ -7,6 +7,8 @@
  * reports success in all three cases, which is why they are worth a test each.
  */
 
+import { readFileSync } from "node:fs";
+
 import { describe, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -2110,6 +2112,34 @@ describe("the nav collapses to a disclosure without a script", () => {
     expect(render("/sets")).toMatch(
       /<a href="\/sets" aria-current="page">Sets<\/a>/,
     );
+  });
+
+  test("the collapse is actually wired, container name and all", () => {
+    /*
+     * THE ONE PART OF THIS FEATURE MARKUP CANNOT SHOW.
+     *
+     * Every other test here reads rendered HTML, and the HTML is identical at
+     * both widths — the collapse lives entirely in the stylesheet. Delete the
+     * `@container` block, or rename `container-name`, and every desktop page
+     * silently becomes a hamburger with the whole suite green. That is the same
+     * class of silent regression the sibling-structure test exists for, and it
+     * is worth a cheap assertion given `check-tokens.ts` grew an exemption
+     * specifically so this one breakpoint could be written down.
+     *
+     * The NAME is the half that rots quietly: a query naming a container that
+     * no longer exists does not error, it just never matches.
+     */
+    const css = readFileSync(
+      new URL("./SiteHeader.css", import.meta.url),
+      "utf-8",
+    );
+    const declared = /container-name:\s*([a-z-]+)/.exec(css)?.[1];
+    expect(declared).toBe("bar");
+    expect(css).toContain(`@container ${declared} (min-inline-size:`);
+
+    /* Range syntax is not parsed by Safari 16.0–16.3, which would drop the
+       whole block and leave a desktop permanently collapsed. */
+    expect(css).not.toMatch(/@container[^{]*(?:>=|<=|[^:]>[^=])/);
   });
 
   test("the front door has no bar at all, so it has no menu", () => {

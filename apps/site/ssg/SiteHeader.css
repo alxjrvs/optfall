@@ -127,9 +127,25 @@
   font-size: var(--of-type-size-small);
 }
 
+/*
+  BIG ENOUGH TO HIT, WHICH IT WAS NOT.
+
+  A 16px glyph with 4px of padding is a 24×24 target — the bare FLOOR of WCAG
+  2.2 SC 2.5.8, and half of what every platform guideline asks for, on the only
+  navigation control a phone gets. The field a few pixels to the left was
+  enlarged in this same change on exactly that argument; a menu button is not
+  the place to make the opposite one.
+
+  44px, composed from tokens rather than written as a number: `loosest` is 40px
+  and `tighter` is 4px. The padding stays small and the MINIMUM does the work,
+  so the glyph is not blown up to fill a target that only needs to be pressable.
+*/
 .of-bar__menu-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-inline-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
+  min-block-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
   padding: var(--of-space-tighter);
   border-radius: var(--of-bevel-radius);
   color: var(--of-color-ink-muted);
@@ -217,8 +233,15 @@
   this nav rather than chosen from a device. Below it the summary is the
   control; at and above it the summary is gone and the list is the row it always
   used to be, so a desktop reader never has to open anything.
+
+  `(min-inline-size: …)` RATHER THAN `(inline-size >= …)`, which is the same
+  query in the newer range syntax. Safari shipped container queries in 16.0 and
+  range syntax in 16.4, and a prelude an engine cannot parse takes the whole
+  block with it — which here means a permanent hamburger on a desktop, the exact
+  old-engine failure the sibling structure was built to avoid. The older
+  spelling is unambiguous everywhere and costs nothing.
 */
-@container bar (inline-size >= 44rem) {
+@container bar (min-inline-size: 44rem) {
   .of-bar__menu-button {
     display: none;
   }
