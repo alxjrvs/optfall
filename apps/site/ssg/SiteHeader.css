@@ -23,6 +23,27 @@
 .of-bar {
   container-type: inline-size;
   container-name: bar;
+  /*
+    THE BAR OWNS ITS PLACE IN THE STACK, RATHER THAN INHERITING ONE.
+
+    The menu panel overhangs the page by ~180px, and its `z-index` is scoped to
+    whatever stacking context encloses it. `container-type` applies layout
+    containment, which by spec establishes one — so the panel's `z-index: 1`
+    stops competing with the page and starts competing only with its siblings,
+    and a positioned box in `<main>` (which comes later in document order) could
+    paint over an open menu.
+
+    MEASURED, AND IT DOES NOT REPRODUCE IN CHROME 151: the panel still wins
+    against a `position: relative` box placed under it, and `contain` computes
+    to `none` there despite `container-type` being set. So this is not a fix for
+    a bug on this engine. It is the difference between a panel that is on top
+    because we said so and one that is on top because of how a browser happens
+    to interpret containment it was given for an unrelated reason — and the
+    second is not something to leave to chance on the only navigation a phone
+    gets.
+  */
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

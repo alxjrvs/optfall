@@ -183,6 +183,16 @@ function styleRegions(
 function violationsIn(file: string, source: string): Violation[] {
   const found: Violation[] = [];
 
+  /*
+   * TRUE WHILE AN AT-RULE'S CONDITION IS STILL OPEN, so a prelude that wraps is
+   * exempt on every line it occupies rather than only on the one carrying the
+   * `@`. The per-line regex this replaced could not see a continuation — it
+   * blanked `@container bar` and then failed the build on the `44rem` sitting
+   * alone on the next line, with no spelling of the query that would have
+   * satisfied it.
+   */
+  let inPrelude = false;
+
   for (const { line, text } of styleRegions(file, source)) {
     const code = text.replace(/\/\*.*?\*\//g, "");
     if (
@@ -222,6 +232,15 @@ function violationsIn(file: string, source: string): Violation[] {
      * declarations inside the block were still scanned. Removing the prelude
      * and scanning what is left keeps the promise on one line and many.
      *
+     * NOT ANCHORED TO THE START OF THE LINE, and that matters for a prelude
+     * that wraps. `^\s*@…[^{]*` blanks a first line that opens an at-rule and
+     * then scans the CONTINUATION line unmodified — so
+     * `@container bar` / `(min-inline-size: 44rem) {` fails the build on a
+     * `44rem` with no spelling of the query that would satisfy it, while the
+     * first line gets exactly the skip-the-whole-line treatment this comment
+     * argues against. Matching the at-rule wherever it sits on the line closes
+     * both halves.
+     *
      * Only lengths, too: a colour has no business in a query condition, so if
      * one ever turns up there it should still fail.
      *
@@ -231,7 +250,27 @@ function violationsIn(file: string, source: string): Violation[] {
      * only stops the check from being the reason a genuinely necessary one
      * cannot be written down.
      */
-    const styled = code.replace(/^\s*@(?:container|media)\b[^{]*/, "");
+    /*
+     * The prelude is CUT and the rest of the line is kept, which is what makes
+     * the exemption narrow: a declaration sharing a line with an at-rule —
+     * `@container bar (min-inline-size: 44rem) { .x { padding: 12px } }` — is
+     * still scanned, and so is every line inside the block.
+     */
+    let styled = code;
+    if (inPrelude) {
+      const opens = styled.indexOf("{");
+      styled = opens === -1 ? "" : styled.slice(opens);
+      inPrelude = opens === -1;
+    }
+    const at = styled.search(/@(?:container|media)\b/);
+    if (at !== -1) {
+      const opens = styled.indexOf("{", at);
+      styled =
+        opens === -1
+          ? styled.slice(0, at)
+          : styled.slice(0, at) + styled.slice(opens);
+      inPrelude = opens === -1;
+    }
 
     // Lengths that a token could have supplied. `%`, `fr`, `vh`, `vw` and
     // `auto` are deliberately absent: they express layout relationships rather

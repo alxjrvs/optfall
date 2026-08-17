@@ -2144,6 +2144,9 @@ describe("the nav collapses to a disclosure without a script", () => {
 
   test("the front door has no bar at all, so it has no menu", () => {
     const html = render("/");
+    /* `render` returns "" for a route that does not resolve, and two
+       `not.toContain` assertions pass beautifully against nothing. */
+    expect(html).not.toBe("");
     expect(html).not.toContain("of-bar__menu");
     expect(html).not.toContain("of-bar__nav");
   });
