@@ -27,7 +27,16 @@ export type HeaderSection = "cards" | "sets" | "rules" | "syntax";
 export interface SiteHeaderProps {
   /** Which section is current, for `aria-current`. */
   readonly section?: HeaderSection | undefined;
-  /** The search field. Off on the page that already has one as its hero. */
+  /**
+   * The search field. On everywhere; nothing turns it off today.
+   *
+   * IT USED TO READ "off on the page that already has one as its hero", which
+   * is now false in both halves: no page passes `false`, and `/cr` is
+   * specifically a page with a hero AND this field — its hero searches the
+   * rules and this one searches cards. See `PageResult.headerSearch` for the
+   * whole argument; the flag survives for the front door, which removes the bar
+   * entirely today and would need this the moment it grew one.
+   */
   readonly field?: boolean;
   /**
    * The id of a page element describing the field, for `aria-describedby`.
