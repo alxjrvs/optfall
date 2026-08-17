@@ -130,8 +130,11 @@ Designing colour as the redundant channel costs nothing and fixes it for everyon
 downstream.
 
 **There are four stones, not three, and the fourth is why the numeral rule is
-load-bearing.** Upstream printed a pitch 4 — a purple strip on a Shadow resource
-gem — and one card in the corpus carries it. Purple is the one hue in this
+load-bearing.** Legend Story Studios printed a pitch 4 — a purple strip on a
+Shadow resource gem — and the palette carries it. The corpus pinned in
+`data/cards` does not hold that card yet, so nothing on the site draws this
+stone today; it is here so the day the pin moves is not also the day somebody
+picks a purple. Purple is the one hue in this
 palette that cannot be given a luminance gap: bright enough to separate from
 pitch three and its own numeral fails contrast; dark enough for white ink and it
 sits where blue sits. So three and four are told apart by hue alone for a reader

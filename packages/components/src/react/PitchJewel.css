@@ -159,8 +159,9 @@
   --ink: var(--of-color-pitch-three-ink);
 }
 
-/* The fourth stone. One card carries it — `tokens.ts` records which, and why
-   its numeral is doing more work than the other four's. */
+/* The fourth stone: one card in the printed game, and none in the corpus this
+   repository currently pins. `tokens.ts` records both of those, and why this
+   stone's numeral is doing more work than the other four's. */
 .of-jewel--tone-four {
   --stone: var(--of-color-pitch-four);
   --ink: var(--of-color-pitch-four-ink);

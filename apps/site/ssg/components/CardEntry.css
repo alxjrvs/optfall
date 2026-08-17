@@ -164,10 +164,11 @@
   --card-pitch: var(--of-color-pitch-three);
 }
 
-/* Pitch four is one card — see `color.pitch.four` in `tokens.ts` for the
-     argument. It is enumerated here rather than left to the default because the
-     default is the no-pitch grey, and a card that HAS a pitch value must not be
-     drawn as one that does not. */
+/* Pitch four is one card in the printed game and none in the pinned corpus —
+     see `color.pitch.four` in `tokens.ts` for both halves of that. It is
+     enumerated here rather than left to the default because the default is the
+     no-pitch grey, and a card that HAS a pitch value must not be drawn as one
+     that does not. */
 .of-card__panel[data-pitch="4"] {
   --card-pitch: var(--of-color-pitch-four);
 }
@@ -320,6 +321,27 @@
   padding-block-start: var(--of-space-tighter);
   border-block-start: calc(var(--of-bevel-width) * 2) solid
     var(--card-pitch, var(--of-color-pitch-none));
+
+  /*
+      AND THE STROKE GIVES ITS OWN HEIGHT BACK, WHICH IS THE PART THAT IS NOT
+      OBVIOUS. This band is `align-items: start` so a name that wraps grows
+      downward past a jewel that stays at the top — which also means the
+      heading's box top IS the row's top, and anything added above the text
+      pushes the text down. Measured: the padding and the border together moved
+      the name's first line 6px down, taking its optical centre from 1.1px above
+      the jewel's to 4.9px below it, so the one line the band exists to centre
+      stopped being level with the two corners it sits between.
+
+      The negative margin is exactly what the two declarations above add and
+      nothing else, so the TEXT lands where it landed before this stroke existed
+      and the stroke occupies space that was already the plate's top padding.
+      Written as the same two terms rather than as a number, so it cannot drift
+      out of agreement with them.
+    */
+  margin-block-start: calc(
+    -1 *
+    (var(--of-space-tighter) + var(--of-bevel-width) * 2)
+  );
 }
 
 /* Same argument, one step down the scale: the type line shares the bottom

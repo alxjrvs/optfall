@@ -64,9 +64,10 @@ describe("PitchJewel", () => {
 
   test("the fourth pitch value gets its own stone, not the grey fallback", () => {
     /*
-     * ONE CARD IN THE CORPUS CARRIES IT, which is exactly why it is pinned. The
-     * tone comes out of a lookup with a `?? "none"` fallback, so a `TONES`
-     * array left one entry short does not throw and does not fail a typecheck:
+     * NOTHING IN THE PINNED CORPUS RENDERS IT YET, which is exactly why it is
+     * pinned here. The tone comes out of a lookup with a `?? "none"` fallback,
+     * so a `TONES` array left one entry short does not throw and does not fail
+     * a typecheck:
      * it silently renders a purple-strip card as a card with NO pitch value,
      * next to a numeral that says 4. The rare value is the one nobody would
      * notice going wrong.

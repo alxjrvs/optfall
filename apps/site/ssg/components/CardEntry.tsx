@@ -156,11 +156,13 @@ const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
  * No-pitch sorts last, otherwise ascending.
  *
  * THE SENTINEL IS ABOVE EVERY PITCH VALUE, NOT EQUAL TO THE HIGHEST ONE. It was
- * `4`, which was one more than the largest pitch that existed — and then a
- * fourth pitch value was printed, at which point "last" and "pitch 4" were the
- * same rank and a group holding both ordered them by whichever the sort
- * happened to see first. `NO_PITCH_RANK` is deliberately far clear of the
- * scale so the next value upstream invents cannot repeat that.
+ * `4`, which was one more than the largest pitch that existed — and a fourth
+ * pitch value has since been printed, at which point "last" and "pitch 4" are
+ * the same rank and a group holding both would order them by whichever the sort
+ * happened to see first. No such group exists in the pinned corpus yet, so this
+ * is a repair made before the fault rather than after it. `NO_PITCH_RANK` is
+ * deliberately far clear of the scale so the next value upstream invents cannot
+ * repeat it either.
  */
 const NO_PITCH_RANK = 10;
 
@@ -952,10 +954,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             {/*
               THE PANEL CARRIES ITS PITCH, so the stylesheet can tint the one
               thing on the page that is allowed to say which version this is
-              without words: the rule under the name. A data attribute rather
-              than an inline custom property, because the four values are a
+              without words: the rule over the name. A data attribute rather
+              than an inline custom property, because the pitch values are a
               closed set the theme already names — `data-pitch` selects one of
-              them, where a `style=` would let this file mix a colour.
+              them, where a `style=` would let this file mix a colour. The set
+              is five wide now rather than four, which is exactly why it is not
+              spelled out here: the count belongs to `PitchValue`, and a comment
+              that repeats it is a second copy to leave stale.
             */}
             <BevelledPlate emphasis="flat">
               <div className="of-card__panel" data-pitch={page.pitch}>
