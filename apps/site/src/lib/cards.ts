@@ -1045,9 +1045,10 @@ const REFERENCED_BY: ReadonlyMap<string, readonly Card[]> = (() => {
  */
 function pitchRank(card: Card): number {
   /* Above the scale rather than one past it. The sentinel was `4` while `4` was
-     also "a pitch value nobody prints"; upstream prints one now, and a rank
-     shared by "no pitch" and "pitch 4" is an order that depends on input
-     order. */
+     also "a pitch value nobody prints" — no longer true of the game, though the
+     pinned corpus has yet to carry one. A rank shared by "no pitch" and
+     "pitch 4" is an order that depends on input order, and the day the pin
+     moves is the wrong day to find that out. */
   return card.pitch === "" ? 10 : Number(card.pitch);
 }
 

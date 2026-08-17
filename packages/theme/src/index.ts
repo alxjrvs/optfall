@@ -172,12 +172,16 @@ export type BevelEdge = "top" | "bottom";
  * one — red and yellow are the classic deuteranopia confusion pair, and pitch
  * is the most-read value on a card.
  *
- * `4` IS REAL AND IT IS RARE — one card in the corpus, a purple strip on a
- * Shadow resource gem. It is in the union rather than handled as an exception
- * because the union is what every renderer switches on: widened here, a jewel
- * or a band that forgot the fourth tone fails the typecheck, and a decoder that
- * silently mapped it to `0` — "no pitch value" — would have been the quiet
- * wrong answer instead.
+ * `4` IS REAL AND IT IS RARE — a purple strip on a Shadow resource gem, one
+ * card in the printed game. The corpus pinned in `data/cards` does not carry it
+ * yet, so this widening is the renderers being ready ahead of the data rather
+ * than a response to a card on screen today.
+ *
+ * It is in the union rather than handled as an exception because the union is
+ * what every renderer switches on: widened here, a jewel or a band that forgot
+ * the fourth tone fails the typecheck, and a decoder that silently mapped it to
+ * `0` — "no pitch value" — would have been the quiet wrong answer instead. Both
+ * of those failures are silent, which is the argument for paying now.
  */
 export type PitchValue = 0 | 1 | 2 | 3 | 4;
 
