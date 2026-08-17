@@ -723,7 +723,7 @@ a framework deletion cannot be bisected.
 it. Astro produced that file from an endpoint route — a `.ts` under `src/pages/`
 exporting `GET` — and the port had no equivalent, so the file was not a page, no
 count included it, and nothing missed it. It is now an explicit
-`GENERATED_ASSETS` registry in `ssg/assets.ts`, deliberately a list rather than a
+`generatedAssets()` registry in `ssg/assets.ts`, deliberately a list rather than a
 directory convention: a convention is precisely the mechanism that produces
 nothing, silently, when it is not followed.
 

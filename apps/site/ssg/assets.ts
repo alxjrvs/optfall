@@ -22,7 +22,6 @@
 
 import { MARK_GEOMETRY } from "optfall-components";
 import { type TokenId, type TokenTable, themes } from "optfall-theme";
-import sharp from "sharp";
 
 /**
  * The colour the platform paints around the app, and the one the browser paints
@@ -226,6 +225,17 @@ function iconSvg(safeZone: number): string {
  * diff.
  */
 async function iconPng(safeZone: number, size: number): Promise<Uint8Array> {
+  /*
+   * IMPORTED HERE RATHER THAN AT THE TOP OF THE FILE, and for the same reason
+   * `generatedAssets()` is a function: `THEME_COLOUR` lives in this module and
+   * `document.tsx` reads it, so a static import would make every consumer of one
+   * string — the test suite included — load sharp's NATIVE BINARY. Deferring it
+   * to the one call that needs it means the only thing that can fail on a
+   * machine without that binary is the build, which is the only thing that ever
+   * wanted it.
+   */
+  const { default: sharp } = await import("sharp");
+
   const rendered = await sharp(Buffer.from(iconSvg(safeZone)))
     .resize(size, size)
     .png()
@@ -244,11 +254,15 @@ async function iconPng(safeZone: number, size: number): Promise<Uint8Array> {
  * icon that was a screenshot of the page. Both are listed, largest last, and
  * every consumer takes the one it understands.
  *
- * `display: "minimal-ui"` RATHER THAN `"standalone"`, and this one is about what
- * the site IS. Optfall's thesis is that every view is a URL — 12,776 of them,
- * each meant to be pasted. `standalone` removes the address bar, which removes
- * the affordance the product is built around. `minimal-ui` keeps a way to see
- * and copy the URL while still installing to a home screen.
+ * `minimal-ui` IS THE INTENT AND `"standalone"` IS THE FALLBACK — read both
+ * lines below before concluding the code contradicts this, because the field
+ * literally spelled `display` is the one that says `standalone`.
+ *
+ * The intent is about what the site IS. Optfall's thesis is that every view is
+ * a URL — 12,776 of them, each meant to be pasted. `standalone` removes the
+ * address bar, which removes the affordance the product is built around.
+ * `minimal-ui` keeps a way to see and copy the URL while still installing to a
+ * home screen.
  *
  * **AND IT IS DECLARED THROUGH `display_override`, BECAUSE ON WebKit
  * `minimal-ui` DOES NOT DEGRADE — IT FALLS OUT OF THE APP ENTIRELY.** The
@@ -438,37 +452,51 @@ function serviceWorkerPurge(): string {
 }
 
 /**
- * THE REGISTRY IS AWAITED NOW, because rasterising is IO and there is no
- * synchronous sharp. That is the whole cost of the change and it is contained
- * here: `build.ts` awaits the list once, and everything else about this file's
- * argument — an explicit list rather than a directory convention, because a
- * convention is what silently produces nothing — is unchanged.
+ * THE REGISTRY IS A FUNCTION, NOT A CONST, AND THE REASON IS WHO IMPORTS THIS
+ * FILE. Rasterising is IO and there is no synchronous sharp, so the array
+ * cannot be built at module scope without a top-level `await` — and a top-level
+ * `await` here is paid by every importer, not just the build.
+ *
+ * The importer that makes this concrete is `THEME_COLOUR`, exported at the top
+ * of this file and read by `document.tsx` for one `<meta>` tag. `ssg.test.ts`
+ * imports `document.tsx`, so an eager version means `bun test` loads a native
+ * module and renders four PNGs in order to ask WHAT COLOUR THE TAB IS — and the
+ * suite acquires a dependency on sharp's platform binary, which is a real thing
+ * to break on a machine the build itself would work on.
+ *
+ * `build.ts` already states this exact principle for `_redirects`, in almost
+ * these words. Deferring the work behind a call is what keeps the statement
+ * true of this file too. Everything else about the argument here — an explicit
+ * list rather than a directory convention, because a convention is what
+ * silently produces nothing when it is not followed — is unchanged.
  */
-export const GENERATED_ASSETS: readonly GeneratedAsset[] = [
-  { path: "favicon.svg", contents: faviconSvg() },
-  /* Full bleed: nothing crops this one. */
-  { path: "icon.svg", contents: iconSvg(1) },
-  /* Inset to the centre 80%, which is all a maskable crop is guaranteed. */
-  { path: "icon-maskable.svg", contents: iconSvg(0.8) },
-  /* The same two insets, rasterised, for the engines that cannot read a vector. */
-  { path: "icon-192.png", contents: await iconPng(1, 192) },
-  { path: "icon-512.png", contents: await iconPng(1, 512) },
-  { path: "icon-maskable-512.png", contents: await iconPng(0.8, 512) },
-  /*
-   * `/apple-touch-icon.png` — 180 px, FULL BLEED, AND NOT NAMED BY THE MANIFEST.
-   *
-   * It is a `<link>` in `document.tsx`, because that is the only channel iOS
-   * reads for this: the manifest's `icons` are ignored for the home-screen
-   * icon on older iOS and overridden by this element on newer.
-   *
-   * FULL BLEED RATHER THAN THE MASKABLE INSET, which looks like the wrong
-   * choice next to the maskable entry above and is not. iOS does not mask to a
-   * circle — it rounds the corners of a square — so the safe-zone padding that
-   * a maskable crop needs would only render the mark small inside empty ground.
-   * The corner radius takes corners, and the mark is a wide ring across the
-   * middle, so nothing of it is inside the rounded-off region.
-   */
-  { path: "apple-touch-icon.png", contents: await iconPng(1, 180) },
-  { path: "manifest.webmanifest", contents: manifest() },
-  { path: "sw-purge.js", contents: serviceWorkerPurge() },
-];
+export async function generatedAssets(): Promise<readonly GeneratedAsset[]> {
+  return [
+    { path: "favicon.svg", contents: faviconSvg() },
+    /* Full bleed: nothing crops this one. */
+    { path: "icon.svg", contents: iconSvg(1) },
+    /* Inset to the centre 80%, which is all a maskable crop is guaranteed. */
+    { path: "icon-maskable.svg", contents: iconSvg(0.8) },
+    /* The same two insets, rasterised, for the engines that cannot read a vector. */
+    { path: "icon-192.png", contents: await iconPng(1, 192) },
+    { path: "icon-512.png", contents: await iconPng(1, 512) },
+    { path: "icon-maskable-512.png", contents: await iconPng(0.8, 512) },
+    /*
+     * `/apple-touch-icon.png` — 180 px, FULL BLEED, AND NOT NAMED BY THE MANIFEST.
+     *
+     * It is a `<link>` in `document.tsx`, because that is the only channel iOS
+     * reads for this: the manifest's `icons` are ignored for the home-screen
+     * icon on older iOS and overridden by this element on newer.
+     *
+     * FULL BLEED RATHER THAN THE MASKABLE INSET, which looks like the wrong
+     * choice next to the maskable entry above and is not. iOS does not mask to a
+     * circle — it rounds the corners of a square — so the safe-zone padding that
+     * a maskable crop needs would only render the mark small inside empty ground.
+     * The corner radius takes corners, and the mark is a wide ring across the
+     * middle, so nothing of it is inside the rounded-off region.
+     */
+    { path: "apple-touch-icon.png", contents: await iconPng(1, 180) },
+    { path: "manifest.webmanifest", contents: manifest() },
+    { path: "sw-purge.js", contents: serviceWorkerPurge() },
+  ];
+}

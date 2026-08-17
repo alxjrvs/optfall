@@ -153,11 +153,15 @@ const checks: Check[] = [
      them leaves the others free to stop being emitted. */
   { path: "/icon-maskable.svg", contentType: "image/svg+xml" },
   /*
-   * THE RASTER SET IS CHECKED FOR THE SAME REASON THE FAVICON IS, and one more
-   * besides: it is the only part of the icon set produced by a rasteriser, so it
-   * is the only part that can vanish because a native module failed to load
-   * rather than because somebody edited a list. That failure is loud in a build
-   * log and silent in the output.
+   * THE RASTER SET IS CHECKED FOR THE SAME REASON THE FAVICON IS: it is derived
+   * rather than committed, so it is code and can break like code — an edited
+   * registry, a renamed path, an `iconPng` call that stops being awaited.
+   *
+   * IT IS NOT HERE TO CATCH A FAILED RASTERISER, which is the tempting thing to
+   * claim and is not true: `assets.ts` calls sharp while the build is deriving
+   * this list, so a native module that will not load throws before a single page
+   * is written. That failure is loud, and a check that runs after a successful
+   * build is not what would surface it.
    */
   { path: "/icon-192.png", contentType: "image/png" },
   { path: "/icon-512.png", contentType: "image/png" },
