@@ -312,7 +312,7 @@ function pitchSegment(card: Card): string {
   return card.pitch === "" ? "0" : card.pitch;
 }
 
-/** `0`, `1`, `2` or `3` — the jewel's own vocabulary. */
+/** `0`, `1`, `2`, `3` or `4` — the jewel's own vocabulary. */
 export function pitchValueOf(card: Card): PitchValue {
   return card.pitch === "1"
     ? 1
@@ -320,7 +320,9 @@ export function pitchValueOf(card: Card): PitchValue {
       ? 2
       : card.pitch === "3"
         ? 3
-        : 0;
+        : card.pitch === "4"
+          ? 4
+          : 0;
 }
 
 /**
@@ -1042,7 +1044,11 @@ const REFERENCED_BY: ReadonlyMap<string, readonly Card[]> = (() => {
  * its O(n log n) calls is the reason the rule exists.
  */
 function pitchRank(card: Card): number {
-  return card.pitch === "" ? 4 : Number(card.pitch);
+  /* Above the scale rather than one past it. The sentinel was `4` while `4` was
+     also "a pitch value nobody prints"; upstream prints one now, and a rank
+     shared by "no pitch" and "pitch 4" is an order that depends on input
+     order. */
+  return card.pitch === "" ? 10 : Number(card.pitch);
 }
 
 /** No-pitch sorts last; otherwise ascending. Total, so the order is stable. */
@@ -1187,7 +1193,7 @@ export const NAME_GROUPS: readonly NameGroup[] = [...BY_NAME_SLUG.entries()]
  * should never need a hop.
  *
  * `byPitch` RATHER THAN `CardPage.pitch`, which is the trap this map exists to
- * avoid. They disagree: `pitchRank` sorts a card with NO pitch LAST (4), while
+ * avoid. They disagree: `pitchRank` sorts a card with NO pitch LAST, while
  * `pitchValueOf` reports it as 0 and would sort it first. Deriving the answer
  * here from the same comparator {@link NAME_GROUPS} uses means the typeahead, the
  * tab strip and the redirect table cannot pick three different versions of one

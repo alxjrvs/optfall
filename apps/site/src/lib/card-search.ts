@@ -934,7 +934,15 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
 
     const digit = Number(encoded.pitches[ordinal] ?? "0");
     pitches.push(
-      (digit === 1 ? 1 : digit === 2 ? 2 : digit === 3 ? 3 : 0) as PitchValue,
+      (digit === 1
+        ? 1
+        : digit === 2
+          ? 2
+          : digit === 3
+            ? 3
+            : digit === 4
+              ? 4
+              : 0) as PitchValue,
     );
 
     const vectorId = Number.parseInt(
@@ -2398,7 +2406,10 @@ function nameDefaultHref(
   versions: readonly CardResultVersion[],
   fallback: string,
 ): string {
-  const rank = (pitch: number): number => (pitch === 0 ? 4 : pitch);
+  /* The sentinel is above every pitch value rather than one past the highest
+     one: `4` used to be both "no pitch, sorts last" and "not a pitch anybody
+     prints", and upstream has since printed a pitch 4. */
+  const rank = (pitch: number): number => (pitch === 0 ? 10 : pitch);
   const first = versions.toSorted((a, b) => rank(a.pitch) - rank(b.pitch))[0];
   return first?.href ?? fallback;
 }

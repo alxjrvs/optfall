@@ -76,6 +76,13 @@
   --band: var(--of-color-pitch-three);
 }
 
+/* The fourth band. Rare enough that a grid will hold one of these and forty of
+   the others, which is the case the accessible name below carries: a band this
+   uncommon is the one a reader is least likely to have learned the colour of. */
+.of-pitch-rule__band--tone-four {
+  --band: var(--of-color-pitch-four);
+}
+
 /*
   NO `prefers-reduced-motion` BLOCK, AND THAT IS A DECISION RATHER THAN AN
   OMISSION. `PitchJewel` carries one, and this file copied it — but neither

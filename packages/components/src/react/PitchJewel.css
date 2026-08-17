@@ -159,6 +159,13 @@
   --ink: var(--of-color-pitch-three-ink);
 }
 
+/* The fourth stone. One card carries it — `tokens.ts` records which, and why
+   its numeral is doing more work than the other four's. */
+.of-jewel--tone-four {
+  --stone: var(--of-color-pitch-four);
+  --ink: var(--of-color-pitch-four-ink);
+}
+
 /* Honour a reduced-motion preference by never introducing motion here at all;
    the jewel is static by design. Declared so the intent is explicit rather than
    accidental. */

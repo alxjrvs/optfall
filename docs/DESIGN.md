@@ -129,6 +129,17 @@ on a card, and it is the same pair the leading commercial scanner app misreads.
 Designing colour as the redundant channel costs nothing and fixes it for everyone
 downstream.
 
+**There are four stones, not three, and the fourth is why the numeral rule is
+load-bearing.** Upstream printed a pitch 4 — a purple strip on a Shadow resource
+gem — and one card in the corpus carries it. Purple is the one hue in this
+palette that cannot be given a luminance gap: bright enough to separate from
+pitch three and its own numeral fails contrast; dark enough for white ink and it
+sits where blue sits. So three and four are told apart by hue alone for a reader
+with deuteranopia or protanopia, and by the numeral for everybody. That is the
+arrangement this section already describes rather than a new exception to it —
+but it is the first stone where the redundant channel is genuinely carrying
+less, and it is written down here rather than discovered later.
+
 ### The pitch rule — the jewel's one exception, and where it applies
 
 **Under a card face, the jewel becomes an underline.** A grid of card art has

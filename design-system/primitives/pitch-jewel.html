@@ -96,6 +96,8 @@
   --of-color-pitch-two-ink: #171307;
   --of-color-pitch-three: #3277bd;
   --of-color-pitch-three-ink: #ffffff;
+  --of-color-pitch-four: #8a4fbf;
+  --of-color-pitch-four-ink: #ffffff;
   --of-color-pitch-facet: #ffffff;
   --of-color-state-legal: #2f7d4f;
   --of-color-state-legal-ink: #ffffff;
@@ -240,6 +242,8 @@
   --of-color-pitch-two-ink: #1a1405;
   --of-color-pitch-three: #245d99;
   --of-color-pitch-three-ink: #ffffff;
+  --of-color-pitch-four: #6f3aa0;
+  --of-color-pitch-four-ink: #ffffff;
   --of-color-pitch-facet: #ffffff;
   --of-color-state-legal: #1f6039;
   --of-color-state-legal-ink: #ffffff;
@@ -385,6 +389,8 @@
     --of-color-pitch-two-ink: #1a1405;
     --of-color-pitch-three: #245d99;
     --of-color-pitch-three-ink: #ffffff;
+    --of-color-pitch-four: #6f3aa0;
+    --of-color-pitch-four-ink: #ffffff;
     --of-color-pitch-facet: #ffffff;
     --of-color-state-legal: #1f6039;
     --of-color-state-legal-ink: #ffffff;
@@ -531,6 +537,8 @@
 --of-color-pitch-two-ink: #1a1405;
 --of-color-pitch-three: #245d99;
 --of-color-pitch-three-ink: #ffffff;
+--of-color-pitch-four: #6f3aa0;
+--of-color-pitch-four-ink: #ffffff;
 --of-color-pitch-facet: #ffffff;
 --of-color-state-legal: #1f6039;
 --of-color-state-legal-ink: #ffffff;
@@ -640,6 +648,7 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 .stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
 .stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
 .stone.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); }
+.stone.p4 { background: var(--of-color-pitch-four); color: var(--of-color-pitch-four-ink); }
 
 .pill {
   display: inline-block; padding: var(--of-space-tightest) var(--of-space-tight);
@@ -824,10 +833,11 @@ ul.results { list-style: none; margin: 0; padding: 0; }
   
   <p class="note">An eight-sided cut stone carrying its numeral. Shape, number and colour state the same fact three times — and the numeral is the <strong>primary</strong> channel, not a fallback.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center">
-    <span class="jewel"><span class="stone p0">–</span></span><span class="jewel"><span class="stone p1">1</span></span><span class="jewel"><span class="stone p2">2</span></span><span class="jewel"><span class="stone p3">3</span></span>
+    <span class="jewel"><span class="stone p0">–</span></span><span class="jewel"><span class="stone p1">1</span></span><span class="jewel"><span class="stone p2">2</span></span><span class="jewel"><span class="stone p3">3</span></span><span class="jewel"><span class="stone p4">4</span></span>
     <span class="jewel sm"><span class="stone p1">1</span></span><span class="jewel"><span class="stone p1">1</span></span><span class="jewel lg"><span class="stone p1">1</span></span>
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)">Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads. Designing colour as the <em>redundant</em> channel costs nothing and fixes it for everyone downstream. The silhouette is reserved: nothing else in the interface is ever this shape.</p>
+  <p class="note"><strong>Pitch four is one card.</strong> Upstream printed a fourth value — a purple strip on a Shadow resource gem — and it is drawn here beside the other four rather than kept as a special case, because a stone the reader meets once is the one whose colour they will not have learned. It is also the stone whose colour channel is weakest: purple sits beside blue in luminance wherever it is still legible under white ink, so for a reader with deuteranopia or protanopia the numeral is what separates three from four.</p>
 </div>
 </body>
 </html>

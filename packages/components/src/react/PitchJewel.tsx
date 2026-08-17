@@ -58,14 +58,14 @@ import type { PitchValue } from "optfall-theme";
 import "./PitchJewel.css";
 
 export interface PitchJewelProps {
-  /** 1, 2 or 3 — or 0 for a card with no pitch value at all. */
+  /** 1, 2, 3 or 4 — or 0 for a card with no pitch value at all. */
   readonly value: PitchValue;
   readonly size?: "sm" | "md" | "lg";
   /** Accessible name. Defaults to the pitch value spoken in full. */
   readonly label?: string;
 }
 
-const TONES = ["none", "one", "two", "three"] as const;
+const TONES = ["none", "one", "two", "three", "four"] as const;
 
 export function PitchJewel({ value, size = "md", label }: PitchJewelProps) {
   /**
