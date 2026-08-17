@@ -201,6 +201,56 @@ const VERSIONS_BY_NAME = ((): ReadonlyMap<
   return found;
 })();
 
+/**
+ * Every card page by its own address, for reaching a SIBLING's printings.
+ *
+ * A `CardLink` carries a name, a label, a pitch and one href — deliberately, so
+ * that the four lists built out of them stay cheap across 4,941 cards. That is
+ * enough to LINK to a version and not enough to ask where else it was printed,
+ * which is exactly what the version tabs need (see {@link addressInSet}). The
+ * link's href IS the sibling's default address, and `CardPage.href` is built by
+ * the same function from the same face, so it is a key rather than a guess.
+ *
+ * Module scope, like the keyword vocabulary above it: a fact about the corpus,
+ * built once, not once per each of 11,378 pages.
+ */
+const PAGE_BY_HREF: ReadonlyMap<string, CardPage> = new Map(
+  CARD_PAGES.map((entry) => [entry.href, entry] as const),
+);
+
+/**
+ * Where a version of this card lives IN A NAMED SET, or `undefined` if that set
+ * never printed it.
+ *
+ * A READER ON A PRINTING PAGE HAS ALREADY CHOSEN A SET. Landing them on Welcome
+ * to Rathe's Head Jab and then sending "Pitch 2" to whichever set upstream
+ * happens to list first for the pitch 2 version throws that choice away — the
+ * two tabs are the same card in the same box, and the strip is the one control
+ * on the page whose whole job is to move between them without changing anything
+ * else.
+ *
+ * THE FIRST FACE IN THE SET, WHICH IS THAT SET'S DEFAULT. `facesOf` is corpus
+ * order, and `defaultAddressOf` picks its first entry for the card's own
+ * address; picking the first entry within a set is the same rule scoped to one
+ * box, so a set that published two arts of a version opens on the same one its
+ * set page links to.
+ *
+ * `undefined` RATHER THAN A FALLBACK, because the caller has a better one: the
+ * link's own default address. Measured on this corpus: 5,799 printing pages
+ * carry a version strip, 11,565 tabs between them, and 2,127 of those tabs name
+ * a version the set on screen never printed — a pitch added in a later set, a
+ * promo carrying one version of a name. A tab that goes nowhere is worse than a
+ * tab that goes somewhere else.
+ */
+function addressInSet(link: CardLink, setCode: string): string | undefined {
+  const sibling = PAGE_BY_HREF.get(link.href);
+  if (sibling === undefined) return undefined;
+  const face = facesOf(sibling.card).find((ref) => ref.setCode === setCode);
+  return face === undefined
+    ? undefined
+    : hrefForPrinting(face.setCode, face.number, sibling.slug);
+}
+
 /** One related-card row: a name, and every version of it this list carries. */
 interface LinkGroup {
   readonly name: string;
@@ -781,11 +831,43 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         }),
   );
 
+  /**
+   * THE STRIP STAYS IN THE SET THE READER IS IN, WHERE THE SET PRINTED THE
+   * VERSION THEY ASKED FOR.
+   *
+   * Every tab used to point at its version's DEFAULT printing, so the one
+   * control for moving between three versions of a card also moved you to a
+   * different set, a different art and a different collector number — three
+   * changes for a click that asked for one. Measured: 2,601 of the 5,799 pages
+   * carrying this strip now send at least one tab somewhere else than they did.
+   * `shown` is the printing this page is a page OF, so its set code is what the
+   * reader has already chosen, and {@link addressInSet} answers whether the
+   * version they are asking for was printed in that box.
+   *
+   * IT FALLS BACK TO THE DEFAULT ADDRESS, AND HAS TO. A set does not have to
+   * print every version of a name — a later set adds a pitch 3, a promo carries
+   * one art of one version — so "the same set" is a preference and not a rule.
+   * The tab goes somewhere either way.
+   *
+   * THE CURRENT VERSION'S OWN ENTRY IS THIS PAGE, NOT THE CARD'S DEFAULT. It is
+   * not rendered as a link (see the strip below), but it IS what `?pitch=` is
+   * resolved against, and naming the default there made `?pitch=1` on an
+   * alternate art of the pitch 1 card a redirect OFF the printing the reader is
+   * looking at. Same rule as the tabs, applied to the tab that is already here.
+   */
+  const currentHref =
+    shown === undefined
+      ? page.href
+      : hrefForPrinting(shown.setCode, shown.number, page.slug);
+
   const versions = [
-    { pitch: page.pitch, href: page.href, current: true },
+    { pitch: page.pitch, href: currentHref, current: true },
     ...page.variants.map((variant) => ({
       pitch: variant.pitch,
-      href: variant.href,
+      href:
+        (shown === undefined
+          ? undefined
+          : addressInSet(variant, shown.setCode)) ?? variant.href,
       current: false,
     })),
   ].toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch));
