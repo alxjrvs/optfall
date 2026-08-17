@@ -71,6 +71,7 @@ import {
 } from "../../src/lib/faces";
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
 import { hrefForNumber, type RulesCorpus } from "../../src/lib/search";
+import { buyDisclosure, buyHref, buyRel } from "../../src/lib/tcgplayer";
 import {
   editionLabel,
   foilingName,
@@ -1550,6 +1551,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 <th scope="col">Foiling</th>
                 <th scope="col">Artist</th>
                 <th scope="col">Other face</th>
+                <th scope="col">Buy</th>
               </tr>
             </thead>
             <tbody>
@@ -1585,6 +1587,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   shown !== undefined &&
                   shown.printing.unique_id === printing.unique_id;
                 const qualifier = numberQualifier.get(printing.unique_id) ?? "";
+                const buy = buyHref(printing, "card-printings");
 
                 return (
                   <tr
@@ -1675,12 +1678,66 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         <a href={otherFace.href}>{otherFace.label}</a>
                       )}
                     </td>
+                    {/*
+                      THE ONLY COLUMN THAT LEAVES THE SITE, and the only reason
+                      it is on the row rather than beside the face: a card route
+                      addresses an ART, so a Standard and a Rainbow Foil struck
+                      from one picture share a page and the URL cannot say which
+                      a reader means. Upstream's storefront link carries
+                      `Printing=` and names the foiling, so the row can say what
+                      the address cannot.
+
+                      AN EM DASH WHERE UPSTREAM LISTED NO PRODUCT, matching
+                      every other column in this table. 1,336 of 16,502
+                      printings are that shape — promos and organised play,
+                      where whole sets carry none — and an absence is reported
+                      as an absence rather than as "unavailable", exactly as the
+                      legality table renders a flag it does not have.
+                    */}
+                    <td>
+                      {buy === undefined ? (
+                        "—"
+                      ) : (
+                        <a className="of-card__buy" href={buy} rel={buyRel()}>
+                          TCGplayer
+                          {/*
+                            SIXTEEN LINKS READING "TCGplayer" ARE SIXTEEN
+                            IDENTICAL LINKS to anything that lists them out of
+                            context. The column header supplies the verb for a
+                            reader who can see it; this supplies the whole
+                            sentence for one who cannot.
+                          */}
+                          <span className="of-card__visually-hidden">
+                            {` — buy ${printing.id}${
+                              printing.foiling === ""
+                                ? ""
+                                : `, ${foilingName(printing.foiling)}`
+                            }, on TCGplayer`}
+                          </span>
+                        </a>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+
+        {/*
+          THE DISCLOSURE SITS WITH THE LINKS, not in the site footer.
+          TCGplayer's Partner Guidelines require it to be "clear, conspicuous,
+          prominent and unambiguous to the average member of your audience" and
+          put FTC compliance on us. Scryfall's equivalent wording lives in their
+          footer inside a sentence about price accuracy; that is the looser
+          reading, and a reference work whose whole claim is being right should
+          not take it.
+
+          THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same constant the
+          links do, so the sentence cannot claim we earn nothing on a page whose
+          links are earning — see `apps/site/src/lib/tcgplayer.ts`.
+        */}
+        <p className="of-card__verify">{buyDisclosure()}</p>
 
         {/*
           ONLY WHERE THE PRINTINGS DISAGREE. A card whose every printing carries

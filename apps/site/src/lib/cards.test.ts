@@ -77,13 +77,63 @@ const pageNamed = (name: string): CardPage => {
 
 describe("the pinned corpus", () => {
   test("is the shape every other assertion here assumes", () => {
-    expect(CORPUS.schemaVersion).toBe(1);
+    expect(CORPUS.schemaVersion).toBe(2);
     expect(CORPUS.counts.cards).toBe(4941);
     expect(CORPUS.cards.length).toBe(CORPUS.counts.cards);
     expect(CORPUS.counts.printings).toBe(16502);
     expect(CORPUS.counts.names).toBe(3158);
     expect(CORPUS.source.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(LAST_CONFIRMED).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  test("carries TCGplayer's product on the printings that have one", () => {
+    /*
+     * THIS IS A DROP DETECTOR, not a coverage report. The fields sat in
+     * `DROPPED_PRINTING_FIELDS` for most of this corpus's life, and the way
+     * they would go missing again is a sync that quietly stops carrying them —
+     * which looks like nothing at all in a 18 MB JSON diff. A count that has to
+     * be updated deliberately is the cheapest alarm for that.
+     */
+    const printings = CORPUS.cards.flatMap((card) => card.printings);
+    const withProduct = printings.filter(
+      (printing) => printing.tcgplayer_url !== undefined,
+    );
+
+    expect(printings.length).toBe(16502);
+    expect(withProduct.length).toBe(15166);
+
+    // Absent, never empty or null — upstream omits the key and so do we.
+    for (const printing of printings) {
+      if (printing.tcgplayer_url === undefined) {
+        expect(printing.tcgplayer_product_id).toBeUndefined();
+        continue;
+      }
+      expect(printing.tcgplayer_url).toStartWith(
+        "https://www.tcgplayer.com/product/",
+      );
+      expect(printing.tcgplayer_product_id).toMatch(/^\d+$/);
+    }
+  });
+
+  test("keeps the foiling in the storefront url", () => {
+    /*
+     * The reason the link is on the printings row at all. If upstream ever
+     * flattens these to one product per collector number, a Standard and a
+     * Rainbow Foil would start sharing a link and the row would be lying —
+     * so the distinction is asserted rather than assumed.
+     */
+    const shared = CORPUS.cards
+      .flatMap((card) => card.printings)
+      .filter((printing) => printing.tcgplayer_url !== undefined)
+      .reduce<Map<string, Set<string>>>((seen, printing) => {
+        const key = `${printing.set_id}${printing.id}`;
+        const urls = seen.get(key) ?? new Set<string>();
+        urls.add(printing.tcgplayer_url ?? "");
+        return seen.set(key, urls);
+      }, new Map());
+
+    const withSeveral = [...shared.values()].filter((urls) => urls.size > 1);
+    expect(withSeveral.length).toBeGreaterThan(0);
   });
 
   test("publishes the six flag counts this file is anchored on", () => {

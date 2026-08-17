@@ -115,7 +115,9 @@ row's subject changes, not when someone notices.*
 | Legality table | ~12 formats, one state each | 6 formats, **multi-state, with the upstream evidence printed** | **have, better** |
 | Every view is a URL | yes | yes | **have** |
 | Bulk export | yes | rules + cards, committed | **have** |
-| Prices, colour identity, EDHREC, tagger | yes | — | **not applicable** |
+| Colour identity, EDHREC, tagger | yes | — | **not applicable** |
+| Prices | yes, from a partner feed | — | **out of scope, on purpose** |
+| Buy links | per printing, foil/nonfoil split | per printing, **foiling and all** | **have, better** |
 
 Two rows are worth dwelling on, because they are the reason this is worth
 building rather than pointing at what exists.
@@ -818,9 +820,14 @@ are banned at one pitch and legal at another.
 
 ## 9. Still out of scope, and why
 
-- **Prices, collector economy, colour identity, EDHREC-style popularity.** The
-  first is the most contested territory in the game (`docs/PLAN.md`); the last
-  two have no Flesh and Blood analogue.
+- **Prices and the collector economy.** The most contested territory in the game
+  (`docs/PLAN.md`), and the one addition here that would need a refresh cadence
+  — which is the thing a corpus pinned by commit cannot give it. A stale price
+  is the confidently-wrong answer this project claims it cannot produce.
+  **Purchase links are not this**, and shipped separately: a link says "this
+  printing is purchasable, here", which does not rot between syncs. See
+  `apps/site/src/lib/tcgplayer.ts`.
+- **Colour identity, EDHREC-style popularity.** No Flesh and Blood analogue.
 - **A tagger.** Scryfall's art and oracle tags are a community-curation
   programme with a moderation burden. "Sync, never curate" rules it out until
   there is a community asking for it.

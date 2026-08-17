@@ -429,10 +429,21 @@ exercised against a `gh` stub with hand-written fixtures; today's live run
 (§1) is the first real read, and it behaved correctly. **Apply mode has still
 never run against GitHub.**
 
-Also open and undecided rather than unfixed: whether an affiliate "buy this
+~~Also open and undecided rather than unfixed: whether an affiliate "buy this
 card" link counts as indirect monetisation (permitted, like ad-sense) or direct
 (barred). The interim rule recorded in COMPLIANCE.md is *do not add one without
-asking LSS first*, which is the right default.
+asking LSS first*, which is the right default.~~ **Closed 2026-08-17 — it is
+indirect, and permitted.** The LSS terms answer it in the clause that governs
+card databases specifically, and LSS's own announcement recommends the TCGplayer
+affiliate programme to the community by name. Full evidence in `COMPLIANCE.md`
+§2.
+
+Worth keeping visible, because it is the more useful lesson than the answer:
+this sat "open" for months while the document that settles it was one fetch
+away. The blocker was a line in `COMPLIANCE.md` asserting the page could not be
+read automatically, which was true of a default User-Agent and false of a
+browser one. **An unverified claim about why something cannot be checked is more
+expensive than the unchecked thing** — it stops anybody trying again.
 
 ---
 

@@ -145,6 +145,19 @@ export interface CardPrinting {
     readonly is_front: boolean;
     readonly is_DFC: boolean;
   }[];
+  /**
+   * TCGplayer's product identifier and storefront URL, carried verbatim from
+   * upstream. Absent on 1,336 of 16,502 printings — promos and organised play,
+   * where no product was ever listed — so both are optional and a consumer must
+   * treat their absence as "upstream published none", never as an error.
+   *
+   * The URL already encodes the foiling, which is the whole reason it is useful
+   * here: a card route addresses an *art*, so a Standard and a Rainbow Foil
+   * struck from one picture share a page, and only the printings table can say
+   * which of the two a reader means.
+   */
+  readonly tcgplayer_product_id?: string;
+  readonly tcgplayer_url?: string;
 }
 
 /** One card, with upstream's field names kept verbatim. */

@@ -87,7 +87,7 @@ import { fileURLToPath } from "node:url";
  * consumer can refuse a file it does not understand instead of silently reading
  * a field that moved.
  */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 /** Where the committed corpus lives, relative to the repository root. */
 const CORPUS_DIRECTORY = "data/cards";
@@ -158,10 +158,6 @@ const DROPPED_PRINTING_FIELDS: Readonly<Record<string, string>> = {
     "an opaque join key into an upstream table this corpus does not ship; (set_id, id, edition) identifies the same grouping in fields we do carry",
   flavor_text_plain:
     "the same text as flavor_text with the ** emphasis markers removed; differs on 2 of 16,502 printings",
-  tcgplayer_product_id:
-    "the collector economy, which docs/PLAN.md puts out of scope, and commerce data has no bearing on legality, rules or card identity",
-  tcgplayer_url:
-    "as tcgplayer_product_id; also a storefront link, which sits awkwardly beside the no-direct-monetisation condition in the permission envelope",
 };
 
 /**
@@ -214,6 +210,8 @@ const PRINTING_FIELDS = [
   "image_url",
   "image_rotation_degrees",
   "double_sided_card_info",
+  "tcgplayer_product_id",
+  "tcgplayer_url",
 ] as const;
 
 /**
@@ -338,6 +336,29 @@ interface CorpusPrinting {
   readonly image_url: string | null;
   readonly image_rotation_degrees: number;
   readonly double_sided_card_info?: readonly DoubleSidedFace[];
+  /**
+   * TCGplayer's identifier for this printing, and the storefront URL built from
+   * it. Both are upstream's, carried verbatim.
+   *
+   * OPTIONAL BECAUSE UPSTREAM OMITS THE KEYS, rather than publishing them as
+   * `null` or `""`. 1,336 of 16,502 printings have neither, concentrated in
+   * promotional and organised-play sets — WIN, SBL, SBA, SLY, SGB and the
+   * armory sets carry none at all. Omitting them here mirrors that exactly, so
+   * a reader can tell "upstream published no product" from "we dropped it",
+   * which is the same distinction `image_url`'s `null` is protecting one field
+   * up.
+   *
+   * THE URL IS CARRIED RATHER THAN DERIVED, even though it is a function of the
+   * id. It encodes the foiling — `?Language=English&Printing=Rainbow+Foil` —
+   * and rebuilding that would mean maintaining our own foiling-code table and
+   * re-verifying it every time upstream moves. A derived link is a claim we
+   * manufactured; a carried one is a claim we can diff against the source.
+   *
+   * These were in `DROPPED_PRINTING_FIELDS` until the permission question they
+   * were dropped over was answered — see `docs/COMPLIANCE.md` §2.
+   */
+  readonly tcgplayer_product_id?: string;
+  readonly tcgplayer_url?: string;
 }
 
 /** Per-format legality, flags then start dates. Keys are upstream's. */
@@ -542,6 +563,24 @@ function nullableText(
   return text(record, key, where);
 }
 
+/**
+ * A string upstream is allowed to leave out entirely.
+ *
+ * Distinct from {@link nullableText}, and the distinction is upstream's rather
+ * than ours: `image_url` is always present and sometimes `null`, while the
+ * TCGplayer fields are simply absent on printings that have no product. A key
+ * that IS present still has to be a string, so a field that starts arriving as
+ * a number or a null fails the build instead of being waved through.
+ */
+function optionalText(
+  record: JsonRecord,
+  key: string,
+  where: string,
+): string | undefined {
+  if (!(key in record)) return undefined;
+  return text(record, key, where);
+}
+
 function flag(record: JsonRecord, key: string, where: string): boolean {
   const value = record[key];
   if (typeof value === "boolean") return value;
@@ -649,6 +688,9 @@ function toCorpusPrinting(printing: JsonRecord, where: string): CorpusPrinting {
         )
       : undefined;
 
+  const productId = optionalText(printing, "tcgplayer_product_id", where);
+  const productUrl = optionalText(printing, "tcgplayer_url", where);
+
   const copy: CorpusPrinting = {
     unique_id: text(printing, "unique_id", where),
     id: text(printing, "id", where),
@@ -663,6 +705,8 @@ function toCorpusPrinting(printing: JsonRecord, where: string): CorpusPrinting {
     image_url: nullableText(printing, "image_url", where),
     image_rotation_degrees: count(printing, "image_rotation_degrees", where),
     ...(faces === undefined ? {} : { double_sided_card_info: faces }),
+    ...(productId === undefined ? {} : { tcgplayer_product_id: productId }),
+    ...(productUrl === undefined ? {} : { tcgplayer_url: productUrl }),
   };
   return copy;
 }

@@ -1237,8 +1237,25 @@
 
 .of-card__printings thead th,
 .of-card__printings .of-card__collector,
-.of-card__printings .of-card__code-hint {
+.of-card__printings .of-card__code-hint,
+.of-card__printings .of-card__buy {
   white-space: nowrap;
+}
+
+/*
+  THE ONE LINK IN THIS TABLE THAT LEAVES THE SITE, and it is marked as such
+  rather than left to look like the set and other-face links beside it. Those go
+  somewhere the reader already is; this goes to a shop.
+
+  IT IS NOT THE ACCENT. Colour in this interface is data — pitch, rarity,
+  legality — and a commerce link is the last thing that should borrow the
+  vocabulary reserved for whether a card is legal. Brass is the material used
+  for apparatus and marginalia throughout, which is what this is.
+*/
+.of-card__buy {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-small);
+  color: var(--of-color-brass);
 }
 
 .of-card__printings thead th {

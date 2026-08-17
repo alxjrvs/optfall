@@ -22,24 +22,33 @@ enforced, and should be read as an open action rather than a satisfied one.
 | Publisher | Legend Story Studios |
 | URL | <https://fabtcg.com/resources/terms-use-licensed-assets/> |
 | Commercial licensing contact | `ip@legendstory.com` |
-| Last checked | 2026-08-08 |
+| Last checked | 2026-08-17 |
 
-> **Verification caveat — read this before relying on a quotation below.**
-> `fabtcg.com` returns **HTTP 403 to automated fetches**, which is consistent
-> with `PLAN.md`'s note that the official site blocks automated access. The
-> clause summaries in this document were assembled from search-engine excerpts
-> of that page plus the envelope already recorded in `PLAN.md`. They are
-> faithful to the best available reading, but they have **not** been read
-> character-for-character off the live page by a human.
+> **Verification caveat — narrowed on 2026-08-17, and worth reading for what it
+> no longer says.**
 >
-> **Action, before the first public deploy:** a human opens that URL, reads it
-> end to end, and either confirms this document or corrects it — in particular
-> the exact disclaimer wording, the exact copyright line, and the logo clause.
-> Until that happens, treat this file as high-confidence but unratified.
+> This block used to record that `fabtcg.com` "returns **HTTP 403 to automated
+> fetches**", and that every clause below was therefore assembled from
+> search-engine excerpts rather than from the page. **The first half was wrong.**
+> The 403 is served to a default client User-Agent; a request carrying an
+> ordinary browser one returns the document, and on 2026-08-17 the page was
+> fetched whole and read end to end. Quotations in this file are now transcribed
+> from the live text rather than reconstructed around it.
 >
-> The one string in this repository that is **not** subject to that caveat is
-> the disclaimer, which is reproduced from `PLAN.md` and cross-checks
-> byte-for-byte against `README.md`.
+> That was not a small error to leave standing. "The source cannot be read"
+> quietly converts every clause here into an argument from memory, and it is the
+> reason §2 spent months recording a decision the document itself answers.
+>
+> **What is still outstanding is narrower, and it is unchanged in kind:** a
+> *machine* has read the page; a *human* has not. Before the first public deploy
+> somebody opens that URL and confirms this file — in particular the logo clause
+> and the copyright line, both of which are judgement calls a transcription
+> cannot settle.
+>
+> The disclaimer is no longer subject to any of this. It is asserted
+> byte-for-byte against the live page's own Third Party Apps clause, and matches
+> in all four documents that carry it — `README.md`, `PLAN.md`, `DATA-TERMS.md`
+> and this one.
 
 ---
 
@@ -142,11 +151,69 @@ explicitly permitted.
 **What would break it.** A paid tier, a subscription, a rate-limited "pro" API
 key, selling the dataset, or selling placement *within* game content.
 
-**Open question for a human.** Affiliate links on card pages (a "buy this card"
-link paying a commission) sit on the boundary: it resembles the permitted
-ad-sense case, but it monetises the game content itself rather than the page
-around it. **Do not add affiliate links without asking LSS first.** Recorded
-here rather than decided.
+**Affiliate links — decided 2026-08-17, and the interim answer was wrong.**
+
+This paragraph read, for months: *"Affiliate links on card pages sit on the
+boundary … it monetises the game content itself rather than the page around it.
+**Do not add affiliate links without asking LSS first.**"* That was a careful
+default reached without reading the policy, and the policy answers it directly.
+It is quoted rather than deleted because the reasoning was reasonable and the
+failure was not the reasoning — see the verification caveat at the top of this
+file for the mechanism.
+
+Three findings, in descending order of weight:
+
+- **The Terms name the case.** Under *FAB Card Images → Platforms and Services*:
+  "You may use the FAB Card Images for the creation of **card databases**,
+  singles websites, and singles marketplaces. You may not monetize these
+  platforms directly without express permission **except through the sale of the
+  Game (including the sale of single cards in the case of singles websites)**.
+  You may indirectly monetize this content (for example, Patreon and ad-sense)."
+  LSS puts singles commerce on the permitted side *for card databases
+  specifically*. A referral fee, where Optfall sells nothing, is strictly less
+  than the thing already blessed.
+- **"Indirect" is defined to include traffic.** The same document, three times
+  over: "You may indirectly monetize this content (such as ad-sense on YouTube
+  videos **and website traffic**)." An affiliate commission is payment for
+  referred traffic. Note also what *direct* is exemplified as everywhere it
+  appears — selling the app, selling subscriptions, selling the underlying IP,
+  selling products *within* it. Never linking to a shop.
+- **LSS recommends the specific programme.** Its own announcement, *FAB comes to
+  TCGplayer*: "TCGplayer also offers support to the Flesh and Blood community
+  with the **TCGplayer Affiliate Program**. Content creators can now earn rewards
+  by referring customers to the digital marketplace." LSS and TCGplayer have been
+  formally partnered since 2026-05-12.
+
+**The precedent.** FaBrary — the ecosystem's most-used third-party app — has
+shipped Impact affiliate links (account `4925001`) alongside five other vendors,
+while carrying the LSS disclaimer, in public, for a long time.
+
+> **A false friend, and the reason this paragraph names it.** The Terms say you
+> may not create the appearance of "endorsements or **affiliate relationship to
+> the Game and the Studio** without prior written approval." That is affiliation
+> *with LSS* — the thing the mandatory disclaimer exists to deny — and has
+> nothing to do with affiliate marketing. It is the **only** occurrence of the
+> word "affiliate" in the document, so anybody re-checking this by searching the
+> policy will land on it and read it as a prohibition. It is not one.
+
+**What we therefore do.** Per-printing purchase links on the printings table,
+built by [`apps/site/src/lib/tcgplayer.ts`](../apps/site/src/lib/tcgplayer.ts).
+**No price, ever** — that is a separate decision on separate grounds, recorded in
+that module and in `docs/PLAN.md`'s collector-economy exclusion.
+
+**What is still not settled**, and should not be overstated: this is a reading of
+published terms plus a live precedent, not written approval, and the grant is
+revocable "at the sole discretion of the Studio" — which is equally true of every
+other permission this project relies on. If a written answer is ever wanted,
+`ip@legendstory.com` is the address, and the affiliate question and the Patreon
+question should go in the same message.
+
+**Enforced at.** [`apps/site/src/lib/tcgplayer.ts`](../apps/site/src/lib/tcgplayer.ts)
+holds a single `AFFILIATE_ID` constant that drives the links, the `rel`, and the
+disclosure sentence together, so the site cannot earn a commission while telling
+readers it does not. `tcgplayer.test.ts` asserts both states, and its final block
+fails deliberately the moment the constant is set — the flip cannot happen
+without somebody reading that file.
 
 ### 3. No FAB or LSS logos — and no close semblance of them
 
@@ -556,8 +623,8 @@ Carried, not closed. Each needs a human.
 
 | # | Action | Blocks |
 |---|---|---|
-| 1 | Read the LSS terms page end to end and ratify or correct this document — especially the disclaimer wording, the copyright line, and the logo clause | First public deploy |
-| 2 | Decide the affiliate-link question (§2), or decide not to decide it and record that | Any revenue |
+| 1 | Read the LSS terms page end to end and ratify or correct this document — especially the copyright line and the logo clause. **Narrowed 2026-08-17**: the page has now been fetched and transcribed, and the disclaimer is asserted byte-for-byte against it, so what remains is a human confirming the judgement calls rather than the text | First public deploy |
+| 2 | ~~Decide the affiliate-link question (§2), or decide not to decide it and record that~~ **Decided 2026-08-17** — permitted as indirect monetisation, with the clause quoted and the precedent named in §2. Links ship unwrapped until the TCGplayer partner application is approved; setting `AFFILIATE_ID` is the whole of the remaining work | — |
 | 3 | ~~Confirm the display typeface is licensed for webfont embedding~~ **Done.** Grenze, SIL OFL 1.1 — the grant names `embed` outright. The clause is quoted in `data/fonts/fonts.json` rather than summarised, and condition 2's obligation (each copy carries the copyright notice and the licence) is met by `apps/site/public/fonts/OFL.txt` | Phase 1 |
 | 4 | Post the upstream licence request | Phase 2/3 data work |
 | 5 | Write the revocation-drill test once the legality package exists | Phase 2 exit |
