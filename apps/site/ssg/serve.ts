@@ -29,6 +29,7 @@ import { join, normalize } from "node:path";
 
 import { outputPathFor } from "./outputPath";
 import { matchRedirect, parseRedirects, redirectIndex } from "./redirects";
+import { serveReadyLine } from "./serveBanner";
 
 const ROOT = new URL("../dist/", import.meta.url).pathname;
 
@@ -131,4 +132,4 @@ Bun.serve({
   },
 });
 
-console.log(`[ssg] serving dist/ on http://localhost:${PORT}`);
+console.log(serveReadyLine(PORT));

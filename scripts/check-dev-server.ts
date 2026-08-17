@@ -62,6 +62,7 @@
  * disagree when there is only one of them.
  */
 import { CARD_ROUTES } from "../apps/site/src/lib/cards";
+import { serveReadyLine } from "../apps/site/ssg/serveBanner";
 
 /**
  * A port far from the 4321 default, so a developer running the real dev server
@@ -85,6 +86,15 @@ const PORT = 4399;
  * that rendered nothing up front.
  */
 const STARTUP_TIMEOUT_MS = 420_000;
+
+/**
+ * How long to wait for the port to come back after killing the server.
+ *
+ * Short, because this is a socket closing rather than work finishing: if it has
+ * not happened in five seconds it is not going to, and the warning is more
+ * useful than the wait.
+ */
+const SHUTDOWN_TIMEOUT_MS = 5_000;
 
 interface Check {
   path: string;
@@ -210,10 +220,22 @@ const checks: Check[] = [
 function assertPortFree(): void {
   try {
     Bun.serve({ port: PORT, fetch: () => new Response("") }).stop(true);
-  } catch {
+    return;
+  } catch (error) {
+    /*
+     * ONLY "IN USE" IS REPORTED AS "IN USE". A bare catch here read every
+     * failure to bind as a collision and printed instructions — go find the
+     * other server and stop it — that cannot fix a sandbox with no listening
+     * sockets, or whatever `Bun.serve` starts throwing next. An error that
+     * names the wrong cause confidently is worse than one that admits it does
+     * not know, so anything unrecognised is re-thrown with its own message.
+     */
+    if ((error as { code?: string }).code !== "EADDRINUSE") throw error;
+
     console.log(
       `::error::Port ${PORT} is already in use, so this check cannot tell its own dev server from somebody else's. ` +
-        `A parallel git worktree running \`bun run dev\` or \`check:dev-server\` is the usual cause; stop it and re-run. ` +
+        `Two usual causes: a parallel git worktree running \`bun run dev\` or \`check:dev-server\`, or a server ORPHANED ` +
+        `by a previous run of this check that outlived it. Stop it and re-run. ` +
         `Do NOT work around this by moving the port — it is fixed on purpose, see the note on PORT.`,
     );
     process.exit(1);
@@ -256,8 +278,12 @@ const origin = `http://localhost:${PORT}`;
  *
  * IT CARRIES THE PORT, so a dev server this check did not start — on another
  * port, in another worktree — cannot satisfy it.
+ *
+ * IMPORTED RATHER THAN RESTATED, because this check cannot tell a renamed
+ * banner from a dead server: both look like seven minutes of silence followed
+ * by an error blaming `bun run dev`. `ssg/serveBanner.ts` carries the argument.
  */
-const READY_LINE = `[ssg] serving dist/ on ${origin}`;
+const READY_LINE = serveReadyLine(PORT);
 
 /**
  * Waits for OUR server to answer, or gives up with everything it said.
@@ -280,6 +306,48 @@ const READY_LINE = `[ssg] serving dist/ on ${origin}`;
  * line claiming a bind and a socket that answers are two different facts and
  * this check wants both.
  */
+/**
+ * Stops the server and does not return until the port is actually free again.
+ *
+ * `server.kill()` SIGNALS THE WRAPPER, NOT THE SERVER. The thing spawned is
+ * `bun run … dev`, and `dev` is the compound `bun ssg/build.ts && bun
+ * ssg/serve.ts` — so the process holding the socket is a GRANDCHILD, and a
+ * signal delivered to its parent is not guaranteed to reach it.
+ *
+ * WITHOUT THIS THE CHECK POISONS ITS OWN NEXT RUN, and does so with a lie.
+ * `assertPortFree` turned a surviving grandchild from a stray process nobody
+ * noticed into a hard failure — one that reports a port collision and blames a
+ * parallel worktree, when the process holding the port is this check's own
+ * orphan from a minute ago. Waiting for the release is what keeps that message
+ * honest.
+ *
+ * IT REPORTS RATHER THAN ESCALATES when the port does not come back. Killing a
+ * process group would reach the grandchild and would also reach anything else
+ * sharing that group, which on a developer's machine is their shell. A check is
+ * not entitled to that, so the honest move is to say plainly that something it
+ * started is still holding the port.
+ */
+async function shutdown(): Promise<void> {
+  server.kill();
+
+  const deadline = Date.now() + SHUTDOWN_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    try {
+      Bun.serve({ port: PORT, fetch: () => new Response("") }).stop(true);
+      return;
+    } catch {
+      await Bun.sleep(200);
+    }
+  }
+
+  console.log(
+    `::warning::The dev server was killed but port ${PORT} is still held after ` +
+      `${SHUTDOWN_TIMEOUT_MS / 1000}s, so something it started outlived it. The next run of this check will ` +
+      `fail its port preflight, and the cause is this orphan rather than another worktree.`,
+  );
+}
+
 async function waitForServer(): Promise<void> {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 
@@ -309,7 +377,7 @@ async function waitForServer(): Promise<void> {
     `::error::\`bun run dev\` did not announce "${READY_LINE}" and answer on it within ${STARTUP_TIMEOUT_MS / 1000}s.`,
   );
   console.log(transcript.trim());
-  server.kill();
+  await shutdown();
   process.exit(1);
 }
 
@@ -369,7 +437,7 @@ for (const check of checks) {
   console.log(`  ${path} → ${status} ${location ?? type}`);
 }
 
-server.kill();
+await shutdown();
 
 if (failed) {
   console.log("\nThe dev server did not serve every route. Its output:\n");
