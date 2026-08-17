@@ -58,7 +58,7 @@ import { JSDOM } from "jsdom";
 import { createElement, type ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { THEME_ATTRIBUTE, THEMES, themeStylesheet } from "optfall-theme";
+import { DEFAULT_THEME, THEME_ATTRIBUTE, themeStylesheet } from "optfall-theme";
 
 import { type PageSize, PRIMITIVES } from "../index";
 
@@ -606,7 +606,10 @@ async function runAxe(dom: JSDOM): Promise<axe.Result[]> {
  * and duplicating a count here would only make this file look like it did more.
  */
 describe("every primitive passes axe", () => {
-  const theme = THEMES[0]!;
+  // DEFAULT_THEME rather than THEMES[0]: this pass deliberately runs against
+  // one theme (see above), and naming which one is the point. It also drops a
+  // non-null assertion on an index that only happened to be right.
+  const theme = DEFAULT_THEME;
 
   for (const { name, component, props, wrap } of CASES) {
     test(`${name}`, async () => {

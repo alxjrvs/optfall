@@ -30,9 +30,6 @@
  * from a mechanic rather than from anyone's branding.
  */
 
-/** Standard TCG stock — 63 × 88 mm. Every measured source lands on this. */
-export const CARD_RATIO = 63 / 88;
-
 /** The tiers this host serves, and the pixel box each one promises. */
 export const TIERS = {
   thumb: { width: 180, height: 251 },

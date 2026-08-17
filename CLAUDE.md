@@ -79,8 +79,8 @@ All enforced somewhere, all easy to violate on a first pass.
 - **Never reorder imports.** Biome's `organizeImports` is off deliberately: it
   hoists imports above the file docblock, stranding the prose that explains the
   file. Import order is maintained by hand.
-- **80 columns.** `.editorconfig` says 100 and is wrong; Biome formats at 80 and
-  `format:check` is a gate.
+- **80 columns.** Biome formats at 80 and `format:check` is a gate.
+  `.editorconfig` agrees; if you ever change one, change both.
 - **Upstream field names stay verbatim, and the bracket is the signal.**
   `card.legality["ll_restricted_affects_full_cycle"]` is deliberate —
   `CardLegality` is an index signature over names we did not choose.

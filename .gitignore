@@ -9,27 +9,12 @@ build/
 out/
 *.tsbuildinfo
 
-# --- Astro ----------------------------------------------------------------
-.astro/
+# The site generator writes here; `apps/site/dist` is 12,776 pages.
 apps/*/dist/
 
 # --- Netlify --------------------------------------------------------------
 .netlify/
 .netlify-cache/
-
-# --- Storybook ------------------------------------------------------------
-storybook-static/
-
-# --- Playwright / visual regression ---------------------------------------
-# Committed baselines live in `*-snapshots/` and must stay tracked; only the
-# per-run diff output is ignored.
-test-results/
-playwright-report/
-blob-report/
-playwright/.cache/
-playwright/.auth/
-*-actual.png
-*-diff.png
 
 # --- Coverage -------------------------------------------------------------
 coverage/

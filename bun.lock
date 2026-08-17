@@ -52,7 +52,6 @@
         "jsdom": "30.0.1",
         "react": "catalog:",
         "react-dom": "catalog:",
-        "vite": "catalog:",
       },
       "peerDependencies": {
         "react": "catalog:",
