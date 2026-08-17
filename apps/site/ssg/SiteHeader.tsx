@@ -68,6 +68,9 @@ const LINKS: readonly {
   { href: "/about", label: "About" },
 ];
 
+/** What the disclosure discloses. Named, because it is not its child. */
+const SECTIONS_LIST_ID = "bar-sections";
+
 export function SiteHeader({
   section,
   field = true,
@@ -175,10 +178,35 @@ export function SiteHeader({
         container query hides the summary and lays the list out as a row as soon
         as the bar is wide enough to seat it, so the disclosure is inert on a
         desktop rather than a thing to click before you can navigate.
+
+        THE LIST IS THE DISCLOSURE'S SIBLING, NOT ITS CHILD, and that is the one
+        thing here that looks wrong and is not. A closed `<details>` does not
+        hide its contents with a rule we can outrank: Blink and WebKit stop
+        rendering the shadow slot the contents are assigned to, which no
+        light-DOM `display` can reach — that is why `::details-content` had to be
+        specified at all, and it landed only in Chrome 131, Safari 18.4 and
+        Firefox 139.
+
+        Nesting the list therefore made the WIDE layout depend on revealing a
+        closed disclosure, which works on a current engine and fails on an older
+        one in the worst possible way: the container query hides the summary,
+        the slot keeps the links unrendered, and the header is left with no
+        navigation and no control to open any. Reproduced by disabling the
+        `::details-content` override in a live page — the links landed 12px past
+        the right edge of the window in a nav box of zero width.
+
+        As a sibling, the list is ordinary markup in the light DOM at every
+        width, and `[open] ~` toggles it. What is lost is the parent-child
+        relationship between the control and what it discloses, so `aria-controls`
+        states it instead; what is kept is a header that works in every browser
+        rather than in the last two years of them.
       */}
       <nav className="of-bar__nav" aria-label="Sections">
-        <details className="of-bar__menu" name="of-bar__menu">
-          <summary className="of-bar__menu-button">
+        <details className="of-bar__menu">
+          <summary
+            className="of-bar__menu-button"
+            aria-controls={SECTIONS_LIST_ID}
+          >
             {/*
               THE GLYPH IS DRAWN, NOT TYPED. `☰` is a CJK character that a
               screen reader may read aloud as "trigram for heaven" and that a
@@ -202,24 +230,24 @@ export function SiteHeader({
             </svg>
             <span className="of-bar__sr">Sections</span>
           </summary>
-
-          <ul className="of-bar__links">
-            {LINKS.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  aria-current={
-                    link.key !== undefined && link.key === section
-                      ? "page"
-                      : undefined
-                  }
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
         </details>
+
+        <ul className="of-bar__links" id={SECTIONS_LIST_ID}>
+          {LINKS.map((link) => (
+            <li key={link.href}>
+              <a
+                href={link.href}
+                aria-current={
+                  link.key !== undefined && link.key === section
+                    ? "page"
+                    : undefined
+                }
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
       </nav>
     </header>
   );

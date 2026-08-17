@@ -2022,6 +2022,10 @@ describe("the nav collapses to a disclosure without a script", () => {
       .find((resolved) => resolved.route === route)
       ?.render([], "islands.js") ?? "";
 
+  /** The `<nav>` only, because the page is full of anchors. */
+  const navIn = (html: string) =>
+    /<nav class="of-bar__nav"[^>]*>(.*?)<\/nav>/s.exec(html)?.[1] ?? "";
+
   test("every link is in the markup, open or closed", () => {
     /*
      * THE POINT OF USING `<details>` RATHER THAN A SCRIPT. The panel is closed
@@ -2029,8 +2033,13 @@ describe("the nav collapses to a disclosure without a script", () => {
      * and reachable with scripting off, which a JavaScript menu cannot promise.
      * A collapse that removes the nav from the page is a collapse that removes
      * the site's navigation from anything that does not run JavaScript.
+     *
+     * SCOPED TO THE NAV, because `/sets` is 112 rows of anchors: matching
+     * `>Sets</a>` against the whole document would have stayed green with the
+     * header link deleted, on the strength of a set named the same thing.
      */
-    const html = render("/sets");
+    const nav = navIn(render("/sets"));
+    expect(nav).not.toBe("");
     for (const label of [
       "Cards",
       "Sets",
@@ -2039,10 +2048,38 @@ describe("the nav collapses to a disclosure without a script", () => {
       "Random",
       "About",
     ]) {
-      expect(`${label}: ${html.includes(`>${label}</a>`)}`).toBe(
+      expect(`${label}: ${nav.includes(`>${label}</a>`)}`).toBe(
         `${label}: true`,
       );
     }
+  });
+
+  test("the list is the disclosure's SIBLING, and the summary says so", () => {
+    /*
+     * THE LOAD-BEARING SHAPE, ASSERTED SO IT CANNOT BE TIDIED AWAY.
+     *
+     * Nesting the list inside `<details>` is the obvious markup and it breaks
+     * the header on every engine older than Chrome 131 / Safari 18.4 /
+     * Firefox 139: a closed disclosure stops rendering the shadow slot its
+     * children are assigned to, which no light-DOM `display` can override, so
+     * the wide layout — which hides the summary — would leave no navigation and
+     * no way to open any. Reproduced in a live page before this structure
+     * landed.
+     *
+     * The relationship the nesting would have expressed is stated by
+     * `aria-controls` instead, and the two have to agree.
+     */
+    const html = render("/sets");
+    const nav = navIn(html);
+    expect(nav).toContain("</details>");
+    /* The list opens AFTER the disclosure closes: a sibling, not a child. */
+    expect(nav.indexOf("</details>")).toBeLessThan(
+      nav.indexOf('<ul class="of-bar__links"'),
+    );
+
+    const controls = /aria-controls="([^"]+)"/.exec(nav)?.[1];
+    expect(controls).toBeDefined();
+    expect(nav).toContain(`<ul class="of-bar__links" id="${controls}">`);
   });
 
   test("the toggle is a summary, and it is named", () => {

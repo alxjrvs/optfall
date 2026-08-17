@@ -118,15 +118,13 @@
   appearance: none;
 }
 
+/* The anchor for the panel. It is the NAV rather than the disclosure, because
+   the panel is the disclosure's sibling — see `SiteHeader.tsx` for why — and it
+   should still hang under the button that opened it. */
 .of-bar__nav {
+  position: relative;
   flex: 0 0 auto;
   font-size: var(--of-type-size-small);
-}
-
-/* The anchor for the panel, which is positioned against this rather than
-   against the bar: the menu should hang under the button that opened it. */
-.of-bar__menu {
-  position: relative;
 }
 
 .of-bar__menu-button {
@@ -172,22 +170,10 @@
   inset-block-start: calc(100% + var(--of-space-tighter));
   z-index: 1;
   /*
-    HIDDEN BY THIS RULE, NOT BY THE BROWSER'S, and that is not belt and braces —
-    it is the only version that works in both engines.
-
-    A closed `<details>` hides its content two different ways depending on how
-    new the browser is: the old way is a UA `display: none`, which ANY class
-    selector here outranks, and the new way is `::details-content` with
-    `content-visibility: hidden`, which no `display` can touch. Relying on the
-    UA therefore fails in opposite directions — on an older engine the panel
-    would hang open permanently, and on a current one it vanished from the
-    layout even when the container query said it should be a row. Measured: the
-    links ended up 12px past the right edge of a 1414px window, in a nav box of
-    zero width, which is what a `content-visibility: hidden` subtree does to
-    anything that tries to lay it out.
-
-    So the state is owned here. Closed is `display: none`; open is a panel; wide
-    is a row regardless of either.
+    HIDDEN BY THIS RULE, AND BY NOTHING ELSE. The list is the disclosure's
+    SIBLING, so no engine is hiding it on our behalf: closed is `display: none`
+    here, open is the panel below, and wide is a row regardless of either. That
+    is the whole reason for the sibling structure — see `SiteHeader.tsx`.
   */
   display: none;
   flex-direction: column;
@@ -203,7 +189,7 @@
   min-inline-size: max-content;
 }
 
-.of-bar__menu[open] .of-bar__links {
+.of-bar__menu[open] ~ .of-bar__links {
   display: flex;
 }
 
@@ -239,7 +225,6 @@
 
   /* `[open]` is irrelevant up here: the links are the bar's nav, not a panel,
      whether or not somebody opened the disclosure before the window grew. */
-  .of-bar__menu .of-bar__links,
   .of-bar__links {
     position: static;
     display: flex;
@@ -248,21 +233,6 @@
     padding: 0;
     background: none;
     border: 0;
-  }
-}
-
-/*
-  AND THE NEW WAY OF HIDING IT, UNDONE.
-
-  Its own rule, on purpose: `::details-content` is unknown to older engines, and
-  an unknown pseudo-element invalidates the whole selector it appears in. Folded
-  into the block above it would take the real rules down with it in exactly the
-  browsers that still need them.
-*/
-@container bar (inline-size >= 44rem) {
-  .of-bar__menu::details-content {
-    content-visibility: visible;
-    block-size: auto;
   }
 }
 
