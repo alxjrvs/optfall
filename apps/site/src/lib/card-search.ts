@@ -1832,6 +1832,21 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
         );
       } else {
         if (RETIRED_DISPLAY_MODES.includes(operand)) {
+          /*
+            IT SAYS WHAT HAPPENED AND DOES NOT GIVE DIRECTIONS, which is a
+            correction rather than an omission. A draft of this sentence
+            pointed at the copy control — "at the end of the bar above" — and
+            was wrong twice over: notices render ABOVE the index, so the bar
+            is below rather than above, and a query that matches nothing
+            renders no index at all, so on that page the notice named a
+            control that was not on it. Review caught both.
+
+            The engine cannot fix either by rewording, because both are facts
+            about a RENDERING it has no access to. A parser that describes the
+            page it is being displayed on will keep drifting out of true every
+            time the page moves. So it describes the QUERY, which is the thing
+            it actually knows, and the control is left to be found where it is.
+          */
           note(
             "operand-retired",
             `display:${operand} named a names-only view. It is now display:list, which is the same rows with more on each of them.`,
