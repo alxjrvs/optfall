@@ -352,6 +352,47 @@ const STRUCTURE: TokenTable = {
   "layout.page.wide":
     "calc(var(--of-card-face-normal) + var(--of-space-loosest) + var(--of-type-measure))",
 
+  /* HOW WIDE A CARD IS DRAWN IN AN INDEX, WHICH IS NOT A TIER.
+
+     `card.face.*` above are the two widths the host SERVES, and their comment
+     is right that a surface may not invent a third — asking for one would be
+     asking for a URL that 404s. This is the different question: how wide the
+     browser LAYS the picture out, which is a fact about a grid rather than
+     about a store. The join between them is `srcset`, so a cell this wide is
+     satisfied by the 450px tier on a dense screen and by the 180px one on a
+     phone, and neither number is chosen here.
+
+     240px, and it is measured rather than picked. Scryfall — the reference
+     `docs/SCRYFALL-GAP.md` names — draws its image results at 245px in a grid
+     capped at 1000px, four across. That is the size at which a card face is
+     readable as a card rather than as a stamp: the name and the pitch colour
+     carry at a glance and the art is still art. Our thumb tier is 180px, which
+     is why the grid it used to draw read as a contact sheet.
+
+     `layout.card.cell`, NOT `card.face.cell`, and the namespace is the whole of
+     the distinction. Anything under `card.face` is a promise the face host
+     keeps. This is a promise the layout keeps. */
+  "layout.card.cell": "15rem",
+
+  /* FOUR CELLS AND THE GUTTERS BETWEEN THEM, added up — written as references
+     for the same reason `page.wide` is, so there is no chosen number here to
+     drift from the cell size it is built out of.
+
+     `page.wide` could not do this job. It is a FACE BESIDE A COLUMN OF PROSE,
+     which is what a card page is, and a list of cards is neither of those
+     things — using it would have made the index's width follow the reading
+     measure, so tuning line length on `/cr` would have silently changed how
+     many cards fit in a row on `/search`.
+
+     Four is the count rather than an accident of the arithmetic: the grid is
+     `auto-fill`, so a narrower viewport takes three or two and a wider one
+     cannot take five, because this is where the container stops. Four card
+     faces is the widest row a reader scans without losing the left edge, and it
+     is what the reference settled on. 61.5rem — 984px — against Scryfall's
+     1000. */
+  "layout.page.index":
+    "calc(4 * var(--of-layout-card-cell) + 3 * var(--of-space-tight))",
+
   /* Quick enough not to be noticed, slow enough not to flicker. */
   "motion.fast": "120ms",
   "motion.base": "180ms",

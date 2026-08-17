@@ -99,8 +99,11 @@ export interface PageResult {
    * scripting being off — see {@link SiteHeaderProps.fieldDescribedBy}.
    */
   readonly headerSearchDescribedBy?: string | undefined;
-  /** `measure` (prose) or `wide` (a face beside a column). See the tokens. */
-  readonly width?: "measure" | "wide";
+  /**
+   * `measure` (prose), `wide` (a face beside a column), or `index` (a grid of
+   * card faces and nothing else). See the tokens.
+   */
+  readonly width?: "measure" | "wide" | "index";
   /**
    * True when this page mounts an `Island`, so the shell emits the script.
    *

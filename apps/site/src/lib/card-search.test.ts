@@ -420,7 +420,13 @@ describe("ranking", () => {
       (row) => row.label === "Head Jab",
     );
 
-    expect(headJab?.matchedVersions).toEqual([
+    expect(
+      headJab?.matchedVersions.map(({ pitch, href, label }) => ({
+        pitch,
+        href,
+        label,
+      })),
+    ).toEqual([
       {
         pitch: 1,
         href: "/card/ben/010/head-jab-1",
@@ -437,6 +443,21 @@ describe("ranking", () => {
         label: "Head Jab (pitch 3)",
       },
     ]);
+
+    /*
+     * AND EACH VERSION CARRIES ITS OWN PICTURE, WHICH IS WHAT MAKES A FAN OF
+     * THEM WORTH DRAWING. `CardIndex` stacks the versions of a name behind the
+     * row's face and spreads them on hover; three copies of one image in three
+     * colours would be a decoration rather than a choice between cards.
+     *
+     * ASSERTED AS DISTINCT RATHER THAN BY KEY, because the keys are upstream
+     * basenames and pinning them here would fail on the next corpus sync for a
+     * reason that has nothing to do with this claim. What has to hold is that
+     * three versions produce three faces.
+     */
+    const faces = (headJab?.matchedVersions ?? []).map((v) => v.faceKey);
+    expect(faces.every((key) => key !== null)).toBe(true);
+    expect(new Set(faces).size).toBe(3);
     /* The row's own link is the LOWEST-PITCH version — which is the page
        `/card/head-jab` used to render and now 301s to. The versions beside it
        are how a reader who means one of the others says so. */

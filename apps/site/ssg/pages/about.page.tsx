@@ -35,9 +35,16 @@ import { fileURLToPath } from "node:url";
 
 import { OrnamentalRule } from "optfall-components/react";
 
+import rulesJson from "../../../../data/rules/cr-2.14.0.json";
+
 import { CORPUS as RULES } from "../../src/lib/rules";
 import { CARD_PAGES, CORPUS } from "../../src/lib/cards";
 import { FACE_HOST } from "../../src/lib/faces";
+import {
+  buildKeywordVocabulary,
+  keywordCoverage,
+} from "../../src/lib/keywords";
+import type { RulesCorpus } from "../../src/lib/search";
 import { SETS } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./about.css";
@@ -141,6 +148,19 @@ const pages = CARD_PAGES.length.toLocaleString("en-GB");
 const sections = RULES.sections.length.toLocaleString("en-GB");
 const sets = SETS.counts.sets.toLocaleString("en-GB");
 const upstream = `https://github.com/${CORPUS.source.repository}`;
+
+/**
+ * THE KEYWORD JOIN'S COVERAGE, computed rather than typed so it cannot rot when
+ * either document is re-synced. Moved here from `/search`; see the paragraph
+ * that renders it for why that page was the wrong home for it.
+ */
+const coverage = keywordCoverage(
+  buildKeywordVocabulary(rulesJson as unknown as RulesCorpus),
+  CORPUS.cards.flatMap((card) =>
+    card.card_keywords.concat(card.ability_and_effect_keywords),
+  ),
+);
+const unmatchedList = coverage.unmatched.join(", ");
 
 /**
  * One real face key, taken from the corpus rather than typed, so the sample
@@ -324,6 +344,33 @@ function page(): PageResult {
           <p>
             Legality is present-day only. Where upstream publishes no flag for a
             format, Optfall returns no verdict for it.
+          </p>
+
+          {/*
+            THE JOIN'S COVERAGE, AND IT MOVED HERE FROM `/search`.
+
+            A join that quietly drops what it cannot answer is asserting a
+            completeness it does not have, so the figure is stated and the
+            failures are named. What changed is only where: it used to sit at
+            the foot of the results page, which paginates — so nine lines of
+            build metadata were filed under sixty card faces, addressed to
+            somebody who came to look up a card. This is the page about method,
+            which is what the number is about.
+
+            COMPUTED RATHER THAN TYPED, so it cannot rot when either document is
+            re-synced. That property is the reason the sentence is worth having
+            at all, and it is why the numbers below are all interpolated.
+          */}
+          <p>
+            Card keywords are matched to the Comprehensive Rules section that
+            defines each one, and every card page cites the rules that govern
+            it. Coverage is <strong>{coverage.percent}%</strong> —{" "}
+            {coverage.direct + coverage.viaFamily} of {coverage.baseForms}{" "}
+            distinct keywords, {coverage.direct} matched directly and{" "}
+            {coverage.viaFamily} through a rule the document parameterises. The{" "}
+            {coverage.unmatched.length} it cannot resolve are named rather than
+            hidden: {unmatchedList}. A keyword the rules do not define carries
+            no citation instead of a guessed one.
           </p>
         </section>
 

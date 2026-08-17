@@ -2,11 +2,11 @@
  * `/search`'s own styles, ported from the Astro page's scoped block.
  */
 
-.of-search-page__provenance {
-  margin-block-start: var(--of-space-loosest);
-  color: var(--of-color-ink-muted);
-  font-size: var(--of-type-size-small);
-}
+/*
+ * NO `.of-search-page__provenance` RULE, because there are no provenance
+ * paragraphs left on this page. See the note at the top of `search.page.tsx`
+ * for where each of the claims they carried now lives.
+ */
 
 /*
  * The no-JS notice, in the same accent-ruled register the query engine's own
