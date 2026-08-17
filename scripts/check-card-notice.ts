@@ -67,7 +67,10 @@ import { CARD_IMAGE_COPYRIGHT } from "../packages/components/src/index";
 import { FACE_HOST } from "../apps/site/src/lib/faces";
 import { CORPUS } from "../apps/site/src/lib/cards";
 
-const outputDirectory = process.argv[2] ?? "apps/site/dist";
+const args = process.argv.slice(2);
+const verbose = args.includes("--verbose");
+const outputDirectory =
+  args.find((arg) => !arg.startsWith("--")) ?? "apps/site/dist";
 
 const pages = [
   ...new Bun.Glob("**/*.html").scanSync({ cwd: outputDirectory, dot: false }),
@@ -152,7 +155,20 @@ function componentFaces(html: string): number {
 }
 
 let facePages = 0;
+/**
+ * How many failing pages get their own `::error` line.
+ *
+ * The failure this check is most afraid of — the universal footer losing the
+ * notice — is one edit that hits every page at once, so the honest report is
+ * one annotation and a count, not 12,776 identical ones. `--verbose`
+ * annotates every page.
+ */
+const MAX_REPORTED = 10;
+
 let failures = 0;
+const report = (message: string): void => {
+  if (verbose || failures < MAX_REPORTED) console.log(message);
+};
 
 for (const page of pages) {
   const html = readFileSync(`${outputDirectory}/${page}`, "utf8");
@@ -168,7 +184,7 @@ for (const page of pages) {
    * art with no attribution anywhere on them.
    */
   if (!html.includes(CARD_IMAGE_COPYRIGHT)) {
-    console.log(
+    report(
       `::error file=${file}::${page} does not contain "${CARD_IMAGE_COPYRIGHT}". It is emitted by the universal footer in ssg/document.tsx, so a page missing it has lost the footer.`,
     );
     failures += 1;
@@ -180,7 +196,7 @@ for (const page of pages) {
   const rendered = componentFaces(html);
 
   if (images > rendered) {
-    console.log(
+    report(
       `::error file=${file}::${page} serves ${images} card image(s) but only ${rendered} came from CardFace. A face outside the component carries no notice of its own and no guarantee that one covers it.`,
     );
     failures += 1;
@@ -188,11 +204,17 @@ for (const page of pages) {
   }
 
   if (rendered > images) {
-    console.log(
+    report(
       `::error file=${file}::${page} renders ${rendered} CardFace element(s) for ${images} card image(s). A CardFace whose src is not a card image makes this check's arithmetic meaningless — it would mask one bare <img> elsewhere on the page. Either the src is wrong or this check's host list needs the new one.`,
     );
     failures += 1;
   }
+}
+
+if (!verbose && failures > MAX_REPORTED) {
+  console.log(
+    `::error::…and ${failures - MAX_REPORTED} more page(s) with the same failure. Re-run with --verbose to annotate every one.`,
+  );
 }
 
 if (facePages === 0) {
