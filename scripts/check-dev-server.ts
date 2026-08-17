@@ -286,6 +286,55 @@ const origin = `http://localhost:${PORT}`;
 const READY_LINE = serveReadyLine(PORT);
 
 /**
+ * Stops the server and waits for the port to come back, or says why it has
+ * not.
+ *
+ * `server.kill()` SIGNALS THE WRAPPER, NOT THE SERVER. The thing spawned is
+ * `bun run … dev`, and `dev` is the compound `bun ssg/build.ts && bun
+ * ssg/serve.ts` — so the process holding the socket is a GRANDCHILD, and a
+ * signal delivered to its parent is not guaranteed to reach it.
+ *
+ * WITHOUT THIS THE CHECK POISONS ITS OWN NEXT RUN, and does so with a lie.
+ * `assertPortFree` turned a surviving grandchild from a stray process nobody
+ * noticed into a hard failure — one that reports a port collision and blames a
+ * parallel worktree, when the process holding the port is this check's own
+ * orphan from a minute ago. Waiting for the release is what keeps that message
+ * honest.
+ *
+ * IT REPORTS RATHER THAN ESCALATES when the port does not come back. Killing a
+ * process group would reach the grandchild and would also reach anything else
+ * sharing that group, which on a developer's machine is their shell. A check is
+ * not entitled to that, so the honest move is to say plainly that the port is
+ * still held and let the next run's preflight name it too.
+ *
+ * AND THE WARNING NAMES BOTH READINGS, because this now also runs on the path
+ * where the server exited without ever binding — where the port is held by
+ * whatever the check lost the race to, not by an orphan of its own. Blaming a
+ * surviving grandchild there would be the same confident wrong diagnosis that
+ * `assertPortFree` was fixed to stop making.
+ */
+async function shutdown(): Promise<void> {
+  server.kill();
+
+  const deadline = Date.now() + SHUTDOWN_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    try {
+      Bun.serve({ port: PORT, fetch: () => new Response("") }).stop(true);
+      return;
+    } catch {
+      await Bun.sleep(200);
+    }
+  }
+
+  console.log(
+    `::warning::The dev server was killed but port ${PORT} is still held after ${SHUTDOWN_TIMEOUT_MS / 1000}s — ` +
+      `either something this check started outlived it, or whatever the check was competing with still has the port. ` +
+      `Either way the next run will fail its port preflight, and this line is the reason.`,
+  );
+}
+
+/**
  * Waits for OUR server to answer, or gives up with everything it said.
  *
  * IT REQUIRES THE CHILD'S OWN READY LINE, NOT MERELY THAT SOMETHING ANSWERS,
@@ -306,48 +355,6 @@ const READY_LINE = serveReadyLine(PORT);
  * line claiming a bind and a socket that answers are two different facts and
  * this check wants both.
  */
-/**
- * Stops the server and does not return until the port is actually free again.
- *
- * `server.kill()` SIGNALS THE WRAPPER, NOT THE SERVER. The thing spawned is
- * `bun run … dev`, and `dev` is the compound `bun ssg/build.ts && bun
- * ssg/serve.ts` — so the process holding the socket is a GRANDCHILD, and a
- * signal delivered to its parent is not guaranteed to reach it.
- *
- * WITHOUT THIS THE CHECK POISONS ITS OWN NEXT RUN, and does so with a lie.
- * `assertPortFree` turned a surviving grandchild from a stray process nobody
- * noticed into a hard failure — one that reports a port collision and blames a
- * parallel worktree, when the process holding the port is this check's own
- * orphan from a minute ago. Waiting for the release is what keeps that message
- * honest.
- *
- * IT REPORTS RATHER THAN ESCALATES when the port does not come back. Killing a
- * process group would reach the grandchild and would also reach anything else
- * sharing that group, which on a developer's machine is their shell. A check is
- * not entitled to that, so the honest move is to say plainly that something it
- * started is still holding the port.
- */
-async function shutdown(): Promise<void> {
-  server.kill();
-
-  const deadline = Date.now() + SHUTDOWN_TIMEOUT_MS;
-
-  while (Date.now() < deadline) {
-    try {
-      Bun.serve({ port: PORT, fetch: () => new Response("") }).stop(true);
-      return;
-    } catch {
-      await Bun.sleep(200);
-    }
-  }
-
-  console.log(
-    `::warning::The dev server was killed but port ${PORT} is still held after ` +
-      `${SHUTDOWN_TIMEOUT_MS / 1000}s, so something it started outlived it. The next run of this check will ` +
-      `fail its port preflight, and the cause is this orphan rather than another worktree.`,
-  );
-}
-
 async function waitForServer(): Promise<void> {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
 
@@ -357,6 +364,14 @@ async function waitForServer(): Promise<void> {
         `::error::\`bun run dev\` exited with code ${server.exitCode} before serving anything.`,
       );
       console.log(transcript.trim());
+      /*
+       * THROUGH `shutdown` LIKE EVERY OTHER EXIT, and this path needs it most.
+       * The wrapper is ALREADY GONE here — that is what `exitCode` means — so it
+       * is the one case where a surviving grandchild is not hypothetical, and it
+       * was the one exit that neither waited for the port nor named the orphan.
+       * When the port is already free the probe costs nothing.
+       */
+      await shutdown();
       process.exit(1);
     }
 
