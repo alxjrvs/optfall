@@ -28,19 +28,31 @@
 /**
  * Our Impact partner identifier, or `null` while the application is pending.
  *
- * FLIPPING THIS IS THE ENTIRE DEPLOYMENT. Set it to the numeric id Impact
- * issues — as a string — and nothing else in the repository needs to change:
- * links gain their wrapper, the disclosure gains its sentence, and the tests
- * that assert both flip with it.
+ * FLIPPING THIS IS ALMOST THE ENTIRE DEPLOYMENT. Set it to the numeric id
+ * Impact issues — as a string — and the code needs nothing else: links gain
+ * their wrapper, the disclosure gains its sentence, and the tests that assert
+ * both flip with it.
+ *
+ * ONE THING NO TEST CAN COVER, so it is a written instruction instead: **click a
+ * link after flipping and confirm it lands on the product page and registers in
+ * Impact.** {@link CAMPAIGN_PATH} is inferred rather than issued to us, and the
+ * tests build their expected URL from that same constant — so a wrong
+ * campaign/media pair would satisfy every assertion here and still send readers
+ * to a dead partner link, or to a live one crediting nobody. One manual
+ * click-through is the only thing that distinguishes those.
  */
 export const AFFILIATE_ID: string | null = null;
 
 /**
  * TCGplayer's campaign path, which is theirs rather than ours.
  *
- * Identical across every partner — Scryfall and FaBrary both publish links on
- * this exact path with only the account segment differing — so it is a constant
- * of the programme, not a value we were issued.
+ * INFERRED FROM TWO PUBLISHED EXAMPLES, NOT FROM DOCUMENTATION. Scryfall
+ * (account `4931599`) and FaBrary (account `4925001`) both publish links on this
+ * exact path with only the account segment differing, which is good evidence
+ * that it is a constant of the programme rather than a per-partner value — and
+ * it is still an inference. Impact issues each partner a link, and ours is the
+ * authority the moment we have it: if it disagrees with this, ours wins and this
+ * comment is the thing that was wrong.
  */
 const CAMPAIGN_PATH = "1830156/21018";
 

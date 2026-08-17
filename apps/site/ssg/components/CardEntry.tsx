@@ -560,6 +560,15 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
   const printingCount = card.printings.length;
 
+  /*
+   * WHETHER THIS PAGE HAS ANYTHING TO DISCLOSE. Read off the same function the
+   * cells call, so the notice and the links can never disagree about whether
+   * there are links.
+   */
+  const hasBuyLinks = card.printings.some(
+    (printing) => buyHref(printing, "card-printings") !== undefined,
+  );
+
   const keywordRules = rulesForCard(KEYWORD_VOCABULARY, [
     ...card.card_keywords,
     ...card.ability_and_effect_keywords,
@@ -819,6 +828,72 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       }
     }
     return qualifiers;
+  })();
+
+  /**
+   * What a buy link is called, per printing.
+   *
+   * THE SAME PROBLEM AS `numberQualifier`, ON A DIFFERENT AXIS. That map keeps
+   * two links to two ADDRESSES from being spoken alike; this one keeps two links
+   * to two PRODUCTS from being. They are genuinely different problems: Standard
+   * and Rainbow Foil of one art share a page — so `numberQualifier` correctly
+   * adds nothing — while pointing at two different things to buy.
+   *
+   * NO SET OF MEANINGFUL FIELDS IS UNIQUE, which is why this ends in a fallback
+   * rather than a longer key. Aether Wildfire's EVR123 has two Rainbow Foil
+   * products separated only by `art_variations: ["EA"]`, and even number +
+   * edition + foiling + variations still collides on four printings in the
+   * corpus — Lightning Flow OMN203, Runechant ROS162, Seismic Surge MPG112 and
+   * Spectral Shield MST158 — where upstream lists several products under
+   * identical metadata. So the product id is appended, and ONLY where the name
+   * would otherwise be ambiguous, exactly as `numberQualifier` adds nothing to a
+   * number that is already unambiguous.
+   *
+   * THE VARIATION CODES ARE UPSTREAM'S, UNEXPANDED. `EA`, `FA`, `AA`, `AB`,
+   * `AT`, `HS` — six codes with no published gloss in the corpus and no
+   * expansion table in this repository. Inventing one would be a curation step
+   * needing re-verification on every sync, which is the thing the corpus builder
+   * refuses to do one layer down.
+   */
+  const buyLabel = ((): ReadonlyMap<string, string> => {
+    const base = new Map<string, string>();
+    const byName = new Map<string, Set<string>>();
+
+    for (const { printing } of page.printings) {
+      const href = buyHref(printing, "card-printings");
+      if (href === undefined) continue;
+
+      const name = [
+        printing.id,
+        editionLabel(printing.edition),
+        printing.foiling === "" ? undefined : foilingName(printing.foiling),
+        printing.art_variations.length === 0
+          ? undefined
+          : `art ${printing.art_variations.join(" ")}`,
+      ]
+        .filter((part) => part !== undefined)
+        .join(", ");
+
+      base.set(printing.unique_id, name);
+      const found = byName.get(name) ?? new Set<string>();
+      found.add(href);
+      byName.set(name, found);
+    }
+
+    const labels = new Map<string, string>();
+    for (const { printing } of page.printings) {
+      const name = base.get(printing.unique_id);
+      if (name === undefined) continue;
+      const ambiguous = (byName.get(name)?.size ?? 0) > 1;
+      const product = printing.tcgplayer_product_id;
+      labels.set(
+        printing.unique_id,
+        ambiguous && product !== undefined
+          ? `${name}, product ${product}`
+          : name,
+      );
+    }
+    return labels;
   })();
 
   /** The box the face is drawn in — this printing's own orientation. */ /** The box the face is drawn in — this printing's own orientation. */
@@ -1706,12 +1781,28 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                             context. The column header supplies the verb for a
                             reader who can see it; this supplies the whole
                             sentence for one who cannot.
+
+                            IT NAMES ALL THREE AXES, and the edition is not
+                            optional politeness. A printing is identified by
+                            (number, edition, foiling) — the corpus builder says
+                            so where it drops `set_printing_unique_id` — and Head
+                            Jab's WTR098 is four printings across two editions
+                            and two foilings. Number and foiling alone give the
+                            two Standard rows identical names pointing at
+                            different products, which is WCAG 2.4.4 and is the
+                            same failure `numberQualifier` exists to prevent one
+                            column to the left.
+
+                            IT DOES NOT REUSE `numberQualifier`, which
+                            disambiguates ADDRESSES rather than products: two
+                            printings can share an art page — and therefore carry
+                            no qualifier — while linking to two different things
+                            here. `buyLabel` is that second map; see it for why
+                            the name sometimes ends in a product id.
                           */}
                           <span className="of-card__visually-hidden">
-                            {` — buy ${printing.id}${
-                              printing.foiling === ""
-                                ? ""
-                                : `, ${foilingName(printing.foiling)}`
+                            {` — buy ${
+                              buyLabel.get(printing.unique_id) ?? printing.id
                             }, on TCGplayer`}
                           </span>
                         </a>
@@ -1736,8 +1827,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
           THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same constant the
           links do, so the sentence cannot claim we earn nothing on a page whose
           links are earning — see `apps/site/src/lib/tcgplayer.ts`.
+
+          AND IT ONLY APPEARS WHERE THERE IS SOMETHING TO DISCLOSE. A card whose
+          every printing is a promo has a Buy column of em dashes, and a notice
+          under it saying "buy links go to TCGplayer" would be describing links
+          that are not on the page. The point of this sentence is that a claim on
+          a page is true of THAT page.
         */}
-        <p className="of-card__verify">{buyDisclosure()}</p>
+        {hasBuyLinks ? (
+          <p className="of-card__verify">{buyDisclosure()}</p>
+        ) : null}
 
         {/*
           ONLY WHERE THE PRINTINGS DISAGREE. A card whose every printing carries

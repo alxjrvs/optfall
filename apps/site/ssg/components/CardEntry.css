@@ -1243,20 +1243,25 @@
 }
 
 /*
-  THE ONE LINK IN THIS TABLE THAT LEAVES THE SITE, and it is marked as such
-  rather than left to look like the set and other-face links beside it. Those go
-  somewhere the reader already is; this goes to a shop.
+  THE ONE LINK IN THIS TABLE THAT LEAVES THE SITE, and it is deliberately NOT
+  given a colour of its own.
 
-  IT IS NOT THE ACCENT. Colour in this interface is data — pitch, rarity,
-  legality — and a commerce link is the last thing that should borrow the
-  vocabulary reserved for whether a card is legal. Brass is the material used
-  for apparatus and marginalia throughout, which is what this is.
+  THIS RULE USED TO SPEND `--of-color-brass`, arguing that brass is the material
+  for apparatus and marginalia. That argument was wrong, and it contradicted an
+  invariant stated in three places: `docs/DESIGN.md` ("the brass seal is the only
+  place brass appears — attribution is the moat, so it gets the one material
+  nothing else is allowed to use"), `packages/theme/src/tokens.ts` ("BRASS IS NOT
+  AVAILABLE", declining it even to Promo rarity where it is the obvious choice),
+  and the design-system page for the seal ("Nothing else in the system may
+  consume `color.brass`"). `rule.page.tsx` already records declining brass for
+  exactly this reason. `check:tokens` asserts that a token EXISTS, not who may
+  spend it, so this landed silently — which is why the argument is written down
+  here rather than just deleted.
+
+  So the link is a link. If marking outbound commerce is worth its own visual
+  vocabulary, that is a decision for `DESIGN.md` to make once, for every surface
+  — not one a component stylesheet invents for itself.
 */
-.of-card__buy {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-small);
-  color: var(--of-color-brass);
-}
 
 .of-card__printings thead th {
   font-family: var(--of-type-family-sans);

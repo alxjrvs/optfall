@@ -1002,6 +1002,72 @@ describe("the printings table is how a reader reaches another art", () => {
     expect(new Set(spoken)).toEqual(new Set(["DYN088", "DYN088 (DYN088-MV)"]));
   });
 
+  /*
+   * THE SAME RULE, FOR THE COLUMN THAT LEAVES THE SITE. `numbersIn` matches
+   * `href="/card/…"` only, so it is structurally blind to the buy links — and a
+   * buy link is the one place where two rows can share an ADDRESS (Standard and
+   * Rainbow Foil are one art, so one page) while addressing two different
+   * PRODUCTS. That is the axis `numberQualifier` does not cover.
+   */
+  const buysIn = (html: string) =>
+    [
+      ...tableIn(html).matchAll(
+        /<a class="of-card__buy" href="([^"]+)"[^>]*>(.*?)<\/a>/gs,
+      ),
+    ].map((link) => ({
+      href: link[1] ?? "",
+      spoken: (link[2] ?? "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    }));
+
+  test("a buy link names the edition, not just the number and foiling", () => {
+    /*
+     * WTR098 IS THE CASE. Head Jab's Welcome to Rathe printing exists in two
+     * editions and two foilings — four products under one collector number — so
+     * a name built from number and foiling alone gives the two Standard rows
+     * identical text pointing at different things.
+     */
+    const buys = buysIn(render(addressOf("head-jab-1")));
+    expect(buys.length).toBeGreaterThan(1);
+
+    const wtr098 = buys.filter((link) => link.spoken.includes("WTR098"));
+    expect(wtr098.length).toBeGreaterThan(1);
+    expect(new Set(wtr098.map((link) => link.spoken)).size).toBe(wtr098.length);
+  });
+
+  test("no card page names two buy links alike and sends them elsewhere", () => {
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      const byName = new Map<string, Set<string>>();
+      for (const link of buysIn(render(page.href))) {
+        const found = byName.get(link.spoken) ?? new Set<string>();
+        found.add(link.href);
+        byName.set(link.spoken, found);
+      }
+      for (const [spoken, hrefs] of byName)
+        if (hrefs.size > 1)
+          expect(`${page.href}: ${spoken} -> ${[...hrefs].join(", ")}`).toBe(
+            `${page.href}: one product`,
+          );
+    }
+  });
+
+  test("the disclosure appears only where there are buy links", () => {
+    /*
+     * A CLAIM ON A PAGE MUST BE TRUE OF THAT PAGE. Cards whose every printing
+     * is a promo have a Buy column of em dashes, and a notice describing links
+     * that are not there is exactly the kind of confidently-wrong sentence this
+     * project exists to not print.
+     */
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      const html = render(page.href);
+      expect(html.includes("Buy links go to TCGplayer")).toBe(
+        buysIn(html).length > 0,
+      );
+    }
+  });
+
   test("no card page names two printings alike and sends them elsewhere", () => {
     /*
      * THE WHOLE CORPUS, at the stride the related-lists test uses and for the
