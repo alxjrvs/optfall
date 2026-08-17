@@ -339,7 +339,14 @@ async function main(): Promise<void> {
   for (const asset of GENERATED_ASSETS) {
     const target = join(OUT_DIR, asset.path);
     await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, asset.contents, "utf-8");
+    /* The encoding is passed for text and WITHHELD for bytes. Node ignores it
+       on a TypedArray either way, but spelling `utf-8` over a PNG reads as a
+       claim about the file that is not true of it. */
+    if (typeof asset.contents === "string") {
+      await writeFile(target, asset.contents, "utf-8");
+    } else {
+      await writeFile(target, asset.contents);
+    }
   }
 
   /*

@@ -72,19 +72,28 @@ export function Document({
         <meta name="description" content={result.description} />
         <link rel="canonical" href={canonicalFor(route, result.canonical)} />
         {/*
-          The mark, in the tab. One declaration rather than the usual pile of
-          six: an SVG icon is served to every engine that supports one, and the
-          PNG variants an `apple-touch-icon` needs cannot be produced without a
-          rasteriser in the build — so they are absent rather than hand-drawn,
-          a hand-drawn one being the second copy of the mark this arrangement
-          exists to avoid.
+          The mark, in the tab. Still one declaration rather than the usual pile
+          of six: an SVG icon is served to every engine that supports one, and
+          nothing here enumerates raster favicon sizes.
         */}
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {/*
-          Installability. The manifest names its own icon, so there is no second
-          `<link rel="apple-touch-icon">` here — it would have to be a PNG, and
-          the reason there is no PNG is written down in `ssg/assets.ts`.
+          Installability, in the two channels that exist.
+
+          THE `apple-touch-icon` IS NOT REDUNDANT WITH THE MANIFEST, which is
+          what the absence of this line used to assume. iOS ignores the
+          manifest's `icons` for the home-screen icon on older versions and lets
+          this element override them on newer, and it has never accepted an SVG
+          in either — so with only the manifest, an iOS install took its icon
+          from a SCREENSHOT OF THE PAGE. It is one size, not the historical
+          ladder: iOS downsamples a single 180 px icon perfectly well, and the
+          ladder existed for devices this site does not need to court.
+
+          It is derived from the same geometry as everything else — see
+          `ssg/assets.ts` — so it is not the second copy of the mark that the
+          old comment here was right to refuse.
         */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content={THEME_COLOUR} />
         {styles.map((href) => (

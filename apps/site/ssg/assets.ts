@@ -22,6 +22,7 @@
 
 import { MARK_GEOMETRY } from "optfall-components";
 import { type TokenId, type TokenTable, themes } from "optfall-theme";
+import sharp from "sharp";
 
 /**
  * The colour the platform paints around the app, and the one the browser paints
@@ -38,7 +39,13 @@ export const THEME_COLOUR: string = literal(themes.dark.tokens, "color.ground");
 export interface GeneratedAsset {
   /** Path relative to the output root. No leading slash. */
   readonly path: string;
-  readonly contents: string;
+  /**
+   * Text for everything derived from the token tables, BYTES for the rasterised
+   * install icons. The union is what let the PNGs join this registry rather than
+   * arrive by a second mechanism — and a second mechanism is precisely what the
+   * header of this file exists to argue against.
+   */
+  readonly contents: string | Uint8Array;
 }
 
 /**
@@ -194,24 +201,69 @@ function iconSvg(safeZone: number): string {
 }
 
 /**
+ * The same mark, rasterised — the half of installability a vector cannot serve.
+ *
+ * THIS IS THE RASTERISER THE COMMENT BELOW SAID WOULD ARRIVE ONE DAY, AND IT
+ * ARRIVES ON THAT COMMENT'S OWN TERMS: the PNG is rendered FROM `iconSvg()`,
+ * not hand-drawn beside it, so there is still exactly one declaration of the
+ * geometry and one of the palette. Move a token and every size re-renders.
+ *
+ * IT IS NEEDED BECAUSE SVG MANIFEST ICONS ARE A CHROMIUM FEATURE, NOT A WEB
+ * ONE. WebKit does not rasterise an SVG named in `icons`, and an
+ * `apple-touch-icon` has never been allowed to be one — so on iOS the install
+ * this project already had was an install whose icon was a SCREENSHOT OF THE
+ * PAGE. The manifest kept both spellings for that reason: Chromium picks
+ * whichever it prefers and loses nothing, while WebKit finally has something it
+ * can read.
+ *
+ * `.resize()` ON VECTOR INPUT RE-RENDERS RATHER THAN UPSCALING, which is the
+ * one thing worth knowing here and is not obvious. These SVGs carry a viewBox
+ * and no `width`/`height`, so their intrinsic size is 22 units — the naive fear
+ * is that sharp rasterises 22×22 and then blows it up to 512. It does not:
+ * librsvg is handed the target dimensions, and a 512 px render and a
+ * `.resize(512)` of the same source are byte-identical. Verified rather than
+ * assumed, because the failure would have been a soft blur nobody notices in a
+ * diff.
+ */
+async function iconPng(safeZone: number, size: number): Promise<Uint8Array> {
+  const rendered = await sharp(Buffer.from(iconSvg(safeZone)))
+    .resize(size, size)
+    .png()
+    .toBuffer();
+
+  return new Uint8Array(rendered);
+}
+
+/**
  * `/manifest.webmanifest` — what makes the site installable.
  *
- * THE ICON IS SVG AND THERE IS NO PNG, which is a real limitation stated rather
- * than hidden. Producing a raster icon needs a rasteriser in the build, and the
- * alternative — hand-drawing the mark once more as a PNG — is the second copy
- * of the geometry that `faviconSvg` exists to avoid, except worse, because a
- * bitmap cannot be re-derived when the palette moves. Chromium accepts SVG
- * manifest icons and installs on them; iOS Safari wants a PNG
- * `apple-touch-icon` and will fall back to a screenshot of the page without one.
- * That is the cost, and it is paid knowingly: the install prompt works where
- * most of this site's readers are, and the day a rasteriser is worth adding, the
- * PNG comes from `iconSvg()` rather than from a designer's export.
+ * THE ICONS ARE EMITTED IN BOTH SPELLINGS, and the PNGs are derived from the
+ * SVG rather than drawn beside it — see `iconPng` above for why that is what
+ * makes a second format affordable at all. Chromium installs happily on the
+ * vector; WebKit cannot read one, so without the raster the iOS install had an
+ * icon that was a screenshot of the page. Both are listed, largest last, and
+ * every consumer takes the one it understands.
  *
  * `display: "minimal-ui"` RATHER THAN `"standalone"`, and this one is about what
  * the site IS. Optfall's thesis is that every view is a URL — 12,776 of them,
  * each meant to be pasted. `standalone` removes the address bar, which removes
  * the affordance the product is built around. `minimal-ui` keeps a way to see
  * and copy the URL while still installing to a home screen.
+ *
+ * **AND IT IS DECLARED THROUGH `display_override`, BECAUSE ON WebKit
+ * `minimal-ui` DOES NOT DEGRADE — IT FALLS OUT OF THE APP ENTIRELY.** The
+ * manifest spec's fallback chain runs `minimal-ui` → `browser`, and WebKit
+ * supports only `standalone` and `browser`, so a bare `display: "minimal-ui"`
+ * means an iOS home-screen icon that opens **in Safari**: a bookmark wearing an
+ * app's clothes, which is the exact opposite of the thing being asked for.
+ *
+ * `display_override: ["minimal-ui"]` with `display: "standalone"` is how both
+ * halves survive. A browser that honours the override gets `minimal-ui` and the
+ * URL bar the product is built around; one that does not skips an unsupported
+ * value and reads `display`, so iOS gets a real standalone launch instead of a
+ * browser tab. The address bar is lost on iOS, and that is a genuine cost rather
+ * than a free win — it is accepted because the alternative on that platform is
+ * not "an install with a URL bar", it is not being installed at all.
  *
  * `start_url` IS `/`, AND IT WAS `/search` UNTIL THE COST WAS MEASURED. The
  * argument for `/search` was about routing — the front door exists to send
@@ -238,7 +290,10 @@ function manifest(): string {
       id: "/",
       start_url: "/",
       scope: "/",
-      display: "minimal-ui",
+      /* Read by whoever honours it; skipped as unsupported by whoever does not,
+         who then reads `display` below. See the note above this function. */
+      display_override: ["minimal-ui"],
+      display: "standalone",
       /* The chrome the platform paints around the app, and the colour behind
          the page before the first paint. Both are the ground rather than the
          accent: this is furniture, and the accent is rationed. */
@@ -266,6 +321,31 @@ function manifest(): string {
           src: "/icon-maskable.svg",
           sizes: "any",
           type: "image/svg+xml",
+          purpose: "maskable",
+        },
+        /*
+         * THE RASTER HALF, FOR EVERY CONSUMER THAT CANNOT READ A VECTOR. 192 and
+         * 512 are not arbitrary and not a pair of round numbers: they are the
+         * two sizes the install checks of every major engine are written against,
+         * and a manifest that names one without the other still trips diagnostics
+         * that look for both.
+         */
+        {
+          src: "/icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/icon-512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/icon-maskable-512.png",
+          sizes: "512x512",
+          type: "image/png",
           purpose: "maskable",
         },
       ],
@@ -357,12 +437,38 @@ function serviceWorkerPurge(): string {
 `;
 }
 
+/**
+ * THE REGISTRY IS AWAITED NOW, because rasterising is IO and there is no
+ * synchronous sharp. That is the whole cost of the change and it is contained
+ * here: `build.ts` awaits the list once, and everything else about this file's
+ * argument — an explicit list rather than a directory convention, because a
+ * convention is what silently produces nothing — is unchanged.
+ */
 export const GENERATED_ASSETS: readonly GeneratedAsset[] = [
   { path: "favicon.svg", contents: faviconSvg() },
   /* Full bleed: nothing crops this one. */
   { path: "icon.svg", contents: iconSvg(1) },
   /* Inset to the centre 80%, which is all a maskable crop is guaranteed. */
   { path: "icon-maskable.svg", contents: iconSvg(0.8) },
+  /* The same two insets, rasterised, for the engines that cannot read a vector. */
+  { path: "icon-192.png", contents: await iconPng(1, 192) },
+  { path: "icon-512.png", contents: await iconPng(1, 512) },
+  { path: "icon-maskable-512.png", contents: await iconPng(0.8, 512) },
+  /*
+   * `/apple-touch-icon.png` — 180 px, FULL BLEED, AND NOT NAMED BY THE MANIFEST.
+   *
+   * It is a `<link>` in `document.tsx`, because that is the only channel iOS
+   * reads for this: the manifest's `icons` are ignored for the home-screen
+   * icon on older iOS and overridden by this element on newer.
+   *
+   * FULL BLEED RATHER THAN THE MASKABLE INSET, which looks like the wrong
+   * choice next to the maskable entry above and is not. iOS does not mask to a
+   * circle — it rounds the corners of a square — so the safe-zone padding that
+   * a maskable crop needs would only render the mark small inside empty ground.
+   * The corner radius takes corners, and the mark is a wide ring across the
+   * middle, so nothing of it is inside the rounded-off region.
+   */
+  { path: "apple-touch-icon.png", contents: await iconPng(1, 180) },
   { path: "manifest.webmanifest", contents: manifest() },
   { path: "sw-purge.js", contents: serviceWorkerPurge() },
 ];
