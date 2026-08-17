@@ -721,6 +721,70 @@ function faceSrc(key: string | null, landscape: boolean): string {
  */
 const GRID_BOX = FACE_TIERS.normal;
 
+/**
+ * The intrinsic box a face at the head of a list row declares.
+ *
+ * THE `thumb` TIER, WHICH IS THE ONE PLACE ON THIS SITE IT IS THE RIGHT
+ * ANSWER. `faceSrc` records why the grid abandoned it: 180px drawn into a
+ * 240px cell is a third of an upscale, so the grid asked for `normal` instead.
+ * The row draws at `layout.card.row` — 44px — so the same tier is a 4×
+ * DOWNSCALE here. Asking for `normal` would ship a 450px picture to paint
+ * forty-four points of it, sixty times a page.
+ *
+ * PORTRAIT FOR THE LANDSCAPE CARDS TOO, exactly as {@link GRID_BOX} is, and
+ * the reason is the same one restated for a different axis: a row that changed
+ * height for the 15 horizontally-played cards would make the list's rhythm
+ * depend on which cards matched. `CardFace` letterboxes inside the box and
+ * draws the face the right way round.
+ */
+const ROW_BOX = FACE_TIERS.thumb;
+
+/**
+ * The row's face — small, silent, and not a link.
+ *
+ * IT IS A RECOGNITION MARK RATHER THAN A PICTURE TO LOOK AT. See the
+ * `layout.card.row` token for the size argument; what matters here is what the
+ * element is NOT.
+ *
+ * NOT A LINK, AND THAT IS THE ACCESSIBILITY CALL. The name beside it already
+ * points at the row, so an anchor around the face would be a second control
+ * for one destination in a smaller target — two links with the same
+ * destination and different accessible names is the WCAG 2.4.4 shape this
+ * component's own `label` field exists to avoid. It sits outside the anchor
+ * for the same reason the stones do: `ResultRow` renders `lead` before the
+ * link rather than inside it.
+ *
+ * `alt=""` FOLLOWS FROM THAT. The picture repeats what the name, the type line
+ * and the stones already say in text on the same row, so naming it again would
+ * make every result announce itself twice. It is decorative in the precise
+ * technical sense — not unimportant, but carrying nothing a screen reader
+ * cannot already reach.
+ *
+ * ONE FACE, NOT A STACK, WHERE THE ROW STANDS FOR SEVERAL VERSIONS. The grid
+ * draws a stack because a cell IS a card and there is room to fan it; here the
+ * stones are already the version links, and three cards fanned at 44px would
+ * be three slivers of nothing. A row that gestured at a choice it could not
+ * legibly offer is worse than a row that leaves the choice to the stones.
+ */
+function RowFace({ entry }: { readonly entry: CardIndexEntry }) {
+  return (
+    <span className="of-index__row-face">
+      <CardFace
+        src={rowFaceSrc(entry.faceKey, entry.faceLandscape)}
+        alt=""
+        width={ROW_BOX.width}
+        height={ROW_BOX.height}
+        loading="lazy"
+      />
+    </span>
+  );
+}
+
+function rowFaceSrc(key: string | null, landscape: boolean): string {
+  const orientation = landscape ? "landscape" : "portrait";
+  return key === null ? placeholderUrl(orientation) : faceUrl(key, "thumb");
+}
+
 export function CardIndex({
   entries,
   display,
@@ -887,7 +951,12 @@ export function CardIndex({
               href={entry.href}
               label={entry.name}
               qualifier={entry.qualifier}
-              lead={<PitchStones versions={entry.versions} />}
+              lead={
+                <>
+                  <RowFace entry={entry} />
+                  <PitchStones versions={entry.versions} />
+                </>
+              }
               meta={
                 <>
                   <span>{entry.typeLine}</span>

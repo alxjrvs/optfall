@@ -374,6 +374,40 @@ const STRUCTURE: TokenTable = {
      keeps. This is a promise the layout keeps. */
   "layout.card.cell": "15rem",
 
+  /* HOW WIDE A CARD IS DRAWN AT THE HEAD OF A LIST ROW.
+
+     THE LIST VIEW USED TO CARRY NO PICTURE AT ALL, which made it the one
+     screen where this site contradicts its own argument: `docs/DESIGN.md`
+     calls recognising a card by its face "the single largest difference
+     between this and every text-list card tool in the game", and the densest
+     card list we publish was a text-list card tool. Scryfall's checklist has
+     the same hole and it is the weakest of its four views for exactly this
+     reason — sixty rows of set, number, name and cost, with the one channel
+     that identifies a card at a glance left out.
+
+     44px, AND IT IS THE DENSITY THAT CHOSE IT RATHER THAN THE PICTURE. A row
+     is 72px with no face. Measured across the three candidates: this takes it
+     to 86px, 3.5rem takes it to 103px and 4.5rem to 126px — so the sizes that
+     render the art comfortably cost a third to nearly half of the rows on a
+     screen, in the view whose entire reason to exist is density. A sixth is
+     the price worth paying.
+
+     IT IS A RECOGNITION THUMBNAIL, NOT A LEGIBLE ONE, and the difference is
+     the whole argument for going this small. The card's own printed name is
+     unreadable here and does not need to be read — the name is set beside it
+     in serif at `type.size.large`. What survives at this size is the frame
+     colour, the class border and the silhouette of the art, which is what
+     lets a reader find a card they have seen before without reading anything.
+     Bigger starts competing with the name for the eye, which is the grid's
+     job and not this view's.
+
+     `layout.card.row`, NOT `card.face.row`, for the reason `layout.card.cell`
+     states beside it: anything under `card.face` is a width the face host
+     promises to serve, and this is a width the layout draws at. The row is
+     satisfied by the `thumb` tier, which is 180px and therefore a comfortable
+     downscale rather than a new tier nobody publishes. */
+  "layout.card.row": "2.75rem",
+
   /* FOUR CELLS AND THE GUTTERS BETWEEN THEM, added up — written as references
      for the same reason `page.wide` is, so there is no chosen number here to
      drift from the cell size it is built out of.

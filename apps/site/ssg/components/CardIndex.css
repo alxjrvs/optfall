@@ -440,6 +440,45 @@
 }
 
 /*
+  THE FACE AT THE HEAD OF A ROW.
+
+  `align-self: flex-start` IS THE LOAD-BEARING LINE AND IT WILL LOOK LIKE A
+  PADDING BUG IF IT GOES. `.of-result` is `align-items: baseline`, which is
+  right for everything else in the row — the stones sit against the first line
+  of a wrapped name because `PitchJewel` offers its numeral's baseline. An
+  IMAGE'S baseline is its bottom margin edge, so a face left on the baseline
+  drags the name down to sit level with the BOTTOM of the picture, leaving the
+  row apparently top-padded by the height of a card. The face opts out; the
+  text keeps the alignment it needs.
+
+  THE WIDTH IS THE WHOLE SIZING, and the height follows from `CardFace`'s
+  `aspect-ratio` — see `ROW_BOX` for why that box is portrait even for the
+  cards that are played sideways. `flex: none` so the face keeps its size when
+  the row's own text is long enough to want the slack.
+
+  NO HOVER, NO RING, NO POINTER. It is not a control; see `RowFace`.
+*/
+.of-index__row-face {
+  align-self: flex-start;
+  flex: none;
+  display: block;
+  inline-size: var(--of-layout-card-row);
+}
+
+/*
+  A HAIRLINE AROUND THE PICTURE, WHICH IS NOT DECORATION.
+
+  A card face is printed with a black border and this list sits on a dark
+  ground, so at 44px the picture's own edge disappears into the page and the
+  art reads as an unbounded smudge rather than as a card. The rule is the same
+  device every other separable thing on this site is closed with, at the one
+  size where the face cannot close itself.
+*/
+.of-index__row-face img {
+  border: var(--of-ornament-rule-width) solid var(--of-color-rule);
+}
+
+/*
   Why the row is here, said in a quieter voice than what the card says about
   itself — a match reason is the engine talking, not the card.
 
@@ -470,6 +509,33 @@
   display: inline-flex;
   align-items: center;
   gap: var(--of-space-tightest);
+  /*
+    A SLOT WIDE ENOUGH FOR THREE STONES, SO THE NAMES LINE UP.
+
+    The stones are inline, so a row's name used to start wherever its stones
+    happened to end: a three-version card pushed its own name — and the type
+    line under it — about 44px right of every one-version row above it. That
+    was already true and already ragged; the face at the head of the row is
+    what makes it read as a fault, because a hard left column of pictures
+    invites the eye to expect a second one and then does not supply it.
+
+    THREE IS THE PRACTICAL MAXIMUM AND THIS IS A MINIMUM, WHICH IS THE POINT.
+    A collapsed row stands for a name, and a name is at most three pitches in
+    this corpus — but `color.pitch.four` exists in the theme against a value
+    the game has previewed, so a fourth stone must widen the slot rather than
+    overflow it or be clipped. `min-inline-size` does that; a fixed width
+    would not.
+
+    WRITTEN AS THE ARITHMETIC IT IS rather than as a measured total, so it
+    cannot drift from the jewel size or the gap it is made of — the same rule
+    `layout.page.index` follows for the grid's four cells.
+  */
+  min-inline-size: calc(
+    3 *
+    var(--of-ornament-jewel-small) +
+    2 *
+    var(--of-space-tightest)
+  );
 }
 
 /*
