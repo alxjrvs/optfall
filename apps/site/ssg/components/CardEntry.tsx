@@ -1807,11 +1807,20 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                             no qualifier — while linking to two different things
                             here. `buyLabel` is that second map; see it for why
                             the name sometimes ends in a product id.
+
+                            IT DOES NOT SAY "TCGplayer" TWICE. The visible text
+                            is already the vendor, and this span follows it into
+                            the same accessible name — so "on TCGplayer" here
+                            would be announced as "TCGplayer — buy MST131,
+                            Standard, on TCGplayer". `numberQualifier` suppresses
+                            exactly this shape one column to the left, for
+                            exactly this reason: heard aloud, the same word
+                            twice.
                           */}
                           <span className="of-card__visually-hidden">
                             {` — buy ${
                               buyLabel.get(printing.unique_id) ?? printing.id
-                            }, on TCGplayer`}
+                            }`}
                           </span>
                         </a>
                       )}

@@ -581,6 +581,52 @@ function optionalText(
   return text(record, key, where);
 }
 
+/**
+ * `tcgplayer_url`, checked at the boundary rather than trusted.
+ *
+ * THE ONLY UPSTREAM STRING THAT BECOMES AN `href`. Card images are ingested to
+ * our own host, so `image_url` never reaches markup; this value does, on 15,166
+ * rows. That makes this the one field where a vandalised or compromised sync of
+ * a community repository — which publishes no licence, has no release process
+ * and is pinned here precisely because it can change under us — turns into
+ * script execution on every card page, via a `javascript:` or `data:` value that
+ * is a perfectly valid string.
+ *
+ * So it is rejected here, where `text()`'s throwing already lives, rather than
+ * noticed later by a test over the pinned corpus. A refusal at the boundary
+ * fails the sync that introduced it and names the printing; a downstream
+ * assertion only fails once the bad value is already committed.
+ *
+ * The origin is pinned, not merely the scheme: every one of the 15,166 URLs
+ * upstream publishes today is on this exact host, so anything else is a change
+ * worth a human rather than a value worth carrying.
+ */
+function storefrontUrl(
+  printing: JsonRecord,
+  where: string,
+): string | undefined {
+  const value = optionalText(printing, "tcgplayer_url", where);
+  if (value === undefined) return undefined;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error(
+      `${where}: expected an absolute URL at "tcgplayer_url", found ${describe(value)}`,
+    );
+  }
+  if (parsed.origin !== STOREFRONT_ORIGIN) {
+    throw new Error(
+      `${where}: expected "tcgplayer_url" on ${STOREFRONT_ORIGIN}, found ${parsed.origin}`,
+    );
+  }
+  return value;
+}
+
+/** The only origin a carried storefront link may point at. */
+const STOREFRONT_ORIGIN = "https://www.tcgplayer.com";
+
 function flag(record: JsonRecord, key: string, where: string): boolean {
   const value = record[key];
   if (typeof value === "boolean") return value;
@@ -689,7 +735,7 @@ function toCorpusPrinting(printing: JsonRecord, where: string): CorpusPrinting {
       : undefined;
 
   const productId = optionalText(printing, "tcgplayer_product_id", where);
-  const productUrl = optionalText(printing, "tcgplayer_url", where);
+  const productUrl = storefrontUrl(printing, where);
 
   const copy: CorpusPrinting = {
     unique_id: text(printing, "unique_id", where),

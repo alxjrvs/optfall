@@ -1009,6 +1009,25 @@ describe("the printings table is how a reader reaches another art", () => {
    * Rainbow Foil are one art, so one page) while addressing two different
    * PRODUCTS. That is the axis `numberQualifier` does not cover.
    */
+  /**
+   * The nth cell of every body row, counting the row header as cell 0.
+   *
+   * Columns are Number, Set, Rarity, Edition, Foiling, Artist, Other face, Buy —
+   * so `cellsAt(html, 3)` is Edition. Positional rather than pattern-matched
+   * because a cell's contents vary (`Set` holds an anchor, `Edition` holds bare
+   * text or a dash) and a regex counting `</td>`s lazily reads a different
+   * column on different rows.
+   */
+  const cellsAt = (html: string, index: number) =>
+    [...tableIn(html).matchAll(/<tr[^>]*>(.*?)<\/tr>/gs)]
+      .map((row) =>
+        [...(row[1] ?? "").matchAll(/<t([hd])[^>]*>(.*?)<\/t\1>/gs)].map(
+          (cell) => cell[2] ?? "",
+        ),
+      )
+      .filter((cells) => cells.length > index)
+      .map((cells) => cells[index] ?? "");
+
   const buysIn = (html: string) =>
     [
       ...tableIn(html).matchAll(
@@ -1160,7 +1179,20 @@ describe("the printings table is how a reader reaches another art", () => {
      */
     const html = render(addressOf("head-jab-1"));
     expect(html).not.toContain("No specified edition");
-    expect(tableIn(html)).toContain("<td>—</td>");
+
+    /*
+     * ANCHORED ON THE EDITION CELL, NOT ON ANY EM DASH ON THE PAGE. The Buy
+     * column renders `<td>—</td>` for the 1,336 productless printings, which
+     * satisfied a bare `toContain("<td>—</td>")` regardless of what the Edition
+     * cell did — so adding that column silently disarmed the regression this
+     * test was written for. The dash is now located: it is the fourth cell of a
+     * row, which is Edition.
+     */
+    const editionCells = cellsAt(html, 3);
+    expect(editionCells.length).toBeGreaterThan(1);
+    expect(editionCells).toContain("—");
+    /* The same column, not some other one that also holds a dash. */
+    expect(editionCells).toContain("Alpha");
 
     /* And a real edition still decodes: Head Jab's Welcome to Rathe rows. */
     expect(tableIn(html)).toContain("<td>Alpha</td>");

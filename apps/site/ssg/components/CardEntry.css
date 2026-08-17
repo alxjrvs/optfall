@@ -1203,7 +1203,14 @@
   carry this same rule for this same reason: hidden text that is read aloud must
   not arrive in a paste.
 */
-.of-card__collector .of-card__visually-hidden {
+.of-card__collector .of-card__visually-hidden,
+/*
+  THE BUY CELL FOR THE SAME REASON. Its hidden span names the printing so the
+  link is not one of sixteen reading "TCGplayer"; selected and pasted, that text
+  would come with it and a reader copying the cell would get the whole sentence
+  instead of the vendor.
+*/
+.of-card__buy .of-card__visually-hidden {
   user-select: none;
 }
 
