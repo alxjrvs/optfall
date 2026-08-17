@@ -1,7 +1,6 @@
 import type { PitchValue } from "optfall-theme";
 
 import { numberFor } from "../printings";
-import { encodePostings } from "./build";
 import { fold, tokeniseCard } from "./tokenise";
 import type { EncodedCardIndex } from "./wire";
 
@@ -103,7 +102,10 @@ function splitIds(field: string, dict: readonly string[]): readonly string[] {
 }
 
 /**
- * The inverse of {@link encodePostings}. Shared for the same reason.
+ * The inverse of `encodePostings` in `./build`. Shared for the same reason.
+ * Named in prose rather than linked: a `{@link}` needs a real import, and an
+ * import would give this client module an edge to the build-only one for the
+ * sake of a doc comment.
  */
 function decodePostings(encoded: string): Map<string, number[]> {
   const postings = new Map<string, number[]>();

@@ -534,11 +534,12 @@ export const CARD_IMAGE_COPYRIGHT = "Card images © Legend Story Studios.";
  * would fail on the eight fields that exist today.
  *
  * Nine other `*Props` interfaces in this file duplicated their components'
- * shape and have been deleted. This one is a second, divergent shape, so
- * removing it would delete the `copyright` assertion with it. (`FiligreeProps`
- * was a tenth case again: same shape as the component's, but a different name
- * — the component declares `FiligreeCornerProps` — so that deletion dropped a
- * name from this package's surface rather than shedding a duplicate of one.)
+ * shape and have been deleted: eight same-named, plus `FiligreeProps`, which
+ * matched `FiligreeCornerProps` in shape but not in name — so that one dropped
+ * a name from this package's surface rather than shedding a duplicate of one.
+ *
+ * This interface is neither. It is a second, divergent shape that nothing
+ * implements, so removing it would delete the `copyright` assertion with it.
  */
 export interface CardImageProps {
   readonly src: string;

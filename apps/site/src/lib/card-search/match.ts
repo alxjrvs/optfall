@@ -1,7 +1,6 @@
 import { type QueryLeaf, type QueryNode } from "../query";
 import type { CardIndex } from "./decode";
 import type { CardFilter } from "./grammar";
-import { searchCards } from "./rank";
 import { tokeniseCard } from "./tokenise";
 
 /* -------------------------------------------------------------------------- */
@@ -32,7 +31,7 @@ function statMatches(printed: string, wanted: string): boolean {
  * `text` is deliberately absent from this switch and is asserted against below:
  * it is the only filter answered by the inverted index rather than by a scan,
  * so resolving it per card would redo a postings walk 4,941 times per keystroke.
- * {@link searchCards} resolves each text filter to a set once and tests
+ * `searchCards` in `./rank` resolves each text filter to a set once and tests
  * membership. A `text` filter reaching here would be a routing bug, and it
  * throws rather than quietly answering `false` — a silent `false` on a filter
  * returns an empty result set, which reads exactly like "no cards match".
@@ -46,7 +45,7 @@ export function passesFilter(
   switch (filter.field) {
     case "text":
       throw new Error(
-        "apps/site/src/lib/card-search.ts: a text filter reached passesFilter. Text filters are resolved through the postings index in searchCards; see the note above this function.",
+        "apps/site/src/lib/card-search/match.ts: a text filter reached passesFilter. Text filters are resolved through the postings index in searchCards; see the note above this function.",
       );
     case "name":
       return tokensMatch(index.labelTokens[ordinal] ?? [], filter.value);

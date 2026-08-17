@@ -56,11 +56,23 @@
  * Every existing import of `./card-search` resolves to this file, so no call
  * site changed.
  *
- * THE BUILD/CLIENT COLUMN IS THE POINT OF THE SPLIT. `printings.ts` states the
- * rule: anything an island imports must not reach `cards.ts`. That was prose
- * spread over 3,221 lines and is now a property of one module — `build.ts` is
- * the only corpus-adjacent one, `pages/search.page.tsx` is its only caller, and
- * `islands/CardSearch.tsx` imports from the client modules alone.
+ * THE BUILD/CLIENT COLUMN IS WHY THE SPLIT IS WORTH HAVING, AND IT IS NOT
+ * ENFORCED BY THE IMPORT GRAPH. `printings.ts` states the rule: anything an
+ * island imports must not reach `cards.ts`. That was prose spread over 3,221
+ * lines, and it is now at least locatable — `build.ts` is the only
+ * corpus-adjacent module and `pages/search.page.tsx` is its only caller.
+ *
+ * Be exact about what that buys, though. This barrel `export *`s every module,
+ * `./build` included, and `islands/CardSearch.tsx` imports from the barrel — so
+ * an island CAN reach the build-only module through it. Nothing structural
+ * stops that.
+ *
+ * What keeps the corpus out of the bundle is tree-shaking, guarded by
+ * `assertIslandBudget` in `ssg/build.ts` (400 kB; the bundle is 244 kB).
+ * Measured on the built output: `assertFormatsAgree` and `encodePostings`
+ * appear zero times in it. To make the guarantee structural rather than
+ * measured, import the client modules directly from the island and stop
+ * re-exporting `./build` here.
  *
  * It is not a decorative concern: a value import from `./cards` once shipped a
  * 9.28 MB bundle to every reader.
