@@ -830,6 +830,97 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
 });
 
 /* -------------------------------------------------------------------------- */
+/* The version tabs, which move between pitches and nothing else              */
+/* -------------------------------------------------------------------------- */
+
+describe("the pitch tabs stay in the set the reader is already in", () => {
+  const render = (route: string) =>
+    RESOLVED.find((resolved) => resolved.route === route)?.render(
+      [],
+      undefined,
+    ) ?? "";
+
+  /** Where each version tab goes, in the strip's order. The current one is not
+      a link, so it is deliberately absent. */
+  const tabsIn = (html: string) =>
+    [
+      ...(
+        /<nav class="of-card__versions".*?<\/nav>/s.exec(html)?.[0] ?? ""
+      ).matchAll(/<a class="of-card__version-tab" href="([^"]+)"/g),
+    ].map((tab) => tab[1] ?? "");
+
+  test("a version printed in this set is reached at its address in this set", () => {
+    /*
+     * HEAD JAB IS PRINTED THREE PITCHES WIDE IN SIX SETS, so a reader on the
+     * Welcome to Rathe printing asking for pitch 2 is asking for WTR099 — the
+     * card in the same box, four numbers along. The tabs used to send them to
+     * `ben/017`: a different set, a different art and a different number, for a
+     * click that asked to change one thing.
+     *
+     * THE ALTERNATE ART IS WHERE THIS MOSTLY BITES, WHICH IS WHY THE TEST
+     * NAMES ONE. A card and its siblings usually share the set they are first
+     * listed in, so the default page's tabs were already in the right box:
+     * measured, 1,982 of the 2,601 pages this rule moves are non-default
+     * printings. The other 619 are default pages whose sibling's default sat in
+     * a different set, which is the same fault in a place a reader is likelier
+     * to be.
+     */
+    const tabs = tabsIn(render("/card/wtr/098/head-jab-1"));
+    expect(tabs).toEqual([
+      "/card/wtr/099/head-jab-2",
+      "/card/wtr/100/head-jab-3",
+    ]);
+  });
+
+  test("a version that set never printed falls back to its own address", () => {
+    /*
+     * `ira` PRINTS THE PITCH 3 HEAD JAB AND NEITHER OF THE OTHER TWO, which is
+     * the ordinary case rather than the corner one: a set is free to publish
+     * one version of a name. So "the same set" is a preference, and the tab
+     * still has to go somewhere — the version's default address, which is what
+     * every tab pointed at before this rule existed.
+     */
+    const tabs = tabsIn(render("/card/ira/008/head-jab-3"));
+    expect(tabs).toEqual([addressOf("head-jab-1"), addressOf("head-jab-2")]);
+  });
+
+  test("the tabs are the same set on every art of one printing's set", () => {
+    /*
+     * TWO EDITIONS, ONE SET. `wtr/u-wtr098` is the Unlimited art of the card
+     * whose Alpha art is `wtr/098`, and both are WTR — so both strips offer
+     * WTR's other pitches. The set is what a tab preserves; which art of it the
+     * other version opens on is that set's own default, the same one its set
+     * page links to.
+     */
+    expect(tabsIn(render("/card/wtr/u-wtr098/head-jab-1"))).toEqual(
+      tabsIn(render("/card/wtr/098/head-jab-1")),
+    );
+  });
+
+  test("every tab on every page addresses a card the site actually serves", () => {
+    /*
+     * THE FAILURE THIS RULE COULD INTRODUCE IS A TAB POINTING AT NOTHING —
+     * a same-set address assembled from the wrong card's slug or the wrong
+     * face's number is still a well-formed URL, and a 404 on the one control
+     * that exists to move between versions. Checked against the router's own
+     * table.
+     *
+     * OVER ROUTES RATHER THAN OVER CARDS, which is the half that matters: on a
+     * card's default printing "the same set" and "the default address" are
+     * usually the same answer, so a sweep of the 4,941 default pages would
+     * exercise the fallback and not the rule. The stride is coarser to pay for
+     * the larger list — 11,378 printings, every twenty-fifth.
+     */
+    const served = new Set(CARD_ROUTES.map((route) => route.href));
+    for (const route of CARD_ROUTES.filter((_, index) => index % 25 === 0)) {
+      for (const href of tabsIn(render(route.href))) {
+        expect(served.has(href)).toBe(true);
+      }
+    }
+  });
+});
+
+/* -------------------------------------------------------------------------- */
 /* The printings table, which is the picker now                               */
 /* -------------------------------------------------------------------------- */
 
