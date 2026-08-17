@@ -21,7 +21,9 @@
  *
  * - **The server does not start.** A `dev` script wired to the wrong command,
  *   or a `serve.ts` that throws on a taken port, is invisible to every other
- *   job here.
+ *   job here. Both are only visible if the check is measuring ITS OWN server,
+ *   which is `assertPortFree` and `READY_LINE` below and was for a while not
+ *   true — a neighbouring worktree holding the port answered in its place.
  * - **The route-to-file mapping disagrees with the generator's.** The server
  *   resolves `/search` to `search/index.html` through the same `outputPathFor`
  *   the build writes with, and this is what proves the two agree — including
@@ -70,6 +72,10 @@ import { CARD_ROUTES } from "../apps/site/src/lib/cards";
  * file had to parse the banner to discover where the server had actually
  * landed, and an earlier draft of it ran all six routes against a server
  * started from a different checkout entirely.
+ *
+ * THAT GUARANTEE WAS LOAD-BEARING AND, FOR A WHILE, NOT ACTUALLY REACHED — see
+ * `assertPortFree` and `READY_LINE` below, which are what make the paragraph
+ * above true rather than merely intended.
  */
 const PORT = 4399;
 
@@ -179,6 +185,43 @@ const checks: Check[] = [
   { path: legacyCardPath, status: 301, location: defaultRoute.href },
 ];
 
+/**
+ * Nothing is already listening on `PORT`, or a clear failure before anything
+ * expensive runs.
+ *
+ * THIS IS THE HALF THE FIXED PORT WAS ASSUMED TO GIVE FOR FREE, AND DID NOT.
+ * The note on `PORT` says a taken port makes `serve.ts` throw rather than move.
+ * That is true, and it was never reached: `dev` BUILDS before it serves, so for
+ * the minutes that build takes, this check's own child is alive and silent
+ * while somebody else's server answers on this port. The readiness poll used to
+ * accept that answer, and the entire run then measured a stranger — which is
+ * precisely the "server started from a different checkout entirely" the note
+ * warns about, arrived at by a different route.
+ *
+ * A PARALLEL GIT WORKTREE IS THE ORDINARY WAY THIS HAPPENS, and it is not
+ * hypothetical: it reported four phantom 404s for files the build had in fact
+ * emitted. THE DANGEROUS DIRECTION IS THE OTHER ONE — a neighbour serving a
+ * healthy site makes every assertion below pass while this checkout is broken,
+ * which is a green check that means nothing.
+ *
+ * Binding is the question, not `fetch`: a port can be held by something that
+ * never answers, and this has to fail on that too.
+ */
+function assertPortFree(): void {
+  try {
+    Bun.serve({ port: PORT, fetch: () => new Response("") }).stop(true);
+  } catch {
+    console.log(
+      `::error::Port ${PORT} is already in use, so this check cannot tell its own dev server from somebody else's. ` +
+        `A parallel git worktree running \`bun run dev\` or \`check:dev-server\` is the usual cause; stop it and re-run. ` +
+        `Do NOT work around this by moving the port — it is fixed on purpose, see the note on PORT.`,
+    );
+    process.exit(1);
+  }
+}
+
+assertPortFree();
+
 /*
  * `bun run … dev` rather than the server script directly, so the thing under
  * test includes the package script itself — a `dev` script wired to the wrong
@@ -209,14 +252,33 @@ void drain(server.stderr);
 const origin = `http://localhost:${PORT}`;
 
 /**
- * Waits for the server to answer, or gives up with everything it said.
+ * The one line `ssg/serve.ts` prints once it has bound.
  *
- * POLLED BY REQUEST RATHER THAN BY BANNER. The old version parsed Astro's
- * colourised startup banner to learn the origin, which meant stripping ANSI
- * escapes and matching on human-facing text that a version bump could reword.
- * The port is an input here, so the only question is whether anything is
- * listening on it — and asking is both simpler and a stronger answer than a
- * line of output claiming it is.
+ * IT CARRIES THE PORT, so a dev server this check did not start — on another
+ * port, in another worktree — cannot satisfy it.
+ */
+const READY_LINE = `[ssg] serving dist/ on ${origin}`;
+
+/**
+ * Waits for OUR server to answer, or gives up with everything it said.
+ *
+ * IT REQUIRES THE CHILD'S OWN READY LINE, NOT MERELY THAT SOMETHING ANSWERS,
+ * and that distinction is what makes every assertion below an assertion about
+ * this checkout. `dev` builds before it serves, so "a request to this port
+ * succeeded" is satisfied by any process that happens to hold the port while
+ * our build is still running, and the routes would then be measured against it.
+ * `assertPortFree` makes that unlikely at startup; this makes it impossible
+ * afterwards, including for a neighbour that appears mid-build.
+ *
+ * THIS IS NOT THE BANNER-PARSING THE OLD VERSION RIGHTLY REMOVED. That parsed
+ * colourised, human-facing text from a FRAMEWORK in order to DISCOVER the
+ * origin — so an ANSI change or a reworded line moved the target. The port is
+ * still an input here; the line belongs to a script in this repository; and it
+ * is used as proof of IDENTITY, never as a source of configuration.
+ *
+ * THE REQUEST POLL STAYS, after the line rather than instead of it, because a
+ * line claiming a bind and a socket that answers are two different facts and
+ * this check wants both.
  */
 async function waitForServer(): Promise<void> {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
@@ -230,16 +292,21 @@ async function waitForServer(): Promise<void> {
       process.exit(1);
     }
 
-    try {
-      await fetch(origin, { signal: AbortSignal.timeout(5_000) });
-      return;
-    } catch {
-      await Bun.sleep(500);
+    if (transcript.includes(READY_LINE)) {
+      try {
+        await fetch(origin, { signal: AbortSignal.timeout(5_000) });
+        return;
+      } catch {
+        /* Announced a bind and not answering yet. Retry rather than fail: the
+           only way out of this branch is the deadline below. */
+      }
     }
+
+    await Bun.sleep(500);
   }
 
   console.log(
-    `::error::\`bun run dev\` did not serve anything on ${origin} within ${STARTUP_TIMEOUT_MS / 1000}s.`,
+    `::error::\`bun run dev\` did not announce "${READY_LINE}" and answer on it within ${STARTUP_TIMEOUT_MS / 1000}s.`,
   );
   console.log(transcript.trim());
   server.kill();
