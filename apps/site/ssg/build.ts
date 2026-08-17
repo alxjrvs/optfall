@@ -42,7 +42,7 @@ import { dirname, join } from "node:path";
 import { themeStylesheet } from "optfall-theme";
 
 import { CARD_REDIRECTS } from "../src/lib/cards";
-import { GENERATED_ASSETS } from "./assets";
+import { generatedAssets } from "./assets";
 import { outputPathFor } from "./outputPath";
 import { redirectRules, renderRedirects } from "./redirects";
 import { routes } from "./routes";
@@ -336,7 +336,8 @@ async function main(): Promise<void> {
    * The non-page files, written before the pages so a failure to derive one
    * stops the build before it emits 12,776 documents linking it.
    */
-  for (const asset of GENERATED_ASSETS) {
+  const generated = await generatedAssets();
+  for (const asset of generated) {
     const target = join(OUT_DIR, asset.path);
     await mkdir(dirname(target), { recursive: true });
     /* The encoding is passed for text and WITHHELD for bytes. Node ignores it
@@ -350,7 +351,7 @@ async function main(): Promise<void> {
   }
 
   /*
-   * `_redirects` IS NOT IN `GENERATED_ASSETS`, and the reason is the corpus.
+   * `_redirects` IS NOT IN `generatedAssets()`, and the reason is the corpus.
    * That registry is imported by `assets.ts`, which draws a favicon out of the
    * theme and reaches nothing else; giving it a member derived from 4,941 cards
    * would make every importer of it — the tests included — load 16 MB to ask
@@ -418,7 +419,7 @@ async function main(): Promise<void> {
 
   console.log(
     `[ssg] ${count} page(s), ${rules.length} redirect(s), ` +
-      `${GENERATED_ASSETS.length} generated asset(s), ` +
+      `${generated.length} generated asset(s), ` +
       `${styles.length} stylesheet(s)` +
       `${islandScript === undefined ? ", no islands" : ", islands bundled"}` +
       `, ${sw.precached} file(s) precached (${Math.round(sw.bytes / 1024)} kB)` +

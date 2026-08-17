@@ -99,7 +99,7 @@ function assertHostMatches(): void {
  * here rather than left to a later job. `importScripts` of a URL that 404s
  * throws inside the install handler and **aborts installation**, so a missing
  * `sw-purge.js` means no service worker installs at all — no precache, no
- * offline, no install prompt. Dropping the `GENERATED_ASSETS` entry while
+ * offline, no install prompt. Dropping the `generatedAssets()` entry while
  * leaving the `importScripts` line would do exactly that, and the two live in
  * different files.
  *
@@ -112,7 +112,7 @@ async function assertPurgeScriptExists(outDir: string): Promise<void> {
   throw new Error(
     `The worker imports /sw-purge.js and the build did not emit it. ` +
       `\`importScripts\` of a 404 throws during install, so this would ship a site where NO service worker installs — ` +
-      `no precache, no offline, no install prompt. Restore the entry in GENERATED_ASSETS (ssg/assets.ts) ` +
+      `no precache, no offline, no install prompt. Restore the entry in generatedAssets() (ssg/assets.ts) ` +
       `or remove the importScripts line here; they have to move together.`,
   );
 }
