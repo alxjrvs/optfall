@@ -78,10 +78,40 @@
  * 9.28 MB bundle to every reader.
  */
 
-export * from "./wire";
-export * from "./tokenise";
-export * from "./build";
-export * from "./decode";
-export * from "./grammar";
-export * from "./match";
-export * from "./rank";
+/*
+ * NAMED RE-EXPORTS, NOT `export *`, AND THE DIFFERENCE IS THE POINT.
+ *
+ * Splitting the file forced sixteen symbols that had been private to it —
+ * `encodePostings`, `passesFilter`, `TONE_BIT`, `fold` and the rest — to be
+ * exported so they could cross a module boundary. An `export *` barrel would
+ * have republished every one, taking this module's public surface from 23
+ * names to 39 and letting a caller couple to an internal that became reachable
+ * only by accident of where the file was cut.
+ *
+ * The list below is exactly the 23 names the single file exported. The split
+ * is invisible from outside: same surface, same import specifier.
+ */
+
+export type { EncodedCardIndex } from "./wire";
+export { tokeniseCard } from "./tokenise";
+export { buildCardIndex } from "./build";
+export type { CardIndexSource } from "./build";
+export { decodeCardIndex } from "./decode";
+export type { ArtRef, CardIndex } from "./decode";
+export { FORMAT_NAMES, parseCardQuery } from "./grammar";
+export type {
+  CardDisplayMode,
+  CardFilter,
+  CardNotice,
+  CardSort,
+  CardSortKey,
+  CardUniqueMode,
+  ParsedCardQuery,
+} from "./grammar";
+export { CARD_RESULT_LIMIT, STAT_LABELS, searchCards } from "./rank";
+export type {
+  CardMatchField,
+  CardOutcome,
+  CardResult,
+  CardResultVersion,
+} from "./rank";
