@@ -1614,6 +1614,105 @@ describe("a set-scoped search shows that set's printing", () => {
     );
     expect(duplicated).toEqual([]);
   });
+
+  test("every card in a fan comes from the set the reader named", () => {
+    /*
+     * THE FAN DEALT FROM TWO DECKS. `toResult` resolved the ROW's picture
+     * through the focus set and the collapse loop built the pitch versions
+     * straight out of `faceKeys` — the card's first-ever printing — so
+     * `set:MPW` on Hit and Run put MPW112 in front of the 1HP red and blue.
+     * Hovering opened a hand holding one card from the set the reader named and
+     * two from a set they did not, and the frames differ enough that it read as
+     * a rendering fault.
+     *
+     * ASSERTED OVER EVERY VERSION OF EVERY ROW, not over the rows. The row's
+     * own face has been right since the focus feature landed; what shipped
+     * wrong is the part nothing looked at.
+     */
+    const outcome = searchCards(index, "set:mon", 20000);
+    expect(outcome.setFocus).toBe("mon");
+
+    const fanned = outcome.results.filter(
+      (row) => row.matchedVersions.length > 1,
+    );
+    /* Monarch prints whole pitch cycles, so there are hands to look at. If this
+       ever goes to zero the test below is vacuous and this is what says so. */
+    expect(fanned.length).toBeGreaterThan(20);
+
+    const strays = fanned.flatMap((row) =>
+      row.matchedVersions
+        .filter(
+          (version) =>
+            version.faceKey !== null &&
+            !version.faceKey.toUpperCase().startsWith("MON"),
+        )
+        .map((version) => `${row.name}: ${version.faceKey}`),
+    );
+    expect(strays).toEqual([]);
+  });
+
+  test("the front card and its own version agree, picture for picture", () => {
+    /*
+     * THE INVARIANT UNDERNEATH THE ONE ABOVE, and it holds for every query
+     * rather than only for a set-scoped one. A collapsed row IS one of the
+     * versions it stands for — the best-ranked one — so the row's face and that
+     * version's face are two renderings of a single fact and must never
+     * disagree.
+     *
+     * `CardStack` drops the version whose address is the row's and draws the
+     * row's own face in front, so a disagreement here is invisible in the grid:
+     * the picture simply comes from whichever of the two paths the fix missed.
+     * That is precisely how the two-decks bug survived — the front card looked
+     * right because it WAS right, and the loop feeding the rest of the hand was
+     * a second, older answer to the same question.
+     */
+    for (const query of ["set:mon", "set:mpw", "dominate", "pitch:1 set:mst"]) {
+      const outcome = searchCards(index, query, 500);
+      for (const row of outcome.results) {
+        const own = row.matchedVersions.find(
+          (version) => version.href === row.href,
+        );
+        if (own === undefined) continue;
+        expect({
+          query,
+          href: row.href,
+          key: own.faceKey,
+          landscape: own.faceLandscape,
+        }).toEqual({
+          query,
+          href: row.href,
+          key: row.faceKey,
+          landscape: row.faceLandscape,
+        });
+      }
+    }
+  });
+
+  test("a filter that excludes a pitch excludes it from the hand", () => {
+    /*
+     * THE OTHER HALF OF "THE FAN SHOWS THE PRINTINGS THAT MATCHED". The faces
+     * being right is worth nothing if the hand holds a card the query is false
+     * of, so this pins the membership rather than the pictures.
+     *
+     * It has held since `matchedVersions` replaced the bare pitch list — the
+     * collapse walks the RANKED rows, which are the matches — and it is pinned
+     * here anyway, beside the faces, because the two claims are one promise to
+     * a reader and a later change to either loop could break just this one.
+     */
+    const scoped = searchCards(index, "set:mon pitch:1", 20000);
+    expect(scoped.results.length).toBeGreaterThan(10);
+    for (const row of scoped.results) {
+      expect(row.matchedVersions.map((version) => version.pitch)).toEqual([1]);
+    }
+
+    /* And a name whose whole cycle is in the set keeps the whole cycle, so the
+       assertion above is a filter doing its job rather than a fan that has
+       quietly stopped being drawn. */
+    const whole = searchCards(index, "set:mon", 20000).results.filter(
+      (row) => row.matchedVersions.length === 3,
+    );
+    expect(whole.length).toBeGreaterThan(20);
+  });
 });
 
 /* -------------------------------------------------------------------------- */

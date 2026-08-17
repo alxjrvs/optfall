@@ -2189,9 +2189,15 @@ export interface CardResultVersion {
    * The three Head Jabs are three different paintings, which is the fact that
    * makes a fan of them worth drawing at all — a stack of one image repeated
    * three times in three colours would be a decoration, and this is a choice
-   * between cards. `faceKeys` is indexed by corpus ordinal and the loop that
-   * builds these versions is walking ordinals, so the key is a lookup rather
-   * than a second derivation.
+   * between cards.
+   *
+   * FROM THE SAME PRINT RUN AS THE ROW'S OWN FACE, RESOLVED BY `focusFace`. A
+   * fan is a comparison between siblings, so the one axis it must not vary on
+   * is the one nobody asked about: under `set:MPW` all three Hit and Runs wear
+   * MPW's frame, and the reader compares the pitch stones rather than wondering
+   * why one card is bordered differently from the other two. This was read
+   * straight out of `faceKeys` — the card's first-ever printing — which put
+   * MPW112 in front of the 1HP red and blue.
    *
    * `null` where the version publishes no art. Four cards in the corpus are in
    * that state and the placeholder is the honest rendering of it.
@@ -2431,6 +2437,79 @@ function nameDefaultHref(
   return first?.href ?? fallback;
 }
 
+/**
+ * The card's own default face — its first printing that publishes art.
+ *
+ * Split out from {@link focusFace} so the two callers that must NOT take the
+ * focus set's art can say so by calling this instead of passing a `null` focus
+ * they do not have.
+ */
+function ownFace(
+  index: CardIndex,
+  ordinal: number,
+): { key: string | null; landscape: boolean } {
+  return {
+    key: index.faceKeys[ordinal] ?? null,
+    landscape: index.faceLandscape[ordinal] === true,
+  };
+}
+
+/**
+ * THE FACE THE QUERY ASKED FOR, WHICH IS NOT ALWAYS THE CARD'S OWN.
+ *
+ * `faceKeys` holds the card's default face — its first printing that publishes
+ * art, in corpus order. That is the right picture for a bare name search and
+ * the WRONG one for `set:MST`: a card first printed in Welcome to Rathe and
+ * reprinted in Mistveil showed the Rathe art under a filter naming Mistveil,
+ * which is a true picture of a false claim. The reader asked what this set
+ * looks like.
+ *
+ * IT IS A FUNCTION, AND IT USED TO BE AN EXPRESSION INSIDE `toResult`. That is
+ * the whole of the fix for a fan that dealt three printings from three
+ * different sets. A row standing for Hit and Run under `set:MPW` resolved its
+ * OWN picture here and got MPW112, while the two pitch versions stacked behind
+ * it were built in the collapse loop from `faceKeys` directly and got the 1HP
+ * art — so hovering opened a hand holding one card from the set the reader
+ * named and two from a set they did not. The versions are the same query's
+ * answer as the row is; they get the same rule, from the same code.
+ *
+ * THE ORIENTATION COMES BACK WITH THE FACE, and the two are resolved in one
+ * expression so they cannot come from different printings. Splitting them is
+ * exactly what went wrong on an earlier pass: the key was swapped to the focus
+ * set's art while `faceLandscape` went on being read from
+ * `index.faceLandscape[ordinal]`, which describes the DEFAULT face. A rotated
+ * alternate would then have been drawn inside a portrait box — visible at a
+ * glance, and only on the printings this feature exists to show.
+ *
+ * The order is deliberate:
+ *
+ * 1. The default face, WHEN IT COMES FROM THE FOCUS SET. This is the common
+ *    case and it costs one string comparison.
+ * 2. An alternate art from the focus set, if the card has one.
+ * 3. The default face, unchanged. A card can match `set:MST` on a printing
+ *    whose art is shared with an earlier set — Regular, Rainbow Foil and Cold
+ *    Foil in one set are three rows and one image, and a straight reprint
+ *    carries no new art at all — so "no art from this set" is a real answer
+ *    rather than a lookup failure, and showing the card's own face is better
+ *    than showing a placeholder. It is also the one case where a fan can still
+ *    hold two sets' pictures, and it is honest: each card is wearing the art
+ *    its matching printing actually carries.
+ */
+function focusFace(
+  index: CardIndex,
+  ordinal: number,
+  setFocus: string | null,
+): { key: string | null; landscape: boolean } {
+  const own = ownFace(index, ordinal);
+  if (setFocus === null || index.faceSets[ordinal] === setFocus) return own;
+  const fromSet = (index.arts[ordinal] ?? []).find(
+    (ref) => ref.setCode === setFocus,
+  );
+  return fromSet === undefined
+    ? own
+    : { key: fromSet.key, landscape: fromSet.landscape };
+}
+
 function toResult(
   index: CardIndex,
   ordinal: number,
@@ -2496,73 +2575,68 @@ function toResult(
   const artStem = art === undefined ? "" : art.key.replace(/\.webp$/, "");
 
   /**
-   * THE FACE THE QUERY ASKED FOR, WHICH IS NOT ALWAYS THE CARD'S OWN.
-   *
-   * `faceKeys` holds the card's default face — its first printing that
-   * publishes art, in corpus order. That is the right picture for a bare name
-   * search and the WRONG one for `set:MST`: a card first printed in Welcome to
-   * Rathe and reprinted in Mistveil showed the Rathe art under a filter naming
-   * Mistveil, which is a true picture of a false claim. The reader asked what
-   * this set looks like.
-   *
-   * Resolved inside `toResult` rather than by its caller because the face and
-   * its orientation have to come out of ONE expression — see the note below on
-   * the half-swap that shipped when they did not. (This used to say "because
-   * there are three call sites"; there is one. The reason survives the
-   * correction, the arithmetic did not.) The order is deliberate:
+   * The picture this row carries. `focusFace` states the rule; the two guards
+   * ahead of it are the two rows that are already printings and must keep the
+   * art they are standing for.
    *
    * 1. An ART ROW already IS a printing, so it keeps its own face. `unique:art`
    *    expands a card into its arts; overriding one of them with the focus
    *    set's art would collapse the expansion it just performed.
-   * 2. The default face, WHEN IT COMES FROM THE FOCUS SET. This is the common
-   *    case and it costs one string comparison.
-   * 3. An alternate art from the focus set, if the card has one.
-   * 4. The default face, unchanged. A card can match `set:MST` on a printing
-   *    whose art is shared with an earlier set — Regular, Rainbow Foil and Cold
-   *    Foil in one set are three rows and one image, and a straight reprint
-   *    carries no new art at all — so "no art from this set" is a real answer
-   *    rather than a lookup failure, and showing the card's own face is better
-   *    than showing a placeholder.
+   * 2. IN `unique:art`, EVERY ROW IS A PRINTING — INCLUDING THE ONE BEING
+   *    EXPANDED. `mode === "art"` yields a card's default face plus one row per
+   *    alternate, so the row reached here is the DEFAULT ART rather than a
+   *    stand-in for the card. Letting it take the focus set's art meant
+   *    `set:lgs unique:art` rendered the card row wearing the LGS art and then
+   *    the LGS art row immediately beneath it — the same picture twice,
+   *    adjacent, which is the duplication the mode exists to avoid. The guard
+   *    above it covers only the rows the expansion ADDED, not the one it was
+   *    expanding.
    */
-  /*
-   * THE ORIENTATION COMES BACK WITH THE FACE, and the two are resolved in one
-   * expression so they cannot come from different printings.
-   *
-   * Splitting them is exactly what went wrong on the first pass: the key was
-   * swapped to the focus set's art while `faceLandscape` went on being read
-   * from `index.faceLandscape[ordinal]`, which describes the DEFAULT face. A
-   * rotated alternate would then have been drawn inside a portrait box —
-   * visible at a glance, and only on the printings this feature exists to
-   * show. The same trap applies to an `unique:art` row, which was already
-   * showing every alternate art at the default face's orientation.
+  /**
+   * WHERE THE ROW GOES, RESOLVED BEFORE ITS PICTURE IS, because the picture is
+   * a fact about the destination. See {@link shown}.
    */
+  const href =
+    art !== undefined
+      ? hrefForPrinting(art.setCode, art.number, slug)
+      : collapsed && !partial
+        ? nameDefaultHref(matchedVersions, defaultHrefOf(index, ordinal))
+        : defaultHrefOf(index, ordinal);
+
   const shown = (() => {
-    const own = {
-      key: index.faceKeys[ordinal] ?? null,
-      landscape: index.faceLandscape[ordinal] === true,
-    };
     if (art !== undefined) return { key: art.key, landscape: art.landscape };
-    /*
-     * IN `unique:art`, EVERY ROW IS A PRINTING — INCLUDING THIS ONE.
+    if (mode === "art") return ownFace(index, ordinal);
+
+    /**
+     * A ROW WEARS THE FACE OF THE CARD IT OPENS, WHICH IS NOT ALWAYS `ordinal`.
      *
-     * `mode === "art"` expands a card into its default face plus one row per
-     * alternate, so the row reached here is the DEFAULT ART rather than a
-     * stand-in for the card. Letting it take the focus set's art meant
-     * `set:lgs unique:art` rendered the card row wearing the LGS art and then
-     * the LGS art row immediately beneath it — the same picture twice, adjacent,
-     * which is the duplication the mode exists to avoid.
+     * A collapsed row is built from the BEST-RANKED version of its name and
+     * opens the LOWEST-PITCH one — `nameDefaultHref`'s rule, and the right one,
+     * since that is the version the card page used to answer with. Those are
+     * usually the same card and they are not always: Deadly Display sits at
+     * pitch 2, 1, 3 in corpus order, so under `set:MPW` the row was built from
+     * pitch 2 and pointed at pitch 1.
      *
-     * The guard above only covered `art !== undefined`, so it caught every row
-     * the expansion ADDED and not the one it was expanding.
+     * The picture came from the ordinal and the link from the rule, and nothing
+     * made them agree — so the cell showed MPW081 and opened pitch 1, whose own
+     * art is MPW080. In the grid that is worse than a mismatched link: the fan
+     * drops the version the cell already points at, so the hand held MPW081
+     * twice, once as the front card and once as the pitch-2 card behind it, and
+     * pitch 1 was the one version of three that never appeared. A duplicate in
+     * a fan of three reads as exactly the rendering fault it is.
+     *
+     * Taken from the version rather than re-resolved from its ordinal because
+     * the versions have already been through `focusFace` — resolving it twice
+     * is how the row and the fan came to disagree in the first place.
+     *
+     * The fallback is not reachable from either caller — a collapsed row's
+     * href is always one of its own versions' — and it is the honest answer if
+     * one ever stops being: the row's own card, by the same rule.
      */
-    if (mode === "art") return own;
-    if (setFocus === null || index.faceSets[ordinal] === setFocus) return own;
-    const fromSet = (index.arts[ordinal] ?? []).find(
-      (ref) => ref.setCode === setFocus,
-    );
-    return fromSet === undefined
-      ? own
-      : { key: fromSet.key, landscape: fromSet.landscape };
+    const opened = matchedVersions.find((version) => version.href === href);
+    return opened === undefined
+      ? focusFace(index, ordinal, setFocus)
+      : { key: opened.faceKey, landscape: opened.faceLandscape };
   })();
 
   return {
@@ -2605,12 +2679,7 @@ function toResult(
     /* Empty where the row already stands for the whole name and there is
        nothing left to qualify. */
     qualifier: collapsed ? "" : pitchSuffix,
-    href:
-      art !== undefined
-        ? hrefForPrinting(art.setCode, art.number, slug)
-        : collapsed && !partial
-          ? nameDefaultHref(matchedVersions, defaultHrefOf(index, ordinal))
-          : defaultHrefOf(index, ordinal),
+    href,
     matchedVersions,
     totalVersions,
     faceKey: shown.key,
@@ -3012,19 +3081,35 @@ export function searchCards(
   const matchedByName = new Map<string, CardResultVersion[]>();
   for (const row of ranked) {
     const name = index.nameSlugs[row.ordinal] ?? index.slugs[row.ordinal] ?? "";
+    /*
+      THE SAME PRINTING RULE THE ROW ITSELF GETS — `focusFace`, not `faceKeys`.
+
+      This read `faceKeys` directly, and carried a comment defending it: a
+      fanned version is a link to a CARD, so let it wear that card's default
+      art the same way its own page does. That argument is about ONE card in
+      isolation and the fan is not one card. `set:MPW` on Hit and Run dealt a
+      hand of MPW112 in front — `toResult` had resolved the focus art for the
+      row — with the 1HP red and blue behind it, so the reader who asked what
+      one set printed got a fan of two sets and no way to tell which card came
+      from where. The versions in a fan are siblings, and siblings from
+      different print runs is the one thing a fan must not show.
+
+      "A printing question asked of a row answering a name question" was the
+      other half of that defence, and it had the direction backwards: the row
+      is already answering the printing question — that is what `setFocus` IS —
+      and the versions were the only part of the answer not hearing it.
+    */
+    const versionFace = focusFace(index, row.ordinal, setFocus);
     const version: CardResultVersion = {
       pitch: index.pitches[row.ordinal] ?? 0,
+      /* THE CARD'S OWN PAGE, STILL. `setFocus` changes which picture a row
+         carries and never where it points — the rule `toResult` states for the
+         row's own `href`, applied to the versions for the same reason. A fanned
+         card is a door to a CARD, whichever printing's art is on the door. */
       href: defaultHrefOf(index, row.ordinal),
       label: index.labels[row.ordinal] ?? "",
-      /* THE VERSION'S OWN FACE, NOT THE ROW'S. `toResult` may swap the row's
-         picture for the one the focus set printed — see `shown` — and this
-         deliberately does not: a fanned version is a link to a CARD, so it
-         wears that card's default art the same way its own page does. Making
-         the two agree would mean re-running the focus-set resolution per
-         version, which is a printing question asked of a row that is answering
-         a name question. */
-      faceKey: index.faceKeys[row.ordinal] ?? null,
-      faceLandscape: index.faceLandscape[row.ordinal] === true,
+      faceKey: versionFace.key,
+      faceLandscape: versionFace.landscape,
     };
     const versions = matchedByName.get(name);
     if (versions) versions.push(version);
@@ -3077,6 +3162,12 @@ export function searchCards(
     display,
     results: rows.slice(offset, offset + limit).map((row) => {
       const name = nameOfRow(row.ordinal);
+      /* The face for the ONE version a non-collapsed row stands for; see where
+         it is used, two lines down, for why the mode decides it. */
+      const soloFace =
+        unique === "art"
+          ? ownFace(index, row.ordinal)
+          : focusFace(index, row.ordinal, setFocus);
       const matched =
         unique === "names"
           ? (matchedByName.get(name) ?? []).toSorted(
@@ -3092,16 +3183,20 @@ export function searchCards(
                    printing. */
                 href: defaultHrefOf(index, row.ordinal),
                 label: index.labels[row.ordinal] ?? "",
-                /* THE CARD'S OWN FACE, FOR THE SAME REASON THE HREF IS ITS OWN
-                   PAGE. An `unique:art` row is one picture of the card and the
-                   mark beside it stands for the card, so the version behind it
-                   wears the default art rather than the alternate this row
-                   happens to be showing. A single-version row draws no fan
-                   either way — there is nothing to choose between — so this is
-                   the type being kept honest rather than a picture anybody
-                   sees. */
-                faceKey: index.faceKeys[row.ordinal] ?? null,
-                faceLandscape: index.faceLandscape[row.ordinal] === true,
+                /* IN `unique:art`, THE CARD'S OWN FACE, FOR THE SAME REASON THE
+                   HREF IS ITS OWN PAGE: such a row is one picture of the card
+                   and the mark beside it stands for the card, so it wears the
+                   default art rather than the alternate this row happens to be
+                   showing.
+
+                   IN `unique:cards` IT IS THE FOCUS SET'S, and that difference
+                   is load-bearing rather than tidiness. The row and its sole
+                   version are the same card at the same address, and `toResult`
+                   now takes a row's picture FROM the version it opens — so
+                   reading the default face here would have quietly undone the
+                   set-focus swap on every `set:X unique:cards` row. */
+                faceKey: soloFace.key,
+                faceLandscape: soloFace.landscape,
               },
             ];
       const versions =
