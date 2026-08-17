@@ -71,6 +71,7 @@ import {
 } from "../../src/lib/faces";
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
 import { hrefForNumber, type RulesCorpus } from "../../src/lib/search";
+import { buyDisclosure, buyHref, buyRel } from "../../src/lib/tcgplayer";
 import {
   editionLabel,
   foilingName,
@@ -559,6 +560,15 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
   const printingCount = card.printings.length;
 
+  /*
+   * WHETHER THIS PAGE HAS ANYTHING TO DISCLOSE. Read off the same function the
+   * cells call, so the notice and the links can never disagree about whether
+   * there are links.
+   */
+  const hasBuyLinks = card.printings.some(
+    (printing) => buyHref(printing, "card-printings") !== undefined,
+  );
+
   const keywordRules = rulesForCard(KEYWORD_VOCABULARY, [
     ...card.card_keywords,
     ...card.ability_and_effect_keywords,
@@ -818,6 +828,80 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       }
     }
     return qualifiers;
+  })();
+
+  /**
+   * What a buy link is called, per printing.
+   *
+   * THE SAME PROBLEM AS `numberQualifier`, ON A DIFFERENT AXIS. That map keeps
+   * two links to two ADDRESSES from being spoken alike; this one keeps two links
+   * to two PRODUCTS from being. They are genuinely different problems: Standard
+   * and Rainbow Foil of one art share a page — so `numberQualifier` correctly
+   * adds nothing — while pointing at two different things to buy.
+   *
+   * NO SET OF MEANINGFUL FIELDS IS UNIQUE, which is why this ends in a fallback
+   * rather than a longer key. Aether Wildfire's EVR123 has two Rainbow Foil
+   * products separated only by `art_variations: ["EA"]`, and even number +
+   * edition + foiling + variations still collides on four printings in the
+   * corpus — Lightning Flow OMN203, Runechant ROS162, Seismic Surge MPG112 and
+   * Spectral Shield MST158 — where upstream lists several products under
+   * identical metadata. So the product id is appended, and ONLY where the name
+   * would otherwise be ambiguous, exactly as `numberQualifier` adds nothing to a
+   * number that is already unambiguous.
+   *
+   * THE VARIATION CODES ARE UPSTREAM'S, UNEXPANDED. `EA`, `FA`, `AA`, `AB`,
+   * `AT`, `HS` — six codes with no published gloss in the corpus and no
+   * expansion table in this repository. Inventing one would be a curation step
+   * needing re-verification on every sync, which is the thing the corpus builder
+   * refuses to do one layer down.
+   */
+  const buyLabel = ((): ReadonlyMap<string, string> => {
+    const base = new Map<string, string>();
+    const byName = new Map<string, Set<string>>();
+
+    for (const { printing } of page.printings) {
+      const href = buyHref(printing, "card-printings");
+      if (href === undefined) continue;
+
+      /*
+       * `editionLabel` RETURNS `null`, NOT `undefined`, and the two are not
+       * interchangeable here. `N` — "no specified edition", and the commonest
+       * edition in the corpus at 11,551 of 16,502 printings — comes back as
+       * `null`, so a filter that only drops `undefined` leaves it in and
+       * `join` renders it as an empty segment: "buy MST131, , Standard".
+       * The column one to the left already handles this, as `?? "—"`.
+       */
+      const name = [
+        printing.id,
+        editionLabel(printing.edition) ?? undefined,
+        printing.foiling === "" ? undefined : foilingName(printing.foiling),
+        printing.art_variations.length === 0
+          ? undefined
+          : `art ${printing.art_variations.join(" ")}`,
+      ]
+        .filter((part) => part !== undefined)
+        .join(", ");
+
+      base.set(printing.unique_id, name);
+      const found = byName.get(name) ?? new Set<string>();
+      found.add(href);
+      byName.set(name, found);
+    }
+
+    const labels = new Map<string, string>();
+    for (const { printing } of page.printings) {
+      const name = base.get(printing.unique_id);
+      if (name === undefined) continue;
+      const ambiguous = (byName.get(name)?.size ?? 0) > 1;
+      const product = printing.tcgplayer_product_id;
+      labels.set(
+        printing.unique_id,
+        ambiguous && product !== undefined
+          ? `${name}, product ${product}`
+          : name,
+      );
+    }
+    return labels;
   })();
 
   /** The box the face is drawn in — this printing's own orientation. */ /** The box the face is drawn in — this printing's own orientation. */
@@ -1550,6 +1634,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 <th scope="col">Foiling</th>
                 <th scope="col">Artist</th>
                 <th scope="col">Other face</th>
+                <th scope="col">Buy</th>
               </tr>
             </thead>
             <tbody>
@@ -1585,6 +1670,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   shown !== undefined &&
                   shown.printing.unique_id === printing.unique_id;
                 const qualifier = numberQualifier.get(printing.unique_id) ?? "";
+                const buy = buyHref(printing, "card-printings");
 
                 return (
                   <tr
@@ -1675,12 +1761,99 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                         <a href={otherFace.href}>{otherFace.label}</a>
                       )}
                     </td>
+                    {/*
+                      THE ONLY COLUMN THAT LEAVES THE SITE, and the only reason
+                      it is on the row rather than beside the face: a card route
+                      addresses an ART, so a Standard and a Rainbow Foil struck
+                      from one picture share a page and the URL cannot say which
+                      a reader means. Upstream's storefront link carries
+                      `Printing=` and names the foiling, so the row can say what
+                      the address cannot.
+
+                      AN EM DASH WHERE UPSTREAM LISTED NO PRODUCT, matching
+                      every other column in this table. 1,336 of 16,502
+                      printings are that shape — promos and organised play,
+                      where whole sets carry none — and an absence is reported
+                      as an absence rather than as "unavailable", exactly as the
+                      legality table renders a flag it does not have.
+                    */}
+                    <td>
+                      {buy === undefined ? (
+                        "—"
+                      ) : (
+                        <a className="of-card__buy" href={buy} rel={buyRel()}>
+                          TCGplayer
+                          {/*
+                            SIXTEEN LINKS READING "TCGplayer" ARE SIXTEEN
+                            IDENTICAL LINKS to anything that lists them out of
+                            context. The column header supplies the verb for a
+                            reader who can see it; this supplies the whole
+                            sentence for one who cannot.
+
+                            IT NAMES ALL THREE AXES, and the edition is not
+                            optional politeness. A printing is identified by
+                            (number, edition, foiling) — the corpus builder says
+                            so where it drops `set_printing_unique_id` — and Head
+                            Jab's WTR098 is four printings across two editions
+                            and two foilings. Number and foiling alone give the
+                            two Standard rows identical names pointing at
+                            different products, which is WCAG 2.4.4 and is the
+                            same failure `numberQualifier` exists to prevent one
+                            column to the left.
+
+                            IT DOES NOT REUSE `numberQualifier`, which
+                            disambiguates ADDRESSES rather than products: two
+                            printings can share an art page — and therefore carry
+                            no qualifier — while linking to two different things
+                            here. `buyLabel` is that second map; see it for why
+                            the name sometimes ends in a product id.
+
+                            IT DOES NOT SAY "TCGplayer" TWICE. The visible text
+                            is already the vendor, and this span follows it into
+                            the same accessible name — so "on TCGplayer" here
+                            would be announced as "TCGplayer — buy MST131,
+                            Standard, on TCGplayer". `numberQualifier` suppresses
+                            exactly this shape one column to the left, for
+                            exactly this reason: heard aloud, the same word
+                            twice.
+                          */}
+                          <span className="of-card__visually-hidden">
+                            {` — buy ${
+                              buyLabel.get(printing.unique_id) ?? printing.id
+                            }`}
+                          </span>
+                        </a>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+
+        {/*
+          THE DISCLOSURE SITS WITH THE LINKS, not in the site footer.
+          TCGplayer's Partner Guidelines require it to be "clear, conspicuous,
+          prominent and unambiguous to the average member of your audience" and
+          put FTC compliance on us. Scryfall's equivalent wording lives in their
+          footer inside a sentence about price accuracy; that is the looser
+          reading, and a reference work whose whole claim is being right should
+          not take it.
+
+          THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same constant the
+          links do, so the sentence cannot claim we earn nothing on a page whose
+          links are earning — see `apps/site/src/lib/tcgplayer.ts`.
+
+          AND IT ONLY APPEARS WHERE THERE IS SOMETHING TO DISCLOSE. A card whose
+          every printing is a promo has a Buy column of em dashes, and a notice
+          under it saying "buy links go to TCGplayer" would be describing links
+          that are not on the page. The point of this sentence is that a claim on
+          a page is true of THAT page.
+        */}
+        {hasBuyLinks ? (
+          <p className="of-card__verify">{buyDisclosure()}</p>
+        ) : null}
 
         {/*
           ONLY WHERE THE PRINTINGS DISAGREE. A card whose every printing carries

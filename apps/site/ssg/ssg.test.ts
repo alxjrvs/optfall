@@ -1002,6 +1002,114 @@ describe("the printings table is how a reader reaches another art", () => {
     expect(new Set(spoken)).toEqual(new Set(["DYN088", "DYN088 (DYN088-MV)"]));
   });
 
+  /*
+   * THE SAME RULE, FOR THE COLUMN THAT LEAVES THE SITE. `numbersIn` matches
+   * `href="/card/…"` only, so it is structurally blind to the buy links — and a
+   * buy link is the one place where two rows can share an ADDRESS (Standard and
+   * Rainbow Foil are one art, so one page) while addressing two different
+   * PRODUCTS. That is the axis `numberQualifier` does not cover.
+   */
+  /**
+   * The nth cell of every body row, counting the row header as cell 0.
+   *
+   * Columns are Number, Set, Rarity, Edition, Foiling, Artist, Other face, Buy —
+   * so `cellsAt(html, 3)` is Edition. Positional rather than pattern-matched
+   * because a cell's contents vary (`Set` holds an anchor, `Edition` holds bare
+   * text or a dash) and a regex counting `</td>`s lazily reads a different
+   * column on different rows.
+   */
+  const cellsAt = (html: string, index: number) =>
+    [...tableIn(html).matchAll(/<tr[^>]*>(.*?)<\/tr>/gs)]
+      .map((row) =>
+        [...(row[1] ?? "").matchAll(/<t([hd])[^>]*>(.*?)<\/t\1>/gs)].map(
+          (cell) => cell[2] ?? "",
+        ),
+      )
+      .filter((cells) => cells.length > index)
+      .map((cells) => cells[index] ?? "");
+
+  const buysIn = (html: string) =>
+    [
+      ...tableIn(html).matchAll(
+        /<a class="of-card__buy" href="([^"]+)"[^>]*>(.*?)<\/a>/gs,
+      ),
+    ].map((link) => ({
+      href: link[1] ?? "",
+      spoken: (link[2] ?? "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    }));
+
+  test("a buy link names the edition, not just the number and foiling", () => {
+    /*
+     * WTR098 IS THE CASE. Head Jab's Welcome to Rathe printing exists in two
+     * editions and two foilings — four products under one collector number — so
+     * a name built from number and foiling alone gives the two Standard rows
+     * identical text pointing at different things.
+     */
+    const buys = buysIn(render(addressOf("head-jab-1")));
+    expect(buys.length).toBeGreaterThan(1);
+
+    const wtr098 = buys.filter((link) => link.spoken.includes("WTR098"));
+    expect(wtr098.length).toBeGreaterThan(1);
+    expect(new Set(wtr098.map((link) => link.spoken)).size).toBe(wtr098.length);
+  });
+
+  test("a buy link never speaks an empty segment", () => {
+    /*
+     * DISTINCTNESS IS NOT WELL-FORMEDNESS, and this test exists because the
+     * first version of the check above could not tell the difference. The name
+     * is assembled from optional parts, and `editionLabel` returns `null` —
+     * not `undefined` — for `N`, the commonest edition in the corpus. A filter
+     * that dropped only `undefined` produced "buy MST131, , Standard", which
+     * is perfectly distinct from its siblings and perfectly broken.
+     *
+     * The whole corpus at the usual stride, because the bug was on 11,551 of
+     * 16,502 printings and a narrow sample would still have found it — the
+     * point is that nothing narrow was looking.
+     */
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      for (const link of buysIn(render(page.href))) {
+        expect(link.spoken).not.toContain(", ,");
+        expect(link.spoken).not.toContain(",,");
+        expect(link.spoken).not.toMatch(/,\s*,/);
+        expect(link.spoken).not.toMatch(/buy\s*,/);
+      }
+    }
+  });
+
+  test("no card page names two buy links alike and sends them elsewhere", () => {
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      const byName = new Map<string, Set<string>>();
+      for (const link of buysIn(render(page.href))) {
+        const found = byName.get(link.spoken) ?? new Set<string>();
+        found.add(link.href);
+        byName.set(link.spoken, found);
+      }
+      for (const [spoken, hrefs] of byName)
+        if (hrefs.size > 1)
+          expect(`${page.href}: ${spoken} -> ${[...hrefs].join(", ")}`).toBe(
+            `${page.href}: one product`,
+          );
+    }
+  });
+
+  test("the disclosure appears only where there are buy links", () => {
+    /*
+     * A CLAIM ON A PAGE MUST BE TRUE OF THAT PAGE. Cards whose every printing
+     * is a promo have a Buy column of em dashes, and a notice describing links
+     * that are not there is exactly the kind of confidently-wrong sentence this
+     * project exists to not print.
+     */
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      const html = render(page.href);
+      expect(html.includes("Buy links go to TCGplayer")).toBe(
+        buysIn(html).length > 0,
+      );
+    }
+  });
+
   test("no card page names two printings alike and sends them elsewhere", () => {
     /*
      * THE WHOLE CORPUS, at the stride the related-lists test uses and for the
@@ -1071,7 +1179,20 @@ describe("the printings table is how a reader reaches another art", () => {
      */
     const html = render(addressOf("head-jab-1"));
     expect(html).not.toContain("No specified edition");
-    expect(tableIn(html)).toContain("<td>—</td>");
+
+    /*
+     * ANCHORED ON THE EDITION CELL, NOT ON ANY EM DASH ON THE PAGE. The Buy
+     * column renders `<td>—</td>` for the 1,336 productless printings, which
+     * satisfied a bare `toContain("<td>—</td>")` regardless of what the Edition
+     * cell did — so adding that column silently disarmed the regression this
+     * test was written for. The dash is now located: it is the fourth cell of a
+     * row, which is Edition.
+     */
+    const editionCells = cellsAt(html, 3);
+    expect(editionCells.length).toBeGreaterThan(1);
+    expect(editionCells).toContain("—");
+    /* The same column, not some other one that also holds a dash. */
+    expect(editionCells).toContain("Alpha");
 
     /* And a real edition still decodes: Head Jab's Welcome to Rathe rows. */
     expect(tableIn(html)).toContain("<td>Alpha</td>");

@@ -950,6 +950,20 @@ demand. This is the part of the plan that is not about features.
   modelling FaB's own post-draw sift, live buyout and arbitrage detection,
   population reports from three grading companies, and a mature scanner app with
   commercial backing.
+
+  **Amended 2026-08-17: a purchase link is not this, and the line is drawn at
+  whether a claim rots.** Card pages carry a per-printing "buy" link
+  (`apps/site/src/lib/tcgplayer.ts`), which says *this printing is purchasable,
+  here* — a fact that is as true a month after a sync as on the day of it.
+  **A price is still out**, and the reason is this document's own model rather
+  than squeamishness: the corpus is committed JSON pinned by commit, so a price
+  would be the one field on the page with no version to cite and no way to be
+  right between syncs. TCGplayer's API being closed to new applicants is the
+  lesser objection and would not change this if it reopened.
+
+  The permission question that kept even the link out until now is settled in
+  [`COMPLIANCE.md`](COMPLIANCE.md) §2 — indirect monetisation, which LSS's terms
+  permit to card databases by name.
 - **Tournament software.** The white space is total and empty for a reason: GEM
   is mandatory for sanctioned play, so anything touching pairings or results
   demands double entry of every player.
