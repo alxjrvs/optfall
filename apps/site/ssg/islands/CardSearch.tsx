@@ -217,8 +217,18 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
      * React 18 guards against exactly this for inputs it renders itself
      * (`postMountWrapper` skips the value assignment while hydrating), and the
      * controlled `SearchField` that used to be here inherited that protection.
-     * An adopted node gets none of it, so the protection has to be written out:
-     * take whatever is in the field as the starting state.
+     * An adopted node gets none of it, so it is written out here: take whatever
+     * is in the field as the starting state.
+     *
+     * **IT ONLY COVERS THE NO-`?q=` CASE, and that is a scope rather than an
+     * oversight.** Landing on `/search?q=dominate` and typing before the script
+     * loads still loses the text, because the URL effect below sets
+     * `setQuery(fromUrl)` in the same commit this seed ran in and the sync
+     * effect then writes `dominate` back over it. That is arguably the right
+     * answer — the address says `dominate`, the results say `dominate`, and a
+     * box saying something else would contradict both — and it is what the
+     * controlled `SearchField` did too. What is fixed here is the case with no
+     * query in the URL, where nothing else has a claim on the field.
      */
     if (input.value !== "") setQuery(input.value);
 
