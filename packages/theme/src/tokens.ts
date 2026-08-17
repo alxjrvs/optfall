@@ -405,6 +405,29 @@ export const DARK_TOKENS: TokenTable = {
   "color.pitch.two.ink": "#171307",
   "color.pitch.three": "#3277bd",
   "color.pitch.three.ink": "#ffffff",
+
+  /* PITCH FOUR IS ONE CARD, AND IT IS A TOKEN RATHER THAN A SPECIAL CASE.
+     Upstream printed a fourth pitch value — a purple strip, on a Shadow
+     resource gem — and a corpus of 4,941 cards holds exactly one of them today.
+     That is precisely the shape of fact that gets hard-coded at the call site
+     and then found again, wrong, in four places: the jewel, the band, the card
+     panel's overline and the design-system page all read this one id.
+
+     PURPLE IS THE CARD'S OWN COLOUR, not a slot chosen off a wheel. The other
+     three stones are the printed strips' hues and this is no different.
+
+     IT IS THE ONE STONE WHOSE COLOUR CHANNEL IS WEAKEST, and that is worth
+     stating rather than discovering. Purple sits next to blue in luminance
+     wherever it is also legible under white ink — brighter than this and the
+     numeral fails contrast, darker and the stone disappears into the ground —
+     so pitch three and pitch four are separated by hue alone for a reader with
+     deuteranopia or protanopia, where red and yellow at least have the
+     luminance gap the test below pins. The numeral is what tells them apart,
+     which is the arrangement this whole block is built around: colour has never
+     been the channel, and here it is carrying less than usual rather than
+     something new. */
+  "color.pitch.four": "#8a4fbf",
+  "color.pitch.four.ink": "#ffffff",
   "color.pitch.facet": "#ffffff",
 
   /* State. The notch says "this carries state"; the colour says which. */
@@ -663,6 +686,15 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.pitch.two.ink": "#1a1405",
   "color.pitch.three": "#245d99",
   "color.pitch.three.ink": "#ffffff",
+
+  /* Pitch four re-checked against this ground rather than translated from the
+     dark table, exactly as every other stone here is: the dark table's violet
+     on an ash ground is a lavender sitting on top of the page instead of a
+     stone struck into it. Deepened until it reads as the same material as the
+     red and the blue beside it, which also buys the numeral more headroom than
+     it has in the other key. */
+  "color.pitch.four": "#6f3aa0",
+  "color.pitch.four.ink": "#ffffff",
   "color.pitch.facet": "#ffffff",
 
   "color.state.legal": "#1f6039",

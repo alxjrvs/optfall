@@ -255,6 +255,7 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 .stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
 .stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
 .stone.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); }
+.stone.p4 { background: var(--of-color-pitch-four); color: var(--of-color-pitch-four-ink); }
 
 .pill {
   display: inline-block; padding: var(--of-space-tightest) var(--of-space-tight);
@@ -675,7 +676,7 @@ cards.push({
     </div>
     <div>
       <p class="eyebrow">Pitch — data, never decoration</p>
-      ${swatch("--of-color-pitch-one", "pitch.one")}${swatch("--of-color-pitch-two", "pitch.two")}${swatch("--of-color-pitch-three", "pitch.three")}
+      ${swatch("--of-color-pitch-one", "pitch.one")}${swatch("--of-color-pitch-two", "pitch.two")}${swatch("--of-color-pitch-three", "pitch.three")}${swatch("--of-color-pitch-four", "pitch.four")}
     </div>
   </div>`,
 });
@@ -754,10 +755,11 @@ cards.push({
   body: `
   <p class="note">An eight-sided cut stone carrying its numeral. Shape, number and colour state the same fact three times — and the numeral is the <strong>primary</strong> channel, not a fallback.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center">
-    ${jewel("0")}${jewel("1")}${jewel("2")}${jewel("3")}
+    ${jewel("0")}${jewel("1")}${jewel("2")}${jewel("3")}${jewel("4")}
     ${jewel("1", "sm")}${jewel("1")}${jewel("1", "lg")}
   </div>
-  <p class="note" style="margin-block-start:var(--of-space-loose)">Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads. Designing colour as the <em>redundant</em> channel costs nothing and fixes it for everyone downstream. The silhouette is reserved: nothing else in the interface is ever this shape.</p>`,
+  <p class="note" style="margin-block-start:var(--of-space-loose)">Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads. Designing colour as the <em>redundant</em> channel costs nothing and fixes it for everyone downstream. The silhouette is reserved: nothing else in the interface is ever this shape.</p>
+  <p class="note"><strong>Pitch four is one card.</strong> Upstream printed a fourth value — a purple strip on a Shadow resource gem — and it is drawn here beside the other four rather than kept as a special case, because a stone the reader meets once is the one whose colour they will not have learned. It is also the stone whose colour channel is weakest: purple sits beside blue in luminance wherever it is still legible under white ink, so for a reader with deuteranopia or protanopia the numeral is what separates three from four.</p>`,
 });
 
 /**
@@ -769,7 +771,7 @@ cards.push({
  * not.
  */
 function band(pitch: string | number): string {
-  return `<span style="display:block;inline-size:var(--of-ornament-band-base);block-size:calc(var(--of-bevel-width) * 3);background:var(--of-color-pitch-${["none", "one", "two", "three"][Number(pitch)]});border-radius:var(--of-bevel-radius);box-shadow:0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light), 0 var(--of-bevel-width) 0 0 var(--of-bevel-dark)"></span>`;
+  return `<span style="display:block;inline-size:var(--of-ornament-band-base);block-size:calc(var(--of-bevel-width) * 3);background:var(--of-color-pitch-${["none", "one", "two", "three", "four"][Number(pitch)]});border-radius:var(--of-bevel-radius);box-shadow:0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light), 0 var(--of-bevel-width) 0 0 var(--of-bevel-dark)"></span>`;
 }
 
 cards.push({

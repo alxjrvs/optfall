@@ -59,7 +59,7 @@ export interface PitchRuleProps {
   readonly label?: string;
 }
 
-const TONES = ["none", "one", "two", "three"] as const;
+const TONES = ["none", "one", "two", "three", "four"] as const;
 
 /**
  * `[1, 2, 3]` → `"Pitch 1, 2 and 3"`. Written, never generated from a join.

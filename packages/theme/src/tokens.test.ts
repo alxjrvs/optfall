@@ -211,6 +211,7 @@ describe("the pitch numeral is the primary channel", () => {
     ["color.pitch.one.ink", "color.pitch.one"],
     ["color.pitch.two.ink", "color.pitch.two"],
     ["color.pitch.three.ink", "color.pitch.three"],
+    ["color.pitch.four.ink", "color.pitch.four"],
   ];
 
   for (const [mode, tokens] of MODES) {

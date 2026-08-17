@@ -62,6 +62,21 @@ describe("PitchJewel", () => {
     ).toContain('aria-label="Red"');
   });
 
+  test("the fourth pitch value gets its own stone, not the grey fallback", () => {
+    /*
+     * ONE CARD IN THE CORPUS CARRIES IT, which is exactly why it is pinned. The
+     * tone comes out of a lookup with a `?? "none"` fallback, so a `TONES`
+     * array left one entry short does not throw and does not fail a typecheck:
+     * it silently renders a purple-strip card as a card with NO pitch value,
+     * next to a numeral that says 4. The rare value is the one nobody would
+     * notice going wrong.
+     */
+    const html = renderToStaticMarkup(<PitchJewel value={4} />);
+    expect(html).toContain("of-jewel--tone-four");
+    expect(html).toContain('aria-label="Pitch 4"');
+    expect(html).toContain(">4<");
+  });
+
   test("the stone is a separate element, because the bevel is a filter", () => {
     // `filter` is applied before `clip-path` on the same element, so the
     // drop-shadow pair has to sit on a PARENT of the clipped stone or it is
@@ -85,6 +100,20 @@ describe("PitchRule", () => {
     expect(html).toContain("of-pitch-rule__band--tone-two");
     expect(html).toContain("of-pitch-rule__band--tone-three");
     expect(html.split("of-pitch-rule__band ").length - 1).toBe(3);
+  });
+
+  test("the fourth value bands and speaks like the other four", () => {
+    /*
+     * The same fallback trap the jewel's fourth-stone test pins, and worse
+     * here: a band has no numeral, so a `tone-four` that fell through to
+     * `none` would be a purple-strip card drawn as an unpitched one with
+     * nothing on screen contradicting it. The accessible name is composed by
+     * `spokenFor` rather than looked up, so it is asserted in the same breath.
+     */
+    const html = renderToStaticMarkup(<PitchRule values={[3, 4]} />);
+    const order = [...html.matchAll(/--tone-(\w+)/g)].map((match) => match[1]);
+    expect(order).toEqual(["three", "four"]);
+    expect(html).toContain('aria-label="Pitch 3 and 4"');
   });
 
   test("the values are sorted and deduplicated by the component", () => {

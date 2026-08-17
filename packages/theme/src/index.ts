@@ -171,8 +171,15 @@ export type BevelEdge = "top" | "bottom";
  * Pitch value. The numeral is the primary channel and colour is the redundant
  * one — red and yellow are the classic deuteranopia confusion pair, and pitch
  * is the most-read value on a card.
+ *
+ * `4` IS REAL AND IT IS RARE — one card in the corpus, a purple strip on a
+ * Shadow resource gem. It is in the union rather than handled as an exception
+ * because the union is what every renderer switches on: widened here, a jewel
+ * or a band that forgot the fourth tone fails the typecheck, and a decoder that
+ * silently mapped it to `0` — "no pitch value" — would have been the quiet
+ * wrong answer instead.
  */
-export type PitchValue = 0 | 1 | 2 | 3;
+export type PitchValue = 0 | 1 | 2 | 3 | 4;
 
 /** Anything carrying state wears a notched corner. This is the closed set. */
 export type StateTone =

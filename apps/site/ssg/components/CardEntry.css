@@ -164,6 +164,14 @@
   --card-pitch: var(--of-color-pitch-three);
 }
 
+/* Pitch four is one card — see `color.pitch.four` in `tokens.ts` for the
+     argument. It is enumerated here rather than left to the default because the
+     default is the no-pitch grey, and a card that HAS a pitch value must not be
+     drawn as one that does not. */
+.of-card__panel[data-pitch="4"] {
+  --card-pitch: var(--of-color-pitch-four);
+}
+
 .of-card__band + .of-card__band {
   margin-block-start: var(--of-space-tight);
   padding-block-start: var(--of-space-tight);
@@ -279,18 +287,27 @@
   );
 
   /*
-      UNDERLINED IN THE PITCH COLOUR — a fourth carrier of the fact the jewel,
+      OVERLINED IN THE PITCH COLOUR — a fourth carrier of the fact the jewel,
       the tab strip and the numeral already carry, and the only one a reader
       gets for free while looking at the name.
 
+      ABOVE THE NAME, BECAUSE THAT IS WHERE THE PRINTED CARD PUTS IT. A Flesh
+      and Blood card carries its pitch as a strip across the very top of the
+      frame, over the name plate — so a stroke under the name was the one part
+      of this panel that mirrored the card in colour and not in position. The
+      whole argument for the panel is that it is the printed object's own
+      geometry (see the band comments above); the pitch strip is part of that
+      geometry and now sits where the card sits it.
+
       A BORDER ON A SHRUNK BOX, NOT `text-decoration`. The name wraps: at two
-      lines `text-decoration: underline` draws two rules, which reads as two
-      links rather than as one card. `fit-content` shrinks the heading's box to
-      its text on the common case, so the rule ends where the name does; on a
-      name long enough to wrap, the box fills the column and the rule runs
-      under both lines as a single stroke. `max-inline-size` is what stops
-      `fit-content` from reaching past the middle grid column, and the auto
-      margins re-centre a box that is now narrower than its cell.
+      lines `text-decoration` draws two rules, which reads as two links rather
+      than as one card — and `overline` has no `text-underline-offset` to hold
+      it off the caps besides. `fit-content` shrinks the heading's box to its
+      text on the common case, so the rule ends where the name does; on a name
+      long enough to wrap, the box fills the column and the rule runs over both
+      lines as a single stroke. `max-inline-size` is what stops `fit-content`
+      from reaching past the middle grid column, and the auto margins re-centre
+      a box that is now narrower than its cell.
 
       Colour is the ONLY channel this adds, and it is deliberately not the only
       channel the fact has — `docs/DESIGN.md` puts red and yellow at the top of
@@ -300,8 +317,8 @@
   inline-size: fit-content;
   max-inline-size: 100%;
   margin-inline: auto;
-  padding-block-end: var(--of-space-tighter);
-  border-block-end: calc(var(--of-bevel-width) * 2) solid
+  padding-block-start: var(--of-space-tighter);
+  border-block-start: calc(var(--of-bevel-width) * 2) solid
     var(--card-pitch, var(--of-color-pitch-none));
 }
 
