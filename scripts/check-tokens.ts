@@ -24,7 +24,9 @@
  * rather than tonal and have nothing to consume from the token layer; and the
  * PRELUDE of an `@media` or `@container` rule, where `var()` is invalid CSS —
  * see the note beside that test for why an exemption there is a fact about the
- * language rather than a hole in the rule.
+ * language rather than a hole in the rule. The prelude is CUT from the line
+ * before scanning rather than the line being skipped, so a declaration sharing
+ * a line with an at-rule is still checked.
  */
 
 import { readFileSync } from "node:fs";
@@ -212,26 +214,29 @@ function violationsIn(file: string, source: string): Violation[] {
      * that this rule could demand instead, which makes flagging one a demand
      * for something that cannot exist.
      *
-     * SCOPED TO THE PRELUDE, deliberately. Only the line opening the at-rule is
-     * exempt; every declaration INSIDE the block is scanned exactly as before,
-     * so a `@container` cannot be used as a place to smuggle literals. And only
-     * lengths — a colour has no business in a query condition, so if one ever
-     * appears there it should still fail.
+     * SCOPED TO THE PRELUDE, AND THE PRELUDE IS CUT RATHER THAN THE LINE
+     * SKIPPED. The first version tested the condition and then suppressed the
+     * rule for the WHOLE line, which is a different thing on any line carrying
+     * both — `@container bar (inline-size >= 44rem) { .x { padding: 12px } }`
+     * walked straight through a check whose own comment promised that
+     * declarations inside the block were still scanned. Removing the prelude
+     * and scanning what is left keeps the promise on one line and many.
      *
-     * The first of these arrived with the header's hamburger. `docs/DESIGN.md`
-     * and `CardEntry` both record that this codebase has no width breakpoints
-     * on purpose; the exemption does not change that, it only stops the check
-     * from being the reason a genuinely necessary one cannot be written down.
+     * Only lengths, too: a colour has no business in a query condition, so if
+     * one ever turns up there it should still fail.
+     *
+     * The first exemption arrived with the header's hamburger. `CardEntry.tsx`,
+     * `pages/about.css` and `pages/rule.css` all record that this codebase has
+     * no width breakpoints on purpose; the exemption does not change that, it
+     * only stops the check from being the reason a genuinely necessary one
+     * cannot be written down.
      */
-    const isQueryCondition = /^@(?:container|media)\b/.test(code.trim());
+    const styled = code.replace(/^\s*@(?:container|media)\b[^{]*/, "");
 
     // Lengths that a token could have supplied. `%`, `fr`, `vh`, `vw` and
     // `auto` are deliberately absent: they express layout relationships rather
     // than design values, and the token layer has nothing to offer them.
-    if (
-      !isQueryCondition &&
-      /(?:^|[\s:(,])-?\d*\.?\d+(?:px|rem|em|pt|ch)\b/.test(code)
-    ) {
+    if (/(?:^|[\s:(,])-?\d*\.?\d+(?:px|rem|em|pt|ch)\b/.test(styled)) {
       found.push({ file, line, text: text.trim(), rule: "raw length" });
     }
     const named = new RegExp(
