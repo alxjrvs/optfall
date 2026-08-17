@@ -307,11 +307,16 @@ const READY_LINE = serveReadyLine(PORT);
  * not entitled to that, so the honest move is to say plainly that the port is
  * still held and let the next run's preflight name it too.
  *
- * AND THE WARNING NAMES BOTH READINGS, because this now also runs on the path
- * where the server exited without ever binding — where the port is held by
- * whatever the check lost the race to, not by an orphan of its own. Blaming a
- * surviving grandchild there would be the same confident wrong diagnosis that
- * `assertPortFree` was fixed to stop making.
+ * AND THE WARNING ASSERTS NEITHER HALF OF WHAT IT DOES NOT KNOW, because this
+ * also runs on the path where the server exited on its own without ever
+ * binding. Two things are unknown there and both were once stated as fact: the
+ * port may be held by whatever the check lost the race to rather than by an
+ * orphan of its own, AND the server may have ended by its own failure rather
+ * than by the `kill` above — where `server.kill()` reached a process that was
+ * already gone. So the line says the server STOPPED, which is true however it
+ * ended, and offers both readings of who holds the port. Either assertion would
+ * be the same confident wrong diagnosis `assertPortFree` was fixed to stop
+ * making.
  */
 async function shutdown(): Promise<void> {
   server.kill();
@@ -328,7 +333,7 @@ async function shutdown(): Promise<void> {
   }
 
   console.log(
-    `::warning::The dev server was killed but port ${PORT} is still held after ${SHUTDOWN_TIMEOUT_MS / 1000}s — ` +
+    `::warning::Port ${PORT} is still held ${SHUTDOWN_TIMEOUT_MS / 1000}s after the dev server stopped — ` +
       `either something this check started outlived it, or whatever the check was competing with still has the port. ` +
       `Either way the next run will fail its port preflight, and this line is the reason.`,
   );
