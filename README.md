@@ -75,19 +75,19 @@ read by `apps/site/src/lib/cards.ts`.
 
 ```sh
 bun install
-bun run check          # 6 of the gate's 10 jobs — everything that needs no build
+bun run check          # 7 of the gate's 10 jobs — everything that needs no build
 bun run check:full     # the whole gate, including the 12,776-page build (~3 min)
 bun run design-system  # regenerate the workbench after changing a primitive
 ```
 
-`check` is the loop command: format, lint, tokens, bun-version, provenance,
-the CI-aggregator assertion, typecheck and the test suite, ordered cheapest
-first so the commonest failures surface in under two seconds. It deliberately
-stops short of the four jobs that need a full site build — `build` itself, and
-the `disclaimer`, `built-tokens` and `card-notice` checks that read its output,
-plus `dev-server`. Those are `check:full`, and **a green `check` is not a green
-gate**: anything touching rendered output, the disclaimer, or the token
-stylesheet needs `check:full` before it is pushed.
+`check` is the loop command: format, lint, tokens, bun-version, provenance, the
+no-language-model scan, the CI-aggregator assertion, typecheck and the test
+suite, ordered cheapest first so the commonest failures surface in under two
+seconds. It deliberately stops short of the three jobs that need a full site
+build — `build` itself, the `disclaimer`, `built-tokens` and `card-notice`
+checks that read its output, and `dev-server`. Those are `check:full`, and
+**a green `check` is not a green gate**: anything touching rendered output, the
+disclaimer, or the token stylesheet needs `check:full` before it is pushed.
 
 ## Licence
 
