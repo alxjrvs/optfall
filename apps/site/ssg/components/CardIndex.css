@@ -100,11 +100,18 @@
   TAKE THE NAMES AWAY — the one control in this bar that is not part of the
   sentence.
 
-  IT IS PUSHED TO THE FAR END AND GIVEN A RULE TO ITS LEFT, which is the whole
-  of how it says so. The four selects compose into a statement about the list;
-  this acts on it. Set in the middle of them it would read as another term and
-  the sentence would stop parsing — which is the exact failure the display
-  filter was changed to fix, so reintroducing it here would be poor form.
+  IT IS PUSHED TO THE FAR END, AND THAT GAP IS THE WHOLE OF HOW IT SAYS SO.
+  The four selects compose into a statement about the list; this acts on it.
+  Set in the middle of them it would read as another term and the sentence
+  would stop parsing — which is the exact failure the display filter was
+  changed to fix, so reintroducing it here would be poor form.
+
+  NO SEPARATOR RULE, AND THIS COMMENT USED TO CLAIM ONE. It said the control
+  was "given a rule to its left", which described a divider that was never
+  drawn — the only border here is the button's own, all four sides of it. The
+  gap and that border are enough: a bordered object at the end of a line of
+  underlined words is already legibly not one of them, and a second rule beside
+  a box that has its own would be an ornament the system does not use.
 
   `margin-inline-start: auto` RATHER THAN A JUSTIFY, because the bar wraps: on
   a narrow viewport the sentence breaks across lines and `space-between` would
@@ -141,6 +148,26 @@
 .of-index__copy:focus-visible {
   outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
   outline-offset: var(--of-space-tightest);
+}
+
+/*
+  THE OUTCOME, FOR A READER WHO CANNOT SEE THE LABEL CHANGE. Off-screen rather
+  than absent, because a `role="status"` in `display: none` is not announced at
+  all — the region has to be in the accessibility tree to be live.
+
+  Sized from `space.hair` rather than collapsed to zero, the same rule
+  `.of-index__choice-label` follows: a zero-area element is skipped by some
+  screen readers, which would make this silent in exactly the case it exists
+  for.
+*/
+.of-index__copy-status {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /*

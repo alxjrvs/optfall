@@ -533,10 +533,9 @@ describe("the control bar writes the query it is a picture of", () => {
       (node) => node.textContent ?? "",
     );
     expect(notices.some((text) => text.includes("display:list"))).toBe(true);
-    /* And it points at the control that took the retired view's job — which
-       has to actually be on the page, or the notice is sending the reader
-       somewhere that does not exist. */
-    expect(notices.some((text) => text.includes("copy control"))).toBe(true);
+    /* The control that took the retired view's job is on this page — but the
+       notice does not say so; see the test at the end of this file for why
+       the engine stopped giving directions. */
     expect(document.querySelectorAll(".of-index__copy").length).toBe(1);
 
     await act(async () => root.unmount());
@@ -555,6 +554,15 @@ describe("the control bar writes the query it is a picture of", () => {
      * what a drag-select over the old view risked and what this is supposed
      * to be better than.
      */
+    /*
+     * RESTORED AFTERWARDS, because `bun test` runs every file in one process
+     * and this is a global. Left in place, the stub — and the `written`
+     * closure it captures — outlives this test and is handed to everything
+     * that runs after it, which is the same "scoped to this file rather than
+     * to whatever happens to run next" argument the happy-dom registration at
+     * the top of this file makes at greater length.
+     */
+    const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
     let written = "";
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -592,6 +600,52 @@ describe("the control bar writes the query it is a picture of", () => {
     );
 
     expect(button.textContent).toBe(`Copied ${lines.length}`);
+
+    /*
+     * THE OUTCOME IS ANNOUNCED, AND THE COUNT ON THE BUTTON IS NOT. The live
+     * region used to be the button itself, whose label carries the number of
+     * rows — so paging, a new query, or a change of `unique:` each announced
+     * "Copy 45 names" at a reader who had not touched the control. The region
+     * is a sibling now and holds only the outcome.
+     */
+    /* Named, because the page already has a `role="status"` — the result
+       announcement — and an unscoped selector finds that one instead. */
+    const status = document.querySelector(".of-index__copy-status");
+    expect(status?.getAttribute("role")).toBe("status");
+    expect(status?.textContent).toBe(
+      `Copied ${lines.length} names to the clipboard.`,
+    );
+    expect(button.hasAttribute("aria-live")).toBe(false);
+
+    await act(async () => root.unmount());
+    if (original) Object.defineProperty(navigator, "clipboard", original);
+  });
+
+  test("the notice for a retired view does not point at UI that may not be there", async () => {
+    /*
+     * IT USED TO SAY "at the end of the bar above" AND WAS WRONG TWICE.
+     * Notices render ABOVE the index, so the bar is below rather than above —
+     * and a query matching nothing renders no index at all, so on that page
+     * the sentence named a control that was not on it.
+     *
+     * The engine cannot fix either by rewording, because both are facts about
+     * a rendering it cannot see. So it describes the query and stops, and this
+     * is the test that keeps it there.
+     */
+    const root = await ask("zzzznotacard display:text");
+
+    expect(shown()).toContain("Nothing matches");
+    /* No index, so no control — which is the case the old wording promised
+       one in. */
+    expect(document.querySelectorAll(".of-index__copy").length).toBe(0);
+
+    const notices = [...document.querySelectorAll(".of-cards__notice")].map(
+      (node) => node.textContent ?? "",
+    );
+    expect(notices.some((text) => text.includes("display:list"))).toBe(true);
+    for (const text of notices) {
+      expect(text).not.toMatch(/\babove\b|\bbelow\b|copy control/);
+    }
 
     await act(async () => root.unmount());
   });

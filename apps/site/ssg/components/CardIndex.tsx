@@ -830,22 +830,38 @@ function CopyNames({
   readonly controlName: string;
 }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  /*
+    A COUNTER PURELY SO A REPEATED OUTCOME IS STILL A CHANGE, and it is here
+    because keying the timer on `state` alone did not do what it looked like.
+
+    Clicking twice sets `"copied"` over `"copied"`: React bails out of an
+    identical state value, `state` never changes, the effect's dependencies
+    never change, and the timer is NOT restarted — so a second click at 1.9s
+    showed no fresh confirmation and the label cleared 0.1s later. That is
+    exactly the "cut short" behaviour the comment below claimed to avoid, and
+    the claim was wrong until this existed.
+
+    Bumped on every click rather than on every successful copy, so a run of
+    failures re-announces too.
+  */
+  const [attempt, setAttempt] = useState(0);
 
   /*
     CLEARED ON UNMOUNT, because the timer outlives the component otherwise and
-    React warns about setting state on something that is gone. Keyed on `state`
-    so a second click while the first is still counting restarts the clock
-    rather than being cut short by it.
+    React warns about setting state on something that is gone. Keyed on the
+    attempt as well as the outcome, so a second click while the first is still
+    counting restarts the clock rather than being cut short by it.
   */
   useEffect(() => {
     if (state === "idle") return undefined;
     const timer = setTimeout(() => setState("idle"), COPIED_FOR);
     return () => clearTimeout(timer);
-  }, [state]);
+  }, [state, attempt]);
 
   if (entries.length === 0) return null;
 
   const copy = () => {
+    setAttempt((previous) => previous + 1);
     const text = entries.map((entry) => entry.name).join("\n");
     /*
       OPTIONAL-CHAINED because `navigator.clipboard` is undefined outright on
@@ -864,25 +880,46 @@ function CopyNames({
   };
 
   return (
-    <button
-      className="of-index__copy"
-      id={`${controlName}-copy`}
-      type="button"
-      onClick={copy}
-      /*
-        LIVE, SO THE OUTCOME IS ANNOUNCED. The button's own label is what
-        changes, and a label changing under a screen reader's cursor is not
-        otherwise reported — which would make this control silent to exactly
-        the reader who cannot see the word change.
-      */
-      aria-live="polite"
-    >
-      {state === "copied"
-        ? `Copied ${entries.length}`
-        : state === "failed"
-          ? "Cannot copy"
-          : `Copy ${entries.length} names`}
-    </button>
+    <>
+      <button
+        className="of-index__copy"
+        id={`${controlName}-copy`}
+        type="button"
+        onClick={copy}
+      >
+        {state === "copied"
+          ? `Copied ${entries.length}`
+          : state === "failed"
+            ? "Cannot copy"
+            : `Copy ${entries.length} names`}
+      </button>
+      {/*
+        THE LIVE REGION IS A SIBLING, AND IT USED TO BE THE BUTTON ITSELF.
+
+        `aria-live` on the button announced every change to its own label —
+        and the label carries `entries.length`, which moves whenever the result
+        set does. So paging, running a new query and switching `unique:` each
+        made the page announce "Copy 45 names" at a reader who had not touched
+        this control. A live region has to hold the thing that is worth
+        interrupting for, and the count is not it.
+
+        SO THE REGION HOLDS THE OUTCOME AND NOTHING ELSE, and it is EMPTY at
+        rest — which is what makes it silent until there is something to say.
+        The visible label still changes for a sighted reader; this is the same
+        fact for a reader who cannot see it.
+
+        `role="status"` rather than `aria-live` on a bare span: it carries the
+        polite semantics and an implicit `aria-atomic`, so the sentence is read
+        whole rather than as the diff between two outcomes.
+      */}
+      <span className="of-index__copy-status" role="status">
+        {state === "copied"
+          ? `Copied ${entries.length} names to the clipboard.`
+          : state === "failed"
+            ? "Could not copy — this browser did not allow it."
+            : ""}
+      </span>
+    </>
   );
 }
 
