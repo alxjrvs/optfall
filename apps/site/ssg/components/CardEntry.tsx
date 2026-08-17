@@ -863,9 +863,17 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       const href = buyHref(printing, "card-printings");
       if (href === undefined) continue;
 
+      /*
+       * `editionLabel` RETURNS `null`, NOT `undefined`, and the two are not
+       * interchangeable here. `N` — "no specified edition", and the commonest
+       * edition in the corpus at 11,551 of 16,502 printings — comes back as
+       * `null`, so a filter that only drops `undefined` leaves it in and
+       * `join` renders it as an empty segment: "buy MST131, , Standard".
+       * The column one to the left already handles this, as `?? "—"`.
+       */
       const name = [
         printing.id,
-        editionLabel(printing.edition),
+        editionLabel(printing.edition) ?? undefined,
         printing.foiling === "" ? undefined : foilingName(printing.foiling),
         printing.art_variations.length === 0
           ? undefined

@@ -1037,6 +1037,29 @@ describe("the printings table is how a reader reaches another art", () => {
     expect(new Set(wtr098.map((link) => link.spoken)).size).toBe(wtr098.length);
   });
 
+  test("a buy link never speaks an empty segment", () => {
+    /*
+     * DISTINCTNESS IS NOT WELL-FORMEDNESS, and this test exists because the
+     * first version of the check above could not tell the difference. The name
+     * is assembled from optional parts, and `editionLabel` returns `null` —
+     * not `undefined` — for `N`, the commonest edition in the corpus. A filter
+     * that dropped only `undefined` produced "buy MST131, , Standard", which
+     * is perfectly distinct from its siblings and perfectly broken.
+     *
+     * The whole corpus at the usual stride, because the bug was on 11,551 of
+     * 16,502 printings and a narrow sample would still have found it — the
+     * point is that nothing narrow was looking.
+     */
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      for (const link of buysIn(render(page.href))) {
+        expect(link.spoken).not.toContain(", ,");
+        expect(link.spoken).not.toContain(",,");
+        expect(link.spoken).not.toMatch(/,\s*,/);
+        expect(link.spoken).not.toMatch(/buy\s*,/);
+      }
+    }
+  });
+
   test("no card page names two buy links alike and sends them elsewhere", () => {
     for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
       const byName = new Map<string, Set<string>>();
