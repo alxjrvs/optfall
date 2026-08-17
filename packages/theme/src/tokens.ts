@@ -455,7 +455,8 @@ export const DARK_TOKENS: TokenTable = {
      `data/cards` carries `pitch: "4"` — zero of the current 4,941 — so nothing
      here renders this stone today. Note what is NOT claimed, because an earlier
      wording claimed it and was wrong: the corpus does hold `IAR` cards already
-     (Baalghor, Omen of the End among them), so "no card from that set" is
+     ("Baalghor, Omen of the End" at IAR159 among them — one card, and the
+     comma is part of its name), so "no card from that set" is
      false. What `data/sets/sets.json` says is set-level and still true — `IAR`
      is "??? Set 20 ???" with `released: null`. Whether the gem ships as
      previewed is upstream's business and not ours to assert.

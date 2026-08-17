@@ -157,10 +157,10 @@ const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
  *
  * THE SENTINEL IS ABOVE EVERY PITCH VALUE, NOT EQUAL TO THE HIGHEST ONE. It was
  * `4`, which was one more than the largest pitch that existed — and a fourth
- * pitch value has since been printed, at which point "last" and "pitch 4" are
+ * pitch value has since been previewed, at which point "last" and "pitch 4" are
  * the same rank and a group holding both would order them by whichever the sort
- * happened to see first. No such group exists in the pinned corpus yet, so this
- * is a repair made before the fault rather than after it. `NO_PITCH_RANK` is
+ * happened to see first. No card in `data/cards` carries `pitch: "4"` yet, so
+ * this is a repair made before the fault rather than after it. `NO_PITCH_RANK` is
  * deliberately far clear of the scale so the next value upstream invents cannot
  * repeat it either.
  */
