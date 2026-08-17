@@ -2424,8 +2424,8 @@ function nameDefaultHref(
 ): string {
   /* The sentinel is above every pitch value rather than one past the highest
      one: `4` used to be both "no pitch, sorts last" and "not a pitch anybody
-     prints". The game has since printed a pitch 4, so the second half is false
-     even though the pinned corpus has yet to carry one. */
+     prints". A pitch 4 has since been previewed, so the second half is no longer
+     safe to rely on even though the pinned corpus carries no such card yet. */
   const rank = (pitch: number): number => (pitch === 0 ? 10 : pitch);
   const first = versions.toSorted((a, b) => rank(a.pitch) - rank(b.pitch))[0];
   return first?.href ?? fallback;

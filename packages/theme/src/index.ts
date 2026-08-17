@@ -172,10 +172,11 @@ export type BevelEdge = "top" | "bottom";
  * one — red and yellow are the classic deuteranopia confusion pair, and pitch
  * is the most-read value on a card.
  *
- * `4` IS REAL AND IT IS RARE — a purple strip on a Shadow resource gem, one
- * card in the printed game. The corpus pinned in `data/cards` does not carry it
- * yet, so this widening is the renderers being ready ahead of the data rather
- * than a response to a card on screen today.
+ * `4` IS RARE AND IT IS NOT HERE YET — a purple strip on a previewed Shadow
+ * resource gem, card code `IAR000`, from a set `data/sets` still records as
+ * unreleased. No card in `data/cards` carries `pitch: "4"`, so this widening is
+ * the renderers being ready ahead of the data rather than a response to a card
+ * on screen today.
  *
  * It is in the union rather than handled as an exception because the union is
  * what every renderer switches on: widened here, a jewel or a band that forgot
