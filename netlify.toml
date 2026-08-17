@@ -104,6 +104,22 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
+# Netlify has no built-in type for `.webmanifest` and serves it as
+# `application/octet-stream`, which is what production was doing. Chromium
+# installs on it anyway — measured, not assumed — so this is not the reason
+# anything was broken and is not filed as a fix for one.
+#
+# It is here because the dev server already says `application/manifest+json` and
+# `check-dev-server.ts` asserts that, so the two halves disagreed about the same
+# file and only the half nobody ships was correct. It also stops being harmless
+# the moment anything downstream trusts `nosniff`, which is set directly above
+# and whose whole purpose is to make a declared type binding.
+[[headers]]
+  for = "/manifest.webmanifest"
+
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
 # Deploy previews exist to catch legality bugs that are invisible in a diff.
 # They are not the published site, so keep them out of search results.
 [[context.deploy-preview.headers]]

@@ -148,9 +148,24 @@ const checks: Check[] = [
    */
   { path: "/manifest.webmanifest", contentType: "application/manifest+json" },
   { path: "/icon.svg", contentType: "image/svg+xml" },
-  /* BOTH ICONS. The manifest names two — full bleed and maskable — and a check
-     that covers one of them leaves the other free to stop being emitted. */
+  /* EVERY ICON THE MANIFEST NAMES. The manifest names five — full bleed and
+     maskable, as a vector and again rasterised — and a check that covers one of
+     them leaves the others free to stop being emitted. */
   { path: "/icon-maskable.svg", contentType: "image/svg+xml" },
+  /*
+   * THE RASTER SET IS CHECKED FOR THE SAME REASON THE FAVICON IS, and one more
+   * besides: it is the only part of the icon set produced by a rasteriser, so it
+   * is the only part that can vanish because a native module failed to load
+   * rather than because somebody edited a list. That failure is loud in a build
+   * log and silent in the output.
+   */
+  { path: "/icon-192.png", contentType: "image/png" },
+  { path: "/icon-512.png", contentType: "image/png" },
+  { path: "/icon-maskable-512.png", contentType: "image/png" },
+  /* Linked by `document.tsx` rather than named by the manifest, which is the
+     one icon channel iOS actually reads. Same silence if it stops being emitted:
+     an install whose icon is a screenshot of the page. */
+  { path: "/apple-touch-icon.png", contentType: "image/png" },
   { path: "/sw.js", contentType: "text/javascript" },
   /* The worker `importScripts` this at startup, so a worker that registers and a
      worker that WORKS are different facts if this file stops being emitted. */
