@@ -20,8 +20,13 @@
  *
  * WHAT IS NOT: anything inside `packages/theme`, which is where literals are
  * defined and therefore the one place they belong; zero, which has no unit and
- * no theme; and `100%`/`1fr`/`auto`-style layout values, which are structural
- * rather than tonal and have nothing to consume from the token layer.
+ * no theme; `100%`/`1fr`/`auto`-style layout values, which are structural
+ * rather than tonal and have nothing to consume from the token layer; and the
+ * PRELUDE of an `@media` or `@container` rule, where `var()` is invalid CSS —
+ * see the note beside that test for why an exemption there is a fact about the
+ * language rather than a hole in the rule. The prelude is CUT from the line
+ * before scanning rather than the line being skipped, so a declaration sharing
+ * a line with an at-rule is still checked.
  */
 
 import { readFileSync } from "node:fs";
@@ -178,6 +183,16 @@ function styleRegions(
 function violationsIn(file: string, source: string): Violation[] {
   const found: Violation[] = [];
 
+  /*
+   * TRUE WHILE AN AT-RULE'S CONDITION IS STILL OPEN, so a prelude that wraps is
+   * exempt on every line it occupies rather than only on the one carrying the
+   * `@`. The per-line regex this replaced could not see a continuation — it
+   * blanked `@container bar` and then failed the build on the `44rem` sitting
+   * alone on the next line, with no spelling of the query that would have
+   * satisfied it.
+   */
+  let inPrelude = false;
+
   for (const { line, text } of styleRegions(file, source)) {
     const code = text.replace(/\/\*.*?\*\//g, "");
     if (
@@ -198,10 +213,69 @@ function violationsIn(file: string, source: string): Violation[] {
         rule: "raw colour function",
       });
     }
+    /*
+     * A QUERY CONDITION CANNOT CONSUME A TOKEN, AND THAT IS CSS, NOT A
+     * PREFERENCE.
+     *
+     * `var()` is invalid in the prelude of `@media` and `@container`: the
+     * condition is evaluated before custom properties are resolved, so
+     * `@container bar (inline-size >= var(--of-…))` does not merely fail to
+     * read the token, it fails to parse. There is no spelling of a breakpoint
+     * that this rule could demand instead, which makes flagging one a demand
+     * for something that cannot exist.
+     *
+     * SCOPED TO THE PRELUDE, AND THE PRELUDE IS CUT RATHER THAN THE LINE
+     * SKIPPED. The first version tested the condition and then suppressed the
+     * rule for the WHOLE line, which is a different thing on any line carrying
+     * both — `@container bar (inline-size >= 44rem) { .x { padding: 12px } }`
+     * walked straight through a check whose own comment promised that
+     * declarations inside the block were still scanned. Removing the prelude
+     * and scanning what is left keeps the promise on one line and many.
+     *
+     * NOT ANCHORED TO THE START OF THE LINE, and that matters for a prelude
+     * that wraps. `^\s*@…[^{]*` blanks a first line that opens an at-rule and
+     * then scans the CONTINUATION line unmodified — so
+     * `@container bar` / `(min-inline-size: 44rem) {` fails the build on a
+     * `44rem` with no spelling of the query that would satisfy it, while the
+     * first line gets exactly the skip-the-whole-line treatment this comment
+     * argues against. Matching the at-rule wherever it sits on the line closes
+     * both halves.
+     *
+     * Only lengths, too: a colour has no business in a query condition, so if
+     * one ever turns up there it should still fail.
+     *
+     * The first exemption arrived with the header's hamburger. `CardEntry.tsx`,
+     * `pages/about.css` and `pages/rule.css` all record that this codebase has
+     * no width breakpoints on purpose; the exemption does not change that, it
+     * only stops the check from being the reason a genuinely necessary one
+     * cannot be written down.
+     */
+    /*
+     * The prelude is CUT and the rest of the line is kept, which is what makes
+     * the exemption narrow: a declaration sharing a line with an at-rule —
+     * `@container bar (min-inline-size: 44rem) { .x { padding: 12px } }` — is
+     * still scanned, and so is every line inside the block.
+     */
+    let styled = code;
+    if (inPrelude) {
+      const opens = styled.indexOf("{");
+      styled = opens === -1 ? "" : styled.slice(opens);
+      inPrelude = opens === -1;
+    }
+    const at = styled.search(/@(?:container|media)\b/);
+    if (at !== -1) {
+      const opens = styled.indexOf("{", at);
+      styled =
+        opens === -1
+          ? styled.slice(0, at)
+          : styled.slice(0, at) + styled.slice(opens);
+      inPrelude = opens === -1;
+    }
+
     // Lengths that a token could have supplied. `%`, `fr`, `vh`, `vw` and
     // `auto` are deliberately absent: they express layout relationships rather
     // than design values, and the token layer has nothing to offer them.
-    if (/(?:^|[\s:(,])-?\d*\.?\d+(?:px|rem|em|pt|ch)\b/.test(code)) {
+    if (/(?:^|[\s:(,])-?\d*\.?\d+(?:px|rem|em|pt|ch)\b/.test(styled)) {
       found.push({ file, line, text: text.trim(), rule: "raw length" });
     }
     const named = new RegExp(

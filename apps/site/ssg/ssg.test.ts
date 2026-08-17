@@ -7,6 +7,8 @@
  * reports success in all three cases, which is why they are worth a test each.
  */
 
+import { readFileSync } from "node:fs";
+
 import { describe, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -2008,5 +2010,144 @@ describe("every screen but the front door carries the header's search", () => {
       const has = render(route).includes(`id="${HEADER_FIELD_ID}"`);
       expect(`${route}: ${has}`).toBe(`${route}: true`);
     }
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The header's menu                                                           */
+/* -------------------------------------------------------------------------- */
+
+describe("the nav collapses to a disclosure without a script", () => {
+  const all = RESOLVED;
+  const render = (route: string) =>
+    all
+      .find((resolved) => resolved.route === route)
+      ?.render([], "islands.js") ?? "";
+
+  /** The `<nav>` only, because the page is full of anchors. */
+  const navIn = (html: string) =>
+    /<nav class="of-bar__nav"[^>]*>(.*?)<\/nav>/s.exec(html)?.[1] ?? "";
+
+  test("every link is in the markup, open or closed", () => {
+    /*
+     * THE POINT OF USING `<details>` RATHER THAN A SCRIPT. The panel is closed
+     * on arrival and the links are still in the document — crawlable, findable,
+     * and reachable with scripting off, which a JavaScript menu cannot promise.
+     * A collapse that removes the nav from the page is a collapse that removes
+     * the site's navigation from anything that does not run JavaScript.
+     *
+     * SCOPED TO THE NAV, because `/sets` is 112 rows of anchors: matching
+     * `>Sets</a>` against the whole document would have stayed green with the
+     * header link deleted, on the strength of a set named the same thing.
+     */
+    const nav = navIn(render("/sets"));
+    expect(nav).not.toBe("");
+    for (const label of [
+      "Cards",
+      "Sets",
+      "Rules",
+      "Syntax",
+      "Random",
+      "About",
+    ]) {
+      expect(`${label}: ${nav.includes(`>${label}</a>`)}`).toBe(
+        `${label}: true`,
+      );
+    }
+  });
+
+  test("the list is the disclosure's SIBLING, and the summary says so", () => {
+    /*
+     * THE LOAD-BEARING SHAPE, ASSERTED SO IT CANNOT BE TIDIED AWAY.
+     *
+     * Nesting the list inside `<details>` is the obvious markup and it breaks
+     * the header on every engine older than Chrome 131 / Safari 18.4 /
+     * Firefox 139: a closed disclosure stops rendering the shadow slot its
+     * children are assigned to, which no light-DOM `display` can override, so
+     * the wide layout — which hides the summary — would leave no navigation and
+     * no way to open any. Reproduced in a live page before this structure
+     * landed.
+     *
+     * The relationship the nesting would have expressed is stated by
+     * `aria-controls` instead, and the two have to agree.
+     */
+    const html = render("/sets");
+    const nav = navIn(html);
+    expect(nav).toContain("</details>");
+    /* The list opens AFTER the disclosure closes: a sibling, not a child. */
+    expect(nav.indexOf("</details>")).toBeLessThan(
+      nav.indexOf('<ul class="of-bar__links"'),
+    );
+
+    const controls = /aria-controls="([^"]+)"/.exec(nav)?.[1];
+    expect(controls).toBeDefined();
+    expect(nav).toContain(`<ul class="of-bar__links" id="${controls}">`);
+  });
+
+  test("the toggle is a summary, and it is named", () => {
+    /*
+     * A `<summary>` is a real disclosure control: focusable, operable with
+     * Enter and Space, and announced with its expanded state — none of which a
+     * `<div>` with a glyph in it would be, and none of which we would have to
+     * reimplement. The glyph is `aria-hidden` and the name comes from text
+     * beside it, because a screen reader cannot read three lines.
+     */
+    const html = render("/sets");
+    expect(html).toContain('<summary class="of-bar__menu-button"');
+    expect(html).toContain("of-bar__menu-glyph");
+    expect(html).toContain('<span class="of-bar__sr">Sections</span>');
+  });
+
+  test("the glyph is drawn rather than typed", () => {
+    /* `☰` is a CJK character a screen reader may announce as "trigram for
+       heaven" and a font may not carry at all. Three paths are three paths. */
+    const html = render("/sets");
+    expect(html).not.toContain("☰");
+    expect(html).toContain('stroke="currentColor"');
+  });
+
+  test("the current section is still marked inside the menu", () => {
+    /* The collapse may not cost the one thing the nav says about where you
+       are. `aria-current` has to survive being wrapped in a disclosure. */
+    expect(render("/sets")).toMatch(
+      /<a href="\/sets" aria-current="page">Sets<\/a>/,
+    );
+  });
+
+  test("the collapse is actually wired, container name and all", () => {
+    /*
+     * THE ONE PART OF THIS FEATURE MARKUP CANNOT SHOW.
+     *
+     * Every other test here reads rendered HTML, and the HTML is identical at
+     * both widths — the collapse lives entirely in the stylesheet. Delete the
+     * `@container` block, or rename `container-name`, and every desktop page
+     * silently becomes a hamburger with the whole suite green. That is the same
+     * class of silent regression the sibling-structure test exists for, and it
+     * is worth a cheap assertion given `check-tokens.ts` grew an exemption
+     * specifically so this one breakpoint could be written down.
+     *
+     * The NAME is the half that rots quietly: a query naming a container that
+     * no longer exists does not error, it just never matches.
+     */
+    const css = readFileSync(
+      new URL("./SiteHeader.css", import.meta.url),
+      "utf-8",
+    );
+    const declared = /container-name:\s*([a-z-]+)/.exec(css)?.[1];
+    expect(declared).toBe("bar");
+    expect(css).toContain(`@container ${declared} (min-inline-size:`);
+
+    /* Range syntax is not parsed by Safari 16.0–16.3, which would drop the
+       whole block and leave a desktop permanently collapsed. */
+    expect(css).not.toMatch(/@container[^{]*(?:>=|<=|[^:]>[^=])/);
+  });
+
+  test("the front door has no bar at all, so it has no menu", () => {
+    const html = render("/");
+    /* `render` returns "" for a route that does not resolve, and two
+       `not.toContain` assertions pass beautifully against nothing. */
+    expect(html).not.toBe("");
+    expect(html).not.toContain("of-bar__menu");
+    expect(html).not.toContain("of-bar__nav");
   });
 });
