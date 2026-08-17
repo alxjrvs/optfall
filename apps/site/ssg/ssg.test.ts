@@ -1883,6 +1883,34 @@ describe("every screen but the front door carries the header's search", () => {
     expect(html).toContain('id="cards-search-hint"');
   });
 
+  test("the field carries the query before any bundle loads", () => {
+    /*
+     * THE FRONT DOOR SUBMITS TO `/search?q=…`, AND THE BOX HAS TO SAY SO.
+     *
+     * The header's input lives in the shell, which is ONE document serving
+     * every query, so it cannot be server-rendered with a value. Filling it
+     * from the island's effect was correct and far too late: this page is
+     * 934 kB of HTML plus a 230 kB bundle, so a reader who searched on the door
+     * arrived at a results page whose search box was empty until all of it
+     * landed — right answers, and a field that looked like it had forgotten the
+     * question. With scripting off, which this page's `noscript` expects, it
+     * never filled at all.
+     *
+     * Asserted on the SERVED MARKUP rather than through a DOM, because that is
+     * the whole claim: the fix has to be in the bytes, ahead of the bundle.
+     */
+    const html = render("/search");
+    expect(html).toContain(`document.getElementById("${HEADER_FIELD_ID}")`);
+    expect(html).toContain(
+      'new URLSearchParams(window.location.search).get("q")',
+    );
+
+    /* AFTER the header, or it runs before the input it is looking for exists. */
+    expect(html.indexOf(`id="${HEADER_FIELD_ID}"`)).toBeLessThan(
+      html.indexOf("URLSearchParams"),
+    );
+  });
+
   test("the front door has a hero and no header at all", () => {
     /*
      * `section: "none"` removes the whole bar there, so the door cannot have

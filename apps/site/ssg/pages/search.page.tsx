@@ -51,7 +51,11 @@ import {
 import type { RulesCorpus } from "../../src/lib/search";
 import { SETS } from "../../src/lib/sets";
 import { Island } from "../Island";
-import { CARDS_HINT_ID, CardSearch } from "../islands/CardSearch";
+import {
+  CARDS_HINT_ID,
+  CardSearch,
+  HEADER_FIELD_ID,
+} from "../islands/CardSearch";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
 
@@ -122,6 +126,44 @@ function page(): PageResult {
           with the field.
         */}
         <h1 className="of-search-page__heading">Search the cards</h1>
+
+        {/*
+          THE FIELD SHOWS THE QUERY BEFORE ANY BUNDLE LOADS, and until this
+          existed it did not.
+
+          The header's input is in the shell, which is one document serving
+          every query — so it cannot be server-rendered with a value the way
+          Scryfall's is. The island filled it in an effect, which is correct and
+          far too late: this page's HTML is 934 kB and its island bundle another
+          230, so a reader who searched "banned:cc" on the front door arrived at
+          a results page whose SEARCH BOX WAS EMPTY until all of that had landed.
+          The results were right and the field looked like it had forgotten the
+          question.
+
+          Worse without scripting at all, which this page has a `noscript` block
+          precisely because it expects: the box stayed empty for good, and so did
+          it after any hydration failure — `islands.client.ts` swallows those and
+          keeps the static markup.
+
+          Four lines, inline, running during parse and therefore before the first
+          paint. Same trade and same shape as the `?pitch=` redirect in
+          `CardEntry`: an island to do this would ship a runtime to beat the
+          runtime it is compensating for.
+
+          IT DOES NOT FIGHT THE ISLAND. `CardSearch`'s adoption effect seeds its
+          state from whatever is in the field, so this becomes the island's
+          starting query rather than something it overwrites.
+        */}
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string with no interpolation.
+          dangerouslySetInnerHTML={{
+            __html: `{
+  const asked = new URLSearchParams(window.location.search).get("q");
+  const field = document.getElementById(${JSON.stringify(HEADER_FIELD_ID)});
+  if (asked !== null && field !== null) field.value = asked;
+}`,
+          }}
+        />
 
         {/*
           THIS IS THE PAGE THE NO-JS FAILURE LANDS ON. The form submits here, so
