@@ -96,6 +96,25 @@ export function Document({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content={THEME_COLOUR} />
+        {/*
+          PROOF OF OWNERSHIP, FOR IMPACT, AND IT SITS IN THE SHELL FOR THE SAME
+          REASON THE DISCLAIMER SITS IN THE FOOTER. A verifier fetches whichever
+          URL it was handed — the front door today, a card page when it
+          re-checks — so a tag added to one page is a tag that holds until
+          somebody points the crawler elsewhere. Here, no page can omit it.
+
+          `value`, NOT `content`, WHICH IS NOT A TYPO AND MUST NOT BE
+          "CORRECTED". The attribute HTML defines for `<meta>` is `content`, and
+          every other tag in this head uses it — but Impact's verifier reads
+          `value`, so tidying this one into line silently un-verifies the
+          domain. React passes the unknown attribute through untouched, and
+          `ssg.test.ts` asserts the rendered output rather than this source,
+          because the pass-through is the part a React upgrade could take away.
+        */}
+        <meta
+          name="impact-site-verification"
+          value="1134ebd0-ee7d-4058-a57f-b6f3da79a0d9"
+        />
         {styles.map((href) => (
           <link key={href} rel="stylesheet" href={href} />
         ))}

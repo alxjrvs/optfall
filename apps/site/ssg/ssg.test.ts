@@ -201,6 +201,25 @@ describe("the document shell", () => {
     expect(html).toContain(LSS_DISCLAIMER);
   });
 
+  test("EVERY page carries the Impact verification tag, spelled `value`", () => {
+    /*
+     * Two failures in one assertion, and neither is loud. The tag going
+     * missing from a page unverifies the domain the moment Impact re-checks
+     * against that URL; the attribute being tidied from `value` to the
+     * `content` that HTML actually defines for `<meta>` does the same while
+     * looking like a fix. So the literal is spelled here rather than imported
+     * from the shell — an assertion against the shell's own constant would
+     * agree with any edit made to it.
+     */
+    const html = render(
+      { title: "t", description: "d", children: null },
+      "/anything",
+    );
+    expect(html).toContain(
+      '<meta name="impact-site-verification" value="1134ebd0-ee7d-4058-a57f-b6f3da79a0d9"/>',
+    );
+  });
+
   test("the canonical is absolute and trailing-slashed", () => {
     // Relative canonicals are ignored by some crawlers, and the site serves
     // directories — so a canonical without the slash names a URL that redirects.
