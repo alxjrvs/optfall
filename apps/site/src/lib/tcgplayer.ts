@@ -34,13 +34,19 @@
  * every outbound purchase link the site renders, so it belongs in the source
  * beside the reasoning rather than in an environment variable nobody can audit.
  *
- * ONE THING NO TEST CAN COVER, so it is a written instruction instead: **click a
- * link and confirm it lands on the product page and registers in Impact.**
- * {@link CAMPAIGN_PATH}'s media segment is inferred rather than issued to us,
- * and the tests build their expected URL from that same constant — so a wrong
- * media id would satisfy every assertion here and still send readers to a dead
- * partner link, or to a live one crediting nobody. One manual click-through is
- * the only thing that distinguishes those, and **it has not been done yet.**
+ * ONE THING NO TEST CAN COVER, because it is a fact about TCGplayer's servers
+ * rather than about this code: whether a built link actually resolves and
+ * actually credits us. The tests build their expected URL from the same
+ * constants the module ships, so a wrong {@link CAMPAIGN_PATH} would satisfy
+ * every assertion here and still send readers to a dead partner link, or to a
+ * live one crediting nobody.
+ *
+ * **Checked end to end on 2026-08-18**, by requesting a built link and reading
+ * the redirect: it returns `301` to the right product with `Printing=Normal`
+ * intact, and the destination carries `irpid=7630689` — this account — plus a
+ * generated `irclickid`. So the path resolves and the click is attributed. What
+ * that request cannot show is the click surfacing in Impact's own reporting,
+ * which is the one remaining thing a human confirms in the dashboard.
  */
 export const AFFILIATE_ID: string | null = "7630689";
 
@@ -54,13 +60,17 @@ export const AFFILIATE_ID: string | null = "7630689";
  * naming TCGplayer's advertiser id and the campaign we sit under. That is the
  * programme stating the number, not us reading it off somebody else's anchor.
  *
- * The media segment, `1830156`, is **still inferred from two published
- * examples.** Scryfall (account `4931599`) and FaBrary (account `4925001`) both
- * publish links on this exact path with only the account segment differing,
- * which is good evidence that it is a constant of the programme rather than a
- * per-partner value — and it is still an inference. Impact issues each partner
- * a link, and ours is the authority the moment we have it: if it disagrees with
- * this, ours wins and this comment is the thing that was wrong.
+ * The media segment, `1830156`, was **inferred from two published examples and
+ * then measured.** Scryfall (account `4931599`) and FaBrary (account `4925001`)
+ * both publish links on this exact path with only the account segment
+ * differing, which was good evidence that it is a constant of the programme
+ * rather than a per-partner value. On 2026-08-18 a built link was requested and
+ * the redirect read: `301` to the correct product, `irpid=7630689` on the
+ * destination. The inference was right, and it is no longer only an inference.
+ *
+ * Impact still issues each partner a link, and ours remains the authority if we
+ * are ever handed one that disagrees — but "disagrees with a working path" is
+ * now the surprising case rather than the expected one.
  */
 const CAMPAIGN_PATH = "1830156/21018";
 

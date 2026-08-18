@@ -240,15 +240,25 @@ one this section blocks on. **A move to Cloudflare carries this section with it
 unchanged**; if that ever stops being true, the thing that changed is a new
 coupling and belongs in this paragraph.
 
-**One verification is outstanding, and no test can close it.** The media segment
-of the partner path (`1830156`) is inferred from Scryfall's and FaBrary's
-published links, not issued to us — the campaign segment (`21018`) *is*
-confirmed, since Impact's own notifications are headed with it. A wrong media id
-passes every assertion in the suite and still produces a link that credits
-nobody. **A human clicks one live link and confirms it registers in Impact.**
-Until that happens the site discloses a commission it may not actually be
-earning, which is the harmless direction of the two, but it is not the finished
-state.
+**The link was verified end to end, not merely assembled.** Both segments of the
+partner path had to be right and neither was issued to us in writing: the
+campaign segment (`21018`) is confirmed by Impact's own notifications, which are
+headed with it, and the media segment (`1830156`) was inferred from Scryfall's
+and FaBrary's published links. A wrong media id passes every assertion in the
+suite and still produces a link that credits nobody, so on 2026-08-18 a built
+link was requested and its redirect read:
+
+- `301` to the correct product, with the `Printing=Normal` parameter intact —
+  so the foiling survives the round trip, which is the regression the encoding
+  test exists for.
+- The destination carries `irpid=7630689` — this account — along with a
+  generated `irclickid` and `utm_source=impact`. The click is attributed.
+
+**What remains is one dashboard check, and only a human can do it:** confirming
+that click surfaces in Impact's reporting. The redirect proves TCGplayer builds
+an attributed destination; it cannot prove Impact recorded it. Until somebody
+looks, treat revenue reporting as unconfirmed — but the failure mode the open
+action was written to catch, a link crediting nobody, has been ruled out.
 
 ### 3. No FAB or LSS logos — and no close semblance of them
 
@@ -660,7 +670,7 @@ Carried, not closed. Each needs a human.
 |---|---|---|
 | 1 | Read the LSS terms page end to end and ratify or correct this document — especially the copyright line and the logo clause. **Narrowed 2026-08-17**: the page has now been fetched and transcribed, and the disclaimer is asserted byte-for-byte against it, so what remains is a human confirming the judgement calls rather than the text | First public deploy |
 | 2 | ~~Decide the affiliate-link question (§2), or decide not to decide it and record that~~ **Decided 2026-08-17** — permitted as indirect monetisation, with the clause quoted and the precedent named in §2. ~~Links ship unwrapped until the TCGplayer partner application is approved; setting `AFFILIATE_ID` is the whole of the remaining work~~ **Approved and set 2026-08-18** — `AFFILIATE_ID` is `7630689`, links are wrapped and disclosed as paid | — |
-| 6 | **Click one live purchase link and confirm it registers in Impact** (§2). The media segment of the partner path is inferred, not issued; a wrong one passes every test and credits nobody. This is the only part of the affiliate work a test structurally cannot cover | Trusting any revenue figure |
+| 6 | ~~Click one live purchase link and confirm it lands and credits us~~ **Half closed 2026-08-18** — the redirect was read directly: `301` to the right product, `irpid=7630689` on the destination, so the inferred media segment is correct and clicks are attributed (§2). What is left is **confirming the click appears in Impact's own reporting**, which needs the dashboard | Trusting any revenue figure |
 | 3 | ~~Confirm the display typeface is licensed for webfont embedding~~ **Done.** Grenze, SIL OFL 1.1 — the grant names `embed` outright. The clause is quoted in `data/fonts/fonts.json` rather than summarised, and condition 2's obligation (each copy carries the copyright notice and the licence) is met by `apps/site/public/fonts/OFL.txt` | Phase 1 |
 | 4 | Post the upstream licence request | Phase 2/3 data work |
 | 5 | Write the revocation-drill test once the legality package exists | Phase 2 exit |
