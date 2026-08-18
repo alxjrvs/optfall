@@ -11,8 +11,13 @@ import {
  * THE POINT OF THIS FILE IS THE FLIP, not the string formatting. Every
  * behaviour below is asserted in both states, so the day somebody sets
  * AFFILIATE_ID there is already proof that links, `rel` and the disclosure all
- * move together. The pending state is asserted separately at the bottom, and
- * that block is the one expected to fail when the id lands.
+ * move together. That day was 2026-08-18; the block at the bottom asserts the
+ * live state, and asserted the pending one before it.
+ *
+ * BOTH-STATES COVERAGE OUTLIVES THE FLIP, so none of it is deleted. `null` is
+ * still a reachable value of the constant — it is how the site would be put
+ * back to earning nothing if the partnership ever ended — and a disclosure that
+ * only works in one direction is the failure this module exists to prevent.
  */
 
 /** A real row from the corpus — MST131, Standard foiling. */
@@ -30,6 +35,14 @@ const RAINBOW = {
 /** One of the 1,336 printings upstream lists no product for. */
 const PROMO = {};
 
+/**
+ * A partner id that is deliberately **not** ours — Scryfall's, published.
+ *
+ * Kept different from `AFFILIATE_ID` on purpose. The explicit-argument tests
+ * below prove the wrapping; the default-argument tests at the bottom prove the
+ * shipped constant is actually wired to it. If this fixture were our own id the
+ * second group could pass on a coincidence.
+ */
 const ID = "4931599";
 
 describe("buyHref", () => {
@@ -105,21 +118,36 @@ describe("buyDisclosure", () => {
   });
 });
 
-describe("the pending application", () => {
+describe("the live partnership", () => {
   /*
-   * DELETE-ME MARKER. This block asserts the state the site ships in today. It
-   * is meant to fail the moment AFFILIATE_ID is set, so that flipping the
-   * constant forces a read of this file rather than letting a stale "we earn
-   * nothing" claim survive the change.
+   * THIS BLOCK REPLACED A DELETE-ME MARKER, and it is the reason that marker
+   * existed. It previously asserted `AFFILIATE_ID === null`, so setting the
+   * constant on 2026-08-18 broke the suite and forced a read of this file
+   * instead of letting a stale "we earn nothing" claim survive the change.
+   *
+   * It now asserts the mirror image. The suite fails just as loudly if the id
+   * is ever unset or edited without the disclosure being reconsidered, which is
+   * the same guarantee pointing the other way.
    */
-  test("no affiliate id is configured yet", () => {
-    expect(AFFILIATE_ID).toBeNull();
-    expect(isAffiliate()).toBe(false);
+  test("the shipped affiliate id is the one Impact issued us", () => {
+    expect(AFFILIATE_ID).toBe("7630689");
+    expect(isAffiliate()).toBe(true);
   });
 
-  test("live links are unwrapped while the application is pending", () => {
-    expect(buyHref(STANDARD, "card-printings")).toBe(STANDARD.tcgplayer_url);
-    expect(buyRel()).toBe("nofollow noreferrer");
-    expect(buyDisclosure()).toContain("Optfall earns nothing");
+  test("live links are wrapped, sponsored, and disclosed as paid", () => {
+    const href = buyHref(STANDARD, "card-printings");
+    expect(href).toStartWith(
+      "https://partner.tcgplayer.com/c/7630689/1830156/21018?u=",
+    );
+    expect(new URL(href ?? "").searchParams.get("u")).toBe(
+      STANDARD.tcgplayer_url,
+    );
+    expect(buyRel()).toBe("sponsored nofollow noreferrer");
+    expect(buyDisclosure()).toContain("earns a commission");
+    expect(buyDisclosure()).not.toContain("Optfall earns nothing");
+  });
+
+  test("a printing with no product stays absent rather than becoming a link", () => {
+    expect(buyHref(PROMO, "card-printings")).toBeUndefined();
   });
 });
