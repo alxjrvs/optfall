@@ -42,7 +42,7 @@ import { dirname, join } from "node:path";
 import { themeStylesheet } from "optfall-theme";
 
 import { generatedAssets } from "./assets";
-import { renderHeaders, renderRedirects } from "./hostConfig";
+import { headersFor, renderHeaders, renderRedirects } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
@@ -354,8 +354,20 @@ async function main(): Promise<void> {
    * `generatedAssets()` on purpose — that registry is what the site SERVES, and
    * these are read by the host and then hidden. `hostConfig.ts` says why.
    */
-  await writeFile(join(OUT_DIR, "_headers"), renderHeaders(), "utf-8");
+  /*
+   * `OPTFALL_PREVIEW` is set by the deploy workflow on a pull request and by
+   * nothing else. It adds `X-Robots-Tag: noindex` to the wildcard rule so a
+   * preview host cannot be indexed alongside production — see `headersFor`,
+   * which also records why this is a merge rather than an extra rule.
+   */
+  const preview = process.env["OPTFALL_PREVIEW"] === "1";
+  await writeFile(
+    join(OUT_DIR, "_headers"),
+    renderHeaders(headersFor({ preview })),
+    "utf-8",
+  );
   await writeFile(join(OUT_DIR, "_redirects"), renderRedirects(), "utf-8");
+  if (preview) console.log("[ssg] preview build — _headers carries noindex");
 
   /*
    * TOKENS FIRST, COMPONENTS SECOND. The component sheets consume `--of-*`
