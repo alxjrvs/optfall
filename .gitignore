@@ -42,5 +42,10 @@ Thumbs.db
 npm-debug.log*
 yarn-error.log*
 
+# --- Cloudflare -----------------------------------------------------------
+# `wrangler dev` and `wrangler deploy` write bundles, state and a local
+# workerd cache here. Build artefacts, per-machine, never reviewed.
+.wrangler/
+
 # --- Agent worktrees ------------------------------------------------------
 .claude/worktrees/

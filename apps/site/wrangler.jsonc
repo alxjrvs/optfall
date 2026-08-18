@@ -1,0 +1,42 @@
+{
+  // Cloudflare Workers deployment for optfall.com.
+  //
+  // THERE IS NO WORKER SCRIPT, AND THAT IS THE WHOLE POINT. `netlify.toml`
+  // opened by promising this site is "static output only — no functions, no
+  // edge handlers, no runtime", and docs/PLAN.md's "no uptime story to fail"
+  // rests on that promise. Cloudflare serves the built files straight from the
+  // assets binding, so the promise survives the move verbatim: no `main`, no
+  // script, nothing to boot and nothing to page anyone about at 3am.
+  //
+  // It nearly did not. The card scheme change left 12,278 exact-path 301s, and
+  // Cloudflare caps `_redirects` at 2,000 static rules and Bulk Redirects at
+  // 10,000 on this plan — so serving them would have meant a Worker holding the
+  // table in memory, and this file would have had a `main`. Retiring the table
+  // is what kept this site static. See the commit that removed it.
+  //
+  // Static asset requests are free and unbilled, and do not count against the
+  // Workers request quota.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "optfall",
+  // Only matters once a Worker script exists, which today it does not. Set
+  // anyway so that adding one later does not silently pick up whatever runtime
+  // baseline happens to be current on that day.
+  //
+  // Deliberately not "today": a compatibility date newer than the workerd
+  // bundled with the installed wrangler makes `wrangler dev` refuse to start,
+  // which costs the ability to test locally before DNS moves. Raise it
+  // deliberately, alongside a wrangler upgrade, never by reflex.
+  "compatibility_date": "2026-08-18",
+  "assets": {
+    "directory": "./dist",
+    // Serve the site's own 404 page rather than Cloudflare's bare platform
+    // error. Without this an unmatched route loses the site's styling and
+    // navigation — and on a reference tool, a miss is a page people READ, since
+    // it is what a mistyped card name gets them.
+    //
+    // `_headers` and `_redirects` live in ./dist too. Cloudflare reads both and
+    // strips them from the asset manifest, so neither is ever served. They are
+    // written by `ssg/build.ts` from `ssg/hostConfig.ts`.
+    "not_found_handling": "404-page"
+  }
+}

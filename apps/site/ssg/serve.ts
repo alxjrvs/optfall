@@ -27,6 +27,7 @@
 
 import { join, normalize } from "node:path";
 
+import { REDIRECTS } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { serveReadyLine } from "./serveBanner";
 
@@ -79,6 +80,24 @@ Bun.serve({
     if (path !== undefined) {
       const file = Bun.file(path);
       if (await file.exists()) return new Response(file);
+    }
+
+    /*
+     * THE FILE WINS, AND ONLY THEN THE TABLE, which is the host's order for a
+     * static asset: on Cloudflare an asset always beats a `_redirects` rule.
+     *
+     * READ FROM `hostConfig.ts` RATHER THAN PARSED BACK OUT OF `dist/_redirects`.
+     * The previous version of this server read the emitted file, because the
+     * table was 12,278 generated rules and the file was the only place they all
+     * existed. It is one hand-written rule now, and this module's own header
+     * argues the point: two spellings of one rule is how they drift.
+     */
+    const redirect = REDIRECTS.find((rule) => rule.from === pathname);
+    if (redirect !== undefined) {
+      return new Response(null, {
+        status: redirect.status,
+        headers: { Location: redirect.to },
+      });
     }
 
     /*
