@@ -28,7 +28,6 @@
 import { join, normalize } from "node:path";
 
 import { outputPathFor } from "./outputPath";
-import { matchRedirect, parseRedirects, redirectIndex } from "./redirects";
 import { serveReadyLine } from "./serveBanner";
 
 const ROOT = new URL("../dist/", import.meta.url).pathname;
@@ -71,24 +70,6 @@ function fileFor(pathname: string): string | undefined {
   return resolved.startsWith(ROOT) ? resolved : undefined;
 }
 
-/**
- * The generated redirect table, read from the artefact the build wrote.
- *
- * READ AND INDEXED ONCE, AT STARTUP, rather than per request: it is 12,278
- * rules and the server is long-lived. A rebuild while the server is up
- * therefore serves the previous table — acceptable, and the same restart this
- * server already needs to pick up new pages.
- *
- * ABSENT IS NOT AN ERROR. `dist/` may not have been built yet, and a dev server
- * that refuses to start because a file it only needs for 301s is missing is a
- * worse failure than one that 404s a redirect.
- */
-const REDIRECTS: ReadonlyMap<string, string> = await (async () => {
-  const file = Bun.file(join(ROOT, "_redirects"));
-  if (!(await file.exists())) return new Map<string, string>();
-  return redirectIndex(parseRedirects(await file.text()));
-})();
-
 Bun.serve({
   port: PORT,
   async fetch(request) {
@@ -98,21 +79,6 @@ Bun.serve({
     if (path !== undefined) {
       const file = Bun.file(path);
       if (await file.exists()) return new Response(file);
-    }
-
-    /*
-     * THE FILE WINS, AND ONLY THEN THE TABLE — which is Netlify's own order for
-     * an unforced rule. Every rule here is an exact path that names no page, so
-     * the two can no longer overlap the way they did while the old printing
-     * form was matched by a pattern; the order is kept because it is the host's,
-     * not because this table still needs it.
-     */
-    const target = matchRedirect(REDIRECTS, pathname);
-    if (target !== undefined) {
-      return new Response(null, {
-        status: 301,
-        headers: { Location: target },
-      });
     }
 
     /*

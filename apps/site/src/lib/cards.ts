@@ -9,7 +9,7 @@
  *
  * THE PRINTING IS THE ADDRESSABLE UNIT, WHICH IT WAS NOT UNTIL RECENTLY. There
  * is no card-level URL: `/card/<slug>` and `/card/<name>` were pages for the
- * life of the site and are 301s now (see {@link CARD_REDIRECTS}), and every
+ * life of the site and are no longer served at all, and every
  * distinct art has an address of the form `/card/<set>/<number>/<slug>`. The
  * argument for the order is in `printings.ts` beside the function that builds
  * it; the short version is that set and number are printed on the card and the
@@ -288,20 +288,6 @@ export function slugify(name: string): string {
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-/**
- * The address a slug USED to have — `/card/head-jab-1`. It is a redirect now.
- *
- * KEPT, AND KEPT NAMED "LEGACY", BECAUSE 5,841 OF THESE ARE ALREADY PASTED
- * SOMEWHERE. Every card and every shared name was served at one of these for the
- * life of the site, so they are exactly the URLs {@link CARD_REDIRECTS} has to
- * enumerate. Nothing links here any more; the only caller builds the redirect
- * table, and that is the whole reason the function still exists rather than the
- * paths being spelled inline where nobody would find them.
- */
-export function legacyHrefForSlug(slug: string): string {
-  return `/card/${slug}`;
 }
 
 /**
@@ -837,10 +823,10 @@ export interface CardPage {
 /**
  * One name, several cards. A GROUP, and it used to be a PAGE.
  *
- * `/card/head-jab` was a real document listing three pitch versions; it is a
- * 301 now, so nothing here is rendered at a URL of its own. The name is
+ * `/card/head-jab` was a real document listing three pitch versions; it is not
+ * served any more, so nothing here is rendered at a URL of its own. The name is
  * retained because the grouping is still what builds the tab strip on a card
- * page and what tells {@link CARD_REDIRECTS} which version a bare name means.
+ * page and what resolves a bare name to its lowest-pitch printing.
  */
 export interface NameGroup {
   readonly name: string;
@@ -1167,17 +1153,14 @@ const PAGE_BY_ID: ReadonlyMap<string, CardPage> = new Map(
  *
  * WHAT THESE WERE. `/card/head-jab` was the URL a person guesses, types and
  * pastes, and it was served as the card itself at its lowest-pitch version.
- * It is a 301 now (see {@link CARD_REDIRECTS}), because there is exactly one
- * kind of card page left and it is a printing. So the guessable form still
- * resolves — it just resolves by moving you to an address that names a real,
- * specific object rather than by rendering a second copy of one.
+ * It is not served any more, because there is exactly one kind of card page
+ * left and it is a printing.
  *
  * WHAT THE GROUPING IS STILL FOR. Two things, both real: the tab strip on a
- * card page is built from it, and the redirect table needs to know which
- * version a bare name should land on. `cards[0]` is the lowest-pitch version
- * under {@link byPitch}, which is the version `/card/head-jab` used to render —
- * so the 301 lands on the page the old URL showed, and nobody's bookmark
- * changes meaning.
+ * card page is built from it, and the typeahead resolves a bare name through
+ * it. `cards[0]` is the lowest-pitch version under {@link byPitch}, which is
+ * the version `/card/head-jab` used to render — so searching the bare name
+ * still lands where the old URL did.
  */
 export const NAME_GROUPS: readonly NameGroup[] = [...BY_NAME_SLUG.entries()]
   .filter(([, group]) => group.length > 1)
@@ -1336,72 +1319,6 @@ export const CARD_ROUTES: readonly CardRoute[] = (() => {
 
   return routes;
 })();
-
-/**
- * The 5,841 addresses this site used to serve, and where each one goes now.
- *
- * WHY THEY ARE 301s AND NOT PAGES. Every one of these was a live URL for the
- * life of the site, and `docs/PLAN.md`'s thesis is that a URL here is permanent
- * and citable. "Permanent" cannot mean "still renders something" — it has to
- * mean the link keeps taking you to the thing it named. A 301 does that and
- * says, to a crawler and to a reader, that the address MOVED. Leaving them as
- * pages with a canonical pointing elsewhere would have kept two documents alive
- * per card forever, which is the duplication the whole scheme change is
- * removing.
- *
- * THREE KINDS, AND ALL OF THEM LAND ON A PRINTING:
- *
- * - **A card slug** — `/card/head-jab-1` → that card's default printing. The
- *   page it rendered and the page it now moves you to are the same page.
- * - **A shared name** — `/card/head-jab` → the LOWEST-PITCH version's default
- *   printing, which is exactly what that URL used to render. Not the whole
- *   group's first-listed card, and not the best-ranked one: `byPitch`, the same
- *   rule the tab strip is ordered by.
- * - **The old printing form** — `/card/head-jab-1/lgs/017-rf` →
- *   `/card/lgs/017-rf/head-jab-1`. The same three segments, reordered.
- *
- * **THE THIRD KIND IS ENUMERATED, AND TWO ATTEMPTS TO BE CLEVER ABOUT IT BOTH
- * SHIPPED AN INFINITE REDIRECT.** It is a pure permutation, so it looks like
- * one Netlify placeholder rule — and `/card/:a/:b/:c` → `/card/:b/:c/:a` is a
- * 3-cycle over any path that names no file. Pinning the set code to segment two
- * (112 rules) fixed that case and left a narrower one: `/card/wtr/lgs/mst`
- * still permutes forever, because every segment is a set code and the permuted
- * output satisfies the same rule. Both were found in review, not by the guards
- * written to catch them — a probe over placeholders only tests the bindings the
- * probe happens to produce.
- *
- * So all 6,437 are spelled out. 12,278 exact rules, no patterns anywhere, and
- * acyclicity stops being an argument: it is set membership over two finite
- * lists, checked exhaustively in `ssg/redirects.ts`. The cost is a 790 kB
- * `_redirects` and a rule count above Netlify's "reach for wildcards" advice,
- * which is guidance about performance rather than a limit. That is the trade,
- * and after two loops it is the right side of it.
- */
-export interface CardRedirect {
-  readonly from: string;
-  readonly to: string;
-}
-
-export const CARD_REDIRECTS: readonly CardRedirect[] = [
-  ...CARD_PAGES.map((page) => ({
-    from: legacyHrefForSlug(page.slug),
-    to: page.href,
-  })),
-  ...NAME_GROUPS.map((page) => ({
-    from: legacyHrefForSlug(page.slug),
-    to: page.href,
-  })),
-  /*
-   * The old per-art addresses. ONLY THE NON-DEFAULT ONES EVER EXISTED: the old
-   * scheme gave face 0 no printing URL of its own, because `/card/<slug>` was
-   * already showing it. Emitting a redirect from a URL that was never served
-   * would be a line that can never fire.
-   */
-  ...CARD_ROUTES.filter((route) => !route.isDefault).map((route) => ({
-    from: `${legacyHrefForSlug(route.slug)}/${route.setCode}/${route.number}`,
-    to: route.href,
-  })),
-];
 
 /* -------------------------------------------------------------------------- */
 /* What a pasted link says about itself                                        */
