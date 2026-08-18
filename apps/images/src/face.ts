@@ -1,10 +1,9 @@
 /**
- * Serves Flesh and Blood card faces from the `optfall-card-faces` Netlify Blobs
- * store.
+ * Serves Flesh and Blood card faces from the `optfall-card-faces` R2 bucket.
  *
  * URL shape:  https://images.optfall.com/<tier>/<key>.webp
  *   e.g.      https://images.optfall.com/normal/MST131.webp
- *   → blob key: normal/MST131.webp
+ *   → object key: normal/MST131.webp
  *
  * Plus one static route, served from this module rather than from a file so
  * that a miss and a deliberate request return the same bytes:
@@ -12,37 +11,34 @@
  *             https://images.optfall.com/placeholder/portrait.svg
  *             https://images.optfall.com/placeholder/landscape.svg
  *
- * THE BYTES LIVE ONLY IN BLOBS, NEVER IN GIT. 11,377 distinct faces at roughly
+ * THE BYTES LIVE ONLY IN R2, NEVER IN GIT. 11,377 distinct faces at roughly
  * 695 KB apiece is ~7.7 GB of source; even transcoded to two WebP tiers it is
  * hundreds of megabytes of binary that git would carry forever.
  * `docs/SCRYFALL-GAP.md` §5.1. Only the serving code is here; the bytes are put
  * there out-of-band by `scripts/ingest-card-images.ts`.
  *
- * WHY THIS IS A SEPARATE SITE FROM THE MAIN ONE. `netlify.toml` at the repo
- * root opens with a promise — "static output only — no functions, no edge
- * handlers, no runtime" — and that promise is what "no uptime story to fail" in
- * `docs/PLAN.md` rests on. Serving images needs a function. Confining that
- * function to its own deploy keeps the runtime inside the one layer the plan
- * already calls expendable: losing images costs a rendering layer, never the
- * product. If this host is down, every card page still renders and every fact
- * on it is still correct.
+ * WHY THIS IS A SEPARATE WORKER FROM THE MAIN SITE. `apps/site` is served
+ * entirely from static assets with no Worker script at all, and that is what
+ * "no uptime story to fail" in `docs/PLAN.md` rests on. Serving images needs
+ * code. Confining that code to its own Worker keeps the runtime inside the one
+ * layer the plan already calls expendable: losing images costs a rendering
+ * layer, never the product. If this host is down, every card page still renders
+ * and every fact on it is still correct.
  *
  * A MISS RETURNS THE PLACEHOLDER WITH 200, NOT A 404, and that is the one
- * genuinely unusual decision here. Rationale in `./_placeholder.ts`; the cache
+ * genuinely unusual decision here. Rationale in `./placeholder.ts`; the cache
  * consequence is below.
  */
-import { getStore } from "@netlify/blobs";
-
 import {
   PLACEHOLDER_CONTENT_TYPE,
   placeholderSvg,
   TIERS,
   type Orientation,
   type Tier,
-} from "./_placeholder";
+} from "./placeholder";
 
-/** The store the ingest writes to. Named once, here and in the ingest tool. */
-export const STORE_NAME = "optfall-card-faces";
+/** The bucket the ingest writes to. Named once, here and in the ingest tool. */
+export const BUCKET_NAME = "optfall-card-faces";
 
 /**
  * The only extension this host serves for a face.
@@ -71,15 +67,19 @@ const IMMUTABLE = "public, max-age=31536000, immutable";
 const PROVISIONAL = "public, max-age=300";
 
 /**
- * The slice of a Netlify Blobs store this function uses.
+ * The slice of the face store this Worker uses.
  *
- * Declared structurally so the tests can inject a fake without a live Blobs
- * runtime — the same dependency-injection seam `SU-SRD/apps/su-assets` uses,
- * and chosen over `mock.module()` for the same reason: that is process-global,
- * and this is one of several test files in the run.
+ * Declared structurally so the tests can inject a fake without a live R2
+ * binding, and chosen over `mock.module()` because that is process-global and
+ * this is one of several test files in the run.
+ *
+ * IT IS NARROWER THAN R2 ON PURPOSE. A key in, a stream or nothing out, is the
+ * entire storage contract this host needs; `index.ts` adapts the binding down to
+ * it in three lines. Everything below is therefore testable without a bucket,
+ * and stays that way regardless of what the storage layer grows.
  */
-export type FaceBlobStore = {
-  get(key: string, options: { type: "stream" }): Promise<ReadableStream | null>;
+export type FaceStore = {
+  get(key: string): Promise<ReadableStream | null>;
 };
 
 /** How a failure is reported. Injected so the tests can assert on it. */
@@ -94,7 +94,6 @@ function placeholderResponse(orientation: Orientation, status = 200): Response {
     headers: {
       "content-type": PLACEHOLDER_CONTENT_TYPE,
       "cache-control": PROVISIONAL,
-      "netlify-cdn-cache-control": PROVISIONAL,
       "access-control-allow-origin": "*",
       // Names the reason in a header rather than only in the pixels, so a
       // caller debugging a grid of grey rectangles can tell "no art published"
@@ -105,7 +104,7 @@ function placeholderResponse(orientation: Orientation, status = 200): Response {
 }
 
 /**
- * Split `/normal/MST131.webp` into its tier and blob key, or reject it.
+ * Split `/normal/MST131.webp` into its tier and object key, or reject it.
  *
  * The guard is the security boundary for a public host that answers every path
  * on its domain: the tier must be one we publish, the remainder must carry no
@@ -120,11 +119,11 @@ export function parseFacePath(
     raw = decodeURIComponent(pathname.replace(/^\/+/, ""));
   } catch {
     // `decodeURIComponent` throws `URIError` on malformed percent-encoding —
-    // `/normal/%zz.webp` is enough. Uncaught, it escaped this function and
-    // Netlify answered 500 where the guard below is written to answer 404. This
+    // `/normal/%zz.webp` is enough. Uncaught, it escapes this function and the
+    // platform answers 500 where the guard below is written to answer 404. This
     // function serves every path on a public, crawler-visible host, so the
-    // first scanner probing bad escapes would have turned the error log into
-    // noise and the guard into a crash.
+    // first scanner probing bad escapes would turn the error log into noise and
+    // the guard into a crash.
     return null;
   }
   const slash = raw.indexOf("/");
@@ -155,7 +154,8 @@ export function parsePlaceholderPath(pathname: string): Orientation | null {
 
 /**
  * Handler factory. The store getter is invoked per request rather than at
- * module scope, because `getStore` needs the Functions runtime context.
+ * module scope, because the R2 binding lives on `env`, which a Worker only has
+ * inside `fetch`. Module scope on Workers forbids async I/O anyway.
  *
  * ON REPORTING: a miss is not an error. This function answers every path on a
  * public, crawler-visible host, so unknown paths and un-ingested keys are
@@ -164,7 +164,7 @@ export function parsePlaceholderPath(pathname: string): Orientation | null {
  * that silently turns every card on the site into a grey rectangle.
  */
 export const makeFaceHandler =
-  (openStore: () => FaceBlobStore, report: FaceFailureReporter = () => {}) =>
+  (openStore: () => FaceStore, report: FaceFailureReporter = () => {}) =>
   async (req: Request): Promise<Response> => {
     const { pathname } = new URL(req.url);
 
@@ -179,16 +179,16 @@ export const makeFaceHandler =
       });
     }
 
-    // Opening the store and reading from it are one failure domain: `getStore`
-    // throws when the Blobs binding is missing, and `get` rejects on an outage.
-    // Either way faces stop serving for everyone at once — so it degrades to
-    // the placeholder rather than to a broken-image glyph, and says so in the
-    // status code so a monitor can tell the difference.
+    // Opening the store and reading from it are one failure domain: the
+    // adapter throws when the R2 binding is missing, and `get` rejects on an
+    // outage. Either way faces stop serving for everyone at once — so it
+    // degrades to the placeholder rather than to a broken-image glyph, and says
+    // so in the status code so a monitor can tell the difference.
     let stream: ReadableStream | null;
     try {
-      stream = await openStore().get(parsed.key, { type: "stream" });
+      stream = await openStore().get(parsed.key);
     } catch (error) {
-      report(error, { fn: "face", op: "blobs.get", key: parsed.key });
+      report(error, { fn: "face", op: "r2.get", key: parsed.key });
       return placeholderResponse("portrait", 503);
     }
 
@@ -202,21 +202,8 @@ export const makeFaceHandler =
         // name, and new art arrives under a new name rather than replacing the
         // bytes at an existing one. Nothing at a given key ever changes.
         "cache-control": IMMUTABLE,
-        "netlify-cdn-cache-control": IMMUTABLE,
         "access-control-allow-origin": "*",
         "x-optfall-face": "hit",
       },
     });
   };
-
-const handler = makeFaceHandler(() => getStore(STORE_NAME));
-
-/** @public Netlify Functions handler — invoked by the platform, not imported. */
-export default async function (req: Request): Promise<Response> {
-  return await handler(req);
-}
-
-/** Functions v2 in-code routing: this function answers every path. */
-export const config = {
-  path: "/*",
-};

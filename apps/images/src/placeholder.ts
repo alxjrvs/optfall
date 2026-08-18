@@ -3,7 +3,7 @@
  *
  * WHY THIS IS AN ASSET AND NOT A 404. Three different states share one need:
  * a printing upstream publishes with `image_url: null` (four of them today), a
- * key the ingest has not reached yet, and a Blobs outage. In every one of them
+ * key the ingest has not reached yet, and a storage outage. In every one of them
  * the page still has a card-shaped hole to fill, and an `<img>` that 404s
  * collapses to a broken-image glyph of the browser's own size — which reflows a
  * grid and makes a working page look broken. `docs/SCRYFALL-GAP.md` §5.1b.

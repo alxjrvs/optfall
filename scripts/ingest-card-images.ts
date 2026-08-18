@@ -1,8 +1,8 @@
 /**
- * ingest-card-images — fill the `optfall-card-faces` Netlify Blobs store from
- * upstream's published card art.
+ * ingest-card-images — fill the `optfall-card-faces` R2 bucket from upstream's
+ * published card art.
  *
- * The bytes behind https://optfall-images.netlify.app. Sources every distinct
+ * The bytes behind https://images.optfall.com. Sources every distinct
  * face in `data/cards/cards.json`, transcodes it to the two WebP tiers
  * `apps/site/src/lib/faces.ts` publishes, and uploads both. The image bytes
  * never enter git — 11,377 faces at ~695 KB apiece is ~7.7 GB of source, and
@@ -23,19 +23,34 @@
  * mirrored. That makes the key correct rather than lossy. But a future clash
  * between genuinely different art would silently serve one card's face under
  * another card's name, which is the category of wrong answer this project
- * exists not to give, so the hash is checked and a real clash stops the run.
+ * exists not to give, so the bytes are compared and a real clash stops the run.
  *
- * ON CREDENTIALS. The Netlify token is read in-process out of the CLI's own
- * config and passed straight to the Blobs client. It is never printed, never
- * exported into the environment, and never written anywhere. Same discipline as
- * the `op-agent` path described in the user's CLAUDE.md: a resolved secret that
- * reaches stdout is a secret in a transcript.
+ * THE CLASH CHECK COMPARES ETAGS. R2 speaks S3, Bun's built-in S3 client cannot
+ * attach custom metadata on write, and S3 already returns a strong validator for
+ * every single-part upload: the ETag is the MD5 of the stored bytes. So the
+ * check needs nothing stored alongside the object — recompute what we would
+ * write, compare it to what is there. A multipart ETag carries a `-<n>` suffix
+ * and is NOT a plain MD5; every object here is a few hundred kilobytes and
+ * therefore single-part, and the suffix is detected rather than assumed so that
+ * the day one is not, the run stops instead of guessing.
+ *
+ * MD5 IS DOING INTEGRITY WORK HERE, NOT SECURITY WORK. It is comparing two
+ * copies of art we fetched ourselves against accidental divergence. Nothing
+ * trusts it against an adversary, and nothing should start.
+ *
+ * ON CREDENTIALS. R2's S3 API needs an access key pair, and wrangler stores no
+ * such pair to be read out of, so they come from the environment. They are held
+ * in-process and are never printed, logged or written. Supply them the way
+ * CLAUDE.md prescribes for everything else:
+ *
+ *   op run --env-file=scripts/.env.r2 -- bun scripts/ingest-card-images.ts
+ *
+ * A resolved secret that reaches stdout is a secret in a transcript.
  */
-import { existsSync, readFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { getStore } from "@netlify/blobs";
+import { S3Client } from "bun";
 import sharp from "sharp";
 
 import {
@@ -44,11 +59,9 @@ import {
   type FaceTier,
 } from "../apps/site/src/lib/faces";
 
-/** The site the store belongs to — `optfall-images`. Public, not a secret. */
-const SITE_ID = "4ffb1b7a-8fb6-4c07-a83e-4641202b50e8";
-
-/** Must equal `STORE_NAME` in `apps/images/netlify/functions/face.ts`. */
-const STORE_NAME = "optfall-card-faces";
+/** Must equal `BUCKET_NAME` in `apps/images/src/face.ts` and the
+ * `bucket_name` in `apps/images/wrangler.jsonc`. Public, not a secret. */
+const BUCKET_NAME = "optfall-card-faces";
 
 /**
  * WebP quality.
@@ -84,40 +97,68 @@ interface Corpus {
 }
 
 /**
- * Read the Netlify personal access token from the CLI's own config.
+ * The R2 client, built from the environment.
  *
- * Returned, never logged. The caller hands it straight to `getStore`.
+ * EVERY VARIABLE IS CHECKED BEFORE ANY IS USED, and the error names all of the
+ * missing ones at once. A tool that runs for an hour should not fail on the
+ * second credential after the reader has already fixed the first.
+ *
+ * Values are read, held in-process and never echoed. `S3Client` keeps them for
+ * request signing; nothing here logs them, and nothing should add a debug line
+ * that does.
  */
-function netlifyToken(): string {
-  const path = join(homedir(), "Library/Preferences/netlify/config.json");
-  if (!existsSync(path)) {
+function r2Client(): S3Client {
+  const required = [
+    "CLOUDFLARE_ACCOUNT_ID",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+  ] as const;
+
+  const missing = required.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
     throw new Error(
-      `No Netlify CLI config at ${path}. Run \`netlify login\` first — this ` +
-        `tool deliberately reads the CLI's own credential rather than taking a ` +
-        `token on the command line, so the token never reaches a shell history ` +
-        `or a process listing.`,
+      `Missing ${missing.join(", ")}. R2's S3 API needs an access key pair, ` +
+        `and wrangler stores no such pair to be read out of. Supply them ` +
+        `without putting a secret in your shell history:\n\n` +
+        `  op run --env-file=scripts/.env.r2 -- bun scripts/ingest-card-images.ts\n`,
     );
   }
-  const config = JSON.parse(readFileSync(path, "utf8")) as {
-    userId?: string;
-    users?: Record<string, { auth?: { token?: string } }>;
-  };
-  /*
-    THE ACTIVE USER, NOT AN ARBITRARY ONE. `users` is keyed by account id and
-    the CLI records which one is signed in as `userId`. Taking the first entry
-    would silently authenticate as whichever account happened to serialise
-    first — against a hard-coded SITE_ID, so the failure would be a confusing
-    403 rather than an obvious wrong-account error.
-  */
-  const users = config.users ?? {};
-  const active = config.userId === undefined ? undefined : users[config.userId];
-  const token = (active ?? Object.values(users)[0])?.auth?.token;
-  if (!token) {
-    throw new Error(
-      "The Netlify CLI config carries no auth token. Run `netlify login`.",
-    );
-  }
-  return token;
+
+  /* Every name above is present and non-empty, checked directly. `process.env`
+     is typed `string | undefined` regardless, and `exactOptionalPropertyTypes`
+     will not take that for these fields — so the narrowing is spelled here,
+     beside the check that earns it, rather than at each use. */
+  const value = (name: (typeof required)[number]): string =>
+    process.env[name] as string;
+
+  return new S3Client({
+    accessKeyId: value("R2_ACCESS_KEY_ID"),
+    secretAccessKey: value("R2_SECRET_ACCESS_KEY"),
+    bucket: BUCKET_NAME,
+    /* R2's S3 endpoint is per account. `auto` is the only region it accepts. */
+    endpoint: `https://${value("CLOUDFLARE_ACCOUNT_ID")}.r2.cloudflarestorage.com`,
+    region: "auto",
+  });
+}
+
+/**
+ * The MD5 an S3 ETag would carry for these bytes.
+ *
+ * See the header: this is an integrity comparison against art we fetched
+ * ourselves, not a security boundary.
+ */
+function md5(bytes: Uint8Array): string {
+  return new Bun.CryptoHasher("md5").update(bytes).digest("hex");
+}
+
+/** An ETag as stored, reduced to a comparable digest — or null if it is not one. */
+function etagDigest(etag: string | undefined): string | null {
+  if (etag === undefined) return null;
+  const unquoted = etag.replace(/^"|"$/g, "");
+  /* `<md5>-<parts>` is a multipart upload and is not an MD5 of the content.
+     Nothing this tool writes should ever be multipart; if one is, say so
+     rather than silently treating a non-comparable value as a mismatch. */
+  return unquoted.includes("-") ? null : unquoted;
 }
 
 /** One face to ingest: the key it lands at, and where to fetch it from. */
@@ -163,15 +204,6 @@ function facesFrom(corpus: Corpus): {
 
   return { faces, printingsWithoutImage, totalPrintings };
 }
-
-/** SHA-256 of a buffer, hex. Used only to detect a genuine key clash. */
-async function sha256(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", bytes as BufferSource);
-  return [...new Uint8Array(digest)]
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 /**
  * Transcode one source image to one tier.
  *
@@ -242,20 +274,34 @@ async function main(): Promise<void> {
       `(${printingsWithoutImage} printings publish no image)`,
   );
 
-  const store = getStore({
-    name: STORE_NAME,
-    siteID: SITE_ID,
-    token: netlifyToken(),
-  });
+  const store = r2Client();
 
   // Listed ONCE. Doing this per face would be 22,754 extra round trips to learn
   // something one call already knows.
-  let present = new Set<string>();
+  //
+  // PAGINATED, AND THAT IS LOAD-BEARING. S3 caps a listing at 1,000 keys per
+  // call and reports `isTruncated`; a full bucket is ~22,754 keys, so a single
+  // un-paginated call would report 4% of the bucket as the whole of it — and
+  // every key it did not see would be re-transcoded and re-uploaded on every
+  // run. Silent, slow and expensive rather than wrong, which is the kind of bug
+  // that survives a long time.
+  const present = new Set<string>();
   if (!force) {
-    const listed = await store.list();
-    present = new Set(listed.blobs.map((blob) => blob.key));
+    let startAfter: string | undefined;
+    for (;;) {
+      const page = await store.list(
+        startAfter === undefined
+          ? { maxKeys: 1000 }
+          : { maxKeys: 1000, startAfter },
+      );
+      for (const entry of page.contents ?? []) present.add(entry.key);
+      if (!page.isTruncated) break;
+      startAfter = page.contents?.at(-1)?.key;
+      /* Defensive: a truncated page with no last key would loop forever. */
+      if (startAfter === undefined) break;
+    }
     console.log(
-      `store: ${present.size.toLocaleString("en-GB")} keys already present`,
+      `bucket: ${present.size.toLocaleString("en-GB")} keys already present`,
     );
   }
 
@@ -299,19 +345,18 @@ async function main(): Promise<void> {
     source: Uint8Array,
     tier: FaceTier,
   ): Promise<void> => {
-    const blobKey = `${tier}/${face.key}`;
+    const objectKey = `${tier}/${face.key}`;
     const bytes = await transcode(source, tier);
-    const hash = await sha256(bytes);
 
-    if (!force && present.has(blobKey)) {
+    if (!force && present.has(objectKey)) {
       // Present already, and we have just recomputed what we would write. If it
       // differs, two genuinely different images want the same key.
-      const existing = await store.getMetadata(blobKey);
-      const existingHash = existing?.metadata?.["sha256"];
-      if (typeof existingHash === "string" && existingHash !== hash) {
-        outcome.clashes.push(blobKey);
+      const stat = await store.stat(objectKey);
+      const existing = etagDigest(stat.etag);
+      if (existing !== null && existing !== md5(bytes)) {
+        outcome.clashes.push(objectKey);
         console.error(
-          `  ‼ ${blobKey} — a different image already occupies this key. ` +
+          `  ‼ ${objectKey} — a different image already occupies this key. ` +
             `Not overwriting. Source: ${face.url}`,
         );
         return;
@@ -320,9 +365,7 @@ async function main(): Promise<void> {
       return;
     }
 
-    await store.set(blobKey, bytes as unknown as ArrayBuffer, {
-      metadata: { sha256: hash, source: face.url },
-    });
+    await store.write(objectKey, bytes, { type: "image/webp" });
     outcome.written += 1;
     outcome.bytesOut += bytes.byteLength;
   };
@@ -368,7 +411,7 @@ async function main(): Promise<void> {
     const left = Math.round((pending.length - done) / Math.max(rate, 0.01));
     console.log(
       `  ${done.toLocaleString("en-GB")}/${pending.length.toLocaleString("en-GB")} ` +
-        `faces · ${outcome.written.toLocaleString("en-GB")} blobs written · ` +
+        `faces · ${outcome.written.toLocaleString("en-GB")} objects written · ` +
         `${(outcome.bytesOut / 1e6).toFixed(0)} MB · ` +
         `${rate.toFixed(1)}/s · ~${Math.floor(left / 60)}m left`,
     );

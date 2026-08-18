@@ -8,11 +8,11 @@
  * tests and build different output. `.bun-version` is the one file a developer's
  * toolchain and CI both read, which is why it is the source of truth here.
  *
- * It cannot be the ONLY place the number appears, though. Netlify's build image
+ * It cannot be the ONLY place the number appears, though. The site's build image
  * takes its Bun from a `BUN_VERSION` build environment variable and reads no
  * version file, and `engines.bun` and the `@types/bun` pin are npm metadata that
  * cannot reference one either. Each of those has to carry the number literally,
- * and a number written in four places is a number that drifts — SU-SRD's copy of
+ * and a number written in several places is a number that drifts — SU-SRD's copy of
  * this check was written after its CI had been testing on 1.3.10 while a
  * production site built on 1.3.14, which is the precise shape of "the gate was
  * green for a build nobody shipped".
@@ -64,11 +64,6 @@ const surfaces: Surface[] = [
   {
     label: "netlify.toml BUN_VERSION",
     actual: netlifyBunVersion("netlify.toml"),
-    expected,
-  },
-  {
-    label: "apps/images/netlify.toml BUN_VERSION",
-    actual: netlifyBunVersion("apps/images/netlify.toml"),
     expected,
   },
   {

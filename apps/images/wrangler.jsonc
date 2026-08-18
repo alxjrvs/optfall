@@ -1,0 +1,54 @@
+{
+  // Cloudflare Workers deployment for the Optfall card-face host.
+  //
+  // THIS IS THE ONLY RUNTIME IN THE REPOSITORY, and the split is deliberate.
+  // `apps/site` is served entirely from static assets with no Worker script at
+  // all, which is what docs/PLAN.md's "no uptime story to fail" rests on.
+  // Serving card images needs code. Confining that code here keeps the runtime
+  // inside the one layer the plan already calls expendable:
+  //
+  //   "Losing images costs a rendering layer, never the product."
+  //
+  // If this Worker is down, every card page on optfall.com still renders and
+  // every fact on it is still correct — cards simply show NO IMAGE.
+  //
+  // THE IMAGE BYTES ARE NOT IN THIS REPOSITORY. They live in the
+  // `optfall-card-faces` R2 bucket, put there out-of-band by
+  // `scripts/ingest-card-images.ts`. 11,377 distinct faces at ~695 KB apiece is
+  // ~7.7 GB of source; even as two WebP tiers it is hundreds of megabytes that
+  // git would carry forever. See docs/SCRYFALL-GAP.md §5.1.
+  //
+  // This file is public and contains no secrets, and must never contain one.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "optfall-images",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-08-18",
+  "assets": {
+    // `robots.txt` and nothing else. Cloudflare serves a matching asset without
+    // invoking the Worker, so the Worker answers every path that is not
+    // literally this one file.
+    //
+    // No `not_found_handling`: a miss here must reach the Worker, because the
+    // Worker's whole job is to answer for paths no file exists at.
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "r2_buckets": [
+    {
+      // `src/index.ts` reads this name off `env`. It is also spelled in
+      // `src/face.ts` as BUCKET_NAME and in the ingest tool; those three must
+      // agree, and the bucket-name string below is the one that is real.
+      "binding": "FACES",
+      "bucket_name": "optfall-card-faces"
+    }
+  ],
+  "observability": {
+    // On by default for new Workers, declared explicitly because it is the only
+    // thing that makes a store failure visible at all. `face.ts` deliberately
+    // does NOT report a miss — this host answers every path on a public,
+    // crawler-visible domain, so unknown keys are ordinary traffic — and DOES
+    // report the store failing to answer, which is the failure that silently
+    // turns every card on the site into a grey rectangle.
+    "enabled": true
+  }
+}
