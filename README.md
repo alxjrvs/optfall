@@ -73,6 +73,8 @@ read by `apps/site/src/lib/cards.ts`.
 
 ## Working on it
 
+Built on **[the Butter Stack](https://alxjrvs.github.io/butter/)** — Bun · Unified workspace · TypeScript · TanStack · Edge-deployed · React.
+
 ```sh
 bun install
 bun run check          # 7 of the gate's 10 jobs — everything that needs no build
