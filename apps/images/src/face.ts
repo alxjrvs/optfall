@@ -97,7 +97,9 @@ function placeholderResponse(orientation: Orientation, status = 200): Response {
       "access-control-allow-origin": "*",
       // Names the reason in a header rather than only in the pixels, so a
       // caller debugging a grid of grey rectangles can tell "no art published"
-      // from "the store did not answer" without reading the image.
+      // from "the store did not answer" without reading the image. The full
+      // vocabulary is `hit`, `substitute`, `placeholder` and
+      // `placeholder-degraded`.
       "x-optfall-face": status === 200 ? "placeholder" : "placeholder-degraded",
     },
   });
@@ -142,6 +144,34 @@ export function parseFacePath(
   if (!/^[A-Za-z0-9._-]+$/.test(name)) return null;
 
   return { tier: tier as Tier, key: `${tier}/${name}` };
+}
+
+/**
+ * The key to try when a Cold Foil face has no art of its own.
+ *
+ * UPSTREAM PUBLISHES 576 `-CF` FACES AND WITHHOLDS 18 OF THEM. Those 18 —
+ * ANQ011-CF..ANQ027-CF and FAB402-CF — return 403 from the official image host
+ * while their non-foil siblings return 200, and Legend Story Studios' own card
+ * database points those same cards at the sibling. So the art exists; only the
+ * foil rendition is unpublished.
+ *
+ * WHAT THIS SUBSTITUTION COSTS, STATED PLAINLY. A Cold Foil is distinguished by
+ * exactly the finish this discards, so the image served under a `-CF` address
+ * is NOT a picture of that printing. That is a real inaccuracy on a site whose
+ * thesis is being right, and it is a deliberate trade: a reader who sees the
+ * illustration learns more than one who sees a grey rectangle. It is made
+ * legible rather than hidden — the response says `x-optfall-face: substitute`,
+ * and the substitute is cached for minutes rather than a year so that the true
+ * foil art replaces it within one cache lifetime of upstream publishing it.
+ *
+ * Returns null for anything that is not a Cold Foil key, so the fallback can
+ * never fire for an ordinary miss.
+ */
+export function coldFoilFallbackKey(key: string): string | null {
+  const match = /^(?<tier>[^/]+)\/(?<stem>.+)-CF\.webp$/.exec(key);
+  const groups = match?.groups;
+  if (!groups) return null;
+  return `${groups["tier"]}/${groups["stem"]}.webp`;
 }
 
 /** `/placeholder/portrait.svg` → `"portrait"`. */
@@ -192,7 +222,41 @@ export const makeFaceHandler =
       return placeholderResponse("portrait", 503);
     }
 
-    if (!stream) return placeholderResponse("portrait");
+    if (!stream) {
+      /*
+       * A Cold Foil with no art of its own falls back to the non-foil sibling.
+       * See {@link coldFoilFallbackKey} for what that costs and why it is
+       * nonetheless the chosen answer. The second read happens ONLY on a miss
+       * of a `-CF` key, so the common path is still one `get`.
+       */
+      const fallback = coldFoilFallbackKey(parsed.key);
+      if (fallback !== null) {
+        let substitute: ReadableStream | null;
+        try {
+          substitute = await openStore().get(fallback);
+        } catch (error) {
+          report(error, { fn: "face", op: "r2.get", key: fallback });
+          return placeholderResponse("portrait", 503);
+        }
+        if (substitute) {
+          return new Response(substitute, {
+            status: 200,
+            headers: {
+              "content-type": "image/webp",
+              /* PROVISIONAL, NOT IMMUTABLE, AND THAT IS THE WHOLE SAFETY OF
+                 THIS. The bytes are a stand-in for art upstream has not
+                 published yet; caching them for a year would outlive the gap
+                 they fill and freeze the wrong picture on the page long after
+                 the right one existed. */
+              "cache-control": PROVISIONAL,
+              "access-control-allow-origin": "*",
+              "x-optfall-face": "substitute",
+            },
+          });
+        }
+      }
+      return placeholderResponse("portrait");
+    }
 
     return new Response(stream, {
       status: 200,

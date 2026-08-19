@@ -438,6 +438,48 @@ async function main(): Promise<void> {
 
   await Promise.all(Array.from({ length: concurrency }, worker));
 
+  /*
+   * SECOND PHASE — bytes for the Cold Foil substitutes.
+   *
+   * Upstream withholds the art for a handful of `-CF` printings while serving
+   * their non-foil siblings, so `apps/images/src/face.ts` falls back to the
+   * sibling and labels the response `x-optfall-face: substitute`. That fallback
+   * is a store lookup, so it only works if the sibling's bytes are actually in
+   * the bucket.
+   *
+   * ALMOST ALL OF THEM ALREADY ARE, because the sibling is usually its own
+   * printing and therefore its own face in the corpus. The exception is a
+   * sibling no printing references — today exactly one, `FAB402` — which nothing
+   * else would ever fetch. This phase fetches precisely those.
+   *
+   * IT IS DERIVED, NOT A LIST. Hard-coding the eighteen keys would be correct
+   * today and silently wrong the next time upstream withholds a different one;
+   * this asks the run what it actually failed to get.
+   */
+  const coldFoilGaps = outcome.unavailable.filter((key) => key.endsWith("-CF"));
+  if (coldFoilGaps.length > 0) {
+    const urlByKey = new Map(faces.map((face) => [face.key, face.url]));
+    const faceKeys = new Set(faces.map((face) => face.key));
+
+    const substitutes: Face[] = coldFoilGaps.flatMap((key) => {
+      const base = key.replace(/-CF$/, "");
+      /* A sibling that is its own printing was already fetched by the main
+         pass. Only the orphans need anything. */
+      if (faceKeys.has(base)) return [];
+      const url = urlByKey.get(key);
+      if (url === undefined) return [];
+      return [{ key: base, url: url.replace(/-CF(?=\.[^.]+$)/, "") }];
+    });
+
+    if (substitutes.length > 0) {
+      console.log(
+        `\ncold foil substitutes: fetching ${substitutes.length} non-foil ` +
+          `sibling(s) no printing references`,
+      );
+      for (const face of substitutes) await ingestFace(face);
+    }
+  }
+
   const elapsed = ((Date.now() - startedAt) / 1000 / 60).toFixed(1);
   console.log(
     `\ndone in ${elapsed}m — ${outcome.written.toLocaleString("en-GB")} written, ` +
