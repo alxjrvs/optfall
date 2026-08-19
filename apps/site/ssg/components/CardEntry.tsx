@@ -370,15 +370,40 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const shown = faces[selected] ?? faces[0];
 
   /**
-   * The storefront link for the printing whose picture is at the top of the
+   * The storefront link for the printing that CLAIMED the art at the top of the
    * page, or `undefined` when upstream published no product for it.
    *
-   * IT HANGS OFF `shown` RATHER THAN OFF THE CARD, which is the whole reason it
-   * is computed here instead of with the rest of the derived values above:
-   * `shown` is the printing that claimed this art, and its link is the one
-   * carrying the `Printing=` that names the foiling. A card-level "first
-   * purchasable printing" would send a reader looking at a Rainbow Foil to the
-   * Standard.
+   * IT IS NOT NECESSARILY THE FOILING THE READER IS LOOKING AT, and an earlier
+   * version of this comment claimed the opposite — that hanging the link off
+   * `shown` is what stops "a reader looking at a Rainbow Foil" being sent to the
+   * Standard. That is exactly backwards, and it is worth spelling out because
+   * the mistake is easy to repeat.
+   *
+   * `facesOf` dedupes printings BY IMAGE and keeps the first one carrying each,
+   * so `shown.printing` means "the first printing published with this picture",
+   * not "the printing you want". Measured on the pinned corpus: 5,055 arts carry
+   * more than one printing and 5,052 of those span more than one foiling —
+   * overwhelmingly a Standard and a Rainbow Foil struck from one image. On every
+   * one of those pages this link is the Standard's product.
+   *
+   * THAT IS A DEFENSIBLE DEFAULT RATHER THAN A BUG, because the page cannot know
+   * the answer: a card route addresses an ART, so `/card/mst/131/…` names a
+   * picture that two foilings share and the URL simply does not carry a foiling
+   * to honour. Something has to be linked, and the printing that claimed the art
+   * is the only non-arbitrary choice available. What was wrong was the claim,
+   * not the code.
+   *
+   * SO THE BUTTON SAYS WHICH ONE IT BUYS. `buyLabel` names the printing —
+   * "MST131, Standard" — and the button carries it as `detail`. A reader who
+   * wants the foil can then hear that this is not it and go to the labelled row
+   * in `BuySection` that is; without it, the one buy link on the page that
+   * cannot say what it buys would also be the most prominent. The label is read
+   * at the render site rather than folded in here, because `buyLabel` is built
+   * further down and this value is needed before it exists.
+   *
+   * ONE CASE THIS DOES NOT HIT, checked rather than assumed: a first printing
+   * with no product whose sibling has one, which would render no button on a
+   * purchasable art. Zero occurrences in the pinned corpus.
    *
    * The page-wide question — does this card have ANY purchase link, and does the
    * disclosure therefore belong on the page — is no longer asked here. It used
@@ -671,7 +696,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     return labels;
   })();
 
-  /** The box the face is drawn in — this printing's own orientation. */ /** The box the face is drawn in — this printing's own orientation. */
+  /** The box the face is drawn in — this printing's own orientation. */
   const shownBox = boxFor(
     "normal",
     shown === undefined
@@ -841,12 +866,14 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               one is directly under that printing's picture, so the picture is
               the label.
 
-              IT IS THE `shown` PRINTING'S PRODUCT, NOT THE CARD'S. A card route
-              addresses an ART, and a Standard and a Rainbow Foil struck from one
-              picture share a page — so `shown` is the printing that claimed this
-              art, and its storefront link carries the `Printing=` that names the
-              foiling. Rendering the first printing's product here instead would
-              send a reader looking at a foil to the non-foil.
+              AND IT NAMES WHICH PRINTING IT BUYS, because it cannot be sure
+              that is the one you wanted. A card route addresses an ART, and
+              5,052 arts in this corpus are shared by more than one foiling, so
+              `shown.printing` is the printing that CLAIMED the picture rather
+              than the foiling a reader has in mind — see the note on
+              `faceBuyHref` for the measurement and for why that is still the
+              right default. The `detail` is what keeps the claim honest: this
+              buys MST131 Standard, and the labelled rows below sell the rest.
 
               NOTHING WHERE THERE IS NOTHING TO BUY. 1,336 printings have no
               upstream product; `buyHref` returns undefined for those and this
@@ -860,8 +887,11 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               that teaches a reader to skip it. The sentence sits once, under the
               block of links in `BuySection`.
             */}
-            {faceBuyHref === undefined ? null : (
+            {faceBuyHref === undefined || shown === undefined ? null : (
               <IconButton
+                detail={
+                  buyLabel.get(shown.printing.unique_id) ?? shown.printing.id
+                }
                 href={faceBuyHref}
                 icon={<TcgplayerMark />}
                 label="Buy on TCGplayer"

@@ -82,6 +82,19 @@ const PARTNER_ORIGIN = "https://partner.tcgplayer.com/c";
  * A closed set rather than a free string, because the value's only job is to be
  * grouped by later, and a typo produces a silently separate row that looks like
  * a placement nobody built.
+ *
+ * `"card-printings"` NAMES A TABLE COLUMN THAT NO LONGER EXISTS, and it is kept
+ * anyway. The links moved into a Buy section of their own and one now sits under
+ * the card face, so the value is no longer descriptive — but it is a REPORTING
+ * KEY, and Impact groups by the string it was sent. Renaming it would split one
+ * placement into two rows at the rename date and silently end the series
+ * somebody would be comparing against. It means "the card page's buy links",
+ * which is what it has always been counting.
+ *
+ * Splitting the face button onto its own value is a real option and deliberately
+ * not taken here: it is worth doing only if somebody intends to compare the two
+ * placements, and inventing a second key nobody reads is how the closed set
+ * above stops being closed.
  */
 export type Placement = "card-printings";
 
@@ -150,7 +163,11 @@ export function buyRel(affiliateId: string | null = AFFILIATE_ID): string {
 }
 
 /**
- * The sentence printed under the printings table.
+ * The sentence printed under the block of buy links.
+ *
+ * It said "under the printings table", which was true while the links were that
+ * table's eighth column and stopped being true when they became a section of
+ * their own. See `BuySection`.
  *
  * Written out in both states rather than assembled from fragments, because this
  * is the text a regulator or LSS would read and a sentence built by

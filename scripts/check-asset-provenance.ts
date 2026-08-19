@@ -57,15 +57,16 @@ const REPO_ROOT = new URL("../", import.meta.url);
 /*
  * ORDER MATTERS: most specific directory first. A file is audited against the
  * FIRST entry whose directory contains it, so `apps/site/public/fonts` is
- * governed by the font manifest and everything else under `apps/site/public`
- * by the symbol one.
+ * governed by the font manifest, `apps/site/public/brand` by the brand one, and
+ * everything else under `apps/site/public` by the symbol manifest.
  *
- * That nesting exists because the two manifests cannot be merged. The symbol
+ * That nesting exists because the manifests cannot be merged. The symbol
  * manifest is GENERATED — `scripts/ingest-game-symbols.ts` writes it, and
  * `check:symbols` verifies the file on disk matches what the ingest would
- * produce — so a hand-written font entry added to it would be deleted by the
- * next sync, silently, and the fonts would be unaccounted-for again. Two
- * manifests, one generated and one authored, is the honest shape.
+ * produce — so a hand-written font or brand entry added to it would be deleted
+ * by the next sync, silently, and those assets would be unaccounted-for again.
+ * One generated manifest and two authored ones, with two nested exceptions
+ * ahead of the general case, is the honest shape.
  */
 const GOVERNED = [
   {

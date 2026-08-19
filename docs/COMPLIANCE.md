@@ -198,8 +198,14 @@ while carrying the LSS disclaimer, in public, for a long time.
 > word "affiliate" in the document, so anybody re-checking this by searching the
 > policy will land on it and read it as a prohibition. It is not one.
 
-**What we therefore do.** Per-printing purchase links on the printings table,
-built by [`apps/site/src/lib/tcgplayer.ts`](../apps/site/src/lib/tcgplayer.ts).
+**What we therefore do.** Per-printing purchase links in a **Buy** section of
+their own on the card page, plus one under the card face for the printing that
+claimed the art shown — all built by
+[`apps/site/src/lib/tcgplayer.ts`](../apps/site/src/lib/tcgplayer.ts). ~~on the
+printings table~~ — struck: they were the table's eighth column until the buy
+section was split out, on the argument that "what exists" and "where do I get
+one" are different questions and the reference work should not be interleaved
+with commerce.
 **No price, ever** — that is a separate decision on separate grounds, recorded in
 that module and in `docs/PLAN.md`'s collector-economy exclusion.
 
@@ -219,8 +225,8 @@ without somebody reading that file.
 
 **The flip happened, 2026-08-18.** TCGplayer accepted the partner application
 filed 2026-08-17 and `AFFILIATE_ID` is now `7630689`, so every purchase link is
-wrapped, every anchor carries `rel="sponsored"`, and the sentence under the
-printings table says Optfall earns a commission. The tripwire did its job: the
+wrapped, every anchor carries `rel="sponsored"`, and the sentence under the buy
+links says Optfall earns a commission. The tripwire did its job: the
 final block asserted `null`, broke on the change, and was rewritten to assert
 the live state — the same guarantee pointing the other way.
 
@@ -228,8 +234,19 @@ The disclosure now carries real weight rather than describing a hypothetical, so
 it is worth naming what it rests on. TCGplayer's Partner Guidelines put FTC
 compliance on the partner and require disclosure that is "clear, conspicuous,
 prominent and unambiguous to the average member of your audience". Optfall's
-sits directly beneath the links it describes rather than in the site footer,
-which is the whole reason `buyDisclosure` lives in the same module as `buyHref`.
+sits directly beneath the block of links it describes rather than in the site
+footer, which is the whole reason `buyDisclosure` lives in the same module as
+`buyHref`.
+
+**One buy link on the page does not have the sentence directly under it** — the
+button beneath the card face, which sits above the fold and well above the Buy
+section. That is deliberate rather than an oversight: printing the disclosure
+twice on one page is not more conspicuous, it is the repetition that teaches a
+reader to skip it. The claim being made is that the sentence is clear and
+prominent *on the page carrying the links*, which `ssg.test.ts` asserts by
+requiring it exactly once wherever any buy link renders and never where none do.
+If that reading is ever judged too loose, the fix is a second disclosure by the
+face rather than a quieter one below.
 
 **Nothing here is coupled to the host**, which is worth stating outright. The
 links are ordinary anchors in static

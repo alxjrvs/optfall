@@ -1011,8 +1011,11 @@ describe("the printings table is how a reader reaches another art", () => {
   /**
    * The nth cell of every body row, counting the row header as cell 0.
    *
-   * Columns are Number, Set, Rarity, Edition, Foiling, Artist, Other face, Buy —
-   * so `cellsAt(html, 3)` is Edition. Positional rather than pattern-matched
+   * Columns are Number, Set, Rarity, Edition, Foiling, Artist, Other face — so
+   * `cellsAt(html, 3)` is Edition. There was a Buy column on the end until the
+   * buy links became a section of their own; its removal did not move any index
+   * the callers here use, which is precisely why a wrong map would have gone
+   * unnoticed. Positional rather than pattern-matched
    * because a cell's contents vary (`Set` holds an anchor, `Edition` holds bare
    * text or a dash) and a regex counting `</td>`s lazily reads a different
    * column on different rows.

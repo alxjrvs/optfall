@@ -1286,16 +1286,23 @@
   carry this same rule for this same reason: hidden text that is read aloud must
   not arrive in a paste.
 */
-.of-card__collector .of-card__visually-hidden,
-/*
-  THE BUY CELL FOR THE SAME REASON. Its hidden span names the printing so the
-  link is not one of sixteen reading "TCGplayer"; selected and pasted, that text
-  would come with it and a reader copying the cell would get the whole sentence
-  instead of the vendor.
-*/
-.of-card__buy .of-card__visually-hidden {
+.of-card__collector .of-card__visually-hidden {
   user-select: none;
 }
+
+/*
+  THE BUY LINK'S HALF OF THIS RULE MOVED WITH THE LINK. It used to sit here as
+  `.of-card__buy .of-card__visually-hidden`, for the same reason as the selector
+  above: the hidden span names the printing so the link is not one of sixteen
+  reading "TCGplayer", and selected-and-pasted that text would come with it.
+  Buy links are `IconButton`s now and live in their own section, so the rule
+  belongs to the primitive — see `user-select` on `.of-icon-button__detail` in
+  `packages/components/src/react/IconButton.css`.
+
+  It is called out rather than silently deleted because deleting it silently is
+  what nearly happened: the selector went orphaned when the column did, and an
+  orphaned rule reads as dead code rather than as behaviour somebody still owes.
+*/
 
 /*
   `.code` WENT WITH THE PORT, because it had already gone from the markup. It was
@@ -1327,30 +1334,31 @@
 
 .of-card__printings thead th,
 .of-card__printings .of-card__collector,
-.of-card__printings .of-card__code-hint,
-.of-card__printings .of-card__buy {
+.of-card__printings .of-card__code-hint {
   white-space: nowrap;
 }
 
 /*
-  THE ONE LINK IN THIS TABLE THAT LEAVES THE SITE, and it is deliberately NOT
-  given a colour of its own.
+  NO TABLE LINK LEAVES THE SITE ANY MORE, and the argument that used to stand
+  here is worth keeping because it is about the system rather than about that
+  column.
 
-  THIS RULE USED TO SPEND `--of-color-brass`, arguing that brass is the material
-  for apparatus and marginalia. That argument was wrong, and it contradicted an
-  invariant stated in three places: `docs/DESIGN.md` ("the brass seal is the only
-  place brass appears — attribution is the moat, so it gets the one material
-  nothing else is allowed to use"), `packages/theme/src/tokens.ts` ("BRASS IS NOT
-  AVAILABLE", declining it even to Promo rarity where it is the obvious choice),
-  and the design-system page for the seal ("Nothing else in the system may
-  consume `color.brass`"). `rule.page.tsx` already records declining brass for
-  exactly this reason. `check:tokens` asserts that a token EXISTS, not who may
-  spend it, so this landed silently — which is why the argument is written down
-  here rather than just deleted.
+  A `.of-card__buy` rule USED TO SPEND `--of-color-brass`, arguing that brass is
+  the material for apparatus and marginalia. That argument was wrong, and it
+  contradicted an invariant stated in three places: `docs/DESIGN.md` ("the brass
+  seal is the only place brass appears — attribution is the moat, so it gets the
+  one material nothing else is allowed to use"), `packages/theme/src/tokens.ts`
+  ("BRASS IS NOT AVAILABLE", declining it even to Promo rarity where it is the
+  obvious choice), and the design-system page for the seal ("Nothing else in the
+  system may consume `color.brass`"). `rule.page.tsx` already records declining
+  brass for exactly this reason. `check:tokens` asserts that a token EXISTS, not
+  who may spend it, so it landed silently — which is why this is written down
+  rather than deleted along with the selector it described.
 
-  So the link is a link. If marking outbound commerce is worth its own visual
-  vocabulary, that is a decision for `DESIGN.md` to make once, for every surface
-  — not one a component stylesheet invents for itself.
+  THE RULE IT GOVERNS NOW IS `IconButton`, which takes `surface.raised` and the
+  two bevel tokens and no colour of its own. If marking outbound commerce is
+  worth its own visual vocabulary, that is a decision for `DESIGN.md` to make
+  once, for every surface — not one a component stylesheet invents for itself.
 */
 
 .of-card__printings thead th {

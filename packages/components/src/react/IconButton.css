@@ -75,9 +75,18 @@
 .of-icon-button__icon svg {
   inline-size: 100%;
   block-size: 100%;
-  /* The mark is not square — TCGplayer's is 600x451 — so it is fitted rather
-     than stretched. A distorted trademark is a compliance problem, not only an
-     ugly one. */
+  /*
+    FITTED RATHER THAN STRETCHED, because a distorted trademark is a compliance
+    problem and not only an ugly one.
+
+    The icon is a slot, so this box cannot know the aspect ratio of what it is
+    handed. `contain` is what makes that safe for every caller rather than for
+    the square one. (An earlier version of this comment justified it by saying
+    "TCGplayer's is 600x451" — which is the Impact library's asset, not the file
+    this repository ships; ours is the 48x48 favicon and it IS square. The
+    declaration was right and the reason given for it was about a different
+    file.)
+  */
   object-fit: contain;
 }
 
@@ -85,8 +94,17 @@
   Announced, never shown. Sized from `space.hair` rather than collapsed to zero
   for the reason `CardSearch.css` gives: a zero-area element is skipped by some
   screen readers.
+
+  AND IT MUST NOT ARRIVE IN A PASTE, which is the half that is easy to lose.
+  Off-screen text is still inside the selection: a reader who drags across a buy
+  row and copies it would otherwise get "Buy on TCGplayer — WTR098, 1st Edition,
+  Standard" where the page shows four words. `CardEntry.css` carried exactly
+  this rule for the buy cell before these links became a primitive, and its
+  comment there is the record of why — hidden text that is read aloud must not
+  come with a copy.
 */
 .of-icon-button__detail {
+  user-select: none;
   position: absolute;
   inline-size: var(--of-space-hair);
   block-size: var(--of-space-hair);
