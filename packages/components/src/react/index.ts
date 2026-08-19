@@ -20,16 +20,23 @@
  * two whose failure is silent: every other primitive in this library is wrong
  * in a way you can see. The rest followed.
  *
- * ALL FOURTEEN ARE HERE NOW, and `parity.test.ts` checks the list against
+ * ALL OF THEM ARE HERE NOW, and `parity.test.ts` checks the list against
  * `PRIMITIVES` in `../index` rather than against a second implementation — a
  * port that forgets a component is a port that looks finished.
  *
- * THE FOURTEENTH IS `Pagination`, and it did not arrive with the port. It is
- * the primitive `docs/SCRYFALL-GAP.md` §4 asked for when it called the hard
- * 60-result cap "a refusal where Scryfall paginates": both search surfaces
- * needed the same control, and the library's rule is that a screen needing new
- * CSS is a signal a primitive is missing rather than a licence to write it in
- * the page.
+ * NO COUNT IS SPELLED IN THIS PROSE, and that is a correction rather than a
+ * style. It read "all fourteen" while the list below held fifteen, which is the
+ * failure `CLAUDE.md` names outright when it says to cite `PRIMITIVES.length`
+ * rather than write the number down: a count in a comment is a claim that ages
+ * every time somebody does the thing this file exists to make easy.
+ *
+ * TWO ARRIVED AFTER THE PORT, by the same route and for the same reason.
+ * `Pagination` is what `docs/SCRYFALL-GAP.md` §4 asked for when it called the
+ * hard 60-result cap "a refusal where Scryfall paginates". `IconButton` is what
+ * the card page's purchase links asked for once they were wanted under the face
+ * AND in the buy table. Both are the library's rule working: a screen needing
+ * new CSS is a signal a primitive is missing rather than a licence to write it
+ * in the page.
  */
 
 export { BevelledPlate, type BevelledPlateProps } from "./BevelledPlate";
@@ -38,6 +45,7 @@ export { CardFace, type CardFaceProps } from "./CardFace";
 export { Citation, type CitationProps } from "./Citation";
 export { FiligreeCorner, type FiligreeCornerProps } from "./FiligreeCorner";
 export { GameSymbol, type GameSymbolProps } from "./GameSymbol";
+export { IconButton, type IconButtonProps } from "./IconButton";
 export { Mark, type MarkProps } from "./Mark";
 export { OrnamentalRule, type OrnamentalRuleProps } from "./OrnamentalRule";
 export { Pagination, type PaginationProps } from "./Pagination";

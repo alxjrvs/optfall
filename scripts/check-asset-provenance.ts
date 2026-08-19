@@ -73,6 +73,20 @@ const GOVERNED = [
     manifest: "data/fonts/fonts.json",
     key: "fonts",
   },
+  /*
+   * A THIRD MANIFEST, FOR THE SAME REASON THERE IS A SECOND. `brand/` holds
+   * marks belonging to companies we link to, and it cannot fold into either
+   * neighbour: the symbol manifest is generated, so a hand-written entry there
+   * would be deleted by the next `check:symbols` sync, and a vendor logo is not
+   * a font. Its own directory also makes the diff that adds one unmistakable,
+   * which is the point — §3 names a third party's imagery reused as UI as the
+   * likeliest way this project goes wrong.
+   */
+  {
+    dir: "apps/site/public/brand",
+    manifest: "data/brand/brand.json",
+    key: "marks",
+  },
   {
     dir: "apps/site/public",
     manifest: "data/symbols/symbols.json",

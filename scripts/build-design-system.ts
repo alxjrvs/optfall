@@ -1296,6 +1296,25 @@ cards.push({
   <p class="note"><strong>The current page is marked, not disabled.</strong> A disabled control leaves the tab order, so paging with the keyboard would drop the reader out of the pager every time they landed somewhere.</p>`,
 });
 
+cards.push({
+  path: "primitives/icon-button.html",
+  group: "Primitives",
+  title: primitiveCardTitle("icon-button"),
+  body: `
+  <p class="note">A call to action that carries somebody else's mark. The card page needed the same control twice — under the face, for the printing being read, and once per row in the buy section — and two placements of one control is this library's own signal that a primitive is missing rather than a licence to write the CSS in the page.</p>
+  <div class="plate" style="margin-block-start:var(--of-space-loose);padding:var(--of-space-loose);display:flex;flex-wrap:wrap;gap:var(--of-space-loose);align-items:center">
+    <span style="display:inline-flex;align-items:center;gap:var(--of-space-tight);padding-block:var(--of-space-base);padding-inline:var(--of-space-loose);background:var(--of-color-surface-raised);border-radius:var(--of-bevel-radius);border-block-start:var(--of-bevel-width) solid var(--of-bevel-light);border-block-end:var(--of-bevel-width) solid var(--of-bevel-dark);font-family:var(--of-type-family-sans);font-size:var(--of-type-size-small);font-weight:var(--of-type-weight-medium);letter-spacing:var(--of-type-tracking-wide);color:var(--of-color-ink);white-space:nowrap">
+      <span aria-hidden="true" style="inline-size:var(--of-ornament-mark-small);block-size:var(--of-ornament-mark-small);background:var(--of-color-rule);border-radius:var(--of-bevel-radius);display:inline-flex"></span>
+      Buy on TCGplayer
+    </span>
+    <span class="note" style="margin:0">— the icon is a slot, so the grey square here is standing in for a vendor's mark.</span>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Nothing in the component knows what TCGplayer is.</strong> A caller hands in a node; this owns the box, the bevel, the focus ring and the relationship between the two. A second marketplace needs a different node and no new component — which matters, because <code>docs/COMPLIANCE.md</code> §2 permits singles commerce generally rather than for one vendor.</p>
+  <p class="note"><strong>It is an <code>&lt;a&gt;</code>, never a <code>&lt;button&gt;</code>.</strong> The same argument the citation makes: middle click, "copy link address", ⌘-click and the browser's own focus order all arrive free with the right element and are unrecoverable without it.</p>
+  <p class="note"><strong><code>rel</code> is required rather than defaulted</strong>, and that is a compliance decision rather than a fussy one. An affiliate link that omits <code>sponsored</code> is the failure <code>tcgplayer.ts</code> exists to prevent, and a default here would let a caller ship a paid link that discloses nothing simply by not thinking about it.</p>
+  <p class="note"><strong>The label is the accessible name and the icon is <code>aria-hidden</code>.</strong> A mark and the word beside it are one thing to a reader and would otherwise be two to a screen reader. Where a page renders several of these, <code>detail</code> adds an off-screen qualifier — five links all named "Buy on TCGplayer" is WCAG 2.4.4.</p>`,
+});
+
 /* -------------------------------------------------------------------- Screens */
 
 cards.push({

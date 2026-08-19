@@ -41,6 +41,7 @@
 import {
   BevelledPlate,
   CardFace,
+  IconButton,
   PitchJewel,
   StatePill,
   StatGlyph,
@@ -66,7 +67,7 @@ import {
 } from "../../src/lib/faces";
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
 import { hrefForNumber, type RulesCorpus } from "../../src/lib/search";
-import { buyHref } from "../../src/lib/tcgplayer";
+import { buyHref, buyRel } from "../../src/lib/tcgplayer";
 import {
   editionLabel,
   foilingName,
@@ -75,9 +76,11 @@ import {
   raritySlug,
   setName,
 } from "../../src/lib/sets";
+import { BuySection } from "./card/BuySection";
 import { PrintingsSection } from "./card/PrintingsSection";
 import { RelatedCards } from "./card/RelatedCards";
 import { SourceSection } from "./card/SourceSection";
+import { TcgplayerMark } from "./card/TcgplayerMark";
 import { CardTextInline } from "./CardTextInline";
 import "./CardEntry.css";
 import { PrintedText } from "./PrintedText";
@@ -312,15 +315,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
   const printingCount = card.printings.length;
 
-  /*
-   * WHETHER THIS PAGE HAS ANYTHING TO DISCLOSE. Read off the same function the
-   * cells call, so the notice and the links can never disagree about whether
-   * there are links.
-   */
-  const hasBuyLinks = card.printings.some(
-    (printing) => buyHref(printing, "card-printings") !== undefined,
-  );
-
   const keywordRules = rulesForCard(KEYWORD_VOCABULARY, [
     ...card.card_keywords,
     ...card.ability_and_effect_keywords,
@@ -374,6 +368,27 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * all has no face here and renders the placeholder.
    */
   const shown = faces[selected] ?? faces[0];
+
+  /**
+   * The storefront link for the printing whose picture is at the top of the
+   * page, or `undefined` when upstream published no product for it.
+   *
+   * IT HANGS OFF `shown` RATHER THAN OFF THE CARD, which is the whole reason it
+   * is computed here instead of with the rest of the derived values above:
+   * `shown` is the printing that claimed this art, and its link is the one
+   * carrying the `Printing=` that names the foiling. A card-level "first
+   * purchasable printing" would send a reader looking at a Rainbow Foil to the
+   * Standard.
+   *
+   * The page-wide question — does this card have ANY purchase link, and does the
+   * disclosure therefore belong on the page — is no longer asked here. It used
+   * to be a `hasBuyLinks` flag computed beside the other derived values and
+   * handed to `PrintingsSection` to gate its notice; `BuySection` now derives
+   * the same fact from the list it is about to render, which is one pass rather
+   * than two and cannot disagree with itself.
+   */
+  const faceBuyHref =
+    shown === undefined ? undefined : buyHref(shown.printing, "card-printings");
 
   /**
    * The other faces of this card's printings, keyed by the printing they belong
@@ -818,6 +833,41 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               height={shownBox.height}
               loading="eager"
             />
+
+            {/*
+              THE ONE BUY LINK THAT NEEDS NO DISAMBIGUATION, because it is the
+              printing already on screen. Every other purchase link on this page
+              lives in `BuySection` and has to name which printing it means; this
+              one is directly under that printing's picture, so the picture is
+              the label.
+
+              IT IS THE `shown` PRINTING'S PRODUCT, NOT THE CARD'S. A card route
+              addresses an ART, and a Standard and a Rainbow Foil struck from one
+              picture share a page — so `shown` is the printing that claimed this
+              art, and its storefront link carries the `Printing=` that names the
+              foiling. Rendering the first printing's product here instead would
+              send a reader looking at a foil to the non-foil.
+
+              NOTHING WHERE THERE IS NOTHING TO BUY. 1,336 printings have no
+              upstream product; `buyHref` returns undefined for those and this
+              renders no button rather than a disabled one. `BuySection` makes
+              the same call for the same reason.
+
+              NO DISCLOSURE BESIDE IT, and that is deliberate rather than an
+              oversight. TCGplayer's Partner Guidelines want disclosure that is
+              "clear, conspicuous, prominent and unambiguous"; printing the same
+              sentence twice on one page is not more conspicuous, it is noise
+              that teaches a reader to skip it. The sentence sits once, under the
+              block of links in `BuySection`.
+            */}
+            {faceBuyHref === undefined ? null : (
+              <IconButton
+                href={faceBuyHref}
+                icon={<TcgplayerMark />}
+                label="Buy on TCGplayer"
+                rel={buyRel()}
+              />
+            )}
           </div>
 
           <div className="of-card__facts-column">
@@ -1367,9 +1417,18 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         hrefByFace={hrefByFace}
         numberQualifier={numberQualifier}
         shown={shown}
-        hasBuyLinks={hasBuyLinks}
-        buyLabel={buyLabel}
       />
+
+      {/*
+        BUY IS ITS OWN SECTION NOW, AND IT USED TO BE THE PRINTINGS TABLE'S
+        EIGHTH COLUMN. See `BuySection` for the argument; the short version is
+        that "what exists" and "where do I get one" are different questions, and
+        Scryfall keeps them apart for the same reason.
+
+        AFTER PRINTINGS RATHER THAN BEFORE. The table is what a reader came for
+        and this is what we are paid for, and that order is the honest one.
+      */}
+      <BuySection page={page} buyLabel={buyLabel} />
 
       <RelatedCards relatedShown={relatedShown} />
 
