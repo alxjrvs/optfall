@@ -1,15 +1,20 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "_comment": "The face host checks itself. The repository-root tsconfig covers `packages/*/src` and `scripts` — not `apps/*` — so without this the one function standing between a card page and a grey rectangle would be type checked by nothing.",
+  "_comment": "The face host checks itself. The repository-root tsconfig covers `packages/*/src` and `scripts` — not `apps/*` — so without this the one Worker standing between a card page and a grey rectangle would be type checked by nothing.",
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    // Netlify Functions v2 runs on the platform's Node runtime, but the tests
-    // beside them run under Bun. `@types/bun` is the root workspace's
-    // devDependency and is hoisted, so naming it costs no manifest change and
-    // no lockfile change — which matters, because CI installs frozen.
+    // The Worker runs on workerd and the tests beside it run under Bun.
+    // `@types/bun` is the root workspace's devDependency and is hoisted, so
+    // naming it costs no manifest change and no lockfile change — which
+    // matters, because CI installs frozen.
+    //
+    // Deliberately NOT `@cloudflare/workers-types`: the only platform surface
+    // this app touches is two methods of an R2 bucket, and `src/index.ts`
+    // declares them structurally. A types package for that would be the only
+    // dependency this app has.
     "types": ["bun"]
   },
-  "include": ["netlify/**/*.ts"],
-  "exclude": ["node_modules", ".netlify"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

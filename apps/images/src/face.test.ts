@@ -2,23 +2,23 @@
  * The face host's behaviour, asserted against a fake store.
  *
  * The seam is `makeFaceHandler`'s injected store getter, so none of this needs
- * a live Blobs runtime. What is worth testing here is not "does it return
+ * a live R2 binding. What is worth testing here is not "does it return
  * bytes" — it is the three decisions a reader would otherwise have to take on
  * trust: the path guard actually rejects traversal, a miss degrades to a
  * placeholder rather than a 404, and a miss is NOT cached like a hit.
  */
 import { describe, expect, test } from "bun:test";
 
-import { placeholderSvg, TIERS } from "../_placeholder";
+import { placeholderSvg, TIERS } from "./placeholder";
 import {
   makeFaceHandler,
   parseFacePath,
   parsePlaceholderPath,
-  type FaceBlobStore,
-} from "../face";
+  type FaceStore,
+} from "./face";
 
 /** A store holding exactly the keys given, and nothing else. */
-function storeWith(keys: readonly string[]): FaceBlobStore {
+function storeWith(keys: readonly string[]): FaceStore {
   return {
     get: async (key) =>
       keys.includes(key) ? new Response("webp-bytes").body : null,
@@ -26,8 +26,8 @@ function storeWith(keys: readonly string[]): FaceBlobStore {
 }
 
 /** A store that is down. */
-const brokenStore: FaceBlobStore = {
-  get: () => Promise.reject(new Error("blobs unavailable")),
+const brokenStore: FaceStore = {
+  get: () => Promise.reject(new Error("r2 unavailable")),
 };
 
 function request(path: string): Request {
@@ -78,7 +78,7 @@ describe("parseFacePath", () => {
   });
 
   test("malformed percent-encoding is a 404, not a crash", () => {
-    // `decodeURIComponent` throws URIError on these. Uncaught, Netlify answered
+    // `decodeURIComponent` throws URIError on these. Uncaught, the platform answers
     // 500 where this guard is written to answer 404 — on a host that serves
     // every path on a public domain, so the first scanner probing bad escapes
     // would have found it.

@@ -24,6 +24,10 @@ coverage/
 .env
 .env.*
 !.env.example
+# Holds `op://` REFERENCES, never values — an address resolves to nothing
+# without a 1Password session, so this one is reviewed in diffs like any other
+# config. See the file's own header.
+!scripts/.env.r2
 *.pem
 *.key
 

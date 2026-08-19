@@ -2,14 +2,11 @@
   "name": "@optfall/images",
   "version": "0.0.0",
   "private": true,
-  "description": "The Optfall card-face host — a Netlify site serving card images from a Netlify Blobs store. The bytes live in Blobs, never in git.",
+  "description": "The Optfall card-face host — a Cloudflare Worker serving card images from an R2 bucket. The bytes live in R2, never in git.",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "typecheck": "tsc",
     "test": "bun test"
-  },
-  "dependencies": {
-    "@netlify/blobs": "catalog:"
   }
 }
