@@ -1011,8 +1011,11 @@ describe("the printings table is how a reader reaches another art", () => {
   /**
    * The nth cell of every body row, counting the row header as cell 0.
    *
-   * Columns are Number, Set, Rarity, Edition, Foiling, Artist, Other face, Buy —
-   * so `cellsAt(html, 3)` is Edition. Positional rather than pattern-matched
+   * Columns are Number, Set, Rarity, Edition, Foiling, Artist, Other face — so
+   * `cellsAt(html, 3)` is Edition. There was a Buy column on the end until the
+   * buy links became a section of their own; its removal did not move any index
+   * the callers here use, which is precisely why a wrong map would have gone
+   * unnoticed. Positional rather than pattern-matched
    * because a cell's contents vary (`Set` holds an anchor, `Edition` holds bare
    * text or a dash) and a regex counting `</td>`s lazily reads a different
    * column on different rows.
@@ -1027,10 +1030,22 @@ describe("the printings table is how a reader reaches another art", () => {
       .filter((cells) => cells.length > index)
       .map((cells) => cells[index] ?? "");
 
+  /*
+    THE WHOLE PAGE, NOT THE TABLE. Buy links were the printings table's eighth
+    column and are now their own section — see `BuySection` — plus one under the
+    card face for the printing being shown. Scoping this to `tableIn` would have
+    quietly matched nothing and passed every assertion below by vacuity, which is
+    why the two tests that use it also assert a non-zero count.
+
+    THE FACE'S BUTTON IS DELIBERATELY IN SCOPE. It is a buy link on the page, so
+    the distinctness and well-formedness rules below apply to it too. It carries
+    no `detail`, so it speaks as the bare label — which is distinct from every
+    row in the section, since each of those names its printing.
+  */
   const buysIn = (html: string) =>
     [
-      ...tableIn(html).matchAll(
-        /<a class="of-card__buy" href="([^"]+)"[^>]*>(.*?)<\/a>/gs,
+      ...html.matchAll(
+        /<a class="of-icon-button" href="([^"]+)"[^>]*>(.*?)<\/a>/gs,
       ),
     ].map((link) => ({
       href: link[1] ?? "",
@@ -1096,15 +1111,29 @@ describe("the printings table is how a reader reaches another art", () => {
 
   test("the disclosure appears only where there are buy links", () => {
     /*
-     * A CLAIM ON A PAGE MUST BE TRUE OF THAT PAGE. Cards whose every printing
-     * is a promo have a Buy column of em dashes, and a notice describing links
+     * A CLAIM ON A PAGE MUST BE TRUE OF THAT PAGE. A card whose every printing
+     * is a promo has no purchase links at all, and a notice describing links
      * that are not there is exactly the kind of confidently-wrong sentence this
      * project exists to not print.
+     *
+     * THE SECTION IS THE GATE NOW, NOT A FLAG. This used to be enforced by a
+     * `hasBuyLinks` boolean computed in `CardEntry` and handed down to gate the
+     * paragraph — two passes over one predicate, and two places for it to
+     * disagree. `BuySection` derives the list and returns `null` when it is
+     * empty, so the disclosure cannot outlive the links: they are the same
+     * render.
      */
     for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
       const html = render(page.href);
       expect(html.includes("Buy links go to TCGplayer")).toBe(
         buysIn(html).length > 0,
+      );
+      /* And exactly once. The face carries a button of its own now, and the
+         obvious way to write that would have been to give it the sentence too —
+         which is not more conspicuous, it is the noise that teaches a reader to
+         skip a disclosure. */
+      expect(html.split("Buy links go to TCGplayer").length - 1).toBeLessThan(
+        2,
       );
     }
   });

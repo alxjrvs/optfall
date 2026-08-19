@@ -68,6 +68,7 @@ import { CardFace } from "./CardFace";
 import { Citation } from "./Citation";
 import { FiligreeCorner } from "./FiligreeCorner";
 import { GameSymbol } from "./GameSymbol";
+import { IconButton } from "./IconButton";
 import { Mark } from "./Mark";
 import { OrnamentalRule } from "./OrnamentalRule";
 import { Pagination } from "./Pagination";
@@ -520,6 +521,39 @@ const CASES: readonly Case[] = [
       unit: "sections",
       href: (page: number) => `/cr?q=dominate&page=${page}`,
       sizeHref: (size: PageSize) => `/cr?q=dominate&per=${size}`,
+    },
+  },
+  /*
+    TWO CASES, BECAUSE THE `detail` BRANCH CHANGES THE ACCESSIBLE NAME. Without
+    it the name is the label alone; with it the name gains an off-screen
+    qualifier, which is the whole reason the prop exists — four buttons in the
+    buy table would otherwise be four identical names in an element list. A
+    single case would exercise one of those and leave the other unchecked.
+
+    The icon is a bare `<span>` rather than the real mark: this suite is about
+    the component's semantics, and the one thing that matters here is that the
+    icon is hidden and contributes nothing to the name. A `<span>` proves that
+    as well as an image does, and without pulling a trademark into the library.
+  */
+  {
+    name: "IconButton, label only",
+    component: IconButton,
+    props: {
+      href: "https://example.test/product/1",
+      label: "Buy on Example",
+      icon: <span />,
+      rel: "sponsored nofollow noreferrer",
+    },
+  },
+  {
+    name: "IconButton with an off-screen qualifier",
+    component: IconButton,
+    props: {
+      href: "https://example.test/product/2",
+      label: "Buy on Example",
+      icon: <span />,
+      rel: "sponsored nofollow noreferrer",
+      detail: "ENG026, Standard",
     },
   },
 ];

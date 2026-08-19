@@ -1,0 +1,28 @@
+{
+  "_comment": "Provenance for third-party BRAND MARKS served under apps/site/public/brand. Authored by hand, like data/fonts/fonts.json and unlike the generated data/symbols/symbols.json — see the GOVERNED table in scripts/check-asset-provenance.ts for why those two cannot be one file, and why this is a third rather than an addition to either. docs/COMPLIANCE.md §3 requires a recorded origin for every binary served publicly; this is that record.",
+
+  "_scope_note": "A mark belonging to a company we link to, used to label the link. This is a different KIND of asset from a font we licensed and from a game symbol we ingested, and it gets its own directory so that the diff which adds one is unmistakable. docs/COMPLIANCE.md §3 calls set symbols reused as UI icons 'the single most likely violation, because it is the obvious UI move and every card site does it' — a vendor logo on a buy button is the same move one step to the left, so it is recorded rather than dropped into public/ beside the favicons.",
+
+  "_what_this_does_not_establish": "check-asset-provenance.ts says it plainly and it is worth repeating where somebody will read it: this records that an origin is KNOWN, not that the use is PERMITTED. See the rights field on each entry for what is and is not established, and do not read a green check:provenance as a licence.",
+
+  "marks": [
+    {
+      "file": "tcgplayer-mark.png",
+      "url": "https://www.tcgplayer.com/favicon.ico",
+      "sha256": "6b98c7ffd1318f6130fd700b5daac83fbf6fa378049d101f6e09a3b52832d853",
+
+      "owner": "TCGplayer, Inc. (eBay Inc.)",
+      "retrieved": "2026-08-19",
+
+      "derivation": "NOT THE UPSTREAM BYTES, and that is the one thing to understand about this entry. The URL serves a multi-resolution Windows ICO (three icons: 48x48 and 32x32, 32-bit); this file is its 48x48 frame converted to PNG with `sips -s format png`, because an ICO is not a format to hand a browser in an <img>. So the sha256 above is THIS file's, which is what check-asset-provenance.ts verifies, and it will not match the URL's bytes.",
+      "upstream_sha256": "19d6026e24725cdd0fa899f9c96a9431e0f3630b30aa6c6a86f0d35647f747b5",
+      "upstream_note": "The ICO as served on 2026-08-19, recorded so the derivation is checkable rather than merely asserted: fetch the URL, hash it, compare to upstream_sha256, convert the 48x48 frame, compare to sha256. Both halves are then verifiable by somebody who does not trust this file.",
+
+      "why_this_source": "TCGplayer's own public favicon, served unauthenticated from their own origin, rather than the higher-resolution `tcgplayer-favicon-primary` in the Impact partner asset library. The Impact asset is the better image — 600x451 against 48x48 — and it sits behind an authenticated dashboard whose download the automation could not complete. Public origin also means the provenance line above is one anybody can re-run, which an asset pulled from a logged-in dashboard would not be. Worth replacing with the Impact original if a person downloads it; the entry then needs a new url, sha256 and derivation.",
+
+      "rights": "UNRESOLVED, DELIBERATELY RECORDED AS SUCH. Optfall is an approved TCGplayer partner through Impact (account 7630689, campaign 21018), and TCGplayer's Partner Guidelines govern partner use of their name and marks. Those guidelines were NOT read before this asset was committed: help.tcgplayer.com returns 403 to automated fetch, and the 'TCGplayer Brand Guidelines' resource in the Impact library (resource 3737, 'TCGplayer's brand guidelines for our logo usage', updated 2025-02-24) is download-only and the download did not complete under browser automation. So what is established here is the origin and the partnership, NOT permission for this specific placement. A human should read resource 3737 and either replace this sentence with the clause that permits it — quoted, the way data/fonts/fonts.json quotes the OFL rather than summarising it — or remove the mark.",
+
+      "usage": "Rendered at ornament.mark.small inside IconButton, beside the words 'Buy on TCGplayer', on the card page's purchase section and under the card face. Unmodified apart from the format conversion above: not recoloured, not cropped, not distorted — the CSS fits rather than stretches it, which is why .of-icon-button__icon sets object-fit: contain."
+    }
+  ]
+}

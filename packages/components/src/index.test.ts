@@ -72,7 +72,7 @@ describe("the primitive set", () => {
     // card index — that did not exist when the list was closed. See
     // `PitchRuleProps` for why it is a second primitive rather than a variant
     // of the jewel.
-    expect(PRIMITIVES).toHaveLength(15);
+    expect(PRIMITIVES).toHaveLength(16);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
