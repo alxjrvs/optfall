@@ -21,7 +21,7 @@ import {
 } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { facesOf, hrefForPrinting } from "../src/lib/printings";
-import { setFor, setName } from "../src/lib/sets";
+import { editionLabel, setFor, setName } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document } from "./document";
 import {
@@ -1013,8 +1013,9 @@ describe("the printings table is how a reader reaches another art", () => {
    *
    * Columns are Number, Set, Rarity, Edition, Foiling, Artist, Other face — so
    * `cellsAt(html, 3)` is Edition. There was a Buy column on the end until the
-   * buy links became a section of their own; its removal did not move any index
-   * the callers here use, which is precisely why a wrong map would have gone
+   * buy links became a section of their own — and that section has since gone
+   * too, leaving one button under the face. Neither removal moved any index the
+   * callers here use, which is precisely why a wrong map would have gone
    * unnoticed. Positional rather than pattern-matched
    * because a cell's contents vary (`Set` holds an anchor, `Edition` holds bare
    * text or a dash) and a regex counting `</td>`s lazily reads a different
@@ -1031,16 +1032,18 @@ describe("the printings table is how a reader reaches another art", () => {
       .map((cells) => cells[index] ?? "");
 
   /*
-    THE WHOLE PAGE, NOT THE TABLE. Buy links were the printings table's eighth
-    column and are now their own section — see `BuySection` — plus one under the
-    card face for the printing being shown. Scoping this to `tableIn` would have
-    quietly matched nothing and passed every assertion below by vacuity, which is
-    why the two tests that use it also assert a non-zero count.
+    THE WHOLE PAGE, NOT THE TABLE, and it has twice been a different part of the
+    page. Buy links were the printings table's eighth column, then a section of
+    their own plus one button under the card face; the section is gone and that
+    button is all that is left. Scoping this to `tableIn` would have quietly
+    matched nothing and passed every assertion below by vacuity, which is why the
+    tests that use it also assert a count.
 
-    THE FACE'S BUTTON IS DELIBERATELY IN SCOPE. It is a buy link on the page, so
-    the distinctness and well-formedness rules below apply to it too. It carries
-    no `detail`, so it speaks as the bare label — which is distinct from every
-    row in the section, since each of those names its printing.
+    IT STILL SCANS THE WHOLE PAGE THOUGH THERE IS ONE LINK TO FIND. That is the
+    point: the count assertion below is what would catch a second buy link
+    arriving somewhere — and a second one is not a small change, because the
+    disclosure's "exactly once" rule and the argument for a bare unqualified
+    label both rest on there being only this one.
   */
   const buysIn = (html: string) =>
     [
@@ -1055,19 +1058,61 @@ describe("the printings table is how a reader reaches another art", () => {
         .trim(),
     }));
 
+  test("a card page carries at most one buy link", () => {
+    /*
+     * THE INVARIANT THE REST OF THIS BLOCK NOW RESTS ON. There was a "Buy"
+     * section listing a row per purchasable printing; it is gone, and what is
+     * left is the button under the face. Two things downstream assume that and
+     * would be wrong without it: the disclosure is asserted to appear exactly
+     * once, and `faceBuyLabel` no longer disambiguates its name against any
+     * other link on the page because there is no other link to collide with.
+     *
+     * WRITTEN AS A TEST RATHER THAN TRUSTED, because it is the kind of fact a
+     * later change breaks incidentally — a second placement is one JSX line,
+     * and nothing else here would fail loudly when it lands.
+     */
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0))
+      expect(buysIn(render(page.href)).length).toBeLessThan(2);
+  });
+
   test("a buy link names the edition, not just the number and foiling", () => {
     /*
-     * WTR098 IS THE CASE. Head Jab's Welcome to Rathe printing exists in two
-     * editions and two foilings — four products under one collector number — so
-     * a name built from number and foiling alone gives the two Standard rows
-     * identical text pointing at different things.
+     * WTR098 IS STILL THE CASE, AND IT MOVED FROM TWO ROWS TO TWO PAGES. Head
+     * Jab's Welcome to Rathe printing exists in Alpha and Unlimited, both
+     * Standard, under one collector number. That used to be two rows of a "Buy"
+     * section, and this test read them off one page and required them to differ.
+     * With the section gone there is one buy link per page — so the same pair is
+     * now two pages, and the assertion is that THEY differ.
+     *
+     * IT IS A SHARPER TEST THAN THE ONE IT REPLACES, which is worth saying
+     * because a rewritten test usually is not. These two printings share a
+     * `tcgplayer_product_id` (225142) as well as a number and a foiling, so the
+     * old "two names, two addresses" check could not have caught a label that
+     * dropped the edition here — the addresses are identical. The edition is
+     * the only thing that distinguishes them anywhere on either page.
+     *
+     * THE ADDRESSES ARE SPELLED OUT for the reason the note on `addressOf`
+     * gives: these tests are about two specific arts, so "whichever alternate
+     * comes first" would quietly make them about something else.
      */
-    const buys = buysIn(render(addressOf("head-jab-1")));
-    expect(buys.length).toBeGreaterThan(1);
+    const alpha = buysIn(render("/card/wtr/098/head-jab-1"));
+    const unlimited = buysIn(render("/card/wtr/u-wtr098/head-jab-1"));
 
-    const wtr098 = buys.filter((link) => link.spoken.includes("WTR098"));
-    expect(wtr098.length).toBeGreaterThan(1);
-    expect(new Set(wtr098.map((link) => link.spoken)).size).toBe(wtr098.length);
+    expect(alpha).toHaveLength(1);
+    expect(unlimited).toHaveLength(1);
+
+    /* Anchored on `editionLabel` rather than on the words, so a rename upstream
+       fails this test instead of silently passing it — and asserted non-null
+       first, because `editionLabel` returns `null` for an edition it declines
+       to name and "contains null" is not the check anybody wants. */
+    const alphaEdition = editionLabel("A");
+    const unlimitedEdition = editionLabel("U");
+    expect(alphaEdition).not.toBeNull();
+    expect(unlimitedEdition).not.toBeNull();
+
+    expect(alpha[0]?.spoken).toContain(String(alphaEdition));
+    expect(unlimited[0]?.spoken).toContain(String(unlimitedEdition));
+    expect(alpha[0]?.spoken).not.toBe(unlimited[0]?.spoken);
   });
 
   test("a buy link never speaks an empty segment", () => {
@@ -1093,21 +1138,24 @@ describe("the printings table is how a reader reaches another art", () => {
     }
   });
 
-  test("no card page names two buy links alike and sends them elsewhere", () => {
-    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
-      const byName = new Map<string, Set<string>>();
-      for (const link of buysIn(render(page.href))) {
-        const found = byName.get(link.spoken) ?? new Set<string>();
-        found.add(link.href);
-        byName.set(link.spoken, found);
-      }
-      for (const [spoken, hrefs] of byName)
-        if (hrefs.size > 1)
-          expect(`${page.href}: ${spoken} -> ${[...hrefs].join(", ")}`).toBe(
-            `${page.href}: one product`,
-          );
-    }
-  });
+  /*
+    A THIRD TEST STOOD HERE — "no card page names two buy links alike and sends
+    them elsewhere" — and it is gone rather than kept, which is the one deletion
+    in this block worth arguing for.
+
+    It walked every buy link on a page, grouped them by spoken name, and failed
+    where one name reached two addresses. That is WCAG 2.4.4, and it was a real
+    check while a page carried a row per purchasable printing. A page carries
+    one buy link now. The test could still be run and would pass on every page
+    in the corpus, for the same reason it would pass on a page with no links at
+    all: there is no second name for the first one to collide with.
+
+    KEEPING IT WOULD HAVE BEEN WORSE THAN DELETING IT. A test that cannot fail
+    reads, to the next person, as coverage of the rule it names — so the rule
+    looks guarded when nothing is guarding it. What actually guards it now is
+    the count assertion above: two buy links on one page is the condition under
+    which this test had teeth, and that is the thing now asserted not to happen.
+  */
 
   test("the disclosure appears only where there are buy links", () => {
     /*
@@ -1116,22 +1164,26 @@ describe("the printings table is how a reader reaches another art", () => {
      * that are not there is exactly the kind of confidently-wrong sentence this
      * project exists to not print.
      *
-     * THE SECTION IS THE GATE NOW, NOT A FLAG. This used to be enforced by a
-     * `hasBuyLinks` boolean computed in `CardEntry` and handed down to gate the
-     * paragraph — two passes over one predicate, and two places for it to
-     * disagree. `BuySection` derives the list and returns `null` when it is
-     * empty, so the disclosure cannot outlive the links: they are the same
-     * render.
+     * THE LINK IS THE GATE NOW, AND IT HAS BEEN THREE THINGS. It started as a
+     * `hasBuyLinks` boolean computed in `CardEntry` and handed down to gate a
+     * paragraph under the printings table — two passes over one predicate, and
+     * two places for it to disagree. Then the "Buy" section derived the list it
+     * was about to render and returned `null` when it was empty. That section
+     * is gone: the face button and this sentence are now inside one branch on
+     * one `faceBuyHref`, so there is a single predicate and the disclosure
+     * cannot outlive the link.
      */
     for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
       const html = render(page.href);
       expect(html.includes("Buy links go to TCGplayer")).toBe(
         buysIn(html).length > 0,
       );
-      /* And exactly once. The face carries a button of its own now, and the
-         obvious way to write that would have been to give it the sentence too —
-         which is not more conspicuous, it is the noise that teaches a reader to
-         skip a disclosure. */
+      /* And exactly once — an assertion that outlived the reason it was
+         written. It guarded against the sentence appearing under the "Buy"
+         section AND again beside the face button, on the argument that printing
+         it twice is not more conspicuous, it is the noise that teaches a reader
+         to skip a disclosure. There is one link now and the sentence sits under
+         it, so what this catches is a second copy arriving from anywhere. */
       expect(html.split("Buy links go to TCGplayer").length - 1).toBeLessThan(
         2,
       );

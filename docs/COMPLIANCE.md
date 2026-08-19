@@ -198,14 +198,15 @@ while carrying the LSS disclaimer, in public, for a long time.
 > word "affiliate" in the document, so anybody re-checking this by searching the
 > policy will land on it and read it as a prohibition. It is not one.
 
-**What we therefore do.** Per-printing purchase links in a **Buy** section of
-their own on the card page, plus one under the card face for the printing that
-claimed the art shown — all built by
+**What we therefore do.** One purchase link on a card page — the button under
+the card face, for the printing that claimed the art shown — built by
 [`apps/site/src/lib/tcgplayer.ts`](../apps/site/src/lib/tcgplayer.ts). ~~on the
-printings table~~ — struck: they were the table's eighth column until the buy
-section was split out, on the argument that "what exists" and "where do I get
-one" are different questions and the reference work should not be interleaved
-with commerce.
+printings table~~ — struck: they were the table's eighth column. ~~Per-printing
+purchase links in a **Buy** section of their own on the card page, plus one under
+the card face~~ — struck **2026-08-19**: the section was split out of the table
+on the argument that "what exists" and "where do I get one" are different
+questions, then removed outright, which answers the same question by subtraction.
+The face button is what is left of commerce on a card page.
 **No price, ever** — that is a separate decision on separate grounds, recorded in
 that module and in `docs/PLAN.md`'s collector-economy exclusion.
 
@@ -234,19 +235,31 @@ The disclosure now carries real weight rather than describing a hypothetical, so
 it is worth naming what it rests on. TCGplayer's Partner Guidelines put FTC
 compliance on the partner and require disclosure that is "clear, conspicuous,
 prominent and unambiguous to the average member of your audience". Optfall's
-sits directly beneath the block of links it describes rather than in the site
-footer, which is the whole reason `buyDisclosure` lives in the same module as
-`buyHref`.
+sits directly beneath the link it describes rather than in the site footer,
+which is the whole reason `buyDisclosure` lives in the same module as `buyHref`.
 
-**One buy link on the page does not have the sentence directly under it** — the
-button beneath the card face, which sits above the fold and well above the Buy
-section. That is deliberate rather than an oversight: printing the disclosure
-twice on one page is not more conspicuous, it is the repetition that teaches a
-reader to skip it. The claim being made is that the sentence is clear and
-prominent *on the page carrying the links*, which `ssg.test.ts` asserts by
-requiring it exactly once wherever any buy link renders and never where none do.
-If that reading is ever judged too loose, the fix is a second disclosure by the
-face rather than a quieter one below.
+**There is one buy link on a card page, and the sentence is directly under it**
+— the button beneath the card face, above the fold. ~~One buy link on the page
+does not have the sentence directly under it — the button beneath the card face,
+which sits above the fold and well above the Buy section. That is deliberate
+rather than an oversight: printing the disclosure twice on one page is not more
+conspicuous, it is the repetition that teaches a reader to skip it. The claim
+being made is that the sentence is clear and prominent *on the page carrying the
+links*, which `ssg.test.ts` asserts by requiring it exactly once wherever any buy
+link renders and never where none do. If that reading is ever judged too loose,
+the fix is a second disclosure by the face rather than a quieter one below.~~
+**Overtaken 2026-08-19**: the Buy section was removed, and with it every buy link
+except that button. So the looser reading this paragraph was defending — that a
+sentence somewhere on the page covers a link elsewhere on it — is no longer being
+asked for, and the fix it named as the fallback is what shipped: the disclosure
+moved up to sit with the face button.
+
+`ssg.test.ts` still asserts the sentence appears exactly once wherever any buy
+link renders and never where none do. Both halves now hold structurally rather
+than by discipline — the button and the sentence render from one branch on one
+`faceBuyHref` in `CardEntry`, so neither can appear without the other — and a
+companion test asserts a card page carries **at most one** buy link, which is the
+premise the "exactly once" rule rests on.
 
 **Nothing here is coupled to the host**, which is worth stating outright. The
 links are ordinary anchors in static

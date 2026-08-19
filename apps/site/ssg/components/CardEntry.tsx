@@ -70,7 +70,7 @@ import {
 } from "../../src/lib/faces";
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
 import { hrefForNumber, type RulesCorpus } from "../../src/lib/search";
-import { buyHref, buyRel } from "../../src/lib/tcgplayer";
+import { buyDisclosure, buyHref, buyRel } from "../../src/lib/tcgplayer";
 import {
   editionLabel,
   foilingName,
@@ -79,7 +79,6 @@ import {
   raritySlug,
   setName,
 } from "../../src/lib/sets";
-import { BuySection } from "./card/BuySection";
 import { PrintingsSection } from "./card/PrintingsSection";
 import { RelatedCards } from "./card/RelatedCards";
 import { TcgplayerMark } from "./card/TcgplayerMark";
@@ -381,24 +380,27 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * is the only non-arbitrary choice available. What was wrong was the claim,
    * not the code.
    *
-   * SO THE BUTTON SAYS WHICH ONE IT BUYS. `buyLabel` names the printing —
-   * "MST131, Standard" — and the button carries it as `detail`. A reader who
-   * wants the foil can then hear that this is not it and go to the labelled row
-   * in `BuySection` that is; without it, the one buy link on the page that
-   * cannot say what it buys would also be the most prominent. The label is read
-   * at the render site rather than folded in here, because `buyLabel` is built
+   * SO THE BUTTON SAYS WHICH ONE IT BUYS. `faceBuyLabel` names the printing —
+   * "MST131, Standard" — and the button carries it as `detail`. That label used
+   * to be an aid to choosing: a reader who wanted the foil could hear that this
+   * was not it and click the labelled row in the "Buy" section that was. The
+   * section is gone, so the label no longer routes anybody anywhere — it is now
+   * the only statement the page makes about which of an art's products this
+   * link addresses, which makes it more load-bearing rather than less. It is
+   * read at the render site rather than folded in here, because it is built
    * further down and this value is needed before it exists.
    *
    * ONE CASE THIS DOES NOT HIT, checked rather than assumed: a first printing
    * with no product whose sibling has one, which would render no button on a
    * purchasable art. Zero occurrences in the pinned corpus.
    *
-   * The page-wide question — does this card have ANY purchase link, and does the
-   * disclosure therefore belong on the page — is no longer asked here. It used
-   * to be a `hasBuyLinks` flag computed beside the other derived values and
-   * handed to `PrintingsSection` to gate its notice; `BuySection` now derives
-   * the same fact from the list it is about to render, which is one pass rather
-   * than two and cannot disagree with itself.
+   * THIS IS ALSO THE DISCLOSURE'S GATE NOW, which it was not when written. The
+   * page-wide question — does this card have ANY purchase link, and does the
+   * disclosure therefore belong on the page — used to be a `hasBuyLinks` flag
+   * handed down to gate a notice under the printings table, then a list derived
+   * inside the "Buy" section. With one link on the page, this single value
+   * answers it: the button and the sentence render from the same branch, so
+   * neither can outlive the other.
    */
   const faceBuyHref =
     shown === undefined ? undefined : buyHref(shown.printing, "card-printings");
@@ -618,23 +620,29 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   })();
 
   /**
-   * What a buy link is called, per printing.
+   * What the face's buy link is called — the printing being shown, named by
+   * every axis that separates one product from another.
    *
-   * THE SAME PROBLEM AS `numberQualifier`, ON A DIFFERENT AXIS. That map keeps
-   * two links to two ADDRESSES from being spoken alike; this one keeps two links
-   * to two PRODUCTS from being. They are genuinely different problems: Standard
-   * and Rainbow Foil of one art share a page — so `numberQualifier` correctly
-   * adds nothing — while pointing at two different things to buy.
+   * IT USED TO BE A MAP OVER EVERY PRINTING, and shrinking it is a consequence
+   * of deleting the "Buy" section rather than a tidy-up. That map existed for
+   * the same reason as `numberQualifier` one axis over: `numberQualifier` keeps
+   * two links to two ADDRESSES from being spoken alike, and this kept two links
+   * to two PRODUCTS from being. Standard and Rainbow Foil of one art share a
+   * page — so `numberQualifier` correctly adds nothing — while pointing at two
+   * different things to buy. That was a real problem for a section that
+   * rendered a row per printing. There is one buy link on a card page now, so
+   * there is no second name for it to collide with.
    *
-   * NO SET OF MEANINGFUL FIELDS IS UNIQUE, which is why this ends in a fallback
-   * rather than a longer key. Aether Wildfire's EVR123 has two Rainbow Foil
+   * WHAT WENT WITH THE MAP is a disambiguating suffix, and it is worth naming
+   * what is no longer being handled rather than letting it disappear. No set of
+   * meaningful fields is unique: Aether Wildfire's EVR123 has two Rainbow Foil
    * products separated only by `art_variations: ["EA"]`, and even number +
    * edition + foiling + variations still collides on four printings in the
    * corpus — Lightning Flow OMN203, Runechant ROS162, Seismic Surge MPG112 and
    * Spectral Shield MST158 — where upstream lists several products under
-   * identical metadata. So the product id is appended, and ONLY where the name
-   * would otherwise be ambiguous, exactly as `numberQualifier` adds nothing to a
-   * number that is already unambiguous.
+   * identical metadata. The old map appended `product <id>` on exactly those.
+   * A lone label cannot be ambiguous against anything on its own page, so the
+   * suffix would now be noise on four printings and never information.
    *
    * THE VARIATION CODES ARE UPSTREAM'S, UNEXPANDED. `EA`, `FA`, `AA`, `AB`,
    * `AT`, `HS` — six codes with no published gloss in the corpus and no
@@ -642,53 +650,28 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * needing re-verification on every sync, which is the thing the corpus builder
    * refuses to do one layer down.
    */
-  const buyLabel = ((): ReadonlyMap<string, string> => {
-    const base = new Map<string, string>();
-    const byName = new Map<string, Set<string>>();
+  const faceBuyLabel = ((): string | undefined => {
+    if (shown === undefined) return undefined;
+    const printing = shown.printing;
 
-    for (const { printing } of page.printings) {
-      const href = buyHref(printing, "card-printings");
-      if (href === undefined) continue;
-
-      /*
-       * `editionLabel` RETURNS `null`, NOT `undefined`, and the two are not
-       * interchangeable here. `N` — "no specified edition", and the commonest
-       * edition in the corpus at 11,551 of 16,502 printings — comes back as
-       * `null`, so a filter that only drops `undefined` leaves it in and
-       * `join` renders it as an empty segment: "buy MST131, , Standard".
-       * The column one to the left already handles this, as `?? "—"`.
-       */
-      const name = [
-        printing.id,
-        editionLabel(printing.edition) ?? undefined,
-        printing.foiling === "" ? undefined : foilingName(printing.foiling),
-        printing.art_variations.length === 0
-          ? undefined
-          : `art ${printing.art_variations.join(" ")}`,
-      ]
-        .filter((part) => part !== undefined)
-        .join(", ");
-
-      base.set(printing.unique_id, name);
-      const found = byName.get(name) ?? new Set<string>();
-      found.add(href);
-      byName.set(name, found);
-    }
-
-    const labels = new Map<string, string>();
-    for (const { printing } of page.printings) {
-      const name = base.get(printing.unique_id);
-      if (name === undefined) continue;
-      const ambiguous = (byName.get(name)?.size ?? 0) > 1;
-      const product = printing.tcgplayer_product_id;
-      labels.set(
-        printing.unique_id,
-        ambiguous && product !== undefined
-          ? `${name}, product ${product}`
-          : name,
-      );
-    }
-    return labels;
+    /*
+     * `editionLabel` RETURNS `null`, NOT `undefined`, and the two are not
+     * interchangeable here. `N` — "no specified edition", and the commonest
+     * edition in the corpus at 11,551 of 16,502 printings — comes back as
+     * `null`, so a filter that only drops `undefined` leaves it in and `join`
+     * renders it as an empty segment: "buy MST131, , Standard". The printings
+     * table handles the same absence one column over, as `?? "—"`.
+     */
+    return [
+      printing.id,
+      editionLabel(printing.edition) ?? undefined,
+      printing.foiling === "" ? undefined : foilingName(printing.foiling),
+      printing.art_variations.length === 0
+        ? undefined
+        : `art ${printing.art_variations.join(" ")}`,
+    ]
+      .filter((part) => part !== undefined)
+      .join(", ");
   })();
 
   /** The box the face is drawn in — this printing's own orientation. */
@@ -855,43 +838,74 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             />
 
             {/*
-              THE ONE BUY LINK THAT NEEDS NO DISAMBIGUATION, because it is the
-              printing already on screen. Every other purchase link on this page
-              lives in `BuySection` and has to name which printing it means; this
-              one is directly under that printing's picture, so the picture is
-              the label.
+              THE ONLY BUY LINK ON THE PAGE, and it used to be one of several.
+              A "Buy" section below the printings table listed a row per
+              purchasable printing; it is gone, and this is what commerce on a
+              card page now amounts to. It buys the printing already on screen,
+              so the picture above it is the label.
 
-              AND IT NAMES WHICH PRINTING IT BUYS, because it cannot be sure
-              that is the one you wanted. A card route addresses an ART, and
-              5,052 arts in this corpus are shared by more than one foiling, so
-              `shown.printing` is the printing that CLAIMED the picture rather
-              than the foiling a reader has in mind — see the note on
+              AND IT STILL NAMES WHICH PRINTING IT BUYS, because it cannot be
+              sure that is the one you wanted. A card route addresses an ART,
+              and 5,052 arts in this corpus are shared by more than one foiling,
+              so `shown.printing` is the printing that CLAIMED the picture
+              rather than the foiling a reader has in mind — see the note on
               `faceBuyHref` for the measurement and for why that is still the
               right default. The `detail` is what keeps the claim honest: this
-              buys MST131 Standard, and the labelled rows below sell the rest.
+              says outright that it buys MST131 Standard.
+
+              THAT CLAIM MATTERS MORE NOW, NOT LESS, and the reason is worth
+              stating because the naming machinery got smaller in the same
+              change. While the section existed, a reader who wanted the foil
+              could read the `detail`, see this was not it, and click the
+              labelled row that was. There is no such row any more. The label is
+              no longer an aid to choosing between links — it is the whole of
+              what the page discloses about which product this one is.
 
               NOTHING WHERE THERE IS NOTHING TO BUY. 1,336 printings have no
               upstream product; `buyHref` returns undefined for those and this
-              renders no button rather than a disabled one. `BuySection` makes
-              the same call for the same reason.
-
-              NO DISCLOSURE BESIDE IT, and that is deliberate rather than an
-              oversight. TCGplayer's Partner Guidelines want disclosure that is
-              "clear, conspicuous, prominent and unambiguous"; printing the same
-              sentence twice on one page is not more conspicuous, it is noise
-              that teaches a reader to skip it. The sentence sits once, under the
-              block of links in `BuySection`.
+              renders no button rather than a disabled one — and the disclosure
+              below is inside the same branch, so a page with no link makes no
+              claim about links.
             */}
             {faceBuyHref === undefined || shown === undefined ? null : (
-              <IconButton
-                detail={
-                  buyLabel.get(shown.printing.unique_id) ?? shown.printing.id
-                }
-                href={faceBuyHref}
-                icon={<TcgplayerMark />}
-                label="Buy on TCGplayer"
-                rel={buyRel()}
-              />
+              <>
+                <IconButton
+                  detail={faceBuyLabel ?? shown.printing.id}
+                  href={faceBuyHref}
+                  icon={<TcgplayerMark />}
+                  label="Buy on TCGplayer"
+                  rel={buyRel()}
+                />
+
+                {/*
+                  THE DISCLOSURE FOLLOWS THE LINK, which is the whole reason it
+                  is up here beside a picture rather than in a block of legalese
+                  further down. It used to sit under the "Buy" section, directly
+                  beneath the rows it described, and `docs/COMPLIANCE.md` §2
+                  named this exact relocation as the fix if that section ever
+                  went: TCGplayer's Partner Guidelines want disclosure that is
+                  "clear, conspicuous, prominent and unambiguous to the average
+                  member of your audience", and adjacency is most of that. With
+                  the section gone, leaving the sentence where it was would have
+                  left it describing nothing, and dropping it would have left a
+                  paid link undisclosed.
+
+                  ONCE, BECAUSE THERE IS ONE LINK. The "exactly once" assertion
+                  in `ssg.test.ts` predates this and still holds — it just holds
+                  for the opposite reason. It used to guard against repeating
+                  the sentence beside this button as well as under the section;
+                  now this button IS the section's replacement and the sentence
+                  has nowhere else to be.
+
+                  THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same
+                  constant the link does, so the sentence cannot claim we earn
+                  nothing on a page whose link is earning — see
+                  `apps/site/src/lib/tcgplayer.ts`.
+                */}
+                <p className="of-card__verify of-card__face-verify">
+                  {buyDisclosure()}
+                </p>
+              </>
             )}
           </div>
 
@@ -1444,16 +1458,21 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       />
 
       {/*
-        BUY IS ITS OWN SECTION NOW, AND IT USED TO BE THE PRINTINGS TABLE'S
-        EIGHTH COLUMN. See `BuySection` for the argument; the short version is
-        that "what exists" and "where do I get one" are different questions, and
-        Scryfall keeps them apart for the same reason.
+        THERE WAS A "BUY" SECTION HERE, AND ITS REMOVAL IS THE POINT. It listed
+        one row per purchasable printing — collector number, edition, foiling,
+        and a branded button each — between the printings table and the related
+        cards. Before that it was the table's eighth column. Both placements
+        were arguing about WHERE a block of commerce belongs in a reference
+        work; the answer taken here is that it does not need a block. The one
+        purchase link that survives is the button under the face, which buys the
+        printing the reader is already looking at.
 
-        AFTER PRINTINGS RATHER THAN BEFORE. The table is what a reader came for
-        and this is what we are paid for, and that order is the honest one.
+        WHAT WENT WITH IT: the disclosure moved UP to sit under that button
+        (see the face column), because it has to accompany the link it
+        describes, and the cross-printing naming machinery collapsed to a single
+        label (see `faceBuyLabel`) because a page with one buy link has nothing
+        to disambiguate it against.
       */}
-      <BuySection page={page} buyLabel={buyLabel} />
-
       <RelatedCards relatedShown={relatedShown} />
 
       {/*
