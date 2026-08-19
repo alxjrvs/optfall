@@ -1101,11 +1101,47 @@
 
 /* -- Printings ----------------------------------------------------------- */
 
-/* The table is the one thing on this page that can genuinely exceed the
-     measure — 50 printings of seven columns — so it scrolls inside its own box
-     rather than making the document scroll sideways. */
+/*
+    The table is the one thing on this page that can genuinely exceed the
+    measure — 50 printings of seven columns — so it scrolls inside its own box
+    rather than making the document scroll sideways.
+
+    `overflow-x` ALONE DID NOT ACHIEVE THAT, WHICH IS WHY `contain` IS HERE.
+    The comment above described the intent correctly and the rule underdelivered
+    it for as long as it has existed: the box did scroll internally, and the
+    DOCUMENT scrolled sideways as well. Measured on production before this
+    change, at 360px on `/card/eng/026/homage-to-ancestors`,
+    `documentElement.scrollWidth` was 736 against a 360 client width and the
+    window really scrolled — 376px of empty ground to the right of every card
+    page carrying a printings table. The six widths in `CLAUDE.md` are exactly
+    the check that should have caught it; 320, 360, 390 and 430 all failed.
+
+    736px IS `type.measure`, and the trail leads to `.of-card__printings`
+    below: the table takes a `min-inline-size` of one measure so that wrapping
+    degrades into scrolling rather than into a column of single words. That
+    floor is right and it stays. What was wrong is that the floor escaped the
+    scroller — every ancestor measured 336px, `.shell` even carries
+    `overflow-x: clip`, and the document grew to 736 anyway.
+
+    `contain: paint` is what actually stops it: the box becomes a containing
+    block and its descendants cannot contribute to an ancestor's scrollable
+    overflow, so the table's floor is now bounded by the thing built to bound
+    it. Measured after, at all six widths: `scrollWidth === clientWidth`,
+    `scrollTo(9999, 0)` leaves `scrollX` at 0, and the table still scrolls
+    inside its own box on a phone. `contain: layout` fixes it identically;
+    `paint` is the one that says clipping rather than the one that says
+    isolation, so it is the honest description of the job.
+
+    WHAT DID NOT WORK, so nobody spends the afternoon again: `max-inline-size`
+    on this box, `min-inline-size: 0` on it or on any ancestor,
+    `contain: inline-size` (a different containment axis — it sizes the box,
+    it does not clip the overflow), a `minmax(0, 1fr)` grid here, and
+    `overflow-x: hidden`/`clip` on `.shell`, `main` or `.of-card__page`. All
+    nine were measured; all nine left the document at 736.
+  */
 .of-card__scroller {
   overflow-x: auto;
+  contain: paint;
 }
 
 /*

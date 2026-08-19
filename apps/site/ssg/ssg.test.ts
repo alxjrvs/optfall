@@ -1224,6 +1224,44 @@ describe("the printings table is how a reader reaches another art", () => {
     expect(faceless).toContain("SUP241");
     expect(faceless).not.toMatch(/<a[^>]*>\s*SUP241/);
   });
+
+  test("the scroller keeps the table's measure floor off the document", () => {
+    /*
+     * THE OTHER HALF OF A RULE THAT READ AS IF IT ALREADY DID THIS.
+     *
+     * `.of-card__printings` takes a `min-inline-size` of one measure so that a
+     * seven-column table on a phone degrades into a sideways scroll rather than
+     * into a column of single words. `.of-card__scroller` is the box that floor
+     * is supposed to be trapped inside, and for as long as that rule existed it
+     * was not: the box scrolled internally AND the document scrolled sideways,
+     * 376px of empty ground beside every card page with printings, at 320, 360,
+     * 390 and 430. It shipped to production that way.
+     *
+     * `overflow-x` alone does not do it and `contain` is what does, which is
+     * precisely the kind of fact a stylesheet states once and nothing checks.
+     * Asserted here for the same reason the `@container` test below exists:
+     * markup cannot show it, jsdom computes no layout, so deleting the
+     * declaration would restore the bug with the whole suite green.
+     *
+     * On `contain` rather than on the exact value: `layout` fixes it
+     * identically, so pinning `paint` would fail a legitimate change for
+     * disagreeing about a synonym. `inline-size` would NOT fix it — it sizes
+     * the box instead of clipping the overflow — so it is named as excluded.
+     */
+    const css = readFileSync(
+      new URL("./components/CardEntry.css", import.meta.url),
+      "utf-8",
+    );
+    const scroller = /\.of-card__scroller\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(scroller).toContain("overflow-x: auto");
+    expect(scroller).toMatch(/contain:\s*(paint|layout)/);
+
+    /* The floor this is containing. If it ever goes, this test is measuring
+       nothing and should be reconsidered rather than quietly left passing. */
+    expect(css).toMatch(
+      /\.of-card__printings\s*\{[^}]*min-inline-size:\s*var\(--of-type-measure\)/,
+    );
+  });
 });
 
 /* -------------------------------------------------------------------------- */
