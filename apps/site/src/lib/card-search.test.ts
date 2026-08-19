@@ -1329,7 +1329,7 @@ describe("one card index, one stat vocabulary", () => {
     /*
      * THE ROWS VIEW IS ONE COMPONENT ON TWO SURFACES, and for a while it spoke
      * two vocabularies. A set page builds its rows from `CardPage.stats`, which
-     * `statsOf` assembles as Cost / Power / Defence / Life / Intellect / Arcane;
+     * `statsOf` assembles as Cost / Power / Defence / Life / Intellect;
      * a search row was built from an index that carried only the first three.
      * So a hero read `Life 20 · Intellect 4` on `/sets/mon` and carried no
      * stats at all on `/search?q=set:mon` — in the one rendering `CardIndex`

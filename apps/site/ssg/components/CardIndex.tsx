@@ -251,12 +251,15 @@ export interface CardIndexEntry {
   /**
    * The card's printed values, label and value. Rows view only.
    *
-   * ALL SIX, NOT THREE — Cost, Power, Defence, Life, Intellect, Arcane, in the
-   * order `docs/DESIGN.md` reads a card. This said "cost, power, defence" while
-   * both callers already supplied six, which is the exact three-value
+   * ALL FIVE, NOT THREE — Cost, Power, Defence, Life, Intellect, in the order
+   * `docs/DESIGN.md` reads a card. This said "cost, power, defence" while both
+   * callers already supplied the full list, which is the exact three-value
    * vocabulary this component exists to stop the two surfaces disagreeing
    * about. Only the values a card actually prints are present, so an ordinary
    * action carries three and a hero carries three different ones.
+   *
+   * ARCANE WAS A SIXTH AND IS NOT A PRINTED VALUE — see `STAT_ORDER` in
+   * `cards.ts`. It is gone from both callers, so the two surfaces still agree.
    */
   readonly stats?: readonly (readonly [string, string])[] | undefined;
   /**

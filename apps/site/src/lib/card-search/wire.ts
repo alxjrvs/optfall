@@ -121,22 +121,29 @@ export interface EncodedCardIndex {
   /** Two base-36 characters per card, indexing {@link EncodedCardIndex.typeDict}. */
   readonly typeAt: string;
   /**
-   * `cost\tpower\tdefence\tlife\tintellect\tarcane` per card, one line each,
-   * empty where a card does not print that value.
+   * `cost\tpower\tdefence\tlife\tintellect` per card, one line each, empty
+   * where a card does not print that value.
    *
    * IT CARRIED THREE, AND THAT MADE ONE RENDERING SPEAK TWO VOCABULARIES. The
    * rows view of `CardIndex` is the same component on `/search` and on a set
    * page, but the set page builds its rows from `CardPage.stats` — which
-   * `cards.ts` assembles as all six — while a search row could only ever offer
-   * the three this line held. So a hero read `Life 20 · Intellect 4` on
+   * `cards.ts` assembles as the whole list — while a search row could only ever
+   * offer the three this line held. So a hero read `Life 20 · Intellect 4` on
    * `/sets/mon` and carried no stats at all on `/search?q=set:mon`, in the one
    * rendering the component exists to make identical.
    *
-   * The last three are display-only: no filter reads them, and `cost`, `power`
+   * IT THEN CARRIED SIX, and the sixth was `arcane`, which is not a printed
+   * stat at all — see `STAT_ORDER` in `cards.ts` for why it is gone from every
+   * surface that showed it. Nothing decoded position five once nothing rendered
+   * it, so the column went with the display rather than lingering as payload
+   * with no reader.
+   *
+   * The last two are display-only: no filter reads them, and `cost`, `power`
    * and `defence` stay first so the comparison operators keep indexing
-   * positionally. About 15 KB across 4,941 cards, most of it the empty strings
-   * of cards that print none of them — which is the honest price of the two
-   * surfaces agreeing.
+   * positionally. About 10 KB across 4,941 cards — measured, and 5 KB less than
+   * the three that were here before arcane left — most of it the empty strings
+   * of cards that print neither, which is the honest price of the two surfaces
+   * agreeing.
    */
   readonly stats: string;
   /** Keyword vocabulary, one per line. */

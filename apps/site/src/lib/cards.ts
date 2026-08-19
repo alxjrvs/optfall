@@ -806,7 +806,7 @@ export interface CardPage {
   /** Sibling cards sharing this name, excluding this one, pitch ascending. */
   readonly variants: readonly CardLink[];
   readonly pitch: PitchValue;
-  /** Pitch, cost, power, defence, health, intelligence, arcane — those present. */
+  /** Pitch, cost, power, defence, health, intelligence — those present. */
   readonly stats: readonly Stat[];
   readonly verdicts: readonly FormatVerdict[];
   readonly printings: readonly PrintingView[];
@@ -844,7 +844,21 @@ export interface NameGroup {
  * card page draws the three combat stats whether or not a card prints them —
  * see `COMBAT_STATS` in `CardEntry` — so it has to know the full list and where
  * each member sits. Deriving that from a card would mean deriving it from a
- * card that happens to print all six.
+ * card that happens to print all five.
+ *
+ * ARCANE IS NOT A PRINTED STAT AND IS NO LONGER ONE OF THESE. It was, and it
+ * was the only member of this list a card face does not carry anywhere: the
+ * CR's notation table at 1.12.4 names eight symbols and arcane is not among
+ * them, because arcane damage is written in a card's RULES TEXT — "Deal 2
+ * arcane damage to any target" — and not struck into a corner of the frame.
+ * Upstream publishes an `arcane` field anyway, derived from that sentence, and
+ * rendering it beside cost and defence stated a printed value the card does not
+ * print and then said it twice, since the text is on the same page. All 287
+ * cards carrying the field say the number in their own text.
+ *
+ * `StatGlyph` still knows an `arcane` kind — see `packages/components` — and
+ * that is deliberate: the plate, its shape and its rationale are the design
+ * system's, and nothing on this site asks for it.
  *
  * `card-search.ts` keeps its own copy as `STAT_LABELS` and cannot import this
  * one: a VALUE import from this module drags the 16 MB corpus into the island
@@ -857,7 +871,6 @@ export const STAT_ORDER = [
   "Defence",
   "Life",
   "Intellect",
-  "Arcane",
 ] as const;
 
 /**
@@ -880,7 +893,6 @@ function statsOf(card: Card): readonly Stat[] {
     Defence: card.defense,
     Life: card.health,
     Intellect: card.intelligence,
-    Arcane: card.arcane,
   };
   return STAT_ORDER.filter((label) => printed[label] !== "").map((label) => ({
     label,

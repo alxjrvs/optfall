@@ -106,16 +106,22 @@ const KEYWORD_VOCABULARY = buildKeywordVocabulary(
   corpusJson as unknown as RulesCorpus,
 );
 
+/*
+ * NO `Arcane` ENTRY, AND THAT IS THE POINT RATHER THAN AN OMISSION. Arcane left
+ * `STAT_ORDER` because a card does not print it — the number lives in the card's
+ * own rules text, which this page renders a few lines further down — so there is
+ * no label here for a glyph to answer. `StatGlyph` keeps its `arcane` kind; this
+ * page simply never asks for it. See `STAT_ORDER` in `cards.ts`.
+ */
 const GLYPH_FOR: Record<
   string,
-  "cost" | "power" | "defence" | "life" | "intellect" | "arcane" | undefined
+  "cost" | "power" | "defence" | "life" | "intellect" | undefined
 > = {
   Cost: "cost",
   Power: "power",
   Defence: "defence",
   Life: "life",
   Intellect: "intellect",
-  Arcane: "arcane",
 };
 
 const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
@@ -130,9 +136,9 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
  * The three positions the ordinary card frame has, whether or not a card fills
  * them. Cost sits top-left, attack bottom-left, defence bottom-right.
  *
- * The other three stats are not here because they have no fixed position: life
- * and intellect belong to a permanent, arcane to whatever prints it, and each
- * is placed by what the card IS rather than by a slot the frame reserves.
+ * The other two stats are not here because they have no fixed position: life
+ * and intellect belong to a permanent, and each is placed by what the card IS
+ * rather than by a slot the frame reserves.
  */
 const COMBAT_STATS = ["Cost", "Power", "Defence"] as const;
 
@@ -152,7 +158,6 @@ const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
   Intellect: "start",
   Defence: "end",
   Life: "end",
-  Arcane: "end",
 };
 
 import { addressInSet, pitchRank } from "../../src/lib/card-versions";
@@ -178,7 +183,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * ONLY ON A CARD THAT IS ON THAT FRAME, which is what `usesCombatFrame` is
    * for, and the test has TWO halves because one was not enough.
    *
-   * It has to print at least one of the three, so the 181 cards printing
+   * It has to print at least one of the three, so the 188 cards printing
    * nothing whatsoever keep the written sentence below rather than growing
    * three sockets out of nowhere. And it has to print NO permanent stat, which
    * is the half the first version was missing: 198 cards print life, and only
@@ -192,16 +197,24 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * was carved out to prevent, arriving through a shape the carve-out did not
    * name.
    *
-   * What is left is what the change is for: 1,363 cards print cost and defence
+   * What is left is what the change is for: 1,543 cards print cost and defence
    * and no power — actions, instants, defence reactions — and gain the empty
    * attack plate.
    *
    * EVERY OTHER SHAPE IS IN, DELIBERATELY, and this is the line somebody will
    * want to move, so here is the whole of it rather than the two cases that
-   * prompted it. 525 cards print defence alone (equipment), 81 print power
-   * alone (weapons), and 409 print cost alone (items, instants, tokens) — the
+   * prompted it. 529 cards print defence alone (equipment), 81 print power
+   * alone (weapons), and 411 print cost alone (items, instants, tokens) — the
    * last being the largest group and the one an earlier draft of this note
    * never named. All three draw the positions they leave empty.
+   *
+   * EVERY COUNT IN THIS NOTE MOVED WHEN ARCANE LEFT `STAT_ORDER`, and they are
+   * re-measured against the corpus rather than adjusted by hand. 287 cards
+   * carry upstream's `arcane` field, so "prints cost and defence and nothing
+   * else" used to exclude the 180 that also carried it; the shapes did not
+   * change, the vocabulary they are counted in did. Seven cards had arcane as
+   * their ONLY value and now print nothing at all, which is where 181 became
+   * 188.
    *
    * They do because "this card has no cost", "no attack", "no defence" are
    * facts worth stating, which is the whole argument for the change, and
@@ -211,9 +224,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * corners, so a socket there would overwrite something rather than report a
    * gap.
    *
-   * Life, intellect and arcane are unchanged and appear only when printed. They
-   * have no fixed position on the frame — they are where a card's type puts
-   * them — so there is no empty slot for them to leave.
+   * Life and intellect are unchanged and appear only when printed. They have no
+   * fixed position on the frame — they are where a card's type puts them — so
+   * there is no empty slot for them to leave.
    */
   const printedValues = new Map(
     page.stats.map((stat) => [stat.label, stat.value]),
@@ -1108,8 +1121,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
                   {!hasStats ? (
                     <p className="of-card__void">
-                      No printed cost, power, defence, life, intellect or arcane
-                      value.
+                      No printed cost, power, defence, life or intellect value.
                     </p>
                   ) : null}
                 </div>

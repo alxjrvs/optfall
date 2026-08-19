@@ -256,7 +256,7 @@ export const CARD_RESULT_LIMIT = 60;
 /**
  * The printed values a row shows, in the order `docs/DESIGN.md` reads a card.
  *
- * THE SAME SIX `statsOf` PRODUCES, AND THE ORDER IS THE SAME ONE. A set page
+ * THE SAME FIVE `statsOf` PRODUCES, AND THE ORDER IS THE SAME ONE. A set page
  * builds its rows straight from `CardPage.stats`; this builds them from the
  * index. Two lists in two files is a drift waiting to happen, so they are
  * pinned against each other in `card-search.test.ts`, under "one card index,
@@ -268,7 +268,6 @@ export const STAT_LABELS = [
   "Defence",
   "Life",
   "Intellect",
-  "Arcane",
 ] as const;
 
 /** `"Head Jab (pitch 2)"` → `"Head Jab"`. The suffix `labelFor` added. */
@@ -426,7 +425,7 @@ function toResult(
    */
   setFocus: string | null = null,
 ): CardResult {
-  const printed = index.stats[ordinal] ?? ["", "", "", "", "", ""];
+  const printed = index.stats[ordinal] ?? ["", "", "", "", ""];
   const slug = index.slugs[ordinal] ?? "";
   const nameSlug = index.nameSlugs[ordinal] ?? slug;
   /*
