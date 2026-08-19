@@ -13,9 +13,12 @@
  *     <attack>  <type>  <defence>
  *     <artist>
  *
- * Everything below the panel — legality, the rules join, the attribute
- * vocabularies — is commentary ON the card and looks like it, which is what lets
- * the legality verdict stay above the fold without competing with the text.
+ * Everything below the panel — legality, the rules join — is commentary ON the
+ * card and looks like it, which is what lets the legality verdict stay above
+ * the fold without competing with the text. An attribute-vocabulary list used
+ * to sit there too, printing the card's types, traits and keywords as tags; it
+ * was removed, and the type line and printed text on the face are where a
+ * reader gets that now.
  *
  * TWO COLUMNS: everything answering "what is this card" beside the face, the
  * apparatus below. It collapses to one column when the line cannot seat a face
@@ -159,18 +162,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const { card } = page;
   const typeLine = card.type_text.trim();
   const text = card.functional_text.trim();
-
-  const vocabularies: readonly (readonly [string, readonly string[]])[] = [
-    ["Types", card.types],
-    ["Traits", card.traits],
-    ["Keywords", card.card_keywords],
-    ["Abilities and effects", card.abilities_and_effects],
-    ["Ability keywords", card.ability_and_effect_keywords],
-    ["Grants", card.granted_keywords],
-    ["Removes", card.removed_keywords],
-    ["Interacts with", card.interacts_with_keywords],
-  ];
-  const vocabulary = vocabularies.filter(([, values]) => values.length > 0);
 
   /**
    * The stat block, INCLUDING the combat positions this card leaves empty.
@@ -1398,45 +1389,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     </li>
                   ))}
                 </ul>
-              </section>
-            ) : null}
-
-            {/*
-              ATTRIBUTES COME UP INTO THE COLUMN, out of the full-width run
-              below. This is the metadata that describes the card rather than
-              the printing, and it belongs beside the face with the rest of what
-              the card IS.
-            */}
-            {vocabulary.length > 0 ? (
-              <section
-                className="of-card__apparatus"
-                aria-labelledby="attributes"
-              >
-                <h2 className="of-apparatus__heading" id="attributes">
-                  Attributes
-                </h2>
-                <dl className="of-card__attributes">
-                  {vocabulary.map(([label, values]) => (
-                    <div className="of-card__attribute" key={label}>
-                      <dt>{label}</dt>
-                      <dd>
-                        <ul className="of-card__tags">
-                          {values.map((value) => (
-                            <li className="of-card__tag" key={value}>
-                              {value}
-                            </li>
-                          ))}
-                        </ul>
-                      </dd>
-                    </div>
-                  ))}
-                  {card.played_horizontally ? (
-                    <div className="of-card__attribute">
-                      <dt>Orientation</dt>
-                      <dd>Played horizontally</dd>
-                    </div>
-                  ) : null}
-                </dl>
               </section>
             ) : null}
           </div>
