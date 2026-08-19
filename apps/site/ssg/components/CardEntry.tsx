@@ -1347,47 +1347,87 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   Governed by
                 </h2>
                 <ul className="of-card__rules">
-                  {keywordRules.map((rule) => (
-                    <li className="of-card__rules-item" key={rule.ruleId}>
-                      <a
-                        className="of-card__rules-citation"
-                        href={hrefForNumber(rule.number)}
-                      >
-                        {rule.ruleId}
-                      </a>
-                      <span className="of-card__rules-keyword">
-                        {rule.keyword}
-                      </span>
-                      {rule.via === "family" ? (
-                        /*
-                          SAID OUT LOUD, because it is a slightly weaker claim.
-                          The rules define `Specialization` once and cards
-                          instantiate it per hero, so the match is a resolution
-                          rather than a direct hit — and a reference work should
-                          say which kind of claim it is making.
-                        */
-                        <span className="of-card__rules-via">
-                          via the general rule
-                        </span>
-                      ) : null}
-                      {/*
-                        THE REMINDER TEXT, WHICH IS THE POINT OF THE JOIN. 138
-                        cards in this corpus print nothing but keyword names, so
-                        the printed text tells a reader who already knows the
-                        keyword exactly what they already knew.
+                  {keywordRules.map((rule) => {
+                    /*
+                      THE CITATION LINE, BUILT ONCE FOR BOTH SHAPES. A rule with
+                      a definition is a fold and this is its `<summary>`; a rule
+                      without one has nothing to disclose and this is the whole
+                      row. Composing it here is what keeps those two from
+                      drifting into two different rows.
 
-                        IT IS QUOTED, NOT INLINED INTO THE CARD'S TEXT. Writing
-                        it into `Printed text` would be printing something the
-                        card does not say — the one thing a reference work may
-                        never do.
-                      */}
-                      {rule.text !== "" ? (
-                        <p className="of-card__rules-text">
-                          <CardTextInline nodes={parseInline(rule.text)} />
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
+                      THE CITATION STAYS A LINK INSIDE THE SUMMARY, and that is
+                      not the conflict it looks like: activation behaviour runs
+                      on the nearest activation target, so a click on the anchor
+                      navigates to the rule and does NOT also toggle the fold,
+                      while a click anywhere else on the line toggles it.
+                    */
+                    const line = (
+                      <>
+                        <a
+                          className="of-card__rules-citation"
+                          href={hrefForNumber(rule.number)}
+                        >
+                          {rule.ruleId}
+                        </a>
+                        <span className="of-card__rules-keyword">
+                          {rule.keyword}
+                        </span>
+                        {rule.via === "family" ? (
+                          /*
+                            SAID OUT LOUD, because it is a slightly weaker claim.
+                            The rules define `Specialization` once and cards
+                            instantiate it per hero, so the match is a resolution
+                            rather than a direct hit — and a reference work should
+                            say which kind of claim it is making.
+                          */
+                          <span className="of-card__rules-via">
+                            via the general rule
+                          </span>
+                        ) : null}
+                      </>
+                    );
+                    return (
+                      <li key={rule.ruleId}>
+                        {/*
+                          THE REMINDER TEXT, WHICH IS THE POINT OF THE JOIN. 138
+                          cards in this corpus print nothing but keyword names,
+                          so the printed text tells a reader who already knows
+                          the keyword exactly what they already knew.
+
+                          IT IS QUOTED, NOT INLINED INTO THE CARD'S TEXT. Writing
+                          it into `Printed text` would be printing something the
+                          card does not say — the one thing a reference work may
+                          never do.
+
+                          IT IS ALSO FOLDED AWAY. The most-governed cards in the
+                          corpus draw four rules each, and four stacked block
+                          quotations buried the thing a reader scans this
+                          section FOR — which rules govern the card — under the
+                          definitions of all of them. Closed by default: the
+                          citations are the index, the definitions the lookup.
+
+                          NO FOLD WHEN THERE IS NOTHING TO OPEN. `text` is
+                          typed as possibly empty and no row in the corpus is
+                          (0 of 3,933 rule rows across every card, measured
+                          against `cr-2.14.0`), but a `<details>` that opens
+                          onto nothing is an affordance that lies, so the
+                          textless row stays a plain line.
+                        */}
+                        {rule.text === "" ? (
+                          <p className="of-card__rules-line">{line}</p>
+                        ) : (
+                          <details className="of-card__rules-fold">
+                            <summary className="of-card__rules-line">
+                              {line}
+                            </summary>
+                            <p className="of-card__rules-text">
+                              <CardTextInline nodes={parseInline(rule.text)} />
+                            </p>
+                          </details>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             ) : null}
