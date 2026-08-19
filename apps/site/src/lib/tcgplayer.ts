@@ -84,12 +84,13 @@ const PARTNER_ORIGIN = "https://partner.tcgplayer.com/c";
  * a placement nobody built.
  *
  * `"card-printings"` NAMES A TABLE COLUMN THAT NO LONGER EXISTS, and it is kept
- * anyway. The links moved into a Buy section of their own and one now sits under
- * the card face, so the value is no longer descriptive — but it is a REPORTING
- * KEY, and Impact groups by the string it was sent. Renaming it would split one
- * placement into two rows at the rename date and silently end the series
- * somebody would be comparing against. It means "the card page's buy links",
- * which is what it has always been counting.
+ * anyway — through two further moves since. The links left the column for a Buy
+ * section of their own, and that section has now gone too, leaving the single
+ * button under the card face. The value has been undescriptive the whole time
+ * and it does not matter: it is a REPORTING KEY, and Impact groups by the string
+ * it was sent. Renaming it would split one placement into two rows at the rename
+ * date and silently end the series somebody would be comparing against. It means
+ * "the card page's buy links", which is what it has always been counting.
  *
  * Splitting the face button onto its own value is a real option and deliberately
  * not taken here: it is worth doing only if somebody intends to compare the two
@@ -163,11 +164,19 @@ export function buyRel(affiliateId: string | null = AFFILIATE_ID): string {
 }
 
 /**
- * The sentence printed under the block of buy links.
+ * The sentence printed under the buy link.
  *
- * It said "under the printings table", which was true while the links were that
- * table's eighth column and stopped being true when they became a section of
- * their own. See `BuySection`.
+ * IT HAS OUTLIVED THREE PLACEMENTS, which is why this docblock keeps getting
+ * shorter and the sentence itself has not changed. It said "under the printings
+ * table" while the links were that table's eighth column; then "under the block
+ * of buy links" while they were a section of their own. The section is gone and
+ * one link is left — the button under the card face — and the sentence sits
+ * beneath it. See `CardEntry`.
+ *
+ * THE WORDING STAYED PLURAL DELIBERATELY. "Buy links go to TCGplayer" is a
+ * claim about where this site's purchase links lead, which is true of a site
+ * whose every card page carries one. Rewriting proofread disclosure text to
+ * match a layout is how a sentence stops being the one that was reviewed.
  *
  * Written out in both states rather than assembled from fragments, because this
  * is the text a regulator or LSS would read and a sentence built by
