@@ -161,9 +161,10 @@ in a git repository.
   this project's only route out to other tools, and nothing replaced it. Quoted
   rather than deleted, and open as*
   [#156](https://github.com/alxjrvs/optfall/issues/156).
-- **Netlify.** Production from `main`, deploy previews on every pull request.
-  Previews matter more than usual here: a legality bug is visible in a preview
-  and invisible in a diff.
+- **Cloudflare Workers.** Production from `main`, a preview URL on every pull
+  request. Previews matter more than usual here: a legality bug is visible in a
+  preview and invisible in a diff. The site ships as static assets with no
+  Worker script; only the card-face host runs code.
 - **A shell script, not Terraform.** Repository settings and ruleset live in a
   checked-in `gh api` script, re-runnable at any time, with a CI job asserting
   the live settings still match. Reproducible from scratch rather than
@@ -183,8 +184,9 @@ in a git repository.
   property and are never relicensed by us.
 
 > **Operational note.** The permission rules on this machine deny the Bash path
-> to secret resolution, so anything needing a Netlify token runs from a human
-> terminal rather than from inside an agent session. The repo-settings script is
+> to secret resolution, so anything needing a deploy or storage credential runs
+> from a human terminal rather than from inside an agent session. The
+> repo-settings script is
 > deliberately not in that category: it authenticates with `gh`, which an agent
 > session already has, so the settings stay reproducible without a human in the
 > loop.
@@ -195,8 +197,8 @@ in a git repository.
 
 **1–2 days. Nothing blocks it.**
 
-`alxjrvs/optfall` — settings in a script, deploying to Netlify, compliant before
-the first line of product code.
+`alxjrvs/optfall` — settings in a script, deploying to Cloudflare, compliant
+before the first line of product code.
 
 **Personal ownership is a compliance requirement, not a preference.** LSS's
 policy bars third-party applications built by commercial entities, so the repo,
@@ -250,12 +252,12 @@ strengthens the ask.
 - `alxjrvs/optfall` — public, personal account, TypeScript workspace on Bun
 - `scripts/repo-settings.sh` — repository settings and ruleset as a re-runnable
   `gh api` script, with a `--check` mode run weekly to catch drift
-- Netlify configuration in `netlify.toml`, alongside the site it builds
+- Cloudflare configuration in `apps/*/wrangler.jsonc`, alongside the site it builds
 - Agent-friendly settings — squash-only, linear history required, branch
   deletion on merge, no required human review, empty bypass list
 - CI with a single aggregate gate — one always-run job depending on all others,
   set as the sole required check
-- Netlify — production deploy from `main`, deploy previews on every PR
+- Cloudflare — production deploy from `main`, a preview URL on every PR
 - Compliance boilerplate — disclaimer, data terms, copyright line, no-logo rule
   in the design tokens
 - Licence issue opened upstream on the card dataset
@@ -764,7 +766,7 @@ a preference here, it is the only option.
 
 *As implemented, with the two amendments the review of layer 6 forced.* Visited
 pages get **`NetworkFirst`** with a 3-second timeout, not `StaleWhileRevalidate`:
-every asset is content-hashed and Netlify's deploys are atomic, so serving
+every asset is content-hashed and asset deploys are atomic, so serving
 stored HTML first meant a returning reader got a document linking the previous
 deploy's stylesheets, which 404 — an unstyled page with no islands on every
 deploy. And **exactly one document is precached**, `/`, because it is the
@@ -996,7 +998,7 @@ demand. This is the part of the plan that is not about features.
 ## Settled, and still open
 
 **Settled.** `alxjrvs/optfall`, personal ownership, MIT, TypeScript on Bun,
-**React components and a static generator this project owns**, Netlify hosting,
+**React components and a static generator this project owns**, Cloudflare hosting,
 repository settings as a `gh api` script rather than Terraform, no direct
 monetisation, and no language model in anything shipped. **The positioning is
 settled too: a card search engine and reference, Scryfall-shaped, with the rules

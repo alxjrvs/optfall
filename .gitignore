@@ -12,10 +12,6 @@ out/
 # The site generator writes here; `apps/site/dist` is 12,776 pages.
 apps/*/dist/
 
-# --- Netlify --------------------------------------------------------------
-.netlify/
-.netlify-cache/
-
 # --- Coverage -------------------------------------------------------------
 coverage/
 *.lcov

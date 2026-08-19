@@ -94,16 +94,16 @@ describe("faceKeyFor", () => {
 describe("faceUrl and placeholderUrl", () => {
   test("build the tiered and placeholder addresses", () => {
     expect(faceUrl("MST131.webp", "thumb")).toBe(
-      "https://optfall-images.netlify.app/thumb/MST131.webp",
+      "https://images.optfall.com/thumb/MST131.webp",
     );
     expect(faceUrl("MST131.webp", "normal")).toBe(
-      "https://optfall-images.netlify.app/normal/MST131.webp",
+      "https://images.optfall.com/normal/MST131.webp",
     );
     expect(placeholderUrl()).toBe(
-      "https://optfall-images.netlify.app/placeholder/portrait.svg",
+      "https://images.optfall.com/placeholder/portrait.svg",
     );
     expect(placeholderUrl("landscape")).toBe(
-      "https://optfall-images.netlify.app/placeholder/landscape.svg",
+      "https://images.optfall.com/placeholder/landscape.svg",
     );
   });
 });

@@ -58,7 +58,7 @@ const OUT =
   process.env["OPTFALL_DS_OUT"] ?? join(import.meta.dir, "..", "design-system");
 const TOKENS = themeStylesheet();
 
-const FACE = "https://optfall-images.netlify.app";
+const FACE = "https://images.optfall.com";
 
 /**
  * A pitch jewel, in the two-element shape `PitchJewel.tsx` renders.

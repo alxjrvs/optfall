@@ -16,7 +16,7 @@
  * class of bug that check was written for cannot occur, and the check now
  * asserts the weaker, true thing: that `bun run dev` serves the site.
  *
- * THE HOST MATTERS MORE THAN IT LOOKS. Netlify resolves `/search` to
+ * THE HOST MATTERS MORE THAN IT LOOKS. The host resolves `/search` to
  * `search/index.html`, serves `404.html` for a miss, and does not care about a
  * trailing slash. A plain file server does none of that, so a local check would
  * pass on paths production redirects and fail on paths production serves. The

@@ -47,8 +47,8 @@
 #   3. Push `main`. The ruleset does not block that: there is no `creation`
 #      rule, and the status check sets do_not_enforce_on_create (see below).
 #   4. Add the REPO_SETTINGS_TOKEN secret so CI can run --check.
-#   5. Create the Netlify site by hand and link it to the repository —
-#      see netlify.toml, which documents the settings to confirm there.
+#   5. Add the CLOUDFLARE_API_TOKEN secret so the deploy workflow can publish —
+#      see .github/workflows/deploy-cloudflare.yml, which skips without it.
 #
 #   Every change to `main` after that is a pull request. Direct pushes are
 #   blocked by the required status check, which is the intended end state.

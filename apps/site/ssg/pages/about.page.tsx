@@ -246,7 +246,7 @@ const SOURCES: readonly {
         {
           what: "Card images",
           href: `${FACE_HOST}/normal/${SAMPLE_FACE}`,
-          label: "optfall-images.netlify.app",
+          label: "images.optfall.com",
           note: "Faces published by Legend Story Studios, reached through the URLs the card compilation carries and re-served from a store of our own so the page does not hotlink theirs.",
         },
       ]),

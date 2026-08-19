@@ -374,7 +374,7 @@ function manifest(): string {
  * page cache safe to have at all.
  *
  * **THE PROBLEM IT CLOSES.** Every asset this site serves is content-hashed and
- * Netlify's deploys are atomic, so a stored HTML document stops being renderable
+ * Asset deploys are atomic, so a stored HTML document stops being renderable
  * the moment a new deploy lands: it links `/assets/*-<oldhash>.css`, which is
  * gone from the origin AND absent from the refreshed precache. A page served
  * from `pages` after a deploy paints unstyled with no islands.

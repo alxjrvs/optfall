@@ -1,11 +1,10 @@
 /**
  * The two files the host reads and never serves: `_headers` and `_redirects`.
  *
- * WHY THEY ARE HERE AND NOT IN `netlify.toml`. They used to be in it. Moving
- * hosting to Cloudflare means the host's configuration stops being a TOML file
- * the platform reads out of the repository root and becomes two plain-text
- * files inside the published directory — so they are build output now, and this
- * is the module that decides what goes in them.
+ * WHY THEY ARE BUILD OUTPUT. Cloudflare reads its host configuration out of
+ * the published directory rather than from a file at the repository root, so
+ * these two are emitted by the build — and this is the module that decides what
+ * goes in them.
  *
  * WHY THEY ARE NOT IN {@link generatedAssets}. That registry is the list of
  * files the site SERVES, and `check-dev-server.ts` asserts every member of it
@@ -41,12 +40,11 @@ export interface RedirectRule {
  * because query strings survive a 301 and `/cards?q=banned:cc` has to keep
  * answering.
  *
- * ON `force`. Netlify's version of this rule set `force = true`, which makes a
- * redirect win even when a file exists at the request path. Cloudflare has no
- * such flag: a static asset always wins. That is not a behaviour change here,
- * because the build emits no `cards/` directory — `/cards` names nothing, so
- * the rule fires either way. It WOULD become one the day a `/cards` page came
- * back, which is why this is written down rather than left to be rediscovered.
+ * A STATIC ASSET ALWAYS WINS over a rule here — there is no way to force a
+ * redirect ahead of a real file. That costs nothing today, because the build
+ * emits no `cards/` directory and `/cards` names nothing, so the rule fires.
+ * It WOULD start mattering the day a `/cards` page came back, which is why it
+ * is written down rather than left to be rediscovered.
  */
 export const REDIRECTS: readonly RedirectRule[] = [
   { from: "/cards", to: "/search", status: 301 },
@@ -59,23 +57,19 @@ export interface HeaderRule {
 }
 
 /**
- * The response headers the host adds, carried over from `netlify.toml` intact.
+ * The response headers the host adds.
  *
- * `X-Content-Type-Options: nosniff` and `Referrer-Policy` are general hardening
- * and were already the site's posture. Worth being explicit about one thing
- * while a hosting migration is in flight: `docs/COMPLIANCE.md` §"Nothing here is
+ * `X-Content-Type-Options: nosniff` and `Referrer-Policy` are general hardening.
+ * Worth being explicit about one thing: `docs/COMPLIANCE.md` §"Nothing here is
  * coupled to the host" establishes that the affiliate links do NOT depend on
  * `Referrer-Policy` — attribution travels in the URL path and `buyRel` puts
  * `noreferrer` on those anchors in both states. So this header is hardening, not
- * a compliance dependency, and carrying it is a choice rather than an
- * obligation. It is carried because dropping a security header during a
- * platform move is how a posture quietly regresses.
+ * a compliance dependency, and its presence is a choice rather than an
+ * obligation.
  *
- * THE WEBMANIFEST TYPE IS REDUNDANT ON CLOUDFLARE, AND THAT IS MEASURED RATHER
- * THAN ASSUMED. It was load-bearing on Netlify, which had no built-in type for
- * `.webmanifest` and served it as `application/octet-stream`. Cloudflare does
- * not need telling: with this rule REMOVED from a fixture and served by real
- * workerd, `/manifest.webmanifest` still came back
+ * THE WEBMANIFEST TYPE IS REDUNDANT, AND THAT IS MEASURED RATHER THAN ASSUMED.
+ * With this rule REMOVED from a fixture and served by real workerd,
+ * `/manifest.webmanifest` still came back
  * `Content-Type: application/manifest+json`. Wrangler infers the type from the
  * extension and attaches it at upload time, so the same inference that answered
  * locally is the one that answers in production.
@@ -105,8 +99,7 @@ export const HEADERS: readonly HeaderRule[] = [
 ];
 
 /**
- * `_redirects`, in the one format both Netlify and Cloudflare read:
- * `<from> <to> <status>`, one rule per line.
+ * `_redirects`: `<from> <to> <status>`, one rule per line.
  */
 export function renderRedirects(
   rules: readonly RedirectRule[] = REDIRECTS,
