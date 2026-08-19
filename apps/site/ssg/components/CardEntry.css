@@ -696,29 +696,67 @@
   list-style: none;
 }
 
-.of-card__rules-item {
-  display: flex;
-  align-items: baseline;
-  gap: var(--of-space-base);
-  flex-wrap: wrap;
+/*
+    THE CITATION LINE — a `<summary>` when the rule has a definition to fold
+    away, a bare `<p>` when it has none. One class, because they are the same
+    row and only one of them is clickable.
+
+    `display` IS LEFT ALONE, and this comment is where that rule now lives —
+    the source fold that used to record it went out with the section it
+    belonged to, and this is the only disclosure left in this component. A
+    `<summary>` is `display: list-item`, its disclosure triangle is that list
+    item's `::marker`, and setting `flex` here — which is exactly what this row
+    used to be — drops the marker entirely in Chrome, leaving a fold with no
+    affordance at all: a line that happens to be clickable, which nobody clicks.
+
+    SO THE GAPS ARE MARGINS. A wrapping flex row gave the citation, the keyword
+    and the `via` note a `gap`; inline children in a list item cannot have one,
+    and `* + *` is the same spacing said in the only vocabulary left. Baseline
+    alignment and wrapping come free — inline layout does both by nature, which
+    is what the flex row was asking for in the first place.
+  */
+.of-card__rules-line {
+  margin: 0;
+}
+
+.of-card__rules-line > * + * {
+  margin-inline-start: var(--of-space-base);
+}
+
+.of-card__rules-fold > .of-card__rules-line {
+  cursor: pointer;
+}
+
+/*
+    AN OPEN FOLD OWNS ITS QUOTATION, and spacing is the only thing saying so.
+    The list's own `gap` is `tight`, so the quotation is set `tighter` under the
+    citation it belongs to and an open row adds `tighter` beneath itself —
+    nearer above than below, which is the whole of the grouping.
+  */
+.of-card__rules-fold[open] {
+  margin-block-end: var(--of-space-tighter);
 }
 
 /*
     THE DEFINITION, SET AS A QUOTATION RATHER THAN AS THE CARD'S OWN TEXT.
 
-    It takes the full width of the item — `flex-basis: 100%` on a wrapping row —
-    so it sits under its citation rather than beside it, and the serif marks it
-    as prose from the rules document rather than interface text. The left rule
-    is the only ornament: it says "this is quoted" without a box, which is the
-    same argument the rest of this page makes about hairlines.
+    It sits under its citation rather than beside it — a block inside the fold,
+    where it used to be a `flex-basis: 100%` item on a wrapping row — and the
+    serif marks it as prose from the rules document rather than interface text.
+    The left rule is the only ornament: it says "this is quoted" without a box,
+    which is the same argument the rest of this page makes about hairlines.
+
+    THE INDENT IS THE MARKER'S, NOT AN ORNAMENT'S. The quotation lines up under
+    the citation it belongs to rather than under the disclosure triangle, so an
+    open fold reads as one block instead of two ragged edges.
 
     Deliberately quieter than `Printed text`. What the card says outranks what
     the rules say about what the card says, and a reader scanning for the
     former must not have to sort it out of the latter.
   */
 .of-card__rules-text {
-  flex-basis: 100%;
-  margin: 0;
+  margin-block: var(--of-space-tighter) 0;
+  margin-inline-start: var(--of-space-base);
   padding-inline-start: var(--of-space-base);
   border-inline-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
   font-family: var(--of-type-family-serif);
