@@ -77,17 +77,6 @@ import "./CardSearch.css";
  */
 export const HEADER_FIELD_ID = "site-search";
 
-/**
- * Ties the header's field to the operator examples rendered on this page.
- *
- * EXPORTED, BECAUSE THE LINK IS EMITTED BY THE SHELL AND NOT BY THIS ISLAND.
- * `search.page.tsx` hands it to `SiteHeader` as `headerSearchDescribedBy`, so
- * the association is in the served HTML rather than attached on hydration —
- * which matters on the one page whose no-JS path is deliberately designed for.
- * The island renders the element; the page wires the field to it.
- */
-export const CARDS_HINT_ID = "cards-search-hint";
-
 export interface CardSearchProps {
   readonly index: EncodedCardIndex;
   readonly ornament?: boolean;
@@ -679,19 +668,6 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
 
   return (
     <>
-      {/*
-        THE HINT STAYS ON THE PAGE, THE FIELD DOES NOT.
-
-        Three example queries and a link to the grammar. It belonged to the hero
-        field and is described BY the header's field now — the adoption effect
-        points `aria-describedby` at this element — because the examples are
-        about what this page can be asked, and the header is on every page.
-      */}
-      <p className="of-search__hint of-cards__hint" id={CARDS_HINT_ID}>
-        <code>pitch:3 class:guardian</code> · <code>banned:cc</code> ·{" "}
-        <code>text:dominate</code> — <a href="/syntax">all operators</a>
-      </p>
-
       {/* Always present, never emptied. */}
       <p className="of-cards__announcement" role="status" aria-live="polite">
         {summary}

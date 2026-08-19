@@ -1316,12 +1316,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     </li>
                   ))}
                 </ul>
-                <p className="of-card__verify">
-                  Matched exactly against the vocabulary the rules publish, and
-                  each definition is quoted verbatim from the rule cited beside
-                  it. A keyword the document does not define is absent rather
-                  than guessed at.
-                </p>
               </section>
             ) : null}
 
