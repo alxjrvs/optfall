@@ -21,7 +21,7 @@ import {
 } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { facesOf, hrefForPrinting } from "../src/lib/printings";
-import { setFor } from "../src/lib/sets";
+import { setFor, setName } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document } from "./document";
 import {
@@ -1297,7 +1297,7 @@ describe("the printings table is how a reader reaches another art", () => {
 /* The credit line                                                             */
 /* -------------------------------------------------------------------------- */
 
-describe("the credit line spaces every fact, not a clump and a count", () => {
+describe("the credit line spaces every fact, not a clump", () => {
   const render = (route: string) =>
     RESOLVED.find((resolved) => resolved.route === route)?.render(
       [],
@@ -1328,13 +1328,12 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
   const creditsIn = (html: string) =>
     [...footerOf(html).matchAll(/<p class="of-card__credit[ "]/g)].length;
 
-  test("rarity, code, artist and printings are four siblings", () => {
+  test("rarity, citation and artist are three siblings", () => {
     const html = render(addressOf("adaptive-plating"));
     expect(html).toContain("of-card__band--credits");
-    expect(creditsIn(html)).toBe(4);
+    expect(creditsIn(html)).toBe(3);
 
-    /* And they are in reading order: what grade, which printing, who drew it,
-       how many. */
+    /* And they are in reading order: what grade, which printing, who drew it. */
     const footer = footerOf(html);
     expect(footer.indexOf("of-card__rarity")).toBeLessThan(
       footer.indexOf("of-card__printing-code"),
@@ -1342,25 +1341,36 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
     expect(footer.indexOf("of-card__printing-code")).toBeLessThan(
       footer.indexOf("Illustrated by"),
     );
-    expect(footer.indexOf("Illustrated by")).toBeLessThan(
-      footer.indexOf('href="#printings"'),
-    );
   });
 
-  test("the code is one word, and only its set half is a link", () => {
+  /*
+    THE COUNT IS GONE, AND THIS IS THE TEST THAT SAYS SO. Three assertions above
+    used to pin an `N printings` anchor into this footer — its position, its
+    presence on every page, and the child count that included it. Deleting them
+    would have left the removal unasserted, so the claim they made is inverted
+    here rather than dropped: nothing in the credit line points at the table.
+  */
+  test("the credit line does not link the printings table", () => {
+    const footer = footerOf(render(addressOf("adaptive-plating")));
+    expect(footer).not.toContain('href="#printings"');
+    /* Not "no anchor at all": the set and the other face are both links down
+       here. The one that pointed at this page's own table is what is gone. */
+    expect(footer).not.toContain("#printings");
+  });
+
+  test("the citation names the set and only the set is a link", () => {
     /*
-     * `EVO013`, NOT `EVO 013` AND NOT `EVOEVO013`. Two ways to get this wrong,
-     * and the markup is what rules out both: the anchor and the number sit
-     * inside ONE span, because the paragraph around them is a flex row with a
-     * gap that would otherwise print the citation as two words; and the number
-     * is sliced at its own set prefix rather than composed from `set_id` and
-     * `id`, which upstream already concatenated.
+     * `Bright Lights #013`, NOT `EVO013` AND NOT `Bright Lights #EVO013`. Two
+     * ways to get this wrong and the markup rules out both: the anchor carries
+     * the set's NAME, which is what makes the link a name rather than a lookup;
+     * and the number is sliced at its own set prefix rather than printed whole,
+     * because upstream already concatenated the code onto it.
      */
     const footer = footerOf(render(addressOf("adaptive-plating")));
     expect(footer).toContain(
-      '<span class="of-card__printing-code"><a href="/sets/evo">EVO' +
-        '<span class="of-card__visually-hidden"> (Bright Lights)</span>' +
-        "</a>013</span>",
+      '<span class="of-card__printing-code"><a href="/sets/evo">' +
+        "Bright Lights</a> " +
+        '<span class="of-card__printing-number">#013</span></span>',
     );
 
     /* The number is not inside the anchor: it names a position in a set and
@@ -1368,21 +1378,26 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
     expect(footer).not.toMatch(/<a href="\/sets\/evo">[^<]*013/);
   });
 
-  test("the code names the printing on screen, on every route", () => {
+  test("the citation names the printing on screen, on every route", () => {
     /*
      * THE SAME RULE THE RARITY FOLLOWS, AND FOR THE SAME REASON: a page shows
      * one printing, so the caption under the picture states THAT printing's
      * number. A per-art route is where this can go wrong — the code came off
      * `card.printings[0]` in an early pass and captioned every art of a card
      * with the first one's number.
+     *
+     * ASSERTED ON THE ROUND TRIP, NOT ON A SECOND COPY OF THE SLICING RULE.
+     * What the citation owes upstream is that its halves concatenate back to
+     * the number upstream published — `EVO` + `013` is `EVO013` — so the test
+     * puts the set code back in front of what it read and compares THAT. A test
+     * that re-implemented the prefix slice would agree with a wrong slice.
      */
     const codeIn = (html: string) =>
       footerOf(html)
         .match(
           /<span class="of-card__printing-code">(.*?)<\/span>\s*<\/p>/s,
         )?.[1]
-        ?.replace(/<[^>]*>/g, "")
-        .replace(/\s*\([^)]*\)\s*/g, "") ?? "";
+        ?.replace(/<[^>]*>/g, "") ?? "";
 
     let perArt = 0;
     for (const page of CARD_PAGES.filter((_, index) => index % 53 === 0)) {
@@ -1394,9 +1409,18 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
         const html = render(route);
         if (html === "") return;
         if (index > 0) perArt += 1;
-        expect(`${route}: ${codeIn(html)}`).toBe(
-          `${route}: ${face.printing.id}`,
-        );
+
+        const { id, set_id } = face.printing;
+        const cite = codeIn(html);
+        const [name = "", number = ""] = cite.split(" #");
+
+        expect(`${route}: ${name}`).toBe(`${route}: ${setName(set_id)}`);
+        /* The number is printed whole where it does not carry its set's code,
+           which is the one case the halves do not concatenate. */
+        const rejoined = id.toUpperCase().startsWith(set_id.toUpperCase())
+          ? `${set_id}${number}`
+          : number;
+        expect(`${route}: ${rejoined}`).toBe(`${route}: ${id}`);
       });
     }
 
@@ -1415,8 +1439,8 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
      * printing's back, and carries neither where upstream publishes neither.
      *
      * So what is asserted is the RULE rather than a number: the artist and the
-     * printing count are always there, the rarity is there exactly when this
-     * printing has one, and the back exactly when it has one.
+     * citation are always there, the rarity is there exactly when this printing
+     * has one, and the back exactly when it has one.
      */
     for (const page of CARD_PAGES.filter((_, index) => index % 37 === 0)) {
       const html = render(page.href);
@@ -1426,9 +1450,9 @@ describe("the credit line spaces every fact, not a clump and a count", () => {
       expect(`${page.label}: artist`).toBe(
         `${page.label}: ${footer.includes("Illustrated by") || footer.includes("No artist is credited") ? "artist" : "none"}`,
       );
-      expect(`${page.label}: ${footer.includes('href="#printings"')}`).toBe(
-        `${page.label}: true`,
-      );
+      expect(
+        `${page.label}: ${footer.includes("of-card__printing-code")}`,
+      ).toBe(`${page.label}: true`);
 
       const rarity = shown?.printing.rarity ?? "";
       expect(`${page.label}: ${footer.includes("of-card__rarity")}`).toBe(
