@@ -18,6 +18,8 @@
  * Astro did. 112 pages, from one pass over the corpus.
  */
 
+import { readableDate } from "optfall-components";
+
 import {
   CARD_PAGES,
   type CardPage,
@@ -310,16 +312,19 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     is what upstream carries, which counts Head Jab three times. Before the
     collapse they were one number; now they differ on most sets, and printing
     the larger one over an index of the smaller would be the masthead
-    contradicting the list under it. So the row count leads, because it is what
-    the reader can count on the screen, and the versions are named after it
-    wherever the two disagree.
+    contradicting the list under it.
+
+    THE MASTHEAD USED TO RECONCILE THEM IN A SENTENCE — "243 cards in this
+    corpus, 423 counting each pitch version" — which put the reader through a
+    subordinate clause to learn two numbers, and dropped the second one
+    entirely on a set where the two agree. They are two rows of the fact list
+    now, each with its own label, and BOTH are always printed: a set whose two
+    counts are equal is a set that printed no pitch cycles, which is a real
+    answer to the question rather than a reason to withhold it, and a list
+    whose rows appear and vanish is one a reader cannot compare across sets.
   */
   const versions = listed.length;
   const rows = entries.length;
-  const counted =
-    versions === rows
-      ? `${rows.toLocaleString("en-GB")} cards in this corpus.`
-      : `${rows.toLocaleString("en-GB")} cards in this corpus, ${versions.toLocaleString("en-GB")} counting each pitch version.`;
 
   return {
     title: `${set.name} — Optfall`,
@@ -358,22 +363,77 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
           </ol>
         </nav>
 
+        {/*
+          A FACT LIST, NOT A SENTENCE, and the sentence is what this replaced:
+
+              Released 2022-05-06. 243 cards in this corpus, 423 counting each
+              pitch version. Out of print.
+
+          Five facts strung into prose, in an order nothing but grammar chose,
+          each one reachable only by reading past the ones before it. A reader
+          arriving at a set page is looking one of them up — when did this come
+          out, is it still in print, how big is it — and prose makes that a
+          scan of a paragraph rather than a glance down a column. The list is
+          also comparable BETWEEN sets, which the sentence never was: the same
+          labels in the same order on all 112 pages.
+
+          `<dl>` RATHER THAN A TABLE OR A ROW OF SPANS, because these are
+          term-and-value pairs and that is the element for them — every label
+          is announced with its value, in order, with no `aria-*` doing work
+          the markup already does.
+
+          THE MACHINE DATE DID NOT GO ANYWHERE. `readableDate` prints "6 May
+          2022" for a reader and `dateTime` still carries `2022-05-06` for
+          anything parsing the page — and the ISO string was never the reason
+          to keep it visible, since a reader wanting to cite the page has the
+          URL.
+        */}
         <header className="of-masthead">
-          <p className="of-masthead__eyebrow">Set {set.id}</p>
           <h1>{set.name}</h1>
-          <p className="of-masthead__meta">
-            {set.released === null ? (
-              "No published release date."
-            ) : (
+          <dl className="of-masthead__facts">
+            <dt>Released</dt>
+            <dd>
+              {set.released === null ? (
+                /* Not "unknown": upstream publishes no date for this set,
+                   which is a fact about the record rather than a gap in it. */
+                "No published date"
+              ) : (
+                <time dateTime={set.released}>
+                  {readableDate(set.released)}
+                </time>
+              )}
+            </dd>
+
+            <dt>Card names</dt>
+            <dd>{rows.toLocaleString("en-GB")}</dd>
+
+            <dt>Pitch versions</dt>
+            <dd>{versions.toLocaleString("en-GB")}</dd>
+
+            <dt>Print status</dt>
+            {/* `outOfPrint` is true only when EVERY printing of the set is out
+                of print — see `SetRecord` — so the negative case is "still in
+                print somewhere" rather than a claim about every printing. */}
+            <dd>{set.outOfPrint ? "Out of print" : "In print"}</dd>
+
+            <dt>Set code</dt>
+            {/* THE EYEBROW OVER THE TITLE SAID THIS FIRST — "SET 1HP" — and it
+                went when the list arrived. The code is a fact about the set
+                like the other five; printing it twice on one masthead is the
+                page saying the same thing in two registers. */}
+            <dd>{set.id}</dd>
+
+            {/* The row goes when there is nothing to name, rather than
+                printing an em dash for the commonest case: `editionLabel`
+                already resolves upstream's "no specified edition" to nothing,
+                and a set with no editions has no edition row. */}
+            {editions.length > 0 ? (
               <>
-                Released <time dateTime={set.released}>{set.released}</time>.
+                <dt>Editions</dt>
+                <dd>{editions.join(", ")}</dd>
               </>
-            )}{" "}
-            {counted}
-            {set.outOfPrint ? " Out of print." : null}
-            {/* The sentence goes when nothing is left to name. */}
-            {editions.length > 0 ? ` Editions: ${editions.join(", ")}.` : null}
-          </p>
+            ) : null}
+          </dl>
         </header>
 
         {/*

@@ -262,13 +262,20 @@ const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
  * dossier. Ours were one picture mode and two grades of one text list. Two is
  * the honest count.
  *
- * WHAT `text` WAS ACTUALLY FOR IS NOT LOST, AND IT IS WORTH NAMING BECAUSE IT
- * WAS REAL. Its job was to be SELECTED AND COPIED: a player building a deck
- * list wants forty names, not forty pictures, and `PitchJewel` carries
- * `user-select: none` specifically so the stone's numeral stayed out of the
- * paste. That job is now a control rather than a rendering — see `CardIndex`'s
- * copy button — which does it better than a view could: it reaches the rows
- * below the fold, needs no drag, and cannot pick up a stray glyph.
+ * WHAT `text` WAS ACTUALLY FOR IS WORTH NAMING BECAUSE IT WAS REAL, AND
+ * BECAUSE NOTHING SERVES IT NOW. Its job was to be SELECTED AND COPIED: a
+ * player building a deck list wants forty names, not forty pictures, and
+ * `PitchJewel` carries `user-select: none` specifically so the stone's numeral
+ * stayed out of the paste.
+ *
+ * THIS PARAGRAPH USED TO SAY THE JOB HAD MOVED TO A CONTROL, naming
+ * `CardIndex`'s copy button — which reached the rows below the fold, needed no
+ * drag, and could not pick up a stray glyph. That button has been deleted, so
+ * the honest statement is that the view is retired and its job is not served:
+ * taking the names off a page is a drag over the list view again, and the type
+ * lines come with them. Written down rather than quietly dropped, because a
+ * retirement argument that rests on a replacement should stop being an
+ * argument when the replacement goes.
  *
  * ITS THREE SPELLINGS STILL PARSE, AND THEY RESOLVE TO `list` WITH A NOTICE.
  * `display:text`, `display:checklist` and `display:names` are in the wild and
@@ -799,7 +806,13 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
             about a RENDERING it has no access to. A parser that describes the
             page it is being displayed on will keep drifting out of true every
             time the page moves. So it describes the QUERY, which is the thing
-            it actually knows, and the control is left to be found where it is.
+            it actually knows.
+
+            THE CONTROL HAS SINCE BEEN DELETED OUTRIGHT, which is the third way
+            that draft would have been wrong and the reason this rule is worth
+            keeping rather than a story about one bad sentence: a notice naming
+            a control ages the moment somebody removes it, and this one would
+            have shipped a pointer to nothing on every page instead of on one.
           */
           note(
             "operand-retired",
