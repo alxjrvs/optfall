@@ -595,3 +595,56 @@ export const VOICE_BY_ROLE: Readonly<
   label: "sans",
   citation: "sans",
 };
+
+/* -------------------------------------------------------------------------- */
+/* Dates                                                                       */
+/* -------------------------------------------------------------------------- */
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/**
+ * `YYYY-MM-DD` expanded to "14 March 2026", by hand.
+ *
+ * Deliberately NOT `new Date(date).toLocaleDateString()`. A bare `YYYY-MM-DD` is
+ * parsed as UTC midnight, so anywhere west of Greenwich that round-trip renders
+ * the *previous day* — a ruling dated the 14th displayed as the 13th to a reader
+ * in Los Angeles. On a surface whose entire value is being citable, a date that
+ * changes with the reader's timezone is not a cosmetic bug. Every caller pairs
+ * this with a `dateTime` attribute carrying the exact machine form, so nothing
+ * is lost by formatting the visible text ourselves.
+ *
+ * An unparseable value renders as given rather than as "Invalid Date": if
+ * upstream data is malformed, showing it is how anyone finds out.
+ *
+ * IT LIVED INSIDE `BrassSeal` UNTIL A SECOND SURFACE WANTED IT. The set page's
+ * masthead prints a release date, and the timezone argument above is the whole
+ * reason it cannot simply call `toLocaleDateString` — so the choice was a copy
+ * of this function in `apps/site` or one function both surfaces call. It is
+ * here rather than in the app because a package cannot import from an app, and
+ * `BrassSeal` is the older caller.
+ *
+ * THE CONTRACT LAYER RATHER THAN `./react`, because it renders no markup and
+ * `parity.test.ts` holds that entry to exactly the primitive set. A string in,
+ * a string out, and no React in the module — the same reason `MARK_GEOMETRY`
+ * and `VOICE_BY_ROLE` are here.
+ */
+export function readableDate(date: string): string {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!parts) return date;
+  const [, year, month, day] = parts;
+  const name = MONTHS[Number(month) - 1];
+  return name ? `${Number(day)} ${name} ${year}` : date;
+}

@@ -28,6 +28,7 @@
  * see the material loses nothing.
  */
 
+import { readableDate } from "../index";
 import "./BrassSeal.css";
 
 export interface BrassSealProps {
@@ -37,43 +38,6 @@ export interface BrassSealProps {
   readonly date: string;
   /** The rules version the ruling was answered under. */
   readonly rulesVersion: string;
-}
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
-
-/**
- * `YYYY-MM-DD` expanded to "14 March 2026", by hand.
- *
- * Deliberately NOT `new Date(date).toLocaleDateString()`. A bare `YYYY-MM-DD` is
- * parsed as UTC midnight, so anywhere west of Greenwich that round-trip renders
- * the *previous day* — a ruling dated the 14th displayed as the 13th to a reader
- * in Los Angeles. On a surface whose entire value is being citable, a date that
- * changes with the reader's timezone is not a cosmetic bug. The `dateTime`
- * attribute below still carries the exact machine form, so nothing is lost by
- * formatting the visible text ourselves.
- *
- * An unparseable value renders as given rather than as "Invalid Date": if
- * upstream data is malformed, showing it is how anyone finds out.
- */
-function readableDate(date: string): string {
-  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
-  if (!parts) return date;
-  const [, year, month, day] = parts;
-  const name = MONTHS[Number(month) - 1];
-  return name ? `${Number(day)} ${name} ${year}` : date;
 }
 
 export function BrassSeal({ judge, date, rulesVersion }: BrassSealProps) {

@@ -1,11 +1,20 @@
 /*
  * `/sets/<code>`'s own styles, ported from the Astro page's scoped block.
  *
- * The breadcrumb and masthead rules are prefixed but not page-scoped: `/cr/<id>`
- * uses the same two shapes, and duplicating them under a second prefix would be
- * two copies of one decision. They belong to the SITE rather than to this page,
- * which is why they are `of-lineage` and `of-masthead` rather than
+ * The breadcrumb rules are prefixed but not page-scoped, and `of-lineage` earns
+ * that: the card page and `/cr/<id>` both wear it, and duplicating it under a
+ * second prefix would be two copies of one decision. It belongs to the SITE
+ * rather than to this page, which is why it is `of-lineage` rather than
  * `of-set-lineage`.
+ *
+ * `of-crumbs` AND `of-masthead` DO NOT, AND THIS USED TO CLAIM THEY DID —
+ * "`/cr/<id>` uses the same two shapes". Measured: that page carries its own
+ * `of-rule__crumbs` inside the shared `of-lineage` nav, and its own
+ * `of-rule__masthead`, `of-rule__eyebrow` and `of-rule__id`. So both rules
+ * below have exactly one caller, this page. They are left under the unprefixed
+ * name because a second masthead arriving is the likelier future than this one
+ * moving, but the sentence promising a second caller was not true and is not
+ * a reason to keep the name.
  */
 
 .of-lineage {
@@ -40,16 +49,55 @@
   margin-block: var(--of-space-tight) var(--of-space-base);
 }
 
-.of-masthead__eyebrow {
+/*
+  `.of-masthead__eyebrow` AND `.of-masthead__meta` WENT WITH THE MARKUP THEY
+  STYLED. The eyebrow printed "SET 1HP" over the title and the code is a row of
+  the fact list now; the meta paragraph was the sentence that list replaced.
+  Deleted rather than left behind, on the rule `CardEntry.css` states about a
+  rule matching no element: dead weight that reads, to the next person, like
+  the markup is still there. The eyebrow's declarations are not lost with it —
+  `.of-masthead__facts dt` below is the same uppercase micro-sans label, which
+  is why the list reads as this masthead's own furniture rather than as a table
+  dropped onto it.
+*/
+
+/*
+  THE SET'S FACTS, ONE PER ROW — the shape `.of-card__provenance` already uses
+  for the same job at the foot of a card page, and it is copied deliberately
+  rather than invented: a two-column grid of uppercase labels and plain values
+  is what this site's data lists look like, and a second dialect of it here
+  would be a reader learning the same table twice.
+
+  `max-content` RATHER THAN THE `auto` THAT SHAPE USES, because these values
+  are short — a date, two numbers, a three-letter code. Under `auto` the label
+  column can take the width the longest VALUE leaves it rather than the width
+  the labels need, which opens a gulf between a term and the value it names.
+  The label column is the widest label here, "Pitch versions", and no wider.
+
+  IT NEVER BECOMES ONE COLUMN. There is no breakpoint below because there is
+  nothing to trade: the widest label is 14 characters at micro size, so the
+  pair still fits the 320 px viewport `CLAUDE.md` names first, and a `dd` that
+  runs long — the Editions row is the only candidate — wraps inside its own
+  column instead of pushing the page wide.
+*/
+.of-masthead__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: baseline;
+  gap: var(--of-space-tight) var(--of-space-loose);
   margin: 0;
+}
+
+.of-masthead__facts dt {
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
   color: var(--of-color-ink-faint);
+  white-space: nowrap;
 }
 
-.of-masthead__meta {
+.of-masthead__facts dd {
   margin: 0;
   color: var(--of-color-ink-muted);
   font-size: var(--of-type-size-small);
