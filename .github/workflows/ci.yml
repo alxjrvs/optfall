@@ -179,9 +179,13 @@ jobs:
   # language and a folder of screenshots is enforcement rather than intent.
   #
   # It is a separate job from `lint` because it is a different KIND of check:
-  # `check-tokens.ts` reads the CSS inside `.svelte` and `.astro` files and
-  # asserts against the token vocabulary, which no general-purpose linter
-  # models.
+  # `check-tokens.ts` reads the project's `.css` files and asserts them against
+  # the token vocabulary, which no general-purpose linter models.
+  #
+  # That sentence used to say it read "the CSS inside `.svelte` and `.astro`
+  # files". Those file types were deleted in Phase 6 layer 5 and the scanner
+  # globs `**/*.css` under `packages/components/src` and `apps/site/ssg`; the
+  # script's own header has said so since. This comment simply never caught up.
   #
   # It previously said this job existed "because oxlint cannot parse .svelte or
   # .astro". Half of that was wrong — measured against an identical duplicate

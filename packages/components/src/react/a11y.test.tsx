@@ -6,9 +6,9 @@
  * which turns the pitch jewel's contract — shape, numeral and colour carrying
  * the same fact three times — from an intention into a test."
  *
- * WHY THIS FILE EXISTS SEPARATELY rather than the Svelte one being edited in
- * place: Phase 6 deletes the Svelte sources, and this is the coverage that
- * would have gone with them. Porting it first is what makes that deletion a
+ * WHY THIS FILE EXISTS SEPARATELY rather than the Svelte one having been edited
+ * in place: Phase 6 deleted the Svelte sources, and this is the coverage that
+ * would have gone with them. Porting it first is what made that deletion a
  * move rather than a loss — `primitives.test.tsx` asserts the markup a port
  * could have quietly changed, and this asserts the part axe can see that a
  * human reading a diff cannot.

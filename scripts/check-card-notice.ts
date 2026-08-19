@@ -143,9 +143,19 @@ function faceImages(html: string): number {
  *
  * The inline `--face-ratio` is the marker: `CardFace` sets it on its `<figure>`
  * from the intrinsic width and height, once per face, and nothing else in the
- * system emits it as an inline style. It is deliberately not the scoped class —
- * Svelte's scope hashes change whenever the component's CSS does, so a check
- * keyed on one would go quietly green on a rename.
+ * system emits it as an inline style.
+ *
+ * IT WAS DELIBERATELY NOT THE CLASS, and the original reason has since expired.
+ * Svelte's scope hashes changed whenever a component's CSS did, so a check keyed
+ * on one would have gone quietly green on a rename. There are no scope hashes
+ * now — the React primitives carry hand-written names like `of-card-face` — so
+ * that particular hazard is gone with Svelte.
+ *
+ * The marker stays anyway, on the narrower ground stated above: it is set from
+ * the face's intrinsic dimensions by the component that renders it, whereas a
+ * class name is a string anything may copy. Those are different strengths of
+ * evidence for "a real face was rendered here", and this check wants the
+ * stronger one.
  */
 function componentFaces(html: string): number {
   // Position-independent: matching `style="--face-ratio:` would count zero the

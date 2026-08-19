@@ -32,7 +32,7 @@ import type { CardPage } from "./cards";
 /**
  * The wire format: three newline-joined columns and one digit string.
  *
- * Same encoding argument as the full index — an Astro island's props are
+ * Same encoding argument as the full index — an island's props are
  * JSON-serialised into an HTML attribute, so every `"` costs six bytes. Columns
  * of lines carry about twenty quotes for the whole payload.
  */
