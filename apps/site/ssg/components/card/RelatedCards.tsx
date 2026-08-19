@@ -10,7 +10,7 @@
  * The grouping itself is not here: `groupByName` and `groupTarget` are domain
  * logic and live in `src/lib/card-versions.ts`.
  *
- * The CSS stays in `CardEntry.css` — see `SourceSection` for why.
+ * The CSS stays in `CardEntry.css` — see `PrintingsSection` for why.
  */
 
 import { OrnamentalRule, PitchJewel } from "optfall-components/react";

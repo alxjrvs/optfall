@@ -6,7 +6,11 @@
  * picker in favour of this table, and #181/#183/#184 reshaped its credit line,
  * so it is one of the two regions of the card page under continuous edit.
  *
- * The CSS stays in `CardEntry.css` — see `SourceSection` for why.
+ * The CSS stays in `CardEntry.css`: the classes are all `of-card__*` and the
+ * bundle is assembled by a glob over `components/*.css`, which does not
+ * descend into this directory. Moving the rules here would silently drop them
+ * from every page — `styles.entry.ts` records that exact failure happening
+ * once.
  */
 
 import { OrnamentalRule } from "optfall-components/react";
