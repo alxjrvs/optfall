@@ -2,12 +2,13 @@
  * `PrintedText`'s styles, ported from the Astro component's scoped block.
  *
  * The toggle rules that used to head this file went with the raw view — see
- * `PrintedText.tsx` for why there is one view now. `.of-printed` survives as the
- * wrapper because `BevelledPlate` owns the element in between and the type rules
- * below need a root that is this component's own.
+ * `PrintedText.tsx` for why there is one view now, and why there is no plate
+ * around it either. `.of-printed` is the whole of the wrapper now: it draws
+ * nothing, and it exists so the type rules below have a root that is this
+ * component's own rather than the band's.
  */
 
-.of-printed__rendered {
+.of-printed {
   margin: 0;
 }
 

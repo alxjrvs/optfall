@@ -28,9 +28,15 @@
  * STILL NO JAVASCRIPT, and now trivially so. The toggle was two radio inputs and
  * a `:has()` selector precisely to avoid turning a 12,278-page static route into
  * an island; with one view there is no state left to hold.
+ *
+ * NO PLATE OF ITS OWN. This sat in a `BevelledPlate emphasis="raised"`, which
+ * drew a bevelled, padded, differently-toned box around the text INSIDE the
+ * oracle band — a box within a box, on the one band whose own comment in
+ * `CardEntry.tsx` already says "the panel is the box, so the text simply IS the
+ * widest band in it". The flavour band below it never had one. The plate is
+ * gone and the printed text sets inline in the band like every other run of
+ * prose in the panel; the band's rule and spacing are what separate it.
  */
-
-import { BevelledPlate } from "optfall-components/react";
 
 import { parseCardText } from "../../src/lib/card-text";
 import { CardTextInline } from "./CardTextInline";
@@ -46,28 +52,24 @@ export function PrintedText({ text }: PrintedTextProps) {
 
   return (
     <div className="of-printed">
-      <BevelledPlate emphasis="raised">
-        <div className="of-printed__rendered">
-          {blocks.map((block, index) =>
-            block.kind === "paragraph" ? (
-              // biome-ignore lint/suspicious/noArrayIndexKey: parsed once from an immutable string; two paragraphs can be identical.
-              <p className="of-printed__text" key={index}>
-                <CardTextInline nodes={block.children} />
-              </p>
-            ) : (
+      {blocks.map((block, index) =>
+        block.kind === "paragraph" ? (
+          // biome-ignore lint/suspicious/noArrayIndexKey: parsed once from an immutable string; two paragraphs can be identical.
+          <p className="of-printed__text" key={index}>
+            <CardTextInline nodes={block.children} />
+          </p>
+        ) : (
+          // biome-ignore lint/suspicious/noArrayIndexKey: as above.
+          <ul className="of-printed__list" key={index}>
+            {block.items.map((item, itemIndex) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: as above.
-              <ul className="of-printed__list" key={index}>
-                {block.items.map((item, itemIndex) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: as above.
-                  <li key={itemIndex}>
-                    <CardTextInline nodes={item} />
-                  </li>
-                ))}
-              </ul>
-            ),
-          )}
-        </div>
-      </BevelledPlate>
+              <li key={itemIndex}>
+                <CardTextInline nodes={item} />
+              </li>
+            ))}
+          </ul>
+        ),
+      )}
     </div>
   );
 }
