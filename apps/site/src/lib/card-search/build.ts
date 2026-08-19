@@ -228,7 +228,6 @@ export function buildCardIndex(
         page.card.defense,
         page.card.health,
         page.card.intelligence,
-        page.card.arcane,
       ].join("\t"),
     );
 

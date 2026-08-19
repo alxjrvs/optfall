@@ -54,7 +54,6 @@ export interface CardIndex {
     string,
     string,
     string,
-    string,
   ])[];
   readonly keywords: readonly (readonly string[])[];
   readonly traits: readonly (readonly string[])[];
@@ -210,8 +209,7 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
   const released: string[][] = [];
   const rarities: string[][] = [];
   const artists: string[][] = [];
-  const stats: (readonly [string, string, string, string, string, string])[] =
-    [];
+  const stats: (readonly [string, string, string, string, string])[] = [];
 
   labels.forEach((_, ordinal) => {
     const typeId = Number.parseInt(
@@ -243,15 +241,10 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
         .map((mask) => Number.parseInt(mask, 36) || 0),
     );
 
-    const [
-      cost = "",
-      power = "",
-      defence = "",
-      life = "",
-      intellect = "",
-      arcane = "",
-    ] = (statLines[ordinal] ?? "").split("\t");
-    stats.push([cost, power, defence, life, intellect, arcane] as const);
+    const [cost = "", power = "", defence = "", life = "", intellect = ""] = (
+      statLines[ordinal] ?? ""
+    ).split("\t");
+    stats.push([cost, power, defence, life, intellect] as const);
 
     const [k = "", t = "", s = "", r = "", a = ""] = (
       membershipLines[ordinal] ?? ""
