@@ -26,6 +26,7 @@ import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document } from "./document";
 import {
   HEADERS,
+  headersFor,
   REDIRECTS,
   renderHeaders,
   renderRedirects,
@@ -2242,6 +2243,55 @@ describe("_headers and _redirects say what the host is told", () => {
       (rule) => rule.pattern === "/manifest.webmanifest",
     );
     expect(manifest?.headers["Content-Type"]).toBe("application/manifest+json");
+  });
+
+  test("no two rules share a pattern, because the later one would win", () => {
+    /*
+     * MEASURED, NOT ASSUMED. Cloudflare's docs say a request matching several
+     * rules "inherits all rules' headers", which reads as a merge. Served by
+     * real workerd, a SECOND `/*` block REPLACED the first outright: the
+     * response carried the second block's header and neither of the first's.
+     *
+     * So a duplicate pattern is a silent deletion. This is the assertion that
+     * stops one being introduced.
+     */
+    const patterns = HEADERS.map((rule) => rule.pattern);
+    expect(new Set(patterns).size).toBe(patterns.length);
+  });
+
+  test("a preview build adds noindex WITHOUT dropping the security headers", () => {
+    /*
+     * THE REGRESSION THIS EXISTS FOR. The obvious way to noindex a preview is
+     * to append a `/*` block in the deploy workflow. Done that way the preview
+     * served `X-Robots-Tag: noindex` and silently lost `X-Content-Type-Options`
+     * and `Referrer-Policy` — a security posture dropped on every preview,
+     * visible nowhere. `headersFor` merges instead, and this pins that.
+     */
+    const preview = headersFor({ preview: true });
+    const wildcard = preview.find((rule) => rule.pattern === "/*");
+
+    expect(wildcard?.headers["X-Robots-Tag"]).toBe("noindex");
+    expect(wildcard?.headers["X-Content-Type-Options"]).toBe("nosniff");
+    expect(wildcard?.headers["Referrer-Policy"]).toBe(
+      "strict-origin-when-cross-origin",
+    );
+
+    /* Still one `/*` rule, not two. */
+    const patterns = preview.map((rule) => rule.pattern);
+    expect(new Set(patterns).size).toBe(patterns.length);
+
+    /* And the webmanifest rule is carried through untouched. */
+    expect(
+      preview.find((rule) => rule.pattern === "/manifest.webmanifest")?.headers[
+        "Content-Type"
+      ],
+    ).toBe("application/manifest+json");
+  });
+
+  test("production is never noindexed, which is the other half of that", () => {
+    const rendered = renderHeaders(headersFor({ preview: false }));
+    expect(rendered).not.toContain("X-Robots-Tag");
+    expect(headersFor({ preview: false })).toBe(HEADERS);
   });
 
   test("both files stay under Cloudflare's ceilings", () => {

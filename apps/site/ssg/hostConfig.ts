@@ -116,12 +116,50 @@ export function renderRedirects(
 }
 
 /**
+ * The header rules for one build: the standing set, plus `noindex` everywhere
+ * when this build is a preview rather than production.
+ *
+ * PREVIEWS ARE LOAD-BEARING ON THIS PROJECT SPECIFICALLY — a legality bug is
+ * visible in a preview and invisible in a diff — and a preview is therefore
+ * another public host serving the same 12,776 pages. Two indexed copies of a
+ * reference site is precisely the duplication the canonical tags exist to
+ * prevent, so a preview must say `noindex` and production must not.
+ *
+ * THE DIRECTIVE IS MERGED INTO THE EXISTING `/*` RULE, NOT APPENDED AS A SECOND
+ * ONE, AND THAT DISTINCTION IS THE WHOLE REASON THIS FUNCTION EXISTS. Appending
+ * a second `/*` block is the obvious way to do this in a shell one-liner, and it
+ * is WRONG: measured against real workerd, a later block with the same pattern
+ * REPLACES the earlier one rather than adding to it. A preview built that way
+ * served `X-Robots-Tag: noindex` and silently lost both `X-Content-Type-Options`
+ * and `Referrer-Policy` — a security posture dropped on every preview, visible
+ * nowhere, caught only because the response was actually read.
+ *
+ * So the merge happens here, in typed code with a test on it, rather than in a
+ * workflow step nobody re-reads.
+ */
+export function headersFor(options: {
+  readonly preview: boolean;
+}): readonly HeaderRule[] {
+  if (!options.preview) return HEADERS;
+
+  return HEADERS.map((rule) =>
+    rule.pattern === "/*"
+      ? { ...rule, headers: { ...rule.headers, "X-Robots-Tag": "noindex" } }
+      : rule,
+  );
+}
+
+/**
  * `_headers`: a pattern on its own line, then one indented `Name: value` per
  * header, blocks separated by a blank line.
  *
  * Cloudflare caps this file at 100 rules and 2,000 characters per line. Two
  * rules is not near either, and this comment exists so that a future addition
  * is made knowing there is a ceiling at all.
+ *
+ * NO TWO RULES MAY SHARE A PATTERN. See {@link headersFor}: the later one wins
+ * outright and the earlier one's headers are lost, so a duplicate pattern is a
+ * silent deletion rather than a merge. Asserted in the tests.
  */
 export function renderHeaders(rules: readonly HeaderRule[] = HEADERS): string {
   const blocks = rules.map((rule) => {

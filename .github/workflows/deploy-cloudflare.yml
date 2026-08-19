@@ -1,0 +1,178 @@
+# Deploy to Cloudflare: production on merge to `main`, a preview URL per PR.
+#
+# The build runs here rather than on the platform. Workers Builds exists, but
+# keeping the build in Actions means one build path, one place for path
+# filtering, and the whole aggregate gate in front of every deploy — a deploy
+# that succeeded where `CI Success` failed would be a lie about the state of
+# `main`.
+#
+# EVERY JOB SKIPS RATHER THAN FAILS WHEN `CLOUDFLARE_API_TOKEN` IS ABSENT. That
+# is the state of the world until the secret is added, and a workflow that fails
+# red on every merge for a known, documented, expected reason is worse than one
+# that does nothing: it trains people to ignore a failing check, and the next
+# real failure hides inside the noise.
+#
+# THE PATH FILTERS ARE SPELLED OUT TWICE ON PURPOSE. A YAML anchor would say it
+# once, and GitHub Actions does not resolve anchors in workflow files — the
+# alias would be taken literally and the filter would match nothing, which is
+# the failure mode where deploys silently stop happening.
+#
+# This file is public and contains no secrets, and must never contain one.
+name: Deploy (Cloudflare)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/site/**'
+      - 'apps/images/**'
+      - 'packages/**'
+      - 'data/**'
+      - 'bun.lock'
+      - '.github/workflows/deploy-cloudflare.yml'
+  pull_request:
+    paths:
+      - 'apps/site/**'
+      - 'apps/images/**'
+      - 'packages/**'
+      - 'data/**'
+      - 'bun.lock'
+      - '.github/workflows/deploy-cloudflare.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  # Never let two deploys race to the same Worker, and never cancel one that is
+  # already uploading: a half-finished asset upload is worse than a short queue.
+  # Keyed by ref so a PR preview and a production deploy do not block each other.
+  group: deploy-cloudflare-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  site:
+    name: optfall.com
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Deliberately the same command production has always run, so that a
+      # deploy and the gate are attesting to the same thing.
+      #
+      # PREVIEWS ARE LOAD-BEARING ON THIS PROJECT SPECIFICALLY. A legality bug
+      # is visible in a preview and invisible in a diff, which is why this repo
+      # cares about them more than most. Cloudflare noindexes Pages preview
+      # deployments automatically; it does NOT do that for Workers preview URLs,
+      # so a preview would otherwise be a second indexable copy of all 12,776
+      # pages — the duplication the canonical tags exist to prevent.
+      #
+      # `OPTFALL_PREVIEW` makes the build merge `X-Robots-Tag: noindex` into the
+      # wildcard rule. IT IS DONE IN THE BUILD RATHER THAN BY APPENDING TO
+      # `_headers` HERE, and that is not a style preference: a second `/*` block
+      # REPLACES the first on Cloudflare rather than adding to it, so the shell
+      # version of this silently stripped `X-Content-Type-Options` and
+      # `Referrer-Policy` from every preview. Measured against real workerd, and
+      # pinned by a test in `ssg.test.ts`.
+      - name: Build
+        env:
+          OPTFALL_PREVIEW: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+        run: bun run build
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          IS_PR: ${{ github.event_name == 'pull_request' }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN is not set — skipping deploy."
+            echo "Add the secret to enable Cloudflare deploys."
+            exit 0
+          fi
+
+          if [ "$IS_PR" != "true" ]; then
+            bunx wrangler@4 deploy -c apps/site/wrangler.jsonc
+            exit 0
+          fi
+
+          # `versions upload` publishes a version WITHOUT routing production
+          # traffic to it, which is what makes this a preview rather than a
+          # deploy. The alias is per-PR, so a second push replaces the first
+          # rather than accumulating URLs nobody will revisit.
+          set +e
+          bunx wrangler@4 versions upload \
+            -c apps/site/wrangler.jsonc \
+            --preview-alias "pr-${PR_NUMBER}" 2>&1 | tee upload.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          if [ "$status" -ne 0 ]; then
+            # A VERSION CANNOT BE THE FIRST THING THAT TOUCHES A WORKER.
+            # `versions upload` refuses with "You cannot upload a new version of
+            # a Worker that does not yet exist", so until a production deploy
+            # has created it, every PR here would go red for a reason that is
+            # expected, documented, and nothing to do with the pull request.
+            # That is the same argument the absent-token skip above makes, so it
+            # gets the same treatment: say so, and pass.
+            if grep -q "does not yet exist" upload.log; then
+              echo "::notice::No preview yet — the Worker does not exist on the account."
+              echo "The first merge to main creates it; previews work from then on."
+              exit 0
+            fi
+            exit "$status"
+          fi
+
+          # Best-effort: surface the URL in the run summary. Never fatal — a
+          # changed log format must not fail an upload that already succeeded.
+          url="$(grep -oE 'https://[^ ]+\.workers\.dev' upload.log | head -1 || true)"
+          if [ -n "$url" ]; then
+            echo "::notice::Preview: ${url}"
+            echo "Preview: ${url}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  images:
+    name: images.optfall.com
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # NO PREVIEW FOR THIS ONE, and that is deliberate rather than an omission. A
+    # preview would be another public host serving licensed card art under a URL
+    # nobody is watching, and this host has no visual surface to review. Its
+    # behaviour is covered by 25 tests that need no bucket.
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # No build step: wrangler bundles `src/index.ts` itself, and the only
+      # static asset is robots.txt. A script that exists to look busy would be
+      # one more thing to keep working.
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN is not set — skipping deploy."
+            echo "Add the secret to enable Cloudflare deploys."
+            exit 0
+          fi
+          bunx wrangler@4 deploy -c apps/images/wrangler.jsonc
