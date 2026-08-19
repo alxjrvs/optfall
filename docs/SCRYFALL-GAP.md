@@ -150,7 +150,7 @@ Deletions first, because most of the confusion is *surplus*, not absence.
 - **Live-as-you-type result updating.** The card field re-ranks on every
   keystroke today. It becomes submit-driven (§5.2), which deletes the debounce,
   the partial-query ranking path and the case for autocomplete along with it.
-- **`/cards` as a distinct route.** It becomes a Netlify 301 to `/`, so every
+- **`/cards` as a distinct route.** It becomes a host-level 301, so every
   pasted `/search?q=…` link keeps working. Query strings survive a 301.
 - **`docs/DESIGN.md` principles table, row 5** — *"The unit is the verdict, not
   the card."* Replaced by the card as the unit, with interactions and rules as
@@ -234,25 +234,25 @@ Three options, and the trade is not close:
    hundreds of megabytes of binary in git history, permanently. No.
 3. **Our own asset host, bytes in object storage, sourced from upstream once.** ✅
 
-**Take option 3, built as a second Netlify site inside this monorepo.** This is
-a pattern that already exists and is in production next door:
-`SU-SRD/apps/su-assets` serves `assets.salvageunion.io` from a Netlify Blobs
-store, and its own header states the rule — **"the bytes live only in Blobs
-(never in git)."** One Functions v2 handler bound to `path: '/*'`, an immutable
-cache header so the edge answers and the function runs only on a miss, a
-path-traversal guard and an extension allowlist. Optfall's copy differs in what
-it stores and how keys are shaped, and in nothing else.
+**Take option 3, built as a second Worker inside this monorepo.** This is a
+pattern that already exists and is in production next door:
+`SU-SRD/apps/su-assets` serves `assets.salvageunion.io` from object storage,
+and its own header states the rule — **"the bytes live only in the store
+(never in git)."** One handler answering every path, an immutable cache header
+so the edge answers and the Worker runs only on a miss, a path-traversal guard
+and an extension allowlist. Optfall's copy differs in what it stores and how
+keys are shaped, and in nothing else.
 
 ```
-apps/images/                       →  a second Netlify site, same workspace
-  netlify.toml                        publish = apps/images/public
-  netlify/functions/face.ts           config.path = '/*'; reads the Blobs store
+apps/images/                       →  a second Worker, same workspace
+  wrangler.jsonc                      assets = apps/images/public, R2 binding
+  src/index.ts                        answers /*; reads the R2 bucket
   public/                             the NO IMAGE placeholders, static
 ```
 
-**Why a whole second site rather than a route on the main one.** The main site's
-`netlify.toml` opens with a promise — *"static output only — no functions, no
-edge handlers, no runtime"* — and that promise is load-bearing: it is the
+**Why a whole second Worker rather than a route on the main one.** The main site
+is *static output only — no functions, no edge handlers, no runtime* — and that
+promise is load-bearing: it is the
 "no uptime story to fail" the Stack section is built on. Serving images needs a
 function. Putting that function on the main site would trade the guarantee for
 the whole product; putting it on its own deploy confines the runtime to the one
@@ -857,8 +857,8 @@ are banned at one pitch and legal at another.
 
 ## 10. The one-sentence version
 
-Stand up our own image host as a second Netlify site with the bytes in Blobs and
-never in git, give every printing a face and every card a printings rail, make
+Stand up our own image host as a second Worker with the bytes in object storage
+and never in git, give every printing a face and every card a printings rail, make
 the homepage a card search hero over explainer links over results, let the
 keyword→rule join carry the Comprehensive Rules onto the card page and the cards
 back onto the rule page — and subtract enough chrome that what is left reads as

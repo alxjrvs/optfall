@@ -4,8 +4,8 @@
  *
  * `docs/PLAN.md` Phase 6. **This is the build now.** It rendered alongside Astro
  * into `dist-next/` for four layers, matched it at 12,776 pages, and layer 5
- * deleted the other one — so the output is `dist/`, which is what Netlify
- * publishes and what every compliance check reads.
+ * deleted the other one — so the output is `dist/`, which is what gets
+ * published and what every compliance check reads.
  *
  * THE PIPELINE, IN ORDER, AND THE ORDER MATTERS:
  *

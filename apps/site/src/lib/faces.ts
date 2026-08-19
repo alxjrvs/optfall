@@ -35,13 +35,13 @@
  */
 
 /**
- * The face host. A separate Netlify site from the main one — see
- * `apps/images/netlify.toml` for why the runtime is confined there.
+ * The face host. A separate Worker from the main site — see
+ * `apps/images/wrangler.jsonc` for why the runtime is confined there.
  *
  * Absolute rather than root-relative, because it is a different origin. If the
  * host is ever moved, this is the one line that changes.
  */
-export const FACE_HOST = "https://optfall-images.netlify.app";
+export const FACE_HOST = "https://images.optfall.com";
 
 /**
  * The tiers the host publishes, and the box each promises.
@@ -57,7 +57,7 @@ export const FACE_HOST = "https://optfall-images.netlify.app";
  * and `height` attributes verbatim: an image without intrinsic dimensions in a
  * lazy-loaded grid is a layout-shift generator.
  *
- * `apps/images/netlify/functions/_placeholder.ts` carries the same table for
+ * `apps/images/src/placeholder.ts` carries the same table for
  * its own guard. The duplication is deliberate — that is a separate deployable
  * with no shared package — and both cite this file.
  */

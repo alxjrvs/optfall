@@ -61,7 +61,7 @@ import { FACE_HOST } from "../src/lib/faces";
  * read as text. So it is written out, and `assertHostMatches` checks it against
  * `FACE_HOST` on every build, which is what stops the two from drifting.
  */
-const IMAGE_HOST = "optfall-images.netlify.app";
+const IMAGE_HOST = "images.optfall.com";
 
 /** The shape Workbox passes a `urlPattern` callback. */
 interface RouteMatchArgs {
@@ -227,7 +227,7 @@ export async function writeServiceWorker(
          * prohibition is stated before anything that could broaden into it.
          */
         urlPattern: ({ url }: { url: URL }) =>
-          url.hostname === "optfall-images.netlify.app",
+          url.hostname === "images.optfall.com",
         handler: "NetworkOnly",
       },
       {
@@ -236,7 +236,7 @@ export async function writeServiceWorker(
          *
          * `NetworkFirst`, NOT `StaleWhileRevalidate`, AND THE DIFFERENCE IS A
          * BUG RATHER THAN A PREFERENCE. Every stylesheet and script this site
-         * serves is content-hashed, and Netlify's deploys are atomic — so the
+         * serves is content-hashed, and asset deploys are atomic — so the
          * previous deploy's `/assets/*-<oldhash>.css` stops existing the moment
          * a new one lands.
          *

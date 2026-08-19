@@ -27,8 +27,7 @@ confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
 | [`docs/SOURCES.md`](docs/SOURCES.md) | Every upstream, re-verified — what is current, what the community trusts, and where an official source exists |
 | [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) | The permission envelope, as an operational checklist with enforcement points |
 | [`docs/DATA-TERMS.md`](docs/DATA-TERMS.md) | Terms on the data Optfall publishes, and what is *not* ours to license |
-| [`docs/PHASE-0-STATUS.md`](docs/PHASE-0-STATUS.md) | What Phase 0 delivered, and every finding left unfixed |
-| [`docs/PHASE-1-STATUS.md`](docs/PHASE-1-STATUS.md) | The same, for Phase 1 |
+| [`docs/PHASE-1-STATUS.md`](docs/PHASE-1-STATUS.md) | What Phase 1 delivered, and every finding left unfixed |
 
 The plan and design pass are also published as browsable pages:
 

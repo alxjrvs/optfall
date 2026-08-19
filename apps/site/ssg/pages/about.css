@@ -90,7 +90,7 @@
   margin: 0;
   display: grid;
   gap: var(--of-space-tightest);
-  /* `optfall-images.netlify.app` and `Comprehensive Rules 2.14.0 (PDF)` are
+  /* `images.optfall.com` and `Comprehensive Rules 2.14.0 (PDF)` are
      unbreakable strings; without this they set the row's min-content width and
      push the page sideways however the columns are declared. */
   overflow-wrap: anywhere;

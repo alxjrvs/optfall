@@ -2230,7 +2230,7 @@ describe("_headers and _redirects say what the host is told", () => {
     }
   });
 
-  test("the security posture netlify.toml carried is carried here", () => {
+  test("the security posture the site ships with is stated here", () => {
     const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
     expect(wildcard?.headers["X-Content-Type-Options"]).toBe("nosniff");
     expect(wildcard?.headers["Referrer-Policy"]).toBe(

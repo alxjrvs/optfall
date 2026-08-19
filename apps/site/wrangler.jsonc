@@ -1,12 +1,11 @@
 {
   // Cloudflare Workers deployment for optfall.com.
   //
-  // THERE IS NO WORKER SCRIPT, AND THAT IS THE WHOLE POINT. `netlify.toml`
-  // opened by promising this site is "static output only — no functions, no
-  // edge handlers, no runtime", and docs/PLAN.md's "no uptime story to fail"
-  // rests on that promise. Cloudflare serves the built files straight from the
-  // assets binding, so the promise survives the move verbatim: no `main`, no
-  // script, nothing to boot and nothing to page anyone about at 3am.
+  // THERE IS NO WORKER SCRIPT, AND THAT IS THE WHOLE POINT. This site is
+  // static output only — no functions, no edge handlers, no runtime — and
+  // docs/PLAN.md's "no uptime story to fail" rests on that. Cloudflare serves
+  // the built files straight from the assets binding: no `main`, no script,
+  // nothing to boot and nothing to page anyone about at 3am.
   //
   // It nearly did not. The card scheme change left 12,278 exact-path 301s, and
   // Cloudflare caps `_redirects` at 2,000 static rules and Bulk Redirects at

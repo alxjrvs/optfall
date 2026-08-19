@@ -8,14 +8,18 @@
  * tests and build different output. `.bun-version` is the one file a developer's
  * toolchain and CI both read, which is why it is the source of truth here.
  *
- * It cannot be the ONLY place the number appears, though. The site's build image
- * takes its Bun from a `BUN_VERSION` build environment variable and reads no
- * version file, and `engines.bun` and the `@types/bun` pin are npm metadata that
- * cannot reference one either. Each of those has to carry the number literally,
- * and a number written in several places is a number that drifts — SU-SRD's copy of
- * this check was written after its CI had been testing on 1.3.10 while a
- * production site built on 1.3.14, which is the precise shape of "the gate was
- * green for a build nobody shipped".
+ * It cannot be the ONLY place the number appears, though. `engines.bun` and the
+ * `@types/bun` pin are npm metadata and cannot reference a file, so each carries
+ * the number literally — and a number written in three places is a number that
+ * drifts. SU-SRD's copy of this check was written after its CI had been testing
+ * on 1.3.10 while a production site built on 1.3.14, which is the precise shape
+ * of "the gate was green for a build nobody shipped".
+ *
+ * THE TWO HOST SURFACES THAT USED TO BE HERE ARE GONE, and that is a real
+ * reduction rather than a gap: the build ran on an image that took its Bun from
+ * a hand-maintained `BUN_VERSION` variable and read no version file. It now runs
+ * in CI, where every step reads `.bun-version` directly, so there is nothing
+ * left to drift.
  *
  * So: `.bun-version` is read, every other surface is compared against it, and
  * this fails naming the ones that disagree.
@@ -49,10 +53,6 @@ if (!/^\d+\.\d+\.\d+$/.test(expected)) {
   process.exit(1);
 }
 
-/** The `BUN_VERSION = "…"` line out of a Netlify build-environment block. */
-const netlifyBunVersion = (path: string): string | undefined =>
-  read(path).match(/^\s*BUN_VERSION\s*=\s*"([^"]+)"/m)?.[1];
-
 const rootPkg = JSON.parse(read("package.json")) as {
   engines?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -61,11 +61,6 @@ const rootPkg = JSON.parse(read("package.json")) as {
 type Surface = { label: string; actual: string | undefined; expected: string };
 
 const surfaces: Surface[] = [
-  {
-    label: "netlify.toml BUN_VERSION",
-    actual: netlifyBunVersion("netlify.toml"),
-    expected,
-  },
   {
     // A floor rather than an exact pin, because `engines` is a compatibility
     // statement to anything that installs this workspace, not a toolchain

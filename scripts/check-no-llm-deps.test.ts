@@ -89,7 +89,7 @@ describe("no-llm scanner: does not over-match", () => {
     "typescript",
     "sharp",
     "@biomejs/biome",
-    "@netlify/blobs",
+    "wrangler",
     "jsdom",
     "axe-core",
     // Contains "ai" as a substring, and must not match the Vercel SDK.

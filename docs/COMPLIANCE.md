@@ -101,7 +101,7 @@ project of an individual and must stay one.
   request until a human installed a personal access token. See the workflow's
   own header for the full reasoning.
 - `LICENSE` — copyright held by `alxjrvs`, an individual, not an entity.
-- The Netlify site, the domain and any future Patreon are held on the same
+- The hosting account, the domain and any future Patreon are held on the same
   personal account.
 
 **Status. Partially enforced, and an open action.** The ownership assertion is
@@ -109,11 +109,13 @@ real and machine-checked, but it runs weekly rather than continuously, and until
 the `REPO_SETTINGS_TOKEN` secret exists the scheduled run warns and stops — so
 today this control is *declared but not yet active*. Per this document's own
 preamble, that makes it an open action rather than an enforced control. The
-Netlify, domain and funding accounts are caught only by a human noticing, and
+hosting, domain and funding accounts are caught only by a human noticing, and
 always were.
 
-**Open action:** create `REPO_SETTINGS_TOKEN` (see `docs/PHASE-0-STATUS.md`,
-handoff step 3) to activate the weekly assertion.
+**Open action:** create `REPO_SETTINGS_TOKEN` — a personal access token with
+`repo` scope, added as an Actions secret — to activate the weekly assertion.
+`scripts/repo-settings.sh` is what reads it; without it the scheduled run warns
+and stops.
 
 **What would break it.**
 
@@ -127,7 +129,7 @@ handoff step 3) to activate the weekly assertion.
 before the first commit rather than after.
 
 **How we would find out.** The drift check above fails the build on an owner
-change or an org transfer. Everything outside the repository — the Netlify
+change or an org transfer. Everything outside the repository — the hosting
 account, the domain registrar, a funding account — is caught by a human
 noticing, which is exactly why it is written down here.
 
@@ -229,14 +231,14 @@ prominent and unambiguous to the average member of your audience". Optfall's
 sits directly beneath the links it describes rather than in the site footer,
 which is the whole reason `buyDisclosure` lives in the same module as `buyHref`.
 
-**Nothing here is coupled to the host**, which is worth stating outright while a
-migration off Netlify is in flight. The links are ordinary anchors in static
+**Nothing here is coupled to the host**, which is worth stating outright. The
+links are ordinary anchors in static
 HTML: no redirect rule, no edge function, no header, no runtime. Attribution
 travels in the URL path (`/c/7630689/…`), so it does not depend on the `Referer`
 header — and could not, since `buyRel` puts `noreferrer` on every one of these
-anchors in both states. `netlify.toml`'s `Referrer-Policy` is therefore not an
-affiliate dependency, and porting it is a general-hardening question rather than
-one this section blocks on. **A move to Cloudflare carries this section with it
+anchors in both states. The site's `Referrer-Policy` is therefore not an
+affiliate dependency, and setting it is a general-hardening question rather than
+one this section blocks on. **The hosting move carried this section with it
 unchanged**; if that ever stops being true, the thing that changed is a new
 coupling and belongs in this paragraph.
 

@@ -35,8 +35,8 @@ concurrency:
 # different tests — not merely a different install resolution. `.bun-version` is
 # the version a developer's toolchain reads too, which makes it the one place
 # the number lives. `bun run check:bun-version` fails when any other surface
-# that must carry the number literally — the two `netlify.toml` files,
-# `engines.bun`, the `@types/bun` pin — disagrees with it.
+# that must carry the number literally — `engines.bun`, the `@types/bun` pin —
+# disagrees with it.
 
 jobs:
   typecheck:
@@ -204,13 +204,12 @@ jobs:
       - name: Assert components consume tokens, never literals
         run: bun run check:tokens
 
-  # `.bun-version` is the pin every `Set up Bun` step above reads, but Netlify's
-  # build image takes its Bun from a `BUN_VERSION` variable and reads no version
-  # file, and `engines.bun` and the `@types/bun` pin are npm metadata that cannot
-  # reference one either. Those surfaces carry the number literally, so this job
-  # is what stops them drifting away from it — including the case where somebody
-  # answers a CI problem by typing a version back into `bun-version:` here, which
-  # would make the file decorative with every other check still green.
+  # `.bun-version` is the pin every `Set up Bun` step above reads, but
+  # `engines.bun` and the `@types/bun` pin are npm metadata and cannot reference
+  # a file. Those surfaces carry the number literally, so this job is what stops
+  # them drifting away from it — including the case where somebody answers a CI
+  # problem by typing a version back into `bun-version:` here, which would make
+  # the file decorative with every other check still green.
   bun-version:
     name: bun-version
     runs-on: ubuntu-latest

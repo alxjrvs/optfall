@@ -405,7 +405,7 @@ const CASES: readonly Case[] = [
     name: "CardFace portrait",
     component: CardFace,
     props: {
-      src: "https://optfall-images.netlify.app/normal/MST131.webp",
+      src: "https://images.optfall.com/normal/MST131.webp",
       alt: "Command and Conquer (pitch 1) — Guardian Action - Attack",
       width: 450,
       height: 628,
@@ -415,7 +415,7 @@ const CASES: readonly Case[] = [
     name: "CardFace landscape",
     component: CardFace,
     props: {
-      src: "https://optfall-images.netlify.app/normal/HVY140.webp",
+      src: "https://images.optfall.com/normal/HVY140.webp",
       alt: "Crown of Providence — Head",
       width: 628,
       height: 450,
