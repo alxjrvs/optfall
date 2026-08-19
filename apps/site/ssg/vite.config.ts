@@ -2,9 +2,12 @@
  * The client build. One entry, and its only real output is a stylesheet.
  *
  * IT LIVES IN `ssg/` RATHER THAN AT THE APP ROOT, and is passed to Vite
- * explicitly, because it is the GENERATOR's config rather than the app's — the
- * app is still an Astro site with its own `astro.config.mjs`, and two configs
- * discovered from one directory is how a build picks the wrong one.
+ * explicitly, because it is the GENERATOR's config rather than the app's. That
+ * mattered acutely during Phase 6, when the app was still an Astro site with
+ * its own `astro.config.mjs` and two configs discovered from one directory was
+ * how a build picked the wrong one. The Astro config is gone; the placement
+ * stays, because an explicit path is still the thing that makes which config
+ * Vite reads a fact rather than a discovery order.
  *
  * `manifest: true` is the point of the whole file. The emitted stylesheet is
  * content-hashed, so nothing may hard-code its URL; `build.ts` reads the

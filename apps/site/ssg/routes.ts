@@ -8,10 +8,12 @@
  * permanent, citable address, "what exists" should be a decision somebody made
  * in a reviewable diff — not a consequence of the filesystem.
  *
- * It also makes the migration auditable. This list grows one line per ported
- * page, so the PR that ports `/syntax` is a page module plus one line here, and
- * the set of pages the new generator claims is readable at a glance against the
- * set Astro still owns.
+ * It also made the migration auditable, which is why it was built this way
+ * first. The list grew one line per ported page, so the PR that ported
+ * `/syntax` was a page module plus one line here, and what the new generator
+ * claimed could be read at a glance against what Astro still owned. Astro owns
+ * nothing now, and the property that outlived the migration is the one in the
+ * paragraph above: what exists is a decision in a diff.
  *
  * A REGISTRATION HANDS BACK CLOSURES, NOT MODULES, and that is what keeps this
  * file free of `any`. A registry is heterogeneous by definition — every module

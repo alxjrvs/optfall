@@ -9,10 +9,10 @@
  * missing the LSS disclaimer is a harness that cannot be used at all, and
  * finding that out on page one costs nothing.
  *
- * The prose is copied verbatim from `src/pages/data-terms.astro`, which remains
- * the page that ships. Two renderers exist side by side until Phase 6 layer 5
- * deletes the first; that is deliberate, and the duplication is bounded by
- * being one page.
+ * The prose was copied verbatim from `src/pages/data-terms.astro`, which was
+ * the page that shipped while both renderers ran side by side. That deliberate
+ * duplication ended with Phase 6 layer 5, which deleted the Astro sources —
+ * this module is now the only thing that renders `/data-terms`.
  */
 
 import type { PageModule, PageResult } from "../types";

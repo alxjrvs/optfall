@@ -16,9 +16,10 @@
  *   words did it. A user can look at a row and say why it is there, which is
  *   the property a generated answer cannot offer at any quality level.
  *
- * THE SPLIT. {@link buildIndex} runs once, in Astro's frontmatter, at build
- * time. {@link decodeIndex} and {@link search} run in the browser against what
- * it produced. The corpus itself — 651 KB of verbatim rules text — never
+ * THE SPLIT. {@link buildIndex} runs once at build time, at module scope in
+ * `ssg/pages/cr.page.tsx`, so the generator does the work while importing the
+ * page rather than once per emitted file. {@link decodeIndex} and {@link
+ * search} run in the browser against what it produced. The corpus itself — 651 KB of verbatim rules text — never
  * reaches the client: the index ships what *ranking* needs and one line of
  * context per section, and the full text lives on the permalink page, which is
  * the thing the search exists to send you to.
@@ -153,8 +154,9 @@ export function isSectionNumber(candidate: string): boolean {
  * The index as it crosses from the build into the page.
  *
  * SIX STRINGS, NOT AN ARRAY OF OBJECTS, and the reason is measurable rather
- * than stylistic. An Astro island's props are JSON-serialised into an HTML
- * attribute, so every `"` in the payload becomes six bytes of `&quot;`. The
+ * than stylistic. An island's props are JSON-serialised into an HTML attribute
+ * — `ssg/Island.tsx` does this, as Astro did before it — so every `"` in the
+ * payload becomes six bytes of `&quot;`. The
  * object-per-section shape carries roughly thirty thousand quotes; this one
  * carries twelve. Same data, and about a third off the page weight before
  * compression even starts.
