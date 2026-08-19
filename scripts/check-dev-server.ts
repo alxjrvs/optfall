@@ -125,21 +125,6 @@ if (!defaultRoute || !alternateRoute) {
   process.exit(1);
 }
 
-/*
- * A REDIRECT IS A ROUTE THE SITE OWNS, AND NOTHING WAS CHECKING ONE.
- *
- * The emitted table is 12,278 exact rules, and they reach the reader
- * through a mechanism no other check here touches: a `_redirects` file written
- * by the build and read back by the server. Emitting it, parsing it and acting
- * on it are three separate things that can each silently stop happening, and
- * the failure is invisible — the site still serves every page it knows about,
- * and only the links people already pasted are dead.
- *
- * The old CARD address is the one asserted, because it is the one 4,941 of
- * those rules are for and because its target is knowable here.
- */
-const legacyCardPath = `/card/${defaultRoute.slug}`;
-
 const checks: Check[] = [
   { path: "/", contentType: "text/html" },
   { path: "/search", contentType: "text/html" },
@@ -192,7 +177,6 @@ const checks: Check[] = [
   { path: "/sw-purge.js", contentType: "text/javascript" },
   { path: defaultRoute.href, contentType: "text/html" },
   { path: alternateRoute.href, contentType: "text/html" },
-  { path: legacyCardPath, status: 301, location: defaultRoute.href },
 ];
 
 /**

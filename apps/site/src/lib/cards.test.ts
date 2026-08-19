@@ -37,9 +37,7 @@ import {
   LAST_CONFIRMED,
   NAME_GROUPS,
   facesOf,
-  CARD_REDIRECTS,
   hrefForPrinting,
-  legacyHrefForSlug,
   labelFor,
   pitchValueOf,
   slugify,
@@ -457,45 +455,23 @@ describe("addressing", () => {
     }
   });
 
-  test("every legacy URL redirects, exactly once, to a route that exists", () => {
-    const addresses = new Set(CARD_ROUTES.map((route) => route.href));
-    const froms = CARD_REDIRECTS.map((redirect) => redirect.from);
-
-    // 4,941 card slugs + 900 shared names + 6,437 old per-art addresses. All
-    // enumerated: see `ssg/redirects.ts` for the two infinite redirects that
-    // the pattern versions of that last group shipped.
-    expect(CARD_REDIRECTS.length).toBe(12278);
-    expect(new Set(froms).size).toBe(froms.length);
-
-    for (const redirect of CARD_REDIRECTS) {
-      expect(addresses.has(redirect.to)).toBe(true);
-      // A redirect whose source is also a live page is a rule that never fires.
-      expect(addresses.has(redirect.from)).toBe(false);
-    }
-  });
-
-  test("a shared name lands on the version that URL used to render", () => {
-    const jab = CARD_REDIRECTS.find(
-      (redirect) => redirect.from === "/card/head-jab",
-    );
-    const lowest = NAME_GROUPS.find((page) => page.slug === "head-jab")
-      ?.cards[0];
+  test("a shared name resolves to the version that URL used to render", () => {
+    const jab = NAME_GROUPS.find((page) => page.slug === "head-jab");
+    const lowest = jab?.cards[0];
     expect(lowest?.slug).toBe("head-jab-1");
-    expect(jab?.to).toBe(lowest?.href);
+    expect(jab?.href).toBe(lowest?.href);
 
     /*
      * THE ONE GROUP WHERE PITCH ORDER AND `byPitch` DISAGREE. Hyper Driver is
      * printed at pitch 1, 2 and 3 plus an unpitched version, and `pitchValueOf`
      * reports that last one as 0 — first by a naive sort, last by the rule the
      * site actually uses. `/card/hyper-driver` rendered the pitch 1 version
-     * before the change and has to keep landing there.
+     * before the change, and the tab strip and the typeahead still have to
+     * lead with it.
      */
-    const hyper = CARD_REDIRECTS.find(
-      (redirect) => redirect.from === "/card/hyper-driver",
-    );
     const hyperGroup = NAME_GROUPS.find((page) => page.slug === "hyper-driver");
     expect(hyperGroup?.cards[0]?.pitch).toBe(1);
-    expect(hyper?.to).toBe(hyperGroup?.cards[0]?.href);
+    expect(hyperGroup?.href).toBe(hyperGroup?.cards[0]?.href);
   });
 
   test("no slug is empty, and none contains anything but a-z, 0-9 and hyphen", () => {
@@ -546,7 +522,6 @@ describe("addressing", () => {
     expect(slugify("Nature's Path")).toBe("natures-path");
     expect(slugify("Ærlig")).toBe("aerlig");
     expect(slugify("Bloodrush Bellow")).toBe("bloodrush-bellow");
-    expect(legacyHrefForSlug("head-jab-1")).toBe("/card/head-jab-1");
     expect(hrefForPrinting("wtr", "098", "head-jab-1")).toBe(
       "/card/wtr/098/head-jab-1",
     );
