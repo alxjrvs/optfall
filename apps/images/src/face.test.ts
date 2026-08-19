@@ -11,6 +11,7 @@ import { describe, expect, test } from "bun:test";
 
 import { placeholderSvg, TIERS } from "./placeholder";
 import {
+  coldFoilFallbackKey,
   makeFaceHandler,
   parseFacePath,
   parsePlaceholderPath,
@@ -235,5 +236,113 @@ describe("the placeholder itself", () => {
     );
     const card = Number((63 / 88).toFixed(2));
     expect(ratios).toEqual({ thumb: card, normal: card });
+  });
+});
+
+describe("a Cold Foil with no art of its own", () => {
+  /*
+   * WHY THIS EXISTS. Upstream publishes 576 `-CF` faces and withholds 18 of
+   * them — ANQ011-CF..ANQ027-CF and FAB402-CF return 403 from the official image
+   * host while their non-foil siblings return 200, and LSS's own card database
+   * points those cards at the sibling. Serving the sibling is a deliberate,
+   * documented inaccuracy; these tests pin the parts that keep it honest.
+   */
+
+  test("maps a Cold Foil key to its non-foil sibling", () => {
+    expect(coldFoilFallbackKey("normal/ANQ011-CF.webp")).toBe(
+      "normal/ANQ011.webp",
+    );
+    expect(coldFoilFallbackKey("thumb/FAB402-CF.webp")).toBe(
+      "thumb/FAB402.webp",
+    );
+  });
+
+  test("never fires for a key that is not Cold Foil", () => {
+    /* The fallback must not turn an ordinary miss into someone else's art.
+       Rainbow Foil, Gold Foil, Marvel and plain keys all stay null. */
+    expect(coldFoilFallbackKey("normal/MST131.webp")).toBeNull();
+    expect(coldFoilFallbackKey("normal/LGS282-RF.webp")).toBeNull();
+    expect(coldFoilFallbackKey("normal/ANQ000-MV.webp")).toBeNull();
+    expect(coldFoilFallbackKey("normal/HVY008-GF.webp")).toBeNull();
+    /* Substring, not suffix — this must not match. */
+    expect(coldFoilFallbackKey("normal/ANQ-CF011.webp")).toBeNull();
+  });
+
+  test("serves the sibling, and says that it did", async () => {
+    const store = storeWith(["normal/ANQ011.webp"]);
+    const response = await makeFaceHandler(() => store)(
+      request("/normal/ANQ011-CF.webp"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("image/webp");
+    expect(response.headers.get("x-optfall-face")).toBe("substitute");
+    expect(await response.text()).toBe("webp-bytes");
+  });
+
+  test("caches the substitute for minutes, never for a year", async () => {
+    /*
+     * THE SAFETY OF THE WHOLE FEATURE. These bytes stand in for art upstream
+     * has not published; an immutable year would outlive the gap and freeze the
+     * wrong picture on the page long after the right one existed.
+     */
+    const store = storeWith(["normal/ANQ011.webp"]);
+    const response = await makeFaceHandler(() => store)(
+      request("/normal/ANQ011-CF.webp"),
+    );
+
+    expect(response.headers.get("cache-control")).toBe("public, max-age=300");
+    expect(response.headers.get("cache-control")).not.toContain("immutable");
+  });
+
+  test("the real foil art wins the moment it exists", async () => {
+    /* One cache lifetime after upstream publishes, the substitution stops. */
+    const store = storeWith(["normal/ANQ011-CF.webp", "normal/ANQ011.webp"]);
+    const response = await makeFaceHandler(() => store)(
+      request("/normal/ANQ011-CF.webp"),
+    );
+
+    expect(response.headers.get("x-optfall-face")).toBe("hit");
+    expect(response.headers.get("cache-control")).toContain("immutable");
+  });
+
+  test("falls through to the placeholder when the sibling is absent too", async () => {
+    const store = storeWith([]);
+    const response = await makeFaceHandler(() => store)(
+      request("/normal/ANQ011-CF.webp"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-optfall-face")).toBe("placeholder");
+  });
+
+  test("a store outage on the fallback read still degrades, not throws", async () => {
+    let call = 0;
+    const flaky: FaceStore = {
+      get: async () => {
+        call += 1;
+        if (call === 1) return null;
+        throw new Error("r2 unavailable");
+      },
+    };
+    const response = await makeFaceHandler(() => flaky)(
+      request("/normal/ANQ011-CF.webp"),
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("x-optfall-face")).toBe("placeholder-degraded");
+  });
+
+  test("an ordinary miss still costs exactly one read", async () => {
+    /* The fallback must not double the store traffic for every absent key. */
+    let reads = 0;
+    const counting: FaceStore = {
+      get: async () => {
+        reads += 1;
+        return null;
+      },
+    };
+    await makeFaceHandler(() => counting)(request("/normal/MST999.webp"));
+    expect(reads).toBe(1);
   });
 });
