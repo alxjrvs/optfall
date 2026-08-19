@@ -637,40 +637,44 @@
   --rarity-ink: var(--of-color-rarity-promo-ink);
 }
 
-/* -- The printing's code -------------------------------------------------- */
+/* -- The printing's citation ---------------------------------------------- */
 
 /*
-  THE CITATION, IN THE SAME VOICE THE TABLE SETS IT IN. Sans and wide-tracked is
-  what a code reads as here — `.of-card__collector` and `.of-card__code-hint`
-  both set an identifier this way — so the one under the picture and the one in
-  the row a reader compares it against are recognisably the same kind of thing.
-  It takes its size from `.of-card__credit`, because it is one of that line's
-  facts and not a louder one.
+  SANS, AS THE FINE PRINT AROUND IT IS. It takes its size from
+  `.of-card__credit`, because it is one of that line's facts and not a louder
+  one.
 
-  NOWRAP FOR THE REASON THE TABLE'S CELLS HAVE IT: a collector number broken
-  across two lines is no longer a citation. It is six characters, so this costs
-  nothing.
+  THE WIDE TRACKING MOVED ONTO THE NUMBER, and the reason is what this line now
+  says. It read `MST131` when this rule was written — an identifier end to end,
+  so it was set the way `.of-card__collector` and `.of-card__code-hint` set one.
+  It reads `History Pack 1 #101` now: the first half is a NAME, and tracking a
+  name out like a part number sets prose in the wrong voice. `#101` is still an
+  identifier and still reads as one, so the tracking follows it there.
 
-  `user-select: all` SO ONE CLICK TAKES THE WHOLE CODE, and the clipped set name
-  inside the anchor is excluded from that selection for the reason
-  `.of-card__collector` excludes its own hidden qualifier — hidden text that is
-  read aloud must not arrive in a paste. Without it, copying `MST131` would give
-  "MST (Part the Mistveil)131".
+  NO NOWRAP ON THE WHOLE CITATION, for the same reason. A six-character code
+  cost nothing to keep on one line; a set name is up to five words and pinning
+  it would push the credit line past a 320 px viewport. The number keeps it —
+  a collector number broken across two lines is no longer a citation — and the
+  break, if one is needed, falls at the space the name and the number already
+  have between them.
 
-  ONLY THE SET HALF IS AN ANCHOR, so only it takes the link accent. That is the
+  `user-select: all` SO ONE CLICK TAKES THE WHOLE CITATION. The clipped set
+  name that used to sit inside the anchor is gone — the visible text is the
+  name now — so the rule excluding it from the selection went with it.
+
+  ONLY THE SET IS AN ANCHOR, so only it takes the link accent. That is the
   colour doing what the markup does: the half that is a destination looks like
   one, and the number beside it reads as the fine print it belongs to.
 */
 .of-card__printing-code {
   font-family: var(--of-type-family-sans);
-  letter-spacing: var(--of-type-tracking-wide);
   color: var(--of-color-ink-muted);
-  white-space: nowrap;
   user-select: all;
 }
 
-.of-card__printing-code .of-card__visually-hidden {
-  user-select: none;
+.of-card__printing-number {
+  letter-spacing: var(--of-type-tracking-wide);
+  white-space: nowrap;
 }
 
 .of-card__code-hint {

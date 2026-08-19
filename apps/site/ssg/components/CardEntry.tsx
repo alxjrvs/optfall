@@ -312,8 +312,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   ];
   const relatedShown = related.filter(([, , links]) => links.length > 0);
 
-  const printingCount = card.printings.length;
-
   const keywordRules = rulesForCard(KEYWORD_VOCABULARY, [
     ...card.card_keywords,
     ...card.ability_and_effect_keywords,
@@ -453,8 +451,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   })();
 
   /**
-   * The citation for the printing on screen — `MST131`, with its set half
-   * addressable.
+   * The citation for the printing on screen — `History Pack 1 #101`, with its
+   * set half addressable.
    *
    * IT IS THE ONE FACT THE CREDIT LINE WAS MISSING. The line already says what
    * grade this printing is, who drew it and what is on its back; what it could
@@ -463,16 +461,24 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * else, and this is the same argument the other captions make: the table is
    * the record, the line under the picture is a caption ON the picture.
    *
-   * ONE CODE, BECAUSE THE PAGE SHOWS ONE PRINTING. It reads off `shown` for the
-   * same reason the rarity and the other face do — see `shown` — so it cannot
+   * THE SET'S NAME, NOT ITS CODE. This line read `1HP101` — the string the card
+   * itself prints — and a code is a lookup rather than a name: a reader who
+   * does not already know it learns nothing from it, and this is a reference
+   * work. `History Pack 1 #101` states the same fact and answers "which set is
+   * this" without a second page. The code has gone nowhere: it is what the
+   * set's own URL is spelled with, and the printings table below still sets
+   * every collector number in full.
+   *
+   * ONE PRINTING, BECAUSE THE PAGE SHOWS ONE. It reads off `shown` for the same
+   * reason the rarity and the other face do — see `shown` — so it cannot
    * disagree with the picture above it.
    *
    * SPLIT AT THE SET PREFIX, NOT COMPOSED FROM TWO FIELDS. Upstream's collector
-   * number already carries the set code (`MST` + `131` — true of all 16,502
-   * printings in this corpus), so concatenating `set_id` with `id` would print
-   * `MSTMST131`. Where a number does NOT start with its set code, the whole
-   * number becomes the link rather than being sliced into a wrong word: the
-   * citation stays intact and only the amount of it that is clickable changes.
+   * number already carries the set code (`1HP` + `101` — true of all 16,502
+   * printings in this corpus), so setting `id` whole after the set's name would
+   * read `History Pack 1 #1HP101`. Where a number does NOT start with its set
+   * code the whole of it is printed, because slicing off a prefix that is not
+   * there is how a citation turns into a wrong word.
    */
   const shownCode = (() => {
     const printing = shown?.printing;
@@ -481,24 +487,23 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     /* CASE-FOLDED, LIKE `numberFor` FOLDS IT. That function strips the same
        prefix off a face key and normalizes both sides before comparing; a bare
        `startsWith` here would agree with it on today's corpus and disagree the
-       day upstream publishes a lower-case set code, silently making the whole
-       collector number the set link. */
+       day upstream publishes a lower-case set code, silently setting the set's
+       code after its name. */
     const prefixed = printing.id
       .toUpperCase()
       .startsWith(printing.set_id.toUpperCase());
-    /* SLICED OUT OF THE NUMBER, NOT SUBSTITUTED FOR IT, so the two halves
-       always concatenate back to exactly what upstream published rather than to
-       the set code's spelling plus a remainder. */
     return {
-      /* The linked half, and its name for anything reading the link aloud. */
-      link: prefixed
-        ? printing.id.slice(0, printing.set_id.length)
-        : printing.id,
+      /* The set, which is the half of this citation with a page behind it.
+         `setName` falls back to the raw code for a set the published data does
+         not name, so an unnamed set degrades to `1HP #101` rather than to a
+         blank link. */
       setName: setName(printing.set_id),
       href: hrefForSet(printing.set_id),
-      /* The rest of the number, which is not a link because there is nothing
-         to look up under it. */
-      rest: prefixed ? printing.id.slice(printing.set_id.length) : "",
+      /* The position inside that set, which is not a link because there is
+         nothing to look up under it. */
+      number: prefixed
+        ? printing.id.slice(printing.set_id.length)
+        : printing.id,
     };
   })();
 
@@ -1105,11 +1110,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 </div>
 
                 {/*
-                  THE FOOT OF THE PANEL, IN THE FINE-PRINT REGISTER — who drew
-                  it, and which printings exist. Both read straight off the
-                  record. The printing count is a link rather than a number
-                  because the table it names is on this same page, and a count
-                  that cannot take you to what it counted is decoration.
+                  THE FOOT OF THE PANEL, IN THE FINE-PRINT REGISTER — what grade
+                  this printing is, which printing it is, who drew it and what is
+                  on its back. Every one of them reads straight off the record.
+
+                  NO PRINTING COUNT. A `N printings` link to the table below used
+                  to close the line. It was a number nobody asked this page for:
+                  the table it pointed at is on this same page under a heading of
+                  its own, so the link duplicated the document's own structure,
+                  and the count itself answered a question a reader arrives at
+                  the table already asking.
                 */}
                 <footer className="of-card__band of-card__band--credits">
                   {/*
@@ -1120,8 +1130,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     clump on the left and the printing count on the right. The
                     facts down here are independent of one another — what grade
                     this printing is, which printing it is, who drew it, what is
-                    on its back, how many printings exist — and reading them as
-                    two-and-one made the first two look like one compound fact.
+                    on its back — and reading them as two-and-one made the first
+                    two look like one compound fact.
 
                     They are siblings now, so `justify-content: space-between`
                     spaces every one of them. NO NUMBER IS WRITTEN DOWN HERE,
@@ -1180,43 +1190,41 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   )}
                   {/*
                     WHICH PRINTING THIS IS, BETWEEN ITS GRADE AND ITS ARTIST —
-                    `MST131`, the string a reader cites, quotes in a deck list
-                    or searches for.
+                    `History Pack 1 #101`, the set a reader names and the
+                    position inside it they quote.
 
-                    THE SET CODE IS THE LINK AND THE NUMBER IS NOT. `MST` names
-                    something with a page of its own; `131` names a position
-                    inside it and has nowhere to go, so making the whole code a
-                    link would promise a destination for a half of it that has
-                    none. The set's own page is where "what else is in this
-                    set" is answered.
+                    THE SET IS THE LINK AND THE NUMBER IS NOT. `History Pack 1`
+                    names something with a page of its own; `#101` names a
+                    position inside it and has nowhere to go, so linking the
+                    whole citation would promise a destination for a half of it
+                    that has none. The set's own page is where "what else is in
+                    this set" is answered.
+
+                    THE ANCHOR READS AS A NAME NOW, WHICH RETIRES A WORKAROUND.
+                    It used to read `MST` with the set's name clipped inside it,
+                    because a link named by a code is a lookup and `label in
+                    name` needed something to hold on to. The visible text IS
+                    the name, so the hidden copy is gone rather than duplicated
+                    — and with it the `user-select: none` rule that kept it out
+                    of a paste.
 
                     ONE SPAN AROUND BOTH HALVES, AND IT IS LOAD-BEARING. This
                     paragraph is a flex row with a gap, and flexbox wraps a bare
                     text node in an anonymous flex item — the note beside
                     `.of-card__credit` says so, and it is the reason nothing
                     else in this footer is wrapped. Here it works the other way:
-                    the anchor and the number are ONE word interrupted, so
-                    letting the row space them would print `MST 131` and break
-                    the citation in half. The span makes them a single item, the
-                    same trick `.of-card__rarity` uses on the bubble and its
-                    word.
-
-                    THE SET'S NAME IS INSIDE THE ANCHOR, CLIPPED. A link reading
-                    "MST" and nothing else is a link named by a code, which is a
-                    lookup rather than a name; the visible half stays a code
-                    because that is what the card prints, and the accessible
-                    name contains it, so `label in name` still holds.
+                    the name and the number are ONE citation, so letting the row
+                    space them would set them at the footer's gap rather than at
+                    a word space. The span makes them a single item, the same
+                    trick `.of-card__rarity` uses on the bubble and its word.
                   */}
                   {shownCode === null ? null : (
                     <p className="of-card__credit">
                       <span className="of-card__printing-code">
-                        <a href={shownCode.href}>
-                          {shownCode.link}
-                          <span className="of-card__visually-hidden">
-                            {` (${shownCode.setName})`}
-                          </span>
-                        </a>
-                        {shownCode.rest}
+                        <a href={shownCode.href}>{shownCode.setName}</a>{" "}
+                        <span className="of-card__printing-number">
+                          {`#${shownCode.number}`}
+                        </span>
                       </span>
                     </p>
                   )}
@@ -1278,11 +1286,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                       <a href={shownOtherFace.href}>{shownOtherFace.label}</a>
                     </p>
                   )}
-                  <p className="of-card__credit">
-                    <a href="#printings">
-                      {printingCount} printing{printingCount === 1 ? "" : "s"}
-                    </a>
-                  </p>
                 </footer>
               </div>
             </BevelledPlate>
