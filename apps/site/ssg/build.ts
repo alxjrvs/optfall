@@ -42,6 +42,7 @@ import { dirname, join } from "node:path";
 import { themeStylesheet } from "optfall-theme";
 
 import { generatedAssets } from "./assets";
+import { renderHeaders, renderRedirects } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
@@ -347,6 +348,14 @@ async function main(): Promise<void> {
       await writeFile(target, asset.contents);
     }
   }
+
+  /*
+   * THE HOST'S OWN TWO FILES, WRITTEN LAST AMONG THE FLAT ONES. They are not in
+   * `generatedAssets()` on purpose — that registry is what the site SERVES, and
+   * these are read by the host and then hidden. `hostConfig.ts` says why.
+   */
+  await writeFile(join(OUT_DIR, "_headers"), renderHeaders(), "utf-8");
+  await writeFile(join(OUT_DIR, "_redirects"), renderRedirects(), "utf-8");
 
   /*
    * TOKENS FIRST, COMPONENTS SECOND. The component sheets consume `--of-*`

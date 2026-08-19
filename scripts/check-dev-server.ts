@@ -177,6 +177,16 @@ const checks: Check[] = [
   { path: "/sw-purge.js", contentType: "text/javascript" },
   { path: defaultRoute.href, contentType: "text/html" },
   { path: alternateRoute.href, contentType: "text/html" },
+  /*
+   * A REDIRECT IS A ROUTE THE SITE OWNS. There is exactly one left — the 12,278
+   * card-scheme rules were retired — and it reaches the reader through a
+   * mechanism nothing else here touches: `hostConfig.ts` is rendered into
+   * `dist/_redirects` for Cloudflare and read directly by `serve.ts`. Deciding
+   * it, emitting it and acting on it are three things that can each silently
+   * stop happening, and the failure is invisible: every page the site knows
+   * about still serves, and only a link somebody already pasted is dead.
+   */
+  { path: "/cards", status: 301, location: "/search" },
 ];
 
 /**

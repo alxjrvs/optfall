@@ -24,6 +24,12 @@ import { facesOf, hrefForPrinting } from "../src/lib/printings";
 import { setFor } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document } from "./document";
+import {
+  HEADERS,
+  REDIRECTS,
+  renderHeaders,
+  renderRedirects,
+} from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { HEADER_FIELD_ID } from "./islands/CardSearch";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
@@ -2156,6 +2162,98 @@ describe("a fan holds the versions it was handed, once each", () => {
 
     expect(faces.length).toBe(2);
     expect(faces.some((src) => src.includes("MPW113"))).toBe(false);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* The files the host reads and never serves                                   */
+/* -------------------------------------------------------------------------- */
+
+describe("_headers and _redirects say what the host is told", () => {
+  /*
+   * THESE ASSERT A FORMAT, WHICH IS UNUSUAL AND IS THE POINT. Both files are
+   * consumed by a platform we cannot run in a unit test, and a malformed line
+   * in either is accepted silently — Cloudflare skips a rule it cannot parse
+   * and deploys green. So the failure is invisible in exactly the way the rest
+   * of this file exists to catch: the site serves every page it knows about,
+   * and only the rule nobody re-tested is gone.
+   */
+
+  test("every redirect is an exact path, and none points at another's source", () => {
+    const sources = new Set(REDIRECTS.map((rule) => rule.from));
+
+    for (const rule of REDIRECTS) {
+      expect(rule.from.startsWith("/")).toBe(true);
+      expect(rule.to.startsWith("/")).toBe(true);
+      /* No placeholders and no wildcards. Two earlier versions of the retired
+         card table used them and both shipped an infinite redirect; the habit
+         is worth keeping now that the table is small enough to be tempting. */
+      expect(rule.from).not.toMatch(/[:*]/);
+      expect(rule.to).not.toMatch(/[:*]/);
+      /* A chain is a loop the browser reports as ERR_TOO_MANY_REDIRECTS rather
+         than as the 404 it should have been. */
+      expect(sources.has(rule.to)).toBe(false);
+    }
+  });
+
+  test("the rendered _redirects is one rule per line, from-to-status", () => {
+    const lines = renderRedirects().trimEnd().split("\n");
+    expect(lines.length).toBe(REDIRECTS.length);
+    expect(lines).toContain("/cards /search 301");
+  });
+
+  test("/cards still answers, because query strings survive a 301", () => {
+    /* `/cards?q=banned:cc` is a link people have pasted. The rule is what keeps
+       it answering after the results page moved to `/search`. */
+    const cards = REDIRECTS.find((rule) => rule.from === "/cards");
+    expect(cards?.to).toBe("/search");
+    expect(cards?.status).toBe(301);
+  });
+
+  test("the rendered _headers indents every header under its pattern", () => {
+    const text = renderHeaders();
+
+    for (const rule of HEADERS) {
+      expect(text).toContain(`\n${rule.pattern}\n`.slice(1));
+      for (const [name, value] of Object.entries(rule.headers)) {
+        expect(text).toContain(`  ${name}: ${value}`);
+      }
+    }
+
+    /* A pattern that is not at the start of a line is a header value, and a
+       header line that is not indented is a pattern. Getting either wrong is
+       how a block silently attaches to the wrong path. */
+    for (const line of text.trimEnd().split("\n")) {
+      if (line === "") continue;
+      expect(line.startsWith("  ") || line.startsWith("/")).toBe(true);
+    }
+  });
+
+  test("the security posture netlify.toml carried is carried here", () => {
+    const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
+    expect(wildcard?.headers["X-Content-Type-Options"]).toBe("nosniff");
+    expect(wildcard?.headers["Referrer-Policy"]).toBe(
+      "strict-origin-when-cross-origin",
+    );
+
+    /* Declared rather than left to the host's default, so that `nosniff` above
+       is making a TRUE claim binding rather than a guessed one. */
+    const manifest = HEADERS.find(
+      (rule) => rule.pattern === "/manifest.webmanifest",
+    );
+    expect(manifest?.headers["Content-Type"]).toBe("application/manifest+json");
+  });
+
+  test("both files stay under Cloudflare's ceilings", () => {
+    /* 100 rules and 2,000 characters per line for _headers; 2,000 static rules
+       for _redirects. Nowhere near either — asserted so that the day somebody
+       adds a table here, the limit is a failing test rather than a surprise in
+       production. */
+    expect(HEADERS.length).toBeLessThanOrEqual(100);
+    expect(REDIRECTS.length).toBeLessThanOrEqual(2000);
+    for (const line of renderHeaders().split("\n")) {
+      expect(line.length).toBeLessThanOrEqual(2000);
+    }
   });
 });
 
