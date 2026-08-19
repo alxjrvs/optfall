@@ -447,11 +447,13 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
 
           It repeated, on 112 pages, an envelope the site states elsewhere: the
           upstream repository and the pinned commit are the same two values on
-          every set page, and every card page already carries them in its Source
-          fold beside the file hash, the retrieval URL and the confirmation date
-          — which is the version of the claim that can actually be checked. A
-          repository name and a commit with none of that around them are a
-          gesture at auditability rather than the thing itself.
+          every set page, and `/about` states them once beside the file path and
+          the retrieval address — which is the version of the claim that can
+          actually be checked. A repository name and a commit with none of that
+          around them are a gesture at auditability rather than the thing
+          itself. (Card pages carried the same envelope in a Source fold until
+          that fold went for this reason too; `/about` is now the only place it
+          is stated.)
 
           The second sentence went with it for a different reason: "a card is
           listed under every set it was printed in" describes the list directly

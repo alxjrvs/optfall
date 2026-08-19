@@ -79,7 +79,6 @@ import {
 import { BuySection } from "./card/BuySection";
 import { PrintingsSection } from "./card/PrintingsSection";
 import { RelatedCards } from "./card/RelatedCards";
-import { SourceSection } from "./card/SourceSection";
 import { TcgplayerMark } from "./card/TcgplayerMark";
 import { CardTextInline } from "./CardTextInline";
 import "./CardEntry.css";
@@ -1463,20 +1462,19 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       <RelatedCards relatedShown={relatedShown} />
 
       {/*
-        THE PROVENANCE FOLDS. Seven rows of hashes, URLs and a pinned commit —
-        the auditability promise, and the thing almost nobody opens. It stayed
-        expanded on the argument that a claim whose evidence needs a click is a
-        claim being asserted; that argument belongs to the LEGALITY verdict,
-        which is a claim about a card, and it does not extend to the corpus
-        envelope, which is identical on all 4,941 pages.
+        THE SOURCE FOLD IS GONE, and it is deleted rather than collapsed.
 
-        THE RIGHTS LINE USED TO SIT HERE, outside the fold, on the argument that
-        it has to accompany the page rather than be available from it. That
-        argument is still right and the line is still on every page — it moved to
-        the universal footer with the card-image notice, so repeating it here was
-        printing the same paragraph twice on one page.
+        Seven rows of hashes, URLs and a pinned commit, identical on all 4,941
+        card pages — the corpus envelope, not a claim about this card. `/about`
+        already states it once, with the file path and the commit, which is the
+        version a reader can act on; repeating it under every card was the same
+        argument set pages settled when their provenance line went.
+
+        Two things that lived near it did NOT go with it. The rights line had
+        already moved to the universal footer with the card-image notice, and
+        `check-disclaimer` and `check-card-notice` enforce both there, on every
+        page. Nothing this file renders was ever the enforcement point.
       */}
-      <SourceSection page={page} />
     </>
   );
 }
