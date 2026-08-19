@@ -473,10 +473,22 @@ export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
         )
       ) : (
         <>
+          {/*
+            THE INVITATION ONLY. This line used to open with the section count
+            and the rules version — and `cr.page.tsx` prints both, plus the
+            publication date and a link to the source, in the provenance
+            paragraph directly beneath this list. Two sentences on one screen
+            saying "1,278 sections, version 2.14.0" is not emphasis.
+
+            THE PROVENANCE LINE IS THE ONE THAT STAYS, and the choice between
+            them is not arbitrary: `docs/PLAN.md` requires every surface to show
+            when its data was last confirmed, so that paragraph is load-bearing
+            and this one is a greeting. It is also the more complete of the two,
+            and it is always on the page, where this appears only until the
+            reader types.
+          */}
           <p className="of-rules__count">
-            {rules.size.toLocaleString("en-GB")} addressable sections, from the
-            Comprehensive Rules {index.version}. Start with a chapter, or type
-            above.
+            Start with a chapter, or type above.
           </p>
           <ol className="of-rules__results">
             {browse.map((chapter) => (

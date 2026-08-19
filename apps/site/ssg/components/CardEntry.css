@@ -180,6 +180,47 @@
 }
 
 /*
+    THE TEXT BAND OPENS ON THE PITCH COLOUR — the fourth carrier of a fact the
+    jewel, the tab strip and the numeral already carry, and the only one a
+    reader gets for free while looking at the text they came for.
+
+    ABOVE THE TEXT, BECAUSE THAT IS THE RULE THE PRINTED CARD DRAWS. A Flesh and
+    Blood frame closes its art and opens its text box on a single stroke, and
+    that stroke is the one piece of the card's geometry this panel was
+    mirroring in colour but not in position — the colour sat over the name
+    instead. The whole argument for the panel is that it is the printed
+    object's own geometry (see the band comments below); this is where the
+    object puts its rule.
+
+    IT REPLACES THE HAIRLINE RATHER THAN JOINING IT. The rule above already
+    draws a `rule`-coloured separator on every band boundary, and two strokes
+    on one edge is a rendering mistake, not emphasis. So this is the same
+    border, restated in the pitch colour at the bevel's weight — the band keeps
+    the margin and padding the separator rule gives it, which is why nothing
+    here touches either.
+
+    THREE CLASSES, TO WIN ON SPECIFICITY RATHER THAN ON ORDER. A bare
+    `.of-card__band--oracle` is (0,1,0) and LOSES to the (0,2,0) selector above
+    it; `.of-card__band + .of-card__band--oracle` merely ties, leaving this
+    correct only while the two rules keep their current order in the file.
+    Doubling the class takes it to (0,3,0), which no reordering can undo. It is
+    restated as the `border-block-start` SHORTHAND for the same reason: this
+    file has already been bitten by a longhand overriding one edge of a
+    shorthand, which is fragile in exactly the way a full restatement is not.
+
+    Colour is the ONLY channel this adds, and deliberately not the only channel
+    the fact has — `docs/DESIGN.md` puts red and yellow at the top of the
+    deuteranopia confusion pair, which is why the numeral in the stone exists.
+
+    The fallback is the no-pitch grey, so a card with no pitch keeps the
+    separator it would have had rather than losing the boundary altogether.
+  */
+.of-card__band + .of-card__band.of-card__band--oracle {
+  border-block-start: calc(var(--of-bevel-width) * 2) solid
+    var(--card-pitch, var(--of-color-pitch-none));
+}
+
+/*
     THE TWO CORNER BANDS, EACH A THREE-COLUMN GRID.
 
     A corner, the centred thing, the other corner — which is the geometry of
@@ -278,14 +319,11 @@
   /* The one heading on the site a reader looks AT rather than scans past, so it
      takes the display face even though it is not an `h1`. */
   font-family: var(--of-type-family-display);
-  /* An `h1`'s own margin, zeroed — and written as the ONE longhand it needs to
-     zero, because the block-start margin belongs to the pitch stroke at the
-     bottom of this rule. As `margin-block: 0` it was a shorthand competing with
-     that longhand sixty lines below, correct only by source order: moving
-     either declaration, or consolidating the two, would silently restore the
-     6px the stroke exists not to add. Two longhands cannot be reordered into
-     disagreement. */
-  margin-block-end: 0;
+  /* An `h1`'s own margin, zeroed. This was two longhands while the pitch stroke
+     lived on this element and needed the block-start edge to itself; the stroke
+     moved to the text band, so the shorthand it was split to avoid competing
+     with is safe again. */
+  margin-block: 0;
   overflow-wrap: anywhere;
   text-align: center;
   font-size: clamp(
@@ -295,70 +333,26 @@
   );
 
   /*
-      OVERLINED IN THE PITCH COLOUR — a fourth carrier of the fact the jewel,
-      the tab strip and the numeral already carry, and the only one a reader
-      gets for free while looking at the name.
+      THE PITCH STROKE USED TO LIVE HERE, AND IT NOW HEADS THE TEXT BAND. See
+      `.of-card__band--oracle` above for where it went and why; what is left in
+      this rule is type and nothing else.
 
-      ABOVE THE NAME, BECAUSE THAT IS WHERE THE PRINTED CARD PUTS IT. A Flesh
+      ~~ABOVE THE NAME, BECAUSE THAT IS WHERE THE PRINTED CARD PUTS IT. A Flesh
       and Blood card carries its pitch as a strip across the very top of the
       frame, over the name plate — so a stroke under the name was the one part
-      of this panel that mirrored the card in colour and not in position. The
-      whole argument for the panel is that it is the printed object's own
-      geometry (see the band comments above); the pitch strip is part of that
-      geometry and now sits where the card sits it.
+      of this panel that mirrored the card in colour and not in position.~~
+      Struck: the strip a reader actually reads as a rule on a printed card is
+      the one closing the art and opening the text box, and that is the edge
+      this panel now colours. The pitch is still carried four ways — the jewel,
+      the tab strip, the numeral, and now that stroke.
 
-      A BORDER ON A SHRUNK BOX, NOT `text-decoration`. The name wraps: at two
-      lines `text-decoration` draws two rules, which reads as two links rather
-      than as one card — and `overline` has no `text-underline-offset` to hold
-      it off the caps besides. `fit-content` shrinks the heading's box to its
-      text on the common case, so the rule ends where the name does; on a name
-      long enough to wrap, the box fills the column and the rule runs over both
-      lines as a single stroke. `max-inline-size` is what stops `fit-content`
-      from reaching past the middle grid column, and the auto margins re-centre
-      a box that is now narrower than its cell.
-
-      Colour is the ONLY channel this adds, and it is deliberately not the only
-      channel the fact has — `docs/DESIGN.md` puts red and yellow at the top of
-      the deuteranopia confusion pair, which is why the numeral in the stone
-      next to it exists.
+      Gone with it: `inline-size: fit-content`, `max-inline-size`,
+      `margin-inline: auto` and the negative `margin-block-start` that gave the
+      stroke's own height back. All four existed only to make a border on this
+      element end where the name's text ends and cost the band no vertical
+      space. A band border needs none of them — it spans the panel by nature,
+      and it sits on an edge the grid was already spacing.
     */
-  inline-size: fit-content;
-  max-inline-size: 100%;
-  margin-inline: auto;
-  padding-block-start: var(--of-space-tighter);
-  border-block-start: calc(var(--of-bevel-width) * 2) solid
-    var(--card-pitch, var(--of-color-pitch-none));
-
-  /*
-      AND THE STROKE GIVES ITS OWN HEIGHT BACK, WHICH IS THE PART THAT IS NOT
-      OBVIOUS. This band is `align-items: start` so a name that wraps grows
-      downward past a jewel that stays at the top — which also means the
-      heading's box top IS the row's top, and anything added above the text
-      pushes the text down. Measured: the padding and the border together moved
-      the name's first line 6px down, taking its optical centre from 1.1px above
-      the jewel's to 4.9px below it, so the one line the band exists to centre
-      stopped being level with the two corners it sits between.
-
-      The negative margin is exactly what the two declarations above add and
-      nothing else, so the TEXT lands where it landed before this stroke existed.
-      Written as the same two terms rather than as a number, so it cannot drift
-      out of agreement with them, and as a longhand rather than a shorthand — see
-      `margin-block-end` at the top of this rule for why that matters.
-
-      IT SPENDS 6px OF `BevelledPlate`'s PADDING, AND THAT IS A DEPENDENCY RATHER
-      THAN A COINCIDENCE. The stroke now paints outside `.of-card__panel`'s
-      content box, into the plate's `--plate-pad` — `space.loose`, so there is
-      16px there and 6px is taken. That is comfortable and it is not enforced:
-      a plate that ever shrank its padding below `space.tighter` plus two bevels
-      would put this stroke on its bevel, and nothing would fail. The panel
-      cannot read the plate's padding to clamp itself against it, so the honest
-      form of the guarantee is this sentence — "compose, never restyle" is why
-      the alternative (reaching into `BevelledPlate` from here) is not taken.
-    */
-  margin-block-start: calc(
-    -1 *
-    (var(--of-space-tighter) + var(--of-bevel-width) * 2)
-  );
 }
 
 /* Same argument, one step down the scale: the type line shares the bottom

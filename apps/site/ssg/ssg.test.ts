@@ -2341,9 +2341,18 @@ describe("every screen but the front door carries the header's search", () => {
     expect([...html.matchAll(/<input\b/g)]).toHaveLength(1);
     expect(html).toContain(`id="${HEADER_FIELD_ID}"`);
 
-    /* And the operator examples survived the field they used to hang off, with
-       the header's input pointed at them by the adoption effect. */
-    expect(html).toContain('id="cards-search-hint"');
+    /* AND NO EXAMPLE-QUERY LINE UNDER IT. The examples outlived the hero field
+       they hung off and were then saying, next to the header's own search box,
+       what that box already says. `Syntax` in the nav carries the grammar link
+       now — see `SiteHeader`. Asserted as an absence so it cannot drift back.
+
+       ON THE ID RATHER THAN ON `aria-describedby`, deliberately. The bare
+       attribute was asserted absent first, which passes today and would fail
+       the moment any control on this page grew a description of its own — a
+       test that forbids an accessibility attribute site-wide to check one
+       paragraph is gone. The id covers both the element and any attribute
+       pointing at it, which is the whole of what was removed. */
+    expect(html).not.toContain("cards-search-hint");
   });
 
   test("the field carries the query before any bundle loads", () => {

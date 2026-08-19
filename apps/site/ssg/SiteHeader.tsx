@@ -4,11 +4,14 @@
  * FIVE DESTINATIONS, WHICH IS THE WHOLE SITE. A nav that needs a submenu is a
  * nav describing a product with more surfaces than this one has.
  *
- * `Syntax` is here rather than only linked from the search hint because the
- * grammar is the thing a reader needs at the moment they are already looking at
- * results and cannot narrow them — which is every page, not just the one with
- * the field on it. It is the most-linked page on the site this one is measured
- * against, for the same reason.
+ * `Syntax` is here because the grammar is the thing a reader needs at the moment
+ * they are already looking at results and cannot narrow them — which is every
+ * page, not just the one with the field on it. It is the most-linked page on the
+ * site this one is measured against, for the same reason.
+ *
+ * IT IS NOW THE ONLY LINK TO THE GRAMMAR. `/search` used to repeat it under a
+ * line of example queries; that line said what this bar's own field already
+ * says, so it went, and this nav entry inherited the whole job.
  *
  * THE FIELD IS A REAL GET TO THE RESULTS PAGE, so it works with scripting off
  * and a submitted query lands on a shareable address. No island, no index — the
@@ -38,19 +41,6 @@ export interface SiteHeaderProps {
    * entirely today and would need this the moment it grew one.
    */
   readonly field?: boolean;
-  /**
-   * The id of a page element describing the field, for `aria-describedby`.
-   *
-   * THE SHELL CANNOT KNOW WHAT THE HINT SAYS, BUT IT HAS TO EMIT THE LINK.
-   * `/search` renders the operator examples — they are about that page, and the
-   * header is on every page — and `CardSearch` used to attach this when it
-   * adopted the field. That made the association depend on JavaScript, on the
-   * one page whose no-JS path is deliberately designed for (see the `noscript`
-   * block in `search.page.tsx`) and on a hydration failure that
-   * `islands.client.ts` deliberately swallows. `SearchField` wired its own hint
-   * server-side; an adopted field has to be given the same thing by the page.
-   */
-  readonly fieldDescribedBy?: string | undefined;
 }
 
 const LINKS: readonly {
@@ -71,11 +61,7 @@ const LINKS: readonly {
 /** What the disclosure discloses. Named, because it is not its child. */
 const SECTIONS_LIST_ID = "bar-sections";
 
-export function SiteHeader({
-  section,
-  field = true,
-  fieldDescribedBy,
-}: SiteHeaderProps) {
+export function SiteHeader({ section, field = true }: SiteHeaderProps) {
   return (
     <header className="of-bar">
       <a className="of-bar__wordmark" href="/">
@@ -136,7 +122,6 @@ export function SiteHeader({
             spellCheck={false}
             enterKeyHint="search"
             placeholder="Search cards"
-            aria-describedby={fieldDescribedBy}
           />
           {/*
             NO VISIBLE SUBMIT, AND STILL A REAL ONE — the same argument

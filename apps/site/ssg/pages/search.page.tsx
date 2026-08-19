@@ -61,11 +61,7 @@ import { buildCardIndex } from "../../src/lib/card-search";
 import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
 import { SETS } from "../../src/lib/sets";
 import { Island } from "../Island";
-import {
-  CARDS_HINT_ID,
-  CardSearch,
-  HEADER_FIELD_ID,
-} from "../islands/CardSearch";
+import { CardSearch, HEADER_FIELD_ID } from "../islands/CardSearch";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
 
@@ -93,7 +89,6 @@ function page(): PageResult {
     description:
       "Lexical search over every Flesh and Blood card. Every card has a permanent, citable URL, with per-format legality and the upstream flags it was derived from.",
     section: "cards",
-    headerSearchDescribedBy: CARDS_HINT_ID,
     /*
       THE COLUMN IS THE GRID'S, NOT PROSE'S. This page's content is a list of
       card faces; at the reading measure the grid fitted its four columns only by

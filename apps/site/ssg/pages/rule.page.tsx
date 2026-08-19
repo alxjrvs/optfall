@@ -233,12 +233,20 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
             <h2 className="of-apparatus__heading" id="governs">
               Cards this rule governs
             </h2>
+            {/*
+              THE COUNT, AND NOT A PARAGRAPH DEFENDING THE MATCH. This used to
+              carry a second sentence explaining that the join is on the
+              published keyword vocabulary rather than on resemblance. Its twin
+              on the card page went for the reason that applies here too: it
+              answered a doubt the reader had not raised, in a place where the
+              heading above and the citation beside each entry already say what
+              the list is. A reference work that keeps reassuring you it is
+              accurate reads as less sure of itself, not more.
+            */}
             <p className="of-rule__scope">
               {governedCards.length.toLocaleString("en-GB")} card
               {governedCards.length === 1 ? "" : "s"} print the keyword this
-              section defines. Matched exactly against the vocabulary the
-              Comprehensive Rules publishes — a card appears here because it
-              carries the keyword, never because its text resembles this rule.
+              section defines.
             </p>
             <ul className="of-rule__governs">
               {governedShown.map((card) => (
