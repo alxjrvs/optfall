@@ -17,6 +17,7 @@ import {
   faceUrl,
   orientationOf,
   placeholderUrl,
+  coldFoilSiblingKey,
 } from "./faces";
 import { CORPUS } from "./cards";
 
@@ -257,5 +258,57 @@ describe("a face key identifies a printing within its card", () => {
     for (const param of params) {
       expect(encodeURIComponent(param)).toBe(param);
     }
+  });
+});
+
+describe("coldFoilSiblingKey", () => {
+  /*
+   * THE BUG THIS PINS. The ingest's first attempt at the Cold Foil fallback
+   * tested `endsWith("-CF")` against a value that is always `…-CF.webp`,
+   * because `faceKeyFor` normalises to the STORED extension. It matched
+   * nothing, so the phase reported no work and eighteen faces stayed missing —
+   * silently, through two clean runs. These cases are written against keys the
+   * real function produces rather than keys spelled by hand, so the shape
+   * cannot drift out from under the rule again.
+   */
+
+  test("takes a key exactly as faceKeyFor emits it", () => {
+    const key = faceKeyFor(
+      "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ANQ011-CF.webp",
+    );
+    expect(key).toBe("ANQ011-CF.webp");
+    expect(coldFoilSiblingKey(key as string)).toBe("ANQ011.webp");
+  });
+
+  test("normalises a non-webp source the same way", () => {
+    /* The stored extension is WebP whatever the source was, so a PNG source
+       still yields a `.webp` key and must still resolve. */
+    const key = faceKeyFor(
+      "https://storage.googleapis.com/fabmaster/cardfaces/2024-XXX/EN/XXX001-CF.png",
+    );
+    expect(key).toBe("XXX001-CF.webp");
+    expect(coldFoilSiblingKey(key as string)).toBe("XXX001.webp");
+  });
+
+  test("returns null for every other foiling, and for plain keys", () => {
+    /* A rule that fired on any key would serve one card's art under another
+       card's name. Rainbow, Gold, Marvel and plain must all be refused. */
+    for (const url of [
+      "https://x/y/MST131.webp",
+      "https://x/y/LGS282-RF.webp",
+      "https://x/y/ANQ000-MV.webp",
+      "https://x/y/HVY008-GF.webp",
+    ]) {
+      const key = faceKeyFor(url);
+      expect(coldFoilSiblingKey(key as string)).toBeNull();
+    }
+  });
+
+  test("matches the suffix, never a substring", () => {
+    expect(coldFoilSiblingKey("ANQ-CF011.webp")).toBeNull();
+    expect(coldFoilSiblingKey("CF.webp")).toBeNull();
+    /* Bare, extensionless input is exactly the mistake that caused the bug:
+       it is not a key this codebase ever produces, and must not resolve. */
+    expect(coldFoilSiblingKey("ANQ011-CF")).toBeNull();
   });
 });
