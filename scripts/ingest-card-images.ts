@@ -54,6 +54,7 @@ import { S3Client } from "bun";
 import sharp from "sharp";
 
 import {
+  coldFoilSiblingKey,
   FACE_TIERS,
   faceKeyFor,
   type FaceTier,
@@ -456,28 +457,35 @@ async function main(): Promise<void> {
    * today and silently wrong the next time upstream withholds a different one;
    * this asks the run what it actually failed to get.
    */
-  const coldFoilGaps = outcome.unavailable.filter((key) => key.endsWith("-CF"));
+  const coldFoilGaps = outcome.unavailable.filter(
+    (key) => coldFoilSiblingKey(key) !== null,
+  );
   if (coldFoilGaps.length > 0) {
     const urlByKey = new Map(faces.map((face) => [face.key, face.url]));
     const faceKeys = new Set(faces.map((face) => face.key));
 
     const substitutes: Face[] = coldFoilGaps.flatMap((key) => {
-      const base = key.replace(/-CF$/, "");
+      const sibling = coldFoilSiblingKey(key);
+      if (sibling === null) return [];
       /* A sibling that is its own printing was already fetched by the main
          pass. Only the orphans need anything. */
-      if (faceKeys.has(base)) return [];
+      if (faceKeys.has(sibling)) return [];
       const url = urlByKey.get(key);
       if (url === undefined) return [];
-      return [{ key: base, url: url.replace(/-CF(?=\.[^.]+$)/, "") }];
+      return [{ key: sibling, url: url.replace(/-CF(?=\.[^.]+$)/, "") }];
     });
 
-    if (substitutes.length > 0) {
-      console.log(
-        `\ncold foil substitutes: fetching ${substitutes.length} non-foil ` +
-          `sibling(s) no printing references`,
-      );
-      for (const face of substitutes) await ingestFace(face);
-    }
+    /* SAID OUT LOUD EVEN WHEN THERE IS NOTHING TO DO. The first version of this
+       phase logged only when it had work, and a key-shape bug meant it never
+       had any — so it reported nothing, which is indistinguishable from not
+       running at all. It cost two clean runs and a round of instrumentation to
+       notice. A phase that decides something should say what it decided. */
+    console.log(
+      `\ncold foil: ${coldFoilGaps.length} gap(s) — ` +
+        `${coldFoilGaps.length - substitutes.length} sibling(s) already held, ` +
+        `${substitutes.length} to fetch`,
+    );
+    for (const face of substitutes) await ingestFace(face);
   }
 
   const elapsed = ((Date.now() - startedAt) / 1000 / 60).toFixed(1);

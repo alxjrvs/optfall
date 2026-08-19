@@ -141,6 +141,32 @@ export function faceKeyFor(imageUrl: string | null | undefined): string | null {
   return `${stem}.webp`;
 }
 
+/**
+ * The non-foil sibling of a Cold Foil face key, or null if this is not one.
+ *
+ * WHY THIS EXISTS. Upstream publishes 576 `-CF` faces and withholds a handful
+ * of them — they answer 403 while their non-foil siblings answer 200, and
+ * Legend Story Studios' own card database points those cards at the sibling.
+ * The face host serves the sibling in their place; this is the rule that names
+ * it, and the ingest uses it to fetch a sibling no printing references.
+ *
+ * IT TAKES A KEY AS {@link faceKeyFor} EMITS ONE, WHICH IS THE WHOLE TRAP. That
+ * output carries the STORED extension — `ANQ011-CF.webp`, never `ANQ011-CF` —
+ * because everything is transcoded to WebP regardless of the source format. A
+ * first version of the ingest's use of this tested `endsWith("-CF")` against
+ * that value, matched nothing, and reported no work to do while eighteen faces
+ * stayed missing. Nothing failed; it simply never ran.
+ *
+ * `apps/images/src/face.ts` carries the runtime twin of this rule, over keys
+ * that also carry a tier prefix. It cannot import this one: that app declares
+ * no dependencies at all, deliberately, and reaches nothing outside itself.
+ */
+export function coldFoilSiblingKey(faceKey: string): string | null {
+  return /-CF\.webp$/.test(faceKey)
+    ? faceKey.replace(/-CF\.webp$/, ".webp")
+    : null;
+}
+
 /** The absolute URL of one face at one tier. */
 export function faceUrl(key: string, tier: FaceTier): string {
   return `${FACE_HOST}/${tier}/${key}`;
