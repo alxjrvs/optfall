@@ -849,77 +849,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               height={shownBox.height}
               loading="eager"
             />
-
-            {/*
-              THE ONLY BUY LINK ON THE PAGE, and it used to be one of several.
-              A "Buy" section below the printings table listed a row per
-              purchasable printing; it is gone, and this is what commerce on a
-              card page now amounts to. It buys the printing already on screen,
-              so the picture above it is the label.
-
-              AND IT STILL NAMES WHICH PRINTING IT BUYS, because it cannot be
-              sure that is the one you wanted. A card route addresses an ART,
-              and 5,052 arts in this corpus are shared by more than one foiling,
-              so `shown.printing` is the printing that CLAIMED the picture
-              rather than the foiling a reader has in mind — see the note on
-              `faceBuyHref` for the measurement and for why that is still the
-              right default. The `detail` is what keeps the claim honest: this
-              says outright that it buys MST131 Standard.
-
-              THAT CLAIM MATTERS MORE NOW, NOT LESS, and the reason is worth
-              stating because the naming machinery got smaller in the same
-              change. While the section existed, a reader who wanted the foil
-              could read the `detail`, see this was not it, and click the
-              labelled row that was. There is no such row any more. The label is
-              no longer an aid to choosing between links — it is the whole of
-              what the page discloses about which product this one is.
-
-              NOTHING WHERE THERE IS NOTHING TO BUY. 1,336 printings have no
-              upstream product; `buyHref` returns undefined for those and this
-              renders no button rather than a disabled one — and the disclosure
-              below is inside the same branch, so a page with no link makes no
-              claim about links.
-            */}
-            {faceBuyHref === undefined || shown === undefined ? null : (
-              <>
-                <IconButton
-                  detail={faceBuyLabel ?? shown.printing.id}
-                  href={faceBuyHref}
-                  icon={<TcgplayerMark />}
-                  label="Buy on TCGplayer"
-                  rel={buyRel()}
-                />
-
-                {/*
-                  THE DISCLOSURE FOLLOWS THE LINK, which is the whole reason it
-                  is up here beside a picture rather than in a block of legalese
-                  further down. It used to sit under the "Buy" section, directly
-                  beneath the rows it described, and `docs/COMPLIANCE.md` §2
-                  named this exact relocation as the fix if that section ever
-                  went: TCGplayer's Partner Guidelines want disclosure that is
-                  "clear, conspicuous, prominent and unambiguous to the average
-                  member of your audience", and adjacency is most of that. With
-                  the section gone, leaving the sentence where it was would have
-                  left it describing nothing, and dropping it would have left a
-                  paid link undisclosed.
-
-                  ONCE, BECAUSE THERE IS ONE LINK. The "exactly once" assertion
-                  in `ssg.test.ts` predates this and still holds — it just holds
-                  for the opposite reason. It used to guard against repeating
-                  the sentence beside this button as well as under the section;
-                  now this button IS the section's replacement and the sentence
-                  has nowhere else to be.
-
-                  THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same
-                  constant the link does, so the sentence cannot claim we earn
-                  nothing on a page whose link is earning — see
-                  `apps/site/src/lib/tcgplayer.ts`.
-                */}
-                <p className="of-card__verify of-card__face-verify">
-                  {buyDisclosure()}
-                </p>
-              </>
-            )}
           </div>
 
           <div className="of-card__facts-column">
@@ -1308,10 +1237,97 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             </BevelledPlate>
 
             {/*
-              LEGALITY IS THE FIRST THING UNDER THE PANEL. `docs/SCRYFALL-GAP.md`
-              §3: "our legality table is already better than Scryfall's … put it
-              on the card page above the fold — it is the differentiator that is
-              already finished."
+              THE ONLY BUY LINK ON THE PAGE, and it used to be one of several.
+              A "Buy" section below the printings table listed a row per
+              purchasable printing; it is gone, and this is what commerce on a
+              card page now amounts to. It buys the printing this page is a page
+              OF — the one in the picture across the gutter, and the one the
+              panel above it mirrors.
+
+              UNDER THE PANEL, NOT UNDER THE PICTURE, and the picture is why it
+              moved. The face column is one `card.face.normal` image and nothing
+              else, which on most cards is taller than the panel, the legality
+              grid and the rules join stacked together — so a button at the end
+              of that column rendered level with the BOTTOM of the image, a
+              screenful below the facts it belongs beside, with empty ground to
+              the right of it, and on a phone below the fold. Here it is the
+              first thing after the card itself, where a reader who has just
+              read the card is.
+
+              THE LABEL DOES THE WORK THE PICTURE USED TO. Adjacency to the face
+              was the argument for a bare button once; the `detail` below is
+              what names the printing now, and it named it then too.
+
+              AND IT STILL NAMES WHICH PRINTING IT BUYS, because it cannot be
+              sure that is the one you wanted. A card route addresses an ART,
+              and 5,052 arts in this corpus are shared by more than one foiling,
+              so `shown.printing` is the printing that CLAIMED the picture
+              rather than the foiling a reader has in mind — see the note on
+              `faceBuyHref` for the measurement and for why that is still the
+              right default. The `detail` is what keeps the claim honest: this
+              says outright that it buys MST131 Standard.
+
+              THAT CLAIM MATTERS MORE NOW, NOT LESS, and the reason is worth
+              stating because the naming machinery got smaller in the same
+              change. While the section existed, a reader who wanted the foil
+              could read the `detail`, see this was not it, and click the
+              labelled row that was. There is no such row any more. The label is
+              no longer an aid to choosing between links — it is the whole of
+              what the page discloses about which product this one is.
+
+              NOTHING WHERE THERE IS NOTHING TO BUY. 1,336 printings have no
+              upstream product; `buyHref` returns undefined for those and this
+              renders no button rather than a disabled one — and the disclosure
+              below is inside the same branch, so a page with no link makes no
+              claim about links.
+            */}
+            {faceBuyHref === undefined || shown === undefined ? null : (
+              <>
+                <IconButton
+                  detail={faceBuyLabel ?? shown.printing.id}
+                  href={faceBuyHref}
+                  icon={<TcgplayerMark />}
+                  label="Buy on TCGplayer"
+                  rel={buyRel()}
+                />
+
+                {/*
+                  THE DISCLOSURE FOLLOWS THE LINK, which is why it moved with
+                  it rather than staying under the face. It used to sit under
+                  the "Buy" section, directly beneath the rows it described, and
+                  `docs/COMPLIANCE.md` §2 named that adjacency as the fix if
+                  that section ever went: TCGplayer's Partner Guidelines want
+                  disclosure that is "clear, conspicuous, prominent and
+                  unambiguous to the average member of your audience", and being
+                  next to the link is most of that. The column it sits in
+                  changed; what it sits under did not.
+
+                  ONCE, BECAUSE THERE IS ONE LINK. The "exactly once" assertion
+                  in `ssg.test.ts` predates this and still holds — it just holds
+                  for the opposite reason. It used to guard against repeating
+                  the sentence beside this button as well as under the section;
+                  now this button IS the section's replacement and the sentence
+                  has nowhere else to be.
+
+                  THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same
+                  constant the link does, so the sentence cannot claim we earn
+                  nothing on a page whose link is earning — see
+                  `apps/site/src/lib/tcgplayer.ts`.
+                */}
+                <p className="of-card__verify of-card__buy-verify">
+                  {buyDisclosure()}
+                </p>
+              </>
+            )}
+
+            {/*
+              LEGALITY LEADS THE APPARATUS, under the panel and the one control
+              that sits with it. `docs/SCRYFALL-GAP.md` §3: "our legality table
+              is already better than Scryfall's … put it on the card page above
+              the fold — it is the differentiator that is already finished." A
+              button and one line of disclosure are not a section, so nothing
+              was pushed below the fold to seat them; legality is still the
+              first thing this page SAYS about the card after the card.
             */}
             <section className="of-card__apparatus" aria-labelledby="legality">
               <h2 className="of-apparatus__heading" id="legality">

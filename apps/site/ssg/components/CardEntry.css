@@ -1110,7 +1110,7 @@
     list of one row per purchasable printing — a quiet wide-tracked label, a
     button, wrapping rather than scrolling because a label and a button fit a
     320px screen stacked. They went with the section. What is left of Buy on a
-    card page is the two rules below: the button under the face, and the
+    card page is the two rules below: the button under the card panel, and the
     sentence that has to accompany it.
 
     IT IS WRITTEN DOWN RATHER THAN SILENTLY DELETED because that is what this
@@ -1120,34 +1120,46 @@
   */
 
 /*
-    THE FACE'S OWN BUTTON. It is centred on the column because the face above it
-    is, and — now that the list below is gone — it is the only control in that
-    column, so a left edge would align it to nothing.
+    THE BUY BUTTON, under the panel that mirrors the printing it buys. See
+    `CardEntry.tsx` for why it left the face column; what it needs here is one
+    declaration.
+
+    `align-self`, BECAUSE THE COLUMN STRETCHES ITS CHILDREN. The facts column is
+    a flex column, so its default `stretch` would pull an `inline-flex` button
+    out to the full width of the panel above it — a control as wide as the card,
+    which reads as a banner rather than as a button. `flex-start` gives it its
+    content width at the edge the panel, the legality grid and every heading in
+    this column already align to.
+
+    IT IS NO LONGER CENTRED, and that was right where it was: it was the only
+    thing under a centred image, in a column of one. Here it is one item in a
+    stack of flush-left ones, and centring it would align it to nothing.
   */
-.of-card__face-column .of-icon-button {
-  align-self: center;
+.of-card__facts-column > .of-icon-button {
+  align-self: flex-start;
 }
 
 /*
-    THE DISCLOSURE, REHOMED UNDER THAT BUTTON. It used to sit in the Buy section
-    at full measure; here it is inside a column that is one card face wide, so
-    the only thing this rule does is keep it from setting a floor under that
-    column. `min-inline-size: 0` lets the flex item be narrower than its longest
-    word wants, which is the 320px case — the column already carries a
-    `min-inline-size` for the face, and a paragraph is not allowed to raise it.
+    THE DISCLOSURE, DIRECTLY UNDER THAT BUTTON. It used to sit in the Buy
+    section at full measure, then under the face; it is now in the facts column
+    with the link it describes, and the rule that follows it there is the same
+    one it needed before. `min-inline-size: 0` lets the flex item be narrower
+    than its longest word wants, which is the 320px case — a paragraph is not
+    allowed to set a floor under the column it sits in.
 
-    IT IS NOT CENTRED WITH THE BUTTON. A centred 380-character paragraph is
-    harder to read than a ragged-right one, and the claim being made here is
-    legal rather than decorative: it should read like the rights line at the
-    foot of the page, which is also flush left under centred material.
+    IT IS NOT INDENTED TO THE BUTTON, IT IS THE MEASURE. `align-self: stretch`
+    keeps it flush with the panel above and the legality grid below, so it reads
+    as a line of the page rather than as a caption hanging off the control. The
+    claim being made is legal rather than decorative: it should read like the
+    rights line at the foot of the page.
   */
-.of-card__face-verify {
+.of-card__buy-verify {
   min-inline-size: 0;
   align-self: stretch;
-  /* The column is a flex column with a `base` gap, and `.of-card__verify` adds
-       a `base` margin of its own — which in the section it came from was the
-       only separation there was. Here the two stack into a double gap, so this
-       gives the margin back to the gap. */
+  /* The column is a flex column with a gap of its own, and `.of-card__verify`
+       adds a `base` margin — which in the section it came from was the only
+       separation there was. Here the two stack into a double gap, so this gives
+       the margin back to the gap. */
   margin-block-start: 0;
 }
 
@@ -1294,8 +1306,8 @@
   `.of-card__buy .of-card__visually-hidden`, for the same reason as the selector
   above: the hidden span names the printing so the link is not one of sixteen
   reading "TCGplayer", and selected-and-pasted that text would come with it.
-  Buy links are `IconButton`s now and live in their own section, so the rule
-  belongs to the primitive — see `user-select` on `.of-icon-button__detail` in
+  The buy link is an `IconButton` now — one of them, and the section that held
+  the other fifteen is gone — so the rule belongs to the primitive — see `user-select` on `.of-icon-button__detail` in
   `packages/components/src/react/IconButton.css`.
 
   It is called out rather than silently deleted because deleting it silently is
