@@ -41,6 +41,7 @@
  * and it has to run before the reader reads anything.
  */
 
+import type { StatKind } from "optfall-components";
 import {
   BevelledPlate,
   CardFace,
@@ -134,34 +135,15 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
  * The three positions the ordinary card frame has, whether or not a card fills
  * them. Cost sits top-left, attack bottom-left, defence bottom-right.
  *
- * PRINTING ONE OF THESE IS WHAT PUTS A CARD ON THIS FRAME. It is not the list
- * of positions drawn when empty — that is `SOCKETED_STATS`, just below, and it
- * is two of these three.
+ * A position this card does not fill is RESERVED, NOT DRAWN — it holds its
+ * width and paints nothing. See `printedStats` for why it is neither drawn nor
+ * dropped.
  *
  * The other two stats are not here because they have no fixed position: life
  * and intellect belong to a permanent, and each is placed by what the card IS
  * rather than by a slot the frame reserves.
  */
 const COMBAT_STATS = ["Cost", "Power", "Defence"] as const;
-
-/**
- * The positions that are DRAWN when the card leaves them empty, which is not
- * all three: the attack plate came back out.
- *
- * Power was in this list and is not any more. It was the socket a reader met
- * most — 1,543 cards print cost and defence and no power, more than any other
- * shape the rule admits — and on every one of them it answered a question
- * nobody had asked, in the corner an attack would sit. "This action has no
- * attack" is not news about an action; "this card you never pay for has no
- * cost" still is, which is why cost and defence keep theirs. See the note on
- * `printedStats` for the argument in full.
- *
- * `COMBAT_STATS` still names all three, because printing power is still what
- * puts a card on this frame: a weapon prints power and nothing else, and the
- * empty cost bubble and defence shield beside it are what say which frame it
- * is on.
- */
-const SOCKETED_STATS = ["Cost", "Defence"] as const;
 
 /**
  * The stats that mean a card is NOT on the ordinary frame.
@@ -173,6 +155,105 @@ const SOCKETED_STATS = ["Cost", "Defence"] as const;
  * bubble and no defence shield to leave standing empty.
  */
 const PERMANENT_STATS = ["Life", "Intellect"] as const;
+
+/**
+ * One corner badge — a label and its plate — or the SPACE one would occupy.
+ *
+ * THE ABSENT CASE IS THE REASON THIS IS A FUNCTION. It renders exactly what the
+ * printed case renders and then hides it, which is the only way to be certain
+ * the width it reserves is the width a value would have taken. Sizing a
+ * stand-in by hand would be a second definition of a badge's geometry, free to
+ * drift from the first the next time the label or the plate changes.
+ *
+ * `visibility: hidden`, NOT `display: none` — the rule is in `CardEntry.css` —
+ * because the point is to keep the grid track. And `aria-hidden`, because
+ * nothing here is a fact about the card: a reader hearing the page should not
+ * be told about a plate a reader seeing it cannot see. `StatGlyph` still spells
+ * its absence out in an `aria-label`; that string is inert under this wrapper
+ * and is what would be read if the badge were ever un-hidden.
+ */
+function StatBadge({
+  label,
+  value,
+  kind,
+}: {
+  readonly label: string;
+  readonly value: string | null;
+  readonly kind: StatKind | null;
+}) {
+  const absent = value === null;
+  return (
+    <div
+      className={
+        absent ? "of-card__badge of-card__badge--reserved" : "of-card__badge"
+      }
+      aria-hidden={absent ? true : undefined}
+    >
+      <dt>{label}</dt>
+      <dd>{kind === null ? value : <StatGlyph kind={kind} value={value} />}</dd>
+    </div>
+  );
+}
+
+/**
+ * One end of a corner band: what the card puts there, or the width of whatever
+ * is at the other end.
+ *
+ * A BAND IS `corner | centred thing | corner`, AND THE CENTRED THING IS CENTRED
+ * INSIDE ITS OWN COLUMN — see the grid note in `CardEntry.css`. So a corner
+ * with nothing in it does not leave a tidy gap; it hands its width to the
+ * middle column and slides the name, or the type line, off the card's axis.
+ * Measured on the built pages: 37px left of centre at a 320px viewport, 52px at
+ * 1226px.
+ *
+ * SO AN EMPTY CORNER MIRRORS THE FULL ONE, which is `mirror` — the opposite
+ * corner's own badges, rendered again and hidden. Reflecting the real thing is
+ * what makes the two widths equal by construction; a stand-in sized by hand
+ * would be a second opinion about how wide a badge is, free to drift from the
+ * first. 571 cards need it in the title band — every pitch-0 card that prints a
+ * cost, and every pitched card that does not — and one card needs it in the
+ * bottom bar: `Polly Cranka`, which prints life and no intellect.
+ *
+ * BOTH CORNERS EMPTY IS THE CASE THAT NEEDS NOTHING. A hero prints neither
+ * pitch nor cost, and two empty corners are already symmetrical, so that band
+ * gets the bare spacer it has always had.
+ */
+function Corner({
+  side,
+  content,
+  mirror,
+  silent = false,
+}: {
+  readonly side: "start" | "end";
+  readonly content: React.ReactNode | null;
+  readonly mirror: React.ReactNode | null;
+  /** True when everything in `content` is a reserved position, so the list has
+      nothing in it worth announcing. */
+  readonly silent?: boolean;
+}) {
+  if (content !== null) {
+    return (
+      <dl
+        className={`of-card__badges of-card__badges--${side}`}
+        aria-hidden={silent ? true : undefined}
+      >
+        {content}
+      </dl>
+    );
+  }
+  if (mirror !== null) {
+    return (
+      // biome-ignore lint/a11y/noAriaHiddenOnFocusable: a `<dl>` is not focusable and neither is anything a corner holds — a label, a plate, a stone. The rule fires on the literal `"true"`; the same attribute two branches up, written as an expression, does not trip it. Keep the corners non-interactive: a focusable thing in here WOULD be the bug this rule is about, because the mirror renders it a second time.
+      <dl
+        className={`of-card__badges of-card__badges--${side} of-card__corner-mirror`}
+        aria-hidden="true"
+      >
+        {mirror}
+      </dl>
+    );
+  }
+  return <span className="of-card__corner-empty" aria-hidden="true" />;
+}
 
 const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
   Power: "start",
@@ -189,8 +270,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const text = card.functional_text.trim();
 
   /**
-   * The stat block, including the two combat positions this card leaves empty
-   * — cost and defence. NOT power: see the end of this note.
+   * The stat block, including the combat positions this card leaves empty —
+   * which are RESERVED rather than drawn. See the end of this note.
    *
    * A Flesh and Blood card frame has three fixed positions — cost top-left,
    * attack bottom-left, defence bottom-right — and a card that prints nothing
@@ -219,23 +300,28 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * was carved out to prevent, arriving through a shape the carve-out did not
    * name.
    *
-   * WHICH POSITIONS GET A SOCKET IS `SOCKETED_STATS`, AND POWER IS NOT ONE OF
-   * THEM ANY MORE. It was, and it was the single biggest effect this rule had:
-   * 1,543 cards print cost and defence and no power (actions, instants,
-   * defence reactions), 411 print cost alone (items, instants, tokens) and 529
-   * print defence alone (equipment) — 2,483 cards, half the corpus, each
-   * carrying an empty attack plate. Counted per reader rather than per card it
-   * was worse still: the plate said "no attack" on almost every card anyone
-   * opens. An absence is only worth drawing where the reader might have
-   * expected a value, and nobody expects an attack on a defence reaction.
+   * AN UNFILLED POSITION IS NOW BLANK, AND THAT IS THE CHANGE. The plates
+   * above were drawn: a silhouette, an en dash and a label, on every position
+   * a card left empty. It was the commonest thing on the page — 1,543 cards
+   * print cost and defence and no power (actions, instants, defence
+   * reactions), 411 print cost alone (items, instants, tokens), 529 print
+   * defence alone (equipment) — so half the corpus carried a plate whose whole
+   * content was the word "no". An absence is only worth drawing where a reader
+   * might have gone looking for a value, and on a defence reaction nobody goes
+   * looking for an attack. What they get instead is nothing at all: no cell,
+   * no dash, no label.
    *
-   * COST AND DEFENCE KEEP THEIRS, which is the same argument reaching the
-   * opposite answer rather than an inconsistency left behind. "This card you
-   * never pay for has no cost" is news about an equipment or a weapon; "this
-   * card you cannot block with has no defence" is news about a weapon or an
-   * item. Both sit against a 0 that a lot of cards genuinely print — 1,648
-   * costs and 191 defences — so the blank-versus-numeral confusion the sockets
-   * were built for is still live for those two. For power it is 13 cards.
+   * IT IS RESERVED, NOT DROPPED, AND THE DIFFERENCE IS THE WHOLE MECHANISM.
+   * The two bands are three-column grids — corner, centred thing, corner — and
+   * the name and the type line are centred INSIDE the middle column, so a
+   * corner that collapses to nothing drags them off the card's axis. Measured
+   * on the built pages before this was fixed: the type line sat 37px left of
+   * centre at a 320px viewport and 52px left at 1226px, against 0-6px on a
+   * card that filled all three. Half the corpus, visibly off-axis. So the
+   * badge still renders and still occupies its exact width — `visibility:
+   * hidden` rather than `display: none` — and is `aria-hidden`, because a
+   * reader hearing the page should not be told about a plate a reader seeing
+   * it cannot see. What was a socket is now a spacer.
    *
    * EVERY COUNT IN THIS NOTE IS re-measured against the corpus rather than
    * adjusted by hand; they last moved when arcane left `STAT_ORDER`. 287 cards
@@ -265,8 +351,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     const printed = printedValues.get(label);
     const shown =
       printed !== undefined ||
-      (usesCombatFrame &&
-        (SOCKETED_STATS as readonly string[]).includes(label));
+      (usesCombatFrame && (COMBAT_STATS as readonly string[]).includes(label));
     if (!shown) return [];
 
     const kind = SYMBOL_FOR[label];
@@ -291,6 +376,40 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     (stat) => CORNER_FOR[stat.label] !== "start",
   );
   const hasStats = page.pitch !== 0 || printedStats.length > 0;
+
+  /*
+     THE FOUR CORNERS, BUILT BEFORE THEY ARE PLACED, because each one is also
+     the other's mirror — see `Corner` — and a corner cannot be handed its
+     opposite until both exist.
+  */
+  const pitchBadge =
+    page.pitch === 0 ? null : (
+      <div className="of-card__badge">
+        <dt>Pitch</dt>
+        <dd>
+          <PitchJewel value={page.pitch} />
+        </dd>
+      </div>
+    );
+  const costBadge =
+    costStat === undefined ? null : (
+      <StatBadge label={costStat.label} value={costStat.value} kind="cost" />
+    );
+  const badgesFor = (stats: typeof printedStats) =>
+    stats.length === 0
+      ? null
+      : stats.map((stat) => (
+          <StatBadge
+            key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            kind={stat.kind}
+          />
+        ));
+  const startBadges = badgesFor(startStats);
+  const endBadges = badgesFor(endStats);
+  const allReserved = (stats: typeof printedStats) =>
+    stats.length > 0 && stats.every((stat) => stat.value === null);
 
   const artists = [
     ...new Set(card.printings.flatMap((printing) => printing.artists)),
@@ -963,21 +1082,11 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     two are a `<dl>` for the reason the stat corners are: this
                     is term-and-value data.
                   */}
-                  {page.pitch === 0 ? (
-                    <span
-                      className="of-card__corner-empty"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <dl className="of-card__badges of-card__badges--start">
-                      <div className="of-card__badge">
-                        <dt>Pitch</dt>
-                        <dd>
-                          <PitchJewel value={page.pitch} />
-                        </dd>
-                      </div>
-                    </dl>
-                  )}
+                  <Corner
+                    side="start"
+                    content={pitchBadge}
+                    mirror={costBadge}
+                  />
                   {/*
                     `card.name`, not `page.label`. Everywhere else in the product
                     a link to this card renders the label — 900 names belong to
@@ -986,21 +1095,15 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     heading would make the three versions read as three cards.
                   */}
                   <h1 className="of-card__name">{card.name}</h1>
-                  {costStat === undefined ? (
-                    <span
-                      className="of-card__corner-empty"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <dl className="of-card__badges of-card__badges--end">
-                      <div className="of-card__badge">
-                        <dt>{costStat.label}</dt>
-                        <dd>
-                          <StatGlyph kind="cost" value={costStat.value} />
-                        </dd>
-                      </div>
-                    </dl>
-                  )}
+                  {/* `silent` because a `<dl>` holding one hidden item is a
+                      definition list with nothing in it, and that is what a
+                      screen reader would announce. */}
+                  <Corner
+                    side="end"
+                    content={costBadge}
+                    mirror={pitchBadge}
+                    silent={costStat?.value === null}
+                  />
                 </header>
 
                 {/*
@@ -1040,53 +1143,23 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   printed power of 0 and still get an entry saying 0.
                 */}
                 <div className="of-card__band of-card__band--bar">
-                  {startStats.length === 0 ? (
-                    <span
-                      className="of-card__corner-empty"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <dl className="of-card__badges of-card__badges--start">
-                      {startStats.map((stat) => (
-                        <div className="of-card__badge" key={stat.label}>
-                          <dt>{stat.label}</dt>
-                          <dd>
-                            {stat.kind === null ? (
-                              stat.value
-                            ) : (
-                              <StatGlyph kind={stat.kind} value={stat.value} />
-                            )}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
+                  <Corner
+                    side="start"
+                    content={startBadges}
+                    mirror={endBadges}
+                    silent={allReserved(startStats)}
+                  />
 
                   <p className="of-card__type-line">
                     {typeLine === "" ? "Flesh and Blood card" : typeLine}
                   </p>
 
-                  {endStats.length === 0 ? (
-                    <span
-                      className="of-card__corner-empty"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <dl className="of-card__badges of-card__badges--end">
-                      {endStats.map((stat) => (
-                        <div className="of-card__badge" key={stat.label}>
-                          <dt>{stat.label}</dt>
-                          <dd>
-                            {stat.kind === null ? (
-                              stat.value
-                            ) : (
-                              <StatGlyph kind={stat.kind} value={stat.value} />
-                            )}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
+                  <Corner
+                    side="end"
+                    content={endBadges}
+                    mirror={startBadges}
+                    silent={allReserved(endStats)}
+                  />
 
                   {!hasStats ? (
                     <p className="of-card__void">
