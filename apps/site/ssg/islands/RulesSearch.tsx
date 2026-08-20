@@ -67,6 +67,7 @@ import {
   queryFromUrl,
   requestFor,
   withPageParams,
+  writeQueryUrl,
 } from "../../src/lib/pagination";
 import { useFocusShortcut } from "./useFocusShortcut";
 import {
@@ -297,45 +298,29 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
    * back button nobody can use. Submitting is the deliberate act, so that one
    * gets a `pushState` and a real history entry.
    */
-  const syncUrl = useCallback(
-    (
-      mode: "replace" | "push",
-      value: string,
-      nextPage: number,
-      nextSize: PageSize,
-    ): void => {
-      if (typeof window === "undefined") return;
-      const url = new URL(window.location.href);
-      const trimmed = value.trim();
-      if (trimmed === "") url.searchParams.delete("q");
-      else url.searchParams.set("q", value);
-      withPageParams(url.searchParams, nextPage, nextSize);
-      const target = `${url.pathname}${url.search}`;
-      if (target === `${window.location.pathname}${window.location.search}`) {
-        return;
-      }
-      if (mode === "push") window.history.pushState({}, "", target);
-      else window.history.replaceState({}, "", target);
-      /*
-       * `useCallback` WITH NO DEPENDENCIES, because it has none: every value it
-       * reads is a parameter or a global. Without it the function is a new
-       * identity each render, so the effect below either lists a dependency that
-       * changes every time — an infinite loop — or omits it and lies about what
-       * it closes over. Stabilising the function is the honest third option.
-       */
-    },
-    [],
-  );
-
+  /**
+   * Keep the address bar in step with the field.
+   *
+   * `replaceState` while typing: a query is one navigation, not one per letter,
+   * and a back button that walks backwards through "domin", "domi", "dom" is a
+   * back button nobody can use. Submitting is the deliberate act, so that one
+   * gets a `pushState` and a real history entry.
+   *
+   * ~~The whole write lived here.~~ It is `writeQueryUrl` in
+   * `../../src/lib/pagination.ts` now, shared with `CardSearch`, which had an
+   * identical copy. What that move protects is the no-op guard: this surface
+   * writes on every keystroke, so an address that has not changed must not
+   * become a second history entry, and that rule was previously stated twice.
+   */
   useEffect(() => {
     // Debounced so the browser's own rate limit on history writes is never the
     // thing that decides whether the URL is right.
     const timer = setTimeout(
-      () => syncUrl("replace", query, page, size),
+      () => writeQueryUrl({ mode: "replace", query, page, size }),
       SETTLE,
     );
     return () => clearTimeout(timer);
-  }, [query, page, size, syncUrl]);
+  }, [query, page, size]);
 
   /**
    * The address of another page of this answer, built off the live URL so that
@@ -371,10 +356,10 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
     (nextPage: number, nextSize: PageSize): void => {
       setPage(nextPage);
       setSize(nextSize);
-      syncUrl("push", query, nextPage, nextSize);
+      writeQueryUrl({ mode: "push", query, page: nextPage, size: nextSize });
       window.scrollTo({ top: 0 });
     },
-    [query, syncUrl],
+    [query],
   );
 
   /** Back and forward have to work, which means listening for them. */
@@ -435,7 +420,7 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
           // Only once hydrated. Without JavaScript this handler does not exist
           // and the form navigates to the same URL by itself.
           event.preventDefault();
-          syncUrl("push", query, page, size);
+          writeQueryUrl({ mode: "push", query, page, size });
           field.current?.blur();
         }}
         onKeyDown={(event) => {

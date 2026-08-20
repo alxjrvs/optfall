@@ -253,6 +253,57 @@ export function pagingFromUrl(): { page: number; size: PageSize } {
 }
 
 /**
+ * Put a query and its paging into the address bar, on a surface that has both.
+ *
+ * THE THIRD COPY OUT OF THE ISLANDS, and the one with the most in it. The
+ * extraction that shared {@link queryFromUrl} and {@link pagingFromUrl} took the
+ * READING half; `CardSearch` and `RulesSearch` each kept a `syncUrl` of their
+ * own, and the two were identical apart from one extra parameter. Everything
+ * below — the `window` guard, trimming to decide delete-or-set, deferring the
+ * page parameters to {@link withPageParams}, the no-op guard, and push versus
+ * replace — was written twice.
+ *
+ * THE NO-OP GUARD IS THE PART WORTH SHARING, because it is the part that looks
+ * like an optimisation and is not. `RulesSearch` writes the URL from a debounced
+ * effect on every keystroke, so without it a reader who types and then deletes
+ * back to where they started gets two history entries for one address — and
+ * browsers rate-limit `pushState`, so the entries that matter can be the ones
+ * dropped. It is load-bearing on the live surface and merely tidy on the
+ * submit-driven one, which is exactly the asymmetry that makes a second copy
+ * likely to lose it.
+ *
+ * `drop` IS HOW THE ONE REAL DIFFERENCE SURVIVES. `/search` deletes a legacy
+ * `?display=` when the submitted query carries a `display:` operator of its own,
+ * because a stale parameter beside a contradicting operator is the ambiguity
+ * that operator exists to remove. `/cr` has no such parameter and passes
+ * nothing. Naming it as a list of parameters to remove keeps the rule at the
+ * call site that owns it rather than teaching this function what `display` is.
+ */
+export function writeQueryUrl(options: {
+  readonly mode: "replace" | "push";
+  /** What the URL should say. NOT always what is in the box — see `CardSearch`. */
+  readonly query: string;
+  readonly page: number;
+  readonly size: PageSize;
+  /** Parameters to delete outright. `/search` passes `display` on some submits. */
+  readonly drop?: readonly string[];
+}): void {
+  if (typeof window === "undefined") return;
+
+  const url = new URL(window.location.href);
+  if (options.query.trim() === "") url.searchParams.delete("q");
+  else url.searchParams.set("q", options.query);
+  withPageParams(url.searchParams, options.page, options.size);
+  for (const param of options.drop ?? []) url.searchParams.delete(param);
+
+  const target = `${url.pathname}${url.search}`;
+  if (target === `${window.location.pathname}${window.location.search}`) return;
+
+  if (options.mode === "push") window.history.pushState({}, "", target);
+  else window.history.replaceState({}, "", target);
+}
+
+/**
  * The address of one page of a query, built from scratch.
  *
  * FROM A GIVEN SEARCH STRING RATHER THAN FROM `location`, because the two

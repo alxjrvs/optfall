@@ -61,6 +61,7 @@ import {
   queryFromUrl,
   requestFor,
   withPageParams,
+  writeQueryUrl,
 } from "../../src/lib/pagination";
 import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
 import { HEADER_FIELD_ID } from "./HeaderSearch";
@@ -381,33 +382,23 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
    * without submitting and then toggling the view pushed a URL carrying the
    * un-submitted text while the screen showed results for the old one.
    */
-  const syncUrl = useCallback(
-    (
-      mode: "replace" | "push",
-      written: string,
-      dropParam: boolean,
-      nextPage: number,
-      nextSize: PageSize,
-    ): void => {
-      if (typeof window === "undefined") return;
-      const url = new URL(window.location.href);
-      const trimmed = written.trim();
-      if (trimmed === "") url.searchParams.delete("q");
-      else url.searchParams.set("q", written);
-      withPageParams(url.searchParams, nextPage, nextSize);
-      /* The parameter is never written again, only read. A stale
-         `?display=list` beside a `display:grid` query is exactly the ambiguity
-         the operator removed. */
-      if (dropParam) url.searchParams.delete("display");
-      const target = `${url.pathname}${url.search}`;
-      if (target === `${window.location.pathname}${window.location.search}`) {
-        return;
-      }
-      if (mode === "push") window.history.pushState({}, "", target);
-      else window.history.replaceState({}, "", target);
-    },
-    [],
-  );
+  /**
+   * `written` is what the URL should say, and it is NOT always the box.
+   *
+   * A submit writes what was just asked; switching the view writes what is
+   * *currently answered*. Both writing the box meant that typing a new query
+   * without submitting and then toggling the view pushed a URL carrying the
+   * un-submitted text while the screen showed results for the old one. That
+   * distinction is why the calls below pass `submitted` rather than the field.
+   *
+   * ~~The write itself lived here.~~ It is `writeQueryUrl` in
+   * `../../src/lib/pagination.ts` now, shared with `RulesSearch`, which had an
+   * identical copy down to the no-op guard. The one difference survives as
+   * `drop`: this surface deletes a legacy `?display=` on the submits that carry
+   * a `display:` operator, because a stale parameter beside a contradicting
+   * operator is the ambiguity the operator exists to remove. `/cr` has no such
+   * parameter and passes nothing.
+   */
 
   /**
    * The address of another page of THIS answer, built off the live URL.
@@ -417,7 +408,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
    * read but never written, and which a from-scratch href would silently drop
    * and so change the view as a side effect of turning a page.
    *
-   * `submitted` rather than `query`, for the reason `syncUrl`'s own comment
+   * `submitted` rather than the box, for the reason the note above `show` gives
    * gives: the box may hold text that has not been asked yet, and a link
    * carrying it would point at a page of a search nobody has run.
    */
@@ -450,10 +441,15 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
     (nextPage: number, nextSize: PageSize): void => {
       setPage(nextPage);
       setSize(nextSize);
-      syncUrl("push", submitted, false, nextPage, nextSize);
+      writeQueryUrl({
+        mode: "push",
+        query: submitted,
+        page: nextPage,
+        size: nextSize,
+      });
       window.scrollTo({ top: 0 });
     },
-    [submitted, syncUrl],
+    [submitted],
   );
 
   /** Back and forward have to work, which means listening for them. */
@@ -525,9 +521,15 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
       setSubmitted(written);
       setParamDisplay(null);
       if (resetPage) setPage(1);
-      syncUrl("push", written, true, nextPage, size);
+      writeQueryUrl({
+        mode: "push",
+        query: written,
+        page: nextPage,
+        size,
+        drop: ["display"],
+      });
     },
-    [page, size, submitted, syncUrl],
+    [page, size, submitted],
   );
 
   /**
@@ -634,11 +636,17 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
       reader and now contradicts the address bar it did not leave.
 
       So the state is forgotten on precisely the submits that drop the
-      parameter, which is the same expression `syncUrl` is given.
+      parameter, which is the same expression `drop` is given below.
     */
     const droppingParam = next.display !== null;
     if (droppingParam) setParamDisplay(null);
-    syncUrl("push", raw, droppingParam, 1, size);
+    writeQueryUrl({
+      mode: "push",
+      query: raw,
+      page: 1,
+      size,
+      drop: droppingParam ? ["display"] : [],
+    });
     headerField()?.blur();
 
     /* `in` rather than a cast: `parseCardQuery` returns no `total`, and the
