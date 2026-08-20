@@ -23,12 +23,13 @@
  * through a link's own edge — which is what earlier attempts did, and why they
  * produced odd angled bites out of the rings.
  *
- * IT IS DRAWN AS AN SVG BECAUSE IT HAS TO SURVIVE A FAVICON — and the honest
- * finding is that at three links it does NOT. Measured at 16px the chain is a
- * smudge, so the favicon endpoint draws ONE link, upright, from
- * `MARK_GEOMETRY.single`. That is the same path under a different transform
- * rather than a second drawing: the favicon is a link of this chain, which is
- * the relationship the geometry constant exists to guarantee.
+ * IT IS DRAWN AS AN SVG BECAUSE IT HAS TO SURVIVE A FAVICON, and the honest
+ * finding at 16px is that three links are a smudge. That finding once bought a
+ * reduced mark — one link, upright — for the tab and then for the installed-app
+ * icon, and both have since gone back to the chain: an icon that is not the
+ * logo is worse at every size than the logo is at its worst size. So
+ * `apps/site/ssg/assets.ts` draws THIS chain, from these same constants, and
+ * the 16px case is accepted rather than designed around.
  *
  * NOT SQUARE, AND THE SIZING FOLLOWS. The chain is about twice as wide as it is
  * tall, so the component sets a HEIGHT from `ornament.mark.*` and lets the

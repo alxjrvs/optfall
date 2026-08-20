@@ -52,35 +52,29 @@ export interface GeneratedAsset {
  *
  * `TokenTable` is a `Partial` record, so every lookup is `string | undefined`
  * and the tempting spelling is `?? "#000"`. That fallback is the bug: a token
- * renamed in `packages/theme` would leave the tab showing a black lozenge and
- * nothing anywhere would say so. This runs at build time, so throwing means a
+ * renamed in `packages/theme` would leave the tab — and the home screen —
+ * showing a black lozenge and nothing anywhere would say so. This runs at build time, so throwing means a
  * failed build rather than a wrong favicon — the loud failure is free here.
  */
 function literal(tokens: TokenTable, id: TokenId): string {
   const value = tokens[id];
   if (value === undefined) {
     throw new Error(
-      `favicon.svg: optfall-theme defines no ${id}. The favicon reads token values directly because it cannot see the page stylesheet; fix the token id rather than inlining a colour here.`,
+      `generated icon: optfall-theme defines no ${id}. A referenced SVG gets no page stylesheet, so these read token values directly; fix the token id rather than inlining a colour here.`,
     );
   }
   return value;
 }
 
 /**
- * `/favicon.svg` — the mark, in the tab.
+ * The chain, painted — the clips, the three links, and the redraws that settle
+ * each pair's upper crossing.
  *
- * IT IS THE CHAIN, NOT ONE LINK, and it used to be one link. The argument for
- * the single link was that a favicon is rasterised at 16px, three interlocked
- * rings become mud at that size, and "a ring with an open window" is the last
- * thing to survive as the icon shrinks. That reasoning is sound and it produced
- * a tab icon that is not the logo — an unfamiliar lozenge next to every other
- * tab, where the whole point of the mark is that the thing you see a thousand
- * times a session is the thing on the tab.
- *
- * So it is the chain, and the 16px case is accepted rather than designed for:
- * browsers ask for 32px and larger far more often than 16 these days, and an
- * icon that is slightly dense at the smallest size beats one that is legible
- * and wrong at every size.
+ * ONE DECLARATION, TWO CANVASES. `/favicon.svg` draws this at the mark's own
+ * aspect; the install icons draw it on a square, over painted ground. Same
+ * paths, same paint order, same fills. What differs between them is the box
+ * around it and what is behind it, and that is all either caller supplies — so
+ * there is no second drawing of the chain to drift from this one.
  *
  * THE INTERLOCK IS PAINT ORDER, NOT MASKING, and this reproduces `Mark.tsx`
  * exactly rather than approximating it. Every link is drawn left to right,
@@ -92,8 +86,8 @@ function literal(tokens: TokenTable, id: TokenId): string {
  *
  * WHAT IT DROPS FROM THE ON-PAGE MARK is the bevel. `Mark` carries a light top
  * edge and a dark bottom one as two 1px drop-shadows and needs `overflow:
- * visible` so an SVG root does not shear them off. A favicon is rasterised
- * inside exactly that clip, where a 1px edge is both uncuttable and mud.
+ * visible` so an SVG root does not shear them off. These are rasterised inside
+ * exactly that clip, where a 1px edge is both uncuttable and mud.
  *
  * THE THREE PITCH COLOURS ARE LITERAL HERE. `Mark` fills each link from a token
  * through a stylesheet; a referenced SVG gets no page CSS, so the values are
@@ -101,14 +95,17 @@ function literal(tokens: TokenTable, id: TokenId): string {
  * same trade `themeStylesheet()` makes — no second declaration to drift,
  * because there is no declaration at all, only a derivation.
  *
- * IT IS NOT THEMED, unlike the version that preceded it. The single link took
- * the accent and flipped it under `prefers-color-scheme` because one shape had
- * to hold against both a dark and a light tab strip. The chain carries the pitch
- * palette, which is the same in both themes — those three colours are the
+ * IT IS NOT THEMED, unlike the single link that preceded it in the tab. That one
+ * took the accent and flipped it under `prefers-color-scheme` because one shape
+ * had to hold against both a dark and a light tab strip. The chain carries the
+ * pitch palette, which is the same in both themes — those three colours are the
  * game's, not the interface's — so there is nothing to swap.
+ *
+ * THE CLIP IDS ARE UNQUALIFIED (`s0`, `s1`) because every caller emits its own
+ * standalone document. `Mark.tsx` needs `useId` for these; a file does not.
  */
-function faviconSvg(): string {
-  const { viewBox, link, placements, scopes } = MARK_GEOMETRY;
+function chainPaint(): string {
+  const { link, placements, scopes } = MARK_GEOMETRY;
   const dark = themes.dark.tokens;
 
   const fills = [
@@ -140,10 +137,32 @@ function faviconSvg(): string {
     )
     .join("");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">
-<defs>${clips}</defs>
+  return `<defs>${clips}</defs>
 ${chain}
-${overs}
+${overs}`;
+}
+
+/**
+ * `/favicon.svg` — the mark, in the tab.
+ *
+ * IT IS THE CHAIN, NOT ONE LINK, and it used to be one link. The argument for
+ * the single link was that a favicon is rasterised at 16px, three interlocked
+ * rings become mud at that size, and "a ring with an open window" is the last
+ * thing to survive as the icon shrinks. That reasoning is sound and it produced
+ * a tab icon that is not the logo — an unfamiliar lozenge next to every other
+ * tab, where the whole point of the mark is that the thing you see a thousand
+ * times a session is the thing on the tab.
+ *
+ * So it is the chain, and the 16px case is accepted rather than designed for:
+ * browsers ask for 32px and larger far more often than 16 these days, and an
+ * icon that is slightly dense at the smallest size beats one that is legible
+ * and wrong at every size.
+ *
+ * The drawing is `chainPaint()`. All this adds is the mark's own box.
+ */
+function faviconSvg(): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${MARK_GEOMETRY.viewBox}">
+${chainPaint()}
 </svg>
 `;
 }
@@ -152,12 +171,27 @@ ${overs}
  * `/icon.svg` — the mark again, at install size.
  *
  * SEPARATE FROM `favicon.svg` BECAUSE AN INSTALLED ICON IS A SQUARE. The mark is
- * a wide, thin ring; dropped into an icon slot at its own proportions it is
+ * a wide, thin chain; dropped into an icon slot at its own proportions it is
  * either letterboxed or, where the platform crops to a circle or a squircle, it
- * loses both ends. So this is the same path on a square canvas, and it paints
+ * loses both ends. So this is the same paint on a square canvas, and it paints
  * the ground rather than leaving it transparent — a transparent icon gets a
  * platform-chosen fill behind it, and this project's whole visual key is that
  * the mark sits on near-black.
+ *
+ * IT IS THE CHAIN, AND IT USED TO BE ONE UPRIGHT LINK IN THE ACCENT. The favicon
+ * had already stopped being the reduced mark, for the reason above it — a tab
+ * icon that is not the logo is an unfamiliar lozenge — which left the installed
+ * icon as the last surface in the product still drawing a shape nothing else
+ * draws. It is the worse of the two places to be wrong: a favicon is 16px of tab
+ * furniture, while a home-screen icon is the whole identity at 512px, and none
+ * of the arguments for reducing the mark apply at that size. The two agree now,
+ * and `chainPaint()` is what stops them disagreeing again.
+ *
+ * IT LETTERBOXES, AND THAT IS THE COST THAT WAS TAKEN RATHER THAN AVOIDED. The
+ * chain's box is 45.45 × 21.33 in viewBox units, so squaring off the longer side
+ * leaves the artwork about 47% of the height, centred, with ground above and
+ * below. One upright link filled more of the square than that. It was not the
+ * mark.
  *
  * EMITTED TWICE, AT TWO INSETS, and the manifest gives each its own `purpose`.
  * A maskable icon is guaranteed only the centre 80% of each axis, so the
@@ -165,14 +199,13 @@ ${overs}
  * because the surfaces that use it do not crop and padded artwork there just
  * renders small in empty ground.
  *
- * IT IS NOT THEMED, unlike the favicon, and that is deliberate rather than an
- * omission. A favicon composites against browser chrome we do not own, so it has
- * to hold on both. An installed icon sits on the user's home screen as OUR
- * surface — one identity, the dark one, which `docs/DESIGN.md` calls the native
- * key.
+ * THE GROUND IS NOT THEMED, and that is deliberate rather than an omission. The
+ * chain itself has nothing to theme — it wears the pitch palette, which both
+ * themes share — but what sits behind it is a choice, and an installed icon is
+ * on the user's home screen as OUR surface: one identity, the dark one, which
+ * `docs/DESIGN.md` calls the native key.
  */
 function iconSvg(safeZone: number): string {
-  const { single, link } = MARK_GEOMETRY;
   const dark = themes.dark.tokens;
 
   /*
@@ -181,20 +214,26 @@ function iconSvg(safeZone: number): string {
    * Read from the geometry rather than restated — the numbers below are
    * arithmetic on the source of truth, not a second copy of it.
    */
-  const [vx = 0, vy = 0, vw = 1, vh = 1] = single.viewBox
+  const [vx = 0, vy = 0, vw = 1, vh = 1] = MARK_GEOMETRY.viewBox
     .split(/\s+/)
     .map(Number);
 
   /* `safeZone` is the fraction of the canvas the artwork is guaranteed. At 1
-     the mark fills the square edge to edge; at 0.8 it is inset to the centre
+     the chain spans the square edge to edge; at 0.8 it is inset to the centre
      80%, which is what a maskable crop may keep. */
-  const side = Math.max(vw, vh) / safeZone;
-  const x = vx + vw / 2 - side / 2;
-  const y = vy + vh / 2 - side / 2;
+  /* Rounded because these are binary fractions of a two-decimal box and print
+     as `9.280000000000001` otherwise. Two places is what `MARK_GEOMETRY` itself
+     rounds to, so the square is stated at the same precision as the mark in
+     it. */
+  const round = (value: number): number => Number(value.toFixed(2));
+
+  const side = round(Math.max(vw, vh) / safeZone);
+  const x = round(vx + vw / 2 - side / 2);
+  const y = round(vy + vh / 2 - side / 2);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${side} ${side}">
 <rect x="${x}" y="${y}" width="${side}" height="${side}" fill="${literal(dark, "color.ground")}"/>
-<g transform="${single.placement}"><path d="${link}" fill-rule="evenodd" fill="${literal(dark, "color.accent")}"/></g>
+${chainPaint()}
 </svg>
 `;
 }

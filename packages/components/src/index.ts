@@ -167,14 +167,19 @@ export type PageSize = number | "all";
  * with — the mark simply stopped being it.
  *
  * IT LIVES HERE BECAUSE IT HAS THREE CONSUMERS AND MUST NOT HAVE THREE
- * DRAWINGS. `Mark.tsx` draws the chain, `apps/site/ssg/assets.ts` draws one
- * link of it at build time for the favicon, and the `mark` design-system card
- * draws it again in the workbench. A second copy of these numbers is a second
- * drawing, and a second drawing drifts — which is the failure the previous mark
- * had, in this same file, before it was rewritten as a derivation.
+ * DRAWINGS. `Mark.tsx` draws the chain, `apps/site/ssg/assets.ts` draws it at
+ * build time for the favicon and the installed-app icons, and the `mark`
+ * design-system card draws it again in the workbench. A second copy of these
+ * numbers is a second drawing, and a second drawing drifts — which is the
+ * failure the previous mark had, in this same file, before it was rewritten as
+ * a derivation.
  *
- * The favicon's link is not a variant of the geometry: it is `link` under
- * `single.placement`, so there is nothing to keep in step.
+ * THERE IS NO REDUCED FORM HERE ANY MORE. `single` was one link upright in its
+ * own box, drawn by whichever surface was too small for three; both surfaces
+ * that used it — the favicon, then the install icon — went back to the chain,
+ * because an icon that is not the logo is worse at every size than a logo that
+ * is dense at one. It came out with the last of them rather than being left as
+ * a variant nothing draws.
  */
 export interface MarkGeometry {
   /** The box the whole chain sits in, at its own aspect. */
@@ -207,17 +212,6 @@ export interface MarkGeometry {
     readonly width: number;
     readonly height: number;
   }[];
-  /**
-   * One link alone, upright, in its own box — what the favicon draws.
-   *
-   * NOT A SECOND DRAWING. It is the same `link` path under a different
-   * transform, because three links at this aspect are a smudge at 16px and one
-   * ring is still a ring. Measured, not assumed.
-   */
-  readonly single: {
-    readonly viewBox: string;
-    readonly placement: string;
-  };
 }
 
 /**
@@ -288,12 +282,9 @@ const centreOf = (index: number): readonly [number, number] => [
 ];
 
 /** One link's four corners after rotation — the input to the bounding box. */
-function cornersOf(
-  index: number,
-  angle = angleOf(index),
-): readonly (readonly [number, number])[] {
+function cornersOf(index: number): readonly (readonly [number, number])[] {
   const [cx, cy] = centreOf(index);
-  const a = radians(angle);
+  const a = radians(angleOf(index));
   return (
     [
       [-LINK_WIDTH / 2, -LINK_HEIGHT / 2],
@@ -308,17 +299,14 @@ function cornersOf(
 }
 
 /** The smallest box holding the given links, with a unit of air around it. */
-function boxOf(
-  indices: readonly number[],
-  angle?: number,
-): {
+function boxOf(indices: readonly number[]): {
   readonly minX: number;
   readonly minY: number;
   readonly width: number;
   readonly height: number;
 } {
   const pad = 1;
-  const points = indices.flatMap((index) => cornersOf(index, angle));
+  const points = indices.flatMap((index) => cornersOf(index));
   const xs = points.map(([x]) => x);
   const ys = points.map(([, y]) => y);
   const minX = Math.min(...xs) - pad;
@@ -332,10 +320,10 @@ function boxOf(
   };
 }
 
-const placementOf = (index: number, angle = angleOf(index)): string => {
+const placementOf = (index: number): string => {
   const [cx, cy] = centreOf(index);
   return (
-    `rotate(${round(angle)},${round(cx)},${round(cy)}) ` +
+    `rotate(${round(angleOf(index))},${round(cx)},${round(cy)}) ` +
     `translate(${round(cx - LINK_WIDTH / 2)},${round(cy - LINK_HEIGHT / 2)})`
   );
 };
@@ -352,7 +340,6 @@ const LINK_PATH =
   "M5,3 L15,3 L17,5 L17,7 L15,9 L5,9 L3,7 L3,5 Z";
 
 const CHAIN_BOX = boxOf([...LINK_ORDER]);
-const SINGLE_BOX = boxOf([0], 0);
 
 export const MARK_GEOMETRY: MarkGeometry = {
   viewBox: `${CHAIN_BOX.minX} ${CHAIN_BOX.minY} ${CHAIN_BOX.width} ${CHAIN_BOX.height}`,
@@ -378,11 +365,6 @@ export const MARK_GEOMETRY: MarkGeometry = {
     width: round(LINK_STEP),
     height: round(CHAIN_CENTRE_Y - CHAIN_BOX.minY),
   })),
-
-  single: {
-    viewBox: `${SINGLE_BOX.minX} ${SINGLE_BOX.minY} ${SINGLE_BOX.width} ${SINGLE_BOX.height}`,
-    placement: placementOf(0, 0),
-  },
 };
 
 /**
