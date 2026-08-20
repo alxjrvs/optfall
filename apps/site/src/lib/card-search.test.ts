@@ -1293,15 +1293,59 @@ describe("comparing two printed values", () => {
     expect(gt + lt + eq).toBe(both);
   });
 
-  test("Scryfall's spelling and ours are the same query", () => {
-    // The grammar is inherited on purpose, so a reader arriving from there
-    // types `pow>tou` and must get what `power>defence` gives.
-    const ours = searchCards(index, "power>defence unique:cards", 20000);
-    const theirs = searchCards(index, "pow>tou unique:cards", 20000);
-    expect(ours.total).toBe(theirs.total);
-    expect(ours.results.map((row) => row.href)).toEqual(
-      theirs.results.map((row) => row.href),
+  test("the short spellings are the same query as the long ones", () => {
+    /*
+     * THIS TEST USED TO READ `pow>tou`, AND THAT IS THE CHANGE. It asserted
+     * that a reader arriving from Scryfall could type that other game's
+     * spelling and get ours — which was true, and was the argument for
+     * accepting `tou` at all.
+     *
+     * `tou` is gone. Toughness is a Flesh and Blood TOKEN, an aura, not a stat,
+     * so the operator named after it was answering a question about defence
+     * while the thing actually called Toughness stayed unreachable. `pow` and
+     * `def` stay: power and defense are words this game uses, so a short
+     * spelling of them is a convenience rather than a foreign import.
+     *
+     * Both sides of a comparison still have to accept the short forms, which is
+     * what this asserts — `pow>def` resolving on one side only is the failure
+     * the original comment warned about, and it survives the vocabulary change.
+     */
+    const long = searchCards(index, "power>defence unique:cards", 20000);
+    const short = searchCards(index, "pow>def unique:cards", 20000);
+    expect(long.total).toBe(short.total);
+    expect(long.results.map((row) => row.href)).toEqual(
+      short.results.map((row) => row.href),
     );
+  });
+
+  test("the rules' own spelling of defence is a query too", () => {
+    /* CR 2.3 is titled "Defense" and upstream keys the field `defense`; this
+       project prints "Defence". A reader copying the word out of the rules must
+       not be told it is not an operator. */
+    const ours = searchCards(index, "defence>=3 unique:cards", 20000);
+    const theirs = searchCards(index, "defense>=3 unique:cards", 20000);
+    expect(ours.total).toBe(theirs.total);
+    expect(ours.total).toBeGreaterThan(0);
+  });
+
+  test("the retired spellings say what to type instead", () => {
+    /*
+     * A retired operator must not fall through to "is not an operator here".
+     * Query state lives in the URL, so `o:dominate` and `tou:3` links exist in
+     * conversations that outlive this change, and the reader following one did
+     * nothing wrong.
+     */
+    for (const [query, replacement] of [
+      ["o:dominate", "text:"],
+      ["tou:3", "defence:"],
+      ["toughness:3", "defence:"],
+    ] as const) {
+      const notices = parseCardQuery(query).notices;
+      expect(notices.map((notice) => notice.kind)).toContain("operand-retired");
+      expect(notices.map((notice) => notice.text).join(" ")).toContain(
+        replacement,
+      );
+    }
   });
 
   test("a card with an unprintable value on either side is excluded", () => {
