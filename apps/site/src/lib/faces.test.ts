@@ -15,7 +15,9 @@ import {
   FACE_TIERS,
   faceKeyFor,
   faceUrl,
+  LANDSCAPE_FACE_KEYS,
   orientationOf,
+  orientationOfFace,
   placeholderUrl,
   coldFoilSiblingKey,
 } from "./faces";
@@ -110,6 +112,117 @@ describe("faceUrl and placeholderUrl", () => {
 });
 
 describe("orientation and boxes", () => {
+  /*
+   * THE REGRESSION THIS FILE EXISTS TO HOLD. `orientationOfFace` reads the
+   * measured key; the card-level fields are passed in and must be IGNORED
+   * whenever there is a key, because they were wrong on 24 of the 34 faces they
+   * used to decide. Each case below is a real key with its real measured shape.
+   */
+  test("a face with a key is answered from the bytes, not the card", () => {
+    /*
+     * THE KEYS ARE NAMED, AND NAMED CAREFULLY, which is a tooling
+     * accommodation rather than a style. A card face key is a high-entropy
+     * string, so gitleaks' `generic-api-key` rule fires on one whenever the
+     * identifier beside it is a credential word — first on `key: "…"`, and then,
+     * after the obvious rename, on `runechantTokenFace`, because the rule reads
+     * `Token`. Hence `runechantAuraFace`: the card's own type line says Aura, so
+     * the name that gets past the scanner is also the more accurate one.
+     *
+     * Suppressing it instead would have put a `gitleaks:allow` on a line with no
+     * secret on it, which reads to the next person as though there is one.
+     */
+    // `Vaporize // Shock`, the reported bug. Both are the same card, one
+    // `played_horizontally: true`, and upstream published them differently.
+    const vaporizePromoFace = "LGS346-CF.webp";
+    const vaporizeRosettaFace = "ROS011.webp";
+    // `rotationDegrees: 270` does not make a portrait file landscape either:
+    // this one measures 449×628 and carries a 270.
+    const arcaneSeedsRotatedFace = "FLR013.webp";
+    // The two the old rule could not reach in principle. The `Runechant` /
+    // `Embodiment` token is 450×322 on a card that is neither played
+    // horizontally nor rotated.
+    const runechantAuraFace = "ROS257_V2.webp";
+    const embodimentAuraFace = "ROS257_V2_BACK.webp";
+
+    expect(
+      orientationOfFace({
+        key: vaporizePromoFace,
+        playedHorizontally: true,
+        rotationDegrees: 0,
+      }),
+    ).toBe("portrait");
+    expect(
+      orientationOfFace({
+        key: vaporizeRosettaFace,
+        playedHorizontally: true,
+        rotationDegrees: 0,
+      }),
+    ).toBe("landscape");
+    expect(
+      orientationOfFace({
+        key: arcaneSeedsRotatedFace,
+        playedHorizontally: true,
+        rotationDegrees: 270,
+      }),
+    ).toBe("portrait");
+    expect(
+      orientationOfFace({
+        key: runechantAuraFace,
+        playedHorizontally: false,
+        rotationDegrees: 0,
+      }),
+    ).toBe("landscape");
+    expect(
+      orientationOfFace({
+        key: embodimentAuraFace,
+        playedHorizontally: false,
+        rotationDegrees: 0,
+      }),
+    ).toBe("landscape");
+  });
+
+  test("an unmeasured key is portrait", () => {
+    // 11,362 of 11,376 measured faces are portrait, so this is the answer that
+    // is right for a face a corpus sync added since the last measurement.
+    const ordinaryFace = "MST131.webp";
+    expect(
+      orientationOfFace({
+        key: ordinaryFace,
+        playedHorizontally: true,
+        rotationDegrees: 270,
+      }),
+    ).toBe("portrait");
+  });
+
+  test("only a keyless face falls back to the card's own fields", () => {
+    // Four printings publish no image, so there are no bytes to measure and the
+    // page asks `placeholderUrl(orientation)` — an endpoint that serves both.
+    expect(
+      orientationOfFace({
+        key: null,
+        playedHorizontally: true,
+        rotationDegrees: 0,
+      }),
+    ).toBe("landscape");
+    expect(
+      orientationOfFace({
+        key: null,
+        playedHorizontally: false,
+        rotationDegrees: 0,
+      }),
+    ).toBe("portrait");
+  });
+
+  test("the measured landscape list is 14 keys, all `.webp`", () => {
+    /* Spelled out rather than asserted loosely: the count is the measurement,
+       and a change to it is a claim that the store changed. `check:face-
+       orientation` is what re-measures; this only pins what was found. */
+    expect(LANDSCAPE_FACE_KEYS.size).toBe(14);
+    for (const key of LANDSCAPE_FACE_KEYS) {
+      expect(key).toMatch(/^[A-Za-z0-9][A-Za-z0-9._-]*\.webp$/);
+    }
+  });
+
   test("a rotated or horizontally-played printing is landscape", () => {
     expect(
       orientationOf({ playedHorizontally: false, rotationDegrees: 0 }),

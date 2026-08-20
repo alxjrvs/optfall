@@ -27,7 +27,7 @@ import {
   HREF_BY_NAME_SLUG,
   variantSuffix,
 } from "../../src/lib/cards";
-import { orientationOf } from "../../src/lib/faces";
+import { orientationOfFace } from "../../src/lib/faces";
 import { editionLabel, setFor } from "../../src/lib/sets";
 import type { CardIndexEntry } from "../components/CardIndex";
 import { Island } from "../Island";
@@ -79,7 +79,8 @@ function faceForSet(page: CardPage, setId: string) {
   return {
     key: own.key,
     landscape:
-      orientationOf({
+      orientationOfFace({
+        key: own.key,
         playedHorizontally: page.card.played_horizontally,
         rotationDegrees: own.printing.image_rotation_degrees,
       }) === "landscape",

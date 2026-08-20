@@ -13,6 +13,7 @@ import { placeholderSvg, TIERS } from "./placeholder";
 import {
   coldFoilFallbackKey,
   makeFaceHandler,
+  orientationOfKey,
   parseFacePath,
   parsePlaceholderPath,
   type FaceStore,
@@ -344,5 +345,49 @@ describe("a Cold Foil with no art of its own", () => {
     };
     await makeFaceHandler(() => counting)(request("/normal/MST999.webp"));
     expect(reads).toBe(1);
+  });
+});
+
+describe("a miss is answered in the shape the page reserved", () => {
+  /*
+   * The site sizes a face's box from the face's OWN measured bytes rather than
+   * from the card's gameplay fields — `apps/site/src/lib/faces.ts`,
+   * `LANDSCAPE_FACE_KEYS`. Fourteen faces are landscape. Answering a miss on one
+   * of them with the portrait plate puts a 450x628 SVG in a 628x450 hole, which
+   * is the same letterboxing that change exists to remove.
+   */
+  test("the tier prefix is stripped before the list is consulted", () => {
+    expect(orientationOfKey("normal/ROS011.webp")).toBe("landscape");
+    expect(orientationOfKey("thumb/ROS011.webp")).toBe("landscape");
+    expect(orientationOfKey("normal/LGS346-CF.webp")).toBe("portrait");
+    expect(orientationOfKey("normal/MST131.webp")).toBe("portrait");
+  });
+
+  test("a landscape key misses to the landscape plate", async () => {
+    const response = await makeFaceHandler(() => storeWith([]))(
+      request("/normal/ROS011.webp"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-optfall-face")).toBe("placeholder");
+    expect(viewBoxRatio(await response.text())).toBeGreaterThan(1);
+  });
+
+  test("an ordinary key still misses to the portrait plate", async () => {
+    const response = await makeFaceHandler(() => storeWith([]))(
+      request("/normal/MST999.webp"),
+    );
+
+    expect(viewBoxRatio(await response.text())).toBeLessThan(1);
+  });
+
+  test("a store outage degrades in the right shape too", async () => {
+    const response = await makeFaceHandler(() => brokenStore)(
+      request("/normal/SEA258.webp"),
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("x-optfall-face")).toBe("placeholder-degraded");
+    expect(viewBoxRatio(await response.text())).toBeGreaterThan(1);
   });
 });
