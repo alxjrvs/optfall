@@ -637,7 +637,7 @@ describe("the ported pages", () => {
 /* The card page's empty stat sockets                                          */
 /* -------------------------------------------------------------------------- */
 
-describe("a card page shows the combat positions it does not fill", () => {
+describe("a card page reserves the combat positions it does not fill", () => {
   const all = RESOLVED;
   const render = (route: string) =>
     all.find((resolved) => resolved.route === route)?.render([], undefined) ??
@@ -645,29 +645,127 @@ describe("a card page shows the combat positions it does not fill", () => {
 
   /*
    * ASSERTED ON REAL PAGES rather than on a fixture, because the rule is about
-   * WHICH cards get sockets and that is a fact about the corpus. Shapes
-   * measured across all 4,941 cards: 1,902 print cost+power+defence, 1,363
-   * print cost and defence and no power, 525 print defence alone, 151 are
-   * heroes printing life and intellect only, 181 print nothing at all.
+   * WHICH cards reserve positions and that is a fact about the corpus. Shapes
+   * measured across all 4,941 cards: 1,963 print cost+power+defence, 1,543
+   * print cost and defence and no power, 529 print defence alone, 411 print
+   * cost alone, 154 are heroes printing life and intellect, 188 print nothing
+   * at all.
    */
 
-  test("an action with no attack draws the power plate, empty", () => {
-    /* `Absorb in Aether` is a Wizard Defense Reaction: cost and defence, no
-       power. The 1,363-card case, and the reason for the change. */
-    const html = render(addressOf("absorb-in-aether-1"));
-    expect(html).not.toBe("");
-    expect(html).toContain('aria-label="No printed power"');
-    /* The plate it drew is still the POWER plate — the silhouette is what says
-       which stat is missing. */
-    expect(html).toContain("of-stat--power");
+  /*
+   * A POSITION THE CARD DOES NOT FILL IS `of-card__badge--reserved`, and that
+   * class is the single thing most of these tests assert on. It carries
+   * `visibility: hidden`, so the badge paints nothing and keeps its width —
+   * which is the whole rule, and neither half of it is checkable from the
+   * markup alone. The class is where they meet.
+   */
+
+  /*
+   * MIRRORED CORNERS ARE STRIPPED FIRST, AND WITHOUT THIS EVERY COUNT BELOW IS
+   * WRONG. An empty corner reflects the opposite corner's badges to borrow its
+   * width, so a reserved badge on one side is rendered a SECOND time on the
+   * other — `Aether Ironweave` counted 3 for its 2 empty positions until this
+   * was here. The reflection is not a position the card leaves empty; it is the
+   * same position, drawn again to hold a width.
+   *
+   * A `<dl>` never nests, so a non-greedy match to the first `</dl>` takes
+   * exactly one corner.
+   */
+  const withoutMirrors = (html: string) =>
+    html.replace(
+      /<dl class="[^"]*of-card__corner-mirror[^"]*"[^>]*>.*?<\/dl>/gs,
+      "",
+    );
+  const reservedCount = (html: string) =>
+    withoutMirrors(html).match(/of-card__badge--reserved/g)?.length ?? 0;
+
+  test("a mirrored corner is inert, and only appears opposite a full one", () => {
+    /*
+     * THE 571-CARD CASE. `Aether Ironweave` pitches for nothing and prints no
+     * cost, so its title band would be a stone-less corner opposite a reserved
+     * cost plate — the name sitting 37px to 52px left of the card's axis,
+     * depending on viewport. The empty corner reflects the full one instead.
+     *
+     * It is `aria-hidden`, which is the half that matters here: the reflection
+     * is a width, and it duplicates markup that is already on the page.
+     */
+    const html = render(addressOf("aether-ironweave"));
+    expect(html).toContain("of-card__corner-mirror");
+    for (const dl of html.match(
+      /<dl class="[^"]*of-card__corner-mirror[^"]*"[^>]*>/g,
+    ) ?? []) {
+      expect(dl).toContain('aria-hidden="true"');
+    }
+
+    /* A HERO GETS NONE, and that is the limit of the rule rather than an
+       oversight: it prints neither pitch nor cost, and two empty corners are
+       already symmetrical. */
+    const hero = CARD_PAGES.find(
+      (page) =>
+        page.card.health !== "" &&
+        page.card.intelligence !== "" &&
+        page.card.cost === "" &&
+        page.card.power === "" &&
+        page.card.defense === "",
+    );
+    expect(hero).toBeDefined();
+    expect(render(hero?.href ?? "")).not.toContain("of-card__corner-mirror");
   });
 
-  test("equipment draws cost and power empty, because the frame has them", () => {
-    /* `Aether Ironweave` is Runeblade Equipment: defence only. */
+  test("an action with no attack paints no attack plate", () => {
+    /*
+     * `Absorb in Aether` is a Wizard Defense Reaction: cost and defence, no
+     * power. The 1,543-card shape, and with the 411 cost-only cards and the
+     * 529 defence-only ones it is half the corpus — which is how big the
+     * drawn-plate version of this rule was, and why it went.
+     */
+    const html = render(addressOf("absorb-in-aether-1"));
+    expect(html).not.toBe("");
+
+    /* ONE reserved position — the attack — and it is inert to a screen
+       reader. */
+    expect(reservedCount(html)).toBe(1);
+    expect(html).toContain(
+      '<div class="of-card__badge of-card__badge--reserved" aria-hidden="true">',
+    );
+
+    /* What it PRINTS is untouched. This changes empty positions only. */
+    expect(html).toMatch(/aria-label="Cost \d+"/);
+    expect(html).toMatch(/aria-label="Defence \d+"/);
+  });
+
+  test("equipment reserves cost and attack, and prints neither", () => {
+    /* `Aether Ironweave` is Runeblade Equipment: defence only, so two of the
+       three positions are empty and both are reserved rather than drawn. */
     const html = render(addressOf("aether-ironweave"));
     expect(html).not.toBe("");
-    expect(html).toContain('aria-label="No printed cost"');
-    expect(html).toContain('aria-label="No printed power"');
+    expect(reservedCount(html)).toBe(2);
+    expect(html).toMatch(/aria-label="Defence \d+"/);
+  });
+
+  test("a reserved position is never announced, on any shape", () => {
+    /*
+     * THE HALF A CLASS NAME CANNOT PROVE, asserted across the shapes rather
+     * than on one card. `StatGlyph` spells an absence out — "No printed power"
+     * — and that string is still in the markup, because the badge is the
+     * printed one hidden rather than a stand-in built to look like it. What
+     * has to hold is that it is never reachable: every occurrence sits inside
+     * an `aria-hidden` badge.
+     *
+     * Checked by counting rather than by reading the tree, because the render
+     * is a string here. If the two counts agree, no absence escaped a hidden
+     * badge — and the first count being non-zero is what stops this passing
+     * vacuously.
+     */
+    for (const route of [
+      addressOf("absorb-in-aether-1"),
+      addressOf("aether-ironweave"),
+    ]) {
+      const html = withoutMirrors(render(route));
+      const absences = html.match(/aria-label="No printed [a-z]+"/g) ?? [];
+      expect(absences.length).toBeGreaterThan(0);
+      expect(absences.length).toBe(reservedCount(html));
+    }
   });
 
   test("a hero gets no sockets, because it has no combat positions", () => {
@@ -701,20 +799,23 @@ describe("a card page shows the combat positions it does not fill", () => {
     const html = render(hero?.href ?? "");
     /* Not the disambiguation page and not nothing: this has to be the card. */
     expect(html).toContain("of-card__name");
+    /* NOT EVEN A RESERVED ONE. A hero does not have these positions to leave
+       empty, so there is no width to hold open for them either. */
+    expect(html).not.toContain("of-card__badge--reserved");
     expect(html).not.toContain("No printed cost");
     expect(html).not.toContain("No printed power");
     expect(html).not.toContain("No printed defence");
   });
 
-  test("a weapon draws cost and defence empty, and that is a decision", () => {
+  test("a weapon reserves cost and defence, and that is a decision", () => {
     /*
-     * 81 cards print power and nothing else. They get the trio for the same
-     * reason the 525 equipment cards do — "this card has no cost" is a fact
-     * worth stating about a card you never pay for — and the case is pinned
-     * here because it is the one somebody will want to move: both are
-     * permanents, and it is arguable their printed frames carry no cost bubble
-     * at all. A card printing LIFE is where the line actually falls; see the
-     * ally test below.
+     * 81 cards print power and nothing else. They reserve the other two for the
+     * same reason the 529 equipment cards do — the positions are on the frame,
+     * and a corner sized to nothing slides the type line off the card's axis —
+     * and the case is pinned here because it is the one somebody will want to
+     * move: both are permanents, and it is arguable their printed frames carry
+     * no cost bubble at all. A card printing LIFE is where the line actually
+     * falls; see the ally test below.
      */
     /* `intelligence` is constrained as well as `health`, because
        `usesCombatFrame` rejects a card printing EITHER permanent stat. No card
@@ -739,22 +840,16 @@ describe("a card page shows the combat positions it does not fill", () => {
 
     const html = render(weapon?.href ?? "");
     expect(html).toContain("of-card__name");
-    expect(html).toContain('aria-label="No printed cost"');
-    expect(html).toContain('aria-label="No printed defence"');
+    expect(reservedCount(html)).toBe(2);
     expect(html).toMatch(/aria-label="Power \d+"/);
   });
 
-  test("a cost-only card draws both of the positions it leaves empty", () => {
+  test("a cost-only card reserves the two positions it leaves empty", () => {
     /*
-     * THE LARGEST GROUP THE RULE ADMITS, and the one an earlier draft of the
-     * rationale never named: 409 cards print a cost and nothing else — items,
-     * instants, tokens. They get an empty attack plate AND an empty defence
-     * shield, which is two sockets from one printed value.
-     *
-     * Pinned as an explicit decision rather than left as a side effect of
-     * "prints a combat stat and no permanent one". It is the same call as
-     * equipment and weapons: the positions exist on the frame and the card
-     * leaves them empty, which is a fact worth drawing.
+     * 411 cards print a cost and nothing else — items, instants, tokens. Both
+     * bottom corners are empty, so both are reserved: the bar is a corner, the
+     * type line and a corner, and with neither corner holding its width the
+     * type line has nothing to sit between.
      */
     const costOnly = CARD_PAGES.find(
       (page) =>
@@ -768,9 +863,8 @@ describe("a card page shows the combat positions it does not fill", () => {
 
     const html = render(costOnly?.href ?? "");
     expect(html).toContain("of-card__name");
-    expect(html).toContain('aria-label="No printed power"');
-    expect(html).toContain('aria-label="No printed defence"');
-    expect(html).not.toContain("No printed cost");
+    expect(reservedCount(html)).toBe(2);
+    expect(html).toMatch(/aria-label="Cost \d+"/);
   });
 
   test("an ally gets no sockets either, because its frame is not that frame", () => {
@@ -797,6 +891,7 @@ describe("a card page shows the combat positions it does not fill", () => {
 
     const html = render(ally?.href ?? "");
     expect(html).toContain("of-card__name");
+    expect(html).not.toContain("of-card__badge--reserved");
     expect(html).not.toContain("No printed cost");
     expect(html).not.toContain("No printed defence");
     /* And it still shows what it DOES print. */
@@ -828,10 +923,14 @@ describe("a card page shows the combat positions it does not fill", () => {
     expect(html).toContain("of-card__name");
     /* The zero is drawn as a zero… */
     expect(html).toContain('aria-label="Cost 0"');
-    expect(html).not.toContain("No printed cost");
-    /* …on the same page where a real absence is drawn as one, which is exactly
-       the pair this change exists to keep apart. */
-    expect(html).toContain('aria-label="No printed power"');
+    /* …and the position that holds it is a printed one, not a reserved one.
+       THIS IS THE PAIR THE CHANGE HAD TO KEEP APART: 1,648 cards print a cost
+       of 0, and a reserved cost corner is also blank, so "prints 0" and "prints
+       nothing" would render identically if the 0 ever fell through to the
+       reserved branch. */
+    expect(html).not.toContain(
+      '<div class="of-card__badge of-card__badge--reserved" aria-hidden="true"><dt>Cost</dt>',
+    );
   });
 });
 

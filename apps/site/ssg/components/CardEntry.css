@@ -383,6 +383,53 @@
 }
 
 /*
+    A COMBAT POSITION THE CARD LEAVES EMPTY: ITS WIDTH, AND NOTHING ELSE.
+
+    `visibility: hidden` RATHER THAN `display: none`, and that is the whole
+    rule. Both make the badge invisible; only this one leaves it in the flow, so
+    the corner keeps the width a printed value would have taken and the grid
+    track keeps its size.
+
+    THE TRACK IS WHAT THIS IS PROTECTING. Both bands are
+    `fit-content(28%) minmax(0, 1fr) fit-content(28%)` and the name and the type
+    line are centred INSIDE the middle column — see the note on the corner bands
+    above — so a corner sized to nothing does not merely leave a gap, it slides
+    the centred thing off the card's axis. Measured on the built pages with the
+    corner dropped: the type line sat 37px left of centre at a 320px viewport
+    and 52px left at 1226px, against 0-6px on a card that fills all three
+    positions. That is half the corpus — 1,543 cards print cost and defence and
+    no power, 411 print cost alone, 529 print defence alone.
+
+    The badge is `aria-hidden` in the markup as well, because an empty position
+    is not a fact about the card and nothing here should be read aloud.
+  */
+.of-card__badge--reserved {
+  visibility: hidden;
+}
+
+/*
+    A CORNER WITH NOTHING IN IT, WEARING THE WIDTH OF THE CORNER OPPOSITE.
+
+    Same mechanism as `--reserved` above and the same reason — a corner sized to
+    nothing slides the centred thing off the card's axis — but a different
+    question. `--reserved` is a position this card leaves empty and whose own
+    width is therefore known. This is a corner with no position at all: a
+    pitch-0 card has no stone to hide, so there is nothing of its own to size
+    it by. It holds the OPPOSITE corner's badges instead, rendered again and
+    hidden, which makes the two widths equal by construction.
+
+    571 cards need it in the title band — a pitch-0 card that prints a cost, or
+    a pitched card that prints none — and one needs it in the bottom bar:
+    `Polly Cranka`, which prints life and no intellect.
+
+    A band with BOTH corners empty gets `of-card__corner-empty` and not this:
+    two nothings are already symmetrical.
+  */
+.of-card__corner-mirror {
+  visibility: hidden;
+}
+
+/*
     THE SYMBOL SITS OUTBOARD OF ITS WORD, ALWAYS.
 
     The label used to sit ABOVE the plate, which is the one arrangement that
