@@ -55,12 +55,11 @@ import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZES,
   type PageSize,
-  pageHref,
+  queryHref,
   paginate,
   pagingFromUrl,
   queryFromUrl,
   requestFor,
-  withPageParams,
   writeQueryUrl,
 } from "../../src/lib/pagination";
 import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
@@ -412,20 +411,21 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
    * gives: the box may hold text that has not been asked yet, and a link
    * carrying it would point at a page of a search nobody has run.
    */
+  /**
+   * The address of another page of THIS answer, built off the live URL.
+   *
+   * Off the URL rather than from `pageHref` so that everything this component
+   * does not own survives the click — `?display=list` in particular, which is
+   * read but never written, and which a from-scratch href would silently drop
+   * and so change the view as a side effect of turning a page.
+   *
+   * `submitted` rather than the box, for the reason the note above `show`
+   * gives: the field may hold text nobody has asked yet, and a link carrying it
+   * would point at a page of a search that was never run.
+   */
   const linkTo = useCallback(
-    (nextPage: number, nextSize: PageSize): string => {
-      /* The pager renders only under results, and results exist only after
-         hydration — so this branch is unreachable in the server render rather
-         than merely unused there. */
-      if (typeof window === "undefined") {
-        return pageHref("/search", submitted, nextPage, nextSize);
-      }
-      const url = new URL(window.location.href);
-      if (submitted.trim() === "") url.searchParams.delete("q");
-      else url.searchParams.set("q", submitted);
-      withPageParams(url.searchParams, nextPage, nextSize);
-      return `${url.pathname}${url.search}`;
-    },
+    (nextPage: number, nextSize: PageSize): string =>
+      queryHref("/search", submitted, nextPage, nextSize),
     [submitted],
   );
 

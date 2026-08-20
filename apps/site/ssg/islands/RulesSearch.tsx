@@ -61,12 +61,11 @@ import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZES,
   type PageSize,
-  pageHref,
+  queryHref,
   paginate,
   pagingFromUrl,
   queryFromUrl,
   requestFor,
-  withPageParams,
   writeQueryUrl,
 } from "../../src/lib/pagination";
 import { useFocusShortcut } from "./useFocusShortcut";
@@ -326,19 +325,17 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
    * The address of another page of this answer, built off the live URL so that
    * anything this component does not own survives the click.
    */
+  /**
+   * The address of another page of this answer, built off the live URL so that
+   * anything this component does not own survives the click.
+   *
+   * `queryHref` is shared with `CardSearch`, which had the same function under
+   * the same name; the two differed only in the path they fall back to and in
+   * what they call the query.
+   */
   const linkTo = useCallback(
-    (nextPage: number, nextSize: PageSize): string => {
-      /* Unreachable in the server render rather than merely unused there: the
-         pager is drawn under results, and there are none without `window`. */
-      if (typeof window === "undefined") {
-        return pageHref("/cr", query, nextPage, nextSize);
-      }
-      const url = new URL(window.location.href);
-      if (query.trim() === "") url.searchParams.delete("q");
-      else url.searchParams.set("q", query);
-      withPageParams(url.searchParams, nextPage, nextSize);
-      return `${url.pathname}${url.search}`;
-    },
+    (nextPage: number, nextSize: PageSize): string =>
+      queryHref("/cr", query, nextPage, nextSize),
     [query],
   );
 
