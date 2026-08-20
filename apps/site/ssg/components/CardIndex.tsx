@@ -51,7 +51,7 @@
 /* Types only. `useState`/`useEffect` went with `CopyNames` — this component
    holds no state of its own now, which is the claim the docblock above makes
    about where the state lives. */
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import {
   CardFace,
@@ -332,6 +332,37 @@ export interface CardIndexProps {
   readonly pagination?: ReactNode | undefined;
   /** Printed above the views. The caller's own sentence, in its own units. */
   readonly summary: ReactNode;
+  /**
+   * The same sentence again, off-screen, in a live region.
+   *
+   * WHY IT IS A SECOND COPY RATHER THAN `summary` MADE LIVE. The printed count
+   * updates on every re-render, and on `/cr` that is every keystroke — a live
+   * region on it would interrupt a screen reader once per letter, each
+   * announcement cancelling the last. So the SURFACE decides when the words are
+   * worth saying and passes them here, which is why `RulesSearch` hands in a
+   * settled copy and the click-driven surfaces hand in the live one.
+   *
+   * OPTIONAL, BUT NEVER CONDITIONALLY PASSED. A live region added to the page
+   * at the moment it has something to say is a live region that says nothing:
+   * assistive technology announces CHANGES to a region it was already watching.
+   * A caller either passes this on every render or never.
+   */
+  readonly announcement?: ReactNode | undefined;
+  /**
+   * A handle on the printed count, so a surface can put focus on it.
+   *
+   * WHAT IT IS FOR. Turning a page client-side is a `pushState`, and a
+   * `pushState` moves no focus — so a reader who clicked "Next" is left with
+   * focus on an anchor that now sits under a different page's results, and the
+   * next Tab carries on from the FOOT of the new page rather than its start.
+   *
+   * THE COUNT RATHER THAN A WRAPPER, because a focus target has to say
+   * something. A `<div tabindex="-1">` around the list announces nothing on
+   * arrival, which is a focus move a screen-reader user cannot hear. The count
+   * names the slice that just landed — "Cards 61–120 of 412" — which is
+   * precisely what the reader asked for by clicking.
+   */
+  readonly countRef?: Ref<HTMLParagraphElement> | undefined;
   /**
    * The radio group's `name`, and the stem of the pagination's labels.
    *
@@ -843,6 +874,8 @@ export function CardIndex({
   onDirectionChange,
   pagination,
   summary,
+  announcement,
+  countRef,
   controlName,
   interactive,
 }: CardIndexProps) {
@@ -944,7 +977,25 @@ export function CardIndex({
       */}
       {interactive ? <OrnamentalRule decorative flush /> : null}
 
-      <p className="of-index__count">{summary}</p>
+      {/*
+        OFF-SCREEN, AND CARRYING THE SAME WORDS THE COUNT PRINTS. Two elements
+        rather than one made live — see `announcement` for why, and note that
+        the surface, not this component, decides when they are worth saying.
+      */}
+      {announcement !== undefined ? (
+        <p aria-live="polite" className="of-index__announcement" role="status">
+          {announcement}
+        </p>
+      ) : null}
+
+      {/*
+        `tabIndex={-1}` MAKES THIS FOCUSABLE BY SCRIPT AND NOT BY TAB, which is
+        the whole of what a post-navigation focus target needs. It adds no stop
+        to the tab order of a reader who never turns a page.
+      */}
+      <p className="of-index__count" ref={countRef} tabIndex={-1}>
+        {summary}
+      </p>
 
       {display === "grid" ? (
         /*

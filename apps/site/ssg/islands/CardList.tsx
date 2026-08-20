@@ -42,7 +42,7 @@
  * a set an address somebody can paste.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Pagination } from "optfall-components/react";
 
@@ -191,6 +191,9 @@ export function CardList({ entries, subject }: CardListProps) {
     [],
   );
 
+  /** The printed count, which is where focus lands after a page turn. */
+  const countRef = useRef<HTMLParagraphElement>(null);
+
   const goTo = useCallback(
     (nextPage: number, nextSize: PageSize, nextDisplay: CardIndexDisplay) => {
       setPage(nextPage);
@@ -204,6 +207,15 @@ export function CardList({ entries, subject }: CardListProps) {
       /* The pager is at the foot of a long page, so without this the next page
          arrives already scrolled past its own start. */
       window.scrollTo({ top: 0 });
+      /*
+        AND FOCUS FOLLOWS THE SCROLL, or the two disagree. `pushState` moves no
+        focus, so without this the reader is looking at the top of page 4 with
+        focus still on the pager at the foot of page 3 — one Tab and they are
+        back where they came from. `preventScroll` because the line above has
+        already decided where the page sits; letting focus scroll too would
+        make the destination depend on which of them ran last.
+      */
+      countRef.current?.focus({ preventScroll: true });
     },
     [linkTo],
   );
@@ -243,6 +255,18 @@ export function CardList({ entries, subject }: CardListProps) {
          should get the names of what they are looking at. */
       onDisplayChange={(next) => goTo(slice.page, size, next)}
       summary={summary}
+      /*
+        THE SAME SENTENCE, SAID RATHER THAN PRINTED. Unconditional, because a
+        live region has to be watched before it can be heard — see the prop.
+
+        IT IS NOT MADE REDUNDANT BY THE FOCUS MOVE IN `goTo`. Focus is moved
+        when the READER turns a page; this covers the turns nobody clicked —
+        the back and forward buttons, which land through `popstate` and quite
+        rightly take no focus with them. Before this, walking a set's history
+        changed four hundred cards and announced nothing at all.
+      */
+      announcement={summary}
+      countRef={countRef}
       controlName="set-display"
       interactive={interactive}
       pagination={

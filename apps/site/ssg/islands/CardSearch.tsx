@@ -437,6 +437,9 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
    * behaviour: this is a jump between two views of one answer, and animating it
    * would suggest the intervening rows exist.
    */
+  /** The printed count, which is where focus lands after a page turn. */
+  const countRef = useRef<HTMLParagraphElement>(null);
+
   const goTo = useCallback(
     (nextPage: number, nextSize: PageSize): void => {
       setPage(nextPage);
@@ -448,6 +451,18 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
         size: nextSize,
       });
       window.scrollTo({ top: 0 });
+      /*
+        FOCUS GOES WHERE THE SCROLL WENT. `pushState` moves no focus, so
+        without this the reader is at the top of page 4 with focus still on the
+        pager under page 3, and one Tab returns them to it.
+
+        THE COUNT SAYS THE SAME WORDS THE LIVE REGION ABOVE DOES, so a screen
+        reader may hear the slice twice on a click-driven turn. That is the
+        accepted cost of keeping the region: it is the only thing that speaks
+        for the turns nobody clicked — back, forward, and a settled query on
+        `/cr` — and those arrive with no focus move to carry them.
+      */
+      countRef.current?.focus({ preventScroll: true });
     },
     [submitted],
   );
@@ -844,6 +859,10 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
               direction={outcome.sort.direction}
               onDirectionChange={(next) => rewrite([["dir", next]], true)}
               summary={summary}
+              /* No `announcement`: this surface renders its own live region
+                 above, outside `CardIndex`, because it has to survive renders
+                 where there is no index at all. */
+              countRef={countRef}
               controlName="display"
               interactive={interactive}
               pagination={
