@@ -115,7 +115,7 @@
 .of-door__ways-in a:focus-visible {
   background: var(--of-color-surface-raised);
   border-inline-color: var(--of-color-rule-strong);
-  color: var(--of-color-accent);
+  color: var(--of-color-link);
 }
 
 /*

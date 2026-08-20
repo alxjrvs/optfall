@@ -238,12 +238,12 @@ code {
 }
 
 a {
-  color: var(--of-color-accent);
+  color: var(--of-color-link);
   text-underline-offset: var(--of-space-tightest);
 }
 
 a:hover {
-  color: var(--of-color-accent-hover);
+  color: var(--of-color-link-hover);
 }
 
 /* Never `outline: none`. A visible focus ring is the difference between a
@@ -309,7 +309,7 @@ strong {
 
 .site-footer__links a:hover,
 .site-footer__links a:focus-visible {
-  color: var(--of-color-accent);
+  color: var(--of-color-link);
 }
 
 .site-footer .legal {

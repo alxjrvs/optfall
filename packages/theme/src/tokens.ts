@@ -462,6 +462,28 @@ export const DARK_TOKENS: TokenTable = {
   "color.accent.hover": "#d92531",
   "color.accent.ink": "#ffffff",
 
+  /*
+    LINK TEXT IS ITS OWN TOKEN, because on a near-black ground the accent was
+    being asked to be two incompatible things at once.
+
+    As a SURFACE — the `NEW` badge, the search well's rule, a focus outline —
+    it has to stay dark enough to carry `accent.ink`, and white on `#cf1f2b`
+    is 5.41:1. As TEXT it has to stand off the ground, and `#cf1f2b` on
+    `color.ground` is 3.22:1, which is below AA for body text. Every route to
+    fixing one broke the other, so the two uses are separated instead.
+
+    `color.link` is the same blood hue lightened and pulled back from full
+    chroma — 5.62:1 on the ground, and it still clears 4.5:1 on `sunken`,
+    `surface` and `surface.raised`, which is what `tokens.test.ts` asserts.
+    That is also why it reads as toned DOWN while being easier to read: the
+    old value was loud in saturation and quiet in luminance, and only
+    luminance is what contrast is made of.
+
+    The accent itself is unchanged. Nothing that paints a background moved.
+  */
+  "color.link": "#e17076",
+  "color.link.hover": "#e98388",
+
   /* Brass, reserved for authority: the verified judge seal and nothing else.
      A material used once is a signal; used twice it is a theme. */
   "color.brass": "#b08d3f",
@@ -762,6 +784,18 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.accent": "#94101a",
   "color.accent.hover": "#7a0d15",
   "color.accent.ink": "#ffffff",
+
+  /*
+    LIGHT NEVER HAD THE PROBLEM DARK HAD, so the link takes the accent's own
+    values rather than a lightened relative of them: `#94101a` on `#d5d5d5` is
+    6.09:1, and its worst ground here is `sunken` at 5.13:1. Ash darkens the
+    accent already, which is the whole reason this theme has its own red.
+
+    Written out rather than aliased so the two themes stay independently
+    readable, and so a future change to one cannot silently move the other.
+  */
+  "color.link": "#94101a",
+  "color.link.hover": "#7a0d15",
 
   "color.brass": "#6d541b",
   "color.brass.ink": "#f5efdd",

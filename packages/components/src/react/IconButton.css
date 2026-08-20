@@ -45,7 +45,7 @@
 
 .of-icon-button:hover {
   background: var(--of-color-sunken);
-  color: var(--of-color-accent-hover);
+  color: var(--of-color-link-hover);
 }
 
 /*
