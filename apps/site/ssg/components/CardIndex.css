@@ -33,9 +33,9 @@
   on the window. Stacked, it is where chrome belongs, first and at the start of
   the line, and it does not move.
 
-  IT IS FOUR CONTROLS NOW AND THEY READ AS A SENTENCE — "Names as Images sorted
-  by Cost, Descending" — so the wrap matters more than it did: `flex-wrap` breaks
-  the sentence across lines on a narrow screen rather than scrolling it, and the
+  IT IS THREE CONTROLS NOW AND THEY READ AS A SENTENCE — "Images sorted by Cost,
+  Descending" — so the wrap matters more than it did: `flex-wrap` breaks the
+  sentence across lines on a narrow screen rather than scrolling it, and the
   `gap` is the word space that holds it together when it does.
 
   A HAIRLINE UNDER IT, WHICH IS THE SITE'S ONLY DEVICE FOR THIS. The reference
@@ -103,7 +103,7 @@
 /*
   EACH CONTROL'S NAME IS FOR ASSISTIVE TECHNOLOGY AND NOT FOR THE SCREEN, and
   the two are different words on purpose. What a sighted reader sees is the
-  sentence the joiners make — "Names as Images sorted by Cost" — and what a
+  sentence the joiners make — "Images sorted by Cost" — and what a
   screen reader announces is "Order by, combo box", because "sorted by" pulled
   out of that sentence names nothing.
 

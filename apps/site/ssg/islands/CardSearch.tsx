@@ -496,11 +496,11 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
   /**
    * Rewrite one operator in the submitted query, and answer the new one.
    *
-   * ONE FUNCTION FOR ALL FOUR CONTROLS, and it started as `show()` for
-   * `display:` alone. The bar now drives `unique:`, `display:`, `order:` and
-   * `dir:`, and four copies of this would be four chances for one of them to
-   * forget to strip the term it is replacing — which does not error, it silently
-   * applies the LAST of two contradicting operators.
+   * ONE FUNCTION FOR ALL THREE CONTROLS, and it started as `show()` for
+   * `display:` alone. The bar now drives `display:`, `order:` and `dir:`, and
+   * three copies of this would be three chances for one of them to forget to
+   * strip the term it is replacing — which does not error, it silently applies
+   * the LAST of two contradicting operators.
    *
    * `value === null` REMOVES THE TERM, which is what "Relevance" means. There is
    * no `order:relevance` to write: the absence of `order:` IS ranking by match,
@@ -812,25 +812,27 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
               display={display}
               onDisplayChange={show}
               /*
-                THE OTHER THREE CONTROLS, WHICH ONLY THIS SURFACE CAN OFFER.
-                `unique:` and `order:` are answered by the query engine, so a
-                page with no query has nothing to hand over — see the props on
-                `CardIndex`. All three read their CURRENT value off the outcome
-                rather than off state of their own, exactly as `display` does:
-                the query is the state, and a second copy of it is a second
-                thing that can disagree with the address bar.
+                THE OTHER TWO CONTROLS, WHICH ONLY THIS SURFACE CAN OFFER.
+                `order:` is answered by the query engine, so a page with no
+                query has nothing to hand over — see the props on `CardIndex`.
+                Both read their CURRENT value off the outcome rather than off
+                state of their own, exactly as `display` does: the query is the
+                state, and a second copy of it is a second thing that can
+                disagree with the address bar.
 
-                EVERY ONE OF THESE RESETS TO PAGE ONE, and the view switch does
-                not, which is not an inconsistency. A view shows the same rows
-                in a different shape, so page 6 is still page 6. Re-ordering or
-                re-collapsing changes WHICH rows are on a page — page 6 of a
-                cost-sorted answer holds different cards than page 6 of a
-                relevance-sorted one — so keeping the number would land the
-                reader somewhere they did not ask to be, and `unique:art` can
-                make the page they were on stop existing.
+                THERE WAS A THIRD, `unique:`, AND IT IS NOT HERE ANY MORE. The
+                operator still parses and still collapses — it is simply back to
+                being typed rather than clicked. `CardIndex` carries the
+                reasoning where the control used to be.
+
+                BOTH OF THESE RESET TO PAGE ONE, and the view switch does not,
+                which is not an inconsistency. A view shows the same rows in a
+                different shape, so page 6 is still page 6. Re-ordering changes
+                WHICH rows are on a page — page 6 of a cost-sorted answer holds
+                different cards than page 6 of a relevance-sorted one — so
+                keeping the number would land the reader somewhere they did not
+                ask to be.
               */
-              unique={outcome.unique}
-              onUniqueChange={(next) => rewrite([["unique", next]], true)}
               order={outcome.sort.key ?? "relevance"}
               /*
                 GOING BACK TO RELEVANCE TAKES `dir:` WITH IT, and it has to be
