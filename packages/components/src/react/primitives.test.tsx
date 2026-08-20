@@ -506,6 +506,42 @@ describe("Pagination", () => {
     expect(last).toContain('href="/search?q=attack&amp;page=1"');
   });
 
+  test("a spent step is still announced, unlike the reference's", () => {
+    /*
+     * THE DIVERGENCE THIS LOCKS IN. Scryfall's spent controls carry
+     * `aria-hidden="true"` and `tabindex="-1"` — greyed on screen, absent from
+     * the accessibility tree, so a sighted reader sees four steps and a
+     * screen-reader user is told there are two. This pager keeps the word
+     * announced: "Previous, dimmed" is the answer to "can I go back", and a
+     * listener told nothing has to infer it from silence.
+     *
+     * ASSERTED RATHER THAN LEFT TO THE DOCBLOCK because it is one attribute
+     * away from being reversed by somebody matching the reference more
+     * literally, and nothing else in the suite would notice.
+     */
+    const first = renderToStaticMarkup(<Pagination {...props} page={1} />);
+
+    /*
+     * THE OPENING TAG ITSELF, NOT THE WHOLE DOCUMENT. A first attempt asserted
+     * `not.toContain('aria-hidden="true">Previous')` and was worthless: React
+     * writes attributes in source order, so the class lands between the two and
+     * that string never appears whether the attribute is there or not. The
+     * negative control caught it — adding `aria-hidden` to the spent span left
+     * all 131 tests green.
+     */
+    const spent = [
+      ...first.matchAll(/<span[^>]*of-pages__step--spent[^>]*>/g),
+    ].map((match) => match[0]);
+    expect(spent).toHaveLength(2);
+    for (const tag of spent) {
+      expect(tag).not.toContain("aria-hidden");
+      expect(tag).not.toContain("aria-disabled");
+    }
+
+    /* The one thing that IS hidden stays hidden: the ellipsis names no page. */
+    expect(first).toContain('aria-hidden="true"');
+  });
+
   test("the forward step says how far it goes, and the backward one does not", () => {
     /*
      * "Next 60" is the reference's wording. It is more useful here than there,

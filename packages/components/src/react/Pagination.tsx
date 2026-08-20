@@ -31,6 +31,25 @@
  * First and Previous are `<span class="button-n disabled">` on its first page
  * and `<a>` on its second, so this was never the divergence it looked like.
  *
+ * ~~It does the same.~~ IT GOES ONE STEP FURTHER, AND THIS PAGER DELIBERATELY
+ * DOES NOT FOLLOW IT THERE. Measured: the reference's spent controls also carry
+ * `aria-hidden="true"` and `tabindex="-1"`, so they are greyed on screen and
+ * absent from the accessibility tree entirely — a sighted reader sees four
+ * steps and a screen-reader user is told there are two.
+ *
+ * Here the word stays announced. A spent step is not nothing: "Previous,
+ * dimmed" is the answer to "can I go back", and a reader who is told nothing
+ * has to infer it from silence. The layout argument above is about the control
+ * not moving under a cursor; this is the same argument for a listener, who
+ * pays for a changing control count in re-orientation rather than in a missed
+ * click. The reference is not wrong to choose otherwise — GOV.UK omits the
+ * control outright, which lands in the same place — but it is a choice about
+ * what to say, not a detail of markup, so it is made here explicitly.
+ *
+ * `aria-disabled` IS NOT USED EITHER, by the reference or by this. A `<span>`
+ * is not a control, so there is no disabled state for the attribute to report;
+ * it belongs on something that could otherwise be operated.
+ *
  * THERE ARE FOUR STEPS, AND THAT IS THE REFERENCE'S CONTROL SET. First,
  * Previous, Next, Last — Scryfall's whole pager, which carries no page numbers
  * at all. This one keeps its numbers and takes the words as well, so the two
