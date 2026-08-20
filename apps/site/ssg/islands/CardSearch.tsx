@@ -53,15 +53,13 @@ import {
 } from "../../src/lib/card-search";
 import {
   DEFAULT_PAGE_SIZE,
-  PAGE_PARAM,
   PAGE_SIZES,
   type PageSize,
   pageHref,
   paginate,
-  parsePage,
-  parsePageSize,
+  pagingFromUrl,
+  queryFromUrl,
   requestFor,
-  SIZE_PARAM,
   withPageParams,
 } from "../../src/lib/pagination";
 import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
@@ -71,6 +69,7 @@ import {
   headerSearchStore,
   setHeaderQuery,
 } from "./headerSearchStore";
+import { useFocusShortcut } from "./useFocusShortcut";
 import { useSearchIndex } from "./useSearchIndex";
 
 import "./CardSearch.css";
@@ -157,11 +156,6 @@ const WHY: Record<CardMatchField, string> = {
   filter: "filter",
 };
 
-function queryFromUrl(): string {
-  if (typeof window === "undefined") return "";
-  return new URLSearchParams(window.location.search).get("q") ?? "";
-}
-
 /**
  * The legacy `?display=` parameter, which predates the operator.
  *
@@ -180,17 +174,6 @@ function displayFromUrl(): CardDisplayMode | null {
     return "list";
   if (wanted === "grid") return "grid";
   return null;
-}
-
-/** Which page, and how many rows on it. Read from the URL, like the query. */
-function pagingFromUrl(): { page: number; size: PageSize } {
-  if (typeof window === "undefined")
-    return { page: 1, size: DEFAULT_PAGE_SIZE };
-  const params = new URLSearchParams(window.location.search);
-  return {
-    page: parsePage(params.get(PAGE_PARAM)),
-    size: parsePageSize(params.get(SIZE_PARAM)),
-  };
 }
 
 /**
@@ -488,22 +471,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  /** `/` focuses the field, the way every reference tool worth using does. */
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) {
-        return;
-      }
-      const target = event.target as HTMLElement | null;
-      const tag = target?.tagName.toLowerCase();
-      if (tag === "input" || tag === "textarea" || tag === "select") return;
-      if (target?.isContentEditable) return;
-      event.preventDefault();
-      headerField()?.focus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  useFocusShortcut(headerField);
 
   /**
    * Switching view rewrites the QUERY, because the view is part of the query.

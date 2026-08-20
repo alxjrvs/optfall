@@ -59,17 +59,16 @@ import {
 
 import {
   DEFAULT_PAGE_SIZE,
-  PAGE_PARAM,
   PAGE_SIZES,
   type PageSize,
   pageHref,
   paginate,
-  parsePage,
-  parsePageSize,
+  pagingFromUrl,
+  queryFromUrl,
   requestFor,
-  SIZE_PARAM,
   withPageParams,
 } from "../../src/lib/pagination";
+import { useFocusShortcut } from "./useFocusShortcut";
 import {
   decodeIndex,
   type EncodedIndex,
@@ -126,23 +125,6 @@ export interface RulesSearchProps {
 
 /** Settle time before the live region speaks, and before the URL is rewritten. */
 const SETTLE = 600;
-
-/** The query, read from the URL. Empty on the server, which is correct there. */
-function queryFromUrl(): string {
-  if (typeof window === "undefined") return "";
-  return new URLSearchParams(window.location.search).get("q") ?? "";
-}
-
-/** Which page, and how many rows on it. Read from the URL, like the query. */
-function pagingFromUrl(): { page: number; size: PageSize } {
-  if (typeof window === "undefined")
-    return { page: 1, size: DEFAULT_PAGE_SIZE };
-  const params = new URLSearchParams(window.location.search);
-  return {
-    page: parsePage(params.get(PAGE_PARAM)),
-    size: parsePageSize(params.get(SIZE_PARAM)),
-  };
-}
 
 /** Why a row is on the page, in the words of the ranking that put it there. */
 function why(result: SearchResult): string {
@@ -407,28 +389,10 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  /**
-   * `/` focuses the field, the way every reference tool worth using does.
-   *
-   * Ignored while the caret is already in a control, so it can never eat a
-   * character somebody meant to type — including in a field on some other part
-   * of the page that this component knows nothing about.
-   */
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) {
-        return;
-      }
-      const target = event.target as HTMLElement | null;
-      const tag = target?.tagName.toLowerCase();
-      if (tag === "input" || tag === "textarea" || tag === "select") return;
-      if (target?.isContentEditable) return;
-      event.preventDefault();
-      field.current?.focus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  /* This island owns its input, so the getter just reads the ref. `CardSearch`
+     passes a DOM lookup instead, because the field it focuses is rendered by
+     the header's island and there is no ref across two hydration roots. */
+  useFocusShortcut(useCallback(() => field.current, []));
 
   /* `browse` is a prop now. It was `useMemo(() => chapters(rules), [rules])`,
      which is what forced a 204 kB index into the page to render nine links. */
