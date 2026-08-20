@@ -51,8 +51,10 @@
   margin-inline-start: auto;
 }
 
-.of-sets__provenance {
-  margin-block-start: var(--of-space-loosest);
-  color: var(--of-color-ink-muted);
-  font-size: var(--of-type-size-small);
-}
+/*
+  `.of-sets__provenance` WENT WITH THE PARAGRAPH IT STYLED, on the rule
+  `set.css` states in the same words about the same deletion: a rule matching
+  no element is dead weight that reads, to the next person, like the markup is
+  still there. `.of-sets__meta` is unrelated despite the neighbouring name — it
+  is the per-row date and count, which is still drawn.
+*/
