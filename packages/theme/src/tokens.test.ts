@@ -174,13 +174,28 @@ describe("contrast, in both modes equally", () => {
      * `color.ink.faint` is for text at `type.size.large` and up, or for
      * non-textual hairlines and marks.
      */
-    test(`${mode}: faint ink meets the LARGE-TEXT threshold only`, () => {
-      const ratio = contrastRatio(
-        token(tokens, "color.ink.faint"),
-        token(tokens, "color.ground"),
-      );
-      expect(ratio).toBeGreaterThanOrEqual(3);
-    });
+    /*
+     * ALL FOUR GROUNDS, for the reason the link pairs above give: this ink
+     * turns up inside a raised plate as readily as on the page. Asserting it
+     * against `color.ground` alone was how the dark value sat at 2.74:1 on
+     * `surface.raised` — under its own floor — while this test passed, because
+     * on the ground it managed 3.41. The assertion was narrower than the usage,
+     * which is the only way a numeric gate goes quietly wrong.
+     */
+    for (const ground of [
+      "color.ground",
+      "color.sunken",
+      "color.surface",
+      "color.surface.raised",
+    ] as const) {
+      test(`${mode}: faint ink on ${ground} meets LARGE-TEXT only`, () => {
+        const ratio = contrastRatio(
+          token(tokens, "color.ink.faint"),
+          token(tokens, ground),
+        );
+        expect(ratio).toBeGreaterThanOrEqual(3);
+      });
+    }
 
     /*
      * THE FOCUS RING IS A NON-TEXT INDICATOR, so 3:1 is the threshold WCAG
