@@ -54,15 +54,16 @@ export function PrintedText({ text }: PrintedTextProps) {
     <div className="of-printed">
       {blocks.map((block, index) =>
         block.kind === "paragraph" ? (
-          // biome-ignore lint/suspicious/noArrayIndexKey: parsed once from an immutable string; two paragraphs can be identical.
+          // Index keys are fine here: parsed once from an immutable string,
+          // and two paragraphs can be identical.
           <p className="of-printed__text" key={index}>
             <CardTextInline nodes={block.children} />
           </p>
         ) : (
-          // biome-ignore lint/suspicious/noArrayIndexKey: as above.
+          // Index keys, as above.
           <ul className="of-printed__list" key={index}>
             {block.items.map((item, itemIndex) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: as above.
+              // Index keys, as above.
               <li key={itemIndex}>
                 <CardTextInline nodes={item} />
               </li>

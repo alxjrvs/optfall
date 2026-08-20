@@ -230,7 +230,9 @@ export function Document({
           about a feature they did not ask for.
         */}
         <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: the content is this file's own literal, not data — there is no input to escape. A `<script>` child would be JSX-escaped, which corrupts JavaScript.
+          // Safe because the content is this file's own literal, not data —
+          // there is no input to escape. A `<script>` child would be
+          // JSX-escaped, which corrupts JavaScript.
           dangerouslySetInnerHTML={{ __html: SERVICE_WORKER_REGISTRATION }}
         />
       </body>

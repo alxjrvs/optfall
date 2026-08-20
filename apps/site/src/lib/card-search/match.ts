@@ -1,4 +1,4 @@
-import { type QueryLeaf, type QueryNode } from "../query";
+import type { QueryLeaf, QueryNode } from "../query";
 import type { CardIndex } from "./decode";
 import type { CardFilter } from "./grammar";
 import { tokeniseCard } from "./tokenise";
