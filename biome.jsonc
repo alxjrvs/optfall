@@ -33,19 +33,27 @@
   // been bitten by rather than of the rule.
   //
   // Measured on a checkout that predates `#107` deleting Astro: the leftover
-  // `apps/site/.astro/` takes `bun run lint` AND `bun run format:check` to exit
-  // 1 from the repo root. Four lint errors and three unformatted files, in
+  // `apps/site/.astro/` took `bun run lint` AND `bun run format:check` to exit 1
+  // from the repo root — four lint errors and three unformatted files, in
   // generated Astro type stubs for a framework this project no longer has.
   //
-  // THIS PARAGRAPH USED TO SAY THAT DIRECTORY WAS "ignored by git, so `git
-  // status` is clean and nothing in review can see it". It was not. `.gitignore`
-  // carried no `.astro` entry, so `useIgnoreFile` below had nothing to act on
-  // and the defence described here did not exist — `git status` showed the
-  // directory as untracked, `git check-ignore` exited 1, and `bun run check`
-  // died at `format:check` in 0.24s on any checkout that had one. The entry is
-  // in `.gitignore` now, under "Deleted frameworks", which is what finally makes
-  // this sentence true. The mechanism was right and the premise was missing;
-  // that is the failure mode the repo's first house rule is about.
+  // ~~THIS PARAGRAPH SAID THAT DIRECTORY WAS "ignored by git, so `git status` is
+  // clean and nothing in review can see it".~~ It was not: `.gitignore` carried
+  // no `.astro` entry, so `useIgnoreFile` below had nothing to act on and the
+  // defence described here did not exist. `bun run check` died at
+  // `format:check` in 0.24s on any checkout that had one.
+  //
+  // THE FIX IS THAT THE DIRECTORY IS GONE, NOT THAT IT IS IGNORED. An ignore
+  // rule was added and then removed again on purpose: nothing can regenerate
+  // that directory — `grep -ci astro bun.lock` is 0 and there is no Astro config
+  // — so it was a fossil from before #107 rather than something that keeps
+  // coming back. Ignoring a fossil hides it, and the one thing worth knowing
+  // about `apps/site/.astro/` reappearing is THAT it reappeared: it would mean
+  // some tool still thinks this is an Astro project, which is a finding, not
+  // noise to suppress. Untracked and visible is the behaviour we want.
+  //
+  // So if you are here because the linter is failing on `.astro/` stubs: delete
+  // the directory, then work out what put it back.
   //
   // CI cannot catch this class of failure by construction: it checks out fresh,
   // so every ignored path is absent there. It only ever fires locally, where the
