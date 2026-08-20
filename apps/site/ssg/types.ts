@@ -67,6 +67,20 @@ export interface PageResult {
   /** Absolute URL. Omitted where the page is its own canonical. */
   readonly canonical?: string | undefined;
   /**
+   * An absolute image URL for the link preview, where the page has one.
+   *
+   * OPTIONAL, AND MOST PAGES CORRECTLY OMIT IT. A card page has an obvious
+   * picture — the face itself, already served from R2 at a tier chosen for
+   * exactly this size — and `/about` does not. A generic fallback image would
+   * put the same mark on every card ever shared, which is worse than the plain
+   * link this replaces: it looks like a preview and carries no information.
+   *
+   * The absence is what selects `summary` over `summary_large_image` in
+   * `document.tsx`, so a page without a picture gets the card shape built for
+   * not having one.
+   */
+  readonly image?: string | undefined;
+  /**
    * Which nav item is current, or `"none"` for a page with no header at all.
    *
    * A UNION RATHER THAN A STRING, because a typo in a section name is silent:

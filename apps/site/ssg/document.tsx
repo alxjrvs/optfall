@@ -72,6 +72,58 @@ export function Document({
         <meta name="description" content={result.description} />
         <link rel="canonical" href={canonicalFor(route, result.canonical)} />
         {/*
+          THE LINK PREVIEW, AND IT IS NOT DECORATION ON THIS SITE. Flesh and
+          Blood rules questions are settled in Discord and on Reddit, which is
+          to say they are settled by somebody pasting a link. Until this block
+          existed every one of those pastes rendered as a bare URL: no name, no
+          text, no face — the reader had to open it to learn whether it was even
+          the right card.
+
+          IT REUSES THE FIELDS THE PAGE ALREADY DECLARES rather than adding a
+          parallel set. `og:title` and `og:description` are the `<title>` and
+          the meta description a few lines up, which is what keeps a page from
+          being able to say one thing to a crawler and another to a person —
+          the failure this project would notice least and like least.
+
+          `og:url` IS THE CANONICAL, NOT THE REQUEST. A card reached by its
+          printing URL canonicals to the default printing, and a preview that
+          advertised the request instead would seed a second address for one
+          answer — the duplication the canonical exists to prevent, propagated
+          by every share.
+        */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Optfall" />
+        <meta property="og:title" content={result.title} />
+        <meta property="og:description" content={result.description} />
+        <meta
+          property="og:url"
+          content={canonicalFor(route, result.canonical)}
+        />
+        {/*
+          THE CARD SHAPE FOLLOWS THE PICTURE. `summary_large_image` on a page
+          with no image is a card with a blank panel where the image should be,
+          so the absence of `result.image` picks the small card built for that
+          case rather than the big one degraded into it.
+        */}
+        <meta
+          name="twitter:card"
+          content={
+            result.image === undefined ? "summary" : "summary_large_image"
+          }
+        />
+        {result.image !== undefined && (
+          <>
+            <meta property="og:image" content={result.image} />
+            {/*
+              THE ALT TEXT IS THE CARD'S NAME, because that is what the picture
+              is of and the title already says it. It is here rather than
+              omitted for the reader whose client renders the preview without
+              loading the image.
+            */}
+            <meta property="og:image:alt" content={result.title} />
+          </>
+        )}
+        {/*
           The mark, in the tab. Still one declaration rather than the usual pile
           of six: an SVG icon is served to every engine that supports one, and
           nothing here enumerates raster favicon sizes.
