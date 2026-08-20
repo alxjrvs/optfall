@@ -132,6 +132,7 @@ export function Document({
             <SiteHeader
               section={result.section}
               field={result.headerSearch ?? true}
+              fieldIsland={result.headerSearchIsland ?? false}
             />
           )}
           <main data-width={result.width ?? "measure"}>{result.children}</main>

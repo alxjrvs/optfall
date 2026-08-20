@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@tanstack/react-query": "5.101.4",
+    "@tanstack/react-store": "0.11.1",
+    "@tanstack/store": "0.11.1",
     "optfall-components": "workspace:*",
     "optfall-theme": "workspace:*",
     "react": "catalog:",

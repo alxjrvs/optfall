@@ -78,7 +78,7 @@
  * stops that.
  *
  * What keeps the corpus out of the bundle is tree-shaking, guarded by
- * `assertIslandBudget` in `ssg/build.ts` (400 kB; the bundle is 279 kB).
+ * `assertIslandBudget` in `ssg/build.ts` (400 kB; the bundle is 286 kB).
  * Measured on the built output: `assertFormatsAgree` and `encodePostings`
  * appear zero times in it. To make the guarantee structural rather than
  * measured, import the client modules directly from the island and stop

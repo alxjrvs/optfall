@@ -58,7 +58,8 @@
  */
 
 import { Island } from "../Island";
-import { CardSearch, HEADER_FIELD_ID } from "../islands/CardSearch";
+import { CardSearch } from "../islands/CardSearch";
+import { HEADER_FIELD_ID } from "../islands/HeaderSearch";
 import { CARD_BRIEF, CARD_INDEX } from "../searchIndexes";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
@@ -111,10 +112,14 @@ function page(): PageResult {
       THE HEADER'S FIELD IS THIS PAGE'S FIELD. It was suppressed here because
       the page rendered a hero of its own, which made the results screen look
       like a second front door — `docs/SCRYFALL-GAP.md` §5.2 gives the hero to
-      the door and the header's field to every other screen. The island adopts
-      it; see `HEADER_FIELD_ID` in `CardSearch.tsx`.
+      the door and the header's field to every other screen. The field is its
+      own island here — see `headerSearchIsland` below and
+      `islands/HeaderSearch.tsx` — so a submit is answered in place.
     */
     islands: true,
+    /* The header's field is hydrated here, so Enter is answered without
+       leaving the page. `types.ts` explains why one page and not all of them. */
+    headerSearchIsland: true,
     children: (
       <>
         {/*
@@ -133,11 +138,17 @@ function page(): PageResult {
           The header's input is in the shell, which is one document serving
           every query — so it cannot be server-rendered with a value the way
           Scryfall's is. The island filled it in an effect, which is correct and
-          far too late: this page's HTML is 934 kB and its island bundle another
-          230, so a reader who searched "banned:cc" on the front door arrived at
-          a results page whose SEARCH BOX WAS EMPTY until all of that had landed.
-          The results were right and the field looked like it had forgotten the
-          question.
+          far too late: this page's HTML was 934 kB and its island bundle
+          another 230, so a reader who searched "banned:cc" on the front door
+          arrived at a results page whose SEARCH BOX WAS EMPTY until all of that
+          had landed. The results were right and the field looked like it had
+          forgotten the question.
+
+          THE NUMBERS THAT MADE IT URGENT ARE GONE AND THE SCRIPT IS NOT. The
+          index moved out of this page, so the HTML is 11 kB — but the bundle is
+          still ~280 kB and still has to parse and hydrate before the field can
+          be filled from state. Four lines that beat it are worth keeping at any
+          document size; they are simply no longer beating an emergency.
 
           IT DOES NOT FIX THE NO-JS CASE, AND CANNOT: an inline script is still
           a script. With scripting off the box stays empty — though so do the
@@ -153,9 +164,13 @@ function page(): PageResult {
           `CardEntry`: an island to do this would ship a runtime to beat the
           runtime it is compensating for.
 
-          IT DOES NOT FIGHT THE ISLAND. `CardSearch`'s adoption effect seeds its
-          state from whatever is in the field, so this becomes the island's
-          starting query rather than something it overwrites.
+          IT DOES NOT FIGHT THE ISLAND, and the mechanism moved without the
+          guarantee changing. `HeaderSearch` renders this field now, and its
+          mount effect seeds the shared store from whatever is already in it —
+          so a value written here becomes the island's starting query rather
+          than something it overwrites. React's own hydration protects the text
+          itself: its DOM host skips the value assignment while hydrating an
+          input it renders, so the string survives the handover.
         */}
         <script
           dangerouslySetInnerHTML={{

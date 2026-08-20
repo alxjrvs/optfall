@@ -14,8 +14,13 @@
  * says, so it went, and this nav entry inherited the whole job.
  *
  * THE FIELD IS A REAL GET TO THE RESULTS PAGE, so it works with scripting off
- * and a submitted query lands on a shareable address. No island, no index — the
- * header carries a way in, not a search engine.
+ * and a submitted query lands on a shareable address. ~~No island, no index~~ —
+ * **no index, and an island on exactly one page.** The header still carries a
+ * way in rather than a search engine: the form, its `action` and its `method`
+ * are the shell's on every page, and nothing here has ever loaded a corpus.
+ * What `/search` adds is that the FIELD is hydrated there, so a submit is
+ * answered in place instead of navigating to the page you are already on. See
+ * `fieldIsland` below, and `islands/HeaderSearch.tsx` for what it replaced.
  *
  * IT LIVES IN `ssg/` RATHER THAN IN THE COMPONENT LIBRARY, which is where
  * `Mark` and the rest live, and the line between them is worth stating: the
@@ -25,7 +30,28 @@
 
 import { Mark } from "optfall-components/react";
 
+import { Island } from "./Island";
+import { HeaderSearch } from "./islands/HeaderSearch";
+
 export type HeaderSection = "cards" | "sets" | "rules" | "syntax";
+
+/**
+ * The form's own attributes — the half of the field the shell keeps.
+ *
+ * SPELLED ONCE BECAUSE THERE ARE TWO WAYS IT IS RENDERED and they must not
+ * differ. On most pages this is a plain `<form>` and nothing hydrates it; on
+ * `/search` the same element is an island's container. `action` and `method` are
+ * what make the no-JavaScript path real either way, so a divergence here would
+ * be a header that submits to the right place on twelve thousand pages and the
+ * wrong one on the page that matters.
+ */
+const FORM_ATTRS = {
+  className: "of-bar__find",
+  role: "search",
+  "aria-label": "Flesh and Blood cards",
+  action: "/search",
+  method: "get",
+} as const;
 
 export interface SiteHeaderProps {
   /** Which section is current, for `aria-current`. */
@@ -41,6 +67,14 @@ export interface SiteHeaderProps {
    * entirely today and would need this the moment it grew one.
    */
   readonly field?: boolean;
+  /**
+   * Whether the field is hydrated, so a submit can be answered without leaving.
+   *
+   * ONE PAGE PASSES THIS AND IT IS `/search`, which is the only surface that can
+   * answer a card query in place. See the render below, and
+   * `PageResult.headerSearchIsland` for where a page declares it.
+   */
+  readonly fieldIsland?: boolean;
 }
 
 const LINKS: readonly {
@@ -61,7 +95,11 @@ const LINKS: readonly {
 /** What the disclosure discloses. Named, because it is not its child. */
 const SECTIONS_LIST_ID = "bar-sections";
 
-export function SiteHeader({ section, field = true }: SiteHeaderProps) {
+export function SiteHeader({
+  section,
+  field = true,
+  fieldIsland = false,
+}: SiteHeaderProps) {
   return (
     <header className="of-bar">
       <a className="of-bar__wordmark" href="/">
@@ -81,68 +119,41 @@ export function SiteHeader({ section, field = true }: SiteHeaderProps) {
       </a>
 
       {field ? (
-        // biome-ignore lint/a11y/useSemanticElements: <search> is a separate change; see SearchField.
-        <form
-          className="of-bar__find"
-          role="search"
-          aria-label="Flesh and Blood cards"
-          action="/search"
-          method="get"
-        >
-          <label className="of-bar__sr" htmlFor="site-search">
-            Search the cards
-          </label>
-          {/*
-            NO CHAIN IN THIS FIELD, DELIBERATELY. `SearchField` puts the mark
-            inside the well because there it is the only thing on the page
-            telling you what you are about to search. Here the wordmark's chain
-            is already a few pixels to the left, so a second one says nothing the
-            first has not — two identical marks on one row read as a rendering
-            mistake rather than as branding. The argument for matching the
-            primitive was consistency between two implementations of one control;
-            consistency is not worth a duplicate glyph, and the header's field is
-            the one place the primitive's reason for the mark does not hold.
-          */}
-          <input
-            id="site-search"
-            className="of-bar__field"
-            name="q"
-            type="search"
-            autoComplete="off"
-            /*
-              OFF, BECAUSE THE QUERY IS THE ARTEFACT. Without it a phone
-              capitalises the first character of every search, and this site's
-              whole design treats `?q=…` as the thing you paste. The parser
-              lowercases field names and operands, so `Banned:cc` still works —
-              it just puts a stray capital in the URL somebody shares.
-              `SearchField` has always carried this; the header's field did not,
-              and that only started to matter when `/search` began using it.
-            */
-            autoCapitalize="off"
-            spellCheck={false}
-            enterKeyHint="search"
-            placeholder="Search cards"
-          />
-          {/*
-            NO VISIBLE SUBMIT, AND STILL A REAL ONE — the same argument
-            `SearchField` makes, now that this field has inherited its job.
+        /*
+          TWO SHAPES OF ONE FORM, AND THE DIFFERENCE IS ONLY WHO OWNS THE FIELD.
 
-            A single-input form submits on Enter, and a button would be the
-            widest thing in the bar for an action nobody clicks. But implicit
-            submission is a browser BEHAVIOUR, not a guarantee, and a form whose
-            only way in is a key press is a form some assistive technology
-            cannot submit at all. That was fine while this field was a
-            convenience and `/search` had a `SearchField` of its own carrying a
-            hidden button; it stopped being fine when this became the only way
-            to search on that page.
+          On every page but `/search` this is exactly what it has always been:
+          static markup, a real GET, no island and no index — "the header carries
+          a way in, not a search engine". On `/search` the same form becomes the
+          container of an island, so the field is React's and a submit can be
+          answered in place instead of navigating to the page you are on.
 
-            Hidden rather than deleted, and it reappears on `:focus-visible` so
-            a keyboard reader who tabs to it can see what they have landed on.
-          */}
-          <button className="of-bar__submit" type="submit">
-            Search
-          </button>
-        </form>
+          THE ISLAND IS THE FORM RATHER THAN A WRAPPER ROUND IT, because
+          `.of-bar` is a flex container and `.of-bar__find` is a flex item with a
+          growth basis. A `div` between them would take the item's place and the
+          form would stop growing. See `Island`'s `as` prop.
+
+          AND IT IS OPT-IN PER PAGE rather than on wherever islands are, which is
+          a narrower rule than it first looks. Every page with any island would
+          otherwise hydrate this field — `/cr`, every set page — to write into a
+          store nothing on those pages reads, for a submit that still has to
+          navigate. One page can answer a card query without leaving, so one page
+          asks for it.
+        */
+        fieldIsland ? (
+          <Island
+            name="HeaderSearch"
+            props={{}}
+            as="form"
+            containerProps={FORM_ATTRS}
+          >
+            <HeaderSearch />
+          </Island>
+        ) : (
+          <form {...FORM_ATTRS}>
+            <HeaderSearch />
+          </form>
+        )
       ) : null}
 
       {/*

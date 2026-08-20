@@ -39,6 +39,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Pagination } from "optfall-components/react";
+import { useStore } from "@tanstack/react-store";
 
 import {
   type CardDisplayMode,
@@ -64,22 +65,39 @@ import {
   withPageParams,
 } from "../../src/lib/pagination";
 import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
+import { HEADER_FIELD_ID } from "./HeaderSearch";
+import {
+  answerInPlace,
+  headerSearchStore,
+  setHeaderQuery,
+} from "./headerSearchStore";
 import { useSearchIndex } from "./useSearchIndex";
 
 import "./CardSearch.css";
 
 /**
- * The shell's search input, which this island drives on `/search`.
+ * The header's input, for FOCUS AND BLUR ONLY — and that restriction is the
+ * whole of what is left of the adoption this island used to do.
  *
- * A STRING SHARED WITH `SiteHeader.tsx` AND NOTHING ENFORCES IT, which is worth
- * saying out loud rather than hiding behind a constant. The header is rendered
- * by the document shell and this island is mounted inside `<main>`, so there is
- * no prop between them; if the id changes there and not here the field simply
- * stops being adopted — the form still submits and navigates, so the page keeps
- * working and gets slower, which is the failure mode to prefer but also the
- * kind that goes unnoticed. `ssg.test.ts` asserts the two agree.
+ * ~~A string shared with `SiteHeader.tsx` and nothing enforces it.~~ The id is
+ * declared once now, by the component that renders the element
+ * (`./HeaderSearch.tsx`), and imported here rather than spelled again.
+ *
+ * WHY A DOM LOOKUP SURVIVES AT ALL, since removing them is the point of the
+ * change: focus is not state. There is no value to keep in step, nothing to
+ * render, and no React equivalent — `/` focuses the field and a submit blurs it,
+ * both of which are imperative acts on a node at a moment in time. Routing them
+ * through the store would mean a counter per gesture and an effect per counter,
+ * which is more machinery than the two calls it replaces.
+ *
+ * The distinction to hold on to: reading or writing this node's VALUE is state
+ * synchronisation and belongs in the store; asking it to take the caret is not.
+ * A `null` here costs a keyboard shortcut, never a wrong answer.
  */
-export const HEADER_FIELD_ID = "site-search";
+function headerField(): HTMLInputElement | null {
+  const found = document.getElementById(HEADER_FIELD_ID);
+  return found instanceof HTMLInputElement ? found : null;
+}
 
 /**
  * Everything this island prints before anybody has searched.
@@ -215,7 +233,6 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
     decodeCardIndex,
   );
 
-  const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const [page, setPage] = useState(1);
   const [size, setSize] = useState<PageSize>(DEFAULT_PAGE_SIZE);
@@ -232,157 +249,52 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
   */
   const [interactive, setInteractive] = useState(false);
   /**
-   * THE HEADER'S FIELD, NOT ONE THIS COMPONENT RENDERS.
+   * THE HEADER'S FIELD, AND THIS COMPONENT NO LONGER TOUCHES IT.
    *
-   * `docs/SCRYFALL-GAP.md` §5.2 says the front door's hero is a search field
-   * and every other screen carries the header's. This page used to have both:
-   * a hero field of its own, with the header's suppressed by
-   * `headerSearch: false`, which meant the results page looked like a second
-   * front door rather than like the rest of the site.
+   * `docs/SCRYFALL-GAP.md` §5.2 says the front door's hero is a search field and
+   * every other screen carries the header's. This page used to have both: a hero
+   * field of its own, with the header's suppressed by `headerSearch: false`,
+   * which meant the results page looked like a second front door rather than
+   * like the rest of the site. So it uses the shell's field, and the question has
+   * always been how.
+
+   * ~~So the island ADOPTS the field the shell already renders.~~ **It reads a
+   * store instead.** `islands/HeaderSearch.tsx` renders that field now — it is
+   * an island whose container IS the shell's form — and the two talk through
+   * `./headerSearchStore.ts`. Neither reaches into the other's tree.
    *
-   * So the island ADOPTS the field the shell already renders. It is a real
-   * `<form action="/search" method="get">` with `id="site-search"` inside it,
-   * so with no JavaScript it submits and navigates — which is exactly what
-   * Scryfall does, since Scryfall renders its results on a server. With
-   * JavaScript the island takes it over and the submit is answered in place,
-   * as it already was.
+   * WHAT WENT WITH THE ADOPTION, because the list is the argument for the
+   * change: a `getElementById` for a node in another root, three
+   * `addEventListener`s on it, a ref holding the latest submit closure so those
+   * listeners could be bound once, a ref holding the latest Escape closure for
+   * the same reason, and an effect writing state back into the DOM `value` with
+   * a first-run skip and an inequality guard to keep the caret still. About a
+   * hundred and fifty lines, and three bugs came out of them — text typed during
+   * hydration erased, a paste-then-Enter running the previous query, a caret
+   * jumping to the end mid-word.
    *
-   * REACHING OUTSIDE THE ISLAND'S OWN TREE IS THE COST, and it is worth naming.
-   * The header is rendered by `document.tsx` outside `<main>`, so no island can
-   * contain both the field and the results; the alternatives were two islands
-   * sharing a store, or a full page load per search. `id="site-search"` is the
-   * contract between them, and {@link HEADER_FIELD_ID} is where it is written
-   * down on this side.
+   * THE FORM IS STILL A REAL `GET`, which is the property none of this may cost.
+   * `action="/search"` and `method="get"` are the shell's attributes on the
+   * container element, untouched by React, so with no JavaScript the field
+   * submits and navigates exactly as before.
    */
-  const field = useRef<HTMLInputElement | null>(null);
+  const submissions = useStore(headerSearchStore, (state) => state.submissions);
 
   /*
-   * THE SUBMIT HANDLER, HELD BY REF SO THE LISTENER IS WIRED ONCE.
+   * CLAIM THE SUBMITS, AND GIVE THEM BACK ON UNMOUNT.
    *
-   * The DOM listener below is attached on mount and never rebound; reading
-   * `query` from its closure would read the value at mount forever. A ref
-   * holding the latest handler is the standard shape for that, and it keeps the
-   * effect's dependency list empty — which matters here because rebinding a
-   * listener on the SHELL's input every keystroke is a side effect on a node
-   * this component does not own.
-   *
-   * **THE SUBMITTED TEXT IS PASSED IN RATHER THAN READ FROM STATE, AND THAT IS
-   * A BUG THIS BRANCH ALREADY HAD.** `input` and `submit` can arrive in ONE
-   * task — a paste followed by Enter, or any programmatic submit — and
-   * `setQuery` only schedules a render, so the ref still holds the previous
-   * render's closure when the submit handler runs. Measured: submitting a new
-   * query immediately after setting the field re-ran the OLD one, left the URL
-   * alone, and looked from the outside like the field had stopped working.
-   *
-   * So the handler takes the field's own value. That is also just what a form
-   * is: at submit, the input is the truth and React state is a copy of it.
+   * `HeaderSearch` only calls `preventDefault()` while this is set — see
+   * `answerInPlace`. Until this island has mounted, and after it goes away, the
+   * header's form navigates instead, which is what keeps a page whose results
+   * island failed to hydrate from having a search box that answers nothing.
    */
-  const submitRef = useRef<(raw: string) => void>(() => {});
-  const escapeRef = useRef<() => void>(() => {});
-
-  useEffect(() => {
-    const input = document.getElementById(HEADER_FIELD_ID);
-    if (!(input instanceof HTMLInputElement)) return;
-
-    field.current = input;
-    const form = input.form;
-
-    /*
-     * NOTHING IS SEEDED FROM THE FIELD, AND A VERSION OF THIS DID SEED IT.
-     *
-     * The problem is real: the header's input is static markup, on screen and
-     * typeable from the first paint, before `islands.js` lands. React guards
-     * that for inputs it renders itself — its DOM host skips the value
-     * assignment while hydrating — and an adopted node gets none of it, so text
-     * typed during hydration was being erased.
-     *
-     * The fix for that is the FIRST-RUN SKIP on the value-sync effect below,
-     * and a `setQuery(input.value)` here was belt on top of braces. Mutation
-     * testing is what settled it: deleting this line changed no assertion in
-     * `CardSearch.dom.test.tsx`, while deleting the skip broke it immediately.
-     * `query` is READ in exactly one place — that effect, to write it back into
-     * the field — so state that merely agrees with the field buys nothing, and
-     * every later write to it (`onInput`, `?q=`, `show`, `submitQuery`,
-     * `popstate`, Escape) already carries the value it wants.
-     *
-     * Left as a note rather than as code, because the line looked necessary and
-     * the next person to notice the hydration race will reach for it again.
-     */
-
-    const onInput = () => setQuery(input.value);
-    const onSubmit = (event: Event) => {
-      event.preventDefault();
-      submitRef.current(input.value);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      /* PREVENTED, AS THE OLD HANDLER DID. `type="search"` has native Escape
-         behaviour of its own — WebKit and Blink clear the field, Firefox treats
-         it as "stop" — so without this the browser's action runs alongside
-         ours. It reaches the same place today, which is exactly why dropping
-         the guard was easy not to notice. */
-      event.preventDefault();
-      escapeRef.current();
-    };
-
-    input.addEventListener("input", onInput);
-    input.addEventListener("keydown", onKeyDown);
-    form?.addEventListener("submit", onSubmit);
-
-    return () => {
-      input.removeEventListener("input", onInput);
-      input.removeEventListener("keydown", onKeyDown);
-      form?.removeEventListener("submit", onSubmit);
-      field.current = null;
-    };
-  }, []);
-
-  /*
-   * THE FIELD SHOWS THE QUERY IT IS ANSWERING, which is the whole reason a
-   * results page has a field in it at all.
-   *
-   * The header's input is server-rendered empty — it is on every page, and the
-   * query lives in `?q=`, which a static document cannot know. So the value is
-   * written here, from the state that `?q=` populates on mount, and rewritten
-   * whenever the query changes for a reason other than typing: Escape clears
-   * it, `display:` switches rewrite it, and `popstate` restores it. Without
-   * this a reader lands on `/search?q=banned:cc`, sees 35 results and an EMPTY
-   * box, and cannot edit the query that produced them.
-   *
-   * Guarded on inequality so typing does not fight the caret: the `input`
-   * listener sets state from the field, and writing the same string back would
-   * move the cursor to the end mid-word.
-   */
-  const synced = useRef(false);
-  useEffect(() => {
-    const input = field.current;
-    if (input === null) return;
-    /*
-     * THE FIRST RUN WRITES NOTHING, AND SEEDING ALONE DOES NOT COVER THAT.
-     *
-     * Effects flush in declaration order within one commit, so on mount this
-     * runs immediately after the adoption effect above — with `query` still the
-     * pre-seed `""`, because `setQuery` schedules a render rather than
-     * performing one. It would therefore blank a field the adoption effect had
-     * just read text out of, and restore it a render later: the text survives,
-     * but it flickers and the caret jumps to the end mid-word.
-     *
-     * On mount the FIELD is the source of truth — that is what the seed says —
-     * so there is nothing for this to write. Every later run is a query that
-     * changed for a reason other than typing, which is exactly what it is for.
-     */
-    if (!synced.current) {
-      synced.current = true;
-      return;
-    }
-    if (input.value !== query) input.value = query;
-  }, [query]);
+  useEffect(() => answerInPlace(), []);
 
   useEffect(() => {
     setInteractive(true);
     const fromUrl = queryFromUrl();
     if (fromUrl !== "") {
-      setQuery(fromUrl);
+      setHeaderQuery(fromUrl);
       setSubmitted(fromUrl);
     }
     const paging = pagingFromUrl();
@@ -565,7 +477,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
   useEffect(() => {
     const onPop = () => {
       const next = queryFromUrl();
-      setQuery(next);
+      setHeaderQuery(next);
       setSubmitted(next);
       const paging = pagingFromUrl();
       setPage(paging.page);
@@ -587,7 +499,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
       if (tag === "input" || tag === "textarea" || tag === "select") return;
       if (target?.isContentEditable) return;
       event.preventDefault();
-      field.current?.focus();
+      headerField()?.focus();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -641,7 +553,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
       */
       const written = text.replace(/\s+/g, " ").trim();
       const nextPage = resetPage ? 1 : page;
-      setQuery(written);
+      setHeaderQuery(written);
       setSubmitted(written);
       setParamDisplay(null);
       if (resetPage) setPage(1);
@@ -726,7 +638,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
       cards === undefined
         ? parseCardQuery(raw)
         : searchCards(cards, raw, requestFor(1, size).limit);
-    setQuery(raw);
+    setHeaderQuery(raw);
     setSubmitted(raw);
     /*
       A NEW QUERY IS PAGE ONE. Keeping the page across a submit would land
@@ -759,7 +671,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
     const droppingParam = next.display !== null;
     if (droppingParam) setParamDisplay(null);
     syncUrl("push", raw, droppingParam, 1, size);
-    field.current?.blur();
+    headerField()?.blur();
 
     /* `in` rather than a cast: `parseCardQuery` returns no `total`, and the
        narrowing says out loud that this branch belongs to the ranked answer. */
@@ -768,27 +680,34 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
     if (only) window.location.assign(only.href);
   }
 
-  /*
-   * ASSIGNED IN AN EFFECT, NOT DURING RENDER, and the difference is a rule
-   * rather than a preference. React documents ref writes during render as
-   * unsupported: a render that is abandoned or replayed would still have
-   * written its closure into the ref, for a commit that never happened. Nothing
-   * in this app renders concurrently today, so the previous spelling was latent
-   * rather than broken — and this is the same code with the guarantee.
+  /**
+   * A SUBMIT HAPPENED, SO ANSWER IT.
    *
-   * NO DEPENDENCY ARRAY, deliberately: the point is to hold the LATEST closure,
-   * so it has to run after every render.
+   * ~~Two refs holding the latest closures, assigned after every render~~ — the
+   * refs existed because the submit listener was bound once on a DOM node this
+   * component did not own, so it could not be allowed to close over a stale
+   * render's `query`. There is no listener here any more: `HeaderSearch` owns
+   * the form, and this reacts to the counter it increments.
+   *
+   * THE COUNTER IS THE DEPENDENCY, NOT THE TEXT, and that is the same
+   * correctness the ref dance was protecting. Two submits of the same string are
+   * two submits — which is exactly what a reader does when they press Enter on
+   * an unchanged query — and an effect keyed on the text alone would fire once.
+   *
+   * `submittedQuery` IS READ RATHER THAN `query`, for the reason the store's own
+   * docblock gives: `input` and `submit` can arrive in one task, and the two
+   * fields are written together in one `setState` so they cannot disagree.
+   *
+   * SKIPPED ON THE FIRST RUN, because a fresh store starts at zero submissions
+   * and an effect that ran anyway would answer a submit nobody made — clearing
+   * `?q=` out of the URL of a link somebody had just followed.
    */
+  const answered = useRef(0);
   useEffect(() => {
-    submitRef.current = submitQuery;
-    /* UNCONDITIONAL, for the same reason `submitQuery` takes its argument: a
-       guard on `query` reads state that may lag the field by a render, and
-       "clear a field that is already empty" costs nothing. */
-    escapeRef.current = () => {
-      setQuery("");
-      if (field.current !== null) field.current.value = "";
-    };
-  });
+    if (submissions === answered.current) return;
+    answered.current = submissions;
+    submitQuery(headerSearchStore.state.submittedQuery);
+  }, [submissions, submitQuery]);
 
   /**
    * The type-line browse, named once because two branches render it.
