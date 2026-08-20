@@ -1124,11 +1124,14 @@
     the printing they are about. See `CardEntry.tsx` for why they left the face
     column and why they are one row rather than two.
 
-    IT IS THE `.of-card__attribute` SHAPE, DELIBERATELY. A label that takes its
-    content width, a body that takes what is left, wrapping to a second line
-    when what is left stops being enough — that is the definition row under
-    "Definition rows" above, and this is the same problem, so it is the same
-    declarations rather than a second spelling of them.
+    IT IS THE `.of-card__attribute` SHAPE, DELIBERATELY — the shape, not the
+    values. A label that takes its content width, a body that takes what is
+    left, wrapping to a second line when what is left stops being enough: that
+    is the definition row under "Definition rows" above, and this is the same
+    problem solved the same way rather than a new arrangement invented for one
+    row. The two numbers differ on purpose and neither should be made to follow
+    the other — this row has a wider column gap because a button is not a label,
+    and a higher wrap basis for the reason argued below.
 
     `baseline`, NOT `center`. The disclosure is three or four lines wherever it
     sits beside the button, so it is always the taller item; centring would push
@@ -1176,13 +1179,15 @@
     same width, wherever it was before.
 
     Measured on the built site, `/card/mst/131/10-000-year-reunion`, in a
-    fixed-width iframe. Beside the button at 964 (717px, three lines — the two
-    columns have stacked there, so the facts column is the whole page) and from
-    1226 up (504px at 1226, 528px at 1440, four lines). Under it at 320, 360,
-    390, 430 — where a button and a paragraph do not share a phone screen — and
-    through the 1000–1200 band, where the columns have split and the facts
-    column is too narrow to seat both. `documentElement.scrollWidth ===
-    clientWidth` at every one of the six widths in `CLAUDE.md`.
+    fixed-width iframe. Every number below is THIS PARAGRAPH's rendered width,
+    not the row's and not the column's. Beside the button at 964 (717px, three
+    lines — the two columns have stacked at that width, so the row it is sharing
+    is the whole page rather than the facts column) and from 1226 up (504px at
+    1226, 528px at 1440, four lines). Under the button at 320, 360, 390, 430 —
+    where a button and a paragraph do not share a phone screen — and through the
+    1000–1200 band, where the columns have split and the facts column is too
+    narrow to seat both. `documentElement.scrollWidth === clientWidth` at every
+    one of the six widths in `CLAUDE.md`.
 
     Nothing here is a breakpoint. The number is a proportion of the row, so the
     arrangement follows the room the row actually has — which is why it survives
@@ -1342,7 +1347,12 @@
 
 /*
   THE BUY LINK'S HALF OF THIS RULE MOVED WITH THE LINK. It used to sit here as
-  `.of-card__buy .of-card__visually-hidden`, for the same reason as the selector
+  `.of-card__buy .of-card__visually-hidden` — and mind that name, because
+  `.of-card__buy` is live again further up this file and means something else
+  now: the flex row holding the button and its disclosure, not the anchor. That
+  compound would start matching the `IconButton`'s hidden detail span if anyone
+  reinstated it, which is a second reason not to. It sat here for the same
+  reason as the selector
   above: the hidden span names the printing so the link is not one of sixteen
   reading "TCGplayer", and selected-and-pasted that text would come with it.
   The buy link is an `IconButton` now — one of them, and the section that held
@@ -1393,7 +1403,10 @@
   here is worth keeping because it is about the system rather than about that
   column.
 
-  A `.of-card__buy` rule USED TO SPEND `--of-color-brass`, arguing that brass is
+  A `.of-card__buy` rule USED TO SPEND `--of-color-brass` — the ANCHOR of that
+  name, which is gone; the `.of-card__buy` further up this file is the row that
+  seats the button beside its disclosure and spends no colour at all. It argued
+  that brass is
   the material for apparatus and marginalia. That argument was wrong, and it
   contradicted an invariant stated in three places: `docs/DESIGN.md` ("the brass
   seal is the only place brass appears — attribution is the moat, so it gets the

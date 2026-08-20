@@ -1290,8 +1290,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 describes sitting between the card panel and Legality — while
                 the ground to the right of a 192px button sat empty at exactly
                 the widths where the paragraph was longest. It goes there now,
-                and drops back underneath when there is no room for it beside;
-                `.of-card__buy-verify` has the widths that was measured at.
+                and drops back underneath when there is no room for it beside.
+                The rule on `.of-card__buy-verify` names the widths each
+                arrangement was measured at.
 
                 IT IS STILL ADJACENT, WHICH IS THE PROPERTY THAT MATTERS.
                 `docs/COMPLIANCE.md` §2 asks for disclosure next to the link it
