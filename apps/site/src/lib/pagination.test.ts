@@ -43,15 +43,9 @@ import {
   SIZE_PARAM,
   withPageParams,
 } from "./pagination";
-import rulesCorpus from "../../../../data/rules/cr-2.14.0.json";
+import { CORPUS as rulesCorpus } from "./rules";
 
-import {
-  buildIndex,
-  decodeIndex,
-  type RulesCorpus,
-  search,
-  type SearchIndex,
-} from "./search";
+import { buildIndex, decodeIndex, search, type SearchIndex } from "./search";
 import { SETS } from "./sets";
 
 const cards: CardIndex = decodeCardIndex(
@@ -62,9 +56,7 @@ const cards: CardIndex = decodeCardIndex(
   }),
 );
 
-const rules: SearchIndex = decodeIndex(
-  buildIndex(rulesCorpus as unknown as RulesCorpus),
-);
+const rules: SearchIndex = decodeIndex(buildIndex(rulesCorpus));
 
 /* -------------------------------------------------------------------------- */
 /* The steps on offer                                                          */

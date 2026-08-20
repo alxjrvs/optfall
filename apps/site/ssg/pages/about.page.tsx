@@ -35,8 +35,6 @@ import { fileURLToPath } from "node:url";
 
 import { OrnamentalRule } from "optfall-components/react";
 
-import rulesJson from "../../../../data/rules/cr-2.14.0.json";
-
 import { CORPUS as RULES } from "../../src/lib/rules";
 import { CARD_PAGES, CORPUS } from "../../src/lib/cards";
 import { FACE_HOST } from "../../src/lib/faces";
@@ -44,7 +42,6 @@ import {
   buildKeywordVocabulary,
   keywordCoverage,
 } from "../../src/lib/keywords";
-import type { RulesCorpus } from "../../src/lib/search";
 import { SETS } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./about.css";
@@ -155,7 +152,7 @@ const upstream = `https://github.com/${CORPUS.source.repository}`;
  * that renders it for why that page was the wrong home for it.
  */
 const coverage = keywordCoverage(
-  buildKeywordVocabulary(rulesJson as unknown as RulesCorpus),
+  buildKeywordVocabulary(RULES),
   CORPUS.cards.flatMap((card) =>
     card.card_keywords.concat(card.ability_and_effect_keywords),
   ),

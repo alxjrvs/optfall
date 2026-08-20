@@ -9,8 +9,6 @@
  */
 import { describe, expect, test } from "bun:test";
 
-import corpusJson from "../../../../data/rules/cr-2.14.0.json";
-
 import { CORPUS as CARDS } from "./cards";
 import {
   baseKeyword,
@@ -19,9 +17,8 @@ import {
   ruleForKeyword,
   rulesForCard,
 } from "./keywords";
-import type { RulesCorpus } from "./search";
+import { CORPUS as rules } from "./rules";
 
-const rules = corpusJson as unknown as RulesCorpus;
 const vocabulary = buildKeywordVocabulary(rules);
 
 const everyCardKeyword = CARDS.cards.flatMap((card) =>

@@ -42,7 +42,6 @@
 
 import { BevelledPlate, Citation } from "optfall-components/react";
 
-import cardsJson from "../../../../data/rules/cr-2.14.0.json";
 import { CARD_PAGES } from "../../src/lib/cards";
 import { buildKeywordVocabulary, cardsByRule } from "../../src/lib/keywords";
 import {
@@ -54,7 +53,6 @@ import {
   type RulePage,
   titleFor,
 } from "../../src/lib/rules";
-import type { RulesCorpus } from "../../src/lib/search";
 import type { PageModule, PageResult, RouteContext } from "../types";
 import "./rule.css";
 
@@ -70,9 +68,7 @@ type Props = { readonly page: RulePage };
  * Comprehensive Rules is a PDF with a search box, and no tool joins it to the
  * cards it governs.
  */
-const KEYWORD_VOCABULARY = buildKeywordVocabulary(
-  cardsJson as unknown as RulesCorpus,
-);
+const KEYWORD_VOCABULARY = buildKeywordVocabulary(CORPUS);
 
 const CARDS_BY_RULE = cardsByRule(
   KEYWORD_VOCABULARY,
