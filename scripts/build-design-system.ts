@@ -1222,13 +1222,8 @@ cards.push({
       </div>
       <p class="note" style="margin-block-start:var(--of-space-tight)">The outer two inherit, so a lockup takes the ink of the word beside it and lights up as one object.</p>
     </div>
-    <hr class="rule">
-    <div>
-      <p class="eyebrow">One link, upright — what the favicon draws</p>
-      <svg class="mark" viewBox="${MARK_GEOMETRY.single.viewBox}" role="img" aria-label="Optfall" focusable="false"><g transform="${MARK_GEOMETRY.single.placement}"><path class="l1" d="${MARK_GEOMETRY.link}" fill-rule="evenodd"/></g></svg>
-      <p class="note" style="margin-block-start:var(--of-space-tight)"><strong>Not a second drawing.</strong> It is the same path under a different transform, because three links at this aspect are a smudge at 16px and one ring is still a ring.</p>
-    </div>
   </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>There is no reduced form.</strong> A single upright link used to sit here, and it was drawn by whichever surface was too small for three — the favicon, then the installed-app icon. Both went back to the chain: three links at this aspect really are a smudge at 16px, measured, but an icon that is not the logo is worse at every size than the logo is at its worst one. The tab and the home screen now draw <code>MARK_GEOMETRY</code> exactly as this card does.</p>
   <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Nothing here is hand-placed.</strong> The step between links is the run of a rotated link minus the overlap that makes them interlock; the box is the union of their rotated corners; the clips are the empty band between each pair's two crossings. Change the angle and everything else follows — which is why the mark it replaced was rewritten as a derivation rather than left as coordinates somebody typed. <strong>This card renders <code>MARK_GEOMETRY</code> directly</strong>, so it cannot show a chain the product does not draw.</p>
   <p class="note"><strong>Three links, because the interlock needs three.</strong> Two can be drawn interlocking, but three is where the pattern is visibly a chain rather than two rings that happen to overlap — and three is what carries the pitch palette, one link per value. Each link is an elongated octagon: the chamfer is how this system spells "not a rectangle", on the jewel, on every plate, and here.</p>
   <p class="note">It is drawn from a game <em>mechanic</em> and from plain geometry rather than from Legend Story Studios' visual identity, which is what keeps it clear of the policy's prohibition on any close semblance to their logos.</p>`,

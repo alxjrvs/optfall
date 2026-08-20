@@ -360,30 +360,21 @@ describe("the reserved silhouette", () => {
     });
   });
 
-  test("the favicon's single link is the same path, not a second drawing", () => {
-    const { single, link, placements } = MARK_GEOMETRY;
-
-    // THE PROPERTY THAT MATTERS. The tab icon draws one link because three at
-    // this aspect are a smudge at 16px — measured — but it must not become a
-    // second drawing of the mark, because a second drawing is a thing that
-    // drifts. There is no `single.link`: the endpoint renders `link` under
-    // `single.placement`, so there is nothing to keep in step.
-    expect(single.placement).toContain("rotate(0,");
-    expect(link).toBeTruthy();
-
-    // Upright, unlike every link in the chain.
-    for (const placement of placements) {
+  test("the geometry offers no reduced form to draw instead of the chain", () => {
+    // THE PROPERTY THAT MATTERS, AND IT IS AN ABSENCE. This constant used to
+    // carry `single` — one link, upright, in its own box — because three links
+    // at this aspect are a smudge at 16px. Measured, and true. It bought a tab
+    // icon that was not the logo, and then an installed-app icon that was not
+    // the logo, and both went back to the chain; what was left was a variant
+    // nothing drew, sitting in the one file whose whole job is that there is
+    // exactly one drawing of the mark.
+    //
+    // So the assertion is that it stays gone. Every placement leans, none is
+    // upright, and there is no second box to render a lone link into.
+    expect(MARK_GEOMETRY).not.toHaveProperty("single");
+    for (const placement of MARK_GEOMETRY.placements) {
       expect(placement).not.toContain("rotate(0,");
     }
-
-    // Its box is its own, and it is close to square — which is the entire
-    // reason the favicon is one link rather than three.
-    const [, , width, height] = single.viewBox.split(" ").map(Number);
-    const chainAspect = (() => {
-      const [, , w, h] = MARK_GEOMETRY.viewBox.split(" ").map(Number);
-      return w! / h!;
-    })();
-    expect(width! / height!).toBeLessThan(chainAspect);
   });
 });
 

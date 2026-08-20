@@ -71,18 +71,38 @@ small, which is worth knowing before choosing one.
 
 ### It has to survive a favicon, and at three links it does not
 
-The chain is about twice as wide as it is tall. Measured at 16, 32, 48 and
+~~The chain is about twice as wide as it is tall. Measured at 16, 32, 48 and
 128px: at 16 in a square box the three rings are a smudge, and **one link
-upright is still legibly a ring**. So the tab icon is one link.
+upright is still legibly a ring**. So the tab icon is one link.~~
 
-That is not a second drawing. `MARK_GEOMETRY.single` is the same path under a
+~~That is not a second drawing. `MARK_GEOMETRY.single` is the same path under a
 different transform, in a box derived from the same corners, so the favicon
 cannot drift from the mark — there is nothing to keep in step. `faviconSvg()` in
 `apps/site/ssg/assets.ts` generates it at build time from that constant (it was
 an Astro endpoint at `apps/site/src/pages/favicon.svg.ts` until
 [#107](https://github.com/alxjrvs/optfall/pull/107)), and one link has no value
 to carry, so it takes the accent rather than the pitch palette: the ordinary
-rule, not the exception above.
+rule, not the exception above.~~
+
+**Reversed. Every icon is the chain.** The measurement above still holds — at
+16px in a square box the three rings really are a smudge — and it was answered
+with the wrong move. What the reduced mark bought was a tab icon that is *not
+the logo*: an unfamiliar lozenge sitting next to every other tab, when the whole
+point of a mark is that the thing you see a thousand times a session is the
+thing on the tab. The favicon went back to the chain first; the installed-app
+icon followed, and that one was the worse of the two to have wrong — a favicon
+is 16px of furniture, a home-screen icon is the entire identity at 512px, where
+none of the argument for reducing applies.
+
+So `apps/site/ssg/assets.ts` paints one chain and hands it three boxes:
+`/favicon.svg` at the mark's own aspect, and `/icon.svg` and
+`/icon-maskable.svg` on a square over the ground, rasterised to PNG for the
+engines that will not read a vector. Squaring a 45.45 × 21.33 mark letterboxes
+it to about 47% of the height, and that is a real cost taken deliberately rather
+than designed around. The links keep the pitch palette everywhere — the
+exception argued above, spent once — so nothing takes the accent and there is
+nothing to swap between themes. `MARK_GEOMETRY.single` was deleted with the last
+surface that drew it, rather than left as a variant the product does not use.
 
 **One compliance constraint shaped this.** LSS's policy does not merely prohibit
 using their logos in third-party applications — it prohibits creating any *close
