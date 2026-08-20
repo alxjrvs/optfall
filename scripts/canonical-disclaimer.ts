@@ -17,7 +17,7 @@
 import { readFileSync } from "node:fs";
 
 /** Where the specification lives, relative to the repository root. */
-export const PLAN_PATH = "docs/PLAN.md";
+const PLAN_PATH = "docs/PLAN.md";
 
 const HEADING = "### Required disclaimer";
 

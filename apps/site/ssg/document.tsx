@@ -25,7 +25,7 @@ import { THEME_COLOUR } from "./assets";
 import { SiteHeader } from "./SiteHeader";
 import type { PageResult } from "./types";
 
-export const SITE_ORIGIN = "https://optfall.com";
+const SITE_ORIGIN = "https://optfall.com";
 
 /**
  * Registers the worker `ssg/serviceWorker.ts` generates, or does nothing.

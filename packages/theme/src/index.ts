@@ -45,7 +45,7 @@ export const THEME_ATTRIBUTE = "data-optfall-theme";
  * inside this repo alone: one namespace, no collision with anything the site
  * itself defines.
  */
-export const TOKEN_PREFIX = "of";
+const TOKEN_PREFIX = "of";
 
 /**
  * The only axes the system has. A value that does not belong to one of these
