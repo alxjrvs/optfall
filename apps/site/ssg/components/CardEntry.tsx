@@ -50,7 +50,6 @@ import {
   StatGlyph,
 } from "optfall-components/react";
 
-import corpusJson from "../../../../data/rules/cr-2.14.0.json";
 import { symbolForKind, type SymbolKind } from "../../src/lib/card-symbols";
 import { parseInline } from "../../src/lib/card-text";
 import {
@@ -69,7 +68,8 @@ import {
   placeholderUrl,
 } from "../../src/lib/faces";
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
-import { hrefForNumber, type RulesCorpus } from "../../src/lib/search";
+import { CORPUS as RULES_CORPUS } from "../../src/lib/rules";
+import { hrefForNumber } from "../../src/lib/search";
 import { buyDisclosure, buyHref, buyRel } from "../../src/lib/tcgplayer";
 import {
   editionLabel,
@@ -102,9 +102,7 @@ export interface CardEntryProps {
 }
 
 /** The keyword vocabulary, built once for all 11,378 card pages. */
-const KEYWORD_VOCABULARY = buildKeywordVocabulary(
-  corpusJson as unknown as RulesCorpus,
-);
+const KEYWORD_VOCABULARY = buildKeywordVocabulary(RULES_CORPUS);
 
 /*
  * NO `Arcane` ENTRY, AND THAT IS THE POINT RATHER THAN AN OMISSION. Arcane left

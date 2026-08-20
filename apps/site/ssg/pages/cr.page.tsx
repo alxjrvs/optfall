@@ -36,15 +36,13 @@
  * submitted query vanish in silence.
  */
 
-import corpusJson from "../../../../data/rules/cr-2.14.0.json";
-
-import { buildIndex, type RulesCorpus } from "../../src/lib/search";
+import { CORPUS as corpus } from "../../src/lib/rules";
+import { buildIndex } from "../../src/lib/search";
 import { Island } from "../Island";
 import { RulesSearch } from "../islands/RulesSearch";
 import type { PageModule, PageResult } from "../types";
 import "./cr.css";
 
-const corpus = corpusJson as unknown as RulesCorpus;
 const index = buildIndex(corpus);
 
 const sections = corpus.sections.length.toLocaleString("en-GB");
