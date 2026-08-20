@@ -920,18 +920,20 @@
 }
 
 /*
-    THE RIGHTS NOTICE IS LEGALESE, NOT APPARATUS. It is 500 characters of
-    licence text that has to be present and does not have to compete — the same
-    argument the card-image copyright line settled, so it gets the same
-    treatment: the smallest step in the scale, tight, faint.
+    THE RIGHTS NOTICE IS NOT STYLED HERE ANY MORE. `.of-card__legal` set it as
+    legalese rather than apparatus — the smallest step in the scale, tight,
+    faint — on the argument the card-image copyright line had already settled.
+
+    `docs/COMPLIANCE.md` §5 moved the notice to the universal page footer: one
+    per page, beside the corpus's own attribution, rather than one per card
+    panel. `scripts/check-card-notice.ts` is the enforcement now, and it says so
+    in its own header. The rule stayed behind and matched nothing, which is the
+    dead weight `set.css` describes: to the next person it reads like the markup
+    is still there.
+
+    The type treatment it argued for is not lost — `--of-type-size-legal` still
+    exists for exactly this job, and the footer is where it is spent.
   */
-.of-card__legal {
-  margin-block-start: var(--of-space-base);
-  font-size: var(--of-type-size-legal);
-  letter-spacing: var(--of-type-tracking-tight);
-  line-height: var(--of-type-leading-base);
-  color: var(--of-color-ink-faint);
-}
 
 .of-card__verify {
   margin-block: var(--of-space-base) 0;
