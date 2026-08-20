@@ -304,6 +304,44 @@ export function writeQueryUrl(options: {
 }
 
 /**
+ * The address of another page of the answer on screen, built off the LIVE URL.
+ *
+ * THE COUNTERPART TO {@link pageHref}, AND THE DIFFERENCE IS THE WHOLE POINT.
+ * That one builds an address from scratch, which is right when there is no
+ * `location` to read or when the address bar is stale. This one starts from the
+ * URL the reader is actually on, so everything the component does not own
+ * survives the click — `?display=list` in particular, which `/search` reads and
+ * never writes, and which a from-scratch href would silently drop, changing the
+ * view as a side effect of turning a page.
+ *
+ * IT FALLS BACK TO {@link pageHref} WITHOUT A `window`, and that branch is
+ * unreachable rather than merely unused: both callers draw their pager under
+ * results, and there are no results in a server render. It is kept because
+ * "unreachable" is a claim about today's callers and `pageHref` is the correct
+ * answer either way.
+ *
+ * Both islands had this, identical apart from the fallback path and what they
+ * call the query — `RulesSearch` passes what is in the field, `CardSearch`
+ * passes what the results answer, which is a distinction that matters at the
+ * call site and not here.
+ */
+export function queryHref(
+  pathname: string,
+  query: string,
+  page: number,
+  size: PageSize,
+): string {
+  if (typeof window === "undefined")
+    return pageHref(pathname, query, page, size);
+
+  const url = new URL(window.location.href);
+  if (query.trim() === "") url.searchParams.delete("q");
+  else url.searchParams.set("q", query);
+  withPageParams(url.searchParams, page, size);
+  return `${url.pathname}${url.search}`;
+}
+
+/**
  * The address of one page of a query, built from scratch.
  *
  * FROM A GIVEN SEARCH STRING RATHER THAN FROM `location`, because the two
