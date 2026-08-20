@@ -43,10 +43,15 @@ Aim the loop — it is fast when scoped:
 | what a page is | `apps/site/ssg/routes.ts` |
 
 **`docs/PLAN.md` is parsed programmatically.** `scripts/canonical-disclaimer.ts`
-extracts its disclaimer blockquote and asserts it normalises identically against
-`apps/site/src/lib/compliance.ts`, `README.md`, `docs/COMPLIANCE.md` and *both*
-copies in `docs/DATA-TERMS.md`. Reflowing the README footer paragraph fails the
-build. Tidying that prose is not a free action.
+extracts its disclaimer blockquote and normalises it;
+`scripts/canonical-disclaimer.test.ts` is where the comparison lives, asserting
+that text appears identically in `apps/site/src/lib/compliance.ts`, `README.md`,
+`docs/COMPLIANCE.md` and *both* copies in `docs/DATA-TERMS.md`. Reflowing the
+README footer paragraph fails `bun run check`. Tidying that prose is not a free
+action.
+
+Open the test, not the script, when you want to see what is enforced — the
+script only throws when it cannot find the blockquote at all.
 
 ## Two rules no check can enforce
 
