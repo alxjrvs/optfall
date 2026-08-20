@@ -455,7 +455,22 @@ export const DARK_TOKENS: TokenTable = {
 
   "color.ink": "#ededed",
   "color.ink.muted": "#a6a6a6",
-  "color.ink.faint": "#6e6e6e",
+  /* LIFTED FROM `#6e6e6e`, WHICH CLEARED ITS OWN FLOOR ON ONLY SOME GROUNDS.
+     `ink.faint` is the large-text ink and `tokens.test.ts` holds it to 3:1
+     rather than 4.5:1 — but it asserted that against `color.ground` alone,
+     where the old value scored 3.41 and passed. On `surface` it was 3.08, and
+     on `surface.raised` 2.74: below the threshold this token is allowed to
+     stop at, on the ground a raised plate gives it.
+
+     Light mode was already clear on all four (3.06 to 4.51), so this was the
+     exact asymmetry that file's opening comment names — "a palette that passes
+     in the mode its author uses and fails in the other is the normal outcome".
+     It survived because the assertion was narrower than the usage.
+
+     `#787878` clears 3:1 on every dark ground with room to spare — 3.94, 3.56,
+     3.16, 4.21 — and stays a true neutral, equal in all three channels, which
+     is the constraint at the top of this file. */
+  "color.ink.faint": "#787878",
   "color.ink.inverse": "#0b0b0b",
 
   /* Hairline rules rather than cards and shadows. */
