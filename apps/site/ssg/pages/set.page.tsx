@@ -60,9 +60,11 @@ type Props = { readonly id: string; readonly cards: readonly CardPage[] };
  * of the second fix. Fixing the picture left the LINK on `page.href`, the
  * card's default printing — so Mistveil's page drew MST095, and clicking it
  * arrived at `/card/eng/025/…`: a different set, a different collector number
- * and a different picture from the one the reader clicked. Measured on this
- * corpus: 4,173 of the 9,118 (set, card) rows this page builds were that shape,
- * across 109 of the 112 sets. Face and address are one decision, so they are
+ * and a different picture from the one the reader clicked. Measured across the
+ * 112 set pages this route builds: they carry 9,118 (set, card) links — a row's
+ * own, one per fanned version, one per `<noscript>` line — and 4,173 of them
+ * pointed outside the set the picture came from, touching 3,365 of the 6,555
+ * rows and 109 of the 112 sets. Face and address are one decision, so they are
  * one return value and cannot be resolved apart.
  *
  * `facesOf` IS THE ROUTER'S LIST, so every key this can return is one the face

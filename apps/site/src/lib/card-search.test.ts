@@ -1617,19 +1617,22 @@ describe("a set-scoped search shows that set's printing", () => {
     const byHref = new Map(outcome.results.map((row) => [row.href, row]));
 
     const missing: string[] = [];
-    const strays: string[] = [];
+    const stale: string[] = [];
     for (const { ordinal } of moved) {
       const here = addressInSetOf(index, ordinal, "mon");
-      /* The old address, which is what the row used to carry. If these ever
-         agree the case is not a reprint and the sample is lying. */
-      expect(here).not.toBe(addressOf(ordinal));
+      /* Present at its Monarch address. */
       if (!byHref.has(here)) missing.push(here);
-      if (!here.startsWith("/card/mon/")) strays.push(here);
+      /*
+        AND ABSENT AT ITS OLD ONE, which is the half that can actually fail.
+        "Is it at the new address" alone would pass on a result set that
+        offered both; this says the row MOVED. The old address is a printing of
+        this card outside Monarch, so no other row in this answer can be
+        carrying it — every row here is addressed by its own card.
+      */
+      if (byHref.has(addressOf(ordinal))) stale.push(addressOf(ordinal));
     }
-    /* Every one of them is on the page at its Monarch address — a row still
-       carrying the old href would be absent from this map. */
     expect(missing).toEqual([]);
-    expect(strays).toEqual([]);
+    expect(stale).toEqual([]);
   });
 
   test("no row loses its picture to the resolution", () => {
