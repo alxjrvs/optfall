@@ -3,14 +3,19 @@
  * Every declaration and every comment is the original's.
  */
 
+/*
+  ONE SHAPE, WHERE THERE USED TO BE TWO. A `.of-rule--ornamented` modifier
+  carried the grid and a looser rhythm, and the bare `.of-rule` was a single
+  hairline at `loose`. Every rule on the site is the ornamented one now — see
+  the note in `OrnamentalRule.tsx` — so the modifier described a variant with no
+  instances, and keeping it would have meant two spellings of the same line.
+*/
 .of-rule {
   /* The rule owns its vertical rhythm. A divider with no room around it is not
      a divider, and this system has no cards or padding to supply that room
      elsewhere. */
-  margin-block: var(--of-space-loose);
-}
+  margin-block: var(--of-space-looser);
 
-.of-rule--ornamented {
   /* Line, ornament, line. The centre is a real gap rather than a masked
      overlay, so the ornament never depends on sitting against a surface of a
      particular colour to hide the line behind it. */
@@ -18,7 +23,6 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   column-gap: var(--of-space-base);
-  margin-block: var(--of-space-looser);
 }
 
 .of-rule__line {

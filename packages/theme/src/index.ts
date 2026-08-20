@@ -152,9 +152,12 @@ export function toCssDeclarations(theme: Theme): string {
 export type Voice = "serif" | "sans";
 
 /**
- * Filigree earns exactly three roles. Never on a control, never on a list,
- * never twice on one screen — so the set is closed by the type rather than by
- * a code-review habit.
+ * Filigree earns exactly three roles. Never on a control, never on a list — so
+ * the set is closed by the type rather than by a code-review habit.
+ *
+ * "Never twice on one screen" used to be part of that sentence and is retired
+ * for `section-rule` only; see `docs/DESIGN.md` § "Filigree, rationed". The
+ * ROLES are still three and this type is still what closes them.
  */
 export type OrnamentRole = "panel-corner" | "card-corner" | "section-rule";
 

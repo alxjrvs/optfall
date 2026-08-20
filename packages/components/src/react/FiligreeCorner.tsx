@@ -6,7 +6,11 @@
  * Swiss rather than as Rathe, so it comes back — but it "earns a place in
  * exactly three roles: the corners of a feature panel, the corners of a card
  * frame, and a section rule. Never on a control, never on a list, never twice on
- * one screen." The `OrnamentRole` union *is* that ration, and this component
+ * one screen." That last clause is retired for `section-rule` — every rule on
+ * the site draws a centre mark now, and `OrnamentalRule.tsx` says why — and
+ * holds for the two roles this component is actually spent on today, since
+ * nothing mounts a filigree in a rule. The `OrnamentRole` union *is* that
+ * ration, and this component
  * takes nothing else: there is no `size`, no `tone`, no `variant`. A prop that
  * let a caller put filigree somewhere new would spend the signal, and the signal
  * is the whole reason it exists.

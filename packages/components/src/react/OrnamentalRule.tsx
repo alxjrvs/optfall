@@ -1,6 +1,6 @@
 /**
- * The section rule — a hairline divider, optionally carrying the centred
- * filigree ornament. React port.
+ * The section rule — a hairline divider carrying the centred ornament. React
+ * port.
  *
  * This is the primitive `docs/DESIGN.md` means by "density without clutter,
  * held together by tight vertical rhythm and hairline rules rather than cards,
@@ -17,18 +17,25 @@
  * `decorative` exists, defaults to `false`, and is the only way to get a line
  * that is not a thematic break.
  *
- * FILIGREE IS RATIONED, AND THIS IS ONE OF ITS THREE ROLES. `docs/DESIGN.md`
- * spends scrollwork on feature-panel corners, card-frame corners and the
- * section rule — never on a control, never on a list, never twice on one
- * screen. `ornament` therefore defaults to `false`: the plain hairline is the
- * common case and the ornamented rule is the exception a page spends once.
+ * THE ORNAMENT IS NOT RATIONED, AND IT USED TO BE. An `ornament` prop defaulted
+ * to `false` on the argument that `docs/DESIGN.md` spends scrollwork on three
+ * roles — feature-panel corners, card-frame corners and the section rule — and
+ * that a screen therefore gets one rule with a centre mark and the rest plain.
+ * In practice exactly one caller ever passed it, so the ration was not choosing
+ * between rules; it was making one rule look like a different component from
+ * its siblings on the next page down. The centre mark is now what a section
+ * rule IS, so a divider reads the same everywhere it appears.
+ *
+ * That reverses the ration for THIS primitive only. Filigree on panel corners
+ * and card frames is still `FiligreeCorner`'s to spend, and it is still spent
+ * sparingly — see the note below on which of the two owns what.
  *
  * The ornament arrives as a slot rather than as an import, because a primitive
  * that reaches for another primitive decides for the caller how much ornament a
  * screen has already spent:
  *
  * ```tsx
- * <OrnamentalRule ornament filigree={<FiligreeCorner role="section-rule" />} />
+ * <OrnamentalRule filigree={<FiligreeCorner role="section-rule" />} />
  * ```
  *
  * **THIS COMPONENT OWNS THE RULE; THE SLOT SUPPLIES A DRAWING.** The two
@@ -54,11 +61,6 @@ import "./OrnamentalRule.css";
 
 export interface OrnamentalRuleProps {
   /**
-   * Open the centre of the rule and mount the filigree. Defaults to `false`
-   * because ornament is rationed; a screen gets one of these at most.
-   */
-  readonly ornament?: boolean;
-  /**
    * Render a line that is *not* a thematic break — furniture inside a plate,
    * rather than a division between sections. Hidden from assistive technology
    * entirely, which is the honest rendering of a decoration.
@@ -76,13 +78,13 @@ export interface OrnamentalRuleProps {
   readonly label?: string;
   /**
    * The ornament itself. Intended occupant: `FiligreeCorner` in its
-   * `section-rule` role. Ignored unless `ornament` is set.
+   * `section-rule` role. Omit it and the component draws its own centre mark,
+   * which is what every rule on the site uses today.
    */
   readonly filigree?: ReactNode;
 }
 
 export function OrnamentalRule({
-  ornament = false,
   decorative = false,
   label,
   filigree,
@@ -96,29 +98,25 @@ export function OrnamentalRule({
   const name = label?.trim() || undefined;
 
   return (
-    <div className={ornament ? "of-rule of-rule--ornamented" : "of-rule"}>
+    <div className="of-rule">
       {decorative ? (
         <span className="of-rule__line" aria-hidden="true" />
       ) : (
         <hr className="of-rule__line" aria-label={name} />
       )}
 
-      {ornament ? (
-        <>
-          <span className="of-rule__mount" aria-hidden="true">
-            {filigree ?? (
-              /*
-                The degenerate ornament. A gap with nothing in it is a bug that
-                looks like a design, so the component draws its own centre mark
-                when nothing is supplied rather than opening a hole and trusting
-                the caller.
-              */
-              <span className="of-rule__mark" />
-            )}
-          </span>
-          <span className="of-rule__line" aria-hidden="true" />
-        </>
-      ) : null}
+      <span className="of-rule__mount" aria-hidden="true">
+        {filigree ?? (
+          /*
+            The default ornament, and the one every caller gets. A gap with
+            nothing in it is a bug that looks like a design, so the component
+            draws its own centre mark rather than opening a hole and trusting
+            the caller to fill it.
+          */
+          <span className="of-rule__mark" />
+        )}
+      </span>
+      <span className="of-rule__line" aria-hidden="true" />
     </div>
   );
 }

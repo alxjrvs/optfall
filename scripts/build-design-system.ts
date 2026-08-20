@@ -1081,28 +1081,25 @@ cards.push({
   <p class="note">The primitive that replaces the card. Where a lesser system would box a section, this one draws a line and moves on — <em>density without clutter, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding</em>.</p>
   <div class="stack" style="margin-block-start:var(--of-space-loose)">
     <div>
-      <p class="eyebrow">Plain — a thematic break, and the common case</p>
-      <hr class="rule">
-    </div>
-    <div>
-      <p class="eyebrow">Ornamented — one per screen, at most</p>
-      <div class="rule-ornamented">
-        <hr class="rule">
-        <span style="display:flex;align-items:center;justify-content:center;color:var(--of-ornament-filigree-ink)">${filigreeSvg("section-rule")}</span>
-        <hr class="rule">
-      </div>
-      <p class="note" style="margin-block-start:var(--of-space-tight)">Line, ornament, line. The centre is a real gap rather than a masked overlay, so the ornament never depends on sitting against a surface of a particular colour to hide the line behind it.</p>
-    </div>
-    <div>
-      <p class="eyebrow">Degenerate ornament — what it draws when nothing is mounted</p>
+      <p class="eyebrow">The rule — a thematic break, and every one on the site is this</p>
       <div class="rule-ornamented">
         <hr class="rule">
         <span class="rule-mark"></span>
         <hr class="rule">
       </div>
-      <p class="note" style="margin-block-start:var(--of-space-tight)">A gap with nothing in it is a bug that looks like a design, so the rule draws its own centre mark rather than opening a hole and trusting the caller.</p>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">Line, ornament, line. The centre is a real gap rather than a masked overlay, so the ornament never depends on sitting against a surface of a particular colour to hide the line behind it. The mark is drawn by the primitive itself: a gap with nothing in it is a bug that looks like a design, so it draws its own centre rather than opening a hole and trusting the caller.</p>
+    </div>
+    <div>
+      <p class="eyebrow">With a filigree mounted — the slot, when a caller fills it</p>
+      <div class="rule-ornamented">
+        <hr class="rule">
+        <span style="display:flex;align-items:center;justify-content:center;color:var(--of-ornament-filigree-ink)">${filigreeSvg("section-rule")}</span>
+        <hr class="rule">
+      </div>
+      <p class="note" style="margin-block-start:var(--of-space-tight)">Nothing on the site fills it today; the mark above is what a rule draws. The slot stays because the ornament arriving as a slot rather than as an import is what keeps this primitive from deciding, on the caller's behalf, how much scrollwork a screen has already spent.</p>
     </div>
   </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>The ornament used to be rationed, and is not.</strong> An <code>ornament</code> flag defaulted to false on the argument that scrollwork is spent on three roles — panel corners, card-frame corners, the section rule — so a screen gets one marked rule and the rest plain. Exactly one caller ever passed it. A flag with one caller was not choosing between rules; it was making a single rule look like a different component from its siblings on the next page down, so the mark is now what a section rule <em>is</em>. The ration still governs <code>FiligreeCorner</code>, which is where panel and card-frame scrollwork is spent.</p>
   <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Semantics are the point of this primitive.</strong> A divider is either a thematic break or it is furniture, and the two must not render as the same thing: a real <code>&lt;hr&gt;</code> is a <code>separator</code> in the accessibility tree and is announced, a decorative line is <code>aria-hidden</code> and is not. The expensive mistake runs in one direction only — a screen reader announcing "separator" between every header and its body, on every card page, is noise that trains people to ignore the one that meant something. So <code>decorative</code> exists, defaults to false, and is the only way to get a line that is not a break.</p>
   <p class="note"><strong>This primitive owns the rule; the slot supplies a drawing.</strong> Both halves had to be written down: the rule and the filigree were each built to the same three-role ration and each concluded independently that the section rule was its job, so following the instructions used to yield four hairlines at two weights, doubled rhythm, and a <code>separator</code> buried inside an <code>aria-hidden</code> mount where the accessibility tree threw it away.</p>`,
 });
@@ -1112,7 +1109,7 @@ cards.push({
   group: "Primitives",
   title: "Filigree corner",
   body: `
-  <p class="note">Scrollwork, rationed. Leaving it out made the first pass read as austere Swiss rather than as Rathe, so it comes back — but it earns a place in <strong>exactly three roles</strong>: the corners of a feature panel, the corners of a card frame, and a section rule. Never on a control, never on a list, never twice on one screen.</p>
+  <p class="note">Scrollwork, rationed. Leaving it out made the first pass read as austere Swiss rather than as Rathe, so it comes back — but it earns a place in <strong>exactly three roles</strong>: the corners of a feature panel, the corners of a card frame, and a section rule. Never on a control, never on a list, never twice on one screen — except in the section rule, where the ration was retired and every rule now draws a centre mark. See the ornamental rule card for the argument.</p>
   <div class="stack" style="margin-block-start:var(--of-space-loose)">
     <div>
       <p class="eyebrow">Panel corner — the fullest hand</p>

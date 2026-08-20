@@ -217,19 +217,22 @@ describe("OrnamentalRule", () => {
     );
   });
 
-  test("an ornamented rule with nothing supplied draws its own mark", () => {
-    // A gap with nothing in it is a bug that looks like a design.
-    const html = renderToStaticMarkup(<OrnamentalRule ornament />);
-    expect(html).toContain("of-rule--ornamented");
+  test("every rule draws the centre mark, with nothing to ask for", () => {
+    /*
+     * THE ORNAMENT IS NOT OPTIONAL, and it used to be — this asserted on an
+     * `ornament` prop and a `--ornamented` modifier. A flag exactly one caller
+     * ever set was not rationing the mark between rules, it was making one rule
+     * look like a different component from its siblings. A gap with nothing in
+     * it is still a bug that looks like a design, so the default mark stays.
+     */
+    const html = renderToStaticMarkup(<OrnamentalRule />);
     expect(html).toContain('class="of-rule__mark"');
     // Line, ornament, line.
     expect(html.split("of-rule__line").length - 1).toBe(2);
   });
 
   test("the ornament mount is hidden, because ornament is never content", () => {
-    const html = renderToStaticMarkup(
-      <OrnamentalRule ornament filigree={<svg />} />,
-    );
+    const html = renderToStaticMarkup(<OrnamentalRule filigree={<svg />} />);
     expect(html).toContain('class="of-rule__mount" aria-hidden="true"');
   });
 });

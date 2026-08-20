@@ -71,19 +71,18 @@ import "./RulesSearch.css";
 export interface RulesSearchProps {
   /** Built at build time by `buildIndex`; see `search.ts` for the format. */
   readonly index: EncodedIndex;
-  /**
-   * Spend the screen's one filigree on this component's section rule.
-   *
-   * A prop rather than a page's own `<OrnamentalRule ornament />` because of
-   * where the ornament has to land: it marks the end of the fold, which is
-   * between the hint and the chapter browse — and both of those are rendered
-   * HERE, so a page placing its own rule can only put it after the browse, ten
-   * rows below the fold it was meant to terminate.
-   *
-   * Defaults to `false` because filigree is rationed: at most one per screen,
-   * never on a control, never on a list.
-   */
-  readonly ornament?: boolean;
+  /*
+    NO `ornament` PROP ANY MORE, and no caller ever passed one. It existed to
+    spend the screen's single filigree on this component's section rule — the
+    rule marks the end of the fold, between the hint and the chapter browse, and
+    both of those are rendered HERE, so a page placing its own rule could only
+    put it after the browse, ten rows below the fold it was meant to terminate.
+    The reasoning was sound and the flag was dead: `cr.page.tsx` mounted this
+    island without it from the day it was written, so the rule it was meant to
+    decorate was the plain hairline the whole time. `OrnamentalRule` draws the
+    centre mark unconditionally now, which gets the argument's intended result
+    with nothing to pass.
+  */
 }
 
 /** Settle time before the live region speaks, and before the URL is rewritten. */
@@ -120,7 +119,7 @@ function why(result: SearchResult): string {
   }
 }
 
-export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
+export function RulesSearch({ index }: RulesSearchProps) {
   const rules = useMemo(() => decodeIndex(index), [index]);
 
   /**
@@ -406,10 +405,7 @@ export function RulesSearch({ index, ornament = false }: RulesSearchProps) {
 
       {/* The break between the field and what is under it: results once
           something has been asked, the chapter browse before that. */}
-      <OrnamentalRule
-        ornament={ornament}
-        label={asked ? "Results" : "Chapters"}
-      />
+      <OrnamentalRule label={asked ? "Results" : "Chapters"} />
 
       {asked ? (
         outcome.results.length > 0 ? (
