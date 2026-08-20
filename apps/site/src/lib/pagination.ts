@@ -224,6 +224,35 @@ export function withPageParams(
 }
 
 /**
+ * The query string an island starts from, read off `location`.
+ *
+ * BOTH ISLANDS HAD THEIR OWN COPY OF THIS, character for character, and so did
+ * {@link pagingFromUrl} below. The odd part was that the halves they call —
+ * {@link parsePage} and {@link parsePageSize} — were already shared from here,
+ * so the extraction had been done and then stopped one function short. Two
+ * copies is the arrangement where a fix to one of them never reaches the other.
+ *
+ * The `window` guard is not defensive padding: these modules are imported by
+ * the generator while it renders the static page, where there is no `location`
+ * to read.
+ */
+export function queryFromUrl(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("q") ?? "";
+}
+
+/** Which page, and how many rows on it. Read from the URL, like the query. */
+export function pagingFromUrl(): { page: number; size: PageSize } {
+  if (typeof window === "undefined")
+    return { page: 1, size: DEFAULT_PAGE_SIZE };
+  const params = new URLSearchParams(window.location.search);
+  return {
+    page: parsePage(params.get(PAGE_PARAM)),
+    size: parsePageSize(params.get(SIZE_PARAM)),
+  };
+}
+
+/**
  * The address of one page of a query, built from scratch.
  *
  * FROM A GIVEN SEARCH STRING RATHER THAN FROM `location`, because the two
