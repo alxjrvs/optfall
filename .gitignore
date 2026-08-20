@@ -42,15 +42,6 @@ Thumbs.db
 npm-debug.log*
 yarn-error.log*
 
-# --- Deleted frameworks ---------------------------------------------------
-# Astro went in Phase 6 (#107), but `apps/site/.astro/` outlives it: any tool
-# that still recognises the project regenerates the type stubs, and they are
-# not Biome-formatted. `biome.jsonc` sets `vcs.useIgnoreFile`, so Biome skips
-# whatever git ignores — which means THIS LINE is what stops those stubs
-# failing `format:check` and `lint` from the repo root. It was missing until
-# the gate was measured failing on a clean checkout.
-.astro/
-
 # --- Cloudflare -----------------------------------------------------------
 # `wrangler dev` and `wrangler deploy` write bundles, state and a local
 # workerd cache here. Build artefacts, per-machine, never reviewed.
