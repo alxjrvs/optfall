@@ -72,6 +72,41 @@ function addressOf(ordinal: number): string {
   );
 }
 
+/**
+ * A card's address UNDER A SET-SCOPED QUERY, which is not {@link addressOf}.
+ *
+ * A row now opens the printing it is showing, so a test that selects rows by
+ * `href` under `set:X` and builds that href from the DEFAULT face selects
+ * nothing on exactly the cards the feature is about — the reprints, where the
+ * default printing is in another set. That is the silent-selection failure the
+ * note above `addressOf` describes, one filter down.
+ *
+ * `focusPrinting`'s three cases, read from the same index it reads: the default
+ * printing where it is already in the set, that set's art where the card has
+ * one, and the default printing again where the set published no distinct art.
+ *
+ * Takes a decoded index rather than closing over the module's, because one
+ * caller runs against a CONSTRUCTED one — see the divergent-orientation test.
+ */
+function addressInSetOf(
+  from: CardIndex,
+  ordinal: number,
+  setCode: string,
+): string {
+  const slug = from.slugs[ordinal] ?? "";
+  if (from.faceSets[ordinal] === setCode) {
+    const key = from.faceKeys[ordinal] ?? "";
+    return hrefForPrinting(setCode, numberFor(key, setCode), slug);
+  }
+  const art = (from.arts[ordinal] ?? []).find((ref) => ref.setCode === setCode);
+  if (art === undefined) {
+    const key = from.faceKeys[ordinal] ?? "";
+    const own = from.faceSets[ordinal] ?? "";
+    return hrefForPrinting(own, numberFor(key, own), slug);
+  }
+  return hrefForPrinting(art.setCode, art.number, slug);
+}
+
 const total = (query: string) => searchCards(index, query).total;
 const labels = (query: string) =>
   searchCards(index, query).results.map((row) => row.label);
@@ -1504,6 +1539,99 @@ describe("a set-scoped search shows that set's printing", () => {
     expect(strays).toEqual([]);
   });
 
+  /*
+   * AND THE LINK GOES WHERE THE PICTURE IS, WHICH IS THE SECOND HALF AND WAS
+   * MISSING FOR LONGER. Swapping the art left every row pointing at the card's
+   * DEFAULT printing, so a `set:MON` grid drew Monarch faces over links into
+   * Heavy Hitters: click the picture and land on a different set, a different
+   * collector number and a different painting of the same card — a wrong answer
+   * of the kind nothing on the page could show, because a link looks correct
+   * until it is followed.
+   *
+   * ASSERTED AS "THE ADDRESS NAMES THE PICTURE" RATHER THAN AS A SET PREFIX,
+   * and the difference is the fallback. A card can match `set:MON` on a printing
+   * whose art is shared with an earlier set — Regular / Rainbow Foil / Cold Foil
+   * are three rows and one image — and then the honest answer is the card's own
+   * face at its own address, which is NOT under `/card/mon/`. A prefix test
+   * would have to carve that case out and would stop being an invariant; this
+   * states the property both cases actually share.
+   */
+  const addressNamesThePicture = (query: string) => {
+    const outcome = searchCards(index, query, 20000);
+    expect(outcome.results.length).toBeGreaterThan(0);
+
+    const wrong = outcome.results
+      .filter((row) => row.faceKey !== null)
+      .map((row) => {
+        const [, , setCode = "", number = ""] = row.href.split("/");
+        return {
+          href: row.href,
+          faceKey: row.faceKey,
+          expected: numberFor(row.faceKey ?? "", setCode),
+          number,
+        };
+      })
+      .filter((row) => row.expected !== row.number);
+    expect(wrong).toEqual([]);
+  };
+
+  test("a row opens the printing it is showing, in every mode", () => {
+    /*
+     * EVERY MODE, because each resolves the pair differently and each got the
+     * pairing wrong in its own way: `unique:names` from the version it opens,
+     * `unique:cards` from the row's own focus printing, `unique:art` from the
+     * art row itself. One invariant over all three is what stops a later change
+     * fixing one and quietly breaking another.
+     */
+    addressNamesThePicture("set:mon unique:cards");
+    addressNamesThePicture("set:mon unique:names");
+    addressNamesThePicture("set:mon unique:art");
+    addressNamesThePicture("set:lgs unique:cards");
+    /* And with no set named at all, where the printing is the default one. */
+    addressNamesThePicture("dominate");
+  });
+
+  test("a reprint's row links into the set the reader named", () => {
+    /*
+     * THE INVARIANT ABOVE IS TRUE OF THE OLD BEHAVIOUR TOO on a card printed in
+     * one set — face and address both default, both agreeing — so it needs the
+     * cards where the two answers genuinely differ. Those are the reprints, and
+     * they are most of the game: 2,239 of 4,941 cards.
+     *
+     * SELECTED FROM THE INDEX, NOT FROM THE RESULTS, because "which rows did
+     * this change move" is a fact about the corpus and asking the results is
+     * asking the thing under test. A card whose DEFAULT printing is outside
+     * Monarch and which has a Monarch art is a row that used to leave the set
+     * on a click; every one of them must now stay.
+     */
+    const moved = index.arts
+      .map((arts, ordinal) => ({ ordinal, arts }))
+      .filter(
+        ({ ordinal, arts }) =>
+          index.faceSets[ordinal] !== "mon" &&
+          arts.some((art) => art.setCode === "mon"),
+      );
+    expect(moved.length).toBeGreaterThan(50);
+
+    const outcome = searchCards(index, "set:mon unique:cards", 20000);
+    const byHref = new Map(outcome.results.map((row) => [row.href, row]));
+
+    const missing: string[] = [];
+    const strays: string[] = [];
+    for (const { ordinal } of moved) {
+      const here = addressInSetOf(index, ordinal, "mon");
+      /* The old address, which is what the row used to carry. If these ever
+         agree the case is not a reprint and the sample is lying. */
+      expect(here).not.toBe(addressOf(ordinal));
+      if (!byHref.has(here)) missing.push(here);
+      if (!here.startsWith("/card/mon/")) strays.push(here);
+    }
+    /* Every one of them is on the page at its Monarch address — a row still
+       carrying the old href would be absent from this map. */
+    expect(missing).toEqual([]);
+    expect(strays).toEqual([]);
+  });
+
   test("no row loses its picture to the resolution", () => {
     /*
      * A straight reprint carries no new art, and Regular / Rainbow Foil / Cold
@@ -1576,7 +1704,6 @@ describe("a set-scoped search shows that set's printing", () => {
      */
     let checked = 0;
     for (const [ordinal, arts] of index.arts.entries()) {
-      const href = addressOf(ordinal);
       /* Every face this card could legitimately be shown by, as a pair. */
       const known = [
         {
@@ -1587,6 +1714,13 @@ describe("a set-scoped search shows that set's printing", () => {
       ].map((pair) => JSON.stringify(pair));
 
       for (const setCode of new Set(arts.map((art) => art.setCode))) {
+        /* THE ROW'S ADDRESS UNDER THIS SCOPE, NOT THE CARD'S DEFAULT ONE. It
+           was the default, and every iteration that mattered `continue`d the
+           moment a row started opening the printing it shows — the arts in
+           this loop are by definition from sets other than the default one, so
+           this test would have gone on passing while checking only the cards
+           it was not about. */
+        const href = addressInSetOf(index, ordinal, setCode);
         const row = searchCards(
           index,
           `set:${setCode} unique:cards`,
@@ -1675,16 +1809,11 @@ describe("a set-scoped search shows that set's printing", () => {
     const art = flipped.arts[target]?.[0];
     expect(art?.landscape).toBe(true);
 
-    /* The card's own address, derived exactly as `defaultHrefOf` derives it —
-       a card URL is `/card/<set>/<number>/<slug>` and the slug alone no longer
-       names a page. */
-    const targetKey = flipped.faceKeys[target] ?? "";
-    const targetSet = flipped.faceSets[target] ?? "";
-    const href = hrefForPrinting(
-      targetSet,
-      numberFor(targetKey, targetSet),
-      flipped.slugs[target] ?? "",
-    );
+    /* The row's address UNDER THIS SCOPE, which is the flipped art's own page:
+       the row shows that art, and a row opens the printing it shows. Built
+       against `flipped` rather than the module index, because that is the
+       corpus this search runs over. */
+    const href = addressInSetOf(flipped, target, art?.setCode ?? "");
     const row = searchCards(
       flipped,
       `set:${art?.setCode} unique:cards`,

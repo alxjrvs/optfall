@@ -363,7 +363,8 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
 
       AND EACH BAND IS A DOOR TO THE VERSION IT DREW, which is the whole of what
       carrying the addresses buys: the row goes to the card, the blue band goes
-      to the blue one. A filtered search keeps that honest for free — only the
+      to the blue one — each at the printing it is wearing, under a `set:` query.
+      A filtered search keeps that honest for free — only the
       versions that matched are drawn, so only the versions that matched can be
       clicked, and `banned:cc` cannot offer a reader the legal version of a card
       it has just put on a banned list.
