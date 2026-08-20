@@ -46,7 +46,6 @@ import {
   CardFace,
   IconButton,
   PitchJewel,
-  StatePill,
   StatGlyph,
 } from "optfall-components/react";
 
@@ -79,6 +78,7 @@ import {
   raritySlug,
   setName,
 } from "../../src/lib/sets";
+import { LegalitySection } from "./card/LegalitySection";
 import { PrintingsSection } from "./card/PrintingsSection";
 import { RelatedCards } from "./card/RelatedCards";
 import { TcgplayerMark } from "./card/TcgplayerMark";
@@ -1347,56 +1347,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               was pushed below the fold to seat them; legality is still the
               first thing this page SAYS about the card after the card.
             */}
-            <section className="of-card__apparatus" aria-labelledby="legality">
-              <h2 className="of-apparatus__heading" id="legality">
-                Legality
-              </h2>
-              <ul className="of-card__formats">
-                {page.verdicts.map((verdict) => (
-                  <li className="of-card__format" key={verdict.format.id}>
-                    <h3
-                      className="of-card__format-name"
-                      id={`format-${verdict.format.id}`}
-                    >
-                      {verdict.format.name}
-                    </h3>
-                    {verdict.unknown ? (
-                      /*
-                        THE SAME REFUSAL, SAID ONCE INSTEAD OF SIX TIMES. It is
-                        deliberately not a `StatePill`: a pill would have to name
-                        a state, and the entire point is that there is no state
-                        to name — "Not in format" is a claim upstream did not
-                        make and this project will not make for it.
-                      */
-                      <p className="of-card__unknown">No flag published</p>
-                    ) : (
-                      <ul className="of-card__states">
-                        {verdict.states.map((state) => (
-                          <li className="of-card__state" key={state.label}>
-                            <StatePill tone={state.tone} label={state.label} />
-                            {state.since !== null ? (
-                              <span className="of-card__since">
-                                since{" "}
-                                <time dateTime={state.since}>
-                                  {state.since}
-                                </time>
-                              </span>
-                            ) : null}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {verdict.affectsFullCycle &&
-                    verdict.format.id === "living-legend" ? (
-                      <p className="of-card__scope">
-                        Upstream records this restriction as affecting the full
-                        cycle of cards sharing this name.
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <LegalitySection verdicts={page.verdicts} />
 
             {keywordRules.length > 0 ? (
               <section
