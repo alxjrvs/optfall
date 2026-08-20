@@ -136,6 +136,13 @@ function assertRoutesEmitted(source: string): void {
   if (!source.includes('"pages"')) {
     problems.push("the NetworkFirst page cache is missing");
   }
+  /* Without it, search still works — and only while the network does. That is
+     the failure worth naming here: it is invisible until somebody is offline. */
+  if (!source.includes('"search-indexes"')) {
+    problems.push(
+      "the CacheFirst rule for the search indexes is missing — the indexes are fetched rather than carried in the page now, so without it /search and /cr cannot answer a query offline",
+    );
+  }
   if (!source.includes("sw-purge.js")) {
     problems.push(
       "the page-cache purge is not imported — without it a document cached before a deploy outlives the hashed assets it links, and both the offline path and the network timeout can serve it",
@@ -229,6 +236,49 @@ export async function writeServiceWorker(
         urlPattern: ({ url }: { url: URL }) =>
           url.hostname === "images.optfall.com",
         handler: "NetworkOnly",
+      },
+      {
+        /*
+         * THE SEARCH INDEXES, WHICH ARE NEITHER SHELL NOR PAGE.
+         *
+         * `CacheFirst`, WHICH IS THE HANDLER THIS FILE OTHERWISE ARGUES
+         * AGAINST, AND THE FILENAME IS WHY IT IS SAFE HERE. Every other
+         * same-origin thing has a stale-content hazard: a page can outlive the
+         * assets it links, so it gets `NetworkFirst`. An index cannot. Its name
+         * carries a digest of its own bytes (`ssg/searchIndexes.ts`), so the
+         * response at a given URL is the same forever and a revalidation could
+         * only ever confirm it. A new index is a new address, linked by a page
+         * that changed.
+         *
+         * PRECACHED WOULD BE THE WRONG ANSWER, and it is the tempting one now
+         * that these are hashed files like the stylesheet. `globPatterns` above
+         * lists the SHELL — bytes every reader needs — and the card index is
+         * 909 kB that only somebody who opens `/search` has any use for.
+         * Precaching it would put it on the disk of every visitor to a card
+         * page, which is the "never precache the pages" argument wearing a
+         * different hat. Fetched on the page that needs it, kept once fetched.
+         *
+         * THIS IS ALSO WHAT KEEPS SEARCH WORKING OFFLINE. It used to work by
+         * accident: the index was inside the page, so a cached page carried it.
+         * Moving it out would have quietly cost that, and this rule is where it
+         * is paid back — deliberately, and only for a reader who has searched
+         * at least once.
+         */
+        urlPattern: ({ url, sameOrigin }: RouteMatchArgs) =>
+          sameOrigin &&
+          url.pathname.startsWith("/assets/") &&
+          url.pathname.endsWith(".json"),
+        handler: "CacheFirst",
+        options: {
+          cacheName: "search-indexes",
+          /*
+           * FOUR: two indexes, across one deploy boundary. Nothing evicts an
+           * index whose page no longer links it — `cleanupOutdatedCaches` is
+           * about precaches, and these are not precached — so without a ceiling
+           * every deploy a reader visits leaves another megabyte behind forever.
+           */
+          expiration: { maxEntries: 4, purgeOnQuotaError: true },
+        },
       },
       {
         /*

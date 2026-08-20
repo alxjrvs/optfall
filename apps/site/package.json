@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "5.101.4",
     "optfall-components": "workspace:*",
     "optfall-theme": "workspace:*",
     "react": "catalog:",

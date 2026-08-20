@@ -25,10 +25,22 @@
  * `useEffect`. Two things are worth naming because they are easy to get subtly
  * wrong:
  *
- * The decoded index is `useMemo`, not a bare call. `decodeIndex` walks 1,278
- * sections; doing that on every keystroke is the difference between a field that
- * feels instant and one that does not. Svelte's `$derived` was lazy and cached
- * for the same reason, and the original's comment argues the same point.
+ * ~~The decoded index is `useMemo`, not a bare call.~~ **The index is FETCHED
+ * now, and decoded once inside the query rather than in a `useMemo` over a
+ * prop.** The reasoning that produced the memo is unchanged and is why the
+ * decode still happens exactly once — `decodeIndex` walks 1,278 sections, and
+ * doing that per render is the difference between a field that feels instant and
+ * one that does not. What changed is where the encoded index comes from: it was
+ * 204,137 bytes in this island's `data-props` attribute, and it is now a
+ * content-hashed file. `ssg/searchIndexes.ts` carries the argument;
+ * `./useSearchIndex.ts` carries the mechanism.
+ *
+ * **AND THAT ADDS A STATE THIS COMPONENT DID NOT HAVE: a query nothing can
+ * answer YET.** It is not the same as a query nothing matches, and rendering the
+ * second while the first is true would tell a reader the Comprehensive Rules do
+ * not contain a word they can see in them. `docs/PLAN.md`'s "degrade visibly"
+ * makes that the one shape to refuse, so there are three branches under the rule
+ * where there were two, and the live region announces all three.
  *
  * The URL sync and the announcement are two separate debounced effects, as they
  * were. Merging them looks tidier and is wrong: the address bar should follow
@@ -59,18 +71,45 @@ import {
   withPageParams,
 } from "../../src/lib/pagination";
 import {
-  chapters,
   decodeIndex,
   type EncodedIndex,
   search,
+  type SearchIndex,
+  type SearchOutcome,
   type SearchResult,
 } from "../../src/lib/search";
+import { useSearchIndex } from "./useSearchIndex";
 
 import "./RulesSearch.css";
 
 export interface RulesSearchProps {
-  /** Built at build time by `buildIndex`; see `search.ts` for the format. */
-  readonly index: EncodedIndex;
+  /**
+   * Where the encoded index is, NOT the index.
+   *
+   * It used to be the index — 204,137 bytes of it, in a `data-props` attribute.
+   * `ssg/searchIndexes.ts` carries the argument for the change and
+   * `./useSearchIndex.ts` the mechanism; what matters here is the consequence:
+   * this component now has three states where it had one, and every one of them
+   * has to reach the screen. See {@link RulesSearch}.
+   */
+  readonly indexUrl: string;
+  /**
+   * The chapter browse, derived at build time.
+   *
+   * THE PAGE'S STATIC CONTENT, AND THE REASON THE INDEX CAN BE LATE. Nine rows,
+   * 1,184 bytes, rendered under an empty query — so a reader with no JavaScript,
+   * and every crawler, sees exactly what they saw before, and a reader who has
+   * not typed anything never waits for a fetch they have no use for.
+   */
+  readonly browse: readonly SearchResult[];
+  /**
+   * The corpus version, for the citations and the empty-result line.
+   *
+   * Read off the index until the index stopped being here. It is one short
+   * string and `cr.page.tsx` already has it from the corpus, so it travels as a
+   * prop rather than becoming a fourth thing to wait for.
+   */
+  readonly version: string;
   /*
     NO `ornament` PROP ANY MORE, and no caller ever passed one. It existed to
     spend the screen's single filigree on this component's section rule — the
@@ -119,8 +158,37 @@ function why(result: SearchResult): string {
   }
 }
 
-export function RulesSearch({ index }: RulesSearchProps) {
-  const rules = useMemo(() => decodeIndex(index), [index]);
+/**
+ * The answer when there is no index to ask.
+ *
+ * A REAL OUTCOME RATHER THAN A NULL, so every reader of `outcome` below is
+ * unchanged and none of them has to learn that the index may be absent. The
+ * component branches on that once, where it renders, rather than at every field
+ * access.
+ */
+const NO_OUTCOME: SearchOutcome = {
+  query: "",
+  terms: [],
+  ids: [],
+  notices: [],
+  results: [],
+  total: 0,
+};
+
+export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
+  /*
+   * THE INDEX IS FETCHED, AND ON THE SERVER IT IS SIMPLY ABSENT — which is the
+   * correct server render and always was. This island has never produced a
+   * result without `window`: the query lives in `?q=`, a static document cannot
+   * know it, and the server therefore renders the chapter browse. That has not
+   * changed. What changed is that the browse now comes from a prop instead of
+   * from an index the server had no other use for.
+   */
+  const {
+    index: rules,
+    pending,
+    failed,
+  } = useSearchIndex<EncodedIndex, SearchIndex>(indexUrl, decodeIndex);
 
   /**
    * THE QUERY STARTS EMPTY, THEN THE URL IS READ IN AN EFFECT, AND THAT ORDER
@@ -179,6 +247,8 @@ export function RulesSearch({ index }: RulesSearchProps) {
    * the URL asked for a page a shrinking answer no longer has.
    */
   const outcome = useMemo(() => {
+    /* No index, no answer. The screen says which of the two reasons it is. */
+    if (rules === undefined) return NO_OUTCOME;
     const wanted = requestFor(page, size);
     const first = search(rules, query, wanted.limit, wanted.offset);
     if (first.results.length > 0 || first.total === 0) return first;
@@ -187,11 +257,30 @@ export function RulesSearch({ index }: RulesSearchProps) {
   }, [rules, query, page, size]);
 
   const asked = query.trim() !== "";
+  /**
+   * A QUESTION NOTHING CAN ANSWER YET, WHICH IS NOT THE SAME AS NO MATCHES.
+   *
+   * `docs/PLAN.md`'s "degrade visibly" is the whole of this distinction.
+   * Rendering the empty-result copy while the index is in flight would tell a
+   * reader that the Comprehensive Rules do not contain the word they just typed
+   * — a confident wrong answer, which is the one failure shape that rule
+   * forbids outright, and the one this component could not previously produce
+   * because its index arrived with the page.
+   */
+  const waiting = asked && pending;
+  const unanswerable = asked && failed;
   const slice = paginate(outcome.total, page, size);
 
   /** Wording for the live region and the count line. Written, never generated. */
   const summary = (() => {
     if (!asked) return "";
+    /* Both said before the count, because both mean the count is not an answer.
+       A listener told "nothing matches" while the index is still in flight has
+       been told the wrong thing, and told it first. */
+    if (waiting) return `Loading the rules index to answer ${query.trim()}.`;
+    if (unanswerable) {
+      return `The rules index did not load, so ${query.trim()} cannot be answered here.`;
+    }
     if (outcome.total === 0) return `Nothing matches ${query.trim()}.`;
     const sections = `${outcome.total} section${outcome.total === 1 ? "" : "s"}`;
     /* The RANGE is the pager's sentence. This one keeps the total and adds the
@@ -341,7 +430,32 @@ export function RulesSearch({ index }: RulesSearchProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const browse = useMemo(() => chapters(rules), [rules]);
+  /* `browse` is a prop now. It was `useMemo(() => chapters(rules), [rules])`,
+     which is what forced a 204 kB index into the page to render nine links. */
+
+  /**
+   * The chapter list, named once because two branches render it.
+   *
+   * It is the page's static content under an empty query, AND it is what the
+   * failure branch offers instead of an answer — the whole point of that branch
+   * being that the corpus is still reachable when the index is not. Spelling the
+   * list twice would let the two copies drift, and the one that drifts is the
+   * one nobody looks at, which is the error path.
+   */
+  const chapterList = (
+    <ol className="of-rules__results">
+      {browse.map((chapter) => (
+        <li className="of-rules__result" key={chapter.id}>
+          <Citation ruleId={chapter.id} href={chapter.href} version={version} />
+          <div className="of-rules__body">
+            <p className="of-rules__line">
+              <span className="of-rules__title">{chapter.title}</span>
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
 
   return (
     <>
@@ -407,7 +521,35 @@ export function RulesSearch({ index }: RulesSearchProps) {
           something has been asked, the chapter browse before that. */}
       <OrnamentalRule label={asked ? "Results" : "Chapters"} />
 
-      {asked ? (
+      {asked && waiting ? (
+        /*
+          NOT A SPINNER, AND NOT AN EMPTY LIST. The index is one request against
+          our own origin and is usually already on disk — the service worker
+          answers it from cache after the first visit — so this is normally a
+          frame or two. It says what it is waiting for anyway, because the case
+          that matters is the one where it is slow, and a screen that says
+          nothing during it is a screen that looks like an answer.
+        */
+        <p className="of-rules__count">
+          Loading the rules index to answer <strong>{query.trim()}</strong>.
+        </p>
+      ) : asked && unanswerable ? (
+        /*
+          DEGRADE VISIBLY. Every section is still addressable — that is the whole
+          claim `/cr` makes and it does not depend on the index — so the failure
+          is stated alongside the two routes that still work rather than as a
+          bare apology.
+        */
+        <>
+          <p className="of-rules__count">
+            The rules index did not load, so <strong>{query.trim()}</strong>{" "}
+            cannot be answered here. Reloading may fix it. Every section is
+            still reachable directly: <code>/cr/8.3.4b</code> is the section
+            cited as <code>cr:8.3.4b</code>, and the chapters are below.
+          </p>
+          {chapterList}
+        </>
+      ) : asked ? (
         outcome.results.length > 0 ? (
           <>
             <p className="of-rules__count">{summary}</p>
@@ -417,7 +559,7 @@ export function RulesSearch({ index }: RulesSearchProps) {
                   <Citation
                     ruleId={result.id}
                     href={result.href}
-                    version={index.version}
+                    version={version}
                   />
                   <div className="of-rules__body">
                     <p className="of-rules__line">
@@ -460,11 +602,10 @@ export function RulesSearch({ index }: RulesSearchProps) {
           </>
         ) : (
           <p className="of-rules__count">
-            Nothing in the Comprehensive Rules {index.version} matches every
-            word of <strong>{query.trim()}</strong>. Words match whole words and
-            the start of words, so <code>banis</code> finds{" "}
-            <code>banished</code> — but every word you type has to appear
-            somewhere in the section.
+            Nothing in the Comprehensive Rules {version} matches every word of{" "}
+            <strong>{query.trim()}</strong>. Words match whole words and the
+            start of words, so <code>banis</code> finds <code>banished</code> —
+            but every word you type has to appear somewhere in the section.
           </p>
         )
       ) : (
@@ -486,22 +627,7 @@ export function RulesSearch({ index }: RulesSearchProps) {
           <p className="of-rules__count">
             Start with a chapter, or type above.
           </p>
-          <ol className="of-rules__results">
-            {browse.map((chapter) => (
-              <li className="of-rules__result" key={chapter.id}>
-                <Citation
-                  ruleId={chapter.id}
-                  href={chapter.href}
-                  version={index.version}
-                />
-                <div className="of-rules__body">
-                  <p className="of-rules__line">
-                    <span className="of-rules__title">{chapter.title}</span>
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          {chapterList}
         </>
       )}
     </>
