@@ -42,9 +42,12 @@ import { Pagination } from "optfall-components/react";
 
 import {
   type CardDisplayMode,
+  type CardIndex as DecodedCardIndex,
   type CardMatchField,
+  type CardOutcome,
   decodeCardIndex,
   type EncodedCardIndex,
+  parseCardQuery,
   searchCards,
 } from "../../src/lib/card-search";
 import {
@@ -61,6 +64,7 @@ import {
   withPageParams,
 } from "../../src/lib/pagination";
 import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
+import { useSearchIndex } from "./useSearchIndex";
 
 import "./CardSearch.css";
 
@@ -77,8 +81,47 @@ import "./CardSearch.css";
  */
 export const HEADER_FIELD_ID = "site-search";
 
+/**
+ * Everything this island prints before anybody has searched.
+ *
+ * DECLARED HERE RATHER THAN IMPORTED FROM `ssg/searchIndexes.ts`, which is where
+ * it is built. That module reads the 18 MB corpus at module scope, and this file
+ * is reached by the island bundle — `build.ts`'s island budget exists because a
+ * value import across exactly that line once shipped the whole corpus to every
+ * reader. The two declarations are checked against each other at the one place
+ * both are in scope, which is `search.page.tsx`.
+ */
+export interface CardCorpusBrief {
+  /** How many cards the corpus carries. */
+  readonly size: number;
+  /** The upstream commit it is pinned at. Displayed, never parsed. */
+  readonly commit: string;
+  /** `YYYY-MM-DD` it was last confirmed against upstream. */
+  readonly confirmed: string;
+  /** Printed type lines and how many cards carry each. */
+  readonly browse: readonly (readonly [string, number])[];
+}
+
 export interface CardSearchProps {
-  readonly index: EncodedCardIndex;
+  /**
+   * Where the encoded index is, NOT the index.
+   *
+   * It used to be the index — 909,626 bytes of it, in a `data-props` attribute,
+   * which made `/search` a 921 kB document and earned it its own entry in
+   * `build.ts`'s page-budget exceptions. `ssg/searchIndexes.ts` carries the
+   * argument for the change; `./useSearchIndex.ts` carries the mechanism.
+   */
+  readonly indexUrl: string;
+  /**
+   * The count, the pin and the type-line browse.
+   *
+   * WHAT THE PAGE CAN SAY WITH NO INDEX, and the reason moving the index out
+   * costs this surface nothing. `docs/PLAN.md` requires every surface to show
+   * when its data was last confirmed, so the pin cannot wait on a request — a
+   * provenance line that appears only once a fetch succeeds is missing exactly
+   * when something has gone wrong. 805 bytes, against the 909,626 they replace.
+   */
+  readonly brief: CardCorpusBrief;
   /*
     NO `ornament` FLAG, because there is no rule left here to spend it on. See
     the note where that rule used to be rendered, below.
@@ -132,8 +175,45 @@ function pagingFromUrl(): { page: number; size: PageSize } {
   };
 }
 
-export function CardSearch({ index }: CardSearchProps) {
-  const cards = useMemo(() => decodeCardIndex(index), [index]);
+/**
+ * The answer when there is no index to ask.
+ *
+ * A REAL OUTCOME RATHER THAN A NULL, so every reader of `outcome` below is
+ * unchanged and none of them has to learn the index may be absent. The component
+ * branches on that where it renders, once, rather than at every field access.
+ *
+ * The defaults are the parser's own for an empty query — `sort` unkeyed, `unique`
+ * collapsed to names — so nothing here invents a state the engine cannot produce.
+ */
+const NO_OUTCOME: CardOutcome = {
+  query: "",
+  terms: [],
+  filters: [],
+  notices: [],
+  sort: { key: null, direction: "asc" },
+  unique: "names",
+  display: null,
+  results: [],
+  total: 0,
+  setFocus: null,
+};
+
+export function CardSearch({ indexUrl, brief }: CardSearchProps) {
+  /*
+   * THE INDEX IS FETCHED, AND ON THE SERVER IT IS SIMPLY ABSENT — which is the
+   * correct server render and always was. This island has never produced a
+   * result without `window`: `?q=` is read in an effect (see below), so the
+   * server renders the empty state, which is the pin and the type-line browse.
+   * Both come from `brief` now, and neither ever needed the index.
+   */
+  const {
+    index: cards,
+    pending,
+    failed,
+  } = useSearchIndex<EncodedCardIndex, DecodedCardIndex>(
+    indexUrl,
+    decodeCardIndex,
+  );
 
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
@@ -321,6 +401,8 @@ export function CardSearch({ index }: CardSearchProps) {
    * offset is worth a ranking pass to avoid answering with a blank list.
    */
   const outcome = useMemo(() => {
+    /* No index, no answer. The screen says which of the two reasons it is. */
+    if (cards === undefined) return NO_OUTCOME;
     const wanted = requestFor(page, size);
     const first = searchCards(cards, submitted, wanted.limit, wanted.offset);
     if (first.results.length > 0 || first.total === 0) return first;
@@ -329,11 +411,28 @@ export function CardSearch({ index }: CardSearchProps) {
   }, [cards, submitted, page, size]);
 
   const asked = submitted.trim() !== "";
+  /**
+   * A QUESTION NOTHING CAN ANSWER YET, WHICH IS NOT THE SAME AS NO MATCHES.
+   *
+   * `docs/PLAN.md`'s "degrade visibly" is the whole of this distinction. The
+   * empty-result copy names a number — "Nothing in the 4,941 cards matches" —
+   * so rendering it while the index is in flight is not a vague inaccuracy, it
+   * is a specific claim about a corpus that has not been read yet.
+   */
+  const waiting = asked && pending;
+  const unanswerable = asked && failed;
   const slice = paginate(outcome.total, page, size);
   const display = outcome.display ?? paramDisplay ?? "grid";
 
   const summary = (() => {
     if (!asked) return "";
+    /* Both said before the count, because both mean the count is not an answer.
+       A listener told "nothing matches" while the index is still in flight has
+       been told the wrong thing, and told it first. */
+    if (waiting) return `Loading the card index to answer ${submitted.trim()}.`;
+    if (unanswerable) {
+      return `The card index did not load, so ${submitted.trim()} cannot be answered here.`;
+    }
     if (outcome.total === 0) return `Nothing matches ${submitted.trim()}.`;
     const found = `${outcome.total} card${outcome.total === 1 ? "" : "s"}`;
     /* The RANGE is the pager's sentence; this one states the total and, when
@@ -607,7 +706,26 @@ export function CardSearch({ index }: CardSearchProps) {
       keystroke, and the alternative is caching machinery to save one pass
       over an index the same interaction already pays for once.
     */
-    const next = searchCards(cards, raw, requestFor(1, size).limit);
+    /*
+      AND IT IS PARSED EVEN WHEN IT CANNOT BE RANKED, which is the one thing
+      the index arriving late is allowed to change here.
+
+      A submit has two jobs: write the URL, and answer the query. Only the
+      second needs the index. `parseCardQuery` is what decides `display` — the
+      value the URL rewrite below turns on — so parsing it separately keeps
+      the address exactly right whether or not the index has landed, and a
+      reader who submits into a slow network still gets a link worth pasting
+      and results the moment the fetch returns.
+
+      What is lost while the index is absent is the single-result redirect
+      below, and losing it is correct rather than merely acceptable: it fires
+      on `next.total === 1`, and a total computed against no index is 0. It is
+      a convenience on top of an answer, not the answer.
+    */
+    const next =
+      cards === undefined
+        ? parseCardQuery(raw)
+        : searchCards(cards, raw, requestFor(1, size).limit);
     setQuery(raw);
     setSubmitted(raw);
     /*
@@ -643,7 +761,10 @@ export function CardSearch({ index }: CardSearchProps) {
     syncUrl("push", raw, droppingParam, 1, size);
     field.current?.blur();
 
-    const only = next.total === 1 ? next.results[0] : undefined;
+    /* `in` rather than a cast: `parseCardQuery` returns no `total`, and the
+       narrowing says out loud that this branch belongs to the ranked answer. */
+    const only =
+      "total" in next && next.total === 1 ? next.results[0] : undefined;
     if (only) window.location.assign(only.href);
   }
 
@@ -668,6 +789,33 @@ export function CardSearch({ index }: CardSearchProps) {
       if (field.current !== null) field.current.value = "";
     };
   });
+
+  /**
+   * The type-line browse, named once because two branches render it.
+   *
+   * It is the empty state — derived from the corpus rather than curated, so it
+   * cannot go stale and cannot express an opinion about which types matter, and
+   * the count beside each is the real number of cards carrying that printed type
+   * line. It is ALSO what the failure branch offers instead of an answer, since
+   * every row is an ordinary link that never needed the index. Spelling the list
+   * twice would let the copies drift, and the one that drifts is the one nobody
+   * looks at, which is the error path.
+   */
+  const browseList = (
+    <ul className="of-cards__browse">
+      {brief.browse.map(([line, count]) => (
+        <li key={line}>
+          <a
+            className="of-cards__browse-link"
+            href={`/search?q=${encodeURIComponent(`type:"${line}"`)}`}
+          >
+            {line}
+          </a>
+          <span className="of-cards__browse-count">{count}</span>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <>
@@ -703,7 +851,36 @@ export function CardSearch({ index }: CardSearchProps) {
         body, which is furniture rather than a thematic break.
       */}
 
-      {asked ? (
+      {asked && waiting ? (
+        /*
+          NOT A SPINNER, AND NOT AN EMPTY GRID. The index is one request against
+          our own origin, and after the first search the service worker answers
+          it from disk — so this is normally a frame or two. It says what it is
+          waiting for anyway, because the case that matters is the slow one, and
+          a results area that says nothing during it looks like an answer.
+        */
+        <p className="of-cards__count">
+          Loading the card index to answer <strong>{submitted.trim()}</strong>.
+        </p>
+      ) : asked && unanswerable ? (
+        <>
+          {/*
+            DEGRADE VISIBLY. Every card is still addressable — that is what the
+            12,776 pages are for, and it does not depend on the index — so the
+            failure is stated alongside the routes that still work rather than
+            as a bare apology, and the browse is drawn under it for the same
+            reason: those links are ordinary hrefs and they never needed an
+            index either.
+          */}
+          <p className="of-cards__count">
+            The card index did not load, so <strong>{submitted.trim()}</strong>{" "}
+            cannot be answered here. Reloading may fix it. Every card is still
+            reachable directly: <code>/card/head-jab</code> finds the card by
+            name, and the type lines below are ordinary links.
+          </p>
+          {browseList}
+        </>
+      ) : asked ? (
         outcome.results.length > 0 ? (
           <>
             {/*
@@ -814,7 +991,7 @@ export function CardSearch({ index }: CardSearchProps) {
           </>
         ) : (
           <p className="of-cards__count">
-            Nothing in the {cards.size.toLocaleString("en-GB")} cards matches
+            Nothing in the {brief.size.toLocaleString("en-GB")} cards matches
             every part of <strong>{submitted.trim()}</strong>. Words match whole
             words and the start of words, so <code>domin</code> finds{" "}
             <code>dominate</code> — but every word you type has to appear in the
@@ -824,30 +1001,11 @@ export function CardSearch({ index }: CardSearchProps) {
       ) : (
         <>
           <p className="of-cards__count">
-            {cards.size.toLocaleString("en-GB")} cards, pinned to upstream
-            commit <code>{cards.commit.slice(0, 7)}</code> and last confirmed{" "}
-            {cards.confirmed}. Start with a type, or type above.
+            {brief.size.toLocaleString("en-GB")} cards, pinned to upstream
+            commit <code>{brief.commit.slice(0, 7)}</code> and last confirmed{" "}
+            {brief.confirmed}. Start with a type, or type above.
           </p>
-          {/*
-            The empty state is a browse, not a blank rectangle — and it is
-            derived from the corpus rather than curated, so it cannot go stale
-            and cannot express an opinion about which types matter. The count
-            beside each is the real number of cards carrying that printed type
-            line.
-          */}
-          <ul className="of-cards__browse">
-            {cards.browse.map(([line, count]) => (
-              <li key={line}>
-                <a
-                  className="of-cards__browse-link"
-                  href={`/search?q=${encodeURIComponent(`type:"${line}"`)}`}
-                >
-                  {line}
-                </a>
-                <span className="of-cards__browse-count">{count}</span>
-              </li>
-            ))}
-          </ul>
+          {browseList}
         </>
       )}
     </>

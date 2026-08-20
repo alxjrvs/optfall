@@ -13,11 +13,19 @@
  * - **Explicable.** Every result carries {@link CardResult.matchedIn}: which
  *   field put it on the page. A user can look at a row and say why it is there.
  *
- * THE SPLIT. {@link buildCardIndex} runs once, in the page module, at build
- * time, over the same {@link CardPage} objects the card pages themselves render
- * — so the search and the page cannot disagree about a card's slug, its label
- * or its legality. {@link decodeCardIndex} and {@link searchCards} run in the
- * browser against what it produced. The 18 MB corpus never reaches a client.
+ * THE SPLIT. {@link buildCardIndex} runs once at build time, in
+ * `ssg/searchIndexes.ts`, over the same {@link CardPage} objects the card pages
+ * themselves render — so the search and the page cannot disagree about a card's
+ * slug, its label or its legality. {@link decodeCardIndex} and
+ * {@link searchCards} run in the browser against what it produced.
+ * The 18 MB corpus never reaches a client.
+ *
+ * IT USED TO RUN IN THE PAGE MODULE, and moving it changed one thing worth
+ * knowing: the encoded index is written to a content-hashed file and FETCHED by
+ * the island, rather than travelling inside `/search`'s HTML. So
+ * {@link decodeCardIndex} runs against a parsed response rather than against a
+ * prop, and the island has a state it did not have before — an index that has
+ * not arrived yet, which is not the same as a query with no matches.
  *
  * WHAT IS INDEXED AS POSTINGS, AND WHAT IS NOT. The inverted index covers the
  * printed card text and nothing else. Names, type lines, traits, keywords, sets
@@ -60,7 +68,9 @@
  * ENFORCED BY THE IMPORT GRAPH. `printings.ts` states the rule: anything an
  * island imports must not reach `cards.ts`. That was prose spread over 3,221
  * lines, and it is now at least locatable — `build.ts` is the only
- * corpus-adjacent module and `pages/search.page.tsx` is its only caller.
+ * corpus-adjacent module and `ssg/searchIndexes.ts` is its only caller. (It was
+ * `pages/search.page.tsx` until the index moved out of that page's markup and
+ * into a file the island fetches.)
  *
  * Be exact about what that buys, though. This barrel `export *`s every module,
  * `./build` included, and `islands/CardSearch.tsx` imports from the barrel — so
@@ -68,7 +78,7 @@
  * stops that.
  *
  * What keeps the corpus out of the bundle is tree-shaking, guarded by
- * `assertIslandBudget` in `ssg/build.ts` (400 kB; the bundle is 244 kB).
+ * `assertIslandBudget` in `ssg/build.ts` (400 kB; the bundle is 279 kB).
  * Measured on the built output: `assertFormatsAgree` and `encodePostings`
  * appear zero times in it. To make the guarantee structural rather than
  * measured, import the client modules directly from the island and stop

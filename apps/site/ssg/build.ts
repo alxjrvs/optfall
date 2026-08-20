@@ -167,9 +167,18 @@ async function assetsFromManifest(): Promise<{
  * a 9.74 MB file and said so.
  *
  * So the measurement is now part of the build rather than a thing to remember.
- * The ceiling is roughly 70% above the current 233 kB — loose enough that
+ * The ceiling is roughly 43% above the current 279 kB — loose enough that
  * ordinary work never touches it, and two orders of magnitude below a corpus, so
  * the failure it exists for cannot squeeze under it.
+ *
+ * **THE HEADROOM WAS 70% AT 233 kB AND IS 43% AT 279 kB**, and the 46 kB between
+ * them is TanStack Query, added when the search indexes moved out of the pages
+ * and into files the islands fetch (`ssg/searchIndexes.ts`). That is a real cost
+ * on every island page, paid once from a hashed asset, against 1.1 MB removed
+ * from two documents that could not cache theirs at all. Worth stating plainly
+ * rather than letting the ceiling absorb it quietly: this is the one deliberate
+ * bite anybody has taken out of this budget, and the next 121 kB is all that is
+ * left before somebody has to argue for raising it.
  *
  * IT SUMS THE WHOLE IMPORT GRAPH, not the entry chunk. `vite.config.ts` declares
  * two inputs, so a module both reach is hoisted into a shared chunk the entry
@@ -216,26 +225,41 @@ async function assertIslandBudget(chunks: readonly string[]): Promise<void> {
  * MEASURED RATHER THAN GUESSED, exactly as the island budget was — and measured
  * over EVERY route, which the first version of this note was not. It said "the
  * largest page in this corpus is `/sets/1hp` at 220 kB", which was true of set
- * pages and false of the site: `/search` is 884 kB. A budget whose stated
+ * pages and false of the site: `/search` was 884 kB. A budget whose stated
  * baseline covers only the pages its author was working on is a budget that has
  * not looked at the others, which is the whole failure it exists to prevent.
  *
- * Measured across all 12,776: `/search` 934 kB (see the exceptions below),
- * `/sets/lgs` 273 kB, `/sets/fab` 243 kB, `/sets/1hp` 238 kB, `/sets/pen` 231
- * kB, `/cr` 215 kB, and a 40 kB median set page.
+ * Measured across all 12,776 when this was written: `/search` 934 kB, `/sets/lgs`
+ * 273 kB, `/sets/fab` 243 kB, `/sets/1hp` 238 kB, `/sets/pen` 231 kB, `/cr` 215
+ * kB, and a 40 kB median set page.
  *
- * THE MARGIN IS WIDE FOR THE SAME REASON `/search`'s IS, and the first version
- * of this number was not. A set page's HTML is LINEAR IN THE SET'S CARD COUNT,
- * so a ceiling 48% above today's largest set is a ceiling that a big new set
- * trips — failing the build with an error blaming per-row props, on a commit
- * that only synced data. That is the exact misdiagnosis the exceptions table
- * below argues against, and it applied here first.
+ * **THE TOP TWO OF THOSE ARE GONE.** `/search` and `/cr` were the two pages
+ * carrying an encoded index as island props; they fetch it now, and measure 11 kB
+ * and 15 kB. So the largest page on the site is a set page again, and this ceiling
+ * is back to being what its name says — a bound on rows, with no page relying on
+ * an exception to clear it. See `PAGE_BUDGET_EXCEPTIONS`.
  *
- * At roughly 2.4× the largest set page it takes a set half again as large as
- * 1HP before anyone has to think about it, and what it still catches is the
- * failure it was written for: a field added to `CardIndexEntry` is paid once
- * per card and then escaped, so anything of consequence moves this by tens of
- * kilobytes per page at once.
+ * Re-measured across all 12,776 on the same build: `/sets/lgs` 297 kB, `/sets/1hp`
+ * 261 kB, `/sets/fab` 260 kB, `/sets/pen` 247 kB, `/sets/mon` 206 kB. Note that
+ * `/sets/lgs` has grown from the 273 kB above WITHOUT a commit moving it — a set
+ * page is linear in its card count, so a data sync grows it. That is the property
+ * this ceiling's margin exists to absorb, and at 1.7× the largest set page it
+ * still has room for a set half again as large as LGS.
+ *
+ * THE MARGIN IS WIDE BECAUSE A SET PAGE'S HTML IS LINEAR IN THE SET'S CARD
+ * COUNT, and the first version of this number was not. A ceiling 48% above
+ * today's largest set is a ceiling that a big new set trips — failing the build
+ * with an error blaming per-row props, on a commit that only synced data. That
+ * is the exact misdiagnosis the exceptions table below argues against, and it
+ * applied here first.
+ *
+ * ~~At roughly 2.4× the largest set page~~ — **1.7× now, and nothing moved this
+ * ceiling; LGS grew into it.** That is the same linearity stated as a
+ * measurement rather than as a risk, and it is the number to watch: at 297 kB
+ * against 512, a set around half again the size of LGS is where this next wants
+ * thinking about. What it still catches meanwhile is the failure it was written
+ * for: a field added to `CardIndexEntry` is paid once per card and then escaped,
+ * so anything of consequence moves this by tens of kilobytes per page at once.
  *
  * IT IS UNCOMPRESSED BYTES, AND THAT IS THE PESSIMISTIC READING. The same page
  * is about 20 kB over the wire, because a list of cards is extremely
@@ -263,36 +287,33 @@ const PAGE_BUDGET_BYTES = 512 * 1024;
  */
 const PAGE_BUDGET_EXCEPTIONS: Readonly<Record<string, number>> = {
   /*
-     The whole-corpus search index, encoded. Measured at 934 kB.
+     ~~`/search`: 1280 kB, for the whole-corpus search index, encoded.~~
+     **EMPTY, AND THE ENTRY THAT WAS HERE IS THE REASON THIS TABLE EXISTS.**
 
-     THAT NUMBER MOVED WITHOUT A COMMIT MOVING IT, which is the property this
-     page has and the set pages do not: it is linear in the CORPUS, so a data
-     sync grows it and the note beside it ages silently. Re-measured here at 934
-     kB, and checked against `main` at the same figure — this branch adds
-     nothing to this page, it only found the drift.
+     `/search` carried the encoded card index as island props — 909,626 bytes of
+     it, in a `data-props` attribute, making the document 921 kB. This entry said
+     so at 1280 kB, and the argument it made was sound at the time and is worth
+     keeping visible: the general ceiling could not be raised to cover it without
+     the check passing forever while measuring nothing, so the one page that was
+     legitimately enormous said so at its own number.
 
-     THE HEADROOM IS WIDE ON PURPOSE, AND IT WAS 8.6% — which is the wrong
-     number for a page whose size is LINEAR IN THE CORPUS. This branch alone
-     spent about 55 kB of it: `faceSets` 9.6 kB, the per-art landscape bit
-     12.9 kB, and three more printed stats per card 32 kB. The last of those
-     landed AFTER the ceiling was widened and would have tripped the old one —
-     failing the build with an error blaming per-row props, which is the wrong
-     diagnosis on a page that has no rows.
+     What that argument could not fix is the property it named. The page's size
+     was LINEAR IN THE CORPUS, so it moved without a commit moving it, and the
+     ceiling had to be wide enough to absorb a data sync — which left it "coarse:
+     an order-of-magnitude mistake, not a tight field". A budget that can only
+     catch an order of magnitude on the largest page on the site is the weakest
+     it is anywhere.
 
-     So the margin has to absorb corpus growth, and what it still catches on
-     this one page is therefore coarse: an order-of-magnitude mistake, not a
-     tight field. That is the honest limit of a byte ceiling here. The check
-     that a new per-card field is worth its weight is the doc-block beside it in
-     `card-search/`, where every existing field states its measured cost.
-  */
-  "/search": 1280 * 1024,
-  /*
-     `/cr` IS DELIBERATELY NOT HERE, and it is the page most likely to be added
-     by mistake — it also ships a whole encoded corpus as island props, so it
-     looks like `/search`'s twin. Measured: 212 kB, comfortably inside the
-     general ceiling, because the rules index carries a ≤120-character lede per
-     section rather than the 651 kB of verbatim rules text. An exception it does
-     not need would stop measuring it.
+     `ssg/searchIndexes.ts` removed the cause rather than the symptom: the index
+     is a content-hashed file now, fetched by the island, and the page carries an
+     805-byte brief. `/search` is an ordinary document held to the ordinary
+     ceiling, and this table is empty — which is the state to keep it in. A new
+     entry should be an argument, not a convenience.
+
+     `/cr` was never here, deliberately, and it is the page that was most likely
+     to be added by mistake: it also shipped a whole encoded corpus as island
+     props, so it looked like `/search`'s twin. It measured 212 kB against the
+     general ceiling, and 15 kB now.
   */
 };
 

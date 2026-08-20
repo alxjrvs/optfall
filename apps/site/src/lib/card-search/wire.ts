@@ -7,11 +7,22 @@ import type { StateTone } from "optfall-theme";
 /**
  * The index as it crosses from the build into the page.
  *
- * NEWLINE-JOINED STRINGS AND BASE-36 IDS, NOT AN ARRAY OF OBJECTS, for the
- * reason `../search.ts` measures: an island's props are JSON-serialised into
- * an HTML attribute, so every `"` in the payload becomes six bytes of
- * `&quot;`. An object per card would carry roughly a hundred thousand quotes;
- * this carries about twenty.
+ * NEWLINE-JOINED STRINGS AND BASE-36 IDS, NOT AN ARRAY OF OBJECTS.
+ *
+ * ~~The reason `../search.ts` measures: an island's props are JSON-serialised
+ * into an HTML attribute, so every `"` in the payload becomes six bytes of
+ * `&quot;`.~~ **That was the original reason and it has expired.** The index is
+ * a `.json` FILE now (`ssg/searchIndexes.ts`), fetched by the island rather
+ * than carried in a `data-props` attribute, so nothing escapes anything and
+ * the hundred thousand quotes an object-per-card format would carry would cost
+ * two bytes each rather than six.
+ *
+ * **THE FORMAT STAYS, AND THE ARGUMENT FOR IT IS A PLAINER ONE NOW.** Six bytes
+ * a quote was the dramatic number; the boring number is that an object per card
+ * repeats every field NAME 4,941 times, and this does not repeat them at all.
+ * Measured on this corpus: 888 KB as it stands. That is still what is fetched
+ * and still what is parsed on the client, so it is still worth being small —
+ * the escaping was an amplifier on a cost that exists without it.
  *
  * THE SLUGS ARE SHIPPED RATHER THAN RE-DERIVED, and that is a deliberate trade
  * of about 100 KB. `slugify` is pure, so a browser could recompute a URL from a
@@ -77,8 +88,9 @@ export interface EncodedCardIndex {
    * collector number is not carried at all — it is a pure function of the key
    * and the code, and deriving it costs nothing next to shipping it.
    *
-   * Measured: 69 KB on a 732 KB payload. Storing every art instead of the
-   * non-default ones would have been 122 KB for the same feature.
+   * Measured: 69 KB on what is now an 888 KB payload. Storing every art
+   * instead of the non-default ones would have been 122 KB for the same
+   * feature.
    */
   readonly arts: string;
   /**
