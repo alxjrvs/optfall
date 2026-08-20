@@ -64,7 +64,12 @@ import type { PitchValue, StateTone } from "optfall-theme";
 import { faceKeyFor, orientationOfFace } from "./faces";
 /* Imported as well as re-exported: a re-export creates no local binding, and
    `CARD_ROUTES` below both calls `facesOf` and names `PrintingRef`. */
-import { facesOf, hrefForPrinting, type PrintingRef } from "./printings";
+import {
+  faceForPrintingId,
+  facesOf,
+  hrefForPrinting,
+  type PrintingRef,
+} from "./printings";
 
 import corpus from "../../../../data/cards/cards.json";
 
@@ -76,6 +81,7 @@ import corpus from "../../../../data/cards/cards.json";
  * everyone else change their import would have been churn for nothing.
  */
 export {
+  faceForPrintingId,
   facesOf,
   hrefForPrinting,
   numberFor,
@@ -773,6 +779,25 @@ export interface CardFaceRef {
   readonly printingId: string | null;
 }
 
+/**
+ * A link to the card on the back of ONE printing, and which face that is.
+ *
+ * THE FACE KEY IS CARRIED BECAUSE THE LABEL CANNOT TELL TWO BACKS APART. The
+ * printings table draws one of these per row, and once each row addresses its
+ * OWN back rather than the other card's default printing, two rows can point at
+ * two different arts under one name — Dash's ARC002 First and ARC002 Unlimited
+ * back onto `ARC039` and `U-ARC039` Azalea, and both anchors read "Azalea".
+ * That is WCAG 2.4.4, and it is the same failure the collector column solved by
+ * naming what separates it; the key is what separates these, and it is unique
+ * per face by construction.
+ *
+ * `null` where the back publishes no image, which is also when the link falls
+ * back to the card's own address and so cannot collide.
+ */
+export interface OtherFaceLink extends CardLink {
+  readonly faceKey: string | null;
+}
+
 /** A printing, plus the one thing that needs the whole corpus to resolve. */
 export interface PrintingView {
   readonly printing: CardPrinting;
@@ -784,8 +809,12 @@ export interface PrintingView {
    * a card. So the link is resolved through the printing index rather than the
    * card one, which is the kind of thing that is silently wrong forever if you
    * assume from the field name.
+   *
+   * AND THE ADDRESS HONOURS THAT, which it did not until recently: the join was
+   * per-printing and then handed back the other card's DEFAULT printing. See
+   * where this is built, and `faceForPrintingId`.
    */
-  readonly otherFace: CardLink | null;
+  readonly otherFace: OtherFaceLink | null;
 }
 
 /** Everything one card page needs, assembled once. */
@@ -1140,10 +1169,46 @@ export const CARD_PAGES: readonly CardPage[] = CORPUS.cards.map(
           otherId === undefined ? undefined : CARD_BY_PRINTING_ID.get(otherId);
         return {
           printing,
-          otherFace:
-            other === undefined || other.unique_id === card.unique_id
-              ? null
-              : linkTo(other),
+          /*
+           * THE BACK OF *THIS* PRINTING, ADDRESSED AS THIS PRINTING'S BACK.
+           *
+           * `other_face_unique_id` names a printing ROW, and this used to
+           * resolve that row to its card and then hand back `linkTo(other)` —
+           * the card's DEFAULT printing. So the join was per-printing and the
+           * address was not, and the specificity upstream supplied was
+           * discarded one line after it was used: the back of Uprising's Aether
+           * Ashwing linked to Dromai's Ash. Measured on the shipped build, 200
+           * of the 271 printing pages with a back-face link left the set, and
+           * ALL 200 of those sets had printed the back face — which is what a
+           * double-sided card is, two faces struck together.
+           *
+           * `faceForPrintingId` answers where that exact row lives; the link's
+           * name, label and pitch still come from `linkTo`, because those are
+           * facts about the CARD and do not vary by printing.
+           */
+          otherFace: (() => {
+            if (other === undefined || other.unique_id === card.unique_id) {
+              return null;
+            }
+            const link = linkTo(other);
+            /* `otherId` is defined whenever `other` is — the lookup is keyed
+               by it — but narrowing says so rather than asserting it. */
+            const ref =
+              otherId === undefined
+                ? undefined
+                : faceForPrintingId(other, otherId);
+            return ref === undefined
+              ? { ...link, faceKey: null }
+              : {
+                  ...link,
+                  faceKey: ref.key,
+                  href: hrefForPrinting(
+                    ref.setCode,
+                    ref.number,
+                    SLUG_BY_ID.get(other.unique_id) ?? slugify(other.name),
+                  ),
+                };
+          })(),
         };
       }),
       /**

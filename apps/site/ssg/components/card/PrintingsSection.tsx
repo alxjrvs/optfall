@@ -52,6 +52,46 @@ export function PrintingsSection({
   numberQualifier,
   shown,
 }: PrintingsSectionProps) {
+  /**
+   * What tells two BACK-FACE links apart when they read the same words.
+   *
+   * `numberQualifier` one column over, and the same rule arrived at from the
+   * other end. Every row's back link addresses that row's OWN back now rather
+   * than the other card's default printing — which is the point, and which is
+   * what makes two rows able to point at two arts under one name: Dash's ARC002
+   * First and ARC002 Unlimited back onto `ARC039` and `U-ARC039` Azalea, and
+   * both cells read "Azalea". Two links spoken alike going to different places
+   * is WCAG 2.4.4, and it is exactly the failure the collector column already
+   * handles.
+   *
+   * THE KEY IS THE DISCRIMINATOR, not the row's own edition. `numberQualifier`
+   * names the axis that separates two printings OF THIS CARD; what separates
+   * two backs is which art of the BACK card each one is, and the face key is
+   * that, uniquely, by construction. It is also the backstop the collector
+   * column falls back to, so the two columns speak one vocabulary.
+   *
+   * ONLY WHERE IT IS AMBIGUOUS. A back named once on the page needs nothing,
+   * which is all but a handful of the 271 pages that draw this column at all.
+   */
+  const backQualifier = ((): ReadonlyMap<string, string> => {
+    const addressesByLabel = new Map<string, Set<string>>();
+    for (const { otherFace } of page.printings) {
+      if (otherFace === null) continue;
+      const found = addressesByLabel.get(otherFace.label) ?? new Set<string>();
+      found.add(otherFace.href);
+      addressesByLabel.set(otherFace.label, found);
+    }
+
+    const qualifiers = new Map<string, string>();
+    for (const { printing, otherFace } of page.printings) {
+      if (otherFace === null) continue;
+      if ((addressesByLabel.get(otherFace.label)?.size ?? 0) < 2) continue;
+      const stem = otherFace.faceKey?.replace(/\.webp$/, "") ?? "";
+      if (stem !== "") qualifiers.set(printing.unique_id, ` (${stem})`);
+    }
+    return qualifiers;
+  })();
+
   return (
     <>
       <OrnamentalRule label="Printings" />
@@ -108,6 +148,8 @@ export function PrintingsSection({
                   shown !== undefined &&
                   shown.printing.unique_id === printing.unique_id;
                 const qualifier = numberQualifier.get(printing.unique_id) ?? "";
+                /* The same, for the back-face column. See `backQualifier`. */
+                const backSaid = backQualifier.get(printing.unique_id) ?? "";
 
                 return (
                   <tr
@@ -195,7 +237,18 @@ export function PrintingsSection({
                       {otherFace === null ? (
                         "—"
                       ) : (
-                        <a href={otherFace.href}>{otherFace.label}</a>
+                        <a href={otherFace.href}>
+                          {otherFace.label}
+                          {/* READ BUT NOT SEEN, exactly as the collector
+                              number's qualifier is. The column still reads as
+                              a list of names; what a screen reader gets is a
+                              name that identifies which back. */}
+                          {backSaid === "" ? null : (
+                            <span className="of-card__visually-hidden">
+                              {backSaid}
+                            </span>
+                          )}
+                        </a>
                       )}
                     </td>
                   </tr>

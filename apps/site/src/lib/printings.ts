@@ -141,3 +141,37 @@ export function facesOf(card: Card): readonly PrintingRef[] {
 
   return faces;
 }
+
+/**
+ * The face that ADDRESSES one particular printing row, by its `unique_id`.
+ *
+ * A PRINTING ROW IS NOT ALWAYS ITS OWN ADDRESS, which is the whole reason this
+ * is a lookup rather than a construction. {@link facesOf} dedupes by image, so
+ * the Regular and the Rainbow Foil struck from one picture share a URL — asking
+ * "where does printing X live" therefore has to find the face that CLAIMED X's
+ * image, which may be a different row of the same card.
+ *
+ * WRITTEN FOR THE BACK OF A DOUBLE-SIDED CARD. Upstream joins the two faces by
+ * printing id — `other_face_unique_id` names a ROW, not a card — and `cards.ts`
+ * was resolving that row to its card and then to that card's DEFAULT printing,
+ * throwing away the very specificity the join had just supplied. So the back of
+ * Uprising's Aether Ashwing linked to Dromai's Ash. Measured on the shipped
+ * build: 200 of the 271 printing pages carrying a back-face link left the set,
+ * and the set on screen had printed that back face on all 200 — which is what
+ * you would expect, since the two faces of a card are struck together.
+ *
+ * `undefined` where the id names no row of this card, or where the row it names
+ * publishes no image. The caller's fallback is the card's own address.
+ */
+export function faceForPrintingId(
+  card: Card,
+  printingId: string,
+): PrintingRef | undefined {
+  const row = card.printings.find(
+    (printing) => printing.unique_id === printingId,
+  );
+  if (row === undefined) return undefined;
+  const key = faceKeyFor(row.image_url);
+  if (key === null) return undefined;
+  return facesOf(card).find((ref) => ref.key === key);
+}

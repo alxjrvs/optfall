@@ -99,6 +99,18 @@ function addressInSetOf(slug: string, setCode: string): string {
   return route.href;
 }
 
+/**
+ * The set segment of a printing URL — `/card/amx/019/x` is `amx`.
+ *
+ * SO A TEST CAN ASK "the set of the page I am on" without naming it. Which set
+ * a card's default printing belongs to is a fact about the corpus that a resync
+ * can move, and a test that hard-codes it fails for a reason that is not the
+ * behaviour under test.
+ */
+function setOfAddress(href: string): string {
+  return href.split("/")[2] ?? "";
+}
+
 /* -------------------------------------------------------------------------- */
 /* URLs to files                                                               */
 /* -------------------------------------------------------------------------- */
@@ -1706,7 +1718,8 @@ describe("a related-cards list is one row per name, stones beside it", () => {
      * shape under test is unchanged and it is now asserted on the kind of list
      * that still exists: one about OTHER cards.
      */
-    const list = listIn(render(addressOf("fist-pump")));
+    const fistPump = addressOf("fist-pump");
+    const list = listIn(render(fistPump));
     expect(list).not.toBe("");
 
     /* One row… */
@@ -1721,11 +1734,33 @@ describe("a related-cards list is one row per name, stones beside it", () => {
         ),
       ].length,
     ).toBe(1);
-    /* …and a link per version the row stands for. */
+    /*
+      …and a link per version the row stands for, EACH IN THE SET THIS PAGE IS
+      IN. The stones used to carry each version's DEFAULT printing, so a row of
+      three on one page dealt printings from two sets — pitch 1 from 1HP beside
+      pitch 2 and 3 from Amplify — and following one changed the set under the
+      reader for a click that asked only to change the pitch. `addressInSet`
+      has answered this for the version strip since it was written; the stones
+      ask the same question. Where the set never printed a version, the version
+      keeps its own address, which `addressInSetOf` would throw over rather than
+      silently assert — so this also pins that Amplify printed all three.
+    */
+    const here = setOfAddress(fistPump);
     const pitchLinks = [
       ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
     ].map((m) => m[1]);
     expect(pitchLinks).toEqual([
+      addressInSetOf("hyper-driver-1", here),
+      addressInSetOf("hyper-driver-2", here),
+      addressInSetOf("hyper-driver-3", here),
+    ]);
+    /* AND THEY MOVED. At least one of the three had a default printing outside
+       this set, or the assertion above is true of the old behaviour too. */
+    expect([
+      addressInSetOf("hyper-driver-1", here),
+      addressInSetOf("hyper-driver-2", here),
+      addressInSetOf("hyper-driver-3", here),
+    ]).not.toEqual([
       addressOf("hyper-driver-1"),
       addressOf("hyper-driver-2"),
       addressOf("hyper-driver-3"),
@@ -1821,11 +1856,18 @@ describe("a related-cards list is one row per name, stones beside it", () => {
      * only the three, so the row lands on one of those three and NOT on the
      * bare name's default, which would offer the token this row does not show.
      */
-    const list = listIn(render(addressOf("fist-pump")));
+    const fistPump = addressOf("fist-pump");
+    const list = listIn(render(fistPump));
     const nameHref = list.match(
       /<a class="of-card__link-name" href="([^"]+)"/,
     )?.[1];
-    expect(nameHref).toBe(addressOf("hyper-driver-1"));
+    /* WHICH CARD is the claim under test and it is unchanged; WHICH PRINTING of
+       that card is a separate question, and the answer is this page's set —
+       `groupTarget` resolves through `addressInSet` now, so a row lands on the
+       version it is showing AND on the copy of it the reader is already among. */
+    expect(nameHref).toBe(
+      addressInSetOf("hyper-driver-1", setOfAddress(fistPump)),
+    );
 
     const stoneHrefs = [
       ...list.matchAll(/<a class="of-card__pitch-link" href="([^"]+)"/g),
@@ -1869,9 +1911,14 @@ describe("a related-cards list is one row per name, stones beside it", () => {
       be true of the destination and false of the row, and would announce the
       same string as the first stone beside it.
     */
-    const versions = listIn(render(addressOf("fist-pump")));
+    /* THE ADDRESSES ARE THIS PAGE'S SET, and the QUALIFIER is what this test is
+       about — the two travel together in the same anchor, so the assertion
+       names both rather than loosening to a substring that would stop seeing
+       the href at all. */
+    const fistPump = addressOf("fist-pump");
+    const versions = listIn(render(fistPump));
     expect(versions).toContain(
-      `<a class="of-card__link-name" href="${addressOf("hyper-driver-1")}">Hyper Driver<span class="of-card__visually-hidden"> (pitch 1, 2 and 3)</span></a>`,
+      `<a class="of-card__link-name" href="${addressInSetOf("hyper-driver-1", setOfAddress(fistPump))}">Hyper Driver<span class="of-card__visually-hidden"> (pitch 1, 2 and 3)</span></a>`,
     );
 
     /* And a row standing for ONE version is named for that one, through
@@ -1879,7 +1926,16 @@ describe("a related-cards list is one row per name, stones beside it", () => {
        Tiger is referenced by Growl at pitch 1 and by no other version of it —
        the only shape in the corpus where a group has one disambiguated member,
        which is why this names an odd pair of cards. */
-    expect(render(addressOf("crouching-tiger"))).toContain(
+    /*
+      AND THIS ONE KEEPS ITS OWN ADDRESS, which is the other half of the set
+      rule rather than an exception to it. Crouching Tiger's default printing is
+      in Dynasty and Dynasty never printed Growl, so `addressInSet` has no
+      answer and the row falls back to the card's own — the honest outcome, and
+      the reason that function returns `undefined` instead of guessing.
+    */
+    const crouchingTiger = addressOf("crouching-tiger");
+    expect(setOfAddress(crouchingTiger)).toBe("dyn");
+    expect(render(crouchingTiger)).toContain(
       `<a class="of-card__link-name" href="${addressOf("growl-1")}">Growl<span class="of-card__visually-hidden"> (pitch 1)</span></a>`,
     );
   });
@@ -2019,9 +2075,11 @@ describe("a double-faced printing names the card on its back", () => {
     /*
      * INNER CHI'S OWN ADDRESS, WHICH IS THE BACK OF THIS VERY PRINTING. Under
      * the old scheme this read `/card/inner-chi` — the card, at whatever art it
-     * happened to open on. A card link is a printing link now, and the printing
-     * `linkTo` picks for Inner Chi is ENG025's back face: the physical other
-     * side of the card this page is showing.
+     * happened to open on. A card link is a printing link now, and this page is
+     * A Drop in the Ocean's DEFAULT printing, so the back `faceForPrintingId`
+     * resolves is ENG025's — which is also Inner Chi's own default, and that
+     * coincidence is why `addressOf` is still the right expectation HERE while
+     * the reprint pages below need `addressInSetOf`.
      */
     expect(html).toContain(`<a href="${addressOf("inner-chi")}">Inner Chi</a>`);
   });
@@ -2042,8 +2100,26 @@ describe("a double-faced printing names the card on its back", () => {
         (match) => match[1],
       );
 
-    expect(backs("/card/hvy/240/agility")).toEqual([addressOf("gold")]);
-    expect(backs("/card/kyo/027/agility")).toEqual([addressOf("might")]);
+    /*
+     * AND IT NAMES THAT PRINTING'S BACK, NOT THE BACK CARD'S DEFAULT ONE.
+     * `other_face_unique_id` addresses a printing ROW, and the link used to
+     * resolve that row to its card and then to the card's default printing —
+     * so Heavy Hitters' Agility was backed with Ako's Gold. The two faces of a
+     * card are struck together, which is why this always has an answer inside
+     * the same set: measured on the shipped build, 200 of the 271 printing
+     * pages carrying this link left the set, and all 200 of those sets had
+     * printed the back face. See `faceForPrintingId`.
+     */
+    expect(backs("/card/hvy/240/agility")).toEqual([
+      addressInSetOf("gold", "hvy"),
+    ]);
+    expect(backs("/card/kyo/027/agility")).toEqual([
+      addressInSetOf("might", "kyo"),
+    ]);
+    /* AND THEY MOVED — the default printings are elsewhere, so these two
+       assertions are false of the old behaviour rather than true of both. */
+    expect(addressInSetOf("gold", "hvy")).not.toBe(addressOf("gold"));
+    expect(addressInSetOf("might", "kyo")).not.toBe(addressOf("might"));
 
     /*
      * AND THE DEFAULT PRINTING NAMES NEITHER, which is the honest answer rather
