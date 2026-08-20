@@ -216,8 +216,18 @@ always means something.
 Scrollwork is central to how the game's frames feel, and leaving it out made the
 first pass read as austere Swiss rather than as Rathe. It earns a place in
 exactly three roles: the corners of a feature panel, the corners of a card frame,
-and a section rule. Never on a control, never on a list, never twice on one
-screen.
+and a section rule. Never on a control, never on a list, ~~never twice on one
+screen~~.
+
+**The "never twice" clause is retired for the section rule, and holds for the
+other two.** It was implemented as an `ornament` flag on `OrnamentalRule`,
+defaulting to off, so a screen spent its one mark on a single rule and drew the
+rest as bare hairlines. Exactly one call site ever set it. A flag with one caller
+was not rationing anything between rules — it was making one divider look like a
+different component from the divider on the next page down, which is the
+inconsistency the ration exists to prevent, arrived at from the other side. The
+centre mark is now what a section rule *is*, on every one of them. Panel corners
+and card frames are still spent once each, and are still `FiligreeCorner`'s.
 
 ### Two voices
 

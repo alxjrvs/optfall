@@ -187,8 +187,8 @@ function page(): PageResult {
           </p>
         </noscript>
 
-        <Island name="CardSearch" props={{ index, ornament: true }}>
-          <CardSearch index={index} ornament />
+        <Island name="CardSearch" props={{ index }}>
+          <CardSearch index={index} />
         </Island>
       </>
     ),

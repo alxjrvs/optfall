@@ -38,7 +38,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { OrnamentalRule, Pagination } from "optfall-components/react";
+import { Pagination } from "optfall-components/react";
 
 import {
   type CardDisplayMode,
@@ -79,7 +79,10 @@ export const HEADER_FIELD_ID = "site-search";
 
 export interface CardSearchProps {
   readonly index: EncodedCardIndex;
-  readonly ornament?: boolean;
+  /*
+    NO `ornament` FLAG, because there is no rule left here to spend it on. See
+    the note where that rule used to be rendered, below.
+  */
 }
 
 /** Why a row is on the page, in the words of the ranking that put it there. */
@@ -129,7 +132,7 @@ function pagingFromUrl(): { page: number; size: PageSize } {
   };
 }
 
-export function CardSearch({ index, ornament = false }: CardSearchProps) {
+export function CardSearch({ index }: CardSearchProps) {
   const cards = useMemo(() => decodeCardIndex(index), [index]);
 
   const [query, setQuery] = useState("");
@@ -683,10 +686,22 @@ export function CardSearch({ index, ornament = false }: CardSearchProps) {
         </ul>
       ) : null}
 
-      <OrnamentalRule
-        ornament={ornament}
-        label={asked ? "Results" : "Browse"}
-      />
+      {/*
+        NO SECTION RULE HERE, AND THERE WAS ONE — an ornamented `OrnamentalRule`
+        labelled "Results"/"Browse". It divided the example-query hint from what
+        followed it, which was a real division for as long as the hint existed.
+        The hint went (it repeated what the header's own field already says), and
+        the rule stayed, so it became the first visible thing in `<main>` with
+        nothing above it to divide from.
+
+        A rule in that position separates the header from the page — a job the
+        header already does with its own `border-block-end`, one hairline and
+        40px further up. What was left was two lines with void between them, and
+        the controls pushed 74px down the page while every other surface on the
+        site starts its content 40px under the bar. Nothing replaces it: the
+        divison it announced to a screen reader was between the header and the
+        body, which is furniture rather than a thematic break.
+      */}
 
       {asked ? (
         outcome.results.length > 0 ? (
