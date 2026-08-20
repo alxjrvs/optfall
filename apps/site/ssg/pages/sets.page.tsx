@@ -84,11 +84,6 @@ function page(): PageResult {
       <>
         <h1 className="of-sets__heading">Sets</h1>
 
-        <p className="of-sets__lede">
-          {listed.length} sets, newest first. Each links to the cards Optfall
-          carries from it.
-        </p>
-
         <ul className="of-sets">
           {listed.map((set) => (
             <li className="of-sets__set" key={set.id}>
