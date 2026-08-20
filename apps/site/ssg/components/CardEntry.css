@@ -1522,8 +1522,13 @@
 
 /* The table caption names the table for a screen reader without repeating the
      `<h2>` on screen. Sized from `space.hair` rather than collapsed to zero: a
-     zero-area element is skipped by some screen readers. Idiom copied verbatim
-     from `RulesSearch.svelte`. */
+     zero-area element is skipped by some screen readers.
+
+     The idiom arrived here copied verbatim from the Svelte rules search, which
+     Phase 6 deleted along with the rest of that layer — so the citation is
+     history, not an address. The other copy that still exists is
+     `.of-citation__sr-only` in `packages/components/src/react/Citation.css`;
+     if this technique ever needs to change, it needs to change in both. */
 .of-card__visually-hidden {
   position: absolute;
   inline-size: var(--of-space-hair);

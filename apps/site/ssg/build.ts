@@ -146,9 +146,9 @@ async function assetsFromManifest(): Promise<{
 /**
  * The island bundle's ceiling, and the reason there is one at all.
  *
- * **THE BUNDLE WAS 9.28 MB AND NOTHING NOTICED.** `card-search.ts` imported two
+ * **THE BUNDLE WAS 9.28 MB AND NOTHING NOTICED.** `card-search/` imported two
  * pure helpers from `cards.ts`, `cards.ts` imports the 18 MB card corpus at
- * module scope, and the island entry reaches `card-search.ts` through
+ * module scope, and the island entry reaches `card-search/` through
  * `CardSearch.tsx` — so Rollup did exactly what it was asked and put the entire
  * corpus in the client. Every reader who opened the front page, `/search`, `/cr`
  * or any card page downloaded it.
@@ -276,7 +276,7 @@ const PAGE_BUDGET_EXCEPTIONS: Readonly<Record<string, number>> = {
      this one page is therefore coarse: an order-of-magnitude mistake, not a
      tight field. That is the honest limit of a byte ceiling here. The check
      that a new per-card field is worth its weight is the doc-block beside it in
-     `card-search.ts`, where every existing field states its measured cost.
+     `card-search/`, where every existing field states its measured cost.
   */
   "/search": 1280 * 1024,
   /*

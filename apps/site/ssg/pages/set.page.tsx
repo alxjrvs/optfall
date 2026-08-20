@@ -99,7 +99,7 @@ function faceForSet(page: CardPage, setId: string) {
  * saw the same card three times and had no visible way to tell which was which.
  * That is not the print run being honest, it is a list repeating itself.
  *
- * A player calls those three ONE card. `card-search.ts` has said so since it was
+ * A player calls those three ONE card. `card-search/` has said so since it was
  * written and collapses on exactly this rule; this page is where the two
  * surfaces stopped agreeing.
  *
@@ -124,7 +124,7 @@ function entryFor(
    * the stats are the half of that worth stating plainly: the three versions of
    * a name differ in cost and often in power, so the rows view shows one
    * version's numbers on a row standing for three. That is the same trade
-   * `card-search.ts` already makes on a collapsed result — the alternative is
+   * `card-search/` already makes on a collapsed result — the alternative is
    * either three rows again or a row printing three costs in one socket — and
    * the honest bound on it is that the numbers belong to the version the bands'
    * leftmost door opens.
@@ -150,7 +150,7 @@ function entryFor(
      * `NAME_GROUPS` is built on.
      *
      * A PARTIAL GROUP MUST LAND ON A VERSION THIS SET ACTUALLY PRINTED, and
-     * that is the same rule `card-search.ts` states at length beside its own
+     * that is the same rule `card-search/` states at length beside its own
      * `partial` flag rather than a second one invented here. `/card/<nameSlug>`
      * renders the corpus's LOWEST-PITCH version, which a set that printed only
      * the higher ones does not contain: Aurora prints Spark Spray at pitch 2
@@ -191,7 +191,7 @@ function entryFor(
       versions carried Welcome to Rathe art would be the exact defect
       `faceForSet` exists to fix, one layer down and only visible on hover.
 
-      This is deliberately the opposite choice from `card-search.ts`, and the two
+      This is deliberately the opposite choice from `card-search/`, and the two
       surfaces are answering different questions. A search result is a row about
       a NAME and its fan is a set of links to cards, so each one shows the art
       its own page shows. A set page is about a PRINT RUN: every picture on it,

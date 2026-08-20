@@ -63,7 +63,7 @@ import "./CardIndex.css";
 /**
  * The two shapes a list of cards comes in.
  *
- * The same union `card-search.ts` parses `display:` into, and it argues there
+ * The same union `card-search/` parses `display:` into, and it argues there
  * at length for why two is the honest count. The short version: there was a
  * third, `text`, which printed names one per line — and that is this view with
  * its metadata removed, so the difference between them was DENSITY rather than
@@ -86,7 +86,7 @@ export type CardIndexDisplay = "grid" | "list";
  * `names` IS THE DEFAULT AND IT IS THE INTERESTING ONE: Head Jab's red, yellow
  * and blue versions are one row, because that is what a player means by a card.
  * `cards` expands them; `art` expands further, to one row per distinct picture.
- * `card-search.ts` states the argument at length beside `CardUniqueMode`.
+ * `card-search/` states the argument at length beside `CardUniqueMode`.
  */
 export type CardIndexUnique = "names" | "cards" | "art";
 
@@ -568,7 +568,7 @@ function PitchStones({
  * EVERY CARD IN THE HAND COMES FROM ONE PRINT RUN, AND THAT IS THE CALLER'S
  * JOB RATHER THAN THIS COMPONENT'S. `set:MST` shows what Mistveil printed, so
  * the row's picture is Mistveil's — and so is every version's, because
- * `card-search.ts` resolves them all through one rule. This note used to say
+ * `card-search/` resolves them all through one rule. This note used to say
  * the versions "deliberately wear their own default faces, because each one is
  * a link to a CARD", which shipped a fan holding one card from the set the
  * reader named and two from a set they did not. A fan is a comparison between

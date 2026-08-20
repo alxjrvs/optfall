@@ -17,7 +17,7 @@
  * IT IS STILL DETERMINISTIC AND STILL EXPLICABLE. No scoring, no fuzzy
  * matching, and every leaf still reports which field it looked at. What changes
  * is the *shape* of the question, never how a single field is matched — the
- * matchers are passed in by `card-search.ts` and this module never touches the
+ * matchers are passed in by `card-search/` and this module never touches the
  * corpus.
  */
 

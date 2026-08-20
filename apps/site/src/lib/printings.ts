@@ -3,8 +3,8 @@
  *
  * WHY THIS IS ITS OWN MODULE, AND IT IS NOT ABOUT TIDINESS. Both functions here
  * lived in `cards.ts`, which imports the 18 MB card corpus and derives
- * `CARD_PAGES` and `CARD_ROUTES` at module scope. `card-search.ts` imported them
- * from there, `CardSearch.tsx` imports `card-search.ts`, and the island bundle
+ * `CARD_PAGES` and `CARD_ROUTES` at module scope. `card-search/` imported them
+ * from there, `CardSearch.tsx` imports `card-search/`, and the island bundle
  * imports `CardSearch.tsx` — so the whole corpus was reachable from the client
  * entry and Rollup bundled it. **The shipped island bundle was 9.28 MB**, of
  * which roughly 9.2 MB was the card corpus, sent to every reader who opened a
@@ -18,7 +18,7 @@
  * These two functions are pure over their arguments and touch no corpus, so the
  * fix is to put them where importing them does not drag one in. `cards.ts`
  * re-exports both, so every existing caller is unchanged; what changed is that
- * `card-search.ts` reaches them WITHOUT reaching the corpus.
+ * `card-search/` reaches them WITHOUT reaching the corpus.
  *
  * The rule this leaves behind: **anything imported by an island must not import
  * `cards.ts`.** The corpus belongs to the build. What the client gets is the
