@@ -433,11 +433,51 @@
   THE CARD UNDER THE POINTER COMES TO THE FRONT, which is the only way to be
   sure what a click will open: a fanned card is mostly covered by the one in
   front of it, and the visible sliver is not enough to recognise a version by.
-  `--n + 1` beats every card in the stack, including the front one.
+  `--n * 2` beats every card in the stack, including the front one and including
+  the raised group below — see the next rule for why the ceiling moved up from
+  `--n + 1`.
 */
 .of-index__stack .of-index__card:hover,
 .of-index__stack .of-index__card:focus-visible {
-  z-index: calc(var(--n, 1) + 1);
+  z-index: calc(var(--n, 1) * 2);
+}
+
+/*
+  THE CARDS LEFT OF THE POINTER REVERSE THEIR LADDER, AND WITHOUT THIS THE HAND
+  CANNOT BE WALKED BACK.
+
+  The resting ladder holds the hand at its LEFT edge: card `--i` sits above card
+  `--i + 1`, so what each version shows is its RIGHT sliver — the 26% strip past
+  the right edge of the card in front of it. That is the only part of a back card
+  a pointer can reach, and raising the hovered card to the front takes the strip
+  belonging to its left-hand neighbour: the hovered card's box starts 26% left of
+  that neighbour's right edge, so it covers exactly the sliver the neighbour was
+  reachable by. On a three-version name, hovering the rightmost card left the
+  middle one with NO hoverable area at all — covered on its left by the front
+  card and on its right by the card the reader was already pointing at. The hand
+  could be walked rightwards and never back.
+
+  So every card before the hovered one is re-stacked in reverse: `--n + --i` puts
+  the nearest neighbour highest and steps down leftwards, above the whole resting
+  ladder and below the hovered card's `--n * 2`. Each of those cards is now
+  covered on its right by the sibling after it and exposed on its LEFT, so the
+  hand reads inwards from the pointer — the neighbour's left 26% is uncovered as
+  the pointer leaves the hovered card's edge, and moving left walks the hand one
+  card at a time.
+
+  IT IS THE PREVIOUS SIBLINGS AND NOT ALL OF THEM. Cards to the RIGHT of the
+  pointer keep the resting ladder, because their right slivers are untouched: the
+  hovered card is to their left, so it covers the part they were already covered
+  in. Reversing them too would take the slivers this rule exists to give back.
+
+  `:focus-visible` is carried for the same reason as the rule above rather than
+  for hit-testing — a keyboard reader arrives by tab order, not by aiming — so
+  that the ladder a focused card produces is the one a hovered card produces and
+  the two cannot diverge into separate behaviours.
+*/
+.of-index__stack .of-index__card:has(~ .of-index__card:hover),
+.of-index__stack .of-index__card:has(~ .of-index__card:focus-visible) {
+  z-index: calc(var(--n, 1) + var(--i, 0));
 }
 
 /*
