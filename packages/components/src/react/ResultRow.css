@@ -14,7 +14,17 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--of-space-tight);
+  /*
+    THE LEAD IS A MARK ON THE NAME, NOT A COLUMN BESIDE IT, so the gap is one
+    step tighter than the row's own rhythm. It used to be `space.tight`, which
+    was the right measure while the lead held a face AND a slot wide enough for
+    three pitch stones: the name began a stone's width to the right of the
+    picture and the two read as two columns with an alley between them. The
+    stones travel with the name now — see `.of-result__trail` — so what is left
+    to separate is a 44px thumbnail from the type it labels, and at that size a
+    wide alley reads as the picture belonging to nothing.
+  */
+  gap: var(--of-space-tighter);
   padding-block: var(--of-space-base);
   border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
@@ -34,6 +44,19 @@
   font-size: var(--of-type-size-large);
   letter-spacing: var(--of-type-tracking-tight);
 }
+
+/*
+  NO RULE FOR THE TRAIL, AND THAT IS THE DESIGN. `.of-result__line` stays a
+  block containing inline content, so whatever the caller puts after the anchor
+  sits where the name ENDS — and, when the name wraps, at the end of its last
+  line rather than stranded beside the first. Making the line a flex row would
+  buy an alignment nobody needs and would have to be told what to do with a
+  wrapped name.
+
+  The space before the mark, and the mark's own alignment, belong to the caller
+  for the same reason the leading slot's do — see `.of-index__stones`. What this
+  file guarantees is that a baseline is there to sit on.
+*/
 
 .of-result__meta {
   display: flex;

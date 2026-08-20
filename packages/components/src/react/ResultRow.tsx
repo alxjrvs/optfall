@@ -4,13 +4,20 @@
  * WHAT THE ROW OWNS: the hairline that separates it from the row above, the
  * baseline alignment, the intrinsic wrap, and the two type voices — serif for
  * the name, sans for the metadata. What the CALLER owns: what a result IS. A
- * rules result leads with a citation and a card result leads with a pitch
- * jewel; neither belongs in a primitive that would then have to know about
- * both.
+ * rules result leads with a citation and a card result trails its name with a
+ * pitch jewel; neither belongs in a primitive that would then have to know
+ * about both.
  *
- * SO THE LEADING SLOT AND THE METADATA ARE BOTH SLOTS. The row is a layout and
- * a set of voices, not a schema. It knows a result has a link, something before
- * it, and some facts under it.
+ * SO LEAD, TRAIL AND METADATA ARE ALL SLOTS. The row is a layout and a set of
+ * voices, not a schema. It knows a result has a link, something before it,
+ * something after its name, and some facts under it.
+ *
+ * LEAD AND TRAIL ARE NOT ONE PLACE ONE STEP APART. The lead is a child of the
+ * ROW, so it sits outside the body and every row's lead lines up in a column;
+ * the trail is a child of the NAME'S LINE, so it travels with the name and
+ * begins wherever that name ends. A mark that qualifies the name — a pitch
+ * jewel — wants the second. A mark the eye scans down a column — a face —
+ * wants the first.
  *
  * THE ROW WRAPS INTRINSICALLY rather than at a breakpoint, because this
  * repository publishes no breakpoint tokens and `check:tokens` rejects a raw
@@ -56,8 +63,25 @@ export interface ResultRowProps {
    * common case.
    */
   readonly qualifier?: string | undefined;
-  /** Rendered before the link — a pitch jewel, a citation. */
+  /** Rendered before the link, in the row's own leading column — a face. */
   readonly lead?: ReactNode;
+  /**
+   * Rendered after the link, on the name's own line — a pitch jewel.
+   *
+   * OUTSIDE THE ANCHOR, WHICH IS THE POINT OF IT BEING A SLOT HERE rather than
+   * markup the caller joins onto {@link label}. What goes here is commonly a
+   * link of its own — a stone addressing one pitch version of the name beside
+   * it — and an anchor inside an anchor is invalid HTML the parser silently
+   * unnests. It is also why {@link qualifier} stays: the trail is not text, so
+   * it names nothing.
+   *
+   * RENDERED BARE, WITH NO WRAPPER OF ITS OWN, exactly as {@link lead} is. A
+   * wrapper would carry the spacing here rather than in the caller — and it
+   * would emit an empty element on every row whose trail resolved to nothing,
+   * since a component that returns `null` is still a truthy element. So the
+   * caller owns both the mark and the space before it.
+   */
+  readonly trail?: ReactNode;
   /** Rendered under the link, in the label voice. Facts, not prose. */
   readonly meta?: ReactNode;
 }
@@ -67,6 +91,7 @@ export function ResultRow({
   label,
   qualifier,
   lead,
+  trail,
   meta,
 }: ResultRowProps) {
   return (
@@ -81,6 +106,7 @@ export function ResultRow({
               <span className="of-result__qualifier">{qualifier}</span>
             )}
           </a>
+          {trail}
         </p>
         {meta ? <p className="of-result__meta">{meta}</p> : null}
       </div>

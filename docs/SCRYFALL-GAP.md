@@ -339,9 +339,24 @@ generated at exactly the tier dimensions, ships **statically in
 store does not), and is drawn from the design system: bevelled plate ground, the
 mark, and NO IMAGE in the wide-tracked mono label voice.
 
-Two orientations, because 15 cards are `played_horizontally` and 10 printings
-carry a non-zero `image_rotation_degrees` — a portrait placeholder under a
-landscape card is a bug visible at a glance.
+Two orientations, ~~because 15 cards are `played_horizontally` and 10 printings
+carry a non-zero `image_rotation_degrees`~~ — a placeholder of the wrong shape
+under a face is a bug visible at a glance.
+
+**Superseded: orientation is measured, not derived.** Neither corpus field says
+which way round upstream published a given file, and both were used as though
+they did. All 11,376 distinct faces were read at the `normal` tier — forty bytes
+each, straight out of the WebP header — and **14 are landscape**, all of them
+450×322. The old rule put a landscape box on 34 faces and was wrong about 24 of
+them: 22 portrait files letterboxed inside landscape boxes (`Vaporize // Shock`
+drew at 322 px beside 450 px neighbours), and 2 landscape files inside portrait
+ones that the rule could not reach in principle — the `Runechant` token is
+`played_horizontally: false` with `image_rotation_degrees: 0`. The measured list
+is `LANDSCAPE_FACE_KEYS` in `apps/site/src/lib/faces.ts`, with a runtime twin in
+`apps/images/src/face.ts` so a miss is answered in the shape the page reserved.
+`bun run check:face-orientation` re-measures the live store against it; it is
+out of `bun run check` and out of the pre-approved command list because it makes
+11,376 network requests.
 
 **The function serves it, rather than 404ing.** A miss returns the placeholder
 with `200` and a *short* cache lifetime, where a hit returns the face immutable
@@ -363,8 +378,11 @@ one place, so no surface can render an image and forget half of it:
 - The **drawn-primitive fallback** for the four printings with no `image_url`,
   and for any future null. "There is no published image" is a fact to render,
   not an error.
-- `image_rotation_degrees` and `played_horizontally` honoured — some cards are
-  printed sideways, and a grid that ignores that shows them wrong.
+- ~~`image_rotation_degrees` and `played_horizontally` honoured — some cards are
+  printed sideways, and a grid that ignores that shows them wrong.~~ Replaced by
+  the measurement above: a card played sideways is not reliably *published*
+  sideways, so the box comes from the stored face's own bytes and these two
+  fields decide nothing a face has a key for.
 
 ### 5.1c Multiple printings, as a first-class thing
 

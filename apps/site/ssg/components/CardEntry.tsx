@@ -63,7 +63,7 @@ import {
   boxFor,
   faceKeyFor,
   faceUrl,
-  orientationOf,
+  orientationOfFace,
   placeholderUrl,
 } from "../../src/lib/faces";
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
@@ -685,12 +685,25 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       .join(", ");
   })();
 
-  /** The box the face is drawn in — this printing's own orientation. */
+  /**
+   * The box the face is drawn in — this printing's own orientation, read off
+   * this printing's own key.
+   *
+   * PER PRINTING RATHER THAN PER CARD, AND NOW ACTUALLY SO. This already said
+   * "this printing's own orientation" while answering from `played_horizontally`,
+   * which is a property of the CARD — so every printing of a card got the same
+   * answer and the distinction the line claims was not being drawn at all.
+   * `Vaporize // Shock` is where that shows: `LGS346-CF` is a portrait file and
+   * `ROS011` is a landscape one, and the landscape box the card-level field
+   * asserted for both letterboxed the first to 322 px wide on a page whose other
+   * cards draw at 450.
+   */
   const shownBox = boxFor(
     "normal",
     shown === undefined
       ? page.face.orientation
-      : orientationOf({
+      : orientationOfFace({
+          key: shown.key,
           playedHorizontally: card.played_horizontally,
           rotationDegrees: shown.printing.image_rotation_degrees,
         }),
@@ -1326,6 +1339,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   the sentence beside this button as well as under the section;
                   now this button IS the section's replacement and the sentence
                   has nowhere else to be.
+
+                  SHORTER THAN IT WAS, AND THAT SERVES THE SAME REQUIREMENT
+                  ADJACENCY DOES. It was four sentences and is two: the material
+                  connection, and nothing else. The two that went — where the
+                  product name comes from, and that no price or endorsement is
+                  implied — were provenance and self-description, and they made
+                  the one paragraph on this page a reader most needs to read
+                  twice as long as it had to be. `buyDisclosure` carries the
+                  argument and the citation. It is also what makes the row work:
+                  two lines fit the button's height, four never could.
 
                   THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same
                   constant the link does, so the sentence cannot claim we earn

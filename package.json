@@ -46,6 +46,7 @@
     "check:dev-server": "bun scripts/check-dev-server.ts",
     "check:provenance": "bun scripts/check-asset-provenance.ts",
     "check:symbols": "bun scripts/ingest-game-symbols.ts --check",
+    "check:face-orientation": "bun scripts/check-face-orientation.ts",
     "check:design-system": "bun test scripts/design-system-coverage.test.ts",
     "symbols": "bun scripts/ingest-game-symbols.ts",
     "corpus:rules": "bun scripts/build-rules-corpus.ts",

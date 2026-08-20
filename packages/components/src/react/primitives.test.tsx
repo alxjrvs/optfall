@@ -323,6 +323,43 @@ describe("ResultRow", () => {
     );
     expect(html).toContain("of-result__meta");
   });
+
+  test("the trail lands on the name's line, after the anchor", () => {
+    /*
+     * THE THREE SLOTS ARE THREE PLACES, and the trail is the one that has to be
+     * INSIDE the name's line and OUTSIDE the anchor. Inside, because it is a
+     * qualifier on the name and travels with it; outside, because what goes
+     * there is commonly a link of its own and an anchor inside an anchor is
+     * invalid markup the parser unnests. Both halves are asserted by position:
+     * after `</a>`, before the line closes.
+     */
+    const html = renderToStaticMarkup(
+      <ResultRow href="/x" label="X" lead={<b>L</b>} trail={<i>T</i>} />,
+    );
+    const line = html.slice(html.indexOf("of-result__line"));
+    expect(line.indexOf("<i>T</i>")).toBeGreaterThan(line.indexOf("</a>"));
+    expect(line.indexOf("<i>T</i>")).toBeLessThan(line.indexOf("</p>"));
+    /* And the leading slot is still ahead of the body, not beside the trail. */
+    expect(html.indexOf("<b>L</b>")).toBeLessThan(
+      html.indexOf("of-result__body"),
+    );
+  });
+
+  test("a trail that resolves to nothing emits nothing", () => {
+    /*
+     * NO WRAPPER ELEMENT, which is the whole reason the slot is rendered bare.
+     * The caller's mark is commonly a component that returns `null` — a card
+     * with no pitch draws no stone — and a component is a truthy element even
+     * when it renders nothing, so a wrapper here would put an empty span,
+     * carrying whatever margin it owned, on every such row in a 12,776-page
+     * build.
+     */
+    const Nothing = () => null;
+    const html = renderToStaticMarkup(
+      <ResultRow href="/x" label="X" trail={<Nothing />} />,
+    );
+    expect(html).toBe(renderToStaticMarkup(<ResultRow href="/x" label="X" />));
+  });
 });
 
 describe("pageWindow", () => {

@@ -1,5 +1,5 @@
 import type { CardPage } from "../cards";
-import { orientationOf } from "../faces";
+import { orientationOfFace } from "../faces";
 import { facesOf } from "../printings";
 
 import { FORMAT_NAMES } from "./grammar";
@@ -194,12 +194,16 @@ export function buildCardIndex(
       faces
         .slice(1)
         .map((ref) => {
-          /* Per ART, not per card — see `ArtRef.landscape`. The card-level
-             half of the rule is passed in beside the printing-level half so
-             this is the SAME function the card page and the set page call,
-             rather than a second evaluation of the same rule. */
+          /* Per ART, not per card — see `ArtRef.landscape`. Answered from the
+             ART'S OWN KEY, which is the whole reason this is per-art: two
+             printings of one card can be published in different orientations,
+             and `Vaporize // Shock` is (`LGS346-CF` portrait, `ROS011`
+             landscape). The card-level fields are passed alongside so this is
+             the SAME function the card page and the set page call, rather than
+             a second evaluation of the same rule. */
           const landscape =
-            orientationOf({
+            orientationOfFace({
+              key: ref.key,
               playedHorizontally: page.card.played_horizontally,
               rotationDegrees: ref.printing.image_rotation_degrees,
             }) === "landscape";

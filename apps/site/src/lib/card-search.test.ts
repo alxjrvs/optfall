@@ -1543,14 +1543,20 @@ describe("a set-scoped search shows that set's printing", () => {
      * box, visible at a glance, and only on the printings this feature exists
      * to show.
      *
-     * `orientationOf` reads two inputs: `played_horizontally`, which belongs to
-     * the CARD, and `image_rotation_degrees`, which belongs to the PRINTING —
-     * ten of them in this corpus are non-zero. Zero cards diverge today, so
-     * this is a latent failure rather than a live one, which is exactly how
-     * `faces.ts` describes the last bug of this shape to reach production.
+     * `orientationOfFace` reads the ART'S OWN measured key (`faces.ts`,
+     * `LANDSCAPE_FACE_KEYS`), so two arts of one card genuinely differ.
+     *
+     * THIS IS A LIVE FAILURE, AND THIS NOTE USED TO CALL IT LATENT. It said
+     * "zero cards diverge today", which was true only of the rule it was written
+     * against: orientation came from `played_horizontally`, a property of the
+     * CARD, so every face of a card got one answer and divergence was
+     * unreachable by construction. Measured against the stored bytes, **12 cards
+     * diverge** — `Vaporize // Shock` ships `LGS346-CF` portrait and `ROS011`
+     * landscape, and the `Runechant` token is landscape on both faces while
+     * being neither played horizontally nor rotated.
      *
      * Asserted as an invariant over the whole index rather than against a
-     * fixture card, so it starts holding the day a corpus sync creates one.
+     * fixture card, which is what makes it keep holding as the corpus moves.
      *
      * THE ROW IS FOUND BY ITS CARD, NOT BY ITS FACE. Selecting it with
      * `faceKey === art.key` and then asserting `faceKey` back is a tautology —

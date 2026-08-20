@@ -6,11 +6,6 @@
   margin-block: 0 var(--of-space-base);
 }
 
-.of-sets__lede {
-  margin-block: 0 var(--of-space-loosest);
-  color: var(--of-color-ink-muted);
-}
-
 /* Hairlines rather than cards, exactly as every other list here. */
 .of-sets {
   margin: 0;
