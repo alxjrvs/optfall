@@ -42,10 +42,17 @@ import { dirname, join } from "node:path";
 import { themeStylesheet } from "optfall-theme";
 
 import { generatedAssets } from "./assets";
+import { canonicalFor } from "./document";
 import { headersFor, renderHeaders, renderRedirects } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
+import {
+  ROBOTS_PATH,
+  renderRobots,
+  renderSitemap,
+  SITEMAP_PATH,
+} from "./sitemap";
 
 const OUT_DIR = new URL("../dist/", import.meta.url).pathname;
 const CONFIG = new URL("./vite.config.ts", import.meta.url).pathname;
@@ -389,6 +396,13 @@ async function main(): Promise<void> {
 
   let count = 0;
   const written = new Map<string, string>();
+  /*
+   * THE SITEMAP IS COLLECTED HERE RATHER THAN BUILT IN A SECOND PASS, because
+   * this loop is the only place that has both the route and the HTML it
+   * produced. Re-resolving the routes afterwards to ask each page for its
+   * canonical would render all 12,776 of them twice.
+   */
+  const sitemapUrls: string[] = [];
 
   for (const registration of routes) {
     for (const resolved of registration.resolve()) {
@@ -407,12 +421,46 @@ async function main(): Promise<void> {
       const html = resolved.render(styles, islandScript);
       assertPageBudget(resolved.route, html);
 
+      /*
+       * A PAGE IS IN THE SITEMAP WHEN IT IS ITS OWN CANONICAL, and the test is
+       * the tag the page actually emitted rather than anything this file
+       * recomputes. 6,437 of these routes are alternate printings that
+       * canonical to their card's default printing; listing them would
+       * contradict, in the sitemap, the thing the `<head>` just said.
+       */
+      if (registration.sitemap) {
+        const canonical = /<link rel="canonical" href="([^"]+)"/.exec(
+          html,
+        )?.[1];
+        if (canonical === canonicalFor(resolved.route)) {
+          sitemapUrls.push(canonical);
+        }
+      }
+
       const target = join(OUT_DIR, outputPath);
       await mkdir(dirname(target), { recursive: true });
       await writeFile(target, html, "utf-8");
       count += 1;
     }
   }
+
+  /*
+   * The sitemap is sorted so the file is stable between builds: the route order
+   * is the registration order, which is a decision about the code rather than
+   * about the URLs, and a diff that reshuffles 12,776 lines because a page moved
+   * in `routes.ts` hides the one line that actually changed.
+   */
+  sitemapUrls.sort();
+  await writeFile(
+    join(OUT_DIR, SITEMAP_PATH),
+    renderSitemap(sitemapUrls),
+    "utf-8",
+  );
+  await writeFile(
+    join(OUT_DIR, ROBOTS_PATH),
+    renderRobots(canonicalFor(`/${SITEMAP_PATH}`).replace(/\/$/, "")),
+    "utf-8",
+  );
 
   // The manifest is how the build talks to itself, not something to publish.
   await rm(join(OUT_DIR, ".vite"), { recursive: true, force: true });
