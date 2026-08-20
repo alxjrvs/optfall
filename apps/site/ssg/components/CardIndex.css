@@ -59,10 +59,45 @@
   padding-block-end: var(--of-space-tight);
 }
 
+/*
+  The announcement is for assistive technology; the same words are printed
+  visibly by `.of-index__count` directly below it, so this one is off-screen
+  rather than duplicated on the page. Sized from `space.hair` rather than
+  collapsed to zero: a zero-area element is skipped by some screen readers.
+
+  THE SAME RULE `.of-cards__announcement` AND `.of-rules__announcement` CARRY.
+  Those two predate this one and still hold the region for their own surfaces,
+  because a live region has to exist before it has something to say and those
+  two render outside this component. This is the copy for the surfaces whose
+  whole output IS this component — today, the set pages.
+*/
+.of-index__announcement {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .of-index__count {
   margin-block: var(--of-space-tight) var(--of-space-base);
   color: var(--of-color-ink-muted);
   font-size: var(--of-type-size-small);
+}
+
+/*
+  THE COUNT IS A FOCUS TARGET AFTER A PAGE TURN, so it needs a ring like any
+  other. `:focus-visible` rather than `:focus`: the element is reached only by
+  script, and a mouse user who clicked "Next" should not be given an outline
+  they did not ask for — the heuristic already knows the difference.
+*/
+.of-index__count:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: var(--of-bevel-width);
 }
 
 /*

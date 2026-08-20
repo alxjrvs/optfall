@@ -778,3 +778,70 @@ describe("the control bar writes the query it is a picture of", () => {
     await act(async () => root.unmount());
   });
 });
+
+/*
+ * PAGING, WHICH UNTIL NOW NOTHING RAN.
+ *
+ * `pagination.ts` is tested exhaustively as arithmetic and `Pagination` is
+ * tested as static markup, but the seam between them — a real click on a real
+ * anchor, and what the PAGE does about it — was covered by nothing. The defect
+ * below was found by reading that gap rather than by a failing test, which is
+ * the argument for closing it here.
+ */
+describe("turning a page moves the reader, not just the rows", () => {
+  /** A query broad enough that there is a second page to go to. */
+  async function askBroad(): Promise<Mounted> {
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
+    await type(field, "type:action");
+    await act(async () => {
+      field.form?.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+    return root;
+  }
+
+  /** The pager's own "Next", as a reader's unmodified left click. */
+  async function clickNext(): Promise<void> {
+    const next = document.querySelector('.of-pages__step[rel="next"]');
+    if (!(next instanceof HTMLAnchorElement)) throw new Error("no next link");
+    await act(async () => {
+      next.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }),
+      );
+    });
+  }
+
+  test("focus lands on the count, not on the pager the reader left", async () => {
+    /*
+     * THE DEFECT THIS IS FOR. `pushState` moves no focus, so before this the
+     * reader who clicked "Next" was scrolled to the top of page 2 with focus
+     * still on an anchor now sitting under page 2's FOOT — and the next Tab
+     * carried on from the end of a page they had not seen the start of.
+     */
+    const root = await askBroad();
+    await clickNext();
+
+    expect(window.location.search).toContain("page=2");
+    const focused = document.activeElement;
+    expect(focused?.className).toContain("of-index__count");
+    /* And it says which slice arrived, which is what makes the move audible
+       rather than merely correct. */
+    expect(focused?.textContent ?? "").toMatch(/\d/);
+
+    await act(async () => root.unmount());
+  });
+
+  test("the count is reachable by script and never by Tab", async () => {
+    /* `tabIndex={-1}` is the whole contract: a reader who never turns a page
+       must not acquire a stop in the tab order for the privilege. */
+    const root = await askBroad();
+
+    const count = document.querySelector(".of-index__count");
+    expect(count?.getAttribute("tabindex")).toBe("-1");
+
+    await act(async () => root.unmount());
+  });
+});

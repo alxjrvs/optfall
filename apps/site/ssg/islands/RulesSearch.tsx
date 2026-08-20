@@ -349,12 +349,27 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
    * handler follows: a query is one navigation however many letters it took,
    * and moving through its pages is a series of them.
    */
+  /** The printed count, which is where focus lands after a page turn. */
+  const countRef = useRef<HTMLParagraphElement>(null);
+
   const goTo = useCallback(
     (nextPage: number, nextSize: PageSize): void => {
       setPage(nextPage);
       setSize(nextSize);
       writeQueryUrl({ mode: "push", query, page: nextPage, size: nextSize });
       window.scrollTo({ top: 0 });
+      /*
+        FOCUS GOES WHERE THE SCROLL WENT, for the reason `CardSearch.goTo`
+        gives at length: `pushState` moves no focus, so the reader ends up
+        reading page 4 with focus still on page 3's pager.
+
+        THIS SURFACE IS THE ONE THE LIVE REGION CANNOT COVER ALONE. Its
+        announcement settles for `SETTLE` ms before it speaks, which is right
+        for a field that re-runs on every keystroke and wrong for a click that
+        already happened — so a page turn is heard here, immediately, from the
+        focus move rather than from the region.
+      */
+      countRef.current?.focus({ preventScroll: true });
     },
     [query],
   );
@@ -498,7 +513,11 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
       ) : asked ? (
         outcome.results.length > 0 ? (
           <>
-            <p className="of-rules__count">{summary}</p>
+            {/* `tabIndex={-1}` for the focus move in `goTo` — reachable by
+                script, never a stop in the tab order. */}
+            <p className="of-rules__count" ref={countRef} tabIndex={-1}>
+              {summary}
+            </p>
             <ol className="of-rules__results">
               {outcome.results.map((result) => (
                 <li className="of-rules__result" key={result.id}>

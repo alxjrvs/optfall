@@ -413,6 +413,27 @@ describe("the ported pages", () => {
     expect(strays).toEqual([]);
   });
 
+  test("a set page carries a live region, so a page turn is audible", () => {
+    /*
+     * THE DEFECT THIS IS FOR, AND IT WAS SILENT IN BOTH SENSES. `/search` and
+     * `/cr` each render their own `role="status"` paragraph; the set pages
+     * never got one. So paging through a set changed four hundred cards and
+     * announced nothing at all — the visible count updated, and a visible
+     * count is not a live region.
+     *
+     * ASSERTED ON THE STATIC HTML, because that is where the failure lived: the
+     * region has to be in the document BEFORE the text changes, or assistive
+     * technology has nothing it was already watching. A region that arrives
+     * with its first message is a region that never announces one.
+     */
+    expect(monarchHtml).toContain('role="status"');
+    expect(monarchHtml).toContain('aria-live="polite"');
+    expect(monarchHtml).toContain("of-index__announcement");
+
+    /* And the count is the focus target the island aims at after a turn. */
+    expect(monarchHtml).toMatch(/class="of-index__count"[^>]*tabindex="-1"/);
+  });
+
   test("a set page without JavaScript still lists every card in the set", () => {
     /*
      * THE PAGER IS A BUTTON, so a reader with scripting off gets the island's
