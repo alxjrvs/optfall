@@ -457,7 +457,7 @@ describe("the ported pages", () => {
      * on the Local Game Store Promos page, identical art, identical name,
      * identical type line, differing in one coloured band and in a qualifier
      * the index deliberately hides. A player calls those three one card, and
-     * `card-search.ts` has collapsed them on exactly that rule since it was
+     * `card-search/` has collapsed them on exactly that rule since it was
      * written; this page was where the two surfaces disagreed.
      *
      * WHAT THE COLLAPSE MAY NOT COST is any version's address, which is the
@@ -534,7 +534,7 @@ describe("the ported pages", () => {
      * card Aurora never published — on the one page whose whole subject is what
      * this set contains. 23 (set, name) groups in this corpus are that shape.
      *
-     * It is the same rule `card-search.ts` states beside its own `partial` flag,
+     * It is the same rule `card-search/` states beside its own `partial` flag,
      * and `set:aur` in the search box already answered `/card/spark-spray-2`.
      */
     const aurora = all.find((resolved) => resolved.route === "/sets/aur");
@@ -2222,7 +2222,7 @@ describe("a fan holds the versions it was handed, once each", () => {
     /*
      * THE HAND HELD A DUPLICATE AND WAS MISSING A CARD, and both came from one
      * cause: the row's picture and the row's link were resolved from different
-     * versions. `card-search.ts` now takes a row's face from the version it
+     * versions. `card-search/` now takes a row's face from the version it
      * opens, so this is that fix seen from the surface it broke — the engine
      * test names the mechanism, this names the symptom.
      *
@@ -2290,7 +2290,7 @@ describe("a fan holds the versions it was handed, once each", () => {
      * A FILTER THAT EXCLUDES A PITCH EXCLUDES IT FROM THE FAN. This component
      * draws the versions it is given and never reaches for a sibling, so a
      * `pitch:1` search cannot be answered with a picture of the blue one — the
-     * same promise `card-search.ts` keeps on its side of the boundary, pinned
+     * same promise `card-search/` keeps on its side of the boundary, pinned
      * here so neither half can start assuming the other does it.
      */
     const faces = dealt({

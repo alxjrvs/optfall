@@ -3,9 +3,14 @@
  *
  * A PORT THAT FORGETS A COMPONENT IS A PORT THAT LOOKS FINISHED. Everything
  * else in this directory tests a component that exists; nothing else tests
- * whether the SET is complete, and "did we do all fourteen" is exactly the
+ * whether the SET is complete, and "did we do all of them" is exactly the
  * question a migration answers wrongly — not by porting one badly, but by
- * stopping at twelve and moving on to the pages.
+ * stopping a few short and moving on to the pages.
+ *
+ * That sentence used to spell the number, twice, and both spellings went stale
+ * as the set grew. In the file whose whole job is guarding the count, which is
+ * the joke CLAUDE.md is making when it says to cite `PRIMITIVES.length` rather
+ * than write a word.
  *
  * IT CHECKS AGAINST `PRIMITIVES`, NOT AGAINST ANOTHER IMPLEMENTATION. This file
  * used to read `src/svelte/index.ts` and assert the two entries matched, and it

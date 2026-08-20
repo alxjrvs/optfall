@@ -78,7 +78,7 @@ export interface CardListProps {
 /**
  * `?display=`, in every spelling the search operator accepts.
  *
- * `card-search.ts` maps `images` onto grid and `rows` onto list, so a reader
+ * `card-search/` maps `images` onto grid and `rows` onto list, so a reader
  * who learned a word on `/search` and typed it here should not find that only
  * one of the site's two card lists understands it.
  *

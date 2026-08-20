@@ -74,7 +74,7 @@ export interface NameIndex {
   readonly size: number;
 }
 
-/** Case- and punctuation-insensitive. Matches `card-search.ts`'s `fold`. */
+/** Case- and punctuation-insensitive. Matches `card-search/`'s `fold`. */
 function fold(text: string): string {
   return (text.toLowerCase().match(/[a-z0-9]+/g) ?? []).join(" ");
 }

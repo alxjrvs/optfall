@@ -73,7 +73,7 @@ import "./search.css";
  */
 /*
  * THE DATES ARE RESOLVED HERE RATHER THAN INSIDE THE ENGINE, because
- * `card-search.ts` ships to the browser through the island and `sets.ts` loads a
+ * `card-search/` ships to the browser through the island and `sets.ts` loads a
  * corpus. The build knows the answer; the client only needs the 1.2 KB of dates
  * the index encodes. See `CardIndexSource`.
  */

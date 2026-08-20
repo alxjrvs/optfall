@@ -71,7 +71,7 @@ import corpus from "../../../../data/cards/cards.json";
 /*
  * MOVED, NOT DELETED — see `printings.ts` for why. Re-exported here because
  * every caller in the app and the tests reaches them through `cards.ts`, and
- * the point of the move was to give ONE importer (`card-search.ts`, which the
+ * the point of the move was to give ONE importer (`card-search/`, which the
  * island bundle pulls in) a path that does not drag the corpus with it. Making
  * everyone else change their import would have been churn for nothing.
  */
@@ -860,10 +860,10 @@ export interface NameGroup {
  * that is deliberate: the plate, its shape and its rationale are the design
  * system's, and nothing on this site asks for it.
  *
- * `card-search.ts` keeps its own copy as `STAT_LABELS` and cannot import this
- * one: a VALUE import from this module drags the 18 MB corpus into the island
- * bundle, which is the failure `printings.ts` was split out to prevent. The two
- * are pinned against each other in `card-search.test.ts` instead.
+ * `card-search/rank.ts` keeps its own copy as `STAT_LABELS` and cannot import
+ * this one: a VALUE import from this module drags the 18 MB corpus into the
+ * island bundle, which is the failure `printings.ts` was split out to prevent.
+ * The two are pinned against each other in `card-search.test.ts` instead.
  */
 export const STAT_ORDER = [
   "Cost",
