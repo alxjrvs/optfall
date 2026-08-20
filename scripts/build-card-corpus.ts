@@ -46,12 +46,21 @@
  * order, only *an* order that is a function of the retrieved bytes, and
  * upstream's is exactly that.
  *
- * WHY TWO FILES. `cards.json` is everything a card page renders. `cards-search.json`
- * is the subset a search index needs — no printings, no images, no artists, no
- * flavour text — and it is a third of the size, so a third-party consumer who
- * wants "every card, its stats and its legality" does not have to download
- * 16,502 printings to get it. Both carry the same envelope, so either one alone
- * says which commit it came from.
+ * ~~WHY TWO FILES.~~ **ONE FILE.** This wrote `cards-search.json` as well — the
+ * subset a search index needs, a third of the size, "so a third-party consumer
+ * who wants every card, its stats and its legality does not have to download
+ * 16,502 printings to get it".
+ *
+ * That consumer never existed, and the file was not reachable by one. Nothing
+ * in the repository read it, `ssg/build.ts` did not copy `data/` into `dist/`,
+ * and the site's `public/` holds fonts and symbols only — so the 4 MB was
+ * available exclusively to somebody who had already cloned the repository, and
+ * therefore already had the 18 MB file it was meant to spare them.
+ *
+ * The argument was sound and the delivery was missing, which is the only reason
+ * it went. If a published data product is wanted, it is a good design: build it
+ * again, serve it from the site or a release, and say so in `docs/SOURCES.md`.
+ * A file nobody can fetch is not a smaller download, it is a bigger repository.
  *
  * WHAT IS DELIBERATELY NOT HERE. No slug, no permalink, no derived legality
  * verdict, no reworded text. Addressing belongs to the site (`apps/site/src/lib`
@@ -92,11 +101,8 @@ const SCHEMA_VERSION = 2;
 /** Where the committed corpus lives, relative to the repository root. */
 const CORPUS_DIRECTORY = "data/cards";
 
-/** The full corpus: everything a card page renders. */
+/** The corpus: everything a card page renders. The only file this writes. */
 const FULL_FILE = "cards.json";
-
-/** The compact corpus: what a search index needs and nothing else. */
-const SEARCH_FILE = "cards-search.json";
 
 /**
  * The upstream, named in `docs/PLAN.md` Phase 2 as "the actively-maintained
@@ -113,7 +119,7 @@ const UPSTREAM_PATH = "json/english/card.json";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
- * The rights notice carried by both files.
+ * The rights notice carried by the corpus.
  *
  * `docs/PLAN.md`, "Required of us" and "MIT code, open data": card names and
  * card text are Legend Story Studios' property, displayed under their
@@ -392,61 +398,6 @@ interface CorpusCard {
   readonly printings: readonly CorpusPrinting[];
 }
 
-/**
- * A card as it appears in the compact search file.
- *
- * The test applied to every field here: **can a query in `docs/DESIGN.md`'s
- * grammar be answered without it?** `pitch:3`, `class:guardian`, `type:attack`,
- * `cost:2` and a text search all land in the fields below; `set:` and `rarity:`
- * land via the two derived ones. What is absent is what only a card *page*
- * needs — printings, images, artists, flavour text, the rules cross-reference —
- * because a search index carrying those is one nobody can afford to download.
- */
-interface SearchCard {
-  readonly unique_id: string;
-  readonly name: string;
-  readonly color: string;
-  readonly pitch: string;
-  readonly cost: string;
-  readonly power: string;
-  readonly defense: string;
-  readonly health: string;
-  readonly intelligence: string;
-  readonly arcane: string;
-  readonly types: readonly string[];
-  readonly traits: readonly string[];
-  readonly card_keywords: readonly string[];
-  readonly type_text: string;
-  /** `functional_text_plain`, verbatim: the search text and the result lede. */
-  readonly text: string;
-  /** Distinct `set_id`s, first-appearance order. Derived, for `set:`. */
-  readonly sets: readonly string[];
-  /** Distinct printing rarities, first-appearance order. Derived, for `rarity:`. */
-  readonly rarities: readonly string[];
-  /**
-   * The legality flags that are **true** for this card, in {@link LEGALITY_FLAGS}
-   * order. Absence means false; the full vocabulary is in the envelope's
-   * `legalityFlags`, so the file explains its own encoding.
-   *
-   * The one place this dataset re-encodes rather than mirrors, and the trade is
-   * measured: written out as seventeen booleans per card, legality was 2.19 MB
-   * of a 6.22 MB file — 35% of a file whose entire reason to exist is being
-   * small enough to hand to a client. About 4.3 flags per card are true, so the
-   * list form costs a quarter of that. It is lossless (a boolean vocabulary with
-   * a fixed key set), it stays line-oriented (a ban shows up as one added line
-   * naming the format), and `cards.json` still carries the explicit object for
-   * anyone who wants every flag spelled out.
-   */
-  readonly flags: readonly string[];
-  /**
-   * Start dates, carried only where upstream has them — the same fields
-   * `cards.json` nests inside `legality`. They stay in the compact file because
-   * they are ~7 KB and they are the seed for `legal:cc@DATE`, which
-   * `docs/DESIGN.md` calls the operator "unavailable anywhere else".
-   */
-  readonly since?: Readonly<Record<string, string>>;
-}
-
 /** Provenance of the exact bytes this corpus was built from. */
 interface CorpusSource {
   /** `the-fab-cube/flesh-and-blood-cards`. */
@@ -506,10 +457,6 @@ interface CorpusEnvelope {
 
 interface CardCorpus extends CorpusEnvelope {
   readonly cards: readonly CorpusCard[];
-}
-
-interface CardSearchCorpus extends CorpusEnvelope {
-  readonly cards: readonly SearchCard[];
 }
 
 /** Something the retrieved file did that this script did not act on. */
@@ -798,63 +745,6 @@ function toCorpusCard(card: JsonRecord, where: string): CorpusCard {
   return copy;
 }
 
-/** Distinct values in first-appearance order — a deterministic derivation. */
-function distinct(values: readonly string[]): readonly string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const value of values) {
-    if (value === "" || seen.has(value)) continue;
-    seen.add(value);
-    out.push(value);
-  }
-  return out;
-}
-
-/**
- * The compact record.
- *
- * `text` is `functional_text_plain` taken **verbatim** from upstream rather than
- * derived by stripping the markers off `functional_text`. Both files therefore
- * carry LSS's text exactly as the upstream publishes it, and neither one
- * contains a string this script composed — which is the shipped-product rule in
- * `docs/PLAN.md` applied to the data layer.
- */
-function toSearchCard(card: JsonRecord, where: string): SearchCard {
-  const printings = records(card, "printings", where);
-  const since: Record<string, string> = {};
-  for (const field of LEGALITY_START_FIELDS) {
-    if (field in card) since[field] = text(card, field, where);
-  }
-  const copy: SearchCard = {
-    unique_id: text(card, "unique_id", where),
-    name: text(card, "name", where),
-    color: text(card, "color", where),
-    pitch: text(card, "pitch", where),
-    cost: text(card, "cost", where),
-    power: text(card, "power", where),
-    defense: text(card, "defense", where),
-    health: text(card, "health", where),
-    intelligence: text(card, "intelligence", where),
-    arcane: text(card, "arcane", where),
-    types: list(card, "types", where),
-    traits: list(card, "traits", where),
-    card_keywords: list(card, "card_keywords", where),
-    type_text: text(card, "type_text", where),
-    text: text(card, "functional_text_plain", where),
-    sets: distinct(
-      printings.map((printing) => text(printing, "set_id", where)),
-    ),
-    rarities: distinct(
-      printings.map((printing) => text(printing, "rarity", where)),
-    ),
-    flags: SEARCH_FLAG_FIELDS.filter(
-      (field) => field in card && flag(card, field, where),
-    ),
-    ...(Object.keys(since).length === 0 ? {} : { since }),
-  };
-  return copy;
-}
-
 /* -------------------------------------------------------------------------- */
 /* Counting, and catching what the trim did not account for                     */
 /* -------------------------------------------------------------------------- */
@@ -1049,7 +939,7 @@ function rawUrl(commit: string): string {
 /* -------------------------------------------------------------------------- */
 
 /** Two-space indent and a trailing newline — POSIX-text and `git diff`-shaped. */
-function serialise(corpus: CardCorpus | CardSearchCorpus): string {
+function serialise(corpus: CardCorpus): string {
   return `${JSON.stringify(corpus, null, 2)}\n`;
 }
 
@@ -1154,12 +1044,6 @@ const cards = upstream.map((card, index) =>
     `card ${String(index)} (${String(card["name"] ?? "unnamed")})`,
   ),
 );
-const searchCards = upstream.map((card, index) =>
-  toSearchCard(
-    card,
-    `card ${String(index)} (${String(card["name"] ?? "unnamed")})`,
-  ),
-);
 
 const counts = countCorpus(cards);
 const warnings = [...unknownFields(upstream), ...duplicateIds(cards)];
@@ -1213,10 +1097,6 @@ if (warnings.length > 0 && !allowWarnings) {
     {
       path: join(outDirectory, FULL_FILE),
       body: serialise({ ...envelope, cards }),
-    },
-    {
-      path: join(outDirectory, SEARCH_FILE),
-      body: serialise({ ...envelope, cards: searchCards }),
     },
   ];
 
