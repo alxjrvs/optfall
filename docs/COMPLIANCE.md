@@ -235,16 +235,24 @@ The disclosure now carries real weight rather than describing a hypothetical, so
 it is worth naming what it rests on. TCGplayer's Partner Guidelines put FTC
 compliance on the partner and require disclosure that is "clear, conspicuous,
 prominent and unambiguous to the average member of your audience". Optfall's
-sits immediately beside the link it describes rather than in the site footer,
-which is the whole reason `buyDisclosure` lives in the same module as `buyHref`.
+sits adjacent to the link it describes rather than in the site footer — beside
+the button where the row is wide enough to seat both, directly under it where it
+is not — which is the whole reason `buyDisclosure` lives in the same module as
+`buyHref`.
 
-**There is one buy link on a card page, and the sentence is in the same row as
-it** — beside the button under the card panel, above the fold. ~~directly under
-it — the button beneath the card face, above the fold.~~ **Overtaken
-2026-08-19**: the button and its disclosure are one flex row, so the sentence
-sits to the right of the button on a wide screen and wraps under it on a narrow
-one. Adjacent either way, which is the property the Partner Guidelines ask
-for. ~~One buy link on the page
+**There is one buy link on a card page, and the sentence shares its row** — to
+the right of the button under the card panel where there is room, wrapped
+directly under that button where there is not, above the fold either way. The
+comment on `.of-card__buy-verify` in `apps/site/ssg/components/CardEntry.css`
+records the widths each arrangement was measured at.
+
+~~There is one buy link on a card page, and the sentence is directly under it —
+the button beneath the card face, above the fold.~~ **Overtaken 2026-08-19**:
+the button and its disclosure became one flex row, so "under" is now only the
+narrow-screen half of the answer. Adjacency is what the Partner Guidelines ask
+for and it holds at every width; "directly under" no longer does.
+
+~~One buy link on the page
 does not have the sentence directly under it — the button beneath the card face,
 which sits above the fold and well above the Buy section. That is deliberate
 rather than an oversight: printing the disclosure twice on one page is not more
