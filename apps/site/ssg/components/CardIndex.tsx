@@ -85,15 +85,14 @@ import "./CardIndex.css";
  */
 export type CardIndexDisplay = "grid" | "list";
 
-/**
- * How much of the corpus one row stands for. The union `unique:` parses into.
- *
- * `names` IS THE DEFAULT AND IT IS THE INTERESTING ONE: Head Jab's red, yellow
- * and blue versions are one row, because that is what a player means by a card.
- * `cards` expands them; `art` expands further, to one row per distinct picture.
- * `card-search/` states the argument at length beside `CardUniqueMode`.
+/*
+ * `CardIndexUnique` IS GONE, AND SO IS THE CONTROL IT TYPED. The bar opened
+ * with a collapse-level select — "Names", "Pitch versions", "Unique art" — and
+ * the two expanded levels are not worth a permanent seat in the sentence every
+ * reader reads. `unique:` itself is untouched: it parses, it collapses, it is
+ * documented at `/syntax`, and it goes back to being what it was before the bar
+ * existed — a typable operator. See `CardUniqueMode` in `card-search/`.
  */
-export type CardIndexUnique = "names" | "cards" | "art";
 
 /**
  * What the list is ordered by, or `relevance` where the reader has not asked.
@@ -293,23 +292,21 @@ export interface CardIndexProps {
   readonly display: CardIndexDisplay;
   readonly onDisplayChange: (display: CardIndexDisplay) => void;
   /**
-   * How much of the corpus one row stands for, and how the list is ordered.
+   * How the list is ordered.
    *
    * OPTIONAL IN PAIRS, AND THAT IS THE WHOLE OF HOW TWO SURFACES SHARE ONE BAR.
    * A control appears when its value AND its handler are supplied, so `/search`
-   * — where all four are terms in a query the reader can also type — gets the
+   * — where all three are terms in a query the reader can also type — gets the
    * full sentence, and a set page gets the one control it can honour. The
    * ORDER of the controls is fixed here rather than composed by the caller: a
    * slot would let two card lists grow two different bars, which is the exact
    * divergence this component exists to end.
    *
-   * WHY THE SET PAGE HAS ONLY `display`. `unique:` collapses pitch versions and
-   * `order:` re-ranks, and both are answered by the QUERY ENGINE — a set page
-   * has no query, it has a set, and its rows are grouped by the build. Offering
-   * a sort it cannot perform would be a control that looks operable and is not.
+   * WHY THE SET PAGE HAS ONLY `display`. `order:` re-ranks, and that is
+   * answered by the QUERY ENGINE — a set page has no query, it has a set, and
+   * its rows are grouped by the build. Offering a sort it cannot perform would
+   * be a control that looks operable and is not.
    */
-  readonly unique?: CardIndexUnique | undefined;
-  readonly onUniqueChange?: ((unique: CardIndexUnique) => void) | undefined;
   readonly order?: CardIndexOrder | undefined;
   readonly onOrderChange?: ((order: CardIndexOrder) => void) | undefined;
   readonly direction?: CardIndexDirection | undefined;
@@ -408,45 +405,25 @@ const VIEWS = [
 ] as const;
 
 /**
- * The other three controls, and what to call each option.
+ * The other two controls, and what to call each option.
  *
  * SAME RULE AS `VIEWS`: every label is a word the operator already accepts, so
- * a reader who learns the bar has learned the grammar. `unique:names`,
- * `order:defence`, `dir:desc` are all typable, and all three appear in
- * `/syntax`.
+ * a reader who learns the bar has learned the grammar. `order:defence` and
+ * `dir:desc` are both typable, and both appear in `/syntax`.
  *
  * "RELEVANCE" IS THE ONE LABEL THAT IS NOT AN OPERAND, because the thing it
  * names is the ABSENCE of one — a query with no `order:` is ranked by how well
  * each card matched, which is a real ordering and the default. Choosing it
  * removes the term rather than writing `order:relevance`, which would not parse.
  */
-/**
- * THESE ARE PHRASES RATHER THAN BARE NOUNS, AND THAT IS THE WHOLE FIX.
- *
- * They read "Names", "Cards" and "Art", which is the operand and nothing else —
- * and a bare noun cannot be relied on to survive the sentence it is dropped
- * into. "Art as Rows" is not a sentence. "Cards as Names" does not say whether
- * "Names" is the unit or the rendering. Both were legible only to somebody who
- * already knew which control was which.
- *
- * The reference solves this and it is not luck: Scryfall's list is "Cards",
- * "All prints", "Unique art" — two of the three are phrases, chosen so that
- * every combination with its display list still parses as English, and no word
- * appears on both axes. "Pitch versions" is our "All prints": what
- * `unique:cards` actually expands a row into here is the pitch versions of a
- * name, which is the same relationship Scryfall's printings have to a card and
- * is worth saying in the label rather than leaving to `/syntax`.
- *
- * "Names" KEEPS ITS BARE NOUN because it is the one that already worked in
- * every position — "Names as Grid", "Names as List" — and because it is the
- * default, so it is the phrase most readers will see and the one with least to
- * gain from being longer.
+/*
+ * `UNIQUES` IS GONE WITH THE CONTROL IT LABELLED, and the labels it took a
+ * paragraph to justify — "Names", "Pitch versions", "Unique art" — went with
+ * it. That paragraph is worth one line of summary rather than deletion: the
+ * phrases existed so that every combination with the view list still parsed as
+ * English, since "Art as Rows" is not a sentence. If the collapse level ever
+ * comes back to the bar, it comes back as phrases, not as bare nouns.
  */
-const UNIQUES = [
-  ["names", "Names"],
-  ["cards", "Pitch versions"],
-  ["art", "Unique art"],
-] as const;
 
 const ORDERS = [
   ["relevance", "Relevance"],
@@ -866,8 +843,6 @@ export function CardIndex({
   entries,
   display,
   onDisplayChange,
-  unique,
-  onUniqueChange,
   order,
   onOrderChange,
   direction,
@@ -889,15 +864,15 @@ export function CardIndex({
         at the far right of a sentence about what you are looking at, and on a
         narrow viewport the flex wrap dropped it BELOW that sentence, moving the
         page's only piece of chrome depending on the window width. Ordering
-        controls did not exist on screen at all: `order:`, `dir:` and `unique:`
-        were typable operators and nothing else, so a reader who did not read
+        controls did not exist on screen at all: `order:` and `dir:` were
+        typable operators and nothing else, so a reader who did not read
         `/syntax` could not sort a result set.
 
         A SENTENCE RATHER THAN A TOOLBAR, which is the reference's shape and the
-        right one: these four values are not independent switches, they compose
-        into one statement about the list — "Names as Images sorted by Cost,
-        Descending" — and reading them in a row is how you check you asked for
-        what you meant.
+        right one: these three values are not independent switches, they compose
+        into one statement about the list — "Images sorted by Cost, Descending"
+        — and reading them in a row is how you check you asked for what you
+        meant.
 
         THE ORDER IS FIXED HERE AND THE CONTROLS ARE OPTIONAL. A caller supplies
         the pairs it can honour; it does not get to arrange them. See the props.
@@ -908,19 +883,13 @@ export function CardIndex({
       */}
       {interactive ? (
         <div className="of-index__controls">
-          {unique !== undefined && onUniqueChange !== undefined ? (
-            <>
-              <Choice
-                id={`${controlName}-unique`}
-                label="One row per"
-                value={unique}
-                options={UNIQUES}
-                onChange={onUniqueChange}
-              />
-              <span className="of-index__joiner">as</span>
-            </>
-          ) : null}
-
+          {/*
+            THE SENTENCE OPENS ON THE VIEW NOW. It used to open on the collapse
+            level — "Names as Grid sorted by Released" — and the "as" joiner
+            existed to carry that first clause into this one. Both are gone with
+            the control, so the bar reads "Grid sorted by Released", which is
+            the shape a set page's bar has always had.
+          */}
           <Choice
             id={`${controlName}-display`}
             label="Show cards as"

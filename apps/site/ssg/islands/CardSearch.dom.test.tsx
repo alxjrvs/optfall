@@ -573,10 +573,10 @@ describe("the island drives the field the shell renders", () => {
 /**
  * THE BAR AND THE BOX SAY THE SAME THING, WHICH IS THE WHOLE CONTRACT.
  *
- * `unique:`, `display:`, `order:` and `dir:` are query TERMS, so a control that
- * changed the list without rewriting the query would leave the reader looking at
- * one answer and copying a link to another. `show()` has been guarded against
- * that since it was the only control; there are four now, and they share one
+ * `display:`, `order:` and `dir:` are query TERMS, so a control that changed
+ * the list without rewriting the query would leave the reader looking at one
+ * answer and copying a link to another. `show()` has been guarded against that
+ * since it was the only control; there are three now, and they share one
  * rewriter precisely so they cannot drift apart.
  *
  * DRIVEN THROUGH THE `<select>`s RATHER THAN THROUGH THE HANDLERS, because the
@@ -656,19 +656,35 @@ describe("the control bar writes the query it is a picture of", () => {
     await act(async () => root.unmount());
   });
 
-  test("the collapse level is a term too, and it changes the rows", async () => {
+  test("the collapse level is typed, not clicked", async () => {
     /*
-     * `unique:` IS THE ONE CONTROL THAT CHANGES HOW MANY ROWS THERE ARE, which
-     * is why the count is asserted beside the query: a bar that wrote the term
-     * without re-running the search would look right and answer the old
-     * question. A name is one row; its pitch versions are several.
+     * THIS USED TO DRIVE A `<select>`. The bar opened with a collapse-level
+     * control — "Names", "Pitch versions", "Unique art" — and the test chose
+     * `cards` from it and asserted both the query and the row count.
+     *
+     * THE OPERATOR IS WHAT SURVIVED, so that is what is asserted: typing
+     * `unique:cards` still expands a name into its pitch versions. The half of
+     * the old assertion worth keeping is the ROW COUNT, because that is the
+     * thing a control could have written a term without actually doing — and it
+     * is no less worth checking now that the term arrives from the box.
+     *
+     * THE ABSENCE OF THE CONTROL IS ASSERTED TOO. A bar that grew it back
+     * silently would pass every other test in this file.
      */
     const root = await ask("head jab");
     const collapsed = document.querySelectorAll(".of-index__cell").length;
     expect(collapsed).toBeGreaterThan(0);
+    expect(document.getElementById("display-unique")).toBeNull();
 
-    await choose("display-unique", "cards");
-    expect(box()).toBe("head jab unique:cards");
+    const field = document.getElementById(HEADER_FIELD_ID);
+    if (!(field instanceof HTMLInputElement)) throw new Error("no field");
+    await type(field, "head jab unique:cards");
+    await act(async () => {
+      field.form?.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true }),
+      );
+    });
+
     expect(document.querySelectorAll(".of-index__cell").length).toBeGreaterThan(
       collapsed,
     );
