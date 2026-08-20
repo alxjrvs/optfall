@@ -79,6 +79,12 @@ const FIELD_RANK: Readonly<Record<CardMatchField, number>> = {
  */
 export interface CardResultVersion {
   readonly pitch: PitchValue;
+  /**
+   * THE PAGE THE FACE BESIDE IT IS ON, not the card's default printing.
+   *
+   * `focusPrinting` resolves the two in one call, so a fanned card cannot show
+   * one set's art and open another's. See {@link CardResultVersion.faceKey}.
+   */
   readonly href: string;
   readonly label: string;
   /**
@@ -89,7 +95,9 @@ export interface CardResultVersion {
    * three times in three colours would be a decoration, and this is a choice
    * between cards.
    *
-   * FROM THE SAME PRINT RUN AS THE ROW'S OWN FACE, RESOLVED BY `focusFace`. A
+   * FROM THE SAME PRINT RUN AS THE ROW'S OWN FACE, RESOLVED BY
+   * `focusPrinting` — which resolves its ADDRESS in the same call, so the two
+   * cannot come from different printings. A
    * fan is a comparison between siblings, so the one axis it must not vary on
    * is the one nobody asked about: under `set:MPW` all three Hit and Runs wear
    * MPW's frame, and the reader compares the pitch stones rather than wondering
@@ -334,25 +342,30 @@ function nameDefaultHref(
   return first?.href ?? fallback;
 }
 
+/** A picture and the page it is a picture OF. Never resolved apart. */
+interface ShownPrinting {
+  readonly key: string | null;
+  readonly landscape: boolean;
+  readonly href: string;
+}
+
 /**
- * The card's own default face — its first printing that publishes art.
+ * The card's own default printing — its first one that publishes art.
  *
- * Split out from {@link focusFace} so the two callers that must NOT take the
- * focus set's art can say so by calling this instead of passing a `null` focus
- * they do not have.
+ * Split out from {@link focusPrinting} so the two callers that must NOT take
+ * the focus set's art can say so by calling this instead of passing a `null`
+ * focus they do not have.
  */
-function ownFace(
-  index: CardIndex,
-  ordinal: number,
-): { key: string | null; landscape: boolean } {
+function ownFace(index: CardIndex, ordinal: number): ShownPrinting {
   return {
     key: index.faceKeys[ordinal] ?? null,
     landscape: index.faceLandscape[ordinal] === true,
+    href: defaultHrefOf(index, ordinal),
   };
 }
 
 /**
- * THE FACE THE QUERY ASKED FOR, WHICH IS NOT ALWAYS THE CARD'S OWN.
+ * THE PRINTING THE QUERY ASKED FOR, WHICH IS NOT ALWAYS THE CARD'S OWN.
  *
  * `faceKeys` holds the card's default face — its first printing that publishes
  * art, in corpus order. That is the right picture for a bare name search and
@@ -360,6 +373,17 @@ function ownFace(
  * reprinted in Mistveil showed the Rathe art under a filter naming Mistveil,
  * which is a true picture of a false claim. The reader asked what this set
  * looks like.
+ *
+ * AND THE ADDRESS GOES WITH THE PICTURE, WHICH IS THE HALF THIS FUNCTION USED
+ * TO WITHHOLD. It returned a face only, and every doc block around it said so
+ * deliberately — "`setFocus` changes which PICTURE a row carries and never
+ * where it points", because a row stood for the card rather than for the
+ * printing. What that produced is a grid where the cell shows MST095 and the
+ * click lands on `/card/eng/025/…`: another set, another collector number, and
+ * another picture than the one the reader clicked. A card image is a link to
+ * the card in the image. So the rule is now the same one the set pages hold
+ * (`printingForSet` in `set.page.tsx`) and the same one the version strip has
+ * held since `addressInSet`: the reader who named a set stays in it.
  *
  * IT IS A FUNCTION, AND IT USED TO BE AN EXPRESSION INSIDE `toResult`. That is
  * the whole of the fix for a fan that dealt three printings from three
@@ -370,33 +394,38 @@ function ownFace(
  * named and two from a set they did not. The versions are the same query's
  * answer as the row is; they get the same rule, from the same code.
  *
- * THE ORIENTATION COMES BACK WITH THE FACE, and the two are resolved in one
- * expression so they cannot come from different printings. Splitting them is
- * exactly what went wrong on an earlier pass: the key was swapped to the focus
- * set's art while `faceLandscape` went on being read from
+ * THE ORIENTATION AND THE ADDRESS COME BACK WITH THE FACE, and the three are
+ * resolved in one expression so they cannot come from different printings.
+ * Splitting them is exactly what went wrong on an earlier pass: the key was
+ * swapped to the focus set's art while `faceLandscape` went on being read from
  * `index.faceLandscape[ordinal]`, which describes the DEFAULT face. A rotated
  * alternate would then have been drawn inside a portrait box — visible at a
- * glance, and only on the printings this feature exists to show.
+ * glance, and only on the printings this feature exists to show. The href had
+ * the same shape of fault and was harder to see, because a wrong link looks
+ * right until it is followed.
  *
  * The order is deliberate:
  *
  * 1. The default face, WHEN IT COMES FROM THE FOCUS SET. This is the common
  *    case and it costs one string comparison.
  * 2. An alternate art from the focus set, if the card has one.
- * 3. The default face, unchanged. A card can match `set:MST` on a printing
+ * 3. The default printing, unchanged. A card can match `set:MST` on a printing
  *    whose art is shared with an earlier set — Regular, Rainbow Foil and Cold
  *    Foil in one set are three rows and one image, and a straight reprint
  *    carries no new art at all — so "no art from this set" is a real answer
  *    rather than a lookup failure, and showing the card's own face is better
  *    than showing a placeholder. It is also the one case where a fan can still
  *    hold two sets' pictures, and it is honest: each card is wearing the art
- *    its matching printing actually carries.
+ *    its matching printing actually carries, and opening the page that art is
+ *    on. The site has no address for "this set's copy of a picture printed
+ *    elsewhere" — `facesOf` dedupes by image, so those rows are one page — and
+ *    inventing one here would be minting a URL the router does not emit.
  */
-function focusFace(
+function focusPrinting(
   index: CardIndex,
   ordinal: number,
   setFocus: string | null,
-): { key: string | null; landscape: boolean } {
+): ShownPrinting {
   const own = ownFace(index, ordinal);
   if (setFocus === null || index.faceSets[ordinal] === setFocus) return own;
   const fromSet = (index.arts[ordinal] ?? []).find(
@@ -404,7 +433,19 @@ function focusFace(
   );
   return fromSet === undefined
     ? own
-    : { key: fromSet.key, landscape: fromSet.landscape };
+    : {
+        key: fromSet.key,
+        landscape: fromSet.landscape,
+        /* THE ROUTER'S OWN ADDRESS FOR THIS ART. Every entry in `arts` is a
+           page `CARD_ROUTES` emits — `wire.ts` says so — and `hrefForPrinting`
+           is the function that emitted it, so this is the same URL rather than
+           a second spelling of it. */
+        href: hrefForPrinting(
+          fromSet.setCode,
+          fromSet.number,
+          index.slugs[ordinal] ?? "",
+        ),
+      };
 }
 
 function toResult(
@@ -419,9 +460,11 @@ function toResult(
   /**
    * The one set the query restricted to, lowercased, or `null`.
    *
-   * See {@link CardOutcome.setFocus}. It changes only which PICTURE the row
-   * carries — never its label, its link or its rank — because the row still
-   * stands for the card rather than for the printing.
+   * See {@link CardOutcome.setFocus}. It changes which PRINTING the row is
+   * shown by — its picture AND its link, resolved together by `focusPrinting`
+   * — and never its label or its rank. The row still stands for the card; what
+   * changed is that the copy of the card it stands for is the one the reader
+   * named, so the door under the picture opens on the picture.
    */
   setFocus: string | null = null,
 ): CardResult {
@@ -472,9 +515,9 @@ function toResult(
   const artStem = art === undefined ? "" : art.key.replace(/\.webp$/, "");
 
   /**
-   * The picture this row carries. `focusFace` states the rule; the two guards
-   * ahead of it are the two rows that are already printings and must keep the
-   * art they are standing for.
+   * The picture this row carries. `focusPrinting` states the rule; the two
+   * guards ahead of it are the two rows that are already printings and must
+   * keep the art they are standing for.
    *
    * 1. An ART ROW already IS a printing, so it keeps its own face. `unique:art`
    *    expands a card into its arts; overriding one of them with the focus
@@ -488,21 +531,44 @@ function toResult(
    *    adjacent, which is the duplication the mode exists to avoid. The guard
    *    above it covers only the rows the expansion ADDED, not the one it was
    *    expanding.
+   *
+   * BOTH GUARDS NOW COVER THE ADDRESS AS WELL, since `ownPrinting` decides it.
+   * Case 2 is where that mattered: the row kept its own face while its href
+   * took the focus set's printing, so the default-art row pointed at the art
+   * row beneath it.
    */
   /**
    * WHERE THE ROW GOES, RESOLVED BEFORE ITS PICTURE IS, because the picture is
    * a fact about the destination. See {@link shown}.
+   *
+   * THE FOCUS SET'S PRINTING, NOT THE CARD'S DEFAULT ONE. This read
+   * `defaultHrefOf` on both of the branches below that are not art rows, and a
+   * `set:MST` grid therefore drew Mistveil faces over links to whichever set
+   * printed each card first. `focusPrinting` resolves the two together now, so
+   * the row cannot show one printing and open another; the collapsed branch
+   * gets it for free, because `matchedVersions` were resolved by the same
+   * function in the collapse loop.
    */
+  const ownPrinting =
+    mode === "art"
+      ? /* IN `unique:art` THE ROW BEING EXPANDED KEEPS ITS OWN ADDRESS, for
+           exactly the reason it keeps its own face two guards below: it is the
+           DEFAULT ART row, and letting it take the focus set's printing would
+           point it at the art row rendered directly beneath it. Measured while
+           writing this: `set:mon unique:art` had Writhing Beast Hulk's LEV016
+           row opening `/card/mon/129`, which is the MON129 row under it. */
+        ownFace(index, ordinal)
+      : focusPrinting(index, ordinal, setFocus);
   const href =
     art !== undefined
       ? hrefForPrinting(art.setCode, art.number, slug)
       : collapsed && !partial
-        ? nameDefaultHref(matchedVersions, defaultHrefOf(index, ordinal))
-        : defaultHrefOf(index, ordinal);
+        ? nameDefaultHref(matchedVersions, ownPrinting.href)
+        : ownPrinting.href;
 
   const shown = (() => {
     if (art !== undefined) return { key: art.key, landscape: art.landscape };
-    if (mode === "art") return ownFace(index, ordinal);
+    if (mode === "art") return ownPrinting;
 
     /**
      * A ROW WEARS THE FACE OF THE CARD IT OPENS, WHICH IS NOT ALWAYS `ordinal`.
@@ -523,16 +589,20 @@ function toResult(
      * a fan of three reads as exactly the rendering fault it is.
      *
      * Taken from the version rather than re-resolved from its ordinal because
-     * the versions have already been through `focusFace` — resolving it twice
-     * is how the row and the fan came to disagree in the first place.
+     * the versions have already been through `focusPrinting` — resolving it
+     * twice is how the row and the fan came to disagree in the first place.
+     *
+     * MATCHED BY ADDRESS, WHICH STILL HOLDS NOW THE ADDRESSES ARE THIS SET'S:
+     * the row's href and the versions' both come from `focusPrinting` under the
+     * same `setFocus`, so the two spellings of one printing are one string.
      *
      * The fallback is not reachable from either caller — a collapsed row's
      * href is always one of its own versions' — and it is the honest answer if
-     * one ever stops being: the row's own card, by the same rule.
+     * one ever stops being: the row's own printing, by the same rule.
      */
     const opened = matchedVersions.find((version) => version.href === href);
     return opened === undefined
-      ? focusFace(index, ordinal, setFocus)
+      ? ownPrinting
       : { key: opened.faceKey, landscape: opened.faceLandscape };
   })();
 
@@ -979,7 +1049,8 @@ export function searchCards(
   for (const row of ranked) {
     const name = index.nameSlugs[row.ordinal] ?? index.slugs[row.ordinal] ?? "";
     /*
-      THE SAME PRINTING RULE THE ROW ITSELF GETS — `focusFace`, not `faceKeys`.
+      THE SAME PRINTING RULE THE ROW ITSELF GETS — `focusPrinting`, not
+      `faceKeys`.
 
       This read `faceKeys` directly, and carried a comment defending it: a
       fanned version is a link to a CARD, so let it wear that card's default
@@ -996,17 +1067,19 @@ export function searchCards(
       is already answering the printing question — that is what `setFocus` IS —
       and the versions were the only part of the answer not hearing it.
     */
-    const versionFace = focusFace(index, row.ordinal, setFocus);
+    const versionPrinting = focusPrinting(index, row.ordinal, setFocus);
     const version: CardResultVersion = {
       pitch: index.pitches[row.ordinal] ?? 0,
-      /* THE CARD'S OWN PAGE, STILL. `setFocus` changes which picture a row
-         carries and never where it points — the rule `toResult` states for the
-         row's own `href`, applied to the versions for the same reason. A fanned
-         card is a door to a CARD, whichever printing's art is on the door. */
-      href: defaultHrefOf(index, row.ordinal),
+      /* THE PAGE THE FACE ON IT IS FROM. This read `defaultHrefOf` and said so
+         at length — "a fanned card is a door to a CARD, whichever printing's
+         art is on the door" — which made every card in a `set:MPW` fan a door
+         painted with one set's art and opening onto another's. Under
+         `setFocus` a fanned face IS a printing; the door goes where the paint
+         says. */
+      href: versionPrinting.href,
       label: index.labels[row.ordinal] ?? "",
-      faceKey: versionFace.key,
-      faceLandscape: versionFace.landscape,
+      faceKey: versionPrinting.key,
+      faceLandscape: versionPrinting.landscape,
     };
     const versions = matchedByName.get(name);
     if (versions) versions.push(version);
@@ -1059,12 +1132,13 @@ export function searchCards(
     display,
     results: rows.slice(offset, offset + limit).map((row) => {
       const name = nameOfRow(row.ordinal);
-      /* The face for the ONE version a non-collapsed row stands for; see where
-         it is used, two lines down, for why the mode decides it. */
-      const soloFace =
+      /* The printing the ONE version a non-collapsed row stands for is shown
+         by; see where it is used, two lines down, for why the mode decides
+         it. */
+      const soloPrinting =
         unique === "art"
           ? ownFace(index, row.ordinal)
-          : focusFace(index, row.ordinal, setFocus);
+          : focusPrinting(index, row.ordinal, setFocus);
       const matched =
         unique === "names"
           ? (matchedByName.get(name) ?? []).toSorted(
@@ -1073,27 +1147,27 @@ export function searchCards(
           : [
               {
                 pitch: index.pitches[row.ordinal] ?? 0,
-                /* ITS OWN PAGE, NEVER THE ART ROW'S PRINTING URL. In
-                   `unique:art` the row's `href` is one picture of the card;
-                   the mark beside it stands for the CARD's pitch, so it points
-                   where the pitch is a fact — the card's own default
-                   printing. */
-                href: defaultHrefOf(index, row.ordinal),
-                label: index.labels[row.ordinal] ?? "",
-                /* IN `unique:art`, THE CARD'S OWN FACE, FOR THE SAME REASON THE
-                   HREF IS ITS OWN PAGE: such a row is one picture of the card
-                   and the mark beside it stands for the card, so it wears the
-                   default art rather than the alternate this row happens to be
-                   showing.
+                /* THE PRINTING THE SOLE VERSION IS SHOWN BY, WHICH IS WHERE ITS
+                   FACE AND ITS MARK BOTH POINT.
+
+                   IN `unique:art` THAT IS THE CARD'S OWN PAGE, NEVER THE ART
+                   ROW'S PRINTING URL: the row's `href` is one picture of the
+                   card, while the mark beside it stands for the CARD's pitch,
+                   so it points where the pitch is a fact — the card's own
+                   default printing. `ownFace` answers exactly that.
 
                    IN `unique:cards` IT IS THE FOCUS SET'S, and that difference
                    is load-bearing rather than tidiness. The row and its sole
                    version are the same card at the same address, and `toResult`
-                   now takes a row's picture FROM the version it opens — so
-                   reading the default face here would have quietly undone the
-                   set-focus swap on every `set:X unique:cards` row. */
-                faceKey: soloFace.key,
-                faceLandscape: soloFace.landscape,
+                   takes a row's picture FROM the version it opens — so reading
+                   the default printing here would have quietly undone the
+                   set-focus swap on every `set:X unique:cards` row, in the
+                   picture before, and in the address now that the two travel
+                   together. */
+                href: soloPrinting.href,
+                label: index.labels[row.ordinal] ?? "",
+                faceKey: soloPrinting.key,
+                faceLandscape: soloPrinting.landscape,
               },
             ];
       const versions =
