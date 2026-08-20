@@ -482,6 +482,51 @@ describe("Pagination", () => {
     expect(last).not.toContain('rel="next"');
   });
 
+  test("First and Last are drawn, and spent at the end they point at", () => {
+    /*
+     * THE REFERENCE'S CONTROL SET. Scryfall's pager is First / Previous /
+     * Next / Last with no numbers in it at all; this one keeps its numbers and
+     * gains the two words, so "take me to the end" is answerable without
+     * reading a number to find out which end it is.
+     *
+     * SPENT AT THEIR OWN END, WHICH IS THE HALF WORTH ASSERTING. A "First" that
+     * is still a link on page one is a control that reloads the page to do
+     * nothing, and the reference disables both of its backward steps there.
+     */
+    const first = renderToStaticMarkup(<Pagination {...props} page={1} />);
+    expect(first).toContain("First");
+    expect(first).toContain("Last");
+    /* Both backward steps are spent together on page one. */
+    expect(first.match(/of-pages__step--spent/g)).toHaveLength(2);
+    /* And Last still goes somewhere, which is the point of having it. */
+    expect(first).toContain('href="/search?q=attack&amp;page=12"');
+
+    const last = renderToStaticMarkup(<Pagination {...props} page={12} />);
+    expect(last.match(/of-pages__step--spent/g)).toHaveLength(2);
+    expect(last).toContain('href="/search?q=attack&amp;page=1"');
+  });
+
+  test("the forward step says how far it goes, and the backward one does not", () => {
+    /*
+     * "Next 60" is the reference's wording. It is more useful here than there,
+     * because there the number is always 60 and here the reader can change it —
+     * so the control that spends the size also states it.
+     *
+     * ASSERTED AT TWO SIZES, because a label that happened to match the default
+     * would pass while being a constant.
+     */
+    const sixty = renderToStaticMarkup(<Pagination {...props} size={60} />);
+    expect(sixty).toContain("Next 60");
+
+    const small = renderToStaticMarkup(<Pagination {...props} size={30} />);
+    expect(small).toContain("Next 30");
+
+    /* The asymmetry is the reference's too: counting rows already read is not
+       a thing anybody wants to know. */
+    expect(small).toContain(">Previous<");
+    expect(small).not.toContain("Previous 30");
+  });
+
   test("the numbered run is dropped when there is one page, and the sizes are not", () => {
     /*
      * The rows-per-page choice is what makes a one-page answer honest: it is

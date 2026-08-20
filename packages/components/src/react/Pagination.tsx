@@ -27,7 +27,16 @@
  * page, and the control renders the word anyway as an inert `<span>`. Omitting
  * it would move every other control sideways at the two moments a reader is
  * most likely to be aiming at one — the first click into paging, and the last
- * click out of it.
+ * click out of it. Measured on the reference and it does the same: Scryfall's
+ * First and Previous are `<span class="button-n disabled">` on its first page
+ * and `<a>` on its second, so this was never the divergence it looked like.
+ *
+ * THERE ARE FOUR STEPS, AND THAT IS THE REFERENCE'S CONTROL SET. First,
+ * Previous, Next, Last — Scryfall's whole pager, which carries no page numbers
+ * at all. This one keeps its numbers and takes the words as well, so the two
+ * ways of asking for the end are both available: the number says WHICH page it
+ * is, the word just goes there. That is the one place the two shapes are
+ * deliberately not the same, and it is a superset rather than a disagreement.
  *
  * NOTHING HERE KNOWS WHAT IS BEING PAGED. The noun in the range line arrives as
  * {@link PaginationProps.unit}, the counts on offer arrive as
@@ -104,10 +113,22 @@ export const PAGE_GAP = "gap" as const;
  * sorted list — the cheapest card, the last set alphabetically — and a control
  * that only offers the neighbours answers it with an unknown number of clicks.
  *
+ * "JUMP TO THE END" NOW HAS TWO ANSWERS, and this is still one of them. The
+ * pager gained First and Last as words, which reach the ends without reading a
+ * number to find out where they are; drawing the numbers as well is what says
+ * WHICH page the end is, and that is a different question from how to get
+ * there. Neither makes the other redundant.
+ *
  * THE WINDOW AROUND THE CURRENT PAGE IS FIXED WIDTH, so the control does not
  * grow as the reader walks into the middle of a long answer. `span` counts
- * pages on EACH side; the default of two gives a run of five, which is the
- * widest that still fits beside "Previous" and "Next" on a narrow screen.
+ * pages on EACH side; the default of two gives a run of five.
+ *
+ * ~~Which is the widest that still fits beside "Previous" and "Next" on a
+ * narrow screen.~~ THAT BUDGET IS GONE: there are four steps beside the run
+ * now, not two, and "Next 60" is wider than "Next". The row is not sized to fit
+ * on one line at 320px any more and is not meant to be — `.of-pages__list` is
+ * `flex-wrap: wrap`, so the overflow becomes a second line rather than a
+ * horizontal scrollbar, which is the constraint that actually has to hold.
  *
  * A GAP IS NEVER DRAWN OVER A SINGLE PAGE. `1 … 3 4 5` spends an ellipsis to
  * hide page 2, which is both longer than showing it and a worse answer — so a
@@ -183,6 +204,54 @@ export function Pagination({
     take();
   };
 
+  /**
+   * One of the four steps — First, Previous, Next, Last — as a link or as an
+   * inert word.
+   *
+   * A FUNCTION RATHER THAN FOUR COPIES, and it arrived when the count went from
+   * two to four. The four differ in three values and agreed on everything else,
+   * which is four chances for one of them to forget the modified-click guard.
+   *
+   * `spent` IS PASSED RATHER THAN DERIVED. It is a different question for each
+   * step — First is spent on page one, Last on the last, Previous and Next at
+   * either end — and a single expression clever enough to answer all four would
+   * be one nobody could check by reading.
+   */
+  const step = (
+    to: number,
+    text: string,
+    spent: boolean,
+    options: { readonly rel?: "prev" | "next"; readonly name?: string } = {},
+  ) =>
+    spent ? (
+      /* Inert rather than absent — see the note at the top about the control
+         shifting under the cursor at the two moments it is most likely to be
+         aimed at. The reference does the same: on its first page, First and
+         Previous are disabled spans rather than gaps in the row. */
+      <span className="of-pages__step of-pages__step--spent">{text}</span>
+    ) : (
+      <a
+        aria-label={options.name ?? undefined}
+        className="of-pages__step"
+        href={href(to)}
+        rel={options.rel ?? undefined}
+        onClick={(event) =>
+          onNavigate && intercept(event, () => onNavigate(to))
+        }
+      >
+        {text}
+      </a>
+    );
+
+  /**
+   * "Next 60", or plain "Next" where the step has no fixed length.
+   *
+   * `"all"` cannot reach this — one page means no steps are drawn — but it is
+   * spelled rather than asserted, because a size union that grows a second
+   * non-numeric member should not silently print "Next all".
+   */
+  const nextText = size === "all" ? "Next" : `Next ${sizeLabel(size)}`;
+
   /** The numbered run, computed once so a gap can be keyed by what follows it. */
   const run = pageWindow(page, pages);
   const count = total.toLocaleString("en-GB");
@@ -209,26 +278,30 @@ export function Pagination({
 
       {pages > 1 ? (
         <ol className="of-pages__list">
+          {/*
+            FIRST AND LAST ARE THE REFERENCE'S ANSWER TO "TAKE ME TO THE END",
+            and they are why the numbered run no longer has to be one.
+
+            The pager was built without them because `pageWindow` always draws
+            page 1 and the last page, which answers the same question by a
+            different route — see its note. Both routes are worth having: the
+            number tells you WHICH page the end is, and the word gets you there
+            without reading a number to find out. The reference offers only the
+            words; this offers both, which is the one place the two shapes are
+            deliberately not the same.
+
+            A WORD RATHER THAN THE REFERENCE'S CHEVRON. Its First and Last are
+            icon-only with a visually-hidden label; every control in this pager
+            is a word, and introducing the site's first icon-only button here
+            would be a new primitive — seven files and a regenerated design
+            system — bought to make one row look more like somebody else's.
+          */}
           <li className="of-pages__item">
-            {page > 1 ? (
-              <a
-                className="of-pages__step"
-                href={href(page - 1)}
-                rel="prev"
-                onClick={(event) =>
-                  onNavigate && intercept(event, () => onNavigate(page - 1))
-                }
-              >
-                Previous
-              </a>
-            ) : (
-              /* Inert rather than absent — see the note at the top about the
-                 control shifting under the cursor at the two moments it is most
-                 likely to be aimed at. */
-              <span className="of-pages__step of-pages__step--spent">
-                Previous
-              </span>
-            )}
+            {step(1, "First", page <= 1, { name: "First page" })}
+          </li>
+
+          <li className="of-pages__item">
+            {step(page - 1, "Previous", page <= 1, { rel: "prev" })}
           </li>
 
           {run.map((entry, at) =>
@@ -289,21 +362,29 @@ export function Pagination({
             ),
           )}
 
+          {/*
+            "NEXT 60" RATHER THAN "NEXT", WHICH IS THE REFERENCE'S WORDING AND
+            A BETTER ONE. The step says how far it goes, so the size in force is
+            legible from the control that spends it rather than only from the
+            row of sizes below — and here it is more useful than at the
+            reference, because there the number is always 60 and here the reader
+            can change it.
+
+            THE ASYMMETRY IS COPIED DELIBERATELY: the reference numbers Next and
+            leaves Previous bare, and so does this. "Previous 60" would be
+            counting rows already read, which is not a thing anybody wants to
+            know, and it reads as though it moved a different distance.
+
+            UNDER `"all"` NEITHER IS DRAWN, so there is no case where this
+            promises a next 60 that does not exist: `pages` is 1 and the whole
+            list is skipped.
+          */}
           <li className="of-pages__item">
-            {page < pages ? (
-              <a
-                className="of-pages__step"
-                href={href(page + 1)}
-                rel="next"
-                onClick={(event) =>
-                  onNavigate && intercept(event, () => onNavigate(page + 1))
-                }
-              >
-                Next
-              </a>
-            ) : (
-              <span className="of-pages__step of-pages__step--spent">Next</span>
-            )}
+            {step(page + 1, nextText, page >= pages, { rel: "next" })}
+          </li>
+
+          <li className="of-pages__item">
+            {step(pages, "Last", page >= pages, { name: "Last page" })}
           </li>
         </ol>
       ) : null}
