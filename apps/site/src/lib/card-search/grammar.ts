@@ -344,6 +344,40 @@ const DISPLAY_MODES: Readonly<Record<string, CardDisplayMode>> = {
  */
 const RETIRED_DISPLAY_MODES: readonly string[] = ["text", "checklist", "names"];
 
+/**
+ * Read a `?display=` PARAMETER against the same table the operator uses.
+ *
+ * WHY THIS IS HERE RATHER THAN IN THE TWO SURFACES THAT READ IT. The parameter
+ * predates the operator and both still exist, so `display` is one vocabulary
+ * with two entry points — and until this existed the two entry points disagreed.
+ * `CardSearch` accepted `list`, `text`, `checklist` and `grid`; `CardList`
+ * accepted those plus `rows`, `names` and `images`; {@link DISPLAY_MODES}, which
+ * the OPERATOR reads, accepts all seven.
+ *
+ * So on `/search`, typing `display:rows` gave a list and arriving at
+ * `?display=rows` gave a grid — the same word, on the same page, answered two
+ * ways depending on whether it was typed or followed. Reading both from one
+ * table is the only arrangement in which that cannot come back.
+ *
+ * IT RETURNS `null` RATHER THAN A DEFAULT, and the callers decide. A parameter
+ * that says nothing and a parameter nobody recognises are the same thing to
+ * this function; what they are worth is a question about the surface, and
+ * `/search` in particular has a query that may carry its own `display:` and
+ * outrank the parameter entirely.
+ *
+ * NO NOTICE, UNLIKE THE OPERATOR. {@link RETIRED_DISPLAY_MODES} exists because
+ * somebody who TYPES `display:text` chose that word just now and deserves to be
+ * told it moved. A parameter arrives on a followed link, very likely one the
+ * reader did not write, so a notice there would explain a vocabulary change to
+ * somebody who never used the old vocabulary.
+ */
+export function parseDisplayParam(
+  raw: string | null | undefined,
+): CardDisplayMode | null {
+  if (raw === null || raw === undefined) return null;
+  return DISPLAY_MODES[raw.trim().toLowerCase()] ?? null;
+}
+
 export type CardUniqueMode = "names" | "cards" | "art";
 
 const UNIQUE_MODES: Readonly<Record<string, CardUniqueMode>> = {

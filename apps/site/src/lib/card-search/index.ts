@@ -108,7 +108,11 @@ export { buildCardIndex } from "./build";
 export type { CardIndexSource } from "./build";
 export { decodeCardIndex } from "./decode";
 export type { ArtRef, CardIndex } from "./decode";
-export { FORMAT_NAMES, parseCardQuery } from "./grammar";
+export {
+  FORMAT_NAMES,
+  parseCardQuery,
+  parseDisplayParam,
+} from "./grammar";
 export type {
   CardDisplayMode,
   CardFilter,

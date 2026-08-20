@@ -46,6 +46,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Pagination } from "optfall-components/react";
 
+import { parseDisplayParam } from "../../src/lib/card-search";
 import {
   PAGE_PARAM,
   PAGE_SIZES,
@@ -97,14 +98,17 @@ export interface CardListProps {
  *
  * NO NOTICE HERE, UNLIKE THE OPERATOR. A set page has no query, so it has
  * nowhere to put one and no parse to attach it to — and this is a parameter on
- * a followed link rather than something typed just now. `CardSearch`'s
- * `displayFromUrl` makes the same call for the same reason.
+ * a followed link rather than something typed just now. That reasoning lives
+ * with `parseDisplayParam` now, which is where both surfaces read it from.
+ *
+ * ~~`CardSearch`'s `displayFromUrl` makes the same call for the same reason.~~
+ * It made the same call about the NOTICE and a different one about the
+ * VOCABULARY: this list was the full seven, its was four of them. The claim was
+ * true of the half it was written about and false of the half a reader would
+ * take from it, which is why the two could disagree for as long as they did.
  */
 function displayFrom(raw: string | null): CardIndexDisplay | null {
-  if (raw === "list" || raw === "rows") return "list";
-  if (raw === "text" || raw === "names" || raw === "checklist") return "list";
-  if (raw === "grid" || raw === "images") return "grid";
-  return null;
+  return parseDisplayParam(raw);
 }
 
 /** The three things this page keeps in the address bar. */

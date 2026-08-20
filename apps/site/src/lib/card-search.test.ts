@@ -36,6 +36,7 @@ import {
   buildCardIndex,
   decodeCardIndex,
   parseCardQuery,
+  parseDisplayParam,
   searchCards,
   STAT_LABELS,
   tokeniseCard,
@@ -1007,6 +1008,54 @@ describe("display:", () => {
     expect(parseCardQuery("dominate display:images").display).toBe("grid");
     expect(parseCardQuery("dominate display:list").display).toBe("list");
     expect(parseCardQuery("dominate display:rows").display).toBe("list");
+  });
+
+  test("the PARAMETER and the OPERATOR answer every spelling the same way", () => {
+    /*
+     * THE REGRESSION THIS EXISTS FOR ALREADY SHIPPED, and nothing failed while
+     * it was live. `display` has two entry points — the `display:` operator you
+     * type and the legacy `?display=` parameter you arrive on — and they read
+     * two different tables. The operator took all seven spellings; `/search`'s
+     * parameter reader took four of them. So `?display=rows` gave a GRID on the
+     * one page where typing `display:rows` gives a list, and a set page, which
+     * had the full list, gave a list for the same URL.
+     *
+     * ASSERTED AS AGREEMENT RATHER THAN AS A LIST, deliberately. A test that
+     * spelled the seven words again would be a third copy of the table, and the
+     * next spelling added would be added to the table and to the operator and
+     * not to this. Reading the answer out of `parseCardQuery` means the two are
+     * compared, so a spelling either one gains alone fails here.
+     */
+    for (const spelling of [
+      "grid",
+      "images",
+      "list",
+      "rows",
+      "text",
+      "checklist",
+      "names",
+    ]) {
+      expect(parseDisplayParam(spelling)).toBe(
+        parseCardQuery(`dominate display:${spelling}`).display,
+      );
+    }
+  });
+
+  test("a parameter nobody recognises is not an answer", () => {
+    /* `null` rather than a default, so the caller decides — `/search` lets a
+       `display:` in the query outrank the parameter, and cannot do that if an
+       unrecognised parameter has already resolved to `grid`. */
+    expect(parseDisplayParam("sideways")).toBeNull();
+    expect(parseDisplayParam("")).toBeNull();
+    expect(parseDisplayParam(null)).toBeNull();
+    expect(parseDisplayParam(undefined)).toBeNull();
+  });
+
+  test("the parameter is read case- and space-insensitively", () => {
+    /* It arrives on links people paste and edit by hand, unlike an operand the
+       parser has already lowercased. */
+    expect(parseDisplayParam(" ROWS ")).toBe("list");
+    expect(parseDisplayParam("Grid")).toBe("grid");
   });
 
   test("the retired names-only view resolves to list, and says so", () => {

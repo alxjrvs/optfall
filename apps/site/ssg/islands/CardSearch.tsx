@@ -49,6 +49,7 @@ import {
   decodeCardIndex,
   type EncodedCardIndex,
   parseCardQuery,
+  parseDisplayParam,
   searchCards,
 } from "../../src/lib/card-search";
 import {
@@ -159,21 +160,20 @@ const WHY: Record<CardMatchField, string> = {
 /**
  * The legacy `?display=` parameter, which predates the operator.
  *
- * `text` AND `checklist` LAND ON `list` NOW, silently, and the silence is the
- * one difference from the operator's own handling. `parseCardQuery` raises an
- * `operand-retired` notice for a TYPED `display:text`, because somebody chose
- * those words just now and deserves to be told they moved. This is a parameter
- * on a link somebody followed — very likely one they did not write — so a
- * notice here would explain a vocabulary change to a reader who never used the
- * old vocabulary.
+ * THE VOCABULARY IS THE OPERATOR'S NOW, AND IT WAS NOT BEFORE. This spelled its
+ * own list — `list`, `text`, `checklist`, `grid` — which is four of the seven
+ * spellings `display:` accepts. So `?display=rows` was ignored on the one page
+ * where typing `display:rows` works: follow such a link and you got a grid, type
+ * the same word and you got a list. `parseDisplayParam` reads the table the
+ * operator reads, and its note carries the rest of the reasoning — including why
+ * a parameter, unlike a typed operand, raises no notice when its spelling has
+ * been retired.
  */
 function displayFromUrl(): CardDisplayMode | null {
   if (typeof window === "undefined") return null;
-  const wanted = new URLSearchParams(window.location.search).get("display");
-  if (wanted === "list" || wanted === "text" || wanted === "checklist")
-    return "list";
-  if (wanted === "grid") return "grid";
-  return null;
+  return parseDisplayParam(
+    new URLSearchParams(window.location.search).get("display"),
+  );
 }
 
 /**
