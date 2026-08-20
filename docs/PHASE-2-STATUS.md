@@ -1,5 +1,26 @@
 # Phase 2 — status
 
+> **Historical.** This is a snapshot of Phase 2 and is kept as the record of
+> what was true then. Its verification run is the part to read carefully and
+> not to trust: the table below reports `svelte-check`, `astro check` and
+> `oxlint --deny-warnings` all passing, and **none of those three tools is in
+> this project any more** — `grep -ci 'astro\|svelte\|storybook\|oxlint'
+> bun.lock` is `0`. Phase 6 (#107) deleted Astro and Svelte; Biome replaced
+> oxlint and brought the formatter the repo had never had, and its reasoning is
+> in `biome.jsonc`'s own header. The gate as it stands now is described in
+> [`CLAUDE.md`](../CLAUDE.md) — `bun run check` for the fast nine, `bun run
+> check:full` for the three that need a build.
+>
+> The counts have moved with it. This document records 313 tests across 10
+> files; `bun test` is now 934 across 32.
+>
+> What has **not** changed is the substance: `packages/legality` is still
+> written, still passing, and still imported by nothing, because Phase 3 is the
+> phase that wires it. [`README.md`](../README.md) says so, and
+> [`docs/PLAN.md`](PLAN.md) carries the phase list. Read the sections below for
+> why the legality model is shaped the way it is; read them for the state of
+> the tooling and you will be reading about 2026-08-10.
+
 **Written 2026-08-10, in two passes.** The first was a research spike and wrote
 no code; its text is kept below under *The research spike*, because its findings
 are still the reason the rest of this is shaped the way it is. Nothing there has
