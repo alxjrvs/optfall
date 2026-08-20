@@ -165,10 +165,12 @@ export function positiveFreeTerms(
  * as the set they are looking at would be reading the query backwards.
  *
  * ANY AMBIGUITY ANSWERS `null`. Two distinct codes cannot both be "the set",
- * and this decides which picture every row carries — so the failure mode of
- * guessing is a grid where an unknown fraction of the art is from a set the
- * reader did not name, with nothing on the page to say which. Returning `null`
- * falls back to each card's own face, which is what the page showed before this
+ * and this decides which printing every row is shown by — its picture AND, since
+ * `focusPrinting` resolves the two together, the page that picture opens. So the
+ * failure mode of guessing is a grid where an unknown fraction of the art is
+ * from a set the reader did not name, with nothing on the page to say which, and
+ * where following a cell lands on that set's page. Returning `null` falls back
+ * to each card's own default printing, which is what the page showed before this
  * existed and is never a claim about a set.
  *
  * AN `or` IS NOT SPECIAL-CASED, AND THE REASON IS NARROWER THAN IT LOOKS.
@@ -183,7 +185,10 @@ export function positiveFreeTerms(
  * to be in `arts` to be chosen at all, and `arts` holds only faces of THAT
  * card. So the worst case is a card shown by a real printing of itself from a
  * set the reader named in half of a disjunction. Nothing false is rendered; the
- * picture is merely chosen by a clause that is not why the row matched.
+ * picture is merely chosen by a clause that is not why the row matched — and
+ * that still holds now the link travels with the picture, because every entry
+ * in `arts` is a page the router emits, so the address is as real as the art
+ * and belongs to the same card. The clause chose which copy, never which card.
  *
  * Tightening it would mean asking which BRANCH of the `or` each row satisfied,
  * which is a per-row question this function is not given the results to answer.

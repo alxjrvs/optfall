@@ -72,6 +72,33 @@ function addressOf(slug: string): string {
   return route.href;
 }
 
+/**
+ * Where a card lives IN A NAMED SET — the address a set page links to.
+ *
+ * A SET PAGE LINKS TO ITS OWN PRINTINGS, so {@link addressOf} is the wrong
+ * lookup for anything asserted against `/sets/<code>`: it answers the card's
+ * DEFAULT printing, which on a reprint belongs to another set entirely.
+ *
+ * FIRST ROUTE IN THE SET, WHICH IS `printingForSet`'S RULE READ OFF THE ROUTER.
+ * `CARD_ROUTES` is emitted by walking `facesOf` in order, and the page picks the
+ * first face whose printing is in the set — so "first route with this set code"
+ * is the same face by the same ordering, resolved through the table the site
+ * actually serves rather than by a second spelling of the rule.
+ */
+function addressInSetOf(slug: string, setCode: string): string {
+  const route = CARD_ROUTES.find(
+    (candidate) => candidate.slug === slug && candidate.setCode === setCode,
+  );
+  if (route === undefined) {
+    throw new Error(
+      `ssg.test.ts: "${slug}" has no printing route in ${setCode}. Either the ` +
+        `card left that set or its slug changed; fix the test's card, not ` +
+        `this lookup.`,
+    );
+  }
+  return route.href;
+}
+
 /* -------------------------------------------------------------------------- */
 /* URLs to files                                                               */
 /* -------------------------------------------------------------------------- */
@@ -507,8 +534,14 @@ describe("the ported pages", () => {
        picture. */
     expect([...cell.matchAll(/<a class="of-index__card/g)]).toHaveLength(3);
 
+    /* THIS SET'S PRINTINGS, WHICH IS THE OTHER HALF OF "a door each". A door
+       painted with LGS art that opens on Monarch is not a door to the card in
+       the picture, and it is the failure a reader cannot see until they follow
+       it — see `printingForSet`. */
     for (const pitch of [1, 2, 3]) {
-      expect(cell).toContain(`href="${addressOf(`angelic-wrath-${pitch}`)}"`);
+      expect(cell).toContain(
+        `href="${addressInSetOf(`angelic-wrath-${pitch}`, "lgs")}"`,
+      );
     }
 
     /* Each named for the CARD and not merely for a pitch value: a fanned face
@@ -518,12 +551,22 @@ describe("the ported pages", () => {
     expect(cell).toContain('alt="Angelic Wrath (pitch 2)"');
     expect(cell).toContain('alt="Angelic Wrath (pitch 3)"');
 
-    /* And the row goes to the name's own version — `/card/angelic-wrath` is a
-       301 now, so the row resolves it here rather than sending a reader
-       through a hop. It is the pitch-1 card, which is what that URL rendered. */
+    /* And the row itself goes to the lowest-pitch version AS THIS SET PRINTED
+       IT. It used to resolve the name through `HREF_BY_NAME_SLUG`, which names
+       the pitch-1 card's DEFAULT printing — the right card, in the wrong set,
+       under LGS art. Same card, this set's copy of it. */
     expect(cell).toContain(
-      `<a class="of-index__card" href="${addressOf("angelic-wrath-1")}"`,
+      `<a class="of-index__card" href="${addressInSetOf("angelic-wrath-1", "lgs")}"`,
     );
+
+    /* AND NOT THE DEFAULT PRINTING, STATED SEPARATELY BECAUSE THE TWO AGREE ON
+       most cards and a test that cannot tell them apart is not testing this.
+       Angelic Wrath's default printing is in another set, so the old address
+       must be absent from the cell rather than merely not asserted. */
+    expect(addressInSetOf("angelic-wrath-1", "lgs")).not.toBe(
+      addressOf("angelic-wrath-1"),
+    );
+    expect(cell).not.toContain(addressOf("angelic-wrath-1"));
   });
 
   test("the sets index counts what the set page lists", () => {

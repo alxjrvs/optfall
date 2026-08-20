@@ -24,7 +24,7 @@ import {
   CARD_PAGES,
   type CardPage,
   facesOf,
-  HREF_BY_NAME_SLUG,
+  hrefForPrinting,
   variantSuffix,
 } from "../../src/lib/cards";
 import { orientationOfFace } from "../../src/lib/faces";
@@ -39,7 +39,8 @@ type Params = { readonly code: string };
 type Props = { readonly id: string; readonly cards: readonly CardPage[] };
 
 /**
- * The face this card wears ON THIS SET'S PAGE, which is not always its own.
+ * The printing this card is shown BY on this set's page: its face, and the
+ * address of the page that face belongs to.
  *
  * A CARD IS LISTED UNDER EVERY SET IT WAS PRINTED IN — the line at the foot of
  * this page has always said so — and `page.face` is the card's FIRST printing
@@ -55,8 +56,20 @@ type Props = { readonly id: string; readonly cards: readonly CardPage[] };
  * because the collapse chooses a version and this chooses that version's
  * printing.)
  *
+ * IT RETURNS THE ADDRESS BECAUSE IT PICKED THE PRINTING, and that is the whole
+ * of the second fix. Fixing the picture left the LINK on `page.href`, the
+ * card's default printing — so Mistveil's page drew MST095, and clicking it
+ * arrived at `/card/eng/025/…`: a different set, a different collector number
+ * and a different picture from the one the reader clicked. Measured across the
+ * 112 set pages this route builds: they carry 9,118 (set, card) links — a row's
+ * own, one per fanned version, one per `<noscript>` line — and 4,173 of them
+ * pointed outside the set the picture came from, touching 3,365 of the 6,555
+ * rows and 109 of the 112 sets. Face and address are one decision, so they are
+ * one return value and cannot be resolved apart.
+ *
  * `facesOf` IS THE ROUTER'S LIST, so every key this can return is one the face
- * host has been asked to store and one `/card/<slug>/<set>/<number>` addresses.
+ * host has been asked to store, and every address it builds is one `CARD_ROUTES`
+ * emits — `hrefForPrinting` from the same `PrintingRef` the router uses.
  * Deriving the set's art any other way would be a second evaluation of a rule
  * that already has one home — the failure `cards.ts` and `printings.ts` both
  * spend paragraphs on.
@@ -65,15 +78,20 @@ type Props = { readonly id: string; readonly cards: readonly CardPage[] };
  * carries no new art, and Regular / Rainbow Foil / Cold Foil in one set are
  * three printing rows sharing one image. "This set published no distinct art for
  * this card" is a real answer, and the honest rendering of it is the card's
- * face rather than a placeholder.
+ * face rather than a placeholder — and its own address, which is the page that
+ * face is on.
  */
-function faceForSet(page: CardPage, setId: string) {
+function printingForSet(page: CardPage, setId: string) {
   const faces = facesOf(page.card);
   const own =
     faces.find((ref) => ref.printing.set_id === setId) ?? faces[0] ?? null;
 
   if (own === null) {
-    return { key: null, landscape: page.face.orientation === "landscape" };
+    return {
+      key: null,
+      landscape: page.face.orientation === "landscape",
+      href: page.href,
+    };
   }
 
   return {
@@ -84,6 +102,7 @@ function faceForSet(page: CardPage, setId: string) {
         playedHorizontally: page.card.played_horizontally,
         rotationDegrees: own.printing.image_rotation_degrees,
       }) === "landscape",
+    href: hrefForPrinting(own.setCode, own.number, page.slug),
   };
 }
 
@@ -133,45 +152,35 @@ function entryFor(
   const first = group[0];
   if (first === undefined) throw new Error("entryFor: an empty name group");
 
-  const face = faceForSet(first, setId);
+  const shown = printingForSet(first, setId);
   const collapsed = group.length > 1;
-  /*
-   * WHETHER THIS SET PRINTED THE WHOLE NAME. `variants` is the card's siblings
-   * in the CORPUS, so the name has `variants.length + 1` versions in total and
-   * this group has however many of them this set published.
-   */
-  const whole = group.length === first.variants.length + 1;
 
   return {
     /*
-     * THE NAME GOES TO THE NAME, BUT ONLY WHEN THE SET PRINTED ALL OF IT.
-     * `/card/angelic-wrath` is the page that holds every version, and it EXISTS
-     * whenever this row is collapsed: two cards in this set sharing a name is
-     * two cards in the corpus sharing one, which is the exact condition
-     * `NAME_GROUPS` is built on.
+     * THE ROW OPENS THE PRINTING IT IS SHOWING, WHICH IS THIS SET'S.
      *
-     * A PARTIAL GROUP MUST LAND ON A VERSION THIS SET ACTUALLY PRINTED, and
-     * that is the same rule `card-search/` states at length beside its own
-     * `partial` flag rather than a second one invented here. `/card/<nameSlug>`
-     * renders the corpus's LOWEST-PITCH version, which a set that printed only
-     * the higher ones does not contain: Aurora prints Spark Spray at pitch 2
-     * and 3, so the collapsed row wore AUR022's art, drew two bands — and sent
-     * the reader to the pitch-1 card Aurora never published. 23 (set, name)
-     * groups in this corpus are that shape, and `set:aur` in the search box
-     * already answered `/card/spark-spray-2` for the same query. So a partial
-     * row links to the lowest version PRESENT, which is `first` by the sort.
+     * A ROW LANDS ON A VERSION THIS SET ACTUALLY PRINTED, and that is the same
+     * rule `card-search/` states at length beside its own `partial` flag rather
+     * than a second one invented here. `/card/<nameSlug>` renders the corpus's
+     * LOWEST-PITCH version, which a set that printed only the higher ones does
+     * not contain: Aurora prints Spark Spray at pitch 2 and 3, so a collapsed
+     * row wore AUR022's art, drew two bands — and sent the reader to the pitch-1
+     * card Aurora never published. So the row opens `first`, the lowest version
+     * PRESENT by the sort, whether or not the set printed the whole name.
      *
-     * A one-version row goes to that version's own page for the same reason at
-     * the other end: there is nothing to disambiguate, and a disambiguation
-     * page for one card is a stop on the way to it.
+     * IT USED TO SPLIT ON `collapsed && whole` AND SEND THE WHOLE-NAME CASE TO
+     * `HREF_BY_NAME_SLUG` — "the name goes to the name". Both halves of that
+     * are gone. `/card/<nameSlug>` is a 301 now, so the map held the lowest
+     * version's DEFAULT PRINTING, which on a reprint is another set's page; and
+     * on a whole group `first` IS the corpus's lowest-pitch version, so the two
+     * branches named the same CARD and differed only in which printing of it
+     * they opened. One branch, and it opens the one on screen.
+     *
+     * WHICH PRINTING IS `printingForSet`'S ANSWER, NOT A SECOND ONE HERE. The
+     * face above and the address are the same value, so a row cannot draw one
+     * set's art over another set's link.
      */
-    href:
-      collapsed && whole
-        ? /* The name's lowest-pitch version, by address rather than by
-             `/card/<nameSlug>` — that URL is a 301 now, and a link the page
-             draws itself should not travel through one. */
-          (HREF_BY_NAME_SLUG.get(first.nameSlug) ?? first.href)
-        : first.href,
+    href: shown.href,
     label: collapsed ? first.card.name : first.label,
     /* The bare name; the pitch qualifier `label` carries is hidden in the
        markup and kept for the accessible name. See `CardIndexEntry`. */
@@ -182,30 +191,30 @@ function entryFor(
        it draws a band for, so a suffix naming one of them would be false. */
     qualifier: collapsed ? "" : variantSuffix(first.pitch, first.disambiguated),
     typeLine: first.card.type_text ?? "",
-    faceKey: face.key,
-    faceLandscape: face.landscape,
+    faceKey: shown.key,
+    faceLandscape: shown.landscape,
     /*
-      EACH VERSION WEARS THIS SET'S ART, NOT ITS OWN DEFAULT, which is the same
-      rule `faceForSet` states for the row and applied to every card in the fan
-      rather than only to the one on top. The images view stacks these behind
-      the row's face and spreads them on hover, so a Mistveil page whose fanned
-      versions carried Welcome to Rathe art would be the exact defect
-      `faceForSet` exists to fix, one layer down and only visible on hover.
+      EACH VERSION WEARS THIS SET'S ART AND OPENS THIS SET'S PRINTING, which is
+      the same rule `printingForSet` states for the row and applied to every
+      card in the fan rather than only to the one on top. The images view stacks
+      these behind the row's face and spreads them on hover, so a Mistveil page
+      whose fanned versions carried Welcome to Rathe art would be the exact
+      defect `printingForSet` exists to fix, one layer down and only visible on
+      hover — and one whose fanned faces LINKED to Welcome to Rathe was that
+      defect surviving the fix, invisible until the click.
 
-      This is deliberately the opposite choice from `card-search/`, and the two
-      surfaces are answering different questions. A search result is a row about
-      a NAME and its fan is a set of links to cards, so each one shows the art
-      its own page shows. A set page is about a PRINT RUN: every picture on it,
-      fanned or not, is what this set printed.
+      A set page is about a PRINT RUN: every picture on it, fanned or not, is
+      what this set printed, and every door under those pictures opens the
+      printing the picture is of.
     */
     versions: group.map((version) => {
-      const versionFace = faceForSet(version, setId);
+      const versionPrinting = printingForSet(version, setId);
       return {
         pitch: version.pitch,
-        href: version.href,
+        href: versionPrinting.href,
         label: version.label,
-        faceKey: versionFace.key,
-        faceLandscape: versionFace.landscape,
+        faceKey: versionPrinting.key,
+        faceLandscape: versionPrinting.landscape,
       };
     }),
     stats: first.stats.map(
@@ -469,8 +478,8 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
           thing. This page used to show a bare column of names — no art, no way
           to ask for any — which meant the one surface whose subject is a PRINT
           RUN was the one surface with no pictures on it. `CardIndex` is that
-          rendering now, and the pictures are this set's own printings; see
-          `faceForSet`.
+          rendering now, and the pictures are this set's own printings — as are
+          the pages under them; see `printingForSet`.
 
           WHAT THE PROPS COST, STATED, because the whole set crosses here as
           JSON in an attribute and React escapes every quote in it. Measured:
@@ -522,9 +531,14 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
             index above draws one row per name.
           </p>
           <ul className="of-set-noscript__list">
+            {/* THIS SET'S PRINTINGS, LIKE THE INDEX ABOVE. `card.href` is the
+                card's DEFAULT printing, which on a reprint is another set's
+                page — so the fallback list for the reader with no scripting
+                pointed somewhere else than the list it stands in for. Same
+                function, so the two cannot drift. */}
             {listed.map((card) => (
               <li key={card.slug}>
-                <a href={card.href}>{card.label}</a>
+                <a href={printingForSet(card, props.id).href}>{card.label}</a>
               </li>
             ))}
           </ul>
