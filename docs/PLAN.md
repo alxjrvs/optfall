@@ -143,6 +143,13 @@ in a git repository.
   with client islands, Vite building the island bundles alone. The checker is
   interactive but needs no server; validation runs in the browser against the
   shipped dataset.
+- **TanStack inside the islands, and nowhere else.** Query for the two search
+  indexes, which are content-hashed files the islands fetch rather than payload
+  the pages carry; Store for the one value two islands share, the text in the
+  header's field. No Router and no Start — every view is a document served at
+  its own URL, which is what a router would take away. See Phase 6, where this
+  was predicted and then decided, along with the two pieces measured and
+  declined.
 - **The committed `design-system/` bundle as the workbench, run locally.**
   Primitives built and reviewed in isolation, in both themes, with axe-core
   running over every primitive in CI. Not deployed — see Phase 1 for why the
@@ -648,6 +655,43 @@ If TanStack Router is wanted later it belongs *inside* a client island — the
 card search is the only surface with enough state to justify one — and that is
 a decision this phase deliberately does not make.
 
+**Made since, and the prediction held: TanStack is in, inside the islands, and
+Router is not part of it.** Three pieces landed, each for a named problem rather
+than because the stack lists them:
+
+- **Query**, because the search indexes moved out of the pages. `/search`
+  carried 909,626 bytes of encoded card index inside a `data-props` attribute
+  and `/cr` carried 204,137 — bytes in the page cache, which the service worker
+  drops on every deploy and cannot share between two documents. They are
+  content-hashed files now (`ssg/searchIndexes.ts`), fetched by the island. What
+  Query supplies is not caching — the URL carries a digest and the worker
+  answers it from disk — it is the three states a fetched index has and a
+  carried one does not: not here yet, here, failed. "Degrade visibly" makes the
+  third non-optional, and an empty result list while the index is in flight is a
+  confident wrong answer. `/search` went 921 kB → 11 kB, `/cr` 215 kB → 15 kB.
+- **Store**, because the header's field belongs to two islands. The results
+  island used to reach out of its own tree and adopt `#site-search` by id —
+  about 150 lines, and three bugs came out of it. This document's own "two
+  islands sharing a store" is what shipped.
+- **Nothing else.** Router still has no job here: every view is a URL served as
+  a real document, which is the argument this section already makes.
+
+**Two were measured and declined, which is the part worth recording.** *Virtual*
+for `?per=all`: measured on a real build at 2,943 results — initial render is no
+slower than `?per=60` (both ~3.5 s, dominated by fetching the index rather than
+by rows), scrolling costs 0.2 ms either way, and the worst case, re-ranking and
+re-rendering every row from grid to list, is 717 ms once. Against that,
+virtualising breaks Ctrl-F and the server-rendered first paint. *Pacer* for the
+two debounced effects in `RulesSearch`: six lines of `setTimeout`, correct, and
+deliberately kept separate — a dependency to replace them buys nothing.
+
+*(An earlier measurement of the same `?per=all` re-render read as tens of
+seconds and would have justified Virtual outright. It was an artifact:
+`requestAnimationFrame` is throttled while a tab is in the background, so the
+probe was timing the throttle rather than the render. Recorded because the wrong
+number was convincing, and because the fix — time the DOM changing, not the
+frame — applies to anything measured through an automated browser.)*
+
 ### The receipt this phase exists for
 
 Recorded under "Rules that hold": `astro check` **cannot run under TypeScript
@@ -995,7 +1039,8 @@ demand. This is the part of the plan that is not about features.
 ## Settled, and still open
 
 **Settled.** `alxjrvs/optfall`, personal ownership, MIT, TypeScript on Bun,
-**React components and a static generator this project owns**, Cloudflare hosting,
+**React components and a static generator this project owns**, **TanStack Query
+and Store inside the client islands and no router**, Cloudflare hosting,
 repository settings as a `gh api` script rather than Terraform, no direct
 monetisation, and no language model in anything shipped. **The positioning is
 settled too: a card search engine and reference, Scryfall-shaped, with the rules
