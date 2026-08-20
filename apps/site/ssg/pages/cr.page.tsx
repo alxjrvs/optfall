@@ -37,13 +37,34 @@
  */
 
 import { CORPUS as corpus } from "../../src/lib/rules";
-import { buildIndex } from "../../src/lib/search";
 import { Island } from "../Island";
 import { RulesSearch } from "../islands/RulesSearch";
+import { RULES_BROWSE, RULES_INDEX } from "../searchIndexes";
 import type { PageModule, PageResult } from "../types";
 import "./cr.css";
 
-const index = buildIndex(corpus);
+/**
+ * WHAT THE ISLAND IS HANDED, AND IT IS NO LONGER THE INDEX.
+ *
+ * This page used to pass the whole encoded rules index as props — 204,137 bytes
+ * of it, inside a `data-props` attribute, on a page whose static content is nine
+ * links. `ssg/searchIndexes.ts` records the argument; the shape of the fix is
+ * visible here. The BROWSE travels as props because it is what the page renders
+ * without a query and what a reader with no JavaScript gets. The INDEX travels
+ * as an address, because it answers queries and there are none until somebody
+ * types one.
+ *
+ * ONE OBJECT FOR BOTH SIDES. `Island` serialises these props for the client and
+ * the child below is rendered from them on the server, so spelling them twice is
+ * two chances to disagree about what the two renders were given — which is
+ * precisely the mismatch hydration exists to catch, arriving from the one
+ * direction the type checker cannot see.
+ */
+const islandProps = {
+  indexUrl: RULES_INDEX.url,
+  browse: RULES_BROWSE,
+  version: corpus.version,
+};
 
 const sections = corpus.sections.length.toLocaleString("en-GB");
 const published = new Date(
@@ -89,8 +110,8 @@ function page(): PageResult {
           </p>
         </noscript>
 
-        <Island name="RulesSearch" props={{ index }}>
-          <RulesSearch index={index} />
+        <Island name="RulesSearch" props={islandProps}>
+          <RulesSearch {...islandProps} />
         </Island>
 
         {/*

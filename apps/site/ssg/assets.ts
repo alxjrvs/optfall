@@ -510,6 +510,20 @@ function serviceWorkerPurge(): string {
  * silently produces nothing when it is not followed — is unchanged.
  */
 export async function generatedAssets(): Promise<readonly GeneratedAsset[]> {
+  /*
+   * THE SEARCH INDEXES, AND THE IMPORT IS DYNAMIC FOR THIS FILE'S OWN STATED
+   * REASON. `searchIndexes.ts` reads a corpus at module scope — the rules corpus
+   * today, the 18 MB card corpus once `/search` follows — and `THEME_COLOUR` is
+   * exported from this file and read by `document.tsx`, which `ssg.test.ts`
+   * imports. A static import here would make asking WHAT COLOUR THE TAB IS load
+   * a corpus, which is the same argument that already keeps sharp behind a call.
+   *
+   * They belong in this registry rather than beside it because they are exactly
+   * what it is for: bytes that are DERIVED. The alternative was a second writer
+   * in `build.ts`, and the header of this file is an argument against having two.
+   */
+  const { RULES_INDEX } = await import("./searchIndexes");
+
   return [
     { path: "favicon.svg", contents: faviconSvg() },
     /* Full bleed: nothing crops this one. */
@@ -537,5 +551,12 @@ export async function generatedAssets(): Promise<readonly GeneratedAsset[]> {
     { path: "apple-touch-icon.png", contents: await iconPng(1, 180) },
     { path: "manifest.webmanifest", contents: manifest() },
     { path: "sw-purge.js", contents: serviceWorkerPurge() },
+    /*
+     * CONTENT-HASHED, SO THE PATH COMES FROM THE ASSET RATHER THAN BEING SPELLED
+     * HERE. `searchIndexes.ts` derives the name from a digest of these exact
+     * bytes and hands the same object to the page that links it, so there is one
+     * declaration of the address and nothing for a second one to drift from.
+     */
+    { path: RULES_INDEX.path, contents: RULES_INDEX.contents },
   ];
 }
