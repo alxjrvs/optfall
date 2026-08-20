@@ -17,8 +17,8 @@
  * hairline, the baseline alignment, the two type voices. What is left is the
  * one class the metadata slot needs and the grouping span around the jewels.
  * That is the primitive doing its job: a list of card results is a `ResultRow`
- * with a pitch stone in the leading slot, which is the exact shape its own
- * documentation describes.
+ * with a face in the leading slot and a pitch stone trailing the name, which is
+ * the exact shape its own documentation describes.
  */
 
 /* -- The head: the control bar, and the count under it -------------------- */
@@ -464,13 +464,17 @@
   THE FACE AT THE HEAD OF A ROW.
 
   `align-self: flex-start` IS THE LOAD-BEARING LINE AND IT WILL LOOK LIKE A
-  PADDING BUG IF IT GOES. `.of-result` is `align-items: baseline`, which is
-  right for everything else in the row — the stones sit against the first line
-  of a wrapped name because `PitchJewel` offers its numeral's baseline. An
-  IMAGE'S baseline is its bottom margin edge, so a face left on the baseline
+  PADDING BUG IF IT GOES. `.of-result` is `align-items: baseline`, which is what
+  the body wants — its first line of type is what a face should be level with.
+  An IMAGE'S baseline is its bottom margin edge, so a face left on the baseline
   drags the name down to sit level with the BOTTOM of the picture, leaving the
   row apparently top-padded by the height of a card. The face opts out; the
   text keeps the alignment it needs.
+
+  THE FACE IS THE ONLY THING IN THE LEADING SLOT NOW, so it is also the only
+  thing this exemption has to cover. The pitch stones were here too and did not
+  need it — they sit on the baseline happily, because `PitchJewel` offers its
+  numeral's — and they now ride the name's own line instead.
 
   THE WIDTH IS THE WHOLE SIZING, and the height follows from `CardFace`'s
   `aspect-ratio` — see `ROW_BOX` for why that box is portrait even for the
@@ -522,51 +526,44 @@
 
 /*
   The stones for a row that stands for several pitch versions, kept together as
-  one leading object rather than as three flex children of the row — otherwise
-  the row's own `gap` spaces them like separate facts and a three-version card
-  reads as three columns.
+  one object rather than as separate inline children — otherwise the space
+  between them is whatever the line's word spacing happens to be and a
+  three-version card reads as three facts instead of one.
+
+  THEY FOLLOW THE NAME NOW, AND THEY USED TO LEAD THE ROW. The stones were a
+  flex child of `.of-result` beside the face, with a `min-inline-size` here wide
+  enough for three of them so that every row's name began at the same x — a
+  one-version row reserved two stones' worth of empty space to keep the column
+  straight. That is a real problem the reservation really solved, and it solved
+  it by putting about 44px of nothing between a 44px picture and the name it
+  labels, on every row that had one stone or none.
+
+  Stating the pitch AFTER the name removes the problem instead of paying for it.
+  The names all start at the same x because there is nothing variable in front
+  of them any more, so no slot has to be reserved and no row is padded to the
+  width of a case it is not. The stones ride the name's line — see
+  `ResultRow.css`, which deliberately leaves that line in inline flow — and a
+  row with no pitch to state draws no stone at all, which is the other half of
+  why the column is now straight without help.
+
+  THE MARGIN IS THIS FILE'S BECAUSE THE MARK IS. `ResultRow` owns the baseline
+  and nothing else about what a caller trails its names with.
 */
 .of-index__stones {
   display: inline-flex;
   align-items: center;
   gap: var(--of-space-tightest);
-  /*
-    A SLOT WIDE ENOUGH FOR THREE STONES, SO THE NAMES LINE UP.
-
-    The stones are inline, so a row's name used to start wherever its stones
-    happened to end: a three-version card pushed its own name — and the type
-    line under it — about 44px right of every one-version row above it. That
-    was already true and already ragged; the face at the head of the row is
-    what makes it read as a fault, because a hard left column of pictures
-    invites the eye to expect a second one and then does not supply it.
-
-    THREE IS THE PRACTICAL MAXIMUM AND THIS IS A MINIMUM, WHICH IS THE POINT.
-    A collapsed row stands for a name, and a name is at most three pitches in
-    this corpus — but `color.pitch.four` exists in the theme against a value
-    the game has previewed, so a fourth stone must widen the slot rather than
-    overflow it or be clipped. `min-inline-size` does that; a fixed width
-    would not.
-
-    WRITTEN AS THE ARITHMETIC IT IS rather than as a measured total, so it
-    cannot drift from the jewel size or the gap it is made of — the same rule
-    `layout.page.index` follows for the grid's four cells.
-  */
-  min-inline-size: calc(
-    3 *
-    var(--of-ornament-jewel-small) +
-    2 *
-    var(--of-space-tightest)
-  );
+  margin-inline-start: var(--of-space-tight);
 }
 
 /*
-  A STONE THAT IS A LINK, in the two text views — the same control the grid's
-  fanned card faces are, drawn as the object those views use.
+  A STONE THAT IS A LINK, in the list view — the same control the grid's fanned
+  card faces are, drawn as the object this view uses.
 
-  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX. The row aligns on the
-  baseline so a stone sits against the first line of a wrapped name, and an
-  inline anchor would offer its own baseline instead of the jewel's numeral's.
-  The anchor has to be as transparent to layout as the stone it wraps.
+  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX. The stone sits on the name's
+  own line, so the baseline it offers is the one the name is set on; an inline
+  anchor would offer its own baseline instead of the jewel's numeral's. The
+  anchor has to be as transparent to layout as the stone it wraps.
 
   NO UNDERLINE AND NO COLOUR CHANGE, because there is no text here to decorate —
   the affordance is the pointer and the ring, and the jewel already carries its
