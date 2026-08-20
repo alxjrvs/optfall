@@ -38,6 +38,7 @@ import {
   descriptionFor,
   titleFor,
 } from "../../src/lib/cards";
+import { faceUrl } from "../../src/lib/faces";
 import { setName } from "../../src/lib/sets";
 import { CardEntry } from "../components/CardEntry";
 import type { PageModule, PageResult, RouteContext } from "../types";
@@ -107,6 +108,20 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     title,
     description: descriptionFor(card),
     canonical,
+    /*
+      THE FACE THIS PAGE IS SHOWING, at the tier that already exists for it.
+
+      `normal` rather than `thumb` because a preview card is rendered at a few
+      hundred pixels wide and the thumb is 180 — upscaled, on the one image a
+      reader judges the link by. It is the same URL the page itself loads, so
+      the preview costs the image host nothing it was not already serving and
+      arrives warm from its cache.
+
+      THE PRINTING'S OWN FACE, NOT THE CARD'S DEFAULT. A link to a specific
+      printing is overwhelmingly a link to that art, and previewing a different
+      one would answer a question nobody asked.
+    */
+    image: faceUrl(route.ref.key, "normal"),
     section: "cards",
     width: "wide",
     /*
