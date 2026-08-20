@@ -41,7 +41,7 @@
  */
 
 import { CORPUS as CARDS, slugify } from "../../src/lib/cards";
-import { hrefForSet, SETS, SETS_BY_RELEASE } from "../../src/lib/sets";
+import { hrefForSet, SETS_BY_RELEASE } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./sets.css";
 
@@ -78,7 +78,7 @@ function page(): PageResult {
   return {
     title: "Sets — Optfall",
     description:
-      "Every Flesh and Blood set, newest first, with its release date and the number of cards Optfall carries from it.",
+      "Every Flesh and Blood set Optfall carries a card from, newest first, with its release date and the number of cards.",
     section: "sets",
     children: (
       <>
@@ -106,15 +106,29 @@ function page(): PageResult {
           ))}
         </ul>
 
-        <p className="of-sets__provenance">
-          From{" "}
-          <a href={`https://github.com/${SETS.source.repository}`}>
-            {SETS.source.repository}
-          </a>{" "}
-          at <code>{SETS.source.commit}</code>, the same snapshot as the cards.{" "}
-          {SETS.counts.sets - listed.length} further sets carry no card here and
-          are not listed.
-        </p>
+        {/*
+          THE PROVENANCE LINE IS GONE, and this is the last page that carried
+          one. Card pages dropped their Source fold, set pages deleted the same
+          paragraph across 112 of them, and `/search` removed both of its
+          build-metadata paragraphs — each on the one argument, which applies
+          here unchanged: a repository name and a forty-character commit with
+          nothing around them are a gesture at auditability rather than the
+          thing itself. `/about` states this exact envelope once, as a row in
+          `SOURCES` — "Four more files from the same compilation, at the same
+          commit", linked to the tree at that commit beside the file names —
+          which is the version of the claim a reader can actually check.
+
+          THE SECOND SENTENCE IS THE ONE THAT COST SOMETHING, and it is worth
+          being exact about where it went. "N further sets carry no card here
+          and are not listed" was the page's only disclosure that it filters,
+          and no other surface repeats it. What replaced it is the meta
+          description, which used to promise "Every Flesh and Blood set" and
+          now promises every set Optfall carries a card from — the sentence was
+          correcting an overclaim made two lines above it, so correcting the
+          overclaim directly is the smaller page and the same disclosure. The
+          lede was already honest: it counts `listed`, and has never called
+          that number every set.
+        */}
       </>
     ),
   };
