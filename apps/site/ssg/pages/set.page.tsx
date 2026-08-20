@@ -373,14 +373,30 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
           each one reachable only by reading past the ones before it. A reader
           arriving at a set page is looking one of them up — when did this come
           out, is it still in print, how big is it — and prose makes that a
-          scan of a paragraph rather than a glance down a column. The list is
+          scan of a paragraph rather than a glance across a strip. The list is
           also comparable BETWEEN sets, which the sentence never was: the same
           labels in the same order on all 112 pages.
 
-          `<dl>` RATHER THAN A TABLE OR A ROW OF SPANS, because these are
-          term-and-value pairs and that is the element for them — every label
-          is announced with its value, in order, with no `aria-*` doing work
-          the markup already does.
+          IT READS ACROSS RATHER THAN DOWN, which is a layout change and not a
+          content one. Stacked, five or six one-line facts cost that many rows
+          of leading before the card index began — most of a phone's first
+          screen spent on a date and four short values, none of them the thing
+          the reader came for. Across, the whole list is a single 21 px line on
+          a desktop and three short ones on a phone; `set.css` carries the
+          measurements, including the variant that made a phone worse.
+
+          `<dl>` STILL, RATHER THAN A TABLE OR A ROW OF SPANS, because these
+          are term-and-value pairs and that is the element for them — every
+          label is announced with its value, in order, with no `aria-*` doing
+          work the markup already does. A `<table>` would be the wrong one
+          twice over: this is one record rather than a grid of them, so the
+          column headers a table promises a screen reader do not exist.
+
+          THE `<div>` AROUND EACH PAIR IS LOAD-BEARING, not tidiness. It is the
+          grouping HTML allows inside a `<dl>` for exactly this, and it is what
+          keeps a label attached to its own value when the strip wraps: without
+          it every `dt` and `dd` is placed independently, and a wrap can put a
+          term at the end of one line and its value at the start of the next.
 
           THE MACHINE DATE DID NOT GO ANYWHERE. `readableDate` prints "6 May
           2022" for a reader and `dateTime` still carries `2022-05-06` for
@@ -391,47 +407,58 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
         <header className="of-masthead">
           <h1>{set.name}</h1>
           <dl className="of-masthead__facts">
-            <dt>Released</dt>
-            <dd>
-              {set.released === null ? (
-                /* Not "unknown": upstream publishes no date for this set,
-                   which is a fact about the record rather than a gap in it. */
-                "No published date"
-              ) : (
-                <time dateTime={set.released}>
-                  {readableDate(set.released)}
-                </time>
-              )}
-            </dd>
+            <div className="of-masthead__fact">
+              <dt>Released</dt>
+              <dd>
+                {set.released === null ? (
+                  /* Not "unknown": upstream publishes no date for this set,
+                     which is a fact about the record rather than a gap in it. */
+                  "No published date"
+                ) : (
+                  <time dateTime={set.released}>
+                    {readableDate(set.released)}
+                  </time>
+                )}
+              </dd>
+            </div>
 
-            <dt>Card names</dt>
-            <dd>{rows.toLocaleString("en-GB")}</dd>
+            <div className="of-masthead__fact">
+              <dt>Card names</dt>
+              <dd>{rows.toLocaleString("en-GB")}</dd>
+            </div>
 
-            <dt>Pitch versions</dt>
-            <dd>{versions.toLocaleString("en-GB")}</dd>
+            <div className="of-masthead__fact">
+              <dt>Pitch versions</dt>
+              <dd>{versions.toLocaleString("en-GB")}</dd>
+            </div>
 
-            <dt>Print status</dt>
-            {/* `outOfPrint` is true only when EVERY printing of the set is out
-                of print — see `SetRecord` — so the negative case is "still in
-                print somewhere" rather than a claim about every printing. */}
-            <dd>{set.outOfPrint ? "Out of print" : "In print"}</dd>
+            <div className="of-masthead__fact">
+              <dt>Print status</dt>
+              {/* `outOfPrint` is true only when EVERY printing of the set is
+                  out of print — see `SetRecord` — so the negative case is
+                  "still in print somewhere" rather than a claim about every
+                  printing. */}
+              <dd>{set.outOfPrint ? "Out of print" : "In print"}</dd>
+            </div>
 
-            <dt>Set code</dt>
-            {/* THE EYEBROW OVER THE TITLE SAID THIS FIRST — "SET 1HP" — and it
-                went when the list arrived. The code is a fact about the set
-                like the other five; printing it twice on one masthead is the
-                page saying the same thing in two registers. */}
-            <dd>{set.id}</dd>
+            <div className="of-masthead__fact">
+              <dt>Set code</dt>
+              {/* THE EYEBROW OVER THE TITLE SAID THIS FIRST — "SET 1HP" — and
+                  it went when the list arrived. The code is a fact about the
+                  set like the other five; printing it twice on one masthead is
+                  the page saying the same thing in two registers. */}
+              <dd>{set.id}</dd>
+            </div>
 
-            {/* The row goes when there is nothing to name, rather than
+            {/* The cell goes when there is nothing to name, rather than
                 printing an em dash for the commonest case: `editionLabel`
                 already resolves upstream's "no specified edition" to nothing,
-                and a set with no editions has no edition row. */}
+                and a set with no editions has no edition cell. */}
             {editions.length > 0 ? (
-              <>
+              <div className="of-masthead__fact">
                 <dt>Editions</dt>
                 <dd>{editions.join(", ")}</dd>
-              </>
+              </div>
             ) : null}
           </dl>
         </header>
