@@ -77,7 +77,7 @@ Built on **[the Butter Stack](https://alxjrvs.github.io/butter/)** — Bun · Un
 ```sh
 bun install
 bun run check          # 7 of the gate's 10 jobs — everything that needs no build
-bun run check:full     # the whole gate, including the 12,776-page build (~3 min)
+bun run check:full     # the whole gate, including the 12,776-page build (~2 min)
 bun run design-system  # regenerate the workbench after changing a primitive
 ```
 

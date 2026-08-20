@@ -16,21 +16,32 @@ assertion, typecheck and tests. Ordered cheapest first, so the commonest
 failures surface in under two seconds.
 
 The other three need a full 12,776-page build and are `bun run check:full`
-(~3 min): `build` itself, the `disclaimer`, `built-tokens` and `card-notice`
-checks that read its output, and `dev-server`.
+(under 2 min): `build` itself, the `disclaimer`, `built-tokens` and
+`card-notice` checks that read its output, and `dev-server`.
 
 **Anything touching rendered output, the disclaimer, attribution copy or the
 token stylesheet needs `check:full` before it is pushed.** A green `check` is
 not a green gate.
 
-Aim the loop — it is fast when scoped:
+Aim the loop — it is fast when scoped. Wall clock, Apple silicon,
+2026-08-20; re-measure rather than trust a figure this old:
 
 | Command | Time |
 |---|---|
-| `bun test packages/theme` | 0.2 s |
-| `bun test packages/components` | 8.6 s |
-| `bun test apps/site` | 18 s |
-| `bun run check` | ~60 s |
+| `bun test packages/theme` | ~1 s |
+| `bun test packages/components` | ~3 s |
+| `bun test apps/site` | ~7 s |
+| `bun run check` | ~25 s |
+| `bun run check:full` | ~115 s |
+
+The date is on that table because the previous one had drifted **in both
+directions** and nobody could tell: `theme` had grown from 0.2 s to about a
+second as its suite went from 92 tests to 104, while `components`,
+`apps/site` and `check` had all got two to three times faster and were
+still advertised at their old cost. A table that overstates is worse than
+one that is merely old — it argues against running the very commands it
+exists to encourage, and `check:full` is *required* for anything touching
+rendered output.
 
 ## Before you touch these, read this
 
