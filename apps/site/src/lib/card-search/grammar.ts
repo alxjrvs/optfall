@@ -61,6 +61,42 @@ const PENDING_OPERATORS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Operators this grammar used to accept because another game's did.
+ *
+ * THIS IS A FLESH AND BLOOD SEARCH AND IT WAS SPEAKING MAGIC. Three operators
+ * arrived as inherited Scryfall grammar, on the reasoning — written beside two
+ * of them — that "a reader who types the spelling they know should get the
+ * value they meant". The trouble is which readers, and which spelling:
+ *
+ * - `o:` is Scryfall's ORACLE text. "Oracle" is Wizards of the Coast's word for
+ *   a card's canonical wording and appears nowhere in the Comprehensive Rules;
+ *   upstream calls this field `functional_text`. It carried no comment at all,
+ *   which is its own signal: nobody argued for it, it simply came along.
+ * - `tou:` and `toughness:` mapped to DEFENCE, and this is the one that does
+ *   real harm. Toughness is not a Flesh and Blood stat — it is a Flesh and
+ *   Blood TOKEN. CR 2.x: "A Toughness token is a token with the name
+ *   'Toughness,' the subtype aura". So `toughness:3` silently answered a
+ *   question about defence, and the one thing in the game actually called
+ *   Toughness was unreachable through the operator named after it.
+ *
+ * `pow:` STAYS, and the difference is the point rather than an inconsistency.
+ * Power is a Flesh and Blood stat; `pow` is a short spelling of a word this
+ * game really uses. `tou` was a short spelling of a word it does not.
+ *
+ * THEY ANSWER RATHER THAN VANISH. Query state is in the URL, so `o:dominate`
+ * links exist in Discord threads and bookmarks; a retired operator that fell
+ * through to the unknown-operator message would tell those readers their link
+ * was gibberish. This says what to type instead, which is what
+ * {@link PENDING_OPERATORS} does for the other kind of absence.
+ */
+const RETIRED_OPERATORS: Readonly<Record<string, string>> = {
+  o: "was another game's name for the rules text — use text:",
+  tou: "was another game's name for defence — use defence: or def:",
+  toughness:
+    "is a token in this game, not a stat — for the stat, use defence: or def:",
+};
+
+/**
  * The six format names, in `FORMATS` order — restated rather than imported, for
  * the reason at the top of this file, and asserted against the real list by
  * {@link buildCardIndex} in `./build` so the restatement cannot drift.
@@ -193,7 +229,7 @@ export interface ParsedCardQuery {
   readonly tree: QueryNode | null;
 }
 
-const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
+export const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
   legal: "legal",
   banned: "banned",
   suspended: "suspended",
@@ -338,8 +374,6 @@ const STAT_FIELDS: Readonly<Record<string, "cost" | "power" | "defence">> = {
   defence: "defence",
   defense: "defence",
   def: "defence",
-  tou: "defence",
-  toughness: "defence",
 };
 
 const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
@@ -387,11 +421,20 @@ export const RARITY_RANK: Readonly<Record<string, number>> = {
   P: 9,
 };
 
-/** Operators that scope a word to one field. `class:` is discussed below. */
-const FIELD_OPERATORS: Readonly<Record<string, CardFilter["field"]>> = {
+/**
+ * Operators that scope a word to one field. `class:` is discussed below.
+ *
+ * EXPORTED, BECAUSE THE THINGS THAT DOCUMENT IT COULD NOT READ IT. This table
+ * was private, so the unknown-operator error below and `ssg/pages/syntax.page.tsx`
+ * both described it by hand — and had drifted. Seven of these keys were absent
+ * from the error's `Supported:` list, so `pow:6` and `tou:3` returned results
+ * while the message a reader got for a typo told them those operators did not
+ * exist. `toughness` was in neither place: it worked, and was discoverable
+ * nowhere.
+ */
+export const FIELD_OPERATORS: Readonly<Record<string, CardFilter["field"]>> = {
   name: "name",
   text: "text",
-  o: "text",
   /* PRINTING-LEVEL, UNLIKE EVERY OPERATOR ABOVE IT, and the page says so.
      A card matches when ANY of its printings does — the same rule `set:` and
      `rarity:` already follow, because all of them are facts about a printing
@@ -416,17 +459,85 @@ const FIELD_OPERATORS: Readonly<Record<string, CardFilter["field"]>> = {
   pitch: "pitch",
   cost: "cost",
   power: "power",
-  /* `pow` and `tou` for the same reason STAT_FIELDS carries them: the grammar is
-     inherited, and a reader who types the spelling they know should get the
-     value they meant. Both sides of a comparison have to accept them or
-     `pow>tou` resolves on the right and fails on the left. */
+  /* `pow` for the same reason STAT_FIELDS carries it: a reader who types the
+     short spelling should get the value they meant, and both sides of a
+     comparison have to accept it or `pow>2` resolves on one side only.
+
+     ITS PARTNER IS GONE. This comment used to cover `tou` as well, on the
+     grammar being inherited — but `power` is a word this game uses and
+     `toughness` is not, so the two were never the same case. See
+     RETIRED_OPERATORS. */
   pow: "power",
   defence: "defence",
+  /* `defense` is not merely tolerated: it is the spelling the Comprehensive
+     Rules use — CR 2.3 is titled "Defense" — and the one upstream keys the
+     field by. This project prints "Defence"; both must resolve. */
   defense: "defence",
   def: "defence",
-  tou: "defence",
-  toughness: "defence",
 };
+
+/**
+ * The operators that configure the query rather than filter it.
+ *
+ * WRITTEN DOWN BECAUSE THEY WERE THE ONLY ONES THAT WERE NOT. `year` and `date`
+ * are handled by a branch on the operator name, and `order`, `dir`, `unique`
+ * and `display` are lifted out of the token stream before the tree is built —
+ * so unlike every other operator, no table listed them, and the only place they
+ * appeared as a set was the hand-typed sentence this file used to end with.
+ * That is why they are here: {@link supportedOperators} needs a source, and a
+ * literal inside that function would be the same hand-maintained list in a new
+ * hiding place.
+ */
+export const QUERY_OPTIONS: readonly string[] = [
+  "year",
+  "date",
+  "order",
+  "dir",
+  "unique",
+  "display",
+];
+
+/**
+ * Every operator this grammar accepts, as the sentence a reader is shown when
+ * they type one it does not.
+ *
+ * DERIVED, WHICH IS THE ENTIRE POINT. The list used to be a string literal, and
+ * it was wrong: it omitted `flavor`, `kw`, `pow`, `defense`, `def`, `tou` and
+ * `toughness`, all of which parse and return results. A reader who mistyped an
+ * operator was handed a list denying the existence of seven working ones.
+ *
+ * ALIASES ARE GROUPED UNDER THE NAME THEY ALIAS, because "name, text, o, type,
+ * class, trait…" reads as twenty-four unrelated operators rather than as
+ * fourteen fields with shorthands. The primary is the key whose value is its
+ * own name — `text: "text"` against `o: "text"` — which is a property of the
+ * table rather than a second list to maintain.
+ */
+export function supportedOperators(): string {
+  const byField = new Map<string, { primary: string; aliases: string[] }>();
+
+  for (const [name, field] of Object.entries(FIELD_OPERATORS)) {
+    const group = byField.get(field);
+    if (group === undefined) {
+      byField.set(field, { primary: name, aliases: [] });
+      continue;
+    }
+    /* A key equal to its own field is the canonical spelling however late in
+       the table it appears, so a group that meets it later promotes. */
+    if (name === field) {
+      group.aliases.push(group.primary);
+      group.primary = name;
+      continue;
+    }
+    group.aliases.push(name);
+  }
+
+  const fields = [...byField.values()].map(({ primary, aliases }) =>
+    aliases.length === 0 ? primary : `${primary} (${aliases.join(", ")})`,
+  );
+  const states = Object.keys(STATE_OPERATORS).join("/");
+
+  return `${[...fields, ...QUERY_OPTIONS].join(", ")}, and ${states} with a format`;
+}
 
 /**
  * Fields whose operand is prose and is therefore tokenised into one requirement
@@ -732,9 +843,23 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
       return null;
     }
 
+    /*
+      A RETIRED OPERATOR GETS ITS OWN ANSWER, ahead of the unknown-operator
+      message, because those two say different things to the person reading
+      them. "Not an operator here" is right for a typo and wrong for a link
+      somebody was sent: the query is in the URL, so `o:dominate` is pasted in
+      Discord threads that outlive this change, and the reader following one did
+      nothing wrong. This tells them what to type instead.
+    */
+    const retired = RETIRED_OPERATORS[name];
+    if (retired) {
+      note("operand-retired", `${name}: ${retired}.`);
+      return null;
+    }
+
     note(
       "operator-unknown",
-      `${name}: is not an operator here. Supported: name, text (o), type (class), trait, keyword, artist (a), flavour (ft), set, rarity, pitch, cost, power, defence, year, date, order, dir, unique, display, and legal/banned/suspended/restricted with a format.`,
+      `${name}: is not an operator here. Supported: ${supportedOperators()}.`,
     );
     return toLeaf({ kind: "term", value: operandRaw, quoted: false });
   };

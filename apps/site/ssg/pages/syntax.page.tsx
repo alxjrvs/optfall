@@ -52,7 +52,6 @@ const FIELDS: readonly Row[] = [
   {
     example: "text:dominate",
     meaning: "The printed rules text contains this word.",
-    aliases: ["o:"],
   },
   {
     example: "type:guardian",
