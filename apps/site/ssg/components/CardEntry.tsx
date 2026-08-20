@@ -1282,7 +1282,24 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               claim about links.
             */}
             {faceBuyHref === undefined || shown === undefined ? null : (
-              <>
+              /*
+                THE BUTTON AND ITS DISCLOSURE ARE ONE ROW, not two stacked
+                items, and the wrapper is what makes them one. The sentence ran
+                the full width of the facts column directly under the button,
+                which is a paragraph several times the height of the control it
+                describes sitting between the card panel and Legality — while
+                the ground to the right of a 192px button sat empty at exactly
+                the widths where the paragraph was longest. It goes there now,
+                and drops back underneath when there is no room for it beside;
+                `.of-card__buy-verify` has the widths that was measured at.
+
+                IT IS STILL ADJACENT, WHICH IS THE PROPERTY THAT MATTERS.
+                `docs/COMPLIANCE.md` §2 asks for disclosure next to the link it
+                describes; beside is as next-to as under, and it is the reading
+                order a reader takes anyway — the button names the vendor, the
+                sentence to its right says what the link is.
+              */
+              <div className="of-card__buy">
                 <IconButton
                   detail={faceBuyLabel ?? shown.printing.id}
                   href={faceBuyHref}
@@ -1299,8 +1316,10 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   that section ever went: TCGplayer's Partner Guidelines want
                   disclosure that is "clear, conspicuous, prominent and
                   unambiguous to the average member of your audience", and being
-                  next to the link is most of that. The column it sits in
-                  changed; what it sits under did not.
+                  next to the link is most of that. The column changed, and then
+                  the side did — it is beside the button rather than under it
+                  now, see the wrapper above — and neither move touched the
+                  adjacency that requirement is about.
 
                   ONCE, BECAUSE THERE IS ONE LINK. The "exactly once" assertion
                   in `ssg.test.ts` predates this and still holds — it just holds
@@ -1317,7 +1336,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 <p className="of-card__verify of-card__buy-verify">
                   {buyDisclosure()}
                 </p>
-              </>
+              </div>
             )}
 
             {/*
@@ -1495,11 +1514,11 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         purchase link that survives is the button under the face, which buys the
         printing the reader is already looking at.
 
-        WHAT WENT WITH IT: the disclosure moved UP to sit under that button
-        (see the face column), because it has to accompany the link it
-        describes, and the cross-printing naming machinery collapsed to a single
-        label (see `faceBuyLabel`) because a page with one buy link has nothing
-        to disambiguate it against.
+        WHAT WENT WITH IT: the disclosure moved UP to sit with that button —
+        beside it, in the facts column, see `.of-card__buy` — because it has to
+        accompany the link it describes, and the cross-printing naming machinery
+        collapsed to a single label (see `faceBuyLabel`) because a page with one
+        buy link has nothing to disambiguate it against.
       */}
       <RelatedCards relatedShown={relatedShown} />
 
