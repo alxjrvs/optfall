@@ -804,7 +804,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         before the reader reads anything.
       */}
       <script
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: the only variable is a JSON literal built above.
+        // Safe because the only variable is a JSON literal built above.
         dangerouslySetInnerHTML={{
           __html: `{
   const targets = ${pitchTargets};

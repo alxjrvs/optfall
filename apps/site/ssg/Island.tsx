@@ -83,7 +83,7 @@ export function Island<P>({ name, props, children }: IslandProps<P>) {
        * comes from React's own renderer two lines up, not from anywhere a caller
        * could reach.
        */
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: the HTML is React's own output; see above.
+      // Safe because the HTML is React's own output; see above.
       dangerouslySetInnerHTML={{ __html: renderToString(children) }}
     />
   );
