@@ -157,7 +157,7 @@ export interface Suggestion {
 }
 
 /** How many suggestions a reader can scan without it becoming a results page. */
-export const SUGGESTION_LIMIT = 8;
+const SUGGESTION_LIMIT = 8;
 
 /**
  * Suggest card names for what has been typed so far.

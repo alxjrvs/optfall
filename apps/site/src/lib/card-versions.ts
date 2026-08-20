@@ -39,7 +39,7 @@ import {
  * deliberately far clear of the scale so the next value upstream invents cannot
  * repeat it either.
  */
-export const NO_PITCH_RANK = 10;
+const NO_PITCH_RANK = 10;
 
 export function pitchRank(pitch: number): number {
   return pitch === 0 ? NO_PITCH_RANK : pitch;
@@ -62,7 +62,7 @@ export function pitchRank(pitch: number): number {
  * `nameSlug` is safe to key by name: measured, zero names in the corpus have
  * cards that disagree about it, and all 3,158 name-level routes exist.
  */
-export const VERSIONS_BY_NAME = ((): ReadonlyMap<
+const VERSIONS_BY_NAME = ((): ReadonlyMap<
   string,
   { readonly count: number; readonly nameSlug: string }
 > => {
@@ -89,7 +89,7 @@ export const VERSIONS_BY_NAME = ((): ReadonlyMap<
  * Module scope, like the keyword vocabulary above it: a fact about the corpus,
  * built once, not once per each of 11,378 pages.
  */
-export const PAGE_BY_HREF: ReadonlyMap<string, CardPage> = new Map(
+const PAGE_BY_HREF: ReadonlyMap<string, CardPage> = new Map(
   CARD_PAGES.map((entry) => [entry.href, entry] as const),
 );
 
@@ -180,7 +180,7 @@ export function groupByName(links: readonly CardLink[]): readonly LinkGroup[] {
  * `variantSuffix` STILL DECIDES WHETHER THERE IS ONE AT ALL: a group of two is
  * two cards sharing a name, so both are disambiguated by construction.
  */
-export function versionsSuffix(links: readonly CardLink[]): string {
+function versionsSuffix(links: readonly CardLink[]): string {
   const first = links[0];
   if (first === undefined) return "";
   if (links.length === 1)

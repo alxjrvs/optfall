@@ -68,7 +68,7 @@ export function hrefForNumber(number: string): string {
 }
 
 /** The citable identifier for a published section number. */
-export function idForNumber(number: string): string {
+function idForNumber(number: string): string {
   return `${RULE_NAMESPACE}:${number}`;
 }
 
@@ -142,7 +142,7 @@ export function tokenise(text: string): string[] {
 /** A published section number — `1`, `1.0`, `1.0.1`, `1.0.1a`. */
 const SECTION_NUMBER = /^\d+(?:\.\d+)*[a-z]?$/;
 
-export function isSectionNumber(candidate: string): boolean {
+function isSectionNumber(candidate: string): boolean {
   return SECTION_NUMBER.test(candidate);
 }
 
@@ -428,7 +428,7 @@ function chunk(
  * "all three". That is the point of adopting a grammar rather than inventing
  * one: the query someone learns today is not retired by tomorrow's corpus.
  */
-export function parseQuery(raw: string): ParsedQuery {
+function parseQuery(raw: string): ParsedQuery {
   const terms: string[] = [];
   const ids: string[] = [];
   const notices: QueryNotice[] = [];
@@ -651,7 +651,7 @@ export interface SearchOutcome {
  * them. This constant is the default one of those steps, kept at the number it
  * has always been.
  */
-export const RESULT_LIMIT = 60;
+const RESULT_LIMIT = 60;
 
 interface Accumulator {
   ordinal: number;

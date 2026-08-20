@@ -134,7 +134,7 @@ export function parsePage(raw: string | null | undefined): number {
 }
 
 /** How a size is written into a URL. `60` → `"60"`, `"all"` → `"all"`. */
-export function formatPageSize(size: PageSize): string {
+function formatPageSize(size: PageSize): string {
   return String(size);
 }
 
