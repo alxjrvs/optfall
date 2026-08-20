@@ -68,13 +68,13 @@
   min-block-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
   padding-inline: var(--of-space-tight);
   border-radius: var(--of-bevel-radius);
-  color: var(--of-color-accent);
+  color: var(--of-color-link);
   text-decoration: none;
 }
 
 .of-pages__page:hover,
 .of-pages__step:hover {
-  color: var(--of-color-accent-hover);
+  color: var(--of-color-link-hover);
   background: var(--of-color-surface);
 }
 
@@ -133,12 +133,12 @@
   min-block-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
   padding-inline: var(--of-space-tight);
   border-radius: var(--of-bevel-radius);
-  color: var(--of-color-accent);
+  color: var(--of-color-link);
   text-decoration: none;
 }
 
 .of-pages__size:hover {
-  color: var(--of-color-accent-hover);
+  color: var(--of-color-link-hover);
   background: var(--of-color-surface);
 }
 

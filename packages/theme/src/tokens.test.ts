@@ -131,6 +131,24 @@ describe("contrast, in both modes equally", () => {
     ["color.ink", "color.surface.raised"],
     ["color.ink.muted", "color.ground"],
     ["color.ink.muted", "color.surface"],
+
+    /*
+     * LINK TEXT IS BODY TEXT, and nothing here said so until a reader reported
+     * the links were hard to read. `a` took `color.accent`, which is 3.22:1 on
+     * the dark ground — the single worst-contrast text on the site, on the one
+     * element whose whole job is to be found. It went unasserted because every
+     * pair in this list is an `ink` on a ground, and the accent is not an ink.
+     *
+     * All four grounds, not the two `ink.muted` gets: a link turns up inside a
+     * raised plate as readily as on the page, and `surface.raised` is the
+     * hardest of them.
+     */
+    ["color.link", "color.ground"],
+    ["color.link", "color.sunken"],
+    ["color.link", "color.surface"],
+    ["color.link", "color.surface.raised"],
+    ["color.link.hover", "color.ground"],
+    ["color.link.hover", "color.surface"],
   ];
 
   for (const [mode, tokens] of MODES) {

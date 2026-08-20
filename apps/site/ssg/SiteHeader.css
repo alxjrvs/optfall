@@ -81,7 +81,7 @@
    muted to full. A smaller change, on a lockup that no longer needs the hover
    to be the thing that makes it look deliberate. */
 .of-bar__wordmark:hover {
-  color: var(--of-color-accent);
+  color: var(--of-color-link);
 }
 
 /* Takes the middle and gives it back when the bar wraps on a narrow screen.
