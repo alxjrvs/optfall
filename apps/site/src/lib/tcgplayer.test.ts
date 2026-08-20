@@ -109,11 +109,42 @@ describe("buyDisclosure", () => {
     expect(buyDisclosure(ID)).toContain("earns a commission");
   });
 
-  test("never implies a price or an endorsement, in either state", () => {
+  /*
+   * THIS USED TO ASSERT TWO SENTENCES THAT NO LONGER EXIST. It required the
+   * disclosure to SAY "No price is shown and no endorsement is implied", which
+   * is a promise about the site made in the site's own fine print — the weakest
+   * form the claim can take. Both sentences went when the disclosure was cut to
+   * what TCGplayer and the FTC require of it (see `buyDisclosure`), and the
+   * assertion is now the stronger version of the same intent: there is no price
+   * in this sentence, rather than a sentence saying there is no price.
+   */
+  test("quotes no price and names the marketplace, in either state", () => {
     for (const text of [buyDisclosure(null), buyDisclosure(ID)]) {
-      expect(text).toContain("No price is shown");
-      expect(text).toContain("no endorsement is implied");
       expect(text).toContain("TCGplayer");
+      expect(text).not.toMatch(/\$|\d/);
+    }
+  });
+
+  /*
+   * THE ONE LAYOUT RULE THAT CAN BE TESTED FROM HERE, and it is here rather
+   * than in a stylesheet because nothing in this repository renders CSS. The
+   * sentence sits in the same row as the buy button, to its right, and must
+   * never be taller than it — `CardEntry.css` caps the type step at the size
+   * two lines fit the button's height at, and the only thing that can then
+   * break the rule is a sentence long enough to need a third line.
+   *
+   * THE BUDGET, MEASURED on the built site at `/card/mst/131/
+   * 10-000-year-reunion` in a fixed-width iframe. The paragraph sits beside the
+   * button only while its flex basis fits, which leaves it 485px at the
+   * narrowest and 528px at 1440 — so two lines hold about 970px of text. This
+   * sentence renders 653px wide at `type.size.micro`, 5.8px per character, so
+   * 130 characters is roughly 760px: comfortably over the 112 it is, and
+   * comfortably under the point where a third line becomes possible. It is a
+   * budget for rewording, not a target.
+   */
+  test("stays inside the two lines the button's height allows", () => {
+    for (const text of [buyDisclosure(null), buyDisclosure(ID)]) {
+      expect(text.length).toBeLessThanOrEqual(130);
     }
   });
 });

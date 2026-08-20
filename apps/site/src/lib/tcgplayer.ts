@@ -164,31 +164,55 @@ export function buyRel(affiliateId: string | null = AFFILIATE_ID): string {
 }
 
 /**
- * The sentence printed under the buy link.
+ * The sentence printed beside the buy link.
  *
- * IT HAS OUTLIVED THREE PLACEMENTS, which is why this docblock keeps getting
- * shorter and the sentence itself has not changed. It said "under the printings
- * table" while the links were that table's eighth column; then "under the block
- * of buy links" while they were a section of their own. The section is gone and
- * one link is left — the button under the card face — and the sentence sits
- * beneath it. See `CardEntry`.
+ * IT HAS OUTLIVED FOUR PLACEMENTS. It said "under the printings table" while
+ * the links were that table's eighth column; then "under the block of buy
+ * links" while they were a section of their own; then under the one button
+ * that was left of them. It now sits in the same row as that button, beside it
+ * rather than beneath it. See `CardEntry`.
+ *
+ * IT IS TWO SENTENCES BECAUSE TWO ARE REQUIRED, and it was four. The two that
+ * went said that the product each link addresses is named by the community
+ * dataset rather than supplied by TCGplayer, and that no price is shown and no
+ * endorsement implied. Both were true and neither was asked for by anybody:
+ * TCGplayer's Partner Guidelines and the FTC want the MATERIAL CONNECTION
+ * disclosed — where the link goes, and that we are paid when it is used — and
+ * what surrounded that was provenance and self-description, doubling the
+ * length of the one paragraph on this page a reader most needs to actually
+ * read. Disclosure a reader skips is not conspicuous, so brevity here serves
+ * the standard rather than trading against it.
+ *
+ * WHAT WAS TRIMMED IS STILL TRUE AND STILL SAID, just not by this sentence.
+ * Provenance is `/about`'s job, which states the source file and the commit
+ * once, in the version a reader can act on. The card-image notice and the
+ * rights line sit in the universal footer of every page, where
+ * `check-card-notice` and `check-disclaimer` enforce them. And no price is
+ * shown anywhere on this site — something a reader can see for themselves,
+ * which is a stronger claim than the same fact asserted in fine print.
+ *
+ * THE CLAUSE THAT DISCLOSES THE MONEY IS UNCHANGED, and that is the one thing
+ * this edit was careful about. "Optfall earns a commission on purchases made
+ * through them" is the reviewed wording, word for word; it lost a leading
+ * "and" and became its own sentence, which is the form the unpaid state was
+ * already written in. Nothing else about it moved. Rewriting THAT to fit a
+ * layout is how a sentence stops being the one that was reviewed.
  *
  * THE WORDING STAYED PLURAL DELIBERATELY. "Buy links go to TCGplayer" is a
  * claim about where this site's purchase links lead, which is true of a site
- * whose every card page carries one. Rewriting proofread disclosure text to
- * match a layout is how a sentence stops being the one that was reviewed.
+ * whose every card page carries one.
  *
  * Written out in both states rather than assembled from fragments, because this
  * is the text a regulator or LSS would read and a sentence built by
  * concatenation is a sentence nobody has actually proofread. TCGplayer's Partner
  * Guidelines require disclosure that is "clear, conspicuous, prominent and
  * unambiguous to the average member of your audience" and put FTC compliance on
- * the partner, so this sits with the links rather than in the site footer.
+ * the partner, so this sits with the link rather than in the site footer.
  */
 export function buyDisclosure(
   affiliateId: string | null = AFFILIATE_ID,
 ): string {
   return isAffiliate(affiliateId)
-    ? "Buy links go to TCGplayer, a third-party marketplace, and Optfall earns a commission on purchases made through them. The product each link addresses is recorded in the community dataset this corpus is built from, not supplied by TCGplayer. No price is shown and no endorsement is implied."
-    : "Buy links go to TCGplayer, a third-party marketplace. Optfall earns nothing from them. The product each link addresses is recorded in the community dataset this corpus is built from, not supplied by TCGplayer. No price is shown and no endorsement is implied.";
+    ? "Buy links go to TCGplayer, a third-party marketplace. Optfall earns a commission on purchases made through them."
+    : "Buy links go to TCGplayer, a third-party marketplace. Optfall earns nothing from them.";
 }

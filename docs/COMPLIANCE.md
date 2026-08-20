@@ -246,6 +246,30 @@ directly under that button where there is not, above the fold either way. The
 comment on `.of-card__buy-verify` in `apps/site/ssg/components/CardEntry.css`
 records the widths each arrangement was measured at.
 
+**The sentence is two sentences, and was four** (2026-08-19). What ships is the
+material connection and nothing else: where the link goes, and that Optfall is
+paid when it is used. ~~The product each link addresses is recorded in the
+community dataset this corpus is built from, not supplied by TCGplayer. No price
+is shown and no endorsement is implied.~~ — struck. Both were true and neither
+was required by the Partner Guidelines, by the FTC, or by the LSS terms this
+document reads elsewhere: the first is provenance, which `/about` states once
+with the file and the commit, and the second is a promise about the site made in
+the site's own fine print, where "no price is shown" is a fact a reader can
+check by looking and affiliation with LSS — the endorsement that does need
+denying — is denied by the verbatim disclaimer §4 governs. What they cost was
+length, on the one paragraph on a card page that most needs to be read.
+Disclosure a reader skips is not conspicuous, so this is the "clear,
+conspicuous, prominent and unambiguous" standard being served rather than traded
+against.
+
+**The clause carrying the obligation was not reworded.** "Optfall earns a
+commission on purchases made through them" is what it was, word for word; it
+lost a leading "and" and became its own sentence, matching the form the unpaid
+state was already written in. `tcgplayer.test.ts` asserts both states, now
+including that neither quotes a price and that neither outgrows the two lines
+the button's height allows — the layout rule it is possible to test from a
+repository that renders no CSS.
+
 ~~There is one buy link on a card page, and the sentence is directly under it —
 the button beneath the card face, above the fold.~~ **Overtaken 2026-08-19**:
 the button and its disclosure became one flex row, so "under" is now only the

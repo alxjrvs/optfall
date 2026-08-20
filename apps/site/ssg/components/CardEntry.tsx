@@ -1327,6 +1327,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   now this button IS the section's replacement and the sentence
                   has nowhere else to be.
 
+                  SHORTER THAN IT WAS, AND THAT SERVES THE SAME REQUIREMENT
+                  ADJACENCY DOES. It was four sentences and is two: the material
+                  connection, and nothing else. The two that went — where the
+                  product name comes from, and that no price or endorsement is
+                  implied — were provenance and self-description, and they made
+                  the one paragraph on this page a reader most needs to read
+                  twice as long as it had to be. `buyDisclosure` carries the
+                  argument and the citation. It is also what makes the row work:
+                  two lines fit the button's height, four never could.
+
                   THE TEXT SWITCHES ITSELF. `buyDisclosure` reads the same
                   constant the link does, so the sentence cannot claim we earn
                   nothing on a page whose link is earning — see

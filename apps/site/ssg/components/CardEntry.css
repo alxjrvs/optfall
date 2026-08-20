@@ -1135,15 +1135,25 @@
     the other — this row has a wider column gap because a button is not a label,
     and a higher wrap basis for the reason argued below.
 
-    `baseline`, NOT `center`. The disclosure is three or four lines wherever it
-    sits beside the button, so it is always the taller item; centring would push
-    the button down the block as the sentence reflowed, and aligning its label
-    to the sentence's first line holds it where the panel above left it.
+    `flex-start`, AND IT WAS `baseline`. Baseline aligned the button's label
+    with the sentence's first line, which is a defensible thing to align and the
+    wrong one here: it seats the paragraph's first line level with text that is
+    itself 13px down inside a padded control, so the paragraph's TOP EDGE landed
+    below the button's top edge and the row read as two things that had been
+    dropped in from different heights. The two boxes start together now.
+
+    That was the arrangement's whole tell while the sentence was four sentences
+    long: it was three or four lines against a one-line control, so it set the
+    row's height, and being the taller item is what made the offset visible. It
+    is two lines at its longest now — see `buyDisclosure`, which was cut to the
+    disclosure the FTC and TCGplayer actually require — and shorter than the
+    button, so `flex-start` is the alignment that is also stable when the
+    sentence reflows: neither box moves the other.
   */
 .of-card__buy {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-start;
   gap: var(--of-space-base) var(--of-space-loose);
 }
 
@@ -1174,26 +1184,36 @@
 
     THE PROPORTION IS THE WHOLE CHOICE, and 60% was tried first. It also seats
     the sentence beside the button — but it seats it in a 318px gutter at a
-    1040px viewport, six lines of `type.size.micro` against a one-line control,
-    for the same row height a full-measure paragraph underneath would have
-    taken. 70% gives that band the readable arrangement instead, and costs the
-    two wide layouts nothing: the sentence is still beside the button, at the
-    same width, wherever it was before.
+    1040px viewport, against a one-line control, for the same row height a
+    full-measure paragraph underneath would have taken. 70% gives that band the
+    readable arrangement instead, and costs the wide layouts nothing: the
+    sentence is still beside the button, at the same width, wherever it was
+    before.
+
+    AND IT IS NOW WHAT KEEPS THE SENTENCE INSIDE THE BUTTON'S HEIGHT, which was
+    a side effect and is now the load-bearing part. 70% of the row is more than
+    fits beside a 192px button and its 16px gap until the row is about 693px
+    wide, so the narrowest gutter this paragraph is ever given beside the button
+    is around 485px. The sentence renders 653px wide at `type.size.micro`, so
+    two lines need about 327px of it: every gutter it can be handed holds it in
+    two, and two is what the `font-size` rule below sizes to the button's
+    height. Below that width the whole paragraph drops onto its own line, where
+    it is a paragraph rather than a caption and the button's height is not its
+    business.
 
     Measured on the built site, `/card/mst/131/10-000-year-reunion`, in a
-    fixed-width iframe. Every number below is THIS PARAGRAPH's rendered width,
-    not the row's and not the column's. Beside the button at 964 (717px, three
-    lines — the two columns have stacked at that width, so the row it is sharing
-    is the whole page rather than the facts column) and from 1226 up (504px at
-    1226, 528px at 1440, four lines). Under the button at 320, 360, 390, 430 —
-    where a button and a paragraph do not share a phone screen — and through the
-    1000–1200 band, where the columns have split and the facts column is too
-    narrow to seat both. `documentElement.scrollWidth === clientWidth` at every
-    one of the six widths in `CLAUDE.md`.
+    fixed-width iframe with no scrollbar. Every number below is THIS
+    PARAGRAPH's rendered width, not the row's and not the column's. Beside the
+    button — tops flush, two lines, 41px against the button's 47px — at 800
+    (568px), 1226 (504px) and 1440 (528px). Under the button at 320 and 360
+    (three lines), at 390, 430 and 700, where a button and a paragraph do not
+    share a phone screen, and through the 964–1040 band, where the columns have
+    split and the facts column is too narrow to seat both.
+    `documentElement.scrollWidth === clientWidth` at all ten widths, which
+    includes the six in `CLAUDE.md`.
 
     Nothing here is a breakpoint. The number is a proportion of the row, so the
-    arrangement follows the room the row actually has — which is why it survives
-    the columns stacking at 964, a width no rule in this file mentions.
+    arrangement follows the room the row actually has.
 
     `min-inline-size: 0` lets the flex item be narrower than its longest word
     wants, which is the 320px case — a paragraph is not allowed to set a floor
@@ -1202,6 +1222,48 @@
 .of-card__buy-verify {
   flex: 1 1 70%;
   min-inline-size: 0;
+
+  /*
+       TWO LINES, INSIDE THE BUTTON'S HEIGHT. The type step is whichever is
+       smaller: the `micro` this paragraph would take from `.of-card__verify`,
+       or the size at which two lines of it fit in the height of the control
+       beside it. The second operand is the button's box restated from the
+       tokens `IconButton` builds it out of — a line of `small` at the browser's
+       normal leading, plus its two `space.base` paddings and its two bevel
+       borders — divided by the two lines of `leading.loose` this paragraph
+       sets. It computes to 13.8px against a `micro` of 12px, so `micro` is what
+       ships; the cap is what stops that from being an accident. Shrink the
+       control, or grow `micro`, and the sentence follows rather than outgrowing
+       the row.
+
+       IT IS A CAP ON THE TYPE, NOT ON THE LINE COUNT, and CSS cannot give the
+       second without clipping — which is not available to a paragraph a
+       regulator reads. The two-line ceiling is held instead by how long the
+       sentence is, and `tcgplayer.test.ts` is where that is enforced: it fails
+       if the disclosure grows past what two lines hold at the narrowest width
+       it sits beside the button.
+
+       `leading.base` IS THE BUTTON'S LEADING BY MEASUREMENT, NOT BY
+       DECLARATION. `.of-icon-button` sets no `line-height`, so its label takes
+       the font's `normal` — 21px at a 14px `small`, which is exactly the 1.5
+       this calc spends. Measured on the built site: the button is 47px, and so
+       is this expression. A font swap could part them, and nothing in CI would
+       say so.
+     */
+  font-size: min(
+    var(--of-type-size-micro),
+    calc(
+      (
+        var(--of-type-size-small) *
+        var(--of-type-leading-base) +
+        2 *
+        var(--of-space-base) +
+        2 *
+        var(--of-bevel-width)
+      ) /
+      (2 * var(--of-type-leading-loose))
+    )
+  );
   /* The row has a gap of its own, and `.of-card__verify` adds a `base` margin —
        which in the section it came from was the only separation there was.
        Beside the button that margin would push the sentence off the button's
