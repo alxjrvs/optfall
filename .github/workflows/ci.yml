@@ -12,6 +12,22 @@ on:
   push:
     branches: [main]
 
+# NO DEPENDENCY CACHE, AND THAT IS MEASURED RATHER THAN OVERLOOKED. Six jobs
+# below each run `bun install --frozen-lockfile`, which looks like five
+# redundant installs and reads like an obvious `actions/cache` candidate. It is
+# not one. Timed on run 32324572946:
+#
+#   dev-server 1s   build 1s   lint 2s   test 1s   typecheck 2s   disclaimer 2s
+#
+# That is nine seconds of aggregate compute and never more than two on any
+# critical path, because the jobs are parallel — the run is paced by
+# `disclaimer` at 45s, of which the install is two. Restoring and saving a
+# `node_modules` cache costs about as long as the install it replaces, so the
+# cache would buy nothing and could plausibly lose. Bun being this fast is the
+# whole reason.
+#
+# Revisit if the install ever passes ~10s, and re-measure rather than assume.
+
 # Minimal by default. No job here needs anything beyond reading the repo.
 permissions:
   contents: read
