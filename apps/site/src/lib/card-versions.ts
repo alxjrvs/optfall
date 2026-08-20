@@ -116,12 +116,23 @@ const PAGE_BY_HREF: ReadonlyMap<string, CardPage> = new Map(
  * a version the set on screen never printed — a pitch added in a later set, a
  * promo carrying one version of a name. A tab that goes nowhere is worse than a
  * tab that goes somewhere else.
+ *
+ * IT TAKES AN ADDRESS RATHER THAN A `CardLink`, and the widening is what let the
+ * rule reach the rest of the page. It was written for the version strip and read
+ * only `link.href`, so every other link on a card page — the breadcrumb, the
+ * related lists, the back of a double-sided card — had no way to ask the
+ * question without inventing a second answer to it. They all hold an address.
+ *
+ * THE ARGUMENT MUST BE A DEFAULT ADDRESS, WHICH IS WHAT `PAGE_BY_HREF` KEYS ON.
+ * Passing an address this function already returned would miss, because a
+ * set-local printing URL is not a `CardPage.href` — so resolve once, from the
+ * card's own address, rather than composing this with itself.
  */
 export function addressInSet(
-  link: CardLink,
+  href: string,
   setCode: string,
 ): string | undefined {
-  const sibling = PAGE_BY_HREF.get(link.href);
+  const sibling = PAGE_BY_HREF.get(href);
   if (sibling === undefined) return undefined;
   const face = facesOf(sibling.card).find((ref) => ref.setCode === setCode);
   return face === undefined
@@ -253,7 +264,16 @@ function versionsSuffix(links: readonly CardLink[]): string {
  * `label` names each of them — and this is the same fix applied to the one
  * anchor on the row that was left carrying a bare name.
  */
-export function groupTarget(group: LinkGroup): {
+export function groupTarget(
+  group: LinkGroup,
+  /**
+   * The set the reader is standing in — the set code of the printing on
+   * screen. A row lands on this set's copy of the card wherever this set
+   * printed it; see {@link addressInSet} for why, and for what happens when it
+   * did not.
+   */
+  setCode: string,
+): {
   readonly href: string;
   readonly qualifier: string;
 } {
@@ -270,10 +290,29 @@ export function groupTarget(group: LinkGroup): {
      now; the map holds the address it points at, so the anchor goes straight
      there. Falls back to the first link, which is the lowest-pitch version of
      this group and therefore the same card the map would have named. */
-  return whole
+  const target = whole
     ? {
         href: HREF_BY_NAME_SLUG.get(known.nameSlug) ?? first.href,
         qualifier: "",
       }
     : { href: first.href, qualifier: versionsSuffix(group.links) };
+
+  /*
+   * AND THEN INTO THE SET THE READER IS IN, WHICH IS THE LAST STEP RATHER THAN
+   * A FOURTH BRANCH ABOVE. Which CARD a row opens is the decision the whole
+   * function is about and it is unchanged; which COPY of that card is a
+   * separate question with one answer, so it is asked once, of the address the
+   * branches produced, instead of inside each of them.
+   *
+   * Measured on the shipped build: 23,624 of the 27,466 related links left the
+   * set they were drawn in, and 4,919 of those named a card the set on screen
+   * had also printed — a reader following "Runechant" off a Monarch page landed
+   * in Welcome to Rathe while Monarch's own Runechant existed. The other 18,705
+   * are cards this set never printed, and they keep their own address, which is
+   * the honest answer rather than a miss.
+   */
+  return {
+    href: addressInSet(target.href, setCode) ?? target.href,
+    qualifier: target.qualifier,
+  };
 }

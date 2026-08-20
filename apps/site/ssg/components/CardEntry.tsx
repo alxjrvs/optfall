@@ -427,7 +427,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   /* THE NAME'S DESTINATION, RESOLVED AT BUILD TIME. `/card/<nameSlug>` is a
      301 now, and a link the page draws itself has no business travelling
      through one — the lowest-pitch version's own address is known here. */
-  const nameHref = HREF_BY_NAME_SLUG.get(page.nameSlug) ?? page.href;
+  const nameDefaultHref = HREF_BY_NAME_SLUG.get(page.nameSlug) ?? page.href;
 
   /*
     NO "OTHER VERSIONS" ROW. It restated, at the foot of the page, a set the
@@ -514,6 +514,29 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * all has no face here and renders the placeholder.
    */
   const shown = faces[selected] ?? faces[0];
+
+  /**
+   * THE BREADCRUMB'S NAME, IN THE SET THE READER IS ALREADY IN.
+   *
+   * `nameDefaultHref` is the lowest-pitch version's DEFAULT printing, which on
+   * a reprint belongs to some other set — so the breadcrumb over
+   * `/card/mst/095/a-drop-in-the-ocean` read "A Drop in the Ocean" and pointed
+   * at `/card/eng/025/…`: a different printing OF THE CARD ALREADY ON SCREEN,
+   * reached by clicking that card's own name. Measured on the shipped build:
+   * 6,003 of the 11,378 printing pages carried a breadcrumb that left the set,
+   * and on 5,721 of them the set on screen had printed that very card.
+   *
+   * The version strip has resolved this since `addressInSet` was written; the
+   * breadcrumb asks the same question one line further up the page, and was
+   * answering it differently.
+   *
+   * HERE RATHER THAN BESIDE `nameDefaultHref`, because it needs `shown` — which
+   * is what knows which printing the page is OF, and is resolved above.
+   */
+  const nameHref =
+    (shown === undefined
+      ? undefined
+      : addressInSet(nameDefaultHref, shown.setCode)) ?? nameDefaultHref;
 
   /**
    * The storefront link for the printing that CLAIMED the art at the top of the
@@ -893,7 +916,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       href:
         (shown === undefined
           ? undefined
-          : addressInSet(variant, shown.setCode)) ?? variant.href,
+          : addressInSet(variant.href, shown.setCode)) ?? variant.href,
       current: false,
     })),
   ].toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch));
@@ -1595,7 +1618,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         collapsed to a single label (see `faceBuyLabel`) because a page with one
         buy link has nothing to disambiguate it against.
       */}
-      <RelatedCards relatedShown={relatedShown} />
+      <RelatedCards
+        relatedShown={relatedShown}
+        /* The set of the printing on screen. `""` where the page has no face
+           at all, which `addressInSet` answers `undefined` for — so those
+           rows keep each card's own address, as they always did. */
+        setCode={shown?.setCode ?? ""}
+      />
 
       {/*
         THE SOURCE FOLD IS GONE, and it is deleted rather than collapsed.

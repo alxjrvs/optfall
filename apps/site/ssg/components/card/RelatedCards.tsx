@@ -16,15 +16,29 @@
 import { OrnamentalRule, PitchJewel } from "optfall-components/react";
 
 import type { CardLink } from "../../../src/lib/cards";
-import { groupByName, groupTarget } from "../../../src/lib/card-versions";
+import {
+  addressInSet,
+  groupByName,
+  groupTarget,
+} from "../../../src/lib/card-versions";
 
 /** A heading, its explanation, and the links under it. */
 export type RelatedGroup = readonly [string, string, readonly CardLink[]];
 
 export function RelatedCards({
   relatedShown,
+  setCode,
 }: {
   readonly relatedShown: readonly RelatedGroup[];
+  /**
+   * The set of the printing on screen, so a related card can land on this
+   * set's copy of itself. See {@link addressInSet}.
+   *
+   * PASSED IN RATHER THAN DERIVED, because this component is handed links and
+   * has no idea which page it is on — and a second derivation of "which set am
+   * I" is the kind of thing that goes quietly out of step with the first.
+   */
+  readonly setCode: string;
 }) {
   return (
     <>
@@ -41,7 +55,7 @@ export function RelatedCards({
                 <p className="of-card__scope">{blurb}</p>
                 <ul className="of-card__links">
                   {groupByName(links).map((group) => {
-                    const target = groupTarget(group);
+                    const target = groupTarget(group, setCode);
                     return (
                       <li className="of-card__link" key={group.name}>
                         {/*
@@ -96,8 +110,16 @@ export function RelatedCards({
                           )}
                         </a>
                         <span className="of-card__link-pitches">
-                          {group.links.map((link) =>
-                            group.links.length === 1 ? (
+                          {group.links.map((link) => {
+                            /* THE STONE GOES WHERE THE NAME BESIDE IT GOES —
+                               this set's copy of the version, or the version's
+                               own address where this set never printed it. The
+                               name was resolved by `groupTarget` and the stones
+                               were not, so a row could send its name into the
+                               set and its stones out of it. */
+                            const versionHref =
+                              addressInSet(link.href, setCode) ?? link.href;
+                            return group.links.length === 1 ? (
                               /*
                             A SOLE VERSION DRAWS A PLAIN STONE, unlinked, for
                             the reason `PitchStones` gives: it would point
@@ -130,7 +152,7 @@ export function RelatedCards({
                           */
                               <a
                                 className="of-card__pitch-link"
-                                href={link.href}
+                                href={versionHref}
                                 key={link.href}
                               >
                                 <PitchJewel
@@ -139,8 +161,8 @@ export function RelatedCards({
                                   label={link.label}
                                 />
                               </a>
-                            ),
-                          )}
+                            );
+                          })}
                         </span>
                       </li>
                     );
