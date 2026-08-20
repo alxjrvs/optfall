@@ -841,10 +841,11 @@ export interface NameGroup {
  * Every stat a card can print, in the order `docs/DESIGN.md` reads a card face.
  *
  * EXPORTED BECAUSE A SECOND SURFACE NEEDS THE ORDER AND NOT THE VALUES. The
- * card page draws the three combat stats whether or not a card prints them —
- * see `COMBAT_STATS` in `CardEntry` — so it has to know the full list and where
- * each member sits. Deriving that from a card would mean deriving it from a
- * card that happens to print all five.
+ * card page lays out the three combat positions whether or not a card prints
+ * them — see `COMBAT_STATS` in `CardEntry`; a position the card leaves empty
+ * paints nothing and keeps its width — so it has to know the full list and
+ * where each member sits. Deriving that from a card would mean deriving it
+ * from a card that happens to print all five.
  *
  * ARCANE IS NOT A PRINTED STAT AND IS NO LONGER ONE OF THESE. It was, and it
  * was the only member of this list a card face does not carry anywhere: the
@@ -881,8 +882,8 @@ export const STAT_ORDER = [
  * values — 13 cards genuinely have `power: "0"`. Testing for the empty string
  * rather than for falsiness is what keeps those thirteen from losing a stat.
  *
- * IT STILL DROPS THE ABSENT ONES, and the card page's empty sockets are not a
- * change to that. A row in a search result or a set index shows what a card
+ * IT STILL DROPS THE ABSENT ONES, and the positions the card page holds open
+ * are not a change to that. A row in a search result or a set index shows what a card
  * HAS; only the card page has a frame with fixed positions to leave standing
  * empty. Adding nulls here would push them into every list on the site.
  */
