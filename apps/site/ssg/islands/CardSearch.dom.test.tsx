@@ -44,16 +44,16 @@ GlobalRegistrator.register({ url: "https://optfall.com/search" });
 
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { createRoot, hydrateRoot, type Root } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 
 import { buildCardIndex, decodeCardIndex } from "../../src/lib/card-search";
 import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
 import { SETS } from "../../src/lib/sets";
-import {
-  type CardCorpusBrief,
-  CardSearch,
-  HEADER_FIELD_ID,
-} from "./CardSearch";
+import { type CardCorpusBrief, CardSearch } from "./CardSearch";
+/* The id moved to the component that renders the field, along with the field. */
+import { HEADER_FIELD_ID, HeaderSearch } from "./HeaderSearch";
+import { headerSearchStore } from "./headerSearchStore";
 import { searchIndexClient } from "./useSearchIndex";
 
 /*
@@ -132,30 +132,97 @@ async function settle(): Promise<void> {
   throw new Error("the card index never finished loading");
 }
 
-/** The shell's markup, as `SiteHeader` renders it. */
-function shell(): HTMLInputElement {
+/**
+ * The shell's markup, as `SiteHeader` renders it — the FORM only.
+ *
+ * THE FIELD IS NOT IN HERE ANY MORE, and that is the change this file tests.
+ * `SiteHeader` renders the form and hands its inside to an island, so the form
+ * element is static markup and everything within it is React's. The harness
+ * reproduces that shape rather than approximating it: hand-writing the input
+ * here would test `CardSearch` against a field nothing owns, which is exactly
+ * the arrangement that has been removed.
+ */
+function shell(): HTMLFormElement {
   document.body.innerHTML = `
-    <form action="/search" method="get">
-      <input id="${HEADER_FIELD_ID}" name="q" type="search" />
-      <button type="submit">Search</button>
-    </form>
+    <form id="header-form" action="/search" method="get"></form>
     <main><div id="root"></div></main>`;
-  const field = document.getElementById(HEADER_FIELD_ID);
+  const form = document.getElementById("header-form");
+  if (!(form instanceof HTMLFormElement)) throw new Error("no form");
+  return form;
+}
+
+/** The field, once `HeaderSearch` has rendered it. */
+function fieldIn(form: HTMLFormElement): HTMLInputElement {
+  const field = form.querySelector(`#${HEADER_FIELD_ID}`);
   if (!(field instanceof HTMLInputElement)) throw new Error("no field");
   return field;
 }
 
-async function mount(): Promise<Root> {
+/**
+ * Both islands, as the page mounts them: two roots, one store between them.
+ *
+ * TWO ROOTS RATHER THAN ONE TREE, because that is the constraint the whole
+ * design exists under — the header is outside `<main>`, so no single island can
+ * hold the field and the results. A harness that rendered them as one tree would
+ * pass while the shipped arrangement was broken.
+ */
+interface Mounted {
+  /** Tears down BOTH roots. Half a page torn down is not a torn-down page. */
+  readonly unmount: () => void;
+}
+
+/**
+ * The page as a reader first sees it: the field is MARKUP, and nothing is live.
+ *
+ * THIS IS THE WINDOW TWO OF THE TESTS BELOW EXIST FOR. `Island` renders its
+ * child on the server, so the header's input is on screen and typeable from the
+ * first paint — well before `islands.js` arrives. Reproducing that needs a real
+ * server render and a real `hydrateRoot`, not a `createRoot` into an empty form:
+ * `createRoot` throws the markup away and rebuilds it, which is precisely the
+ * step that cannot lose anything, so a harness built on it cannot see the defect.
+ */
+function paint(form: HTMLFormElement): HTMLInputElement {
+  form.innerHTML = renderToString(<HeaderSearch />);
+  return fieldIn(form);
+}
+
+/** Hydrate a painted form, the way `islands.client.ts` does. */
+async function hydrate(form: HTMLFormElement): Promise<Mounted> {
   const host = document.getElementById("root");
   if (host === null) throw new Error("no root");
-  const root = createRoot(host);
+  let headerRoot: Root | undefined;
+  const results: Root = createRoot(host);
   await act(async () => {
+    headerRoot = hydrateRoot(form, <HeaderSearch />);
+    results.render(<CardSearch indexUrl={INDEX_URL} brief={brief} />);
+  });
+  await settle();
+  return {
+    unmount: () => {
+      results.unmount();
+      headerRoot?.unmount();
+    },
+  };
+}
+
+async function mount(form: HTMLFormElement): Promise<Mounted> {
+  const host = document.getElementById("root");
+  if (host === null) throw new Error("no root");
+  const headerRoot: Root = createRoot(form);
+  const root: Root = createRoot(host);
+  await act(async () => {
+    headerRoot.render(<HeaderSearch />);
     root.render(<CardSearch indexUrl={INDEX_URL} brief={brief} />);
   });
   /* Mounted is not ready any more. Every test below asks a question the index
      has to have arrived to answer, so waiting here keeps that out of each one. */
   await settle();
-  return root;
+  return {
+    unmount: () => {
+      root.unmount();
+      headerRoot.unmount();
+    },
+  };
 }
 
 /**
@@ -174,16 +241,64 @@ function shown(): string {
   );
 }
 
-/** Type into the adopted field the way a browser does. */
+/**
+ * Type into the field the way a browser does.
+ *
+ * STILL A REAL DOM EVENT. React listens for `input` at the root and turns it
+ * into `onChange`, so dispatching one is what a keystroke actually is — setting
+ * `.value` alone would move the DOM without telling React, which is a state no
+ * browser can produce.
+ */
 async function type(field: HTMLInputElement, text: string): Promise<void> {
   await act(async () => {
-    field.value = text;
+    nativeValue(field, text);
     field.dispatchEvent(new Event("input", { bubbles: true }));
   });
 }
 
+/**
+ * Set an input's value the way a KEYSTROKE does, past React's value tracker.
+ *
+ * **`field.value = text` DOES NOT WORK ON A CONTROLLED INPUT, AND FAILS
+ * SILENTLY**, which is worth the paragraph because it looks exactly like typing
+ * and is not. React installs an OWN `value` property on every input it controls
+ * — that is its change detection: the tracker remembers the last value it saw,
+ * and `onChange` fires when the DOM's value differs from it. An ordinary
+ * assignment goes through that setter, so the tracker is updated in the same
+ * breath, React compares the two, finds them equal and fires nothing.
+ *
+ * Measured on this harness before the fix: `HeaderSearch` rendered exactly once
+ * for a test that typed and then pressed Escape. Nothing errored. The field held
+ * text React had never heard about.
+ *
+ * The prototype's setter is the one a browser uses, and it leaves the tracker
+ * stale — which is precisely the state that makes React notice.
+ *
+ * (`keydown` needs no equivalent, and cannot have one: React's delegated keydown
+ * listener does not fire under happy-dom at all. That is why Escape is a native
+ * listener in `HeaderSearch` rather than an `onKeyDown` prop.)
+ */
+function nativeValue(field: HTMLInputElement, text: string): void {
+  const setter = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value",
+  )?.set;
+  if (setter === undefined) throw new Error("no prototype value setter");
+  setter.call(field, text);
+}
+
 beforeEach(() => {
   window.history.replaceState(null, "", "/search");
+  /* THE STORE OUTLIVES A TEST, because it is a module constant — which is what
+     makes it a channel between two roots in the first place. Resetting it here
+     keeps each test's field empty and its submit count at zero, so a test cannot
+     pass on a submission the previous one made. */
+  headerSearchStore.setState(() => ({
+    query: "",
+    submissions: 0,
+    submittedQuery: "",
+    answeredInPlace: false,
+  }));
 });
 
 /*
@@ -206,8 +321,9 @@ afterAll(async () => {
 
 describe("the island drives the field the shell renders", () => {
   test("it adopts the header's input rather than rendering one", async () => {
-    const field = shell();
-    const root = await mount();
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
 
     /* The whole page has exactly one text field, and it is the shell's — the
        island renders none of its own. */
@@ -232,8 +348,9 @@ describe("the island drives the field the shell renders", () => {
      * No `await` between the two dispatches, deliberately. That is the whole
      * test: separating them is what made the bug invisible by hand.
      */
-    const field = shell();
-    const root = await mount();
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
 
     await act(async () => {
       field.value = "banned:cc";
@@ -252,8 +369,9 @@ describe("the island drives the field the shell renders", () => {
   });
 
   test("a submit pushes history, so the back button has somewhere to go", async () => {
-    const field = shell();
-    const root = await mount();
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
 
     await type(field, "banned:cc");
     await act(async () => field.form?.requestSubmit());
@@ -279,26 +397,33 @@ describe("the island drives the field the shell renders", () => {
 
   test("text typed before hydration survives the mount", async () => {
     /*
-     * THE SECOND DEFECT IN THE SEAM. The header's field is static markup —
-     * on screen and typeable from first paint, before `islands.js` lands. The
-     * value-sync effect writes `query` into it whenever the two differ, and
-     * `query` starts empty, so mounting BLANKED whatever had been typed.
+     * THE SECOND DEFECT IN THE SEAM, AND THE FIX FOR IT IS NOW REACT'S.
      *
-     * React guards this for inputs it renders itself; an adopted node gets none
-     * of it. Two things close it and this asserts the pair: the adoption effect
-     * seeds state from the field, and the sync effect skips its first run so it
-     * cannot write the pre-seed empty string back in the same commit.
+     * The header's field is server-rendered markup — on screen and typeable
+     * from first paint, before `islands.js` lands. Under the adopted-field
+     * arrangement the value-sync effect wrote `query` into it whenever the two
+     * differed, and `query` started empty, so mounting BLANKED whatever had
+     * been typed. It took a seed and a first-run skip to close.
+     *
+     * Neither exists any more. React's DOM host skips the value assignment
+     * while hydrating an input it renders itself, which is exactly the guarantee
+     * the adopted node could not have. What this asserts is that the guarantee
+     * is really being relied on — that the field is React's, hydrated rather
+     * than recreated — plus the one thing React cannot know: that the STORE ends
+     * up agreeing, so the text is a query and not just pixels.
      */
-    const field = shell();
+    const form = shell();
+    const field = paint(form);
     field.value = "winter";
 
-    const root = await mount();
+    const root = await hydrate(form);
 
     expect(field.value).toBe("winter");
+    expect(headerSearchStore.state.query).toBe("winter");
 
-    /* And the seed is the island's state, not just a value left alone: a submit
-       with no further typing has to run what is in the box. */
-    await act(async () => field.form?.requestSubmit());
+    /* And it is the island's state, not just a value left alone: a submit with
+       no further typing has to run what is in the box. */
+    await act(async () => form.requestSubmit());
     expect(window.location.search).toBe("?q=winter");
     expect(shown()).toContain("cards match");
 
@@ -320,7 +445,8 @@ describe("the island drives the field the shell renders", () => {
      * reaches for an intermediate state, and it is here because the defect only
      * exists in one.
      */
-    const field = shell();
+    const form = shell();
+    const field = paint(form);
     field.value = "winter";
 
     const writes: string[] = [];
@@ -343,7 +469,7 @@ describe("the island drives the field the shell renders", () => {
       },
     });
 
-    const root = await mount();
+    const root = await hydrate(form);
 
     expect(writes).not.toContain("");
     expect(field.value).toBe("winter");
@@ -356,8 +482,9 @@ describe("the island drives the field the shell renders", () => {
        in `search.page.tsx` does this before any bundle loads; the island has to
        agree with it rather than clear it. */
     window.history.replaceState(null, "", "/search?q=banned%3Acc");
-    const field = shell();
-    const root = await mount();
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
 
     expect(field.value).toBe("banned:cc");
 
@@ -371,8 +498,9 @@ describe("the island drives the field the shell renders", () => {
      * browser's action runs alongside ours. It reaches the same place today,
      * which is exactly why the guard was easy to drop unnoticed.
      */
-    const field = shell();
-    const root = await mount();
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
     await type(field, "banned:cc");
 
     const escapeKey = new KeyboardEvent("keydown", {
@@ -394,8 +522,9 @@ describe("the island drives the field the shell renders", () => {
     /* The island listens on a node it does not own, so it has to stop. A
        listener surviving unmount would answer submits for a component that is
        no longer on the page. */
-    const field = shell();
-    const root = await mount();
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
     await act(async () => root.unmount());
 
     /*
@@ -424,8 +553,9 @@ describe("the island drives the field the shell renders", () => {
     /* The other half of the pair: `defaultPrevented` has to differ between a
        mounted island and an unmounted one, or asserting `false` above is
        asserting a constant. */
-    const field = shell();
-    const root = await mount();
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
 
     const submit = new Event("submit", { bubbles: true, cancelable: true });
     field.value = "banned:cc";
@@ -473,9 +603,10 @@ describe("the control bar writes the query it is a picture of", () => {
   }
 
   /** Ask a question, so there is an answer for the bar to be about. */
-  async function ask(text: string): Promise<Root> {
-    const field = shell();
-    const root = await mount();
+  async function ask(text: string): Promise<Mounted> {
+    const form = shell();
+    const root = await mount(form);
+    const field = fieldIn(form);
     await type(field, text);
     await act(async () => {
       field.form?.dispatchEvent(

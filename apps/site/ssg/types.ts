@@ -91,6 +91,22 @@ export interface PageResult {
    */
   readonly headerSearch?: boolean;
   /**
+   * Whether the header's field is hydrated, so a submit is answered in place.
+   *
+   * ONE PAGE SETS IT, AND THE NARROWNESS IS THE POINT. `/search` is the only
+   * surface that can answer a card query without navigating, so it is the only
+   * one that should pay for the field to be React's. Every other page — `/cr`,
+   * every set page, the 12,776 documents — keeps the static form it has always
+   * had, which submits and navigates exactly as it does with scripting off.
+   *
+   * DECLARED RATHER THAN DERIVED FROM {@link PageResult.islands}, for the same
+   * reason that flag is declared rather than detected: a page carrying an island
+   * of its own is not thereby a page that can answer a card query, and deriving
+   * one from the other would hydrate a field on every set page to write into a
+   * store nothing there reads.
+   */
+  readonly headerSearchIsland?: boolean;
+  /**
    * `measure` (prose), `wide` (a face beside a column), or `index` (a grid of
    * card faces and nothing else). See the tokens.
    */

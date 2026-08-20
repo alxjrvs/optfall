@@ -32,7 +32,7 @@ import {
   renderRedirects,
 } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
-import { HEADER_FIELD_ID } from "./islands/CardSearch";
+import { HEADER_FIELD_ID } from "./islands/HeaderSearch";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
 import { routes } from "./routes";
 import type { PageModule, PageResult } from "./types";
@@ -2465,11 +2465,17 @@ describe("every screen but the front door carries the header's search", () => {
     /*
      * THE ONE THING NOTHING ELSE CAN CATCH. The header is rendered by the
      * document shell and `CardSearch` is mounted inside `<main>`, so there is
-     * no prop between them — the island finds its field with
-     * `document.getElementById(HEADER_FIELD_ID)`. If the id changes on one side
-     * only the field stops being adopted: the form still submits and the page
-     * still works, just with a full navigation, which is a regression nobody
-     * would notice from the output.
+     * no prop between them.
+     *
+     * ~~The island finds its field with `document.getElementById`.~~ It does
+     * not any more — `HeaderSearch` renders the field and declares the id, and
+     * the two islands share a store rather than a DOM node. What this still
+     * asserts is narrower and still worth asserting: the id reaches the BUILT
+     * PAGE. `search.page.tsx` writes an inline script that fills the field from
+     * `?q=` before any bundle loads, and that script looks the node up by this
+     * id — so a rename that missed it would leave a results page whose search
+     * box is empty until the island lands, exactly the regression that script
+     * was added to remove.
      */
     expect(render("/search")).toContain(`id="${HEADER_FIELD_ID}"`);
   });

@@ -30,6 +30,7 @@ import { hydrateRoot } from "react-dom/client";
 
 import { CardList } from "./islands/CardList";
 import { CardSearch } from "./islands/CardSearch";
+import { HeaderSearch } from "./islands/HeaderSearch";
 import { RandomCard } from "./islands/RandomCard";
 import { RulesSearch } from "./islands/RulesSearch";
 
@@ -45,6 +46,7 @@ import { RulesSearch } from "./islands/RulesSearch";
 const ISLANDS: Record<string, (props: any) => React.ReactNode> = {
   CardList,
   CardSearch,
+  HeaderSearch,
   RandomCard,
   RulesSearch,
 };

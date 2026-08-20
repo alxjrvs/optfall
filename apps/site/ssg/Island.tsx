@@ -46,7 +46,7 @@
  * exactly this reason — their whole wire format exists to cross this boundary.
  */
 
-import type { ReactElement } from "react";
+import { createElement, type ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 
 /** Every island the client bundle knows how to hydrate. */
@@ -54,7 +54,8 @@ export type IslandName =
   | "RulesSearch"
   | "RandomCard"
   | "CardSearch"
-  | "CardList";
+  | "CardList"
+  | "HeaderSearch";
 
 export interface IslandProps<P> {
   /** Which component to hydrate. Must be a key of the client registry. */
@@ -63,28 +64,58 @@ export interface IslandProps<P> {
   readonly props: P;
   /** The subtree to render and then hydrate. */
   readonly children: ReactElement;
+  /**
+   * The container's tag. `div` unless the island has to BE a layout element.
+   *
+   * ADDED FOR THE HEADER'S FIELD, AND THE REASON IS CSS RATHER THAN TASTE.
+   * `.of-bar` is `display: flex` and `.of-bar__find` carries
+   * `flex: 1 1 var(--of-card-face-thumb)`, so a `div` wrapped around that form
+   * would become the flex item and the form inside it would lose its growth —
+   * a header that silently re-lays-out on the one page that hydrates its field.
+   * Making the FORM the hydration root inserts no element at all.
+   *
+   * `hydrateRoot` does not care what the container is; `islands.client.ts`
+   * queries `[data-island]` rather than `div[data-island]`. What does care is
+   * the subtree: the container's own attributes stay server-rendered and
+   * outside React's tree, exactly as the `div`'s always have.
+   */
+  readonly as?: "div" | "form";
+  /**
+   * Attributes for the container, for when it is a real element in the layout.
+   *
+   * STRINGS ONLY, AND NOT BY ACCIDENT. Anything here is emitted by the server
+   * and never re-rendered — React does not own this element, it owns what is
+   * inside it. A handler passed here would be silently dropped, so the type
+   * refuses one.
+   */
+  readonly containerProps?: Readonly<Record<string, string>>;
 }
 
-export function Island<P>({ name, props, children }: IslandProps<P>) {
-  return (
-    <div
-      data-island={name}
-      /*
-       * `data-props` rather than a `<script type="application/json">` child.
-       * A script child would sit INSIDE the hydration root, so React would see a
-       * node the component did not render and fail on it. An attribute on the
-       * container is outside the tree React owns.
-       */
-      data-props={JSON.stringify(props)}
-      /*
-       * The subtree is already HTML by the time it gets here, so it is injected
-       * rather than rendered. `dangerouslySetInnerHTML` is the only way to put a
-       * pre-rendered string inside an element React is emitting — and the string
-       * comes from React's own renderer two lines up, not from anywhere a caller
-       * could reach.
-       */
-      // Safe because the HTML is React's own output; see above.
-      dangerouslySetInnerHTML={{ __html: renderToString(children) }}
-    />
-  );
+export function Island<P>({
+  name,
+  props,
+  children,
+  as = "div",
+  containerProps,
+}: IslandProps<P>) {
+  return createElement(as, {
+    ...containerProps,
+    "data-island": name,
+    /*
+     * `data-props` rather than a `<script type="application/json">` child.
+     * A script child would sit INSIDE the hydration root, so React would see a
+     * node the component did not render and fail on it. An attribute on the
+     * container is outside the tree React owns.
+     */
+    "data-props": JSON.stringify(props),
+    /*
+     * The subtree is already HTML by the time it gets here, so it is injected
+     * rather than rendered. `dangerouslySetInnerHTML` is the only way to put a
+     * pre-rendered string inside an element React is emitting — and the string
+     * comes from React's own renderer two lines up, not from anywhere a caller
+     * could reach.
+     */
+    // Safe because the HTML is React's own output; see above.
+    dangerouslySetInnerHTML: { __html: renderToString(children) },
+  });
 }

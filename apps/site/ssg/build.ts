@@ -167,18 +167,22 @@ async function assetsFromManifest(): Promise<{
  * a 9.74 MB file and said so.
  *
  * So the measurement is now part of the build rather than a thing to remember.
- * The ceiling is roughly 43% above the current 279 kB — loose enough that
+ * The ceiling is roughly 40% above the current 286 kB — loose enough that
  * ordinary work never touches it, and two orders of magnitude below a corpus, so
  * the failure it exists for cannot squeeze under it.
  *
- * **THE HEADROOM WAS 70% AT 233 kB AND IS 43% AT 279 kB**, and the 46 kB between
- * them is TanStack Query, added when the search indexes moved out of the pages
- * and into files the islands fetch (`ssg/searchIndexes.ts`). That is a real cost
- * on every island page, paid once from a hashed asset, against 1.1 MB removed
- * from two documents that could not cache theirs at all. Worth stating plainly
- * rather than letting the ceiling absorb it quietly: this is the one deliberate
- * bite anybody has taken out of this budget, and the next 121 kB is all that is
- * left before somebody has to argue for raising it.
+ * **THE HEADROOM WAS 70% AT 233 kB AND IS 40% AT 286 kB**, and the 53 kB between
+ * them is TanStack, in two bites. Query (46 kB) arrived when the search indexes
+ * moved out of the pages into files the islands fetch (`ssg/searchIndexes.ts`);
+ * Store (6 kB) when the header's field became an island of its own rather than a
+ * node `CardSearch` reached out and adopted (`islands/headerSearchStore.ts`).
+ *
+ * Both are real costs on every island page, paid once from a hashed asset,
+ * against 1.1 MB removed from two documents that could not cache theirs at all
+ * and about 150 lines of cross-root DOM synchronisation removed from one island.
+ * Worth stating plainly rather than letting the ceiling absorb it quietly: these
+ * are the only deliberate bites anybody has taken out of this budget, and the
+ * next 114 kB is all that is left before somebody has to argue for raising it.
  *
  * IT SUMS THE WHOLE IMPORT GRAPH, not the entry chunk. `vite.config.ts` declares
  * two inputs, so a module both reach is hoisted into a shared chunk the entry
