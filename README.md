@@ -60,10 +60,23 @@ phase covers and what remains.
   the Comprehensive Rules parsed and addressable at `/cr` and `/rule/:number`,
   and a search over each. Every view is a permanent URL.
 
-**Phase 3, legality that remembers, is next.** `packages/legality` is written
-and tested, but its headline export `isLegal` still throws and nothing under
-`apps/` imports it; the legality shown on card pages today is upstream's flags,
-read by `apps/site/src/lib/cards.ts`.
+**Phase 3, legality that remembers, is next, and it is blocked on a dataset
+rather than on code.** `packages/legality` is written and tested — 3,854 lines
+and 185 passing tests — but its headline export `isLegal` still throws and
+nothing under `apps/` imports it; the legality shown on card pages today is
+upstream's flags, read by `apps/site/src/lib/cards.ts`.
+
+What is missing is `data/legality`, which does not exist. Building it means
+prose extraction from roughly 67 archived announcements, with human review of
+every entry, reachable only through the Wayback Machine because `fabtcg.com`
+returns 403 — and it is blocked behind the licence request drafted in
+[`docs/upstream-licence-issue.md`](docs/upstream-licence-issue.md), which **has
+never been sent**. That file says why it has not: it asks a favour of a
+volunteer maintainer and cites a third party's legal terms, so a person should
+post it under their own name.
+
+So the next action on Phase 3 is not a commit. It is somebody reading that
+draft and deciding whether to send it.
 
 ## Working on it
 
