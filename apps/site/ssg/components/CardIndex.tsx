@@ -53,7 +53,12 @@
    about where the state lives. */
 import type { ReactNode } from "react";
 
-import { CardFace, PitchJewel, ResultRow } from "optfall-components/react";
+import {
+  CardFace,
+  OrnamentalRule,
+  PitchJewel,
+  ResultRow,
+} from "optfall-components/react";
 import type { PitchValue } from "optfall-theme";
 
 import { FACE_TIERS, faceUrl, placeholderUrl } from "../../src/lib/faces";
@@ -907,6 +912,21 @@ export function CardIndex({
           ) : null}
         </div>
       ) : null}
+
+      {/*
+        THE BAR'S CLOSING LINE, AND IT IS THE SECTION RULE RATHER THAN A BORDER
+        OF THE BAR'S OWN. `border-block-end` on `.of-index__controls` drew the
+        same hairline `OrnamentalRule` draws, which made this the one divider on
+        a results page with no centre mark in it. `decorative`, because a border
+        announced nothing and a `separator` between a control bar and the count
+        it describes is noise; `flush`, because the bar's padding above and the
+        count's margin below are already the space either side of it.
+
+        INSIDE THE SAME CONDITION AS THE BAR. There is no line to close a bar
+        that was never drawn — before hydration, and for a caller that hands in
+        no controls at all.
+      */}
+      {interactive ? <OrnamentalRule decorative flush /> : null}
 
       <p className="of-index__count">{summary}</p>
 

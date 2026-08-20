@@ -49,8 +49,25 @@
   align-items: center;
   gap: var(--of-space-base) var(--of-space-loose);
   padding-block: var(--of-space-base);
+}
+
+/*
+  THE BAR'S CLOSING LINE, WHICH USED TO BE ITS OWN BORDER.
+
+  `border-block-end` drew the same hairline `OrnamentalRule` draws, in a second
+  spelling, and that was the whole of the difference: it was the one divider on
+  the site that could not carry the centre mark, because a border has no middle
+  to put anything in. Composing the primitive instead makes the header close the
+  way every other section on the page does.
+
+  THE SPACING STAYS THE BAR'S, which is what `flush` is for. The rule brings no
+  rhythm of its own, so the margin that used to sit under the border sits under
+  the rule instead — the sibling selector, rather than a margin on `.of-bar`,
+  because the gap belongs BELOW the line and the line is no longer part of the
+  bar's box.
+*/
+.of-bar + .of-rule {
   margin-block-end: var(--of-space-loosest);
-  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
 
 .of-bar__wordmark {

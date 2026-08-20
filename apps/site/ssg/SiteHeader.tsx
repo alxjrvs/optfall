@@ -28,7 +28,7 @@
  * knows Optfall's five URLs. A header naming `/cr` is not a primitive.
  */
 
-import { Mark } from "optfall-components/react";
+import { Mark, OrnamentalRule } from "optfall-components/react";
 
 import { Island } from "./Island";
 import { HeaderSearch } from "./islands/HeaderSearch";
@@ -101,150 +101,174 @@ export function SiteHeader({
   fieldIsland = false,
 }: SiteHeaderProps) {
   return (
-    <header className="of-bar">
-      <a className="of-bar__wordmark" href="/">
+    <>
+      <header className="of-bar">
+        <a className="of-bar__wordmark" href="/">
+          {/*
+            THE PITCH VARIANT, AND `md` RATHER THAN `sm`. The header used to carry
+            the monochrome mark at the smallest step, on the argument that chrome
+            should be quiet and the door was the one surface where the mark was
+            identity rather than furniture. That is a defensible position and it
+            made every page but one look unbranded — the wordmark reads as text
+            with a grey glyph beside it, and the three-colour mark is the thing
+            people recognise. It is the same object either way; this is a decision
+            about which of the two surfaces gets the recognisable one, and the
+            answer is both.
+          */}
+          <Mark size="md" decorative />
+          Optfall
+        </a>
+
+        {field ? (
+          /*
+            TWO SHAPES OF ONE FORM, AND THE DIFFERENCE IS ONLY WHO OWNS THE FIELD.
+
+            On every page but `/search` this is exactly what it has always been:
+            static markup, a real GET, no island and no index — "the header carries
+            a way in, not a search engine". On `/search` the same form becomes the
+            container of an island, so the field is React's and a submit can be
+            answered in place instead of navigating to the page you are on.
+
+            THE ISLAND IS THE FORM RATHER THAN A WRAPPER ROUND IT, because
+            `.of-bar` is a flex container and `.of-bar__find` is a flex item with a
+            growth basis. A `div` between them would take the item's place and the
+            form would stop growing. See `Island`'s `as` prop.
+
+            AND IT IS OPT-IN PER PAGE rather than on wherever islands are, which is
+            a narrower rule than it first looks. Every page with any island would
+            otherwise hydrate this field — `/cr`, every set page — to write into a
+            store nothing on those pages reads, for a submit that still has to
+            navigate. One page can answer a card query without leaving, so one page
+            asks for it.
+          */
+          fieldIsland ? (
+            <Island
+              name="HeaderSearch"
+              props={{}}
+              as="form"
+              containerProps={FORM_ATTRS}
+            >
+              <HeaderSearch />
+            </Island>
+          ) : (
+            <form {...FORM_ATTRS}>
+              <HeaderSearch />
+            </form>
+          )
+        ) : null}
+
         {/*
-          THE PITCH VARIANT, AND `md` RATHER THAN `sm`. The header used to carry
-          the monochrome mark at the smallest step, on the argument that chrome
-          should be quiet and the door was the one surface where the mark was
-          identity rather than furniture. That is a defensible position and it
-          made every page but one look unbranded — the wordmark reads as text
-          with a grey glyph beside it, and the three-colour mark is the thing
-          people recognise. It is the same object either way; this is a decision
-          about which of the two surfaces gets the recognisable one, and the
-          answer is both.
+          A DISCLOSURE, NOT A SCRIPT. Six links do not fit beside a wordmark and a
+          search field on a phone, and the bar's answer used to be `flex-wrap` —
+          the nav dropped to a second row and the header doubled in height on the
+          surface with the least of it to spare.
+
+          `<details>` is the collapse, because it is the only one the platform
+          gives us for free: it opens on click and on Enter/Space, it is in the
+          accessibility tree as a disclosure with its state announced, and it
+          needs no JavaScript on a header that is rendered by the shell into
+          12,776 static documents. A checkbox and a label would look the same and
+          announce as a checkbox; a real `<button>` would need an island in the
+          one component that must never depend on one.
+
+          IT IS ONLY A MENU WHEN THERE IS NO ROOM. See `SiteHeader.css`: a
+          container query hides the summary and lays the list out as a row as soon
+          as the bar is wide enough to seat it, so the disclosure is inert on a
+          desktop rather than a thing to click before you can navigate.
+
+          THE LIST IS THE DISCLOSURE'S SIBLING, NOT ITS CHILD, and that is the one
+          thing here that looks wrong and is not. A closed `<details>` does not
+          hide its contents with a rule we can outrank: Blink and WebKit stop
+          rendering the shadow slot the contents are assigned to, which no
+          light-DOM `display` can reach — that is why `::details-content` had to be
+          specified at all, and it landed only in Chrome 131, Safari 18.4 and
+          Firefox 139.
+
+          Nesting the list therefore made the WIDE layout depend on revealing a
+          closed disclosure, which works on a current engine and fails on an older
+          one in the worst possible way: the container query hides the summary,
+          the slot keeps the links unrendered, and the header is left with no
+          navigation and no control to open any. Reproduced by disabling the
+          `::details-content` override in a live page — the links landed 12px past
+          the right edge of the window in a nav box of zero width.
+
+          As a sibling, the list is ordinary markup in the light DOM at every
+          width, and `[open] ~` toggles it. What is lost is the parent-child
+          relationship between the control and what it discloses, so `aria-controls`
+          states it instead; what is kept is a header that works in every browser
+          rather than in the last two years of them.
         */}
-        <Mark size="md" decorative />
-        Optfall
-      </a>
+        <nav className="of-bar__nav" aria-label="Sections">
+          <details className="of-bar__menu">
+            <summary
+              className="of-bar__menu-button"
+              aria-controls={SECTIONS_LIST_ID}
+            >
+              {/*
+                THE GLYPH IS DRAWN, NOT TYPED. `☰` is a CJK character that a
+                screen reader may read aloud as "trigram for heaven" and that a
+                font may simply not have; three rules are three rules everywhere.
+                The accessible name comes from the text beside it, which is
+                clipped rather than absent for the same reason the field's label
+                is.
+              */}
+              <svg
+                className="of-bar__menu-glyph"
+                viewBox="0 0 16 16"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M1 3h14M1 8h14M1 13h14"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="of-bar__sr">Sections</span>
+            </summary>
+          </details>
 
-      {field ? (
-        /*
-          TWO SHAPES OF ONE FORM, AND THE DIFFERENCE IS ONLY WHO OWNS THE FIELD.
-
-          On every page but `/search` this is exactly what it has always been:
-          static markup, a real GET, no island and no index — "the header carries
-          a way in, not a search engine". On `/search` the same form becomes the
-          container of an island, so the field is React's and a submit can be
-          answered in place instead of navigating to the page you are on.
-
-          THE ISLAND IS THE FORM RATHER THAN A WRAPPER ROUND IT, because
-          `.of-bar` is a flex container and `.of-bar__find` is a flex item with a
-          growth basis. A `div` between them would take the item's place and the
-          form would stop growing. See `Island`'s `as` prop.
-
-          AND IT IS OPT-IN PER PAGE rather than on wherever islands are, which is
-          a narrower rule than it first looks. Every page with any island would
-          otherwise hydrate this field — `/cr`, every set page — to write into a
-          store nothing on those pages reads, for a submit that still has to
-          navigate. One page can answer a card query without leaving, so one page
-          asks for it.
-        */
-        fieldIsland ? (
-          <Island
-            name="HeaderSearch"
-            props={{}}
-            as="form"
-            containerProps={FORM_ATTRS}
-          >
-            <HeaderSearch />
-          </Island>
-        ) : (
-          <form {...FORM_ATTRS}>
-            <HeaderSearch />
-          </form>
-        )
-      ) : null}
+          <ul className="of-bar__links" id={SECTIONS_LIST_ID}>
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  aria-current={
+                    link.key !== undefined && link.key === section
+                      ? "page"
+                      : undefined
+                  }
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </header>
 
       {/*
-        A DISCLOSURE, NOT A SCRIPT. Six links do not fit beside a wordmark and a
-        search field on a phone, and the bar's answer used to be `flex-wrap` —
-        the nav dropped to a second row and the header doubled in height on the
-        surface with the least of it to spare.
+        THE CLOSING RULE, AND IT IS A SIBLING RATHER THAN A BORDER.
 
-        `<details>` is the collapse, because it is the only one the platform
-        gives us for free: it opens on click and on Enter/Space, it is in the
-        accessibility tree as a disclosure with its state announced, and it
-        needs no JavaScript on a header that is rendered by the shell into
-        12,776 static documents. A checkbox and a label would look the same and
-        announce as a checkbox; a real `<button>` would need an island in the
-        one component that must never depend on one.
+        It was `border-block-end` on `.of-bar` — the same hairline
+        `OrnamentalRule` draws, spelled a second way, and therefore the one
+        divider on the site that could never carry the centre mark. As an
+        element it can, so the header closes the way every other section on the
+        page does.
 
-        IT IS ONLY A MENU WHEN THERE IS NO ROOM. See `SiteHeader.css`: a
-        container query hides the summary and lays the list out as a row as soon
-        as the bar is wide enough to seat it, so the disclosure is inert on a
-        desktop rather than a thing to click before you can navigate.
+        `decorative`, because it always was: a border announces nothing, and a
+        `separator` between a site header and its page would be read aloud on
+        every document to say what the landmark already says. `flush`, because
+        the space under it is `.of-bar + .of-rule`'s — see `SiteHeader.css` —
+        exactly as it was the border's.
 
-        THE LIST IS THE DISCLOSURE'S SIBLING, NOT ITS CHILD, and that is the one
-        thing here that looks wrong and is not. A closed `<details>` does not
-        hide its contents with a rule we can outrank: Blink and WebKit stop
-        rendering the shadow slot the contents are assigned to, which no
-        light-DOM `display` can reach — that is why `::details-content` had to be
-        specified at all, and it landed only in Chrome 131, Safari 18.4 and
-        Firefox 139.
-
-        Nesting the list therefore made the WIDE layout depend on revealing a
-        closed disclosure, which works on a current engine and fails on an older
-        one in the worst possible way: the container query hides the summary,
-        the slot keeps the links unrendered, and the header is left with no
-        navigation and no control to open any. Reproduced by disabling the
-        `::details-content` override in a live page — the links landed 12px past
-        the right edge of the window in a nav box of zero width.
-
-        As a sibling, the list is ordinary markup in the light DOM at every
-        width, and `[open] ~` toggles it. What is lost is the parent-child
-        relationship between the control and what it discloses, so `aria-controls`
-        states it instead; what is kept is a header that works in every browser
-        rather than in the last two years of them.
+        OUTSIDE THE `<header>`, not inside it. The bar is a container query's
+        container and the menu panel hangs off it; a full-width line inside a
+        wrapping flex row would be a flex item that changes what "the bar no
+        longer fits its links" means.
       */}
-      <nav className="of-bar__nav" aria-label="Sections">
-        <details className="of-bar__menu">
-          <summary
-            className="of-bar__menu-button"
-            aria-controls={SECTIONS_LIST_ID}
-          >
-            {/*
-              THE GLYPH IS DRAWN, NOT TYPED. `☰` is a CJK character that a
-              screen reader may read aloud as "trigram for heaven" and that a
-              font may simply not have; three rules are three rules everywhere.
-              The accessible name comes from the text beside it, which is
-              clipped rather than absent for the same reason the field's label
-              is.
-            */}
-            <svg
-              className="of-bar__menu-glyph"
-              viewBox="0 0 16 16"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path
-                d="M1 3h14M1 8h14M1 13h14"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span className="of-bar__sr">Sections</span>
-          </summary>
-        </details>
-
-        <ul className="of-bar__links" id={SECTIONS_LIST_ID}>
-          {LINKS.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                aria-current={
-                  link.key !== undefined && link.key === section
-                    ? "page"
-                    : undefined
-                }
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </header>
+      <OrnamentalRule decorative flush />
+    </>
   );
 }

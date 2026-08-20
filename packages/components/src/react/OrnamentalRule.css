@@ -25,6 +25,18 @@
   column-gap: var(--of-space-base);
 }
 
+/*
+  A RULE THAT IS AN EDGE RATHER THAN A BREAK. `flush` hosts — the header's
+  closing line, the index control bar's, the footer's opening one — each drew
+  this hairline as a `border-block-end` of their own until now, and a border
+  has no margins: the space either side was always the host's padding and the
+  host's margin. So the rhythm is dropped rather than halved, and what the
+  reader gains is the centre mark, which a border could not carry.
+*/
+.of-rule--flush {
+  margin-block: 0;
+}
+
 .of-rule__line {
   display: block;
   inline-size: 100%;
