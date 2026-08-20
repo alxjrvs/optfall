@@ -26,10 +26,10 @@
  * cell that opens into the three cards it stands for.
  *
  * THE TWO VIEWS DRAW IT DIFFERENTLY BECAUSE THEY CAN AFFORD DIFFERENT THINGS.
- * The list view has a line of type to sit a mark beside, so it puts a numbered
- * stone per version there. The grid has a whole card, so it draws the versions
- * AS cards: stacked behind the front one, fanned on hover, each face its own
- * link. See {@link CardIndexEntry.versions} and `CardStack`.
+ * The list view has a line of type to hang a mark off, so it puts a numbered
+ * stone per version at the end of the name. The grid has a whole card, so it
+ * draws the versions AS cards: stacked behind the front one, fanned on hover,
+ * each face its own link. See {@link CardIndexEntry.versions} and `CardStack`.
  *
  * IT IS PRESENTATIONAL AND CONTROLLED, WHICH IS WHAT LETS BOTH CALLERS USE IT.
  * The two disagree about where the state lives and they are both right:
@@ -239,12 +239,12 @@ export interface CardIndexEntry {
    * of versions cannot disagree with itself.
    *
    * TWO RENDERINGS, CHOSEN BY VIEW, AND THAT IS A DESIGN DECISION RATHER THAN
-   * AN INCONSISTENCY. The list view has a line of type to put a jewel beside,
-   * so it draws {@link PitchJewel}, which carries the numeral `docs/DESIGN.md`
-   * calls the primary channel. The grid has a whole card, so it draws the
-   * versions as CARDS — a stack that
-   * fans on hover, each face a link to its own version. The information is
-   * identical; what differs is what the surface can afford to say it with.
+   * AN INCONSISTENCY. The list view has a line of type to put a jewel at the
+   * end of, so it draws {@link PitchJewel}, which carries the numeral
+   * `docs/DESIGN.md` calls the primary channel. The grid has a whole card, so
+   * it draws the versions as CARDS — a stack that fans on hover, each face a
+   * link to its own version. The information is identical; what differs is
+   * what the surface can afford to say it with.
    *
    * THE GRID USED TO DRAW BANDS — one `PitchRule` per version, as an
    * underline, on the argument that there was no room under a face for a stone
@@ -504,7 +504,7 @@ function versionsOf(
 }
 
 /**
- * The pitch versions as jewels — the rendering the two TEXT views use.
+ * The pitch versions as jewels — the rendering the list view uses.
  *
  * ONE STONE PER VERSION, so a row standing for three pitch versions of a name
  * carries three, exactly as the grid draws three cards. `PitchJewel` is
@@ -519,10 +519,24 @@ function versionsOf(
  * feature, and the numeral in the stone is what says which one is under the
  * pointer before it is clicked.
  *
- * THE LIST VIEW PUTS THE STONES OUTSIDE THE NAME'S ANCHOR ALREADY —
- * `ResultRow` renders its `lead` before the link rather than inside it — so
- * this needs no markup contortion to avoid nesting an anchor in an anchor. The
- * grid did need one; see the cell.
+ * A ROW WITH NO PITCH TO STATE DRAWS NO STONE AT ALL, which is what the guard
+ * below is. Pitch is a value most of this corpus does not have — every hero,
+ * every weapon, every piece of equipment — and for those the stone was a grey
+ * diamond with a dash in it, one per row, down the whole page: a column of
+ * marks saying *nothing here*, in the reserved silhouette that is supposed to
+ * mean pitch. An absent value is absent; the row says so by not drawing it.
+ *
+ * IT IS `every`, NOT A FILTER, AND THE DIFFERENCE IS ONE GROUP IN THE CORPUS.
+ * `Hyper Driver` is a pitch-0 token sharing its name with three pitched
+ * actions — the one name disambiguated by an ABSENCE — so on a collapsed row
+ * for that name the dash stone is the only thing distinguishing a real version
+ * from its siblings, and it is a door to that version's page. Dropping every
+ * zero would take that door away. What is being removed is a stone with nothing
+ * to say, not the pitch-0 version.
+ *
+ * THE STONES SIT OUTSIDE THE NAME'S ANCHOR — `ResultRow` renders its `trail`
+ * after the link rather than inside it — so this needs no markup contortion to
+ * avoid nesting an anchor in an anchor. The grid did need one; see the cell.
  */
 function PitchStones({
   versions,
@@ -531,6 +545,7 @@ function PitchStones({
 }) {
   const shown = versionsOf(versions);
   if (shown.length === 0) return null;
+  if (shown.every((version) => version.pitch === 0)) return null;
   return (
     <span className="of-index__stones">
       {shown.map((version) =>
@@ -762,8 +777,9 @@ const ROW_BOX = FACE_TIERS.thumb;
  * for one destination in a smaller target — two links with the same
  * destination and different accessible names is the WCAG 2.4.4 shape this
  * component's own `label` field exists to avoid. It sits outside the anchor
- * for the same reason the stones do: `ResultRow` renders `lead` before the
- * link rather than inside it.
+ * for the same reason the stones do — `ResultRow` renders both of its marks
+ * outside the link, the `lead` before it and the `trail` after it, so neither
+ * can nest an anchor inside one.
  *
  * `alt=""` FOLLOWS FROM THAT. The picture repeats what the name, the type line
  * and the stones already say in text on the same row, so naming it again would
@@ -979,15 +995,27 @@ export function CardIndex({
         /*
           Dense rows: the view for comparing printed values down a column, and
           `ResultRow` is exactly the primitive for it — a leading slot, a name,
-          and facts underneath. THE JEWEL LEADS, because this view has a line of
-          type to sit a stone beside, so it can afford the rendering that
-          carries the numeral.
+          a trailing slot, and facts underneath. THE FACE LEADS AND THE JEWEL
+          TRAILS THE NAME, because this view has a line of type to hang a stone
+          off, so it can afford the rendering that carries the numeral.
+
+          THE JEWEL LED THE ROW UNTIL IT DID NOT EARN THE COLUMN. Beside the
+          face it needed a slot as wide as three stones so that every row's name
+          started at the same x, which meant a one-version row put an empty
+          stone's width between a 44px picture and the name it labels. Trailing
+          the name, the mark is a qualifier ON the name — where a reader looking
+          up a pitch is already looking — and the names need no slot to line up
+          because nothing variable precedes them. See `.of-index__stones`.
 
           ONE JEWEL PER PITCH VALUE, exactly as the grid draws one card
           per value. A row stands for a NAME and a name is commonly three cards, so
           a single stone would be picking one of the three versions to speak for
           the other two — which is the same "collapses two true facts into one"
           failure the engine builds its whole verdict model to avoid.
+
+          AND NONE AT ALL WHERE THE CARD HAS NO PITCH, which most of the corpus
+          does not — see `PitchStones` for why an absence is drawn by drawing
+          nothing rather than by a grey stone with a dash in it.
         */
         <ol className="of-index__rows">
           {entries.map((entry) => (
@@ -996,12 +1024,8 @@ export function CardIndex({
               href={entry.href}
               label={entry.name}
               qualifier={entry.qualifier}
-              lead={
-                <>
-                  <RowFace entry={entry} />
-                  <PitchStones versions={entry.versions} />
-                </>
-              }
+              lead={<RowFace entry={entry} />}
+              trail={<PitchStones versions={entry.versions} />}
               meta={
                 <>
                   <span>{entry.typeLine}</span>
