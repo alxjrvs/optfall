@@ -710,7 +710,7 @@ Each is a stack layer that leaves the site shippable.
 refused to precache a 9.74 MB file and said so, which is the only reason anybody
 looked: **the island bundle was 9.28 MB, and roughly 9.2 MB of it was the card
 corpus.** `card-search.ts` value-imported two pure helpers from `cards.ts`,
-`cards.ts` loads the 16 MB corpus at module scope, and the island entry reaches
+`cards.ts` loads the 18 MB corpus at module scope, and the island entry reaches
 `card-search.ts` through `CardSearch.tsx` — so Rollup did exactly as asked and
 shipped the corpus to every reader who opened the front page, `/search`, `/cr` or
 any card page. Every check was green while that shipped, because **a bundle

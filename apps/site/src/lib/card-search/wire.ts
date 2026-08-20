@@ -44,7 +44,7 @@ export interface EncodedCardIndex {
    * Face blob keys, one per line, empty where the card publishes no art.
    *
    * SHIPPED RATHER THAN DERIVED, for the same reason the slugs are: the key is
-   * a pure function of an image URL, but the URL lives in the 16 MB corpus that
+   * a pure function of an image URL, but the URL lives in the 18 MB corpus that
    * deliberately never reaches a browser. The build already resolved it, so the
    * index carries the answer rather than the input.
    *

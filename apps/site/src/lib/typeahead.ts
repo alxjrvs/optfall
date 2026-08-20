@@ -92,7 +92,7 @@ function fold(text: string): string {
  * last where `CardPage.pitch` reports it as 0 and would rank it first. One card
  * group in the corpus mixes the two. Recomputing the rule here would be a
  * second spelling of it, and this module cannot import `cards.ts` anyway: it is
- * reachable from the island bundle, and `cards.ts` loads a 16 MB corpus at
+ * reachable from the island bundle, and `cards.ts` loads an 18 MB corpus at
  * module scope. `HREF_BY_NAME_SLUG` is that map.
  *
  * A NAME WITH NO ENTRY IS DROPPED RATHER THAN LINKED NOWHERE. It cannot happen

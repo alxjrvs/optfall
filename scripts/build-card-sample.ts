@@ -5,7 +5,7 @@
  * WHY THIS EXISTS, AND IT IS NOT ABOUT TESTS. The site build does not read this
  * file, and no test asserts behaviour through it — the one test that opens it,
  * `build-card-sample.test.ts`, is checking this generator rather than using the
- * sample as a fixture. It exists because `data/cards/cards.json` is 16 MB,
+ * sample as a fixture. It exists because `data/cards/cards.json` is 18 MB,
  * and the obvious first move against an unfamiliar corpus — open it, or grep it
  * for a card name — costs an agent its entire context in one call, with no
  * warning and nothing smaller to reach for. `CLAUDE.md` names this file as the

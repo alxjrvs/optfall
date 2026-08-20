@@ -114,7 +114,7 @@ export function encodePostings(
  * `releasedBySet` IS PASSED IN RATHER THAN IMPORTED, and that is a bundling
  * constraint rather than a style choice. This module is reached from the search
  * island through `CardSearch.tsx`, so anything it imports ships to the browser —
- * which is how the entire 16 MB card corpus once ended up in a 9.28 MB client
+ * which is how the entire 18 MB card corpus once ended up in a 9.28 MB client
  * bundle. `sets.ts` loads a 21 KB corpus to answer a question worth 1.2 KB of
  * dates, so the build resolves it and hands over the answer. See
  * `src/lib/printings.ts` for the same rule stated at length.

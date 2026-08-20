@@ -131,7 +131,7 @@ function decodePostings(encoded: string): Map<string, number[]> {
  * One alternate art of a card, as a result row needs it.
  *
  * Deliberately smaller than `PrintingRef` in `cards.ts`: that one carries the
- * whole printing row, which is a build-time object sitting in a 16 MB corpus
+ * whole printing row, which is a build-time object sitting in an 18 MB corpus
  * the browser never sees. This is the three fields that survive the wire.
  */
 export interface ArtRef {

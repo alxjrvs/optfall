@@ -97,7 +97,7 @@ describe("the index", () => {
   });
 
   test("carries no card text, only an inverted index over it", () => {
-    // The corpus is 16 MB; what ships is the index. A regression that started
+    // The corpus is 18 MB; what ships is the index. A regression that started
     // shipping the text would be invisible except as a page-weight change, so
     // it is asserted rather than trusted.
     const serialised = JSON.stringify(encoded);

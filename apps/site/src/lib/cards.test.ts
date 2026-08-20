@@ -89,7 +89,7 @@ describe("the pinned corpus", () => {
      * THIS IS A DROP DETECTOR, not a coverage report. The fields sat in
      * `DROPPED_PRINTING_FIELDS` for most of this corpus's life, and the way
      * they would go missing again is a sync that quietly stops carrying them —
-     * which looks like nothing at all in a 18 MB JSON diff. A count that has to
+     * which looks like nothing at all in an 18 MB JSON diff. A count that has to
      * be updated deliberately is the cheapest alarm for that.
      */
     const printings = CORPUS.cards.flatMap((card) => card.printings);
