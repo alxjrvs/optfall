@@ -32,8 +32,18 @@
  * WIDTH AND HEIGHT ARE REQUIRED, and that is not pedantry. Sixty lazily loaded
  * images with no intrinsic size are sixty layout shifts; the attributes give
  * the browser the box before a byte arrives. They are also why the landscape
- * cases matter — 15 cards are played horizontally and 10 printings carry a
- * rotation, and a portrait box around a landscape face is visible at a glance.
+ * cases matter — 14 of the 11,376 stored faces are wider than they are tall,
+ * and a box of the wrong shape around a face is visible at a glance.
+ *
+ * THE CALLER OWES A BOX THE FACE ACTUALLY HAS, and this component cannot check
+ * it. The box is enforced below rather than inferred from what loads (see the
+ * `aspect-ratio` note in `CardFace.css`), so a caller that hands over a
+ * landscape box for a portrait face gets a portrait face letterboxed inside it
+ * — silently, at about 72% of the width its neighbours draw at. That shipped:
+ * the site derived the box from `played_horizontally`, a gameplay field, and it
+ * disagreed with the bytes on 24 faces. `apps/site/src/lib/faces.ts` now answers
+ * from a measurement, and this paragraph is here because the component's
+ * contract is what made the caller's mistake invisible.
  *
  * THERE IS NO ERROR HANDLING HERE, DELIBERATELY. The face host answers a miss
  * with a card-shaped NO IMAGE placeholder at 200 rather than a 404, so the

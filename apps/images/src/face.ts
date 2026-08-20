@@ -174,6 +174,56 @@ export function coldFoilFallbackKey(key: string): string | null {
   return `${groups["tier"]}/${groups["stem"]}.webp`;
 }
 
+/**
+ * Every stored face whose bytes are wider than they are tall.
+ *
+ * THE RUNTIME TWIN OF `LANDSCAPE_FACE_KEYS` in `apps/site/src/lib/faces.ts`,
+ * duplicated for the reason `coldFoilFallbackKey` is: this app declares no
+ * dependencies at all, deliberately, and reaches nothing outside itself. Read
+ * that file for how the list was measured and what it corrects; the short
+ * version is that a ranged read of all 11,376 stored faces found exactly these
+ * 14 to be landscape, and no corpus field predicts them.
+ *
+ * The keys here carry no tier prefix — {@link orientationOfKey} strips it —
+ * so this list is character-for-character the site's, which is what makes the
+ * two comparable by eye when one of them changes.
+ */
+const LANDSCAPE_FACE_KEYS: ReadonlySet<string> = new Set([
+  "AST017.webp",
+  "ROS005.webp",
+  "ROS006.webp",
+  "ROS011.webp",
+  "ROS012.webp",
+  "ROS017.webp",
+  "ROS018.webp",
+  "ROS023.webp",
+  "ROS024.webp",
+  "ROS253.webp",
+  "ROS257_V2.webp",
+  "ROS257_V2_BACK.webp",
+  "SEA258.webp",
+  "SEA259.webp",
+]);
+
+/**
+ * The placeholder shape to answer a miss at this key with.
+ *
+ * WHY A MISS HAS AN ORIENTATION AT ALL. The placeholder is what fills the box
+ * the page has already reserved, and that box is now the face's OWN shape rather
+ * than a guess from the card's gameplay fields. So answering every miss with the
+ * portrait plate — which is what this host did — put a 450×628 SVG inside a
+ * 628×450 hole for exactly the 14 faces most likely to be missing, and
+ * `object-fit: contain` letterboxed it. Small, but it is the same defect the
+ * site-side change exists to remove, and leaving it here would mean the two
+ * halves disagreed on a page nobody would think to check.
+ *
+ * Takes the key WITH its tier prefix, as {@link parseFacePath} emits one.
+ */
+export function orientationOfKey(key: string): Orientation {
+  const basename = key.slice(key.indexOf("/") + 1);
+  return LANDSCAPE_FACE_KEYS.has(basename) ? "landscape" : "portrait";
+}
+
 /** `/placeholder/portrait.svg` → `"portrait"`. */
 export function parsePlaceholderPath(pathname: string): Orientation | null {
   const raw = pathname.replace(/^\/+/, "");
@@ -219,7 +269,7 @@ export const makeFaceHandler =
       stream = await openStore().get(parsed.key);
     } catch (error) {
       report(error, { fn: "face", op: "r2.get", key: parsed.key });
-      return placeholderResponse("portrait", 503);
+      return placeholderResponse(orientationOfKey(parsed.key), 503);
     }
 
     if (!stream) {
@@ -236,7 +286,7 @@ export const makeFaceHandler =
           substitute = await openStore().get(fallback);
         } catch (error) {
           report(error, { fn: "face", op: "r2.get", key: fallback });
-          return placeholderResponse("portrait", 503);
+          return placeholderResponse(orientationOfKey(parsed.key), 503);
         }
         if (substitute) {
           return new Response(substitute, {
@@ -255,7 +305,7 @@ export const makeFaceHandler =
           });
         }
       }
-      return placeholderResponse("portrait");
+      return placeholderResponse(orientationOfKey(parsed.key));
     }
 
     return new Response(stream, {

@@ -61,7 +61,7 @@
 
 import type { PitchValue, StateTone } from "optfall-theme";
 
-import { faceKeyFor, orientationOf } from "./faces";
+import { faceKeyFor, orientationOfFace } from "./faces";
 /* Imported as well as re-exported: a re-export creates no local binding, and
    `CARD_ROUTES` below both calls `facesOf` and names `PrintingRef`. */
 import { facesOf, hrefForPrinting, type PrintingRef } from "./printings";
@@ -1080,7 +1080,12 @@ function faceOf(card: Card): CardFaceRef {
     if (key === null) continue;
     return {
       key,
-      orientation: orientationOf({
+      // FROM THE KEY, NOT FROM THE CARD. A card played sideways is not reliably
+      // published sideways — `Vaporize // Shock` ships one portrait face and one
+      // landscape one — so the box is read off the measured face rather than off
+      // `played_horizontally`. See `LANDSCAPE_FACE_KEYS`.
+      orientation: orientationOfFace({
+        key,
         playedHorizontally,
         rotationDegrees: printing.image_rotation_degrees,
       }),
@@ -1090,10 +1095,16 @@ function faceOf(card: Card): CardFaceRef {
 
   // No printing publishes art. The page still needs a box of the right shape,
   // so the orientation is answered from the card itself and the key is null —
-  // which `CardFace` renders as the placeholder rather than as nothing.
+  // which `CardFace` renders as the placeholder rather than as nothing. This is
+  // the one case with no bytes to measure, and the one `orientationOf` is still
+  // the right question for.
   return {
     key: null,
-    orientation: orientationOf({ playedHorizontally, rotationDegrees: 0 }),
+    orientation: orientationOfFace({
+      key: null,
+      playedHorizontally,
+      rotationDegrees: 0,
+    }),
     printingId: card.printings[0]?.id ?? null,
   };
 }

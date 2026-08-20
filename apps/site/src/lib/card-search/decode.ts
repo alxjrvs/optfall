@@ -141,18 +141,22 @@ export interface ArtRef {
   /**
    * Whether THIS art is landscape, which is not always what the card is.
    *
-   * CARRIED PER ART BECAUSE THE INPUT IS PER PRINTING. `orientationOf` reads
-   * two things: `played_horizontally`, which belongs to the card and is
-   * therefore the same for every one of its faces, and
-   * `image_rotation_degrees`, which belongs to the PRINTING — ten of them in
-   * this corpus carry a non-zero one. So two arts of one card can differ, and
-   * an index that knew only the default face's orientation would put a
-   * rotated alternate inside a portrait box.
+   * CARRIED PER ART BECAUSE THE INPUT IS PER ART. `orientationOfFace` reads the
+   * face's own measured key (`faces.ts`, `LANDSCAPE_FACE_KEYS`), and upstream
+   * publishes two arts of one card in different orientations — so an index that
+   * knew only the default face's orientation would put the other one in the
+   * wrong box.
    *
-   * Measured today: zero cards actually diverge, so this is latent rather than
-   * live. It is carried anyway, for the reason `faces.ts` gives about the
-   * `decodeURIComponent` throw it once shipped — latent is exactly how a bug
-   * like this arrives, on a corpus sync nobody is watching.
+   * IT IS LIVE, NOT LATENT, AND THIS NOTE SAID THE OPPOSITE. It read "measured
+   * today: zero cards actually diverge", on the strength of the old rule, which
+   * derived orientation from `played_horizontally` — a property of the CARD, and
+   * therefore the same for every face of it. Under that rule divergence was not
+   * merely absent, it was unreachable, so the measurement was of the rule rather
+   * than of the corpus. Measured against the bytes: **12 cards diverge.**
+   * `Vaporize // Shock` is one — `LGS346-CF.webp` is a 449×628 file and
+   * `ROS011.webp` is a 450×322 one — and so is the `Runechant` token, whose two
+   * faces are landscape on a card that is neither played horizontally nor
+   * rotated.
    *
    * TWO characters per art, not one: the flag needs its own space delimiter, so
    * 6,437 arts cost about 12.9 KB rather than the 6.4 KB the digit alone would

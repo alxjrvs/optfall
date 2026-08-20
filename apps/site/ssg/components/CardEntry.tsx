@@ -63,7 +63,7 @@ import {
   boxFor,
   faceKeyFor,
   faceUrl,
-  orientationOf,
+  orientationOfFace,
   placeholderUrl,
 } from "../../src/lib/faces";
 import { buildKeywordVocabulary, rulesForCard } from "../../src/lib/keywords";
@@ -685,12 +685,25 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       .join(", ");
   })();
 
-  /** The box the face is drawn in — this printing's own orientation. */
+  /**
+   * The box the face is drawn in — this printing's own orientation, read off
+   * this printing's own key.
+   *
+   * PER PRINTING RATHER THAN PER CARD, AND NOW ACTUALLY SO. This already said
+   * "this printing's own orientation" while answering from `played_horizontally`,
+   * which is a property of the CARD — so every printing of a card got the same
+   * answer and the distinction the line claims was not being drawn at all.
+   * `Vaporize // Shock` is where that shows: `LGS346-CF` is a portrait file and
+   * `ROS011` is a landscape one, and the landscape box the card-level field
+   * asserted for both letterboxed the first to 322 px wide on a page whose other
+   * cards draw at 450.
+   */
   const shownBox = boxFor(
     "normal",
     shown === undefined
       ? page.face.orientation
-      : orientationOf({
+      : orientationOfFace({
+          key: shown.key,
           playedHorizontally: card.played_horizontally,
           rotationDegrees: shown.printing.image_rotation_degrees,
         }),

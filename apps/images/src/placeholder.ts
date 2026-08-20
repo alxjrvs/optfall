@@ -45,9 +45,15 @@ export type Orientation = "portrait" | "landscape";
  *
  * Drawn rather than typed out twice: the landscape form is the portrait form
  * with the box transposed, so the two cannot drift apart in the way two
- * hand-maintained files would. 15 cards are `played_horizontally` and 10
- * printings carry a non-zero `image_rotation_degrees`, and a portrait
- * placeholder under a landscape card is a bug visible at a glance.
+ * hand-maintained files would.
+ *
+ * WHICH ONE A MISS GETS IS DECIDED BY `orientationOfKey` IN `./face.ts`, from
+ * the same measured list the site sizes its boxes with. It used to be decided
+ * here in the sense that it was not decided at all — every face miss took the
+ * portrait plate — and the note this replaces justified the landscape form by
+ * counting `played_horizontally` cards, which is a fact about the game rather
+ * than about any stored file. Measured: 14 of the 11,376 stored faces are
+ * landscape, and those are the ones whose miss needs this form.
  */
 export function placeholderSvg(orientation: Orientation): string {
   const long = 628;

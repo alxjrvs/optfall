@@ -187,11 +187,98 @@ export function placeholderUrl(
 }
 
 /**
- * Which way round a printing is.
+ * Every stored face whose bytes are wider than they are tall.
+ *
+ * MEASURED, NOT PREDICTED, AND THAT IS THE ENTIRE POINT OF THIS CONSTANT.
+ * Orientation used to be inferred from two corpus fields — `played_horizontally`
+ * on the card and `image_rotation_degrees` on the printing — on the reasoning
+ * that a card played sideways is published sideways. It is not. Upstream is
+ * inconsistent about which way round it scans a horizontal card, and neither
+ * field records what it chose.
+ *
+ * The whole store was measured to settle it: a ranged `GET` of the first forty
+ * bytes of all 11,376 distinct faces at the `normal` tier, reading the box out
+ * of the WebP header. 11,376 answered, none 404ed, none was served the
+ * placeholder. **14 are landscape, all of them exactly 450×322.** The old rule
+ * put a landscape box on 34 faces and got 24 of them wrong, in both directions:
+ *
+ * - **22 portrait faces in a landscape box.** `Vaporize // Shock` is the
+ *   reported one — `LGS346-CF.webp` is 449×628, a portrait scan of a card whose
+ *   text runs sideways, and `played_horizontally` said landscape. `object-fit:
+ *   contain` then letterboxed it, so a split card drew at 322 px wide where
+ *   every other card on the site draws at 450. That is the bug this fixes: not
+ *   a crop, not a scale — the box was the wrong shape and the image obeyed it.
+ *   Its own sibling printing `ROS011.webp` IS landscape, so one card rendered
+ *   two sizes depending on which printing you were looking at.
+ * - **2 landscape faces in a portrait box**, which the old rule could not have
+ *   caught in principle. `ROS257_V2` and `ROS257_V2_BACK` — the `Runechant` /
+ *   `Embodiment` token — are 450×322 with `played_horizontally: false` and
+ *   `image_rotation_degrees: 0`. No combination of the two fields reaches them.
+ *
+ * `image_rotation_degrees` is not the missing signal either. It is 270 on seven
+ * of these and 0 on the rest, and it does not sort them: `FLR013` (270) and
+ * `LGS346-CF` (0) are both portrait files. The ingest honours EXIF and nothing
+ * else (`scripts/ingest-card-images.ts`), so what is stored is whatever shape
+ * upstream published, and only the stored bytes know it.
+ *
+ * KEEPING IT HONEST. `bun run check:face-orientation` re-measures the live
+ * store against this list. It is deliberately NOT part of `bun run check` and
+ * NOT pre-approved in `.claude/settings.json`, for the reason `check:symbols`
+ * is not: it makes 11,376 network requests. Run it after a corpus sync.
+ *
+ * `apps/images/src/face.ts` carries the same list, for the same
+ * declares-no-dependencies reason `coldFoilSiblingKey` has a twin there.
+ */
+export const LANDSCAPE_FACE_KEYS: ReadonlySet<string> = new Set([
+  "AST017.webp",
+  "ROS005.webp",
+  "ROS006.webp",
+  "ROS011.webp",
+  "ROS012.webp",
+  "ROS017.webp",
+  "ROS018.webp",
+  "ROS023.webp",
+  "ROS024.webp",
+  "ROS253.webp",
+  "ROS257_V2.webp",
+  "ROS257_V2_BACK.webp",
+  "SEA258.webp",
+  "SEA259.webp",
+]);
+
+/**
+ * Which way round a face is, from the bytes where there are bytes.
+ *
+ * A key names something that has been measured, so it is answered from
+ * {@link LANDSCAPE_FACE_KEYS} and no corpus field is consulted. A key the list
+ * has never seen is portrait: that is the answer for 11,362 of 11,376 measured
+ * faces, and a face added by a corpus sync since the last measurement is far
+ * likelier to be another portrait than the fifteenth landscape.
+ *
+ * `null` is the one case with nothing to measure — four printings publish no
+ * image at all — and it falls to {@link orientationOf}, because the page then
+ * asks for `placeholderUrl(orientation)` explicitly and that endpoint really
+ * does serve both shapes.
+ */
+export function orientationOfFace(input: {
+  readonly key: string | null;
+  readonly playedHorizontally: boolean;
+  readonly rotationDegrees: number;
+}): "portrait" | "landscape" {
+  if (input.key !== null)
+    return LANDSCAPE_FACE_KEYS.has(input.key) ? "landscape" : "portrait";
+  return orientationOf(input);
+}
+
+/**
+ * Which way round a card is PLAYED, which is a different question.
  *
  * 15 cards are `played_horizontally` and 10 printings carry a non-zero
- * `image_rotation_degrees`. Either makes the face landscape, and a portrait box
- * around a landscape image is a bug visible at a glance.
+ * `image_rotation_degrees`. That is a fact about the game, and it was used as a
+ * proxy for a fact about an image file until the measurement above showed the
+ * two disagree 24 times. It survives for the one case where there is no file to
+ * measure — see {@link orientationOfFace} — and should not be reached for a
+ * face that has a key.
  */
 export function orientationOf(input: {
   readonly playedHorizontally: boolean;
