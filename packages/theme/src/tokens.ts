@@ -209,15 +209,21 @@ const STRUCTURE: TokenTable = {
      whole of the difference: edge-up reads as a button, vertex-up as a gem. */
   "ornament.cut.jewel":
     "polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%)",
-  "ornament.cut.hexagon":
-    "polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%)",
-  "ornament.cut.lean.end":
-    "polygon(0 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%)",
-  "ornament.cut.lean.start":
-    "polygon(0 0, 100% 0, 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)))",
-  "ornament.cut.plain": "none",
-  "ornament.cut.diagonal.start":
-    "polygon(var(--chamfer) 0, 100% 0, 100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%, 0 100%, 0 var(--chamfer))",
+  /* FIVE CUTS WENT, AND THE REASON IS THAT NOTHING WORE THEM. `hexagon`,
+     `lean.start`, `lean.end`, `plain` and `diagonal.start` were defined here and
+     used by no component and no page — so every one of the 12,776 pages
+     downloaded five custom properties that could not affect a pixel.
+
+     A token is a shared vocabulary, and an entry nobody says is not vocabulary,
+     it is a suggestion. `plain` is the clearest case: a token whose value is
+     `none` is a way of writing "no clip-path" that reads like a decision, and
+     the components that want no clip-path simply do not set one.
+
+     Do not restore one speculatively. The seven that remain — `disc`, `jewel`,
+     `shield`, `crown`, `diagonal.end`, `side.start`, `side.end` — are each worn
+     by something, and `scripts/check-tokens.ts` fails the build on a surface
+     naming a token that does not exist, so adding one back when a component
+     needs it is a two-line change with a gate behind it. */
   "ornament.cut.diagonal.end":
     "polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer)))",
   "ornament.cut.crown":
