@@ -4,9 +4,6 @@
 rules engine attached — every card, every printing, every rule, each citable and
 each with a permanent URL.
 
-> Published version:
-> <https://claude.ai/code/artifact/f801332b-9a7b-430a-bf9b-b6d603ce186a>
-
 | Phase | | State |
 |---|---|---|
 | 0 | Repo and infrastructure | **done** |

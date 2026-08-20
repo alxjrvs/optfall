@@ -3,9 +3,6 @@
 Scryfall's ethos — a reference work that respects your time — forged in the
 language of Rathe: black, blood and brass.
 
-> Published version with rendered mockups:
-> <https://claude.ai/code/artifact/7cb29b44-9250-48bb-a733-e9f4c8a5eb64>
-
 ---
 
 ## What we take, and what changes

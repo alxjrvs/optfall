@@ -29,12 +29,6 @@ confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
 | [`docs/DATA-TERMS.md`](docs/DATA-TERMS.md) | Terms on the data Optfall publishes, and what is *not* ours to license |
 | [`docs/PHASE-1-STATUS.md`](docs/PHASE-1-STATUS.md) | What Phase 1 delivered, and every finding left unfixed |
 
-The plan and design pass are also published as browsable pages:
-
-- [Build plan](https://claude.ai/code/artifact/f801332b-9a7b-430a-bf9b-b6d603ce186a)
-- [Design pass](https://claude.ai/code/artifact/7cb29b44-9250-48bb-a733-e9f4c8a5eb64)
-- [The Scryfall gap](https://claude.ai/code/artifact/a0870818-24e7-4ca8-8711-940e5f3fcf9d)
-
 ## Status
 
 **Phases 0, 1, 2 and 6 are on `main`**, and the product surface is built: a
