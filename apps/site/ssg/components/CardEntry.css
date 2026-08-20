@@ -1110,8 +1110,8 @@
     list of one row per purchasable printing — a quiet wide-tracked label, a
     button, wrapping rather than scrolling because a label and a button fit a
     320px screen stacked. They went with the section. What is left of Buy on a
-    card page is the two rules below: the button under the card panel, and the
-    sentence that has to accompany it.
+    card page is the three rules below: the row under the card panel, the button
+    that starts it, and the sentence that has to accompany that button.
 
     IT IS WRITTEN DOWN RATHER THAN SILENTLY DELETED because that is what this
     file did for the buy column it replaced, one screen down, and for the same
@@ -1120,46 +1120,85 @@
   */
 
 /*
-    THE BUY BUTTON, under the panel that mirrors the printing it buys. See
-    `CardEntry.tsx` for why it left the face column; what it needs here is one
-    declaration.
+    THE BUTTON AND ITS DISCLOSURE, SIDE BY SIDE, under the panel that mirrors
+    the printing they are about. See `CardEntry.tsx` for why they left the face
+    column and why they are one row rather than two.
 
-    `align-self`, BECAUSE THE COLUMN STRETCHES ITS CHILDREN. The facts column is
-    a flex column, so its default `stretch` would pull an `inline-flex` button
-    out to the full width of the panel above it — a control as wide as the card,
-    which reads as a banner rather than as a button. `flex-start` gives it its
-    content width at the edge the panel, the legality grid and every heading in
-    this column already align to.
+    IT IS THE `.of-card__attribute` SHAPE, DELIBERATELY. A label that takes its
+    content width, a body that takes what is left, wrapping to a second line
+    when what is left stops being enough — that is the definition row under
+    "Definition rows" above, and this is the same problem, so it is the same
+    declarations rather than a second spelling of them.
 
-    IT IS NO LONGER CENTRED, and that was right where it was: it was the only
-    thing under a centred image, in a column of one. Here it is one item in a
-    stack of flush-left ones, and centring it would align it to nothing.
+    `baseline`, NOT `center`. The disclosure is three or four lines wherever it
+    sits beside the button, so it is always the taller item; centring would push
+    the button down the block as the sentence reflowed, and aligning its label
+    to the sentence's first line holds it where the panel above left it.
   */
-.of-card__facts-column > .of-icon-button {
-  align-self: flex-start;
+.of-card__buy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-base) var(--of-space-loose);
 }
 
 /*
-    THE DISCLOSURE, DIRECTLY UNDER THAT BUTTON. It used to sit in the Buy
-    section at full measure, then under the face; it is now in the facts column
-    with the link it describes, and the rule that follows it there is the same
-    one it needed before. `min-inline-size: 0` lets the flex item be narrower
-    than its longest word wants, which is the 320px case — a paragraph is not
-    allowed to set a floor under the column it sits in.
+    THE BUTTON KEEPS ITS CONTENT WIDTH, and now there are two ways it could
+    lose it. The facts column is a flex column whose default `stretch` would
+    pull an `inline-flex` button out to the full width of the panel above it; a
+    flex ROW would instead grow it to fill whatever the disclosure did not take.
+    `0 0 auto` refuses both — a control as wide as the card reads as a banner,
+    and a control whose width tracks the length of a legal sentence reads as an
+    accident.
 
-    IT IS NOT INDENTED TO THE BUTTON, IT IS THE MEASURE. `align-self: stretch`
-    keeps it flush with the panel above and the legality grid below, so it reads
-    as a line of the page rather than as a caption hanging off the control. The
-    claim being made is legal rather than decorative: it should read like the
-    rights line at the foot of the page.
+    IT IS NO LONGER CENTRED, and that was right where it was: it was the only
+    thing under a centred image, in a column of one. Here it is the first item
+    in a flush-left row, and centring it would align it to nothing.
+  */
+.of-card__buy > .of-icon-button {
+  flex: 0 0 auto;
+}
+
+/*
+    THE DISCLOSURE TAKES WHAT THE BUTTON LEAVES, AND WRAPS RATHER THAN NARROWS.
+    `1 1 70%` is the growth, the shrink and the wrap in one declaration. Asking
+    for 70% of the row is asking for more than fits beside a 192px button until
+    the row is about 700px wide, so above that the sentence sits to the right
+    and grows into whatever is left, and below it the whole paragraph drops onto
+    its own line at full width.
+
+    THE PROPORTION IS THE WHOLE CHOICE, and 60% was tried first. It also seats
+    the sentence beside the button — but it seats it in a 318px gutter at a
+    1040px viewport, six lines of `type.size.micro` against a one-line control,
+    for the same row height a full-measure paragraph underneath would have
+    taken. 70% gives that band the readable arrangement instead, and costs the
+    two wide layouts nothing: the sentence is still beside the button, at the
+    same width, wherever it was before.
+
+    Measured on the built site, `/card/mst/131/10-000-year-reunion`, in a
+    fixed-width iframe. Beside the button at 964 (717px, three lines — the two
+    columns have stacked there, so the facts column is the whole page) and from
+    1226 up (504px at 1226, 528px at 1440, four lines). Under it at 320, 360,
+    390, 430 — where a button and a paragraph do not share a phone screen — and
+    through the 1000–1200 band, where the columns have split and the facts
+    column is too narrow to seat both. `documentElement.scrollWidth ===
+    clientWidth` at every one of the six widths in `CLAUDE.md`.
+
+    Nothing here is a breakpoint. The number is a proportion of the row, so the
+    arrangement follows the room the row actually has — which is why it survives
+    the columns stacking at 964, a width no rule in this file mentions.
+
+    `min-inline-size: 0` lets the flex item be narrower than its longest word
+    wants, which is the 320px case — a paragraph is not allowed to set a floor
+    under the column it sits in.
   */
 .of-card__buy-verify {
+  flex: 1 1 70%;
   min-inline-size: 0;
-  align-self: stretch;
-  /* The column is a flex column with a gap of its own, and `.of-card__verify`
-       adds a `base` margin — which in the section it came from was the only
-       separation there was. Here the two stack into a double gap, so this gives
-       the margin back to the gap. */
+  /* The row has a gap of its own, and `.of-card__verify` adds a `base` margin —
+       which in the section it came from was the only separation there was.
+       Beside the button that margin would push the sentence off the button's
+       baseline; wrapped underneath it, it doubles the row gap. */
   margin-block-start: 0;
 }
 

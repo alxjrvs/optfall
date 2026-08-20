@@ -1182,7 +1182,7 @@ describe("the printings table is how a reader reaches another art", () => {
          written. It guarded against the sentence appearing under the "Buy"
          section AND again beside the face button, on the argument that printing
          it twice is not more conspicuous, it is the noise that teaches a reader
-         to skip a disclosure. There is one link now and the sentence sits under
+         to skip a disclosure. There is one link now and the sentence sits beside
          it, so what this catches is a second copy arriving from anywhere. */
       expect(html.split("Buy links go to TCGplayer").length - 1).toBeLessThan(
         2,
