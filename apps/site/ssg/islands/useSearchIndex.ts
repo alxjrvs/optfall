@@ -40,6 +40,14 @@ import { QueryClient, useQuery } from "@tanstack/react-query";
 /**
  * One client for every island, created once.
  *
+ * EXPORTED FOR ONE REASON: A TEST CANNOT OTHERWISE KNOW THE FETCH HAS LANDED.
+ * `CardSearch.dom.test.tsx` drives this island through real queries, and every
+ * assertion in it is now downstream of a request. Polling the DOM for the
+ * absence of a loading line is the alternative, and it is the shape that goes
+ * green for the wrong reason — the line is also absent before anything has been
+ * asked. `client.isFetching()` is the actual question, so it is the one asked.
+ * Nothing in the app reads this export.
+ *
  * EVERY REFETCH TRIGGER IS OFF, because there is nothing to refetch. The URL
  * carries a digest of its own contents, so the bytes behind it can never change:
  * a new index is a new address, served by a page that links it. Focus,
@@ -50,7 +58,7 @@ import { QueryClient, useQuery } from "@tanstack/react-query";
  * are not redundant with it, since a refetch trigger fires on the CACHE ENTRY
  * rather than on staleness alone.
  */
-const client = new QueryClient({
+export const searchIndexClient: QueryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: Number.POSITIVE_INFINITY,
@@ -107,7 +115,7 @@ export function useSearchIndex<Encoded, Decoded>(
         return decode((await response.json()) as Encoded);
       },
     },
-    client,
+    searchIndexClient,
   );
 
   return {

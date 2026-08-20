@@ -57,31 +57,40 @@
  * claim keeps a surface; each one moved to the surface that is about it.
  */
 
-import { buildCardIndex } from "../../src/lib/card-search";
-import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
-import { SETS } from "../../src/lib/sets";
 import { Island } from "../Island";
 import { CardSearch, HEADER_FIELD_ID } from "../islands/CardSearch";
+import { CARD_BRIEF, CARD_INDEX } from "../searchIndexes";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
 
-/*
- * Built here, once, at build time, from the same shaped pages `/card/<slug>`
- * renders — which is what makes it impossible for a search result and the page
- * it links to to disagree about a slug, a label, a legality verdict or a face.
- * The 18 MB corpus stays on the build machine.
+/**
+ * WHAT THE ISLAND IS HANDED, AND IT IS NO LONGER THE INDEX.
+ *
+ * ~~Built here, once, at build time~~ — **the index is built in
+ * `ssg/searchIndexes.ts` now, and this page links its address rather than
+ * carrying its bytes.** Nothing about the construction moved except its
+ * location: it is still made from the same shaped pages `/card/<slug>` renders,
+ * which is what makes it impossible for a search result and the page it links to
+ * to disagree about a slug, a label, a legality verdict or a face.
+ * The 18 MB corpus still stays on the build machine.
+ *
+ * WHAT MOVED IS WHERE THE 909,626 BYTES GO. They were inside this page, in a
+ * `data-props` attribute — the single largest document on the site, at 921 kB,
+ * with its own entry in `build.ts`'s budget exceptions to say so. They are now a
+ * content-hashed file, fetched by the island when there is a query to answer.
+ * `ssg/searchIndexes.ts` carries the argument for the change.
+ *
+ * THE PIN STAYS IN THE PAGE, and that is the part that could not simply be
+ * deleted. `docs/PLAN.md` requires every surface to show when its data was last
+ * confirmed, and the card count, the upstream commit and the confirmation date
+ * are how `/search` does it. They ride in `CARD_BRIEF` — 805 bytes, rendered
+ * with no fetch — because a provenance line that appears only once a request
+ * succeeds is absent exactly when something has gone wrong.
  */
-/*
- * THE DATES ARE RESOLVED HERE RATHER THAN INSIDE THE ENGINE, because
- * `card-search/` ships to the browser through the island and `sets.ts` loads a
- * corpus. The build knows the answer; the client only needs the 1.2 KB of dates
- * the index encodes. See `CardIndexSource`.
- */
-const index = buildCardIndex(CARD_PAGES, {
-  commit: CORPUS.source.commit,
-  confirmed: LAST_CONFIRMED,
-  releasedBySet: new Map(SETS.sets.map((set) => [set.id, set.released])),
-});
+const islandProps = {
+  indexUrl: CARD_INDEX.url,
+  brief: CARD_BRIEF,
+};
 
 function page(): PageResult {
   return {
@@ -187,8 +196,8 @@ function page(): PageResult {
           </p>
         </noscript>
 
-        <Island name="CardSearch" props={{ index }}>
-          <CardSearch index={index} />
+        <Island name="CardSearch" props={islandProps}>
+          <CardSearch {...islandProps} />
         </Island>
       </>
     ),

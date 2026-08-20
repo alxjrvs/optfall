@@ -522,7 +522,7 @@ export async function generatedAssets(): Promise<readonly GeneratedAsset[]> {
    * what it is for: bytes that are DERIVED. The alternative was a second writer
    * in `build.ts`, and the header of this file is an argument against having two.
    */
-  const { RULES_INDEX } = await import("./searchIndexes");
+  const { CARD_INDEX, RULES_INDEX } = await import("./searchIndexes");
 
   return [
     { path: "favicon.svg", contents: faviconSvg() },
@@ -558,5 +558,6 @@ export async function generatedAssets(): Promise<readonly GeneratedAsset[]> {
      * declaration of the address and nothing for a second one to drift from.
      */
     { path: RULES_INDEX.path, contents: RULES_INDEX.contents },
+    { path: CARD_INDEX.path, contents: CARD_INDEX.contents },
   ];
 }

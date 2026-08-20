@@ -49,7 +49,11 @@ export default defineConfig({
          * carrying the printing picker downloads the rules search too, which is
          * a real cost and the right trade at this size: the alternative is a
          * chunk graph and a manifest lookup per island, to save a few kB on a
-         * site whose largest page ships a 731 kB search index inline.
+         * site whose largest page ~~ships a 731 kB search index inline~~ is a
+         * 297 kB list of set rows. The index moved out into a file the islands
+         * fetch (`ssg/searchIndexes.ts`), so the comparison that made this an
+         * easy call is gone and the call is unchanged: one bundle is still four
+         * islands in one cache entry, and the heaviest thing in it is React.
          *
          * Revisit when an island appears that is genuinely heavy and genuinely
          * rare. Until then, one file, one cache entry, one request.

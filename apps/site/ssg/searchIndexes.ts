@@ -50,12 +50,19 @@ import { createHash } from "node:crypto";
  */
 import { CORPUS as RULES_CORPUS } from "../src/lib/rules";
 import {
+  buildCardIndex,
+  decodeCardIndex,
+  type EncodedCardIndex,
+} from "../src/lib/card-search";
+import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../src/lib/cards";
+import {
   buildIndex,
   chapters,
   decodeIndex,
   type EncodedIndex,
   type SearchResult,
 } from "../src/lib/search";
+import { SETS } from "../src/lib/sets";
 
 /**
  * One index, as the four things its two consumers between them need.
@@ -134,3 +141,68 @@ export const RULES_INDEX: SearchIndexAsset<EncodedIndex> = indexAsset(
 export const RULES_BROWSE: readonly SearchResult[] = chapters(
   decodeIndex(RULES_INDEX.encoded),
 );
+
+/**
+ * The card index. Measured at 909,626 bytes on `main`.
+ *
+ * BUILT HERE RATHER THAN IN `search.page.tsx`, WHICH IS WHERE IT LIVED. Nothing
+ * about the construction changed — it is still the same three fields fed to
+ * `buildCardIndex` from the same shaped pages `/card/<slug>` renders, which is
+ * what makes it impossible for a result and the page it links to to disagree
+ * about a slug, a legality verdict or a face. What changed is that TWO
+ * consumers need it now: the page, which links its address, and `assets.ts`,
+ * which writes its bytes. A module scope is the only place both can read one
+ * value rather than two derivations of it.
+ */
+export const CARD_INDEX: SearchIndexAsset<EncodedCardIndex> = indexAsset(
+  "card-index",
+  buildCardIndex(CARD_PAGES, {
+    commit: CORPUS.source.commit,
+    confirmed: LAST_CONFIRMED,
+    releasedBySet: new Map(SETS.sets.map((set) => [set.id, set.released])),
+  }),
+);
+
+/**
+ * Everything `/search` prints before anybody has searched.
+ *
+ * THE SAME SEPARATION `RULES_BROWSE` MAKES, and it is worth stating that the
+ * symmetry is real rather than a coincidence of shape. Both surfaces are a field
+ * over a corpus, and both draw something from that corpus while the field is
+ * empty — nine chapters there, twenty-four printed type lines here, each a link
+ * into the search that answers it. Neither needs an index to do it, and until
+ * now both loaded one anyway.
+ *
+ * IT CARRIES THE PIN, WHICH IS NOT DECORATION. `docs/PLAN.md`: "Every surface
+ * shows when its data was last confirmed. A stale Optfall must look stale." The
+ * count, the upstream commit and the confirmation date are that sentence on this
+ * page, so they have to render without a fetch — a provenance line that appears
+ * only once a request succeeds is a provenance line that is absent exactly when
+ * something is wrong.
+ *
+ * 805 bytes measured, against the 909,626 it replaces.
+ */
+export interface CardCorpusBrief {
+  /** How many cards the corpus carries. */
+  readonly size: number;
+  /** The upstream commit it is pinned at. Displayed, never parsed. */
+  readonly commit: string;
+  /** `YYYY-MM-DD` it was last confirmed against upstream. */
+  readonly confirmed: string;
+  /** Printed type lines and how many cards carry each, for the empty state. */
+  readonly browse: readonly (readonly [string, number])[];
+}
+
+export const CARD_BRIEF: CardCorpusBrief = (() => {
+  /* Decoded once, at build time, purely to read four fields off it. The decode
+     is the honest way to get them: `size` and `browse` are derivations of the
+     wire format, and re-deriving them from the encoded strings here would be a
+     second implementation of `decodeCardIndex` that could disagree with it. */
+  const decoded = decodeCardIndex(CARD_INDEX.encoded);
+  return {
+    size: decoded.size,
+    commit: decoded.commit,
+    confirmed: decoded.confirmed,
+    browse: decoded.browse,
+  };
+})();

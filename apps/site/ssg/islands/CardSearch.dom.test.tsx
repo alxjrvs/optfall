@@ -46,10 +46,15 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
-import { buildCardIndex } from "../../src/lib/card-search";
+import { buildCardIndex, decodeCardIndex } from "../../src/lib/card-search";
 import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
 import { SETS } from "../../src/lib/sets";
-import { CardSearch, HEADER_FIELD_ID } from "./CardSearch";
+import {
+  type CardCorpusBrief,
+  CardSearch,
+  HEADER_FIELD_ID,
+} from "./CardSearch";
+import { searchIndexClient } from "./useSearchIndex";
 
 /*
  * THE REAL INDEX, BECAUSE THE SEAM CARRIES REAL QUERIES ACROSS IT. A stub index
@@ -62,6 +67,70 @@ const index = buildCardIndex(CARD_PAGES, {
   confirmed: LAST_CONFIRMED,
   releasedBySet: new Map(SETS.sets.map((set) => [set.id, set.released])),
 });
+
+/**
+ * The index arrives over `fetch` now, so the harness has to serve it.
+ *
+ * A REAL `Response` CARRYING THE REAL INDEX, not a mocked hook. The component's
+ * contract with `useSearchIndex` is one of the things that can break, and a test
+ * that stubs the hook would assert the component against a fiction of it. This
+ * stubs the ONE thing the browser provides and the test environment does not,
+ * and everything above it — the query, the decode, the three states — is the
+ * shipped code.
+ *
+ * THE ADDRESS IS ASSERTED RATHER THAN IGNORED. If the island ever fetches
+ * something else, the throw says so by name instead of the suite quietly seeing
+ * an index that never loads.
+ */
+const INDEX_URL = "/assets/card-index-under-test.json";
+
+globalThis.fetch = (async (input: RequestInfo | URL): Promise<Response> => {
+  const url = typeof input === "string" ? input : String(input);
+  if (url !== INDEX_URL) throw new Error(`unexpected fetch: ${url}`);
+  return new Response(JSON.stringify(index), {
+    headers: { "content-type": "application/json" },
+  });
+}) as typeof fetch;
+
+/** The count, the pin and the browse, exactly as `searchIndexes.ts` derives them. */
+const brief: CardCorpusBrief = (() => {
+  const decoded = decodeCardIndex(index);
+  return {
+    size: decoded.size,
+    commit: decoded.commit,
+    confirmed: decoded.confirmed,
+    browse: decoded.browse,
+  };
+})();
+
+/**
+ * Wait for the index request to land.
+ *
+ * EVERY ASSERTION IN THIS FILE IS DOWNSTREAM OF A FETCH NOW, and a suite that
+ * asserted before it settled would be testing the loading state while claiming
+ * to test results. The DOM cannot answer the question either, because the
+ * loading line is equally absent before anything has been asked.
+ *
+ * IT WAITS FOR THE CACHED DATA, NOT FOR `isFetching() === 0`, and the difference
+ * is the whole correctness of this helper. React starts the request in an
+ * effect, so for the first tick after a render nothing is in flight yet —
+ * "nothing is fetching" is true BEFORE the fetch as well as after it, and a
+ * helper resting on it returns immediately and settles nothing.
+ *
+ * IT THROWS RATHER THAN GIVING UP QUIETLY. A settle helper that returns after N
+ * ticks whether or not anything happened is how a suite starts passing for the
+ * wrong reason, which is the failure the `IS_REACT_ACT_ENVIRONMENT` note at the
+ * top of this file already records once.
+ */
+async function settle(): Promise<void> {
+  for (let tick = 0; tick < 50; tick += 1) {
+    if (searchIndexClient.getQueryData(["search-index", INDEX_URL])) return;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+    });
+  }
+  throw new Error("the card index never finished loading");
+}
 
 /** The shell's markup, as `SiteHeader` renders it. */
 function shell(): HTMLInputElement {
@@ -81,8 +150,11 @@ async function mount(): Promise<Root> {
   if (host === null) throw new Error("no root");
   const root = createRoot(host);
   await act(async () => {
-    root.render(<CardSearch index={index} />);
+    root.render(<CardSearch indexUrl={INDEX_URL} brief={brief} />);
   });
+  /* Mounted is not ready any more. Every test below asks a question the index
+     has to have arrived to answer, so waiting here keeps that out of each one. */
+  await settle();
   return root;
 }
 

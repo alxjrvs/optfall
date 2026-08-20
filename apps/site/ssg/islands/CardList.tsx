@@ -16,8 +16,14 @@
  *
  * WHAT IT IS NOT: a search over the set. `docs/DESIGN.md`, quoted in
  * `set.page.tsx`: "a set page is a LIST, not a search result". The whole corpus
- * index is 732 KB and this page does not load it — the rows arrive already
+ * index is 888 KB and this page does not load it — the rows arrive already
  * built, from the build, as this island's props.
+ *
+ * THAT STAYS TRUE NOW THE INDEX IS A FILE RATHER THAN PAGE MARKUP, and it is
+ * worth saying because the reason changed shape. It used to be true because the
+ * index lived inside `/search`'s HTML and this is a different document; it is
+ * true now because this island never calls `useSearchIndex`, so the request is
+ * never made. A set page still costs no index at all.
  *
  * THE FIRST PAGE IS IN THE HTML. `Island` renders its child on the server, so
  * a set's first sixty cards are markup before any script runs; hydration adds
