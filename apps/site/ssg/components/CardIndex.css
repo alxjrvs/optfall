@@ -42,6 +42,14 @@
   paints its control bar on a tinted band; this system separates with rules
   rather than with fills — see `ResultRow`, `.of-index__rows`, the browse list
   — so the bar is closed with the same hairline everything else is.
+
+  AND IT IS THE SAME HAIRLINE NOW, WHICH IT WAS NOT. That line was a
+  `border-block-end` here: the same weight and the same colour as the section
+  rule, spelled a second way, and the cost of the second spelling was a divider
+  with no middle to put the centre mark in — so the bar over a grid of cards
+  closed differently from every other section on the same page. `CardIndex.tsx`
+  composes `OrnamentalRule` instead. What stays here is the padding above the
+  line; the rule is `flush` and brings no rhythm of its own.
 */
 .of-index__controls {
   display: flex;
@@ -49,7 +57,6 @@
   align-items: center;
   gap: var(--of-space-base);
   padding-block-end: var(--of-space-tight);
-  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
 
 .of-index__count {

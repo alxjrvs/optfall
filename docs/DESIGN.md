@@ -246,6 +246,23 @@ inconsistency the ration exists to prevent, arrived at from the other side. The
 centre mark is now what a section rule *is*, on every one of them. Panel corners
 and card frames are still spent once each, and are still `FiligreeCorner`'s.
 
+**And "every one of them" was four short.** The header's closing line, the line
+under the card index's control bar, the one above a pager and the one that opens
+the footer were not `OrnamentalRule`s at all — each was a `border-block-start` or
+`border-block-end` on the box itself, the same hairline at the same weight in the
+same ink, spelled a second way. A border has no middle, so those four were the
+only dividers on the site that *could not* carry the mark, and they were four of
+the most-seen: the footer's is on all 12,776 built pages and the header's on
+12,775 of them — the front door is the one surface that opts the header out.
+They compose the primitive now, with a `flush` variant that drops the vertical
+rhythm a border never had: at a container's edge the host already owns the space
+on both sides.
+
+Row hairlines are deliberately not in that set. `ResultRow`, the browse list, the
+sets list and the printings table each rule *between items of one list*, which is
+the "never on a list" clause still doing its job; a mark on every row is the
+clutter the density principle is written against.
+
 ### Two voices
 
 - **Serif** — card names, questions, headings.

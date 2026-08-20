@@ -272,8 +272,22 @@ strong {
   z-index: 1;
   background: var(--of-color-ground);
   margin-block-start: var(--of-space-loosest);
-  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
-  padding-block-start: var(--of-space-loose);
+}
+
+/*
+  THE LINE THAT OPENS THE FOOTER, WHICH USED TO BE `border-block-start` HERE.
+  Same hairline, drawn by the primitive that owns hairlines — see
+  `OrnamentalRule.tsx` — so it carries the centre mark every other divider on
+  the page carries. It sits outside `.site-footer__inner` on purpose: the border
+  it replaces ran the full width of the window rather than the content column's,
+  and a line that stopped where the prose stops would read as a box round the
+  legal text.
+
+  The space under it was the footer's `padding-block-start` and still is; the
+  rule is `flush` and brings none of its own.
+*/
+.site-footer > .of-rule {
+  margin-block-end: var(--of-space-loose);
 }
 
 /*

@@ -53,6 +53,16 @@
  * break is carried by the `<hr>` element itself rather than by anything
  * visible. Colour never carries the meaning here — remove every colour from
  * this component and the break is still in the accessibility tree.
+ *
+ * A RULE MAY ALSO BE A CONTAINER'S OWN EDGE, and that is what `flush` is for.
+ * The header's closing line, the line under the index's control bar and the
+ * one that opens the footer were each a `border-block-end` on the box itself —
+ * the same hairline this primitive draws, spelled a second way, and therefore
+ * the one kind of divider on the site that could never carry the centre mark.
+ * Three hosts drawing their own version of a primitive is the drift the
+ * primitive exists to prevent, so they compose this instead; `flush` drops the
+ * rhythm a border never had, because at an edge the host already owns the
+ * space on both sides.
  */
 
 import type { ReactNode } from "react";
@@ -66,6 +76,14 @@ export interface OrnamentalRuleProps {
    * entirely, which is the honest rendering of a decoration.
    */
   readonly decorative?: boolean;
+  /**
+   * Drop the rule's own vertical rhythm, for a rule serving as a container's
+   * edge rather than as a break between two blocks. The host owns the space on
+   * both sides — its padding above the line, its margin below — exactly as it
+   * did while the line was a border, so a rule that supplied its own would
+   * double it.
+   */
+  readonly flush?: boolean;
   /**
    * Accessible name for the break, such as the section it introduces.
    *
@@ -86,6 +104,7 @@ export interface OrnamentalRuleProps {
 
 export function OrnamentalRule({
   decorative = false,
+  flush = false,
   label,
   filigree,
 }: OrnamentalRuleProps) {
@@ -98,7 +117,7 @@ export function OrnamentalRule({
   const name = label?.trim() || undefined;
 
   return (
-    <div className="of-rule">
+    <div className={flush ? "of-rule of-rule--flush" : "of-rule"}>
       {decorative ? (
         <span className="of-rule__line" aria-hidden="true" />
       ) : (

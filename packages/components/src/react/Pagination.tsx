@@ -39,6 +39,8 @@ import type { MouseEvent } from "react";
 
 import type { PageSize } from "../index";
 
+import { OrnamentalRule } from "./OrnamentalRule";
+
 import "./Pagination.css";
 
 export interface PaginationProps {
@@ -191,6 +193,18 @@ export function Pagination({
 
   return (
     <nav className="of-pages" aria-label={label}>
+      {/*
+        THE LINE ABOVE THE PAGER, AND IT IS THE SECTION RULE RATHER THAN THIS
+        COMPONENT'S OWN BORDER. `border-block-start` on `.of-pages` drew the
+        hairline `OrnamentalRule` owns, in a second spelling, which left the
+        divider under every list of results as the one on the page with no
+        centre mark. `decorative`, because a border announced nothing and a
+        `separator` inside a navigation landmark would be read aloud as a
+        division within the pager rather than as the division above it;
+        `flush`, because the space either side is still this component's.
+      */}
+      <OrnamentalRule decorative flush />
+
       <p className="of-pages__range">{showing}</p>
 
       {pages > 1 ? (

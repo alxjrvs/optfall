@@ -8,7 +8,9 @@
  * belong to, so it takes the quietest voice the system has — sans, micro, wide
  * tracking, muted ink — and spends its one piece of emphasis on the page the
  * reader is standing on. No filigree: `docs/DESIGN.md` rations ornament to one
- * per screen and forbids it on a control outright.
+ * per screen and forbids it on a control outright — and that still holds. The
+ * centre mark on the rule below is not filigree and is not on a control; see
+ * the note beside `.of-pages > .of-rule`.
  */
 
 .of-pages {
@@ -17,13 +19,38 @@
   align-items: baseline;
   gap: var(--of-space-tight) var(--of-space-looser);
   margin-block-start: var(--of-space-loose);
-  padding-block-start: var(--of-space-base);
-  border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
   color: var(--of-color-ink-muted);
+}
+
+/*
+  THE LINE THAT OPENS THE PAGER, WHICH USED TO BE ITS `border-block-start`.
+
+  Same hairline, same weight, same colour as the section rule — it was the same
+  line spelled a second way, and the second spelling is the reason the divider
+  above the pager was the only one on a results page with no centre mark in it.
+  `Pagination.tsx` composes `OrnamentalRule` instead.
+
+  THIS IS NOT ORNAMENT ON A CONTROL, which the header of this file rules out and
+  still rules out. What is forbidden there is filigree — scrollwork spent on a
+  button — and the mark is not that: it is what a section rule IS, and this rule
+  divides the list from the pager rather than decorating the pager. No control
+  in here gained anything.
+*/
+.of-pages > .of-rule {
+  /* A rule is not one of the pager's wrapping items; it takes the whole line,
+     the same way the range sentence below it does. */
+  flex: 1 0 100%;
+  /*
+    The border it replaces carried `padding-block-start: base` beneath it. The
+    flex row-gap supplies `tight` of that gap already, so what is left is the
+    difference — written as a subtraction of the two tokens rather than as a
+    third number, so it stays correct if either step moves.
+  */
+  margin-block-end: calc(var(--of-space-base) - var(--of-space-tight));
 }
 
 /*

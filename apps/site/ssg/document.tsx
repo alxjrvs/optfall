@@ -18,6 +18,7 @@
 import type { ReactElement } from "react";
 
 import { CARD_IMAGE_COPYRIGHT } from "optfall-components";
+import { OrnamentalRule } from "optfall-components/react";
 
 import { CORPUS } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
@@ -206,6 +207,20 @@ export function Document({
           starting where the browser happens to end.
         */}
         <footer className="site-footer">
+          {/*
+            THE FOOTER'S OPENING LINE, AND IT IS AN ELEMENT RATHER THAN A
+            BORDER. `border-block-start` on `.site-footer` drew the same
+            hairline the section rule draws, in a second spelling, which left
+            the divider at the bottom of every page as the one on the site with
+            no centre mark. It is `decorative` because a border announces
+            nothing and the `contentinfo` landmark below already says what this
+            line separates, and `flush` because the space under it is still the
+            footer's own padding.
+
+            OUTSIDE `.site-footer__inner`, so it keeps the border's full-window
+            width rather than being capped to the content column.
+          */}
+          <OrnamentalRule decorative flush />
           <div className="site-footer__inner">
             {/*
               SITE LINKS, because a footer that is only a legal notice makes the
