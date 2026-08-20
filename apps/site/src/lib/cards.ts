@@ -841,10 +841,11 @@ export interface NameGroup {
  * Every stat a card can print, in the order `docs/DESIGN.md` reads a card face.
  *
  * EXPORTED BECAUSE A SECOND SURFACE NEEDS THE ORDER AND NOT THE VALUES. The
- * card page draws the three combat stats whether or not a card prints them —
- * see `COMBAT_STATS` in `CardEntry` — so it has to know the full list and where
- * each member sits. Deriving that from a card would mean deriving it from a
- * card that happens to print all five.
+ * card page draws cost and defence whether or not a card prints them — see
+ * `SOCKETED_STATS` in `CardEntry`, and note that power is deliberately not one
+ * of them — so it has to know the full list and where each member sits.
+ * Deriving that from a card would mean deriving it from a card that happens to
+ * print all five.
  *
  * ARCANE IS NOT A PRINTED STAT AND IS NO LONGER ONE OF THESE. It was, and it
  * was the only member of this list a card face does not carry anywhere: the

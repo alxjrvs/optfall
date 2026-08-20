@@ -134,11 +134,34 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
  * The three positions the ordinary card frame has, whether or not a card fills
  * them. Cost sits top-left, attack bottom-left, defence bottom-right.
  *
+ * PRINTING ONE OF THESE IS WHAT PUTS A CARD ON THIS FRAME. It is not the list
+ * of positions drawn when empty — that is `SOCKETED_STATS`, just below, and it
+ * is two of these three.
+ *
  * The other two stats are not here because they have no fixed position: life
  * and intellect belong to a permanent, and each is placed by what the card IS
  * rather than by a slot the frame reserves.
  */
 const COMBAT_STATS = ["Cost", "Power", "Defence"] as const;
+
+/**
+ * The positions that are DRAWN when the card leaves them empty, which is not
+ * all three: the attack plate came back out.
+ *
+ * Power was in this list and is not any more. It was the socket a reader met
+ * most — 1,543 cards print cost and defence and no power, more than any other
+ * shape the rule admits — and on every one of them it answered a question
+ * nobody had asked, in the corner an attack would sit. "This action has no
+ * attack" is not news about an action; "this card you never pay for has no
+ * cost" still is, which is why cost and defence keep theirs. See the note on
+ * `printedStats` for the argument in full.
+ *
+ * `COMBAT_STATS` still names all three, because printing power is still what
+ * puts a card on this frame: a weapon prints power and nothing else, and the
+ * empty cost bubble and defence shield beside it are what say which frame it
+ * is on.
+ */
+const SOCKETED_STATS = ["Cost", "Defence"] as const;
 
 /**
  * The stats that mean a card is NOT on the ordinary frame.
@@ -166,7 +189,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const text = card.functional_text.trim();
 
   /**
-   * The stat block, INCLUDING the combat positions this card leaves empty.
+   * The stat block, including the two combat positions this card leaves empty
+   * — cost and defence. NOT power: see the end of this note.
    *
    * A Flesh and Blood card frame has three fixed positions — cost top-left,
    * attack bottom-left, defence bottom-right — and a card that prints nothing
@@ -175,52 +199,56 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * they had not finished looking at. Worse, it made the absence unreadable
    * against the common case: 1,648 cards print a cost of 0, 191 a defence of 0
    * and 13 a power of 0, so "no power" and "power 0" were a blank and a numeral
-   * with nothing to connect them. `StatGlyph` draws the empty ones now, keeping
-   * the silhouette and taking `null`.
+   * with nothing to connect them. `StatGlyph` draws the empty ones, keeping the
+   * silhouette and taking `null`.
    *
    * ONLY ON A CARD THAT IS ON THAT FRAME, which is what `usesCombatFrame` is
    * for, and the test has TWO halves because one was not enough.
    *
    * It has to print at least one of the three, so the 188 cards printing
    * nothing whatsoever keep the written sentence below rather than growing
-   * three sockets out of nowhere. And it has to print NO permanent stat, which
-   * is the half the first version was missing: 198 cards print life, and only
-   * 154 of those are heroes. The other 44 are allies, angels, dragons, demons
-   * and token creatures — `Aegis, Archangel of Protection` prints power and
-   * life and nothing else — and under "prints any combat stat" they qualified
-   * on their power and were handed an empty cost bubble and an empty defence
+   * sockets out of nowhere. And it has to print NO permanent stat, which is the
+   * half the first version was missing: 198 cards print life, and only 154 of
+   * those are heroes. The other 44 are allies, angels, dragons, demons and
+   * token creatures — `Aegis, Archangel of Protection` prints power and life
+   * and nothing else — and under "prints any combat stat" they qualified on
+   * their power and were handed an empty cost bubble and an empty defence
    * shield. The defence one landed immediately left of the life plate, because
    * `CORNER_FOR` puts both at `end`: an absence asserted in the exact corner the
    * card prints life in. That is the "inventing slots" failure the hero case
    * was carved out to prevent, arriving through a shape the carve-out did not
    * name.
    *
-   * What is left is what the change is for: 1,543 cards print cost and defence
-   * and no power — actions, instants, defence reactions — and gain the empty
-   * attack plate.
+   * WHICH POSITIONS GET A SOCKET IS `SOCKETED_STATS`, AND POWER IS NOT ONE OF
+   * THEM ANY MORE. It was, and it was the single biggest effect this rule had:
+   * 1,543 cards print cost and defence and no power (actions, instants,
+   * defence reactions), 411 print cost alone (items, instants, tokens) and 529
+   * print defence alone (equipment) — 2,483 cards, half the corpus, each
+   * carrying an empty attack plate. Counted per reader rather than per card it
+   * was worse still: the plate said "no attack" on almost every card anyone
+   * opens. An absence is only worth drawing where the reader might have
+   * expected a value, and nobody expects an attack on a defence reaction.
    *
-   * EVERY OTHER SHAPE IS IN, DELIBERATELY, and this is the line somebody will
-   * want to move, so here is the whole of it rather than the two cases that
-   * prompted it. 529 cards print defence alone (equipment), 81 print power
-   * alone (weapons), and 411 print cost alone (items, instants, tokens) — the
-   * last being the largest group and the one an earlier draft of this note
-   * never named. All three draw the positions they leave empty.
+   * COST AND DEFENCE KEEP THEIRS, which is the same argument reaching the
+   * opposite answer rather than an inconsistency left behind. "This card you
+   * never pay for has no cost" is news about an equipment or a weapon; "this
+   * card you cannot block with has no defence" is news about a weapon or an
+   * item. Both sit against a 0 that a lot of cards genuinely print — 1,648
+   * costs and 191 defences — so the blank-versus-numeral confusion the sockets
+   * were built for is still live for those two. For power it is 13 cards.
    *
-   * EVERY COUNT IN THIS NOTE MOVED WHEN ARCANE LEFT `STAT_ORDER`, and they are
-   * re-measured against the corpus rather than adjusted by hand. 287 cards
+   * EVERY COUNT IN THIS NOTE IS re-measured against the corpus rather than
+   * adjusted by hand; they last moved when arcane left `STAT_ORDER`. 287 cards
    * carry upstream's `arcane` field, so "prints cost and defence and nothing
    * else" used to exclude the 180 that also carried it; the shapes did not
    * change, the vocabulary they are counted in did. Seven cards had arcane as
    * their ONLY value and now print nothing at all, which is where 181 became
    * 188.
    *
-   * They do because "this card has no cost", "no attack", "no defence" are
-   * facts worth stating, which is the whole argument for the change, and
-   * because the alternative renders an absence of an absence. Cards printing
-   * LIFE are the ones that go the other way, above, and the difference is not
-   * how many stats they print: a hero or an ally has its OWN furniture in those
-   * corners, so a socket there would overwrite something rather than report a
-   * gap.
+   * Cards printing LIFE are the ones that go the other way, above, and the
+   * difference is not how many stats they print: a hero or an ally has its OWN
+   * furniture in those corners, so a socket there would overwrite something
+   * rather than report a gap.
    *
    * Life and intellect are unchanged and appear only when printed. They have no
    * fixed position on the frame — they are where a card's type puts them — so
@@ -237,7 +265,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     const printed = printedValues.get(label);
     const shown =
       printed !== undefined ||
-      (usesCombatFrame && (COMBAT_STATS as readonly string[]).includes(label));
+      (usesCombatFrame &&
+        (SOCKETED_STATS as readonly string[]).includes(label));
     if (!shown) return [];
 
     const kind = SYMBOL_FOR[label];
