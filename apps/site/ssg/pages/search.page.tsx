@@ -69,7 +69,7 @@ import "./search.css";
  * Built here, once, at build time, from the same shaped pages `/card/<slug>`
  * renders — which is what makes it impossible for a search result and the page
  * it links to to disagree about a slug, a label, a legality verdict or a face.
- * The 16 MB corpus stays on the build machine.
+ * The 18 MB corpus stays on the build machine.
  */
 /*
  * THE DATES ARE RESOLVED HERE RATHER THAN INSIDE THE ENGINE, because

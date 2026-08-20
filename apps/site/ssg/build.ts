@@ -147,7 +147,7 @@ async function assetsFromManifest(): Promise<{
  * The island bundle's ceiling, and the reason there is one at all.
  *
  * **THE BUNDLE WAS 9.28 MB AND NOTHING NOTICED.** `card-search.ts` imported two
- * pure helpers from `cards.ts`, `cards.ts` imports the 16 MB card corpus at
+ * pure helpers from `cards.ts`, `cards.ts` imports the 18 MB card corpus at
  * module scope, and the island entry reaches `card-search.ts` through
  * `CardSearch.tsx` — so Rollup did exactly what it was asked and put the entire
  * corpus in the client. Every reader who opened the front page, `/search`, `/cr`
@@ -190,7 +190,7 @@ async function assertIslandBudget(chunks: readonly string[]): Promise<void> {
     `The island bundle is ${Math.round(total / 1024)} kB across ${chunks.length} chunk(s), over the ${Math.round(ISLAND_BUDGET_BYTES / 1024)} kB budget.\n` +
       `${breakdown}\n` +
       `This almost always means a module the client imports now reaches the card corpus: ` +
-      `\`cards.ts\` loads 16 MB at module scope, and a VALUE import of anything from it ` +
+      `\`cards.ts\` loads 18 MB at module scope, and a VALUE import of anything from it ` +
       `pulls the whole thing into the bundle. See \`src/lib/printings.ts\`, which exists ` +
       `for exactly this reason. Use \`import type\` where you only need a shape.`,
   );
@@ -245,7 +245,7 @@ const PAGE_BUDGET_BYTES = 512 * 1024;
  * OF THE CHECK. Adding this budget found `/search` at 883 kB on its first run —
  * not a regression, and not a surprise once looked at: that page ships the
  * ENTIRE encoded card index as island props, 732 kB of it, which is the
- * deliberate trade `search.page.tsx` argues at length (the 16 MB corpus stays on
+ * deliberate trade `search.page.tsx` argues at length (the 18 MB corpus stays on
  * the build machine and the reader gets the index instead). Raising the general
  * ceiling to cover it would have bought nothing — 1 MB is above every page that
  * could ever go wrong, so the check would pass forever while measuring nothing.

@@ -2,7 +2,7 @@
  * A card's faces, and the collector number that addresses one.
  *
  * WHY THIS IS ITS OWN MODULE, AND IT IS NOT ABOUT TIDINESS. Both functions here
- * lived in `cards.ts`, which imports the 16 MB card corpus and derives
+ * lived in `cards.ts`, which imports the 18 MB card corpus and derives
  * `CARD_PAGES` and `CARD_ROUTES` at module scope. `card-search.ts` imported them
  * from there, `CardSearch.tsx` imports `card-search.ts`, and the island bundle
  * imports `CardSearch.tsx` — so the whole corpus was reachable from the client
@@ -100,7 +100,7 @@ export function numberFor(key: string, setCode: string): string {
  * every printing URL beneath it. Here the identity is upstream's own set code
  * and collector number, and the tail is the only part that can move.
  *
- * PURE, AND THAT IS LOAD-BEARING. `cards.ts` loads a 16 MB corpus at module
+ * PURE, AND THAT IS LOAD-BEARING. `cards.ts` loads an 18 MB corpus at module
  * scope; this module exists so the client can build a card URL without reaching
  * it (see the note at the top of this file). Every surface that links to a card
  * — the results page, the set pages, the random redirect — goes through here.

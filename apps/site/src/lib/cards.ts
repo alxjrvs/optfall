@@ -861,7 +861,7 @@ export interface NameGroup {
  * system's, and nothing on this site asks for it.
  *
  * `card-search.ts` keeps its own copy as `STAT_LABELS` and cannot import this
- * one: a VALUE import from this module drags the 16 MB corpus into the island
+ * one: a VALUE import from this module drags the 18 MB corpus into the island
  * bundle, which is the failure `printings.ts` was split out to prevent. The two
  * are pinned against each other in `card-search.test.ts` instead.
  */

@@ -15,7 +15,7 @@
  *
  * The OLD reason `_redirects` sat outside that registry was different and no
  * longer applies: it was derived from 4,941 cards, and giving `assets.ts` a
- * member that dragged a 16 MB corpus behind it would have made every importer
+ * member that dragged an 18 MB corpus behind it would have made every importer
  * pay for it. Nothing in this file touches the corpus. It is a constant.
  */
 

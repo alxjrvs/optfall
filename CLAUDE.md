@@ -103,7 +103,7 @@ All enforced somewhere, all easy to violate on a first pass.
 
 ## The corpus
 
-- **Never `Read` or `grep` `data/cards/cards.json`.** It is 16 MB and will
+- **Never `Read` or `grep` `data/cards/cards.json`.** It is 18 MB and will
   destroy your context in one call.
   - To see the **shape** — field names, how an absent stat is encoded, what a
     banned card looks like — read `data/cards/sample.json`. Twenty cards, same

@@ -13,7 +13,7 @@
  *
  * IT MAY IMPORT `./cards` BY VALUE. Its only consumer is `CardEntry`, which is
  * rendered at build time by `pages/card.page.tsx` and reached from no island —
- * so the rule in `printings.ts` about islands never reaching the 16 MB corpus
+ * so the rule in `printings.ts` about islands never reaching the 18 MB corpus
  * does not bind here. Do not import this module from an island.
  */
 

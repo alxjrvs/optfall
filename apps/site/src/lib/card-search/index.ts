@@ -17,7 +17,7 @@
  * time, over the same {@link CardPage} objects the card pages themselves render
  * — so the search and the page cannot disagree about a card's slug, its label
  * or its legality. {@link decodeCardIndex} and {@link searchCards} run in the
- * browser against what it produced. The 16 MB corpus never reaches a client.
+ * browser against what it produced. The 18 MB corpus never reaches a client.
  *
  * WHAT IS INDEXED AS POSTINGS, AND WHAT IS NOT. The inverted index covers the
  * printed card text and nothing else. Names, type lines, traits, keywords, sets

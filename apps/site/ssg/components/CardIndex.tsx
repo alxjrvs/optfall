@@ -45,7 +45,7 @@
  * sixtieth of it is the shape that makes a 4,000-row index expensive.
  *
  * NOTHING HERE MAY IMPORT `cards.ts`. It is reached from an island bundle, and
- * `faces.ts` records what that costs: the corpus is 16 MB and it once shipped.
+ * `faces.ts` records what that costs: the corpus is 18 MB and it once shipped.
  */
 
 /* Types only. `useState`/`useEffect` went with `CopyNames` — this component

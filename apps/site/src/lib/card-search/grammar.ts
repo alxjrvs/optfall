@@ -6,7 +6,7 @@
  * `../query.ts` if tokenising changes, and `ssg/pages/syntax.page.tsx` — which
  * nothing checks against this file. See `.claude/skills/add-a-search-filter`.
  *
- * NOTHING HERE MAY IMPORT `../cards` BY VALUE. That module pulls the 16 MB
+ * NOTHING HERE MAY IMPORT `../cards` BY VALUE. That module pulls the 18 MB
  * corpus at module scope, and this one is reached from a client island, so a
  * value import would put the corpus in the browser bundle. It did once: 9.28 MB
  * shipped to every reader. `import type` is erased before the bundler sees it.

@@ -109,7 +109,7 @@ describe("card sample: coverage", () => {
   has("played horizontally", (c) => c.played_horizontally === true);
 
   test("it is small enough to be worth reading", () => {
-    // The whole point is a file an agent can open instead of a 16 MB one.
+    // The whole point is a file an agent can open instead of an 18 MB one.
     // If a corpus change pushes this past ~120 kB, lower SAMPLE_SIZE rather
     // than letting the alternative quietly stop being an alternative.
     expect(committed.length).toBeLessThan(120 * 1024);
