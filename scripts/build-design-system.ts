@@ -32,7 +32,7 @@
  * review, and the two exceptions are `MARK_GEOMETRY` and `FILIGREE_PATHS`,
  * drawn from the contract module so those two cannot drift at all.
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -61,7 +61,7 @@ const TOKENS = themeStylesheet();
 const FACE = "https://images.optfall.com";
 
 /**
- * A pitch jewel, in the two-element shape `PitchJewel.tsx` renders.
+ * A pitch jewel, in the shape `PitchJewel.tsx` renders.
  *
  * THE NESTING IS THE BEVEL. Every plate in this system carries a light top edge
  * and a dark bottom one, and on the diamond that has to be a `drop-shadow()`
@@ -74,12 +74,69 @@ const FACE = "https://images.optfall.com";
  * diamond against a component that ships a struck one — the same "cards
  * advertise a rendering the product does not have" gap that let the silhouette
  * itself drift, one axis over.
+ *
+ * AND IT DRIFTED AGAIN, WHICH IS WHY THIS NOTE KEEPS GROWING. The stone carried
+ * a numeral here and in the component; the component now carries three slots
+ * filled to the pitch value, the way the printed card does, and for one build
+ * this helper went on publishing the numeral. A gallery that shows a rendering
+ * the product retired is worse than no gallery, because it is consulted by
+ * somebody trying to find out what the product does.
  */
 function jewel(pitch: string | number, size = ""): string {
-  const value = String(pitch);
-  // Zero is an absence and reads as one, exactly as the component renders it.
-  const glyph = value === "0" ? "–" : value;
-  return `<span class="jewel${size ? ` ${size}` : ""}"><span class="stone p${value}">${glyph}</span></span>`;
+  const value = Number(pitch);
+  /* THREE SLOTS ALWAYS, filled from the apex — the denominator is half the
+     statement. Zero fills none of them, which is the same claim the grey
+     `none` stone makes and is why it needs no branch here. */
+  /* THE SOCKETS THE CARD PAYS FOR HOLD THE RESOURCE SYMBOL, and the rest are
+     holes. A pitch value IS a resource value — CR 1.12.4e — so the pip is the
+     thing being counted rather than a dot standing in for it. The artwork is
+     drawn at the base size and the drawn red at `sm`, exactly as the component
+     splits it: a socket a few pixels across cannot resolve the swirl. */
+  const art = size === "sm" ? null : symbolArt("cost");
+  const slots = [0, 1, 2]
+    .map((slot) => {
+      const filled = slot < value;
+      const pip =
+        filled && art !== null
+          ? `<img class="pip" src="${art}" alt="" width="105" height="105">`
+          : "";
+      return `<span class="slot" data-filled="${filled ? "true" : "false"}">${pip}</span>`;
+    })
+    .join("");
+  return `<span class="jewel${size ? ` ${size}` : ""}"><span class="stone p${value}"><span class="slots">${slots}</span></span></span>`;
+}
+
+/**
+ * The game's own artwork for a stat's symbol, inlined.
+ *
+ * A DATA URI BECAUSE A CARD IS ONE FILE. These pages are opened from disk and
+ * from Claude Design, where neither `apps/site/public/` nor any origin of ours
+ * is mounted — a root-relative `/symbols/icon_p.png` resolves to nothing in
+ * both. The card face above reaches a live host because a card image is 50 kB
+ * and there are thousands; a symbol is four, there are five, and inlining them
+ * is what makes the gallery show the product's own rendering without depending
+ * on a deploy.
+ *
+ * READ FROM THE SITE'S `public/`, which is the same byte the site serves and
+ * the one `check-asset-provenance.ts` has a recorded origin for. Copying them
+ * into the design system would create a second copy with no provenance entry,
+ * which that check exists to fail.
+ */
+const SYMBOL_FILE: Readonly<Record<string, string>> = {
+  cost: "icon_r.png",
+  power: "icon_p.png",
+  defence: "icon_d.png",
+  life: "icon_h.png",
+  intellect: "icon_i.png",
+};
+
+function symbolArt(kind: string): string | null {
+  const file = SYMBOL_FILE[kind];
+  if (file === undefined) return null;
+  const bytes = readFileSync(
+    join(import.meta.dir, "..", "apps", "site", "public", "symbols", file),
+  );
+  return `data:image/png;base64,${bytes.toString("base64")}`;
 }
 
 /**
@@ -136,19 +193,29 @@ const STAT_PLATES: Readonly<
   arcane: { cut: "cut.diagonal.end", tone: null, optical: 0.908 },
 };
 
-function statPlate(kind: string, value: string): string {
+/**
+ * THE PLATE IS THE FALLBACK NOW, AND ARCANE IS THE ONLY STAT THAT MEETS IT.
+ * `StatGlyph` renders LSS's own file wherever the rules publish one, which is
+ * every stat the card panel prints; the silhouettes below are what it draws
+ * when no `src` is supplied — in a story, and on the one stat with no printed
+ * notation. Both renderings are on the gallery card, labelled as what they are.
+ *
+ * `absent` is passed rather than inferred from an en dash, because the absent
+ * state no longer draws a character: beside a mark, where every printed value
+ * now sits, a dash reads as something the card prints.
+ */
+function statPlate(kind: string, value: string, absent = false): string {
   const spec = STAT_PLATES[kind];
   // Same argument as `cutValue`: a stat the component knows and this table does
   // not is drift, and the gallery should say so rather than render a blank.
   if (spec === undefined) throw new Error(`no such stat plate: ${kind}`);
 
   const size = `calc(var(--of-ornament-stat-size) * ${spec.optical})`;
-  /* AN EN DASH IS THE ABSENT VALUE, and it takes the empty-socket fill whatever
-     the stat's own tone is — the component overrides `background` and `color`
-     and leaves the silhouette alone, so this does the same. */
-  const absent = value === "–";
+  /* THE SILHOUETTE IS UNTOUCHED BY AN ABSENCE and only the fill changes — the
+     component overrides `background` and `color` and leaves the clip alone, so
+     this does the same. */
   const surface = absent
-    ? "background:var(--of-color-stat-absent);color:var(--of-color-stat-absent-ink)"
+    ? "visibility:hidden"
     : spec.tone === null
       ? "background:var(--of-color-surface-raised);color:var(--of-color-ink)"
       : `background:var(--of-color-stat-${spec.tone});color:var(--of-color-stat-${spec.tone}-ink)`;
@@ -156,30 +223,75 @@ function statPlate(kind: string, value: string): string {
      centred in the BODY rather than in the box — the component's own note. */
   const seat =
     kind === "defence" ? `;padding-block-end:calc(${size} * 0.28)` : "";
-  /* THE DASH IS LIGHTER THAN A NUMERAL, exactly as `StatGlyph.css` draws it —
-     a stat that is not there should not shout as loudly as one that is. Stated
-     here because a card publishing a bold dash against a product shipping a
-     regular one is the same shape/ink/size drift this helper exists to end. */
-  const weight = absent ? "regular" : "bold";
 
-  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:${size};block-size:${size};${surface};font-family:var(--of-type-family-sans);font-size:var(--of-type-size-base);font-weight:var(--of-type-weight-${weight});line-height:1;clip-path:${cutValue(spec.cut)};box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark)${seat}">${value}</span>`;
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;inline-size:${size};block-size:${size};${surface};font-family:var(--of-type-family-sans);font-size:var(--of-type-size-base);font-weight:var(--of-type-weight-bold);line-height:1;clip-path:${cutValue(spec.cut)};box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark)${seat}">${absent ? "" : value}</span>`;
 }
 
 /**
- * A stat and its word, side by side, in the arrangement the card panel uses.
+ * A printed stat mark — the game's artwork, with the value beside it.
  *
- * THE PLATE TAKES THE OUTER POSITION AND THE WORD THE INNER ONE. On the panel
- * that means the symbols form a column down each edge and the words face in
- * toward the name between them.
+ * WHAT THE PRODUCT ACTUALLY RENDERS, and therefore what this gallery leads
+ * with. The card sets its combat values `{p} 4 … 2 {d}` with the symbol
+ * outboard and the numeral inboard of it, and sets COST alone inside the
+ * resource disc — the one exception, and the reason this branches.
+ *
+ * `mirror` puts the numeral first, which is what the panel's end corner does so
+ * that the artwork stays against the frame on both sides.
+ *
+ * An absent stat greys the artwork and prints no character. That is the one
+ * thing the plate above could do better: a recessed fill is a token and a
+ * greyscale filter is not, which is the price of rendering somebody else's
+ * file.
+ */
+function statMark(
+  kind: string,
+  value: string,
+  { absent = false, mirror = false } = {},
+): string {
+  const art = symbolArt(kind);
+  if (art === null) return statPlate(kind, value, absent);
+
+  /* AN EMPTY POSITION PAINTS NOTHING AND KEEPS ITS WIDTH. It was greyed here
+     for one build — the artwork desaturated and dropped back — and on a page
+     that read as a rendering fault rather than a statement. `visibility` is the
+     spelling, because the width is the whole reason the position renders. */
+  const dim = absent ? ";visibility:hidden" : "";
+  const img = `<img src="${art}" alt="" width="105" height="105" style="display:block;inline-size:var(--of-ornament-stat-size);block-size:var(--of-ornament-stat-size);object-fit:contain;flex:none${dim}">`;
+  const numeral = absent ? "" : value;
+
+  if (kind === "cost") {
+    return `<span style="display:inline-grid;place-items:center"><span style="grid-area:1/1">${img}</span><span style="grid-area:1/1;font-family:var(--of-type-family-serif);font-size:var(--of-type-size-large);font-weight:var(--of-type-weight-bold);line-height:1;color:var(--of-color-stat-cost-ink)">${numeral}</span></span>`;
+  }
+
+  const text = `<span style="font-family:var(--of-type-family-serif);font-size:var(--of-type-size-large);font-weight:var(--of-type-weight-bold);line-height:1;color:var(--of-color-ink);font-variant-numeric:tabular-nums">${numeral}</span>`;
+  const order = mirror ? `${text}${img}` : `${img}${text}`;
+  return `<span style="display:inline-flex;align-items:center;gap:var(--of-space-tight)">${order}</span>`;
+}
+
+/**
+ * A stat mark and the word for it, for the gallery's own catalogue.
+ *
+ * THE CARD PANEL PRINTS NO WORD, AND THIS ONE DOES. That is not drift, it is
+ * the difference between a product surface and a catalogue of one: the panel
+ * shows a reader the card they are looking at, where the marks are the game's
+ * own and a label is a translation of a language they already speak. A gallery
+ * shows somebody every mark at once with no card around it, and has to say
+ * which is which. The prose beside each row carries the fact that the product
+ * does not.
  *
  * NO `outboard` PARAMETER, and it was written and then removed. The gallery
  * draws these as a left-aligned row with no edges to face away from, so an
  * argument for mirroring would have had exactly one caller and one value
- * forever — a knob illustrating a rule rather than obeying one. The prose beside
- * the row carries the mirroring instead, which is what a gallery is for.
+ * forever — a knob illustrating a rule rather than obeying one. The prose
+ * carries the mirroring instead, which is what a gallery is for.
  */
-function statBadge(kind: string, label: string, value: string): string {
-  return `<div style="display:flex;align-items:center;gap:var(--of-space-tight)">${statPlate(kind, value)}<span class="eyebrow" style="margin:0">${label}</span></div>`;
+function statBadge(
+  kind: string,
+  label: string,
+  value: string,
+  absent = false,
+): string {
+  return `<div style="display:flex;align-items:center;gap:var(--of-space-tight)">${statMark(kind, value, { absent })}<span class="eyebrow" style="margin:0">${label}</span></div>`;
 }
 
 /**
@@ -264,13 +376,62 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
   font-size: var(--of-type-size-base);
   line-height: var(--of-type-leading-tight);
   --jewel-size: var(--of-ornament-jewel-base);
+  --slot-size: calc(var(--jewel-size) * 0.38);
+  /* Equilateral, and centred on the centroid rather than the bounding box —
+     both derived in \`PitchJewel.css\`, which explains why the row spacing is
+     not the column spacing and why the cluster rides up by a sixth of its
+     height. */
+  --slot-gap: calc(var(--slot-size) * 0.2);
+  --slot-step: calc(var(--slot-size) + var(--slot-gap));
+  --slot-rise: calc(var(--slot-step) * 0.866);
   filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
     drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
 }
+/* A DISC, BECAUSE THE CARD PRINTS A RING. This clipped itself to
+   \`ornament.cut.jewel\` — the reserved eight-sided silhouette — for most of the
+   project's life. See \`PitchJewel.css\` and \`docs/DESIGN.md\`, where the
+   reservation is struck through rather than deleted. */
 .jewel .stone {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
   inline-size: 100%; block-size: 100%;
-  clip-path: var(--of-ornament-cut-jewel);
+  border-radius: 50%;
+}
+/* THE TRIANGLE THE CARD PRINTS: one slot above, two below, filled from the top.
+   Spanning the first across both columns centres the apex over the gap beneath
+   it without positioning anything, so the arrangement survives a change of
+   size with no second number to keep in step — the component's own geometry,
+   read from \`PitchJewel.css\` rather than re-invented. */
+.jewel .slots {
+  position: relative; display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: center; justify-items: center; align-content: center;
+  column-gap: var(--slot-gap);
+  row-gap: calc(var(--slot-rise) - var(--slot-size));
+  transform: translateY(calc(var(--slot-rise) / -6));
+}
+/* THE APEX SPANS BOTH COLUMNS, which is the whole of the triangle — and
+   leaving it out of this copy published a gallery card with two pips above one
+   instead of one above two, against a product that had it right. Exactly the
+   drift this file's other notes are about, committed within the same change
+   that wrote them. */
+.jewel .slot:first-child { grid-column: 1 / -1; }
+/* EVERY SOCKET WEARS THE SAME LIGHT BEZEL, filled or not, exactly as the card
+   draws it — and that hairline is what lets a red pip sit on the red stone at
+   pitch one without the two merging. An outset shadow rather than a border,
+   because a border would eat into the socket and leave it a different size from
+   the artwork inside it. */
+.jewel .slot {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+  inline-size: var(--slot-size); block-size: var(--slot-size);
+  border-radius: 50%;
+  background: var(--of-color-pitch-socket);
+  box-shadow: 0 0 0 var(--of-space-hair) var(--of-color-pitch-facet);
+}
+.jewel .slot[data-filled="true"] { background: var(--of-color-pitch-pip); }
+.jewel .pip {
+  display: block; inline-size: 100%; block-size: 100%;
+  border-radius: 50%; object-fit: contain;
 }
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
 .jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-title); }
@@ -798,13 +959,15 @@ cards.push({
   group: "Primitives",
   title: "Pitch jewel",
   body: `
-  <p class="note">An eight-sided cut stone carrying its numeral. Shape, number and colour state the same fact three times — and the numeral is the <strong>primary</strong> channel, not a fallback.</p>
+  <p class="note">An eight-sided cut stone carrying three slots, filled to the card's pitch value. Shape, count and colour state the same fact three times — and the <strong>count</strong> is the primary channel, not a fallback.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center">
     ${jewel("0")}${jewel("1")}${jewel("2")}${jewel("3")}${jewel("4")}
     ${jewel("1", "sm")}${jewel("1")}${jewel("1", "lg")}
   </div>
-  <p class="note" style="margin-block-start:var(--of-space-loose)">Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads. Designing colour as the <em>redundant</em> channel costs nothing and fixes it for everyone downstream. The silhouette is reserved: nothing else in the interface is ever this shape.</p>
-  <p class="note"><strong>Pitch four is drawn here before it is drawn anywhere in the product.</strong> A fourth value has been previewed — a purple strip on a Shadow resource gem, card code <code>IAR000</code> — and no card in the pinned corpus carries <code>pitch: "4"</code> yet, though the corpus does already hold other cards from that set. It sits beside the other four rather than being kept as a special case, because a stone the reader meets once is the one whose colour they will not have learned. It is also the stone whose colour channel is weakest: purple sits beside blue in luminance wherever it is still legible under white ink, so for a reader with deuteranopia or protanopia the numeral is what separates three from four.</p>`,
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>It carried a numeral until now, and the requirement did not change with it.</strong> Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads — so pitch may never be carried by hue alone. A numeral satisfies that. So does counting, and counting is what the printed card does: three slots in the top-left corner, filled from the top down, with no numeral anywhere on the frame. Nobody miscounts three dots, and a reader who cannot separate the red stone from the yellow one still counts one pip against two.</p>
+  <p class="note"><strong>Three slots, not <code>value</code> slots.</strong> A single filled pip and one pip out of three are different statements; only the second says "this card pitches for one of a possible three". The empty ones are the denominator, and they are drawn in the stone's own ink at a quarter opacity — the one colour on this component already guaranteed to clear AA against every tone, so an unfilled slot needs no contrast check of its own.</p>
+  <p class="note">The silhouette is reserved: nothing else in the interface is ever this shape. The card's own field is a circle; the octagon is kept because it is the shape this system has promised means pitch, and at this size a cut stone and a disc read alike.</p>
+  <p class="note"><strong>Pitch four is drawn here before it is drawn anywhere in the product.</strong> A fourth value has been previewed — a purple strip on a Shadow resource gem, card code <code>IAR000</code> — and no card in the pinned corpus carries <code>pitch: "4"</code> yet, though the corpus does already hold other cards from that set. It sits beside the other four rather than being kept as a special case, because a stone the reader meets once is the one whose colour they will not have learned. <strong>It is also the one value the slots cannot carry:</strong> there are three of them because the card prints three, so pitch four fills every one and is told from pitch three by its stone alone — and that stone's colour channel is the weakest here, since purple sits beside blue in luminance wherever it is still legible under white ink. The accessible name is what separates them, and it says so in words.</p>`,
 });
 
 cards.push({
@@ -916,7 +1079,7 @@ cards.push({
   group: "Primitives",
   title: "Stat glyph",
   body: `
-  <p class="note">A printed stat in a struck plate whose silhouette says which stat it is. <code>docs/DESIGN.md</code> asked for "cost in a hexagonal plate, power and defence in chamfered plates at the corners"; the three the card itself draws have since taken the card's own geometry instead, and the note below says why.</p>
+  <p class="note">A printed stat: the game's own mark, with the value the card prints beside it. <code>docs/DESIGN.md</code> asked for "cost in a hexagonal plate, power and defence in chamfered plates at the corners" and the component drew exactly that for several phases. It renders LSS's published symbols now, and the note below says what changed and what the plates are still for.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center;gap:var(--of-space-looser);flex-wrap:wrap">
     ${[
       ["cost", "0"],
@@ -929,26 +1092,45 @@ cards.push({
       .map(([kind, value]) => statBadge(kind ?? "", kind ?? "", value ?? ""))
       .join("")}
   </div>
+  <p class="note" style="margin-block-start:var(--of-space-tight)"><strong>The symbol sits outboard and the numeral inboard of it</strong>, which is how the card sets its combat bar: <code>{p} 4</code> at one end and <code>2 {d}</code> at the other, with the artwork against the frame in both corners. On the card panel the end corner mirrors, so the marks line the two edges and the numerals face in toward the type line between them. <strong>Cost is the one exception</strong> — the card sets that numeral <em>inside</em> the resource disc, and so does this.</p>
+  <p class="note"><strong>Nothing on the card panel is labelled.</strong> The words above are the gallery naming what it is showing you; the product prints none, because the card prints none and the marks are the ones a reader has already met. What the label used to carry lives in the accessible name, which spells the stat out in full — "Power 3", "No printed power" — at every size.</p>
   <p class="note" style="margin-block-start:var(--of-space-looser)"><strong>A stat the card does not print — which is not a stat printed 0.</strong></p>
   <div class="row" style="margin-block-start:var(--of-space-tight);align-items:center;gap:var(--of-space-looser);flex-wrap:wrap">
     ${[
-      ["cost", "0"],
-      ["cost", "–"],
-      ["power", "0"],
-      ["power", "–"],
-      ["defence", "0"],
-      ["defence", "–"],
+      ["cost", "0", ""],
+      ["cost", "", "absent"],
+      ["power", "0", ""],
+      ["power", "", "absent"],
+      ["defence", "0", ""],
+      ["defence", "", "absent"],
     ]
-      .map(([kind, value]) => statBadge(kind ?? "", kind ?? "", value ?? ""))
+      .map(([kind, value, state]) =>
+        statBadge(kind ?? "", kind ?? "", value ?? "", state === "absent"),
+      )
       .join("")}
   </div>
-  <p class="note" style="margin-block-start:var(--of-space-tight)">1,648 cards print a cost of 0, 191 a defence of 0 and 13 a power of 0, so both members of each pair above are real and a reader has to be able to tell them apart. <strong>The silhouette survives the absence</strong> — the shape is what says WHICH stat is missing — and only the fill changes, to a plate that recedes against the ground rather than a seventh colour with a meaning of its own. Spoken as "no printed power", never as a dash. The card page draws these three whether or not a card fills them, because the frame reserves the positions; a hero, which has none of them, gets none.</p>
-  <p class="note" style="margin-block-start:var(--of-space-loose)">The house vocabulary is a square plate, chamfered differently, and arcane is the last stat wearing it — see below for what the other five took instead. <strong>None is eight-sided:</strong> the pitch jewel owns that outline and the system promises it means pitch, so a stat glyph that happened to be an octagon would spend the one shape that is spoken for. That still binds every plate here, discs included. The numeral stays the primary channel and the label stays visible; the silhouette is the third redundant carrier, never the only one — which is what lets four of the six share the disc without a value becoming unreadable.</p>
-  <p class="note"><strong>Five of the six break the vocabulary on purpose</strong>, and the test is whether the game prints a notation for the stat. Cost, power and defence are the three a player knows by sight, so they take the card's own geometry rather than a grey square that has to be read to be identified: two discs and a shield. Intellect and life earn it the same way — the Comprehensive Rules name <code>{i}</code> at 1.12.4b and <code>{h}</code> at 1.12.4c, and LSS publishes both as discs — so they take the card's blue and green. All of it drawn by us in tokens from our own palette: the register, none of the artwork. A player looking for attack is looking for a yellow disc.</p>
-  <p class="note"><strong>Arcane is the exception, and it is the one that proves the rule.</strong> 1.12.4 names eight symbols and arcane is not among them, so there is no printed register to take. It keeps the chamfered plate in the default ink, which is now exactly what "this stat has no notation of its own" looks like rather than a default the others happened to share.</p>
-  <p class="note"><strong>One size, three areas, so the boxes are not all the same.</strong> The eye compares ink rather than bounding boxes: a chamfered plate keeps about 21% more of its box than a disc does. Each plate is therefore scaled by the square root of its silhouette's area against the disc's π/4. Four of the six are discs and so take the reference factor untouched — only the shield and arcane's chamfered plate are still being compensated, which is what makes the row above read as one size.</p>
-  <p class="note"><strong>The word sits beside the plate, never above it</strong> — and on the card panel it sits <em>inboard</em> of it, so the plates line the two edges of the panel and the words face in toward the name and the type line between them.</p>
-  <p class="note">No LSS symbol is reproduced. These are the system's own plates carrying our numerals — the same move the mark made: take the register, none of the form.</p>`,
+  <p class="note" style="margin-block-start:var(--of-space-tight)">1,648 cards print a cost of 0, 191 a defence of 0 and 13 a power of 0, so both members of each pair above are real and a reader has to be able to tell them apart. <strong>The mark survives the absence</strong> — it is what says WHICH stat is missing — and it greys out rather than disappearing, with <strong>no character at all</strong> in the value position. An en dash sat there until the values moved out of the plates; beside a mark, where every printed value now is, a dash reads as something the card prints. Spoken as "no printed power", which is where a claim about what is <em>not</em> on a card belongs.</p>
+  <p class="note"><strong>This is the one thing the drawn plates did better.</strong> An absence used to be a recessed fill — a token, in the theme, checked like every other colour. An ingested PNG takes no token, so the greyed state is a filter instead. That is the price of rendering the game's own file, and it is stated here rather than discovered.</p>
+  <p class="note">The card page draws these three whether or not a card fills them, because the frame reserves the positions; a hero, which has none of them, gets none.</p>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>The plates are the fallback, and they are still here.</strong> The component draws them wherever no artwork is supplied — in a story, where the site's <code>public/</code> is not mounted, and for the one stat the rules print no symbol for. The house vocabulary is a square plate, chamfered differently, and <strong>none of them is eight-sided</strong>: the pitch jewel owns that outline and the system promises it means pitch.</p>
+  <div class="row" style="margin-block-start:var(--of-space-tight);align-items:center;gap:var(--of-space-looser);flex-wrap:wrap">
+    ${[
+      ["cost", "0"],
+      ["power", "3"],
+      ["defence", "2"],
+      ["life", "20"],
+      ["intellect", "4"],
+      ["arcane", "1"],
+    ]
+      .map(
+        ([kind, value]) =>
+          `<div style="display:flex;align-items:center;gap:var(--of-space-tight)">${statPlate(kind ?? "", value ?? "")}<span class="eyebrow" style="margin:0">${kind ?? ""}</span></div>`,
+      )
+      .join("")}
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-tight)"><strong>One size, three areas, so the boxes are not all the same.</strong> The eye compares ink rather than bounding boxes: a chamfered plate keeps about 21% more of its box than a disc does. Each plate is therefore scaled by the square root of its silhouette's area against the disc's π/4. Four of the six are discs and so take the reference factor untouched — only the shield and arcane's chamfered plate are compensated, which is what makes the row above read as one size. <strong>The marks do not need it:</strong> the files are all square and all full-bleed, so the artwork resets the factor to one.</p>
+  <p class="note"><strong>Arcane is the exception, and it is the one that proves the rule.</strong> 1.12.4 names eight symbols and arcane is not among them, so LSS publishes no icon for it and there is no printed register to take. It is the only stat that meets the plate in the product — and the card panel never asks for it at all, because the card prints that number in its rules text instead.</p>
+  <p class="note">The plates reproduce no LSS symbol: they are the system's own shapes carrying our numerals, every colour a token. The marks above them <em>are</em> LSS's files, unmodified, ingested from LSS's own rules site with the provenance record <code>docs/COMPLIANCE.md</code> §3 requires. §3 bars logos and close semblances of them and blesses drawing from a mechanic; <code>{p}</code> is defined at 1.12.4d as the notation for a power value and identifies no brand. Cost is the one place a numeral is set <em>over</em> the artwork rather than beside it — the file is unaltered, the numeral is a separate element, and the composite is ours.</p>`,
 });
 
 /**
@@ -1506,7 +1688,7 @@ cards.push({
             ${statBadge("power", "Power", "3")}
             ${statBadge("defence", "Defence", "2")}
           </div>
-          <p class="note" style="margin-block-start:var(--of-space-tight)">Pitch is labelled like every other corner, and every plate here is one visual size — the stone is scaled up and the shield down, because the eye compares ink rather than boxes.</p>
+          <p class="note" style="margin-block-start:var(--of-space-tight)">The words are this gallery naming its own row; <strong>the card panel prints none of them</strong>, because the card prints none and the marks are the game's own. Every mark here is one visual size — the stone is scaled to the artwork's box, and the artwork needs no optical factor because the files are square and full-bleed.</p>
         </div>
 
         <div>

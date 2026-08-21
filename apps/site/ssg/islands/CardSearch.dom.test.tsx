@@ -50,7 +50,11 @@ import { renderToString } from "react-dom/server";
 import { buildCardIndex, decodeCardIndex } from "../../src/lib/card-search";
 import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../../src/lib/cards";
 import { SETS } from "../../src/lib/sets";
-import { type CardCorpusBrief, CardSearch } from "./CardSearch";
+import {
+  type CardCorpusBrief,
+  CardSearch,
+  type NewestRelease,
+} from "./CardSearch";
 /* The id moved to the component that renders the field, along with the field. */
 import { HEADER_FIELD_ID, HeaderSearch } from "./HeaderSearch";
 import { headerSearchStore } from "./headerSearchStore";
@@ -857,6 +861,155 @@ describe("turning a page moves the reader, not just the rows", () => {
 
     const count = document.querySelector(".of-index__count");
     expect(count?.getAttribute("tabindex")).toBe("-1");
+
+    await act(async () => root.unmount());
+  });
+});
+
+/**
+ * The row of faces the browse state opens on.
+ *
+ * HAND-WRITTEN RATHER THAN `CARD_NEWEST`, and the reason is the same one that
+ * keeps `brief` local: `ssg/searchIndexes.ts` is the build's, and what is under
+ * test here is what the COMPONENT does with a row it is handed. Deriving the
+ * fixture from the same module the page derives the real one from would make
+ * both sides of the assertion one expression.
+ */
+const newest: NewestRelease = {
+  name: "Part the Mistveil",
+  code: "mst",
+  released: "2024-11-15",
+  cards: [
+    {
+      key: "MST001.webp",
+      href: "/card/mst/001/nuu-alluring-desire",
+      label: "Nuu, Alluring Desire",
+      typeLine: "Assassin Hero",
+      faceKey: "MST001.webp",
+    },
+    {
+      key: "MST002.webp",
+      href: "/card/mst/002/mask-of-the-pouncing-lynx",
+      label: "Mask of the Pouncing Lynx",
+      typeLine: "",
+      faceKey: "MST002.webp",
+    },
+  ],
+};
+
+/** Mount the browse state — no query asked, with or without a newest release. */
+async function browse(row: NewestRelease | null): Promise<Mounted> {
+  const form = shell();
+  const host = document.getElementById("root");
+  if (host === null) throw new Error("no root");
+  const headerRoot: Root = createRoot(form);
+  const root: Root = createRoot(host);
+  await act(async () => {
+    headerRoot.render(<HeaderSearch />);
+    root.render(<CardSearch indexUrl={INDEX_URL} brief={brief} newest={row} />);
+  });
+  return {
+    unmount: () => {
+      root.unmount();
+      headerRoot.unmount();
+    },
+  };
+}
+
+/**
+ * WHAT THE PAGE IS BEFORE ANYBODY HAS ASKED IT ANYTHING.
+ *
+ * This state is what a reader reaches from the header's "Cards" link and from
+ * the breadcrumb on every card page, so it is the most-arrived-at screen on the
+ * site after the front door — and it had no test of its own at all. The three
+ * things asserted here are the three that were wrong or absent before: the pin
+ * is printed WITHOUT the index (`docs/PLAN.md` requires it and a fetch must not
+ * gate it), the release row draws the printings it is handed, and an absent
+ * release costs the type lines nothing.
+ *
+ * NOTHING HERE WAITS FOR THE INDEX, deliberately — `settle()` is absent from
+ * every test below. That is the property under test: a browse that needed the
+ * index would be a browse that is blank on a slow connection.
+ */
+describe("the browse state stands up without an index", () => {
+  test("it prints the pin and every type line the brief carries", async () => {
+    const root = await browse(null);
+
+    const pin = document.querySelector(".of-cards__count")?.textContent ?? "";
+    expect(pin).toContain(brief.commit.slice(0, 7));
+    expect(pin).toContain(brief.confirmed);
+
+    /* The count leads, in its own element, so the lede can be sized as a
+       sentence with one large word in it. */
+    expect(document.querySelector(".of-browse__size")?.textContent).toBe(
+      brief.size.toLocaleString("en-GB"),
+    );
+
+    expect(document.querySelectorAll(".of-cards__browse li")).toHaveLength(
+      brief.browse.length,
+    );
+
+    await act(async () => root.unmount());
+  });
+
+  test("no release to show costs the type lines nothing", async () => {
+    const root = await browse(null);
+
+    expect(document.querySelector(".of-browse__faces")).toBeNull();
+    expect(
+      document.querySelectorAll(".of-cards__browse li").length,
+    ).toBeGreaterThan(0);
+
+    await act(async () => root.unmount());
+  });
+
+  test("the release row draws the PRINTINGS it is handed", async () => {
+    const root = await browse(newest);
+
+    const faces = [...document.querySelectorAll(".of-browse__faces img")];
+    expect(faces).toHaveLength(newest.cards.length);
+
+    /*
+     * THE FACE AND THE ADDRESS ARE CARRIED, NEVER RECONSTRUCTED, which is the
+     * half of the guarantee this file can see. A component that built either
+     * from the label or the key would draw a row that agrees with itself and
+     * disagrees with the router.
+     *
+     * THE OTHER HALF IS NOT HERE, and it is worth being exact about that. The
+     * bug this row was built wrong by the first time — showing each card's
+     * DEFAULT art, so "Newest: Mastery Pack Warrior" appeared over faces keyed
+     * `DDD001` and `HVY093` — is a defect of the DERIVATION, not of this
+     * component: hand this component a wrong row and it will draw the wrong row
+     * faithfully. `ssg.test.ts` holds `CARD_NEWEST` to belonging to its own set,
+     * which is where that assertion can actually be made.
+     */
+    for (const [index, img] of faces.entries()) {
+      const card = newest.cards[index];
+      if (card === undefined) throw new Error("missing fixture card");
+      expect(img.getAttribute("src")).toContain(card.faceKey);
+    }
+
+    const links = [
+      ...document.querySelectorAll<HTMLAnchorElement>(".of-browse__face a"),
+    ].map((anchor) => anchor.getAttribute("href"));
+    expect(links).toEqual(newest.cards.map((card) => card.href));
+
+    await act(async () => root.unmount());
+  });
+
+  test("a card with no type line is named by its label alone", async () => {
+    const root = await browse(newest);
+
+    const alts = [...document.querySelectorAll(".of-browse__faces img")].map(
+      (img) => img.getAttribute("alt"),
+    );
+
+    /* `""` is upstream's "no type line", and it must not reach a reader as an
+       em dash with nothing after it. */
+    expect(alts).toEqual([
+      "Nuu, Alluring Desire — Assassin Hero",
+      "Mask of the Pouncing Lynx",
+    ]);
 
     await act(async () => root.unmount());
   });

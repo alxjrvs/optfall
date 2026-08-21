@@ -411,28 +411,33 @@ const STRUCTURE: TokenTable = {
      reason — sixty rows of set, number, name and cost, with the one channel
      that identifies a card at a glance left out.
 
-     44px, AND IT IS THE DENSITY THAT CHOSE IT RATHER THAN THE PICTURE. A row
-     is 72px with no face. Measured across the three candidates: this takes it
-     to 86px, 3.5rem takes it to 103px and 4.5rem to 126px — so the sizes that
-     render the art comfortably cost a third to nearly half of the rows on a
-     screen, in the view whose entire reason to exist is density. A sixth is
-     the price worth paying.
+     72px, AND IT WAS 44px UNTIL THE ROW STOPPED PRINTING VALUES. The density
+     arithmetic that chose the smaller size is on the record: a row is 72px
+     with no face, and the three candidates were projected at 86px for 2.75rem,
+     103px for 3.5rem and 126px for this one. This one measures 127px in the
+     built page, so the picture really does cost between a sixth and nearly
+     half of the rows on a screen. What changed is what the row spends its text
+     on. It printed Cost, Power and
+     Defence under every name, and on a search a word naming the field that
+     matched; both are gone, and a row that carries a name, a pitch and a type
+     line has nothing left competing with the face for the reader's eye.
+     Density lost to recognition here, deliberately.
 
-     IT IS A RECOGNITION THUMBNAIL, NOT A LEGIBLE ONE, and the difference is
-     the whole argument for going this small. The card's own printed name is
-     unreadable here and does not need to be read — the name is set beside it
-     in serif at `type.size.large`. What survives at this size is the frame
-     colour, the class border and the silhouette of the art, which is what
-     lets a reader find a card they have seen before without reading anything.
-     Bigger starts competing with the name for the eye, which is the grid's
-     job and not this view's.
+     IT IS STILL A RECOGNITION THUMBNAIL RATHER THAN A CARD TO READ, which is
+     the line this size walks up to and does not cross. The card's own printed
+     name and text are unreadable here and do not need to be read — the name is
+     set beside it in serif at `type.size.large`. What the extra 28px buys is
+     the art: at 44px the frame colour, the class border and a silhouette were
+     all that survived, which is enough to recognise a card you have seen and
+     not enough to see one you have not. Reading a face is the grid's job, and
+     the grid draws at `layout.card.cell`, which is more than three times this.
 
      `layout.card.row`, NOT `card.face.row`, for the reason `layout.card.cell`
      states beside it: anything under `card.face` is a width the face host
      promises to serve, and this is a width the layout draws at. The row is
      satisfied by the `thumb` tier, which is 180px and therefore a comfortable
      downscale rather than a new tier nobody publishes. */
-  "layout.card.row": "2.75rem",
+  "layout.card.row": "4.5rem",
 
   /* THE POINTER-TARGET FLOOR — 24px, which is what WCAG 2.5.8 (AA) sets.
      Anything that is the ONLY way to reach a destination must be at least this
@@ -605,6 +610,26 @@ export const DARK_TOKENS: TokenTable = {
   "color.pitch.four.ink": "#ffffff",
   "color.pitch.facet": "#ffffff",
 
+  /* THE SLOTS INSIDE THE STONE, and both are read off a printed card rather
+     than chosen. A pitch value is three sockets in a ring in the card's
+     top-left corner, each one bezelled in a light hairline: the ones the card
+     has paid for hold the red resource symbol, and the rest are holes.
+
+     `pip` is the fallback red, for the sizes where the artwork cannot be read.
+     Sampled from `MST131` and `ARC124` at #be3631 and #a52d2d, and rounded to the brighter of the two — the same red the
+     resource symbol is drawn in, which is why it is here rather than borrowed
+     from `pitch.one`: that token means "this card pitches for one", and a pip
+     on a pitch-three stone means nothing of the kind.
+
+     `socket` is the hole, and it is near-black in BOTH themes, which is the one
+     place this file deliberately does not follow the ground. Every other
+     recessed surface here lightens in the light theme so that it recedes
+     against ash. A socket does not sit on the page — it sits on a saturated
+     stone, in both themes — so it recedes by being darker than the stone
+     whatever the stone is, exactly as the card prints it. */
+  "color.pitch.pip": "#be3631",
+  "color.pitch.socket": "#232326",
+
   /* State. The notch says "this carries state"; the colour says which. */
   /* Every coloured chip carries its own ink, exactly as every pitch stone does.
      A single shared ink token forces every state to sit in the same luminance
@@ -734,68 +759,97 @@ export const DARK_TOKENS: TokenTable = {
   "color.stat.absent": "#3a3a3a",
   "color.stat.absent.ink": "#c8c8c8",
 
-  /* Rarity. Ten of them, and the honest note is at the top rather than buried:
-     THESE ARE OPTFALL'S COLOURS, NOT LEGEND STORY STUDIOS'. Nothing in the
-     published dataset names a colour for a rarity, and this project does not
-     invent facts and print them as though they were read off a record — so the
-     LETTER and the WORD carry the fact ("M" and "ajestic"), and the hue is a
-     grouping the reader can scan, nothing more. Getting the hue wrong costs a
-     glance; it cannot make the page say something false.
+  /* Rarity. Ten of them, and the honest note at the top has been overtaken:
+     SIX OF THESE ARE NOW READ OFF A PRINTED CARD, AND FOUR ARE STILL OURS.
 
-     They are also the largest single expansion of the palette so far, against a
-     `DESIGN.md` rule that boldness is spent in two places. The mitigation is
-     size rather than restraint of hue: these appear only as a bubble one
-     character wide, at label size, once per card. A rarity chip is not
-     competing with a pitch stone for attention at any distance.
+     This block used to open "THESE ARE OPTFALL'S COLOURS, NOT LEGEND STORY
+     STUDIOS'" — nothing in the published dataset names a colour for a rarity,
+     so the hue was a grouping and never a claim. The dataset still names none.
+     The CARD does: every printing carries its rarity as a filled disc with a
+     single letter in its bottom margin, and that disc has a colour anybody can
+     read off an image. Refusing to look at it was not caution, it was declining
+     to check.
 
-     BRASS IS NOT AVAILABLE, including to Promo, where it is the obvious choice.
-     "A material used once is a signal; used twice it is a theme", and brass is
-     spent on verified attribution. Promo takes a mauve that is nobody else's.
+     SAMPLED, WITH THE PRINTING NAMED, SO THE CLAIM IS RE-DERIVABLE. Median of
+     the disc body over its interquartile range, letter and rim excluded, taken
+     from the card images this project already serves:
 
-     LEGENDARY IS YELLOW, AND IT SITS NEXT TO MAJESTIC'S GOLD ON PURPOSE. It was
-     a violet, which separated it from everything; the two are now the only warm
-     yellows in the table and they are one rank apart on the ladder, which is
-     exactly where a reader is most likely to be comparing them. So the pair is
-     the one that had to be measured rather than eyeballed: they are 29 ΔE apart
-     in dark and 24 in light, against a table whose closest EXISTING pair is 12.4
-     dark and 10.6 light (token/basic and common/token). Comfortably clear by
-     this palette's own working standard, and `tokens.test.ts` now pins it — the
-     rarity ramp had no test of any kind before this, which is how a second
-     yellow could have landed on top of the first with nothing to catch it.
+       Rare        blue                 MPW075
+       Super Rare  violet               SUP021
+       Majestic    red                  MST131
+       Legendary   amber                EVR154
+       Fabled      gold, and a DIAMOND  ANQ002
+       Promo       green                GEM088
 
-     THE SEPARATION IS CARRIED DIFFERENTLY IN EACH MODE, and that is the point of
-     keeping two hand-checked tables rather than deriving one from the other.
-     Dark goes up: a bright lemon at L* 88 against gold's 65, which an ink-black
-     letter sits on at 13.5:1. Light cannot — the ash ground is already at L* 85,
-     so a lemon bubble would have less edge than any other chip on the page — so
-     it goes to a deep chrome yellow at L* 70, separating from gold's 55 by
-     lightness in the same direction the whole light table darkens. */
+     WHERE THE CARD SAYS NOTHING, WE STILL DO. Common, Token and Basic are the
+     same grey on the card — three samples inside about two ΔE of each other —
+     so the card distinguishes them by their letter alone and has nothing to
+     tell us about telling them apart at a glance. They keep the values they
+     had. So does Marvel: no printing was found rendering a Marvel mark on its
+     face, and inventing one to complete the set is the exact move the original
+     note was written to prevent.
+
+     THE HUE IS THE CARD'S AND THE LUMINANCE IS OURS, which is the whole of the
+     adaptation. A printed disc is a foil mark a few millimetres across and
+     carries a white letter at about 2.9:1; the same colour in a bubble on a
+     page is a UI element held to AA by `tokens.test.ts`. So each sampled hue
+     was kept and darkened until white cleared 4.5 — Rare and Promo needed it,
+     Super Rare and Majestic already passed — while Legendary and Fabled keep
+     the card's value and take the dark ink Legendary already used, because
+     darkening an amber far enough for white ink is how you stop having an
+     amber.
+
+     BRASS IS STILL NOT AVAILABLE, including to Promo, where it was the obvious
+     choice before the card answered the question. "A material used once is a
+     signal; used twice it is a theme", and brass is spent on verified
+     attribution. Promo is green because the card is green.
+
+     WHAT THIS COST THE OLD RAMP, named rather than quietly dropped. Legendary
+     was a lemon yellow chosen to sit one rank from Majestic's gold and measured
+     against it at 29 ΔE dark and 24 light; Majestic is red now and Legendary
+     amber, so that pair is 41.9 ΔE dark and 37.1 light — further apart than the
+     arrangement the measurement was defending. The pair `tokens.test.ts` pins
+     is the same pair; only the colours under it changed.
+
+     FABLED IS THE ONE PLACE FIDELITY STOPS. The card prints it as a gold
+     diamond with no letter — the only rarity it separates by SHAPE rather than
+     by hue — and this table has no shape to give. Colour alone clears the
+     ramp's floor against Legendary at 15.6 ΔE dark and 13.7 light, so the gold
+     is taken and the diamond is not. If that ever feels too close in use, the
+     answer is `ornament.cut.*` and not a hue nobody printed. */
   "color.rarity.common": "#6e6e6e",
   "color.rarity.common.ink": "#ffffff",
-  "color.rarity.rare": "#8a6a2f",
+  "color.rarity.rare": "#3c79a6",
   "color.rarity.rare.ink": "#ffffff",
-  /* DARKENED BY A HAIR TO CLEAR AA, and it is a bug fix rather than a palette
-     choice. This was `#4a7fa8`, on which white lands at 4.29:1 — under the 4.5
-     the letter needs, and the letter is the fact. Nothing caught it because the
-     rarity ramp had no test until the one in `tokens.test.ts`, which is the
-     honest reason a pre-existing near-miss is corrected in a commit about
-     Legendary: writing that test is what found it. The shift is 6.7 ΔE, far
-     enough to pass and near enough that the blue is the same blue. */
-  "color.rarity.super": "#3d6e95",
+  /* SUPER RARE IS VIOLET, AND IT USED TO BE A BLUE. Two notes lived here and
+     both are worth keeping, because between them they are the reason this whole
+     block now cites a printing.
+
+     ~~It was `#4a7fa8`, on which white lands at 4.29:1 — under the 4.5 the
+     letter needs — and it was darkened by a hair to `#3d6e95` to clear it.~~
+     That fix was right and the colour under it was not: the card prints Super
+     Rare violet, and the blue it was being carefully adjusted toward belongs to
+     Rare. Two rarities one rank apart had been given each other's rough
+     neighbourhood, and no amount of contrast tuning was going to find that —
+     nothing in the dataset says what colour a rarity is, so there was nothing
+     to be wrong against until somebody looked at a card.
+
+     The sampled violet needs no adjustment: white lands on it at 6.12:1. */
+  "color.rarity.super": "#79538c",
   "color.rarity.super.ink": "#ffffff",
-  "color.rarity.majestic": "#c9971f",
-  "color.rarity.majestic.ink": "#171307",
-  "color.rarity.legendary": "#f7dc3f",
+  "color.rarity.majestic": "#a64339",
+  "color.rarity.majestic.ink": "#ffffff",
+  "color.rarity.legendary": "#dc9f58",
   "color.rarity.legendary.ink": "#171307",
-  "color.rarity.fabled": "#b0431f",
-  "color.rarity.fabled.ink": "#ffffff",
+  "color.rarity.fabled": "#d5b766",
+  "color.rarity.fabled.ink": "#171307",
   "color.rarity.token": "#4a4a4a",
   "color.rarity.token.ink": "#ededed",
   "color.rarity.basic": "#3f5764",
   "color.rarity.basic.ink": "#ffffff",
   "color.rarity.marvel": "#2f7d6f",
   "color.rarity.marvel.ink": "#ffffff",
-  "color.rarity.promo": "#8a5a8a",
+  "color.rarity.promo": "#3e8340",
   "color.rarity.promo.ink": "#ffffff",
 
   /* Bevel: light top edge, dark bottom edge, so plates read as struck metal. */
@@ -884,6 +938,12 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.pitch.four.ink": "#ffffff",
   "color.pitch.facet": "#ffffff",
 
+  /* Sampled the same way as the dark table's pair — see the note there for
+     why the socket does not lighten with the rest of this theme. The pip is
+     a step down, because it sits on stones that are themselves darker here. */
+  "color.pitch.pip": "#a52d2d",
+  "color.pitch.socket": "#232326",
+
   "color.state.legal": "#1f6039",
   "color.state.legal.ink": "#ffffff",
   "color.state.banned": "#8c1016",
@@ -949,23 +1009,23 @@ export const LIGHT_TOKENS: TokenTable = {
      is unavailable to Promo. */
   "color.rarity.common": "#5c5c5c",
   "color.rarity.common.ink": "#ffffff",
-  "color.rarity.rare": "#6f5423",
+  "color.rarity.rare": "#376e97",
   "color.rarity.rare.ink": "#ffffff",
-  "color.rarity.super": "#2f5f80",
+  "color.rarity.super": "#79538c",
   "color.rarity.super.ink": "#ffffff",
-  "color.rarity.majestic": "#a87d13",
-  "color.rarity.majestic.ink": "#1a1405",
-  "color.rarity.legendary": "#c9a900",
+  "color.rarity.majestic": "#a64339",
+  "color.rarity.majestic.ink": "#ffffff",
+  "color.rarity.legendary": "#c68f4f",
   "color.rarity.legendary.ink": "#1a1405",
-  "color.rarity.fabled": "#8f3315",
-  "color.rarity.fabled.ink": "#ffffff",
+  "color.rarity.fabled": "#b79d58",
+  "color.rarity.fabled.ink": "#1a1405",
   "color.rarity.token": "#767676",
   "color.rarity.token.ink": "#ffffff",
   "color.rarity.basic": "#334855",
   "color.rarity.basic.ink": "#ffffff",
   "color.rarity.marvel": "#1f6155",
   "color.rarity.marvel.ink": "#ffffff",
-  "color.rarity.promo": "#6d456d",
+  "color.rarity.promo": "#38763a",
   "color.rarity.promo.ink": "#ffffff",
 
   "bevel.light": "rgba(255, 255, 255, 0.85)",

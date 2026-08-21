@@ -32,6 +32,7 @@ import {
   renderRedirects,
 } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
+import { CARD_NEWEST } from "./searchIndexes";
 import { HEADER_FIELD_ID } from "./islands/HeaderSearch";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
 import { routes } from "./routes";
@@ -646,10 +647,10 @@ describe("the ported pages", () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* The card page's empty stat sockets                                          */
+/* The card page's empty stat positions                                       */
 /* -------------------------------------------------------------------------- */
 
-describe("a card page reserves the combat positions it does not fill", () => {
+describe("a card page holds open the combat positions it does not fill", () => {
   const all = RESOLVED;
   const render = (route: string) =>
     all.find((resolved) => resolved.route === route)?.render([], undefined) ??
@@ -657,45 +658,87 @@ describe("a card page reserves the combat positions it does not fill", () => {
 
   /*
    * ASSERTED ON REAL PAGES rather than on a fixture, because the rule is about
-   * WHICH cards reserve positions and that is a fact about the corpus. Shapes
-   * measured across all 4,941 cards: 1,963 print cost+power+defence, 1,543
-   * print cost and defence and no power, 529 print defence alone, 411 print
-   * cost alone, 154 are heroes printing life and intellect, 188 print nothing
-   * at all.
+   * WHICH cards leave positions empty and that is a fact about the corpus.
+   * Shapes measured across all 4,941 cards: 1,963 print cost+power+defence,
+   * 1,543 print cost and defence and no power, 529 print defence alone, 411
+   * print cost alone, 154 are heroes printing life and intellect, 188 print
+   * nothing at all.
    */
 
   /*
-   * A POSITION THE CARD DOES NOT FILL IS `of-card__badge--reserved`, and that
-   * class is the single thing most of these tests assert on. It carries
-   * `visibility: hidden`, so the badge paints nothing and keeps its width —
-   * which is the whole rule, and neither half of it is checkable from the
-   * markup alone. The class is where they meet.
+   * WHERE THE CLASS MOVED, AND WHAT DID NOT MOVE WITH IT. An empty position was
+   * `of-card__badge--reserved` on the page. It is `of-stat--absent` on the
+   * component now, because the mark is what knows how to not paint itself — but
+   * the behaviour either name describes is the same one: `visibility: hidden`,
+   * `aria-hidden`, a mark rendered and suppressed so the corner keeps its width
+   * without claiming anything.
+   *
+   * A GREYED MARK WAS TRIED IN BETWEEN and these tests briefly asserted it:
+   * visible, announced, the artwork desaturated. On the page it read as a
+   * rendering fault rather than a statement, so it went, and the assertions
+   * came back to where they started.
+   *
+   * WHAT NEVER CHANGED is the reason any of this exists: both bands are
+   * `fit-content(28%) minmax(0, 1fr) fit-content(28%)` with the name and the
+   * type line centred inside the middle column, so a corner sized to nothing
+   * slides the centred thing off the card's axis — 37px at a 320px viewport,
+   * 52px at 1226px.
    */
 
   /*
    * MIRRORED CORNERS ARE STRIPPED FIRST, AND WITHOUT THIS EVERY COUNT BELOW IS
    * WRONG. An empty corner reflects the opposite corner's badges to borrow its
-   * width, so a reserved badge on one side is rendered a SECOND time on the
+   * width, so an absent mark on one side is rendered a SECOND time on the
    * other — `Aether Ironweave` counted 3 for its 2 empty positions until this
    * was here. The reflection is not a position the card leaves empty; it is the
    * same position, drawn again to hold a width.
    *
-   * A `<dl>` never nests, so a non-greedy match to the first `</dl>` takes
-   * exactly one corner.
+   * IT COUNTS DEPTH RATHER THAN MATCHING TO THE FIRST CLOSING TAG, and that is
+   * a consequence of the corners becoming `<div>`s. They were `<dl>`s, which
+   * never nest, so a non-greedy match to `</dl>` took exactly one corner. A
+   * `<div>` corner contains `<div>` badges, so the same match would have cut
+   * the corner off at its first child and left the rest of the mirror in the
+   * string — passing every count here while silently measuring the wrong
+   * markup.
    */
-  const withoutMirrors = (html: string) =>
-    html.replace(
-      /<dl class="[^"]*of-card__corner-mirror[^"]*"[^>]*>.*?<\/dl>/gs,
-      "",
-    );
-  const reservedCount = (html: string) =>
-    withoutMirrors(html).match(/of-card__badge--reserved/g)?.length ?? 0;
+  const withoutMirrors = (html: string) => {
+    const opener = /<div class="[^"]*of-card__corner-mirror[^"]*"[^>]*>/;
+    let out = html;
+    for (;;) {
+      const found = opener.exec(out);
+      if (found === null) return out;
+      let depth = 1;
+      let at = found.index + found[0].length;
+      const tag = /<(\/?)div\b[^>]*>/g;
+      tag.lastIndex = at;
+      for (;;) {
+        const step = tag.exec(out);
+        if (step === null) return out.slice(0, found.index);
+        depth += step[1] === "/" ? -1 : 1;
+        if (depth === 0) {
+          at = step.index + step[0].length;
+          break;
+        }
+      }
+      out = out.slice(0, found.index) + out.slice(at);
+    }
+  };
+
+  /*
+   * AN EMPTY POSITION IS `of-stat--absent`, and that class is the single thing
+   * most of these tests assert on. It carries `visibility: hidden`, so the mark
+   * paints nothing and keeps its width — which is the whole rule, and neither
+   * half of it is checkable from the markup alone. The class is where they
+   * meet.
+   */
+  const absentCount = (html: string) =>
+    withoutMirrors(html).match(/of-stat--absent/g)?.length ?? 0;
 
   test("a mirrored corner is inert, and only appears opposite a full one", () => {
     /*
      * THE 571-CARD CASE. `Aether Ironweave` pitches for nothing and prints no
-     * cost, so its title band would be a stone-less corner opposite a reserved
-     * cost plate — the name sitting 37px to 52px left of the card's axis,
+     * cost, so its title band would be a stone-less corner opposite a greyed
+     * cost mark — the name sitting 37px to 52px left of the card's axis,
      * depending on viewport. The empty corner reflects the full one instead.
      *
      * It is `aria-hidden`, which is the half that matters here: the reflection
@@ -703,10 +746,10 @@ describe("a card page reserves the combat positions it does not fill", () => {
      */
     const html = render(addressOf("aether-ironweave"));
     expect(html).toContain("of-card__corner-mirror");
-    for (const dl of html.match(
-      /<dl class="[^"]*of-card__corner-mirror[^"]*"[^>]*>/g,
+    for (const corner of html.match(
+      /<div class="[^"]*of-card__corner-mirror[^"]*"[^>]*>/g,
     ) ?? []) {
-      expect(dl).toContain('aria-hidden="true"');
+      expect(corner).toContain('aria-hidden="true"');
     }
 
     /* A HERO GETS NONE, and that is the limit of the rule rather than an
@@ -724,45 +767,43 @@ describe("a card page reserves the combat positions it does not fill", () => {
     expect(render(hero?.href ?? "")).not.toContain("of-card__corner-mirror");
   });
 
-  test("an action with no attack paints no attack plate", () => {
+  test("an action with no attack paints no attack mark", () => {
     /*
      * `Absorb in Aether` is a Wizard Defense Reaction: cost and defence, no
      * power. The 1,543-card shape, and with the 411 cost-only cards and the
-     * 529 defence-only ones it is half the corpus — which is how big the
-     * drawn-plate version of this rule was, and why it went.
+     * 529 defence-only ones it is half the corpus.
      */
     const html = render(addressOf("absorb-in-aether-1"));
     expect(html).not.toBe("");
 
-    /* ONE reserved position — the attack — and it is inert to a screen
+    /* ONE empty position — the attack — and it is inert to a screen
        reader. */
-    expect(reservedCount(html)).toBe(1);
-    expect(html).toContain(
-      '<div class="of-card__badge of-card__badge--reserved" aria-hidden="true">',
-    );
+    expect(absentCount(html)).toBe(1);
+    expect(html).toContain('aria-label="No printed power"');
 
     /* What it PRINTS is untouched. This changes empty positions only. */
     expect(html).toMatch(/aria-label="Cost \d+"/);
     expect(html).toMatch(/aria-label="Defence \d+"/);
   });
 
-  test("equipment reserves cost and attack, and prints neither", () => {
+  test("equipment holds cost and attack open, and prints neither", () => {
     /* `Aether Ironweave` is Runeblade Equipment: defence only, so two of the
-       three positions are empty and both are reserved rather than drawn. */
+       three positions are empty and both are held open rather than drawn. */
     const html = render(addressOf("aether-ironweave"));
     expect(html).not.toBe("");
-    expect(reservedCount(html)).toBe(2);
+    expect(absentCount(html)).toBe(2);
     expect(html).toMatch(/aria-label="Defence \d+"/);
   });
 
-  test("a reserved position is never announced, on any shape", () => {
+  test("an empty position is never announced, on any shape", () => {
     /*
      * THE HALF A CLASS NAME CANNOT PROVE, asserted across the shapes rather
      * than on one card. `StatGlyph` spells an absence out — "No printed power"
      * — and that string is still in the markup, because the badge is the
-     * printed one hidden rather than a stand-in built to look like it. What
-     * has to hold is that it is never reachable: every occurrence sits inside
-     * an `aria-hidden` badge.
+     * printed one hidden rather than a stand-in built to look like it. What has
+     * to hold is that it is never reachable: every occurrence sits inside an
+     * `aria-hidden` badge, because a listener should not be told about a mark a
+     * viewer cannot see.
      *
      * Checked by counting rather than by reading the tree, because the render
      * is a string here. If the two counts agree, no absence escaped a hidden
@@ -776,16 +817,40 @@ describe("a card page reserves the combat positions it does not fill", () => {
       const html = withoutMirrors(render(route));
       const absences = html.match(/aria-label="No printed [a-z]+"/g) ?? [];
       expect(absences.length).toBeGreaterThan(0);
-      expect(absences.length).toBe(reservedCount(html));
+      expect(absences.length).toBe(absentCount(html));
+      /* Every one of them under a hidden badge. */
+      expect(
+        (html.match(/<div class="of-card__badge" aria-hidden="true">/g) ?? [])
+          .length,
+      ).toBe(absences.length);
     }
+  });
+
+  test("an empty position prints no character", () => {
+    /*
+     * THE INSTRUCTION THAT RETIRED THE EN DASH. An absence used to draw one,
+     * which was right inside a struck plate and wrong beside a mark: every
+     * printed value now sits next to its symbol, so a dash in that position
+     * reads as something the card prints.
+     *
+     * ASSERTED ON THE VALUE ELEMENT rather than on the page, because an en dash
+     * is legitimate prose elsewhere in the markup — a date range in the
+     * printings table would fail a page-wide search for the character.
+     */
+    const html = render(addressOf("aether-ironweave"));
+    const values = html.match(
+      /<span class="of-stat__value"[^>]*>[^<]*<\/span>/g,
+    );
+    expect(values?.length).toBeGreaterThan(0);
+    for (const value of values ?? []) expect(value).not.toContain("–");
   });
 
   test("a hero gets no sockets, because it has no combat positions", () => {
     /*
      * THE LIMIT ON THE RULE, and why it is not "always draw three". A hero
      * prints life and intellect; cost, power and defence are not values it is
-     * missing but positions its frame does not have. Three dashes on a hero
-     * would be inventing slots rather than reporting an absence.
+     * missing but positions its frame does not have. Three held-open slots on
+     * a hero would be inventing positions rather than reporting an absence.
      */
     /*
      * THE ADDRESS COMES FROM `CARD_PAGES`, NOT FROM SLUGGING THE NAME HERE.
@@ -811,17 +876,17 @@ describe("a card page reserves the combat positions it does not fill", () => {
     const html = render(hero?.href ?? "");
     /* Not the disambiguation page and not nothing: this has to be the card. */
     expect(html).toContain("of-card__name");
-    /* NOT EVEN A RESERVED ONE. A hero does not have these positions to leave
+    /* NOT EVEN A HIDDEN ONE. A hero does not have these positions to leave
        empty, so there is no width to hold open for them either. */
-    expect(html).not.toContain("of-card__badge--reserved");
+    expect(absentCount(html)).toBe(0);
     expect(html).not.toContain("No printed cost");
     expect(html).not.toContain("No printed power");
     expect(html).not.toContain("No printed defence");
   });
 
-  test("a weapon reserves cost and defence, and that is a decision", () => {
+  test("a weapon holds cost and defence open, and that is a decision", () => {
     /*
-     * 81 cards print power and nothing else. They reserve the other two for the
+     * 81 cards print power and nothing else. They hold the other two open for the
      * same reason the 529 equipment cards do — the positions are on the frame,
      * and a corner sized to nothing slides the type line off the card's axis —
      * and the case is pinned here because it is the one somebody will want to
@@ -852,14 +917,14 @@ describe("a card page reserves the combat positions it does not fill", () => {
 
     const html = render(weapon?.href ?? "");
     expect(html).toContain("of-card__name");
-    expect(reservedCount(html)).toBe(2);
+    expect(absentCount(html)).toBe(2);
     expect(html).toMatch(/aria-label="Power \d+"/);
   });
 
-  test("a cost-only card reserves the two positions it leaves empty", () => {
+  test("a cost-only card holds open the two positions it leaves empty", () => {
     /*
      * 411 cards print a cost and nothing else — items, instants, tokens. Both
-     * bottom corners are empty, so both are reserved: the bar is a corner, the
+     * bottom corners are empty, so both are held open: the bar is a corner, the
      * type line and a corner, and with neither corner holding its width the
      * type line has nothing to sit between.
      */
@@ -875,7 +940,7 @@ describe("a card page reserves the combat positions it does not fill", () => {
 
     const html = render(costOnly?.href ?? "");
     expect(html).toContain("of-card__name");
-    expect(reservedCount(html)).toBe(2);
+    expect(absentCount(html)).toBe(2);
     expect(html).toMatch(/aria-label="Cost \d+"/);
   });
 
@@ -903,7 +968,7 @@ describe("a card page reserves the combat positions it does not fill", () => {
 
     const html = render(ally?.href ?? "");
     expect(html).toContain("of-card__name");
-    expect(html).not.toContain("of-card__badge--reserved");
+    expect(absentCount(html)).toBe(0);
     expect(html).not.toContain("No printed cost");
     expect(html).not.toContain("No printed defence");
     /* And it still shows what it DOES print. */
@@ -935,14 +1000,39 @@ describe("a card page reserves the combat positions it does not fill", () => {
     expect(html).toContain("of-card__name");
     /* The zero is drawn as a zero… */
     expect(html).toContain('aria-label="Cost 0"');
-    /* …and the position that holds it is a printed one, not a reserved one.
-       THIS IS THE PAIR THE CHANGE HAD TO KEEP APART: 1,648 cards print a cost
-       of 0, and a reserved cost corner is also blank, so "prints 0" and "prints
-       nothing" would render identically if the 0 ever fell through to the
-       reserved branch. */
-    expect(html).not.toContain(
-      '<div class="of-card__badge of-card__badge--reserved" aria-hidden="true"><dt>Cost</dt>',
+    /* …and the mark that holds it is painted, not hidden. THIS IS THE PAIR
+       THE CHANGE HAD TO KEEP APART: 1,648 cards print a cost of 0, and a
+       hidden cost position is also blank, so "prints 0" and "prints nothing"
+       would render identically if the 0 ever fell through to the absent
+       branch. */
+    expect(html).not.toContain("No printed cost");
+    expect(html).not.toMatch(/of-stat--cost[^"]*of-stat--absent/);
+  });
+
+  test("the marks are the game's own files, and they are not labelled", () => {
+    /*
+     * THE CHANGE THIS WHOLE BLOCK IS DOWNSTREAM OF, pinned where the corpus can
+     * see it. Every stat in `STAT_ORDER` resolves to one of LSS's published
+     * symbols, so a card page should render artwork and never the drawn
+     * fallback plate — `of-stat--art` on every mark, `of-stat__art` for the
+     * image, and no `<dt>` anywhere in a corner.
+     *
+     * THE LABEL ASSERTION IS THE ONE WORTH KEEPING. Dropping the words was the
+     * point of the change and it is the easiest thing to reintroduce by
+     * accident, since a `<dt>` in a corner would look right in review and read
+     * as a duplicate to anybody hearing the page.
+     */
+    const html = render(addressOf("absorb-in-aether-1"));
+    expect(html).toContain("of-stat--art");
+    expect(html).toContain("of-stat__art");
+    expect(html).toContain("/symbols/icon_");
+    /* The drawn plate is the fallback and nothing on a card page should reach
+       it. */
+    expect(html).not.toMatch(
+      /class="of-stat of-stat--(cost|power|defence)[^"]*"[^>]*>\s*<span class="of-stat__value"/,
     );
+    /* No corner carries a word. */
+    expect(html).not.toContain("<dt>");
   });
 });
 
@@ -2383,7 +2473,7 @@ describe("a card index prints the name and not the pitch qualifier", () => {
     }
   });
 
-  test("the list row leads with a face, at the tier a 44px box wants", () => {
+  test("the list row leads with a face, at the tier a 72px box wants", () => {
     /*
      * THE VIEW USED TO CARRY NO PICTURE, which made the densest card list on
      * this site the one screen contradicting `docs/DESIGN.md`'s claim that
@@ -2391,9 +2481,9 @@ describe("a card index prints the name and not the pitch qualifier", () => {
      * text-list card tool in the game.
      *
      * THE TIER IS THE HALF WORTH PINNING. `thumb` is 180px and the box is
-     * 44px; `normal` is 450px and is what the GRID asks for, because a 240px
+     * 72px; `normal` is 450px and is what the GRID asks for, because a 240px
      * cell upscaled the smaller one. Getting that backwards costs nothing
-     * visible and ships a 450px picture sixty times a page to paint 44 points
+     * visible and ships a 450px picture sixty times a page to paint 72 points
      * of it, so it would survive any test that only looked at the markup.
      */
     /*
@@ -3014,5 +3104,56 @@ describe("the nav collapses to a disclosure without a script", () => {
     expect(html).not.toBe("");
     expect(html).not.toContain("of-bar__menu");
     expect(html).not.toContain("of-bar__nav");
+  });
+});
+
+/**
+ * The row of faces `/search` opens on, held to the set it names.
+ *
+ * WRITTEN AFTER GETTING IT WRONG. The first version of `CARD_NEWEST` read
+ * `CardPage.face` — the card's DEFAULT art, whichever set first printed it —
+ * which is correct for every surface that shows A CARD and wrong for the one
+ * surface that shows A SET. It headed the row "Newest: Mastery Pack Warrior"
+ * over four faces keyed `DDD001`, `AHA001-RF`, `MPW004` and `HVY093`: a mastery
+ * pack is reprints, so three of the four pictures belonged to older sets. Every
+ * card really was in the set and only one of the pictures was, which is the
+ * shape of defect nothing else here would have caught — the page renders, the
+ * links resolve, and only somebody who knows the sets can see it is lying.
+ *
+ * THE ADDRESSES ARE CHECKED AGAINST THE ROUTER'S OWN LIST rather than against a
+ * pattern. `facesOf` is what `CARD_ROUTES` mints printing URLs from, so an href
+ * built any other way is an href that may not be a page — and a 404 from the
+ * busiest browse surface on the site is worse than the bad picture was.
+ */
+describe("the newest release the browse state opens on", () => {
+  test("every face and every address belongs to the set it names", () => {
+    /* `null` is a legal value — a corpus with no set over `RELEASE_SIZE` has no
+       release to show — so this is a guard on the shape, not an assumption that
+       today's corpus has one. */
+    if (CARD_NEWEST === null) return;
+
+    const code = CARD_NEWEST.code.toUpperCase();
+    expect(CARD_NEWEST.cards.length).toBeGreaterThan(0);
+
+    for (const card of CARD_NEWEST.cards) {
+      expect(card.faceKey.toUpperCase().startsWith(code)).toBe(true);
+      expect(card.href.startsWith(`/card/${CARD_NEWEST.code}/`)).toBe(true);
+    }
+  });
+
+  test("it names a real set, and the set is dated", () => {
+    if (CARD_NEWEST === null) return;
+
+    const set = setFor(CARD_NEWEST.code.toUpperCase());
+    expect(set).toBeDefined();
+    expect(set?.name).toBe(CARD_NEWEST.name);
+    expect(set?.released).toBe(CARD_NEWEST.released);
+  });
+
+  test("no card is drawn twice", () => {
+    if (CARD_NEWEST === null) return;
+
+    const keys = CARD_NEWEST.cards.map((card) => card.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });

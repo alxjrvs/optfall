@@ -35,7 +35,7 @@
 import { SearchField } from "optfall-components/react";
 
 import { CARD_PAGES } from "../../src/lib/cards";
-import { SETS_BY_RELEASE } from "../../src/lib/sets";
+import { RECENT_RELEASES } from "../../src/lib/releases";
 import { CardFan, type FanCard } from "../components/CardFan";
 import type { PageModule, PageResult } from "../types";
 import "./home.css";
@@ -85,46 +85,21 @@ const fan: readonly FanCard[] = FAN_NAMES.map((name) => {
 });
 
 /**
- * The most recent sets, newest first, as searches rather than as set pages.
+ * The three most recent sets, newest first, as searches rather than as set
+ * pages.
  *
- * THREE, DATED, AND BIG ENOUGH TO BE A RELEASE. `SETS_BY_RELEASE` puts the
- * undated sets last — the judge and organised-play lines — so an undated set can
- * never occupy a slot; `RELEASE_SIZE` keeps the decks and armory products out,
- * which is the filter that stopped this list advertising a demo deck as the
- * newest thing in the game.
+ * THREE, DATED, AND BIG ENOUGH TO BE A RELEASE — and the filter that makes that
+ * true is `RECENT_RELEASES` now rather than a constant declared here.
+ * `/search`'s browse state opens on the newest of the same list, and the day
+ * this page's copy of `RELEASE_SIZE` and that one disagreed would be the day
+ * the front door and the card index named different sets as the newest thing in
+ * the game. See `src/lib/releases.ts`, which carries the measurement.
  *
  * The link is a SEARCH, not `/sets/<code>`: the set page is a description of a
  * set, and somebody clicking `NEW` wants the cards in it. `order:released`
  * keeps a multi-set week in the order the sets actually came out.
  */
-/**
- * How many printings a set needs before it counts as a release.
- *
- * MEASURED, NOT GUESSED, and the gap is an order of magnitude so the number is
- * not delicate. The fourteen most recent dated sets in this corpus are either
- * expansions — 272, 482, 681 printings — or decks and armory products: 16, 27,
- * 29, 30, 34, 36, 39, 42, 55. There is nothing between 55 and 272.
- *
- * Without this the door advertised "Armory Deck - Olympia" and "Dorinthea Demo
- * Deck" as the newest things in Flesh and Blood, because they are dated latest.
- * A reader clicking `NEW` wants the set that just came out, not the most
- * recently dated SKU.
- */
-const RELEASE_SIZE = 200;
-
-const PRINTINGS_PER_SET = new Map<string, number>();
-for (const page of CARD_PAGES) {
-  for (const printing of page.card.printings) {
-    const id = printing.set_id.toUpperCase();
-    PRINTINGS_PER_SET.set(id, (PRINTINGS_PER_SET.get(id) ?? 0) + 1);
-  }
-}
-
-const RECENT_SETS = SETS_BY_RELEASE.filter(
-  (set) =>
-    set.released !== null &&
-    (PRINTINGS_PER_SET.get(set.id.toUpperCase()) ?? 0) >= RELEASE_SIZE,
-).slice(0, 3);
+const RECENT_SETS = RECENT_RELEASES.slice(0, 3);
 
 function searchHref(query: string): string {
   return `/search?q=${encodeURIComponent(query)}`;

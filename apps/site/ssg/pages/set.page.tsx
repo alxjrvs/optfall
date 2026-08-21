@@ -217,9 +217,6 @@ function entryFor(
         faceLandscape: versionPrinting.landscape,
       };
     }),
-    stats: first.stats.map(
-      (stat) => [stat.label, stat.value] as readonly [string, string],
-    ),
   };
 }
 
