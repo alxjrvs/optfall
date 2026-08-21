@@ -102,11 +102,26 @@ export interface RulesSearchProps {
    */
   readonly browse: readonly SearchResult[];
   /**
-   * The corpus version, for the citations and the empty-result line.
+   * The corpus version, for the empty-result line.
    *
    * Read off the index until the index stopped being here. It is one short
    * string and `cr.page.tsx` already has it from the corpus, so it travels as a
    * prop rather than becoming a fourth thing to wait for.
+   *
+   * IT NO LONGER STAMPS THE CITATIONS, and the reason is that a version is only
+   * information where it can differ. Every row of the chapter browse and every
+   * row of a result set is read from one document, so printing `2.14.0` nine
+   * times — or, at `?per=all`, up to 1,278 — restates a constant the provenance
+   * paragraph beneath the list already states once, in bold, beside the
+   * publication date, the section count and a link to the source. That is the
+   * `/sets` argument: the list underneath already shows it.
+   *
+   * `/cr/<id>` HAS ALWAYS DRAWN LIST CITATIONS THIS WAY, which is what makes
+   * this a correction rather than a preference. Its breadcrumbs, its references
+   * and its child sections all render `Citation` with no version; the single
+   * versioned one on that page is the "This section" row of the Source
+   * apparatus, where the citation IS the artifact being described and the
+   * version is the point. This surface was the last one stamping a list.
    */
   readonly version: string;
   /*
@@ -407,7 +422,7 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
     <ol className="of-rules__results">
       {browse.map((chapter) => (
         <li className="of-rules__result" key={chapter.id}>
-          <Citation ruleId={chapter.id} href={chapter.href} version={version} />
+          <Citation ruleId={chapter.id} href={chapter.href} />
           <div className="of-rules__body">
             <p className="of-rules__line">
               <span className="of-rules__title">{chapter.title}</span>
@@ -521,11 +536,7 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
             <ol className="of-rules__results">
               {outcome.results.map((result) => (
                 <li className="of-rules__result" key={result.id}>
-                  <Citation
-                    ruleId={result.id}
-                    href={result.href}
-                    version={version}
-                  />
+                  <Citation ruleId={result.id} href={result.href} />
                   <div className="of-rules__body">
                     <p className="of-rules__line">
                       {result.title ? (
