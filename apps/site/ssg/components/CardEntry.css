@@ -1011,7 +1011,7 @@
   The anchor is transparent to layout, because the mark is the control. It
   carries no padding and no ink of its own any more — both were the tab's, and
   a tab needed a hit area larger than its label and a resting colour to be
-  brightened on hover. What is inside now is a struck plate at full contrast
+  brightened on hover. What is inside now is a banded mark at full contrast
   that already fills the target; wrapping it in a box that reserved a bevel
   edge for a selected state simply drew a gap around it.
 */
@@ -1044,7 +1044,7 @@
   reading. The label was a wide-tracked uppercase "PITCH 1" beside the tab's
   stone, the same fact the stone's numeral already carried, in the one place
   the duplication was unavoidable because a jewel cannot spell itself.
-  `PitchBox` is that label, struck in the pitch colour.
+  `PitchBox` is that label, under a band of the pitch colour.
 
   Both are deleted rather than left unused: a selector for a state nothing can
   be in is a rule the next reader has to disprove.
@@ -1062,10 +1062,10 @@
 }
 
 /* CENTRED, NOT BASELINED, because the last crumb on a disambiguated card is a
-   struck plate rather than a word. Its label sits a step under the trail's, in
-   its own padded box, so `baseline` lines that smaller text up with the crumbs
-   and hangs the plate below them; centring seats the object on the line the
-   trail is set on, which is what it is a member of.
+   banded mark rather than a word. Its label sits a step under the trail's, in
+   its own padded box under a rule, so `baseline` lines that smaller text up
+   with the crumbs and hangs the band above them; centring seats the object on
+   the line the trail is set on, which is what it is a member of.
 
    THE REASON USED TO BE THE JEWEL'S GEOMETRY — "a diamond has no baseline
    worth aligning to: the only thing in it that reports one is the numeral at

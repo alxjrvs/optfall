@@ -142,21 +142,22 @@ function symbolArt(kind: string): string | null {
 /**
  * A pitch box, in the two-element shape `PitchBox.tsx` renders.
  *
- * THE SHAPE IS THE STATE PILL'S, so the CSS above is `.pill`'s with the pitch
- * palette and two differences, both of which `PitchBox.css` makes for stated
- * reasons: the words do not wrap, and the END padding carries the notch's own
- * width so the chamfer cannot bite the digit this label ends in. `.pill`'s
- * `overflow-wrap: anywhere` is dropped with the wrapping, and `user-select:
- * none` is a product concern rather than a gallery one — a card nobody drags
- * names off has nothing to keep out of a paste.
+ * IT WAS THE STATE PILL'S PLATE AND IS NOT ANY MORE. The CSS above was `.pill`'s
+ * with the pitch palette; it is now a `color.sunken` well carrying the hue as a
+ * band along its top edge, with the value written underneath in the display
+ * face, which is what `PitchBox.css` draws and why. The one declaration the
+ * gallery drops is `user-select: none` — a product concern rather than a
+ * gallery one, since a card nobody drags names off has nothing to keep out of a
+ * paste.
  *
- * A card that drew this as anything other than the notched plate would
- * advertise a rendering the product does not ship, which is the drift
- * `jewel()`'s comment above exists to record.
+ * A card that drew this as the old notched plate would advertise a rendering
+ * the product does not ship, which is the drift `jewel()`'s comment above
+ * exists to record.
  */
 function pitchBox(pitch: string | number, size = ""): string {
   const value = String(pitch);
-  // Sentence case here too: the shouting is `text-transform`, in both places.
+  // Sentence case on the screen as well as in the markup, in both places: the
+  // `text-transform` that shouted this went with the label voice.
   const words = value === "0" ? "No pitch" : `Pitch ${value}`;
   return `<span class="pbox p${value}${size ? ` ${size}` : ""}"><span>${words}</span></span>`;
 }
@@ -435,28 +436,27 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
 .jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-title); }
 .pbox {
-  display: inline-flex; align-items: center; box-sizing: border-box;
-  padding-block: var(--of-space-tighter);
-  padding-inline-start: var(--of-space-tight);
-  padding-inline-end: calc(var(--of-space-tight) + var(--of-ornament-notch-size));
-  clip-path: polygon(0% 0%, calc(100% - var(--of-ornament-notch-size)) 0%, 100% var(--of-ornament-notch-size), 100% 100%, 0% 100%);
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  border-block-start: calc(var(--of-bevel-width) * 2) solid var(--band);
   border-radius: var(--of-bevel-radius);
-  box-shadow:
-    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
-    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
-  font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-medium);
-  font-size: var(--of-type-size-micro);
+  padding-block: var(--of-space-tightest);
+  padding-inline: var(--of-space-tight);
+  background: var(--of-color-sunken);
+  color: var(--of-color-ink);
+  box-shadow: inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+  font-family: var(--of-type-family-display); font-weight: var(--of-type-weight-medium);
+  font-size: var(--of-type-size-small);
   line-height: var(--of-type-leading-tight);
-  letter-spacing: var(--of-type-tracking-wide); text-transform: uppercase;
+  letter-spacing: var(--of-type-tracking-normal);
   vertical-align: middle;
 }
 .pbox > span { white-space: nowrap; }
-.pbox.sm { padding-block: 0; padding-inline-start: var(--of-space-tighter); padding-inline-end: calc(var(--of-space-tighter) + var(--of-ornament-notch-size)); font-size: var(--of-type-size-legal); }
-.pbox.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
-.pbox.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
-.pbox.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
-.pbox.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); }
-.pbox.p4 { background: var(--of-color-pitch-four); color: var(--of-color-pitch-four-ink); }
+.pbox.sm { padding-block: 0; padding-inline: var(--of-space-tighter); font-size: var(--of-type-size-micro); }
+.pbox.p0 { --band: var(--of-color-pitch-none); }
+.pbox.p1 { --band: var(--of-color-pitch-one); }
+.pbox.p2 { --band: var(--of-color-pitch-two); }
+.pbox.p3 { --band: var(--of-color-pitch-three); }
+.pbox.p4 { --band: var(--of-color-pitch-four); }
 .stone.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
 .stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
 .stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
@@ -975,15 +975,17 @@ cards.push({
   group: "Primitives",
   title: "Pitch box",
   body: `
-  <p class="note">The same value as the jewel, written out in the state pill's plate. This is the rendering for a LIST or a GRID — the card index, the version tabs, the related links, the breadcrumb — and it replaced the stone at every one of those sites.</p>
+  <p class="note">The same value as the jewel, written out under a band of its colour. This is the rendering for a LIST or a GRID — the card index, the version tabs, the related links, the breadcrumb — and it replaced the stone at every one of those sites.</p>
   <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center">
     ${pitchBox("0")}${pitchBox("1")}${pitchBox("2")}${pitchBox("3")}${pitchBox("4")}
     ${pitchBox("1", "sm")}${pitchBox("1")}
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Why the stones left the lists.</strong> A jewel is an object: one card, one value, set beside the name of the thing it belongs to on a page about that thing. Down the left of a list it became a scatter of cut gems, each one an ornament competing with the name it was captioning — and a row in this index stands for a NAME, which in this game is commonly three cards, so it was three of them per row.</p>
-  <p class="note"><strong>The words are the point, not a caption on an icon.</strong> Red and yellow are the classic deuteranopia confusion pair and pitch is the most-read value on a card; the jewel answers that with a numeral, which is still one glyph a reader has to know the grammar of. "PITCH 1" is the fact spelled, which leaves colour doing what colour should do in this system — repeating something already said.</p>
-  <p class="note"><strong>It is the legality flag's shape, and that is the decision.</strong> Same notch at the same token depth, same label voice, same struck edge — a reader who has learned the verdicts at the foot of a card page has learned this at the top of one. So the notch is no longer state's alone: it now means "one value out of a fixed set this card carries", which state and pitch both are and nothing else in the interface is. What it still rules out is the part that matters — never on a control, never on a heading, never as decoration.</p>
-  <p class="note">No size token in either axis: the box is its words plus the pill's padding, so two of them on a row are not equal columns any more than two verdicts are. A tag is as wide as what it says. Two places it parts from the pill: these words never wrap — a verdict must survive at any length, and this is two short words at a fixed one — and the end padding carries the notch's own width, because this label ends in its VALUE and a chamfer through the digit is a chamfer through the fact.</p>`,
+  <p class="note"><strong>The words are the point, not a caption on an icon.</strong> Red and yellow are the classic deuteranopia confusion pair and pitch is the most-read value on a card; the jewel answers that with a numeral, which is still one glyph a reader has to know the grammar of. "Pitch 1" is the fact spelled, which leaves colour doing what colour should do in this system — repeating something already said.</p>
+  <p class="note"><strong>It was the legality flag's plate, and it is not any more.</strong> This shipped wearing <code>StatePill</code>'s notch at the same token depth, in the same label voice, filled in the pitch colour — on the argument that a reader who has learned the verdicts at the foot of a card page has learned this at the top of one. What that bought alongside the familiarity was a mark loud twice over: the hue as a background behind its own words, and a silhouette saying "this carries state" a few centimetres from four objects that mean it literally. The notch is state's alone again.</p>
+  <p class="note"><strong>The colour is a band and nothing else.</strong> Two hairlines across the top edge — the same mark <code>PitchRule</code> draws under a card face, which is one object in two places rather than two objects for one value — and here it gets the words a band under a picture has no room for. Those words take the display family a card's name is set in, because this mark is read as part of that name; the pill's wide-tracked uppercase was the voice of a flag and went with the plate.</p>
+  <p class="note"><strong>The ground is <code>color.sunken</code>, and the token is the argument.</strong> It first shipped with no fill, on the page's own ground, which left the band an underline hanging in whitespace rather than the top edge of an object. <code>sunken</code> is the one grey below <code>ground</code>, <code>surface</code> <em>and</em> <code>surface.raised</code> in both themes — so the box reads as a well cut into the page whether it sits in an index row, on a card panel or inside a raised plate, and "dark" stays true in light mode instead of meaning whatever the dark theme happens to do. Only the dark half of the bevel pair is drawn on it: the light top edge has a tenant, and it is the band.</p>
+  <p class="note">No size token in either axis: the box is its words plus its padding, so two of them on a row are not equal columns any more than two verdicts are. A tag is as wide as what it says, and so is the band over it. The padding is even now — the plate's end side carried the notch's own width so the chamfer could not bite the digit this label ends in, and there is no chamfer left to clear — and the words still never wrap, because a second line under a two-pixel rule is twice the mark in a list where the marks are the quiet half of the row.</p>`,
 });
 
 /**

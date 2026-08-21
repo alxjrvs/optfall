@@ -240,12 +240,12 @@ export interface CardIndexEntry {
    *
    * TWO RENDERINGS, CHOSEN BY VIEW, AND THAT IS A DESIGN DECISION RATHER THAN
    * AN INCONSISTENCY. The list view has a line of type to put a mark at the
-   * end of, so it draws {@link PitchBox} — a notched flag reading "PITCH 1",
-   * which states in words the value `docs/DESIGN.md` calls the primary
-   * channel. The grid has a whole card, so it draws the versions as CARDS — a
-   * stack that fans on hover, each face a link to its own version. The
-   * information is identical; what differs is what the surface can afford to
-   * say it with.
+   * end of, so it draws {@link PitchBox} — a rectangle banded in the pitch
+   * colour, reading "Pitch 1" underneath — which states in words the value
+   * `docs/DESIGN.md` calls the primary channel. The grid has a whole card, so
+   * it draws the versions as CARDS — a stack that fans on hover, each face a
+   * link to its own version. The information is identical; what differs is
+   * what the surface can afford to say it with.
    *
    * IT DREW `PitchJewel` HERE UNTIL THE BOXES LANDED. The stone is the mark
    * for a page ABOUT one card; forty of them down a list of names is forty

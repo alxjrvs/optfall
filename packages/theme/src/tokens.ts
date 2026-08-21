@@ -143,16 +143,19 @@ const STRUCTURE: TokenTable = {
   "bevel.width": "1px",
   "bevel.radius": "0",
 
-  /* The notch on a value a card carries out of a fixed set. The clipped corner
-     is the only ornament in the system and it always means something.
+  /* The notch on a thing carrying state. The clipped corner is the only
+     ornament in the system and it always means something.
 
-     IT SAID "ANYTHING CARRYING STATE" AND THAT WAS NARROWER THAN THE SET IT
-     DESCRIBES. `StatePill` was the only user while legality verdicts were the
-     only such value on the page; `PitchBox` draws the same notch at the same
-     depth for pitch, which is the other one — a short label, one of five, that
-     a card either has or does not. What the corner rules out is unchanged and
-     is the part that matters: it never appears on a control, on a heading, or
-     as decoration. */
+     IT WAS WIDENED TO "A VALUE A CARD CARRIES OUT OF A FIXED SET" AND HAS BEEN
+     NARROWED BACK. `PitchBox` drew the same notch at the same depth for pitch
+     while it wore `StatePill`'s plate, and the definition was widened to cover
+     it; the box is a banded rectangle now and draws no notch at all, so
+     `StatePill` is once again the only user and the corner means legality and
+     nothing else. Restated rather than left standing — a definition kept broad
+     for a user that has gone is a licence nobody asked for.
+
+     What the corner rules out is unchanged either way, and is the part that
+     matters: it never appears on a control, on a heading, or as decoration. */
   "ornament.notch.size": "0.5rem",
   "ornament.rule.width": "1px",
   "ornament.filigree.size": "1.25rem",
