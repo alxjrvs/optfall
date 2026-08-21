@@ -2383,7 +2383,7 @@ describe("a card index prints the name and not the pitch qualifier", () => {
     }
   });
 
-  test("the list row leads with a face, at the tier a 44px box wants", () => {
+  test("the list row leads with a face, at the tier a 72px box wants", () => {
     /*
      * THE VIEW USED TO CARRY NO PICTURE, which made the densest card list on
      * this site the one screen contradicting `docs/DESIGN.md`'s claim that
@@ -2391,9 +2391,9 @@ describe("a card index prints the name and not the pitch qualifier", () => {
      * text-list card tool in the game.
      *
      * THE TIER IS THE HALF WORTH PINNING. `thumb` is 180px and the box is
-     * 44px; `normal` is 450px and is what the GRID asks for, because a 240px
+     * 72px; `normal` is 450px and is what the GRID asks for, because a 240px
      * cell upscaled the smaller one. Getting that backwards costs nothing
-     * visible and ships a 450px picture sixty times a page to paint 44 points
+     * visible and ships a 450px picture sixty times a page to paint 72 points
      * of it, so it would survive any test that only looked at the markup.
      */
     /*
