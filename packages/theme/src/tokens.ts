@@ -408,28 +408,33 @@ const STRUCTURE: TokenTable = {
      reason — sixty rows of set, number, name and cost, with the one channel
      that identifies a card at a glance left out.
 
-     44px, AND IT IS THE DENSITY THAT CHOSE IT RATHER THAN THE PICTURE. A row
-     is 72px with no face. Measured across the three candidates: this takes it
-     to 86px, 3.5rem takes it to 103px and 4.5rem to 126px — so the sizes that
-     render the art comfortably cost a third to nearly half of the rows on a
-     screen, in the view whose entire reason to exist is density. A sixth is
-     the price worth paying.
+     72px, AND IT WAS 44px UNTIL THE ROW STOPPED PRINTING VALUES. The density
+     arithmetic that chose the smaller size is on the record: a row is 72px
+     with no face, and the three candidates were projected at 86px for 2.75rem,
+     103px for 3.5rem and 126px for this one. This one measures 127px in the
+     built page, so the picture really does cost between a sixth and nearly
+     half of the rows on a screen. What changed is what the row spends its text
+     on. It printed Cost, Power and
+     Defence under every name, and on a search a word naming the field that
+     matched; both are gone, and a row that carries a name, a pitch and a type
+     line has nothing left competing with the face for the reader's eye.
+     Density lost to recognition here, deliberately.
 
-     IT IS A RECOGNITION THUMBNAIL, NOT A LEGIBLE ONE, and the difference is
-     the whole argument for going this small. The card's own printed name is
-     unreadable here and does not need to be read — the name is set beside it
-     in serif at `type.size.large`. What survives at this size is the frame
-     colour, the class border and the silhouette of the art, which is what
-     lets a reader find a card they have seen before without reading anything.
-     Bigger starts competing with the name for the eye, which is the grid's
-     job and not this view's.
+     IT IS STILL A RECOGNITION THUMBNAIL RATHER THAN A CARD TO READ, which is
+     the line this size walks up to and does not cross. The card's own printed
+     name and text are unreadable here and do not need to be read — the name is
+     set beside it in serif at `type.size.large`. What the extra 28px buys is
+     the art: at 44px the frame colour, the class border and a silhouette were
+     all that survived, which is enough to recognise a card you have seen and
+     not enough to see one you have not. Reading a face is the grid's job, and
+     the grid draws at `layout.card.cell`, which is more than three times this.
 
      `layout.card.row`, NOT `card.face.row`, for the reason `layout.card.cell`
      states beside it: anything under `card.face` is a width the face host
      promises to serve, and this is a width the layout draws at. The row is
      satisfied by the `thumb` tier, which is 180px and therefore a comfortable
      downscale rather than a new tier nobody publishes. */
-  "layout.card.row": "2.75rem",
+  "layout.card.row": "4.5rem",
 
   /* THE POINTER-TARGET FLOOR — 24px, which is what WCAG 2.5.8 (AA) sets.
      Anything that is the ONLY way to reach a destination must be at least this

@@ -617,35 +617,32 @@
   A HAIRLINE AROUND THE PICTURE, WHICH IS NOT DECORATION.
 
   A card face is printed with a black border and this list sits on a dark
-  ground, so at 44px the picture's own edge disappears into the page and the
-  art reads as an unbounded smudge rather than as a card. The rule is the same
-  device every other separable thing on this site is closed with, at the one
-  size where the face cannot close itself.
+  ground, so at `layout.card.row` the picture's own edge disappears into the
+  page and the art reads as an unbounded smudge rather than as a card. The rule
+  is the same device every other separable thing on this site is closed with,
+  at the one size where the face cannot close itself.
 */
 .of-index__row-face img {
   border: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
 
 /*
-  Why the row is here, said in a quieter voice than what the card says about
-  itself — a match reason is the engine talking, not the card.
+  `.of-index__row-why` WAS HERE and is gone with the span it styled. It set the
+  match reason in italic `ink-muted` so that the engine's voice — "matched on
+  card text" — was distinguishable from the card's own. Two things in it are
+  worth carrying forward for whoever next adds a word to a result row:
 
-  THE SELECTOR HAS TO NAME THE SPAN. `ResultRow`'s own `.of-result__meta span`
-  is (0,1,1) and a bare `.of-index__row-why` is (0,1,0), so the override lost on
-  specificity and this was dead CSS describing a distinction that never
-  rendered.
+  A CLASS ON A `.of-result__meta` CHILD MUST NAME THE ELEMENT TO WIN.
+  `ResultRow`'s own `.of-result__meta span` is (0,1,1) and a bare class is
+  (0,1,0), so the first version of this rule was dead CSS describing a
+  distinction that never rendered.
 
-  IT IS `ink-muted` ON A DIMMER GROUND RATHER THAN `ink-faint`, and that is the
-  second half of the fix. `packages/theme/src/tokens.test.ts` states the rule:
-  anything at `type.size.base` or smaller uses `color.ink` or `color.ink.muted`,
-  because `ink.faint` is asserted at 3:1 and 3:1 is a LARGE-TEXT threshold. This
-  row is `type.size.micro`. So the separation is carried by italics, which cost
-  no contrast at all.
+  AND ITALIC RATHER THAN FAINTER. `packages/theme/src/tokens.test.ts` states
+  the rule: anything at `type.size.base` or smaller uses `color.ink` or
+  `color.ink.muted`, because `ink.faint` is asserted at 3:1 and 3:1 is a
+  LARGE-TEXT threshold. A meta line is `type.size.micro`, so a quieter voice
+  there has to be carried by something other than contrast.
 */
-.of-result__meta span.of-index__row-why {
-  color: var(--of-color-ink-muted);
-  font-style: italic;
-}
 
 /*
   The pitch boxes for a row that stands for several pitch versions, kept
@@ -678,11 +675,19 @@
   /*
     WRAPPING, WHICH IT DID NOT NEED WHEN THE MARKS WERE STONES. Three 20px
     jewels and their gaps were an atomic inline box about 64px wide; three
-    boxes reading "PITCH n" are nearer 215px. That still fits a 320px row
-    beside a 44px face, but with a few pixels of margin rather than the ~170 it
-    used to have — so the next thing that widens the label, a longer value or a
-    wider tracking token, would be a horizontal scrollbar instead of a second
-    line. `wrap` costs nothing here and removes the cliff.
+    boxes reading "PITCH n" measure 202px.
+
+    IT IS NOT WHAT PUTS THEM UNDER THE NAME ON A PHONE, and the distinction is
+    the whole reason to keep it. This box is an inline-flex child of the name's
+    paragraph, so where the name and the boxes together outrun the line, the
+    paragraph moves the WHOLE box down as one inline item — measured at a
+    320px viewport, where the three sit together on their own line under the
+    name and this declaration never fires. What it guards is the step after
+    that: the line is 220px wide there against the box's 202px, so 18px of
+    slack stands between a longer label or a wider tracking token and a box
+    that outgrows its own line. Without `wrap` that overflows the page, which
+    is the failure CLAUDE.md names six viewport widths to catch and
+    `scripts/mobile-overflow.test.ts` covers only the static half of.
   */
   flex-wrap: wrap;
   gap: var(--of-space-tightest);
