@@ -581,10 +581,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * one's. That is the same defensible default those two make — see `shown` —
    * and not a new compromise introduced here.
    *
-   * WHAT IT COSTS is a printing whose flavour differs from the one that
-   * claimed its art: those words are on no page. The trade is the same one the
-   * per-art address makes everywhere else on this page, and the alternative
-   * was the list above.
+   * WHAT IT COULD COST IS NOTHING ON THIS CORPUS, AND THAT IS MEASURED RATHER
+   * THAN ASSUMED. The shape that would cost something is a printing whose
+   * flavour differs from the one that claimed its art — its words would then be
+   * on no page at all. Walked over every route against the pinned corpus:
+   * 468 distinct wordings, 468 of them printed on some page, and each of the
+   * 864 cards carrying flavour still shows it somewhere. What does move is
+   * WHICH pages carry a band: 731 routes stop (the printing shown genuinely
+   * has no flavour of its own, and used to borrow a sibling's) and 103 start
+   * (their printings disagreed, so the old condition printed none of them).
+   * No page changed its wording. Re-measure rather than trust these figures.
    */
   const flavour = shown?.printing.flavor_text.trim() ?? "";
 

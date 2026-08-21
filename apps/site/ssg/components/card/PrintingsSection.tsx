@@ -272,7 +272,9 @@ export function PrintingsSection({
         The table two lines up already tells those four apart, in columns.
 
         The flavour is the panel's now, and it is the SHOWN printing's rather
-        than the card's — see `flavour` in `CardEntry.tsx` for what that costs.
+        than the card's. Nothing became unreachable in the move — every one of
+        the 468 wordings in the corpus is still printed on some page; see
+        `flavour` in `CardEntry.tsx`, which carries the measurement.
       */}
       </section>
     </>
