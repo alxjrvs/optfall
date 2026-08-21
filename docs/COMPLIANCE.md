@@ -198,8 +198,9 @@ while carrying the LSS disclaimer, in public, for a long time.
 > word "affiliate" in the document, so anybody re-checking this by searching the
 > policy will land on it and read it as a prohibition. It is not one.
 
-**What we therefore do.** One purchase link on a card page — the button under
-the card face, for the printing that claimed the art shown — built by
+**What we therefore do.** One purchase link on a card page — the button below
+the legality grid, for the printing that claimed the art shown; see §2 for where
+it has been and why it is there — built by
 [`apps/site/src/lib/tcgplayer.ts`](../apps/site/src/lib/tcgplayer.ts). ~~on the
 printings table~~ — struck: they were the table's eighth column. ~~Per-printing
 purchase links in a **Buy** section of their own on the card page, plus one under
@@ -241,10 +242,17 @@ is not — which is the whole reason `buyDisclosure` lives in the same module as
 `buyHref`.
 
 **There is one buy link on a card page, and the sentence shares its row** — to
-the right of the button under the card panel where there is room, wrapped
-directly under that button where there is not, above the fold either way. The
-comment on `.of-card__buy-verify` in `apps/site/ssg/components/CardEntry.css`
-records the widths each arrangement was measured at.
+the right of the button where there is room, wrapped directly under that button
+where there is not. ~~The row sits under the card panel, above the fold either
+way.~~ **Overtaken 2026-08-20**: the row and the legality grid swapped places,
+so the button now follows Legality rather than leading it — six format rows
+further down, because `verdicts` is `FORMATS.map(…)` and every card page prints
+all six whether upstream published a flag or not. What the
+Partner Guidelines ask for is adjacency to the link, which is a property of the
+row and not of its position on the page, so the swap did not touch it — the
+button and the sentence moved together, as one element. The comment on
+`.of-card__buy-verify` in `apps/site/ssg/components/CardEntry.css` records the
+widths each arrangement was measured at.
 
 **The sentence is two sentences, and was four** (2026-08-19). What ships is the
 material connection and nothing else: where the link goes, and that Optfall is
