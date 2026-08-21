@@ -1397,8 +1397,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               OF — the one in the picture across the gutter, and the one the
               panel above it mirrors.
 
-              UNDER THE PANEL, NOT UNDER THE PICTURE, and the picture is why it
-              moved. The face column is one `card.face.normal` image and nothing
+              IN THE FACTS COLUMN, NOT UNDER THE PICTURE, and the picture is
+              why it moved. The face column is one `card.face.normal` image and nothing
               else, which on most cards is taller than the panel, the legality
               grid and the rules join stacked together — so a button at the end
               of that column rendered level with the BOTTOM of the image, a
@@ -1446,7 +1446,8 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 items, and the wrapper is what makes them one. The sentence ran
                 the full width of the facts column directly under the button,
                 which is a paragraph several times the height of the control it
-                describes sitting between the card panel and Legality — while
+                describes, in the slot the row held then — directly under the
+                card panel, above Legality rather than below it — while
                 the ground to the right of a 192px button sat empty at exactly
                 the widths where the paragraph was longest. It goes there now,
                 and drops back underneath when there is no room for it beside.

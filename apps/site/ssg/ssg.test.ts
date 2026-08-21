@@ -1365,6 +1365,30 @@ describe("the printings table is how a reader reaches another art", () => {
     }
   });
 
+  test("the legality verdict comes before the buy link, not after", () => {
+    /*
+     * THE ORDER IS THE POINT, AND NOTHING ELSE ASSERTS IT. The buy row and the
+     * legality grid are siblings in one flex column, so swapping them is a
+     * two-line edit that renders, builds, typechecks and passes every other
+     * test in this file. The arrangement it would undo is the argument the
+     * comment on `LegalitySection` in `CardEntry.tsx` makes: a reader who has
+     * just read a card is asking whether they may play it, and a link to a
+     * marketplace does not go between the card and that answer.
+     *
+     * `indexOf` ON THE RENDERED STRING, which is the pattern the credits-band
+     * test above already uses for reading order. Both markers are unique on a
+     * card page — one `id="legality"`, one `.of-card__buy` — so the comparison
+     * is between two positions rather than two first-of-many.
+     */
+    for (const page of CARD_PAGES.filter((_, index) => index % 12 === 0)) {
+      const html = render(page.href);
+      const buy = html.indexOf('class="of-card__buy"');
+      /* Pages with nothing to buy render no row and have nothing to order. */
+      if (buy === -1) continue;
+      expect(html.indexOf('id="legality"')).toBeLessThan(buy);
+    }
+  });
+
   test("no card page names two printings alike and sends them elsewhere", () => {
     /*
      * THE WHOLE CORPUS, at the stride the related-lists test uses and for the
