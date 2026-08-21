@@ -1,5 +1,6 @@
 /**
- * `/about` — what this is, where the data comes from, and who to blame.
+ * `/about` — what this is, who it owes, where the data comes from, and who to
+ * blame.
  *
  * THE COLOPHON PROSE IS READ FROM DISK AT BUILD TIME, the same arrangement
  * SU-SRD uses: `LLM_STATEMENT.md` and `ABOUT_JRVS.md` live at the repository
@@ -21,7 +22,17 @@
  * reader — the string "Scryfall" appeared nowhere in the built site — so the
  * section exists to say where the ideas came from. It says it the way you would
  * say it out loud, because the author has used the thing for years and the
- * influence is a credit rather than an admission.
+ * influence is a credit rather than an admission. The heading now names the
+ * debt outright: the resemblance is homage, and a homage nobody states reads as
+ * a copy nobody owned up to.
+ *
+ * NO FIGURES ON THIS PAGE, and that is a rule rather than an omission. Corpus
+ * counts, the page total and the keyword join's coverage percentage were all
+ * interpolated, so none of them could rot — and every one of them still read as
+ * a specification sheet in the middle of a page whose subject is who made what.
+ * A reader who wants the size of the corpus is not on `/about`. The keyword
+ * join's *unmatched list* survives the rule deliberately: naming what a join
+ * could not answer is honesty, whereas counting what it could is a boast.
  *
  * THE SIX FRONT-DOOR CARDS ARE NOT NAMED HERE. They were, briefly, linked to
  * their own pages — and explaining the joke is what killed it. The fan stands
@@ -36,13 +47,11 @@ import { fileURLToPath } from "node:url";
 import { OrnamentalRule } from "optfall-components/react";
 
 import { CORPUS as RULES } from "../../src/lib/rules";
-import { CARD_PAGES, CORPUS } from "../../src/lib/cards";
-import { FACE_HOST } from "../../src/lib/faces";
+import { CORPUS } from "../../src/lib/cards";
 import {
   buildKeywordVocabulary,
   keywordCoverage,
 } from "../../src/lib/keywords";
-import { SETS } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./about.css";
 
@@ -139,17 +148,13 @@ function Colophon({ source }: { readonly source: string }) {
   );
 }
 
-const cards = CORPUS.counts.cards.toLocaleString("en-GB");
-const printings = CORPUS.counts.printings.toLocaleString("en-GB");
-const pages = CARD_PAGES.length.toLocaleString("en-GB");
-const sections = RULES.sections.length.toLocaleString("en-GB");
-const sets = SETS.counts.sets.toLocaleString("en-GB");
 const upstream = `https://github.com/${CORPUS.source.repository}`;
 
 /**
- * THE KEYWORD JOIN'S COVERAGE, computed rather than typed so it cannot rot when
- * either document is re-synced. Moved here from `/search`; see the paragraph
- * that renders it for why that page was the wrong home for it.
+ * THE KEYWORD JOIN'S UNMATCHED LIST, computed rather than typed so it cannot
+ * rot when either document is re-synced. The percentage and the tallies that
+ * used to sit beside it are gone; the note on figures at the head of this file
+ * says why this half stayed.
  */
 const coverage = keywordCoverage(
   buildKeywordVocabulary(RULES),
@@ -159,39 +164,32 @@ const coverage = keywordCoverage(
 );
 const unmatchedList = coverage.unmatched.join(", ");
 
-/**
- * One real face key, taken from the corpus rather than typed, so the sample
- * link in the sources table points at an image that exists.
- */
-const SAMPLE_FACE = CARD_PAGES.find((page) => page.face.key !== null)?.face.key;
-
-/** This site's own source. Linked from the sources table and from the foot. */
+/** This site's own source. Linked from the sources list and from the foot. */
 const OPTFALL_REPO = "https://github.com/alxjrvs/optfall";
 
 /**
- * Every source this site is built from, each one a link you can open.
+ * Everyone this site is built on, each one a link you can open.
  *
- * IT IS A TABLE RATHER THAN PROSE because the claim is completeness: this page
- * says the data has provenance, and a reader has no way to check that against
- * three sentences naming two of five things. Each row is the address the build
- * actually read, pulled from the corpus metadata rather than typed, so a
- * re-sync moves the link with the data.
+ * IT IS A LIST RATHER THAN PROSE because the claim is completeness: this page
+ * says nothing here started with me, and a reader has no way to check that
+ * against three sentences naming two of five things. Reading it should feel
+ * like credits, which is what it is.
  *
- * NO RETRIEVAL DATE ON THIS PAGE, and the scope of that is worth stating
- * because the site has not stopped recording one everywhere.
+ * EACH LINK IS THE SOURCE'S FRONT DOOR, NOT THE EXACT BYTES THE BUILD READ, and
+ * that is the reversal worth recording. The rows used to carry a pinned blob
+ * URL, the commit's short SHA, the list of JSON filenames and the rules
+ * document's version number, all interpolated from corpus metadata — provably
+ * accurate, and addressed to an auditor rather than a reader. A version number
+ * in a credit line ages the credit, and the thanks do not expire when the PDF
+ * is revised. The pin is still real and still checkable: it is in the
+ * repository, which is the last link on the page. It is simply no longer what a
+ * reader has to wade through to find out who made the cards.
  *
- * The date was a fact about the last sync rather than about the data. On a page
- * whose job is "here is what Optfall is built from", it went stale the moment a
- * script ran and told a reader nothing they could act on: "last confirmed"
- * three months ago does not distinguish an old corpus from a script nobody
- * re-ran. The COMMIT answers the same question honestly — it identifies the
- * exact bytes, cannot drift, and is checkable.
- *
- * `/search` and every card page still print `LAST_CONFIRMED`, deliberately.
- * There it sits beside a specific claim about a specific card — this legality
- * verdict, confirmed against upstream on this date — and a date is exactly the
- * right qualifier for that. What was wrong was using it as a summary of the
- * whole dataset's freshness, which is a question it cannot answer.
+ * NO RETRIEVAL DATE ON THIS PAGE. It was a fact about the last sync rather than
+ * about the data: "last confirmed" three months ago does not distinguish an old
+ * corpus from a script nobody re-ran. `/search` and every card page still print
+ * `LAST_CONFIRMED`, deliberately — there it sits beside a specific claim about
+ * a specific card, and a date is exactly the right qualifier for that.
  */
 const SOURCES: readonly {
   readonly what: string;
@@ -200,55 +198,25 @@ const SOURCES: readonly {
   readonly note: string;
 }[] = [
   {
-    what: "Cards",
-    /* THE BLOB VIEW, NOT `source.url`. That field is the raw address the build
-       fetched — 23 MB of JSON, which a browser downloads rather than shows. It
-       is the same bytes at the same commit either way; this one is the one a
-       reader can open. */
-    href: `${upstream}/blob/${CORPUS.source.commit}/${CORPUS.source.path}`,
-    label: `${CORPUS.source.repository}/${CORPUS.source.path}`,
-    note: `The compilation this site's card data is read from, pinned at commit ${CORPUS.source.commit.slice(0, 7)}. Community-maintained; it publishes no licence of its own.`,
+    what: "The cards",
+    href: upstream,
+    label: CORPUS.source.repository,
+    note: "A community compilation of Flesh and Blood card data — cards, printings, sets, rarities, editions, foilings — kept up in the open by people doing it for nothing. Optfall reads a copy of it, pinned to one commit. It publishes no licence of its own.",
   },
   {
-    what: "Sets, rarities, editions, foilings",
-    href: `${upstream}/tree/${SETS.source.commit}/json/english`,
-    label: SETS.source.files.join(", "),
-    note: "Four more files from the same compilation, at the same commit.",
-  },
-  {
-    what: "Comprehensive Rules",
+    what: "The rules",
     href: RULES.sourceUrl,
-    label: `Comprehensive Rules ${RULES.version} (PDF)`,
-    note: "Published by Legend Story Studios and parsed into addressable sections. The PDF is the source; the parse is ours.",
+    label: "the Comprehensive Rules (PDF)",
+    note: "Published by Legend Story Studios. The document is theirs; the parse into sections you can link to is mine.",
   },
   {
-    what: "Game symbols",
+    what: "The symbols",
     href: "https://rules.fabtcg.com/en/",
     label: "rules.fabtcg.com",
-    note: "The resource, attack and defence markers the printed text carries, ingested from the rules site and recorded in data/symbols/symbols.json.",
+    note: "The resource, attack and defence markers the printed text carries, taken from the rules site rather than redrawn.",
   },
-  /*
-    A FACE, NOT THE HOST ROOT. `/` on that site answers a plain-text 404 — the
-    function only serves `<tier>/<name>` — and a table claiming every row is a
-    link you can open must not contain one that opens an error.
-
-    SO THE ROW IS DROPPED RATHER THAN POINTED AT NOTHING when the corpus has no
-    face to sample. That cannot happen today; it could after a bad sync, and a
-    missing row is a smaller lie than a broken link on the one table whose claim
-    is that every entry opens.
-  */
-  ...(SAMPLE_FACE === undefined
-    ? []
-    : [
-        {
-          what: "Card images",
-          href: `${FACE_HOST}/normal/${SAMPLE_FACE}`,
-          label: "images.optfall.com",
-          note: "Faces published by Legend Story Studios, reached through the URLs the card compilation carries and re-served from a store of our own so the page does not hotlink theirs.",
-        },
-      ]),
   {
-    what: "Typeface",
+    what: "The letterforms",
     href: "https://fonts.google.com/specimen/Grenze",
     label: "Grenze",
     note: "Self-hosted under the SIL Open Font Licence, whose text ships beside the font file.",
@@ -257,7 +225,7 @@ const SOURCES: readonly {
     what: "Optfall itself",
     href: OPTFALL_REPO,
     label: "alxjrvs/optfall",
-    note: "Every page on this site is generated from this repository by a script in it. The structural work over the dataset is openly licensed.",
+    note: "Every page on this site is generated from this repository by a script in it. The structural work over the dataset is openly licensed — read it, take it, tell me where I got it wrong.",
   },
 ];
 
@@ -265,7 +233,7 @@ function page(): PageResult {
   return {
     title: "About — Optfall",
     description:
-      "What Optfall is, where its data comes from, what it takes from Scryfall, and its position on language models.",
+      "What Optfall is, who it owes, where its data comes from, and its position on language models.",
     /* The header stays. `section: "none"` is for the front door, which is its own
        masthead; every other page needs a way back out of it. No `key` matches
        "about" in the nav, so nothing renders as current, which is correct — it
@@ -278,10 +246,11 @@ function page(): PageResult {
         <section className="of-about__section">
           <p className="of-about__lede">
             Optfall is a card search engine and rules reference for Flesh and
-            Blood. Every card, every printing and every rules section has a
-            permanent URL you can paste into a judge call, and every legality
-            verdict shows the upstream flags it was derived from rather than
-            asking you to trust it.
+            Blood. I built it because I wanted one: somewhere every card, every
+            printing and every rules section has a permanent URL you can paste
+            into a judge call, and where a legality verdict shows you the
+            upstream flags it came from instead of asking you to take my word
+            for it.
           </p>
           <p>
             It is free, it has no accounts, it runs no server, and it will never
@@ -292,7 +261,7 @@ function page(): PageResult {
         <OrnamentalRule label="Scryfall" />
 
         <section className="of-about__section">
-          <h2 className="of-about__heading">I have used Scryfall for years</h2>
+          <h2 className="of-about__heading">In honour of Scryfall</h2>
           <p>
             <a href="https://scryfall.com">Scryfall</a> is the card search
             engine for Magic: The Gathering, and it is the best reference tool
@@ -303,27 +272,35 @@ function page(): PageResult {
             quietly answering something else.
           </p>
           <p>
-            The grammar is inherited on purpose. You arrive already fluent in{" "}
-            <code>pitch:3 class:guardian</code> because you have typed{" "}
+            Where the two look alike, that is on purpose, and it is a debt
+            rather than a coincidence. None of their code, their data or their
+            blessing is in here. What is in here is their idea of what a card
+            search engine owes the person using it, and they should get the
+            credit for it — which is the whole reason this section exists,
+            because a resemblance nobody owns up to reads as something worse
+            than an influence.
+          </p>
+          <p>
+            The grammar is inherited on purpose too. You arrive already fluent
+            in <code>pitch:3 class:guardian</code> because you have typed{" "}
             <code>c:r t:goblin</code> for years, and a second dialect would just
             be the same thing learned twice.
+          </p>
+          <p>
+            If you play Magic, go and use theirs. This is a small thing made in
+            respect of a much larger one.
           </p>
         </section>
 
         <OrnamentalRule label="The data" />
 
         <section className="of-about__section">
-          <h2 className="of-about__heading">Sources</h2>
+          <h2 className="of-about__heading">Where all this came from</h2>
           <p>
-            {cards} cards, {printings} printings, {sets} sets and {sections}{" "}
-            rules sections, generated into {pages} card pages and served as
-            static files. No database, no API, no server.
-          </p>
-          <p>
-            Every source is listed here with the address the build actually
-            read. Both corpora are committed to the repository at a pinned
-            commit, so what a page shows is identified by bytes rather than by a
-            date somebody last checked.
+            Almost none of it is mine. The cards, the rules, the symbols, the
+            art and even the letterforms were made by other people first; what I
+            did was the joining-up. So here is everyone to thank, with the
+            address the build actually reads.
           </p>
 
           <dl className="of-about__sources">
@@ -339,35 +316,43 @@ function page(): PageResult {
           </dl>
 
           <p>
+            Both corpora are committed to this repository at a pinned commit,
+            and the whole site is generated from them as static files, so what a
+            page shows you is identified by the bytes it was built from rather
+            than by a date somebody last checked. No database, no API, nothing
+            to go down.
+          </p>
+          <p>
+            Card images are Legend Story Studios'. They are reached through the
+            URLs the card compilation carries and re-served from a store of my
+            own, so these pages do not hotlink theirs.
+          </p>
+          <p>
             Legality is present-day only. Where upstream publishes no flag for a
             format, Optfall returns no verdict for it.
           </p>
 
           {/*
-            THE JOIN'S COVERAGE, AND IT MOVED HERE FROM `/search`.
+            THE JOIN'S FAILURES, AND THEY MOVED HERE FROM `/search`.
 
             A join that quietly drops what it cannot answer is asserting a
-            completeness it does not have, so the figure is stated and the
-            failures are named. What changed is only where: it used to sit at
-            the foot of the results page, which paginates — so nine lines of
-            build metadata were filed under sixty card faces, addressed to
-            somebody who came to look up a card. This is the page about method,
-            which is what the number is about.
+            completeness it does not have, so the failures are named. What
+            changed first is only where: they used to sit at the foot of the
+            results page, which paginates — so build metadata was filed under
+            sixty card faces, addressed to somebody who came to look up a card.
+            This is the page about method.
 
-            COMPUTED RATHER THAN TYPED, so it cannot rot when either document is
-            re-synced. That property is the reason the sentence is worth having
-            at all, and it is why the numbers below are all interpolated.
+            THE NAMES STAYED WHERE THE PERCENTAGE WENT. Both were computed, so
+            neither could rot; only one of them was information. A coverage
+            figure invites the reader to be satisfied, and the list invites them
+            to check. The list is also the shorter sentence.
           */}
           <p>
             Card keywords are matched to the Comprehensive Rules section that
             defines each one, and every card page cites the rules that govern
-            it. Coverage is <strong>{coverage.percent}%</strong> —{" "}
-            {coverage.direct + coverage.viaFamily} of {coverage.baseForms}{" "}
-            distinct keywords, {coverage.direct} matched directly and{" "}
-            {coverage.viaFamily} through a rule the document parameterises. The{" "}
-            {coverage.unmatched.length} it cannot resolve are named rather than
-            hidden: {unmatchedList}. A keyword the rules do not define carries
-            no citation instead of a guessed one.
+            it. The keywords the rules never define outright are named rather
+            than hidden: {unmatchedList}. A keyword the rules do not define
+            carries no citation instead of a guessed one.
           </p>
         </section>
 
@@ -380,7 +365,7 @@ function page(): PageResult {
             <a href="https://legendstory.com">Legend Story Studios</a>. Card
             names, card text and card images are their property, displayed here
             under their third-party application policy. Optfall is not
-            affiliated with them, and would take it down if asked.
+            affiliated with them, and I would take it down if they asked.
           </p>
           <p>
             What is mine is the structural work over the dataset — the field
@@ -402,11 +387,11 @@ function page(): PageResult {
           on this page that can be checked in full. Everything above describes
           how the site is built; this is the build.
 
-          It is also in the sources table above, deliberately. That table is
-          about provenance and answers "where did this data come from"; this is
-          an invitation and answers "can I see it". Same URL, two different
-          questions, and a reader who skimmed the table should not have to
-          scroll back up to find it.
+          It is also in the sources list above, deliberately. That list is about
+          provenance and answers "where did this come from"; this is an
+          invitation and answers "can I see it". Same URL, two different
+          questions, and a reader who skimmed the list should not have to scroll
+          back up to find it.
         */}
         <p className="of-about__source-link">
           <a href={OPTFALL_REPO}>Optfall on GitHub</a>
