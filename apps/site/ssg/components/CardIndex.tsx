@@ -575,23 +575,54 @@ function PitchStones({
 
 /**
  * The pitch versions as a STACK OF CARDS that fans on hover — the rendering the
- * grid uses, and what replaced the row of coloured bands under the name.
+ * grid uses, and what replaced the row of coloured rules under the name.
  *
- * WHY THE BANDS ARE GONE. They were an underline: three hairlines saying, in
- * hue alone, that this cell stood for three cards, with each one a link to the
- * version it was drawn the colour of. That worked and it was quiet to the point
+ * AT REST IT IS DIVIDED, AND THAT IS WHAT THE CELL SAYS WITHOUT BEING TOUCHED.
+ * Each version is clipped to its own vertical band of the cell — a name with
+ * three of them draws three strips of card side by side, in pitch order, each
+ * strip a link to the version it is a strip of. Hovering pulls the bands back
+ * into whole cards and spreads them into a hand.
+ *
+ * THE BANDS REPLACED A DECK OF SLIVERS, and what the deck could not say is the
+ * reason. Every version behind the front one sat two percent up and to the
+ * right, so the cell showed stepped edges: legibly SEVERAL cards, and nothing
+ * about WHICH. That is the wrong half. A reader scanning a grid already knows a
+ * name has versions; what they are looking for is the red one.
+ *
+ * NO MARK IS LAID OVER THE BANDS, AND ONE WAS TRIED. The argument for it is
+ * good on paper: a card prints its pitch in one corner, that corner is in the
+ * leftmost band, and the pitch versions of a name usually share their painting
+ * — so the other bands should be anonymous strips. On screen they are not. A
+ * card face carries a pitch-coloured band across the head of its frame, the
+ * split cuts straight across it, and the cell reads red-yellow-blue along its
+ * top edge. A jewel per band said a second time what the faces had already
+ * said once, so it is not there.
+ *
+ * WHY THE COLOURED RULE BEFORE ALL THIS IS GONE. It was an underline: three
+ * hairlines saying, in hue alone, that this cell stood for three cards, with
+ * each one a link to the version it was drawn the colour of. That worked and it was quiet to the point
  * of being invisible — a reader had to already know what the mark meant, the
  * colour was the entire channel, and the thing the mark stood for was a CARD
  * while the mark was a stripe. This draws the cards instead. The cell is a
- * stack; the versions behind the front one show as slivers at rest, so a
- * multi-version cell is legibly a stack of cards rather than a single one; and
- * hovering spreads them into a hand, each face its own link to its own version.
+ * stack; at rest it is divided into one band per version, so every version is
+ * visible without touching anything; and hovering spreads them into a hand,
+ * each face its own link to its own version.
  *
  * THE FRONT CARD IS THE ROW'S OWN, NOT `versions[0]`, and the difference is a
  * feature rather than pedantry. The front is handed over whole and the tail is
  * every version that is not already it, matched by address rather than by
  * position: a caller whose first version is not the row would otherwise have
  * drawn the same card twice.
+ *
+ * BUT ITS PLACE IN THE HAND IS ITS PITCH'S, NOT THE FRONT OF IT. `--i` is the
+ * version's position in the pitch-ascending list rather than its position in
+ * the markup, and the split is why it had to become so: a row is the
+ * best-ranked of its versions, so a query can perfectly well collapse to the
+ * pitch-3 card — and dealing that card first laid the bands out 3, 1, 2. Bands
+ * are read left to right and one of the two things they are read for is the
+ * pitch order, so the hand is ordered by pitch and the row's own card takes its
+ * seat in it. It is still the card in normal flow, still the one that sizes the
+ * cell, and still the cell's primary destination; only its seat has moved.
  *
  * EVERY CARD IN THE HAND COMES FROM ONE PRINT RUN, AND THAT IS THE CALLER'S
  * JOB RATHER THAN THIS COMPONENT'S. `set:MST` shows what Mistveil printed, so
@@ -612,16 +643,18 @@ function PitchStones({
  * hover behaviour — there is nothing to choose between, and a cell that
  * gestured at a choice it does not have would be worse than the plain one.
  *
- * A TOUCH READER NEVER HOVERS, AND THAT IS AN ACCEPTED BOUND RATHER THAN AN
- * OVERSIGHT. The resting slivers still say the cell is a stack, and tapping it
- * opens the row's card, whose own page carries every version. What a pointer
- * buys is skipping that page; it is a shortcut, so losing it costs a tap rather
- * than a destination.
+ * A TOUCH READER NEVER HOVERS, AND THE SPLIT IS WHY THAT COSTS LESS THAN IT
+ * DID. The bands are the resting state, so they are what a tap lands on: a
+ * clip-path clips hit-testing as well as paint, which means the band a reader
+ * can see a version in is the band that opens it. The fan is a pointer's
+ * shortcut to a bigger target for the same set of destinations, not the only
+ * way to reach them.
  */
 function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
   /*
     Matched by ADDRESS rather than by index — see the note above. `versionsOf`
-    has already deduplicated and sorted, so this preserves pitch order.
+    has already deduplicated and sorted, so this IS the pitch order the bands
+    and the fan are laid out in.
 
     THE LENGTH GUARD IS NOT REDUNDANT WITH THE ADDRESS FILTER, and an
     `unique:art` row is where the difference showed. Such a row stands for ONE
@@ -632,12 +665,21 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
     standing for one version is one card and one link; that is a fact about how
     many versions it has, so it is asked of the count.
   */
-  const behind =
-    entry.versions.length < 2
-      ? []
-      : versionsOf(entry.versions).filter(
-          (version) => version.href !== entry.href,
-        );
+  const ordered = entry.versions.length < 2 ? [] : versionsOf(entry.versions);
+  /*
+    WHERE THE ROW'S OWN CARD SITS IN THAT ORDER, or `-1` where it is not one of
+    them at all. The second case is not reachable from either caller today —
+    `card-search.ts` collapses a row TO one of its versions and the set page
+    builds the row from the first of the group — but it is a fact about data
+    this component is handed rather than one it establishes, and a `-1` used as
+    an index silently deals the whole hand one seat wrong. So it is asked, and
+    the front card falls back to the seat it used to hold unconditionally.
+  */
+  const own = ordered.findIndex((version) => version.href === entry.href);
+  const seat = own === -1 ? 1 : 0;
+  const behind = ordered
+    .map((version, position) => ({ version, index: position + seat }))
+    .filter(({ version }) => version.href !== entry.href);
 
   const face = (
     <CardFace
@@ -658,13 +700,15 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
   }
 
   /*
-    `--n` IS ON THE STACK AND `--i` IS ON EACH CARD, because the tilt of one
-    card is a function of BOTH — a fan is symmetric about its middle, so a card
-    needs to know how many it is one of. Two custom properties rather than a
-    pre-computed angle per card so the arithmetic lives in the stylesheet
-    beside the value it is made of; see `.of-index__card` for what it computes.
+    `--n` IS ON THE STACK AND `--i` IS ON EACH CARD, because both the band a
+    card is clipped to and the tilt it opens at are functions of BOTH — a band
+    is one nth of the cell at the card's own offset, and a fan is symmetric
+    about its middle, so a card needs to know how many it is one of. Two custom
+    properties rather than a pre-computed band and angle per card, so the
+    arithmetic lives in the stylesheet beside the values it is made of; see
+    `.of-index__card` for what it computes.
   */
-  const total = behind.length + 1;
+  const total = ordered.length + seat;
 
   return (
     <span
@@ -674,16 +718,16 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
       <a
         className="of-index__card"
         href={entry.href}
-        style={{ "--i": 0 } as React.CSSProperties}
+        style={{ "--i": own === -1 ? 0 : own } as React.CSSProperties}
       >
         {face}
       </a>
-      {behind.map((version, position) => (
+      {behind.map(({ version, index }) => (
         <a
           className="of-index__card of-index__card--behind"
           href={version.href}
           key={version.href}
-          style={{ "--i": position + 1 } as React.CSSProperties}
+          style={{ "--i": index } as React.CSSProperties}
         >
           {/*
             THE VERSION'S LABEL IS THE WHOLE ALT TEXT, with no type line after
