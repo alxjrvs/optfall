@@ -50,9 +50,9 @@
 }
 
 /*
-  THE SOURCES TABLE. A definition list because that is what it is: a thing, and
-  what it came from. Two columns where the line can seat them, one where it
-  cannot — no breakpoint, because the token layer publishes none.
+  THE SOURCES LIST — the credits. A definition list because that is what it is:
+  a thing, and who it came from. Two columns where the line can seat them, one
+  where it cannot — no breakpoint, because the token layer publishes none.
 */
 .of-about__sources {
   display: grid;
@@ -90,9 +90,9 @@
   margin: 0;
   display: grid;
   gap: var(--of-space-tightest);
-  /* `images.optfall.com` and `Comprehensive Rules 2.14.0 (PDF)` are
-     unbreakable strings; without this they set the row's min-content width and
-     push the page sideways however the columns are declared. */
+  /* `the-fab-cube/flesh-and-blood-cards` and `rules.fabtcg.com` are unbreakable
+     strings; without this they set the row's min-content width and push the
+     page sideways however the columns are declared. */
   overflow-wrap: anywhere;
 }
 
