@@ -204,17 +204,142 @@
   decided by source order — the exact fragility that put ink-on-ink into the
   pager earlier in this repository's history. Doubling the class makes it
   (0,2,0) and the outcome a fact rather than a line number.
+
+  NO CHARACTER IS DRAWN IN EITHER MODE. The plate used to carry an en dash and
+  the component no longer emits one — see `StatGlyphProps.value`. The recessed
+  fill and the surviving silhouette are what say "this stat, absent"; a dash was
+  a second statement of it that read, beside a mark, as a printed value.
 */
 .of-stat.of-stat--absent {
   background: var(--of-color-stat-absent);
   color: var(--of-color-stat-absent-ink);
 }
 
+/* -- The printed mark -------------------------------------------------------
+   LSS'S OWN ARTWORK, WITH THE VALUE BESIDE IT. This is what the card panel
+   renders; everything above is the fallback. See the note at the head of
+   `StatGlyph.tsx` for why the arrangement is the card's rather than ours.
+
+   THE PLATE UNDERNEATH GETS OUT OF THE WAY ENTIRELY — no background, no bevel,
+   no clip, and no optical factor. The icons are round with their own dark ring;
+   a struck square behind a disc would read as a mounting plate somebody forgot
+   to remove.
+
+   TWO CLASSES, NOT ONE, AND THAT IS THE WHOLE OF A BUG THAT SHIPPED IN
+   `GameSymbol`. Single-class rules here would tie with `.of-stat--defence` and
+   friends and be decided by source order, which once drew every ingested icon
+   clipped by the plate it was supposed to replace. Raising specificity rather
+   than reordering, because source order is not a thing a future edit can be
+   expected to preserve.
+
+   `--optical` IS RESET, and that is the half a copy of the `GameSymbol` rule
+   would have missed. The factor exists to compensate for how much of its square
+   each `clip-path` keeps; the files are all square and all full-bleed, so a
+   defence mark scaled to 0.956 would be the one stat rendering smaller than the
+   others for a reason that no longer applies to it. */
+.of-stat.of-stat--art {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--of-space-tight);
+  inline-size: auto;
+  block-size: auto;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+  /* BOTH ENDS, and the `-end` half is the one that matters: `.of-stat--defence`
+     pads its point out of the way, and that padding has no shield to sit under
+     here. */
+  padding-block: 0;
+  --optical: 1;
+}
+
+.of-stat.of-stat--art .of-stat__art {
+  display: block;
+  inline-size: var(--stat-size);
+  block-size: var(--stat-size);
+  /* The files are square and the box is square, but `contain` is stated rather
+     than assumed: two of the eight are a pixel smaller than the other six, and
+     a symbol that stretched to fit would be the one place on this site where
+     upstream's own artwork got distorted to suit a layout. */
+  object-fit: contain;
+  /* Never squeezed by the numeral beside it. A three-digit life total is the
+     common case on a hero and the mark is the fixed half of the pair. */
+  flex: none;
+}
+
 /*
-  The dash is lighter than a numeral would be. A stat that is not there should
-  not shout as loudly as one that is, and the weight is the only channel left
-  once the shape and the plate are both still doing their jobs.
+  THE VALUE IS SET IN THE CARD'S OWN VOICE. Inside a plate it was sans, because
+  it was interface furniture struck into metal. Beside the mark it is what the
+  card prints in its combat bar, and the card sets it in a serif — so it takes
+  the serif family and the title step, matching the panel's name and type line
+  rather than its labels.
+
+  `tabular-nums` because these sit in two columns down the panel's edges and a
+  proportional `1` would put a hero's life out of line with the intellect
+  opposite it.
 */
-.of-stat--absent .of-stat__value {
-  font-weight: var(--of-type-weight-regular);
+.of-stat.of-stat--art .of-stat__value {
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-title);
+  font-weight: var(--of-type-weight-bold);
+  line-height: 1;
+  color: var(--of-color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.of-stat.of-stat--art.of-stat--sm .of-stat__value {
+  font-size: var(--of-type-size-large);
+}
+
+/*
+  COST IS THE ONE THE CARD SETS INSIDE THE DISC, and it is the whole reason this
+  component keeps a stacking mode at all. Every other printed value sits beside
+  its symbol; the resource disc carries its numeral. Following the card here
+  gives the panel two rules and is still the right call — the corner a reader
+  checks first should look like the corner they have already seen.
+
+  ONE GRID CELL, NOT `position: absolute`. Both children claim `1 / 1`, so the
+  cell is sized by the artwork and the numeral is centred in it by
+  `place-items` — which means the mark still has the artwork's intrinsic box and
+  still participates in the row above it. An absolutely positioned numeral would
+  have collapsed that box to nothing.
+*/
+.of-stat.of-stat--art.of-stat--cost {
+  display: inline-grid;
+  place-items: center;
+  gap: 0;
+}
+
+.of-stat.of-stat--art.of-stat--cost > * {
+  grid-area: 1 / 1;
+}
+
+/*
+  A STEP DOWN AND IN THE DISC'S OWN INK, because it is inside the artwork rather
+  than beside it: at the title step a two-digit cost would overrun the disc, and
+  the ink is the one the resource mark's own dark centre was chosen against.
+*/
+.of-stat.of-stat--art.of-stat--cost .of-stat__value {
+  font-size: var(--of-type-size-large);
+  color: var(--of-color-stat-cost-ink);
+}
+
+/*
+  AN ABSENT STAT, WHEN THE MARK IS SOMEBODY ELSE'S FILE. The recessed fill above
+  cannot apply — an ingested PNG takes no token — so the artwork desaturates and
+  drops back instead, and the value position stays empty.
+
+  This is the weakest join in the change and it is worth naming: the absent
+  state stops being a colour the theme owns and becomes a filter. What it buys
+  is that the mark still says WHICH stat is missing, which is the property the
+  recessed plate was keeping and the reason an absence draws anything at all.
+*/
+.of-stat.of-stat--art.of-stat--absent {
+  background: none;
+}
+
+.of-stat.of-stat--art.of-stat--absent .of-stat__art {
+  filter: grayscale(1);
+  opacity: 0.3;
 }

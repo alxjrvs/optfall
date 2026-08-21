@@ -124,9 +124,10 @@ plate rather than as flat rectangles.
 ### The pitch jewel
 
 A **diamond**: vertex up, vertex down, widest across the middle, with all four
-corners cut — eight sides, and a facet highlight, carrying its numeral. Shape,
-number and colour state the same fact three times, and the silhouette is
-reserved: nothing else in the interface is ever this shape.
+corners cut — eight sides, and a facet highlight, carrying ~~its numeral~~
+**three slots filled to the card's pitch value**. Shape, count and colour state
+the same fact three times, and the silhouette is reserved: nothing else in the
+interface is ever this shape.
 
 **The orientation is part of the specification, not a drawing detail.** This
 section used to say only "an eight-sided cut stone", which is equally true of an
@@ -140,11 +141,32 @@ it. `scripts/check-tokens.ts` fails the build on a `var(--of-*)` the theme does
 not define, so the shape cannot be redrawn in one place and not the other. That
 is the actual fix: not a second copy kept honest by a test, but no second copy.
 
-The numeral is the **primary** channel, not an accessibility fallback. Red and
-yellow are the classic deuteranopia confusion pair, pitch is the most-read value
-on a card, and it is the same pair the leading commercial scanner app misreads.
-Designing colour as the redundant channel costs nothing and fixes it for everyone
-downstream.
+~~The numeral is~~ **The count is** the **primary** channel, not an
+accessibility fallback. Red and yellow are the classic deuteranopia confusion
+pair, pitch is the most-read value on a card, and it is the same pair the leading
+commercial scanner app misreads. Designing colour as the redundant channel costs
+nothing and fixes it for everyone downstream.
+
+**The channel changed and the constraint did not, which is why the sentence
+above is struck rather than deleted.** The stone carried a numeral until the
+marks on the card panel became the game's own. The printed card counts instead:
+three slots in the top-left corner, filled from the apex down — one for pitch
+one, two for pitch two, three for pitch three — with no numeral anywhere on the
+frame. Counting is not a hue, so every word of the paragraph above still holds;
+what it costs is a numeral's exactness at a glance, which for a three-valued
+closed set is a smaller loss than it sounds. The accessible name says "Pitch 3"
+in words at every size.
+
+**Three slots, not `value` slots.** A single filled pip and one pip out of three
+are different statements, and only the second says "this card pitches for one of
+a possible three". The empty slots are the denominator. They take the stone's own
+ink at a quarter opacity, which is the one colour on the component already
+guaranteed to clear AA against every tone.
+
+**The card's field is a circle and ours stays an octagon.** The silhouette is the
+one shape this system reserves, and at the size a stone is read a cut octagon and
+a disc are the same object; giving it up to match the frame would spend a
+promise to gain nothing a reader can see.
 
 **There are four stones, not three, and the fourth is why the numeral rule is
 load-bearing.** A pitch 4 has been previewed — a purple strip on a Shadow
@@ -158,10 +180,12 @@ Purple is the one hue in this
 palette that cannot be given a luminance gap: bright enough to separate from
 pitch three and its own numeral fails contrast; dark enough for white ink and it
 sits where blue sits. So three and four are told apart by hue alone for a reader
-with deuteranopia or protanopia, and by the numeral for everybody. That is the
-arrangement this section already describes rather than a new exception to it —
-but it is the first stone where the redundant channel is genuinely carrying
-less, and it is written down here rather than discovered later.
+with deuteranopia or protanopia — and the count cannot help, because there are
+three slots and both values fill all of them. ~~by the numeral for everybody~~
+**The accessible name is what separates them for everybody else**, which is
+weaker than a visible numeral was and is the one place the change above costs
+something real. It is the first stone where the redundant channel is genuinely
+carrying less, and it is written down here rather than discovered later.
 
 ### The pitch rule — the jewel's one exception, and where it applies
 
@@ -174,17 +198,18 @@ per value, ascending. `PitchRule` in `optfall-components`.
 
 **Every text surface keeps the jewel**, which is what stops this from being a
 weakening of the rule above. The card page, the rows view and the names view all
-carry numbered stones, so the numeral remains available one click — usually
-zero clicks — away, and the reserved silhouette still appears wherever there is
-room for it.
+carry ~~numbered~~ **slotted** stones, so the value remains available one click —
+usually zero clicks — away, and the reserved silhouette still appears wherever
+there is room for it.
 
-**What the bands give up, and what replaces it.** A band has no room for a
-numeral, so on that one surface colour carries more weight than this document
+**What the bands give up, and what replaces it.** A band cannot carry the stone's
+slots, so on that one surface colour carries more weight than this document
 otherwise allows. Three things stand in for it: the element is a `role="img"`
 with a written name that spells the values out ("Pitch 1, 2 and 3"); the COUNT
-of bands is a non-colour channel, which is new information the old rendering did
-not have at all; and the ORDER is fixed ascending, so the leftmost band is always
-the lowest pitch. The honest summary is that this is a trade rather than a free
+of bands is a non-colour channel, ~~which is new information the old rendering
+did not have at all~~ **which is now the same channel the jewel itself uses,
+counting versions where the stone counts pips**; and the ORDER is fixed
+ascending, so the leftmost band is always the lowest pitch. The honest summary is that this is a trade rather than a free
 win, and it is confined to the surface that could not take the jewel.
 
 **It is plural where the jewel is singular, and that is why it is a second

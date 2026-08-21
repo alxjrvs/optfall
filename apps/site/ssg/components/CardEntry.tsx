@@ -51,7 +51,12 @@ import {
   StatGlyph,
 } from "optfall-components/react";
 
-import { symbolForKind, type SymbolKind } from "../../src/lib/card-symbols";
+import {
+  assetForSymbol,
+  type GameSymbol,
+  symbolForKind,
+  type SymbolKind,
+} from "../../src/lib/card-symbols";
 import { parseInline } from "../../src/lib/card-text";
 import {
   type CardLink,
@@ -133,6 +138,29 @@ const SYMBOL_FOR: Record<string, SymbolKind | undefined> = {
 };
 
 /**
+ * A stat mark's artwork props, or none.
+ *
+ * EVERY STAT IN `STAT_ORDER` RESOLVES TO A FILE, so on this page the `null`
+ * branch is unreachable rather than rare: the five labels above are exactly the
+ * five the Comprehensive Rules name at 1.12.4, and `assetForSymbol` is backed
+ * by the ingest script's provenance record for all of them. It is still written
+ * as a fallback because `StatGlyph` has one — a symbol LSS stops publishing
+ * should cost this page its artwork and keep its stat, not throw.
+ *
+ * SPREAD RATHER THAN PASSED AS THREE PROPS, because `exactOptionalPropertyTypes`
+ * is on: `src={undefined}` is a different type from an absent `src`, and the
+ * component's `src !== undefined` test is what chooses between the artwork and
+ * the drawn plate.
+ */
+function artworkFor(
+  symbol: GameSymbol | null,
+): { src: string; width: number; height: number } | Record<string, never> {
+  const asset = symbol === null ? null : assetForSymbol(symbol);
+  if (asset === null) return {};
+  return { src: asset.src, width: asset.width, height: asset.height };
+}
+
+/**
  * The three positions the ordinary card frame has, whether or not a card fills
  * them. Cost sits top-left, attack bottom-left, defence bottom-right.
  *
@@ -158,40 +186,73 @@ const COMBAT_STATS = ["Cost", "Power", "Defence"] as const;
 const PERMANENT_STATS = ["Life", "Intellect"] as const;
 
 /**
- * One corner badge — a label and its plate — or the SPACE one would occupy.
+ * One corner badge — the card's own mark and the value beside it.
  *
- * THE ABSENT CASE IS THE REASON THIS IS A FUNCTION. It renders exactly what the
- * printed case renders and then hides it, which is the only way to be certain
- * the width it reserves is the width a value would have taken. Sizing a
- * stand-in by hand would be a second definition of a badge's geometry, free to
- * drift from the first the next time the label or the plate changes.
+ * NO LABEL, AND THAT IS THE CHANGE THIS FUNCTION EXISTS TO CARRY. Every badge
+ * was `<dt>Power</dt><dd>{plate}</dd>`, and the word earned its place while the
+ * plate was a silhouette this project cut for itself: a private notation has to
+ * be taught, and the micro-caps label was the teaching.
  *
- * `visibility: hidden`, NOT `display: none` — the rule is in `CardEntry.css` —
- * because the point is to keep the grid track. And `aria-hidden`, because
- * nothing here is a fact about the card: a reader hearing the page should not
- * be told about a plate a reader seeing it cannot see. `StatGlyph` still spells
- * its absence out in an `aria-label`; that string is inert under this wrapper
- * and is what would be read if the badge were ever un-hidden.
+ * The marks are LSS's own files now — the same artwork the reader has already
+ * met on the card in their hand and, a few lines up this same page, inline in
+ * its printed text. The card labels none of them, and neither does this: a word
+ * beside a symbol a reader already knows is a translation of a language they
+ * already speak, set 11,378 times in the tightest line on the page.
+ *
+ * WHAT CARRIES THE WORD NOW. `StatGlyph` is `role="img"` with the stat spelled
+ * out — "Power 4", "No printed power" — so nothing was lost for a reader
+ * hearing the page. The redundancy that went is the one that only ever served a
+ * reader who could see the symbol, which is the reader who needed it least.
+ *
+ * AND THE `<dl>` WENT WITH IT. A definition list with no terms is not one; the
+ * corners are rows of marks, so they are `<div>`s. The class names stayed —
+ * they name the corner, not the element that fills it.
+ *
+ * AN EMPTY POSITION IS NOW DRAWN, WHERE IT USED TO BE HELD OPEN AND HIDDEN.
+ * That is a reversal of a recent decision and it deserves its reasons written
+ * down rather than quietly overwritten.
+ *
+ * The old rule was `of-card__badge--reserved` and `visibility: hidden`: the
+ * badge painted nothing and kept its width, so a corner the card leaves empty
+ * could not slide the centred name off the card's axis. It solved a real,
+ * measured problem — 37px off-axis at 320px, 52px at 1226px — and it solved it
+ * by making an absence invisible, because a hidden plate was the least bad way
+ * to say nothing while occupying something.
+ *
+ * A MARK CAN SAY "EMPTY" IN A WAY A PLATE COULD NOT. `StatGlyph` desaturates
+ * the artwork and drops it back — see its `--absent` rule — so the position
+ * reads as a slot on the frame that this card does not fill, in the same place
+ * and at the same size as a filled one. That is a better answer than a gap: a
+ * reader can see that this card has no attack, rather than inferring it from a
+ * space. The width problem takes care of itself, because the mark is genuinely
+ * there rather than reserved.
+ *
+ * SO IT IS ANNOUNCED, TOO. The old badge was `aria-hidden` on the sound
+ * argument that a reader hearing the page should not be told about a plate a
+ * reader seeing it cannot see. The mark is visible now, so the argument
+ * reverses with it: `StatGlyph` names the absence in full — "No printed power"
+ * — and suppressing that would give a listener less than a viewer gets.
+ *
+ * AND IT PRINTS NO CHARACTER. The absent state used to draw an en dash. Beside
+ * a mark rather than inside a plate, a dash reads as a value the card prints,
+ * which is the one thing this state exists to deny.
  */
 function StatBadge({
-  label,
   value,
   kind,
+  symbol,
 }: {
-  readonly label: string;
   readonly value: string | null;
   readonly kind: StatKind | null;
+  readonly symbol: GameSymbol | null;
 }) {
-  const absent = value === null;
   return (
-    <div
-      className={
-        absent ? "of-card__badge of-card__badge--reserved" : "of-card__badge"
-      }
-      aria-hidden={absent ? true : undefined}
-    >
-      <dt>{label}</dt>
-      <dd>{kind === null ? value : <StatGlyph kind={kind} value={value} />}</dd>
+    <div className="of-card__badge">
+      {kind === null ? (
+        value
+      ) : (
+        <StatGlyph kind={kind} value={value} {...artworkFor(symbol)} />
+      )}
     </div>
   );
 }
@@ -223,34 +284,27 @@ function Corner({
   side,
   content,
   mirror,
-  silent = false,
 }: {
   readonly side: "start" | "end";
   readonly content: React.ReactNode | null;
   readonly mirror: React.ReactNode | null;
-  /** True when everything in `content` is a reserved position, so the list has
-      nothing in it worth announcing. */
-  readonly silent?: boolean;
 }) {
   if (content !== null) {
     return (
-      <dl
-        className={`of-card__badges of-card__badges--${side}`}
-        aria-hidden={silent ? true : undefined}
-      >
+      <div className={`of-card__badges of-card__badges--${side}`}>
         {content}
-      </dl>
+      </div>
     );
   }
   if (mirror !== null) {
     return (
-      // biome-ignore lint/a11y/noAriaHiddenOnFocusable: a `<dl>` is not focusable and neither is anything a corner holds — a label, a plate, a stone. The rule fires on the literal `"true"`; the same attribute two branches up, written as an expression, does not trip it. Keep the corners non-interactive: a focusable thing in here WOULD be the bug this rule is about, because the mirror renders it a second time.
-      <dl
+      // biome-ignore lint/a11y/noAriaHiddenOnFocusable: a corner is a `<div>` and nothing it holds is focusable — a mark, a stone. The rule fires on the literal `"true"`; the same attribute two branches up, written as an expression, does not trip it. Keep the corners non-interactive: a focusable thing in here WOULD be the bug this rule is about, because the mirror renders it a second time.
+      <div
         className={`of-card__badges of-card__badges--${side} of-card__corner-mirror`}
         aria-hidden="true"
       >
         {mirror}
-      </dl>
+      </div>
     );
   }
   return <span className="of-card__corner-empty" aria-hidden="true" />;
@@ -386,15 +440,12 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const pitchBadge =
     page.pitch === 0 ? null : (
       <div className="of-card__badge">
-        <dt>Pitch</dt>
-        <dd>
-          <PitchJewel value={page.pitch} />
-        </dd>
+        <PitchJewel value={page.pitch} />
       </div>
     );
   const costBadge =
     costStat === undefined ? null : (
-      <StatBadge label={costStat.label} value={costStat.value} kind="cost" />
+      <StatBadge value={costStat.value} kind="cost" symbol={costStat.symbol} />
     );
   const badgesFor = (stats: typeof printedStats) =>
     stats.length === 0
@@ -402,16 +453,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       : stats.map((stat) => (
           <StatBadge
             key={stat.label}
-            label={stat.label}
             value={stat.value}
             kind={stat.kind}
+            symbol={stat.symbol}
           />
         ));
   const startBadges = badgesFor(startStats);
   const endBadges = badgesFor(endStats);
-  const allReserved = (stats: typeof printedStats) =>
-    stats.length > 0 && stats.every((stat) => stat.value === null);
-
   const artists = [
     ...new Set(card.printings.flatMap((printing) => printing.artists)),
   ];
@@ -1080,13 +1128,12 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               <div className="of-card__panel" data-pitch={page.pitch}>
                 <header className="of-card__band of-card__band--title">
                   {/*
-                    PITCH IS LABELLED, LIKE COST. It is the same kind of thing
-                    in the same kind of corner — a printed value in a plate —
-                    and the corner opposite it has said its own name in micro
-                    caps since the panel was built. The stone carries the
-                    numeral, the word carries what the numeral is OF, and the
-                    two are a `<dl>` for the reason the stat corners are: this
-                    is term-and-value data.
+                    PITCH IS UNLABELLED, LIKE COST, and for once the two corners
+                    agree with the card rather than with each other. The stone
+                    said "Pitch" in micro caps beside a numeral; the card prints
+                    three slots in its top-left corner, fills them from the top,
+                    and names nothing. `PitchJewel` counts the same way now, and
+                    what the word was carrying is in its accessible name.
                   */}
                   <Corner
                     side="start"
@@ -1101,15 +1148,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     heading would make the three versions read as three cards.
                   */}
                   <h1 className="of-card__name">{card.name}</h1>
-                  {/* `silent` because a `<dl>` holding one hidden item is a
-                      definition list with nothing in it, and that is what a
-                      screen reader would announce. */}
-                  <Corner
-                    side="end"
-                    content={costBadge}
-                    mirror={pitchBadge}
-                    silent={costStat?.value === null}
-                  />
+                  <Corner side="end" content={costBadge} mirror={pitchBadge} />
                 </header>
 
                 {/*
@@ -1153,19 +1192,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     side="start"
                     content={startBadges}
                     mirror={endBadges}
-                    silent={allReserved(startStats)}
                   />
 
                   <p className="of-card__type-line">
                     {typeLine === "" ? "Flesh and Blood card" : typeLine}
                   </p>
 
-                  <Corner
-                    side="end"
-                    content={endBadges}
-                    mirror={startBadges}
-                    silent={allReserved(endStats)}
-                  />
+                  <Corner side="end" content={endBadges} mirror={startBadges} />
 
                   {!hasStats ? (
                     <p className="of-card__void">

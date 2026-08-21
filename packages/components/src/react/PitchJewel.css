@@ -28,8 +28,20 @@
   */
   position: relative;
   display: inline-flex;
-  inline-size: var(--of-ornament-jewel-base);
-  block-size: var(--of-ornament-jewel-base);
+
+  /*
+    HELD AS ONE PROPERTY BECAUSE THE SLOTS ARE MEASURED FROM IT. The size used
+    to be written straight onto `inline-size`/`block-size` and repeated in the
+    two variants; the three pips inside now need the same number, and deriving
+    them from a local property is the only spelling that cannot drift when a
+    variant changes. `check-tokens.ts` still sees a token on every branch —
+    nothing here is a literal — and the ratio below is unitless, which is a
+    proportion rather than a design value the theme could have supplied.
+  */
+  --jewel-size: var(--of-ornament-jewel-base);
+  --slot-size: calc(var(--jewel-size) * 0.24);
+  inline-size: var(--jewel-size);
+  block-size: var(--jewel-size);
 
   /* Struck, not printed: a light top edge and a dark bottom one, exactly as
      every plate in the system carries.
@@ -78,34 +90,35 @@
 }
 
 .of-jewel--sm {
-  inline-size: var(--of-ornament-jewel-small);
-  block-size: var(--of-ornament-jewel-small);
+  --jewel-size: var(--of-ornament-jewel-small);
 }
 
 .of-jewel--lg {
-  inline-size: var(--of-ornament-jewel-large);
-  block-size: var(--of-ornament-jewel-large);
+  --jewel-size: var(--of-ornament-jewel-large);
 }
 
 /* The facet highlight. A cut stone catches light on its crown, which is what
    separates it from a coloured hexagon — and the reason the shape reads as a
    jewel at a glance, before the numeral is legible.
 
-   THE CROWN STOPS ABOVE THE GLYPH, AND THAT IS A CONTRAST FIX RATHER THAN A
-   TASTE ONE. The numeral paints above this overlay, but the overlay lightens
-   the stone BEHIND it, so a white wash reaching the cap-height line reduces the
-   very channel `docs/DESIGN.md` calls primary. At half the block size and a
-   higher opacity the residual alpha under the top of the glyph took pitch three
-   from 4.66:1 to about 4.00:1 in dark mode — a 1.4.3 failure — and pitch one
-   from 5.53:1 to about 4.91:1. A third of the block size ends the gradient at
-   the cap line at every one of the three sizes, so the numeral sits on
-   undiluted stone; the lower opacity is headroom, since pitch three clears the
-   threshold by only 0.16 before any overlay at all. The crown highlight
+   THE HEIGHT AND THE OPACITY ARE A CONTRAST FIX RATHER THAN A TASTE ONE, and
+   the reason has outlived the numeral it was measured against. At half the
+   block size and a higher opacity the residual alpha under the top of a centred
+   glyph took pitch three from 4.66:1 to about 4.00:1 in dark mode — a 1.4.3
+   failure — and pitch one from 5.53:1 to about 4.91:1. The mark carries three
+   pips now rather than a numeral, and they are struck in that same ink on that
+   same stone, so a wash that dilutes the stone dilutes them by exactly as much:
+   the measurement is the pips' as surely as it was the glyph's. A third of the
+   block size at this opacity keeps the top pip on all but undiluted stone, and
+   the headroom still matters, since pitch three clears the threshold by only
+   0.16 before any overlay at all. The crown highlight
    survives both changes, which is the point.
 
    On the stone rather than the jewel, so the highlight is clipped by the
    silhouette that lives there. On a diamond the band is cut to a triangle by
-   the two upper edges, which is what a crown facet actually looks like. */
+   the two upper edges, which is what a crown facet actually looks like — and it
+   now points at a triangle of pips, which is a coincidence of geometry rather
+   than a plan, but not one worth undoing. */
 .of-jewel__stone::before {
   content: "";
   position: absolute;
@@ -117,26 +130,57 @@
   pointer-events: none;
 }
 
-/* THE NUMERAL IS SET AT THE STAT PLATE'S SIZE, not a step under it. The stone
-   and the cost disc share a line in the card panel and the token layer now
-   matches their silhouettes optically; leaving the digit inside the stone a
-   step smaller than the digit inside the disc would put the difference straight
-   back, in the channel `PitchJewel` calls primary. */
-.of-jewel__glyph {
+/* -- The three slots --------------------------------------------------------
+   THE TRIANGLE THE CARD PRINTS: one above, two below. It replaced a numeral —
+   see the head of `PitchJewel.tsx` for why the channel changed and what that
+   keeps.
+
+   A TWO-COLUMN GRID WITH THE FIRST SLOT SPANNING BOTH, which is the whole of
+   the geometry. Spanning centres the apex over the gap between the two beneath
+   it without anybody positioning anything, so the arrangement survives a change
+   of size, of gap, or of slot diameter with no second number to keep in step.
+
+   SIZED IN PER CENT OF THE STONE, not of the box. The silhouette is a vertex-up
+   diamond and it is at its widest across the middle, so a cluster wide enough
+   to look right inside a square would have its lower two pips cut by the two
+   lower edges. Two thirds is what clears them at every size. */
+.of-jewel__slots {
   position: relative;
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-base);
-  font-weight: var(--of-type-weight-bold);
-  line-height: var(--of-type-leading-tight);
-  letter-spacing: var(--of-type-tracking-normal);
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  justify-content: center;
+  justify-items: center;
+  align-content: center;
+  gap: calc(var(--slot-size) * 0.34);
+  inline-size: 66%;
 }
 
-.of-jewel--lg .of-jewel__glyph {
-  font-size: var(--of-type-size-title);
+.of-jewel__slot:first-child {
+  grid-column: 1 / -1;
 }
 
-.of-jewel--sm .of-jewel__glyph {
-  font-size: var(--of-type-size-micro);
+/*
+  A STRUCK PIP, AND AN EMPTY ONE IS THE SAME PIP UNLIT. Both take the stone's
+  own ink, which is the one colour on this component guaranteed to clear AA
+  against every tone — `tokens.test.ts` pins that pairing for the numeral this
+  replaced, and the pips inherit the guarantee rather than needing a new one.
+
+  So the fill never changes and only the opacity does. That matters more than it
+  looks: an empty slot drawn in a colour of its own would need its own contrast
+  check against four stones, and the yellow one is where such a check goes
+  wrong. Here there is nothing to check — a quarter of a colour that already
+  passes is visible against the same ground, and the reader is comparing the
+  pips with each other rather than reading either against the stone.
+*/
+.of-jewel__slot {
+  inline-size: var(--slot-size);
+  block-size: var(--slot-size);
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.of-jewel__slot[data-filled="false"] {
+  opacity: 0.25;
 }
 
 .of-jewel--tone-none {

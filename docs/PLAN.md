@@ -399,8 +399,9 @@ lookup rather than a reference.
 red and yellow being the classic deuteranopia confusion pair, on the most-read
 value on a card. Tellingly they are *also* the pair Dragon Shield's scanner
 misreads: same physics, two independent confirmed failures. The pitch jewel built
-in Phase 1 already carries the numeral as its primary channel, so every consumer
-inherits the fix without deciding to.
+in Phase 1 already carries a non-colour primary channel — ~~the numeral~~ **the
+count of three slots filled to the value, which is what the printed card draws;
+see `docs/DESIGN.md`** — so every consumer inherits the fix without deciding to.
 
 ### Deliverables
 

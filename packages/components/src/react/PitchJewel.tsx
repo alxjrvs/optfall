@@ -1,5 +1,6 @@
 /**
- * The pitch jewel — an eight-sided cut stone carrying its numeral. React port.
+ * The pitch jewel — an eight-sided cut stone carrying three slots, filled to
+ * the card's pitch value. React port.
  *
  * This is the reference component for the library. Every convention here is
  * deliberate and every other primitive follows it:
@@ -45,12 +46,35 @@
  * shape, which is what lets pitch and the blood accent share a hue without ever
  * being confused.
  *
- * THE NUMERAL IS THE PRIMARY CHANNEL, not an accessibility fallback. Red and
- * yellow are the classic deuteranopia confusion pair, pitch is the most-read
- * value on a card, and it is the same pair the leading commercial scanner app
- * misreads. So the numeral is always rendered, at every size — there is no
- * compact variant that drops it, because that variant would be the one that
- * breaks for the people this design exists to serve.
+ * THE COUNT IS THE PRIMARY CHANNEL, AND IT USED TO BE A NUMERAL. That is a
+ * deliberate reversal of this docblock's own rule, so here is the whole of it.
+ *
+ * The rule was right about the constraint and wrong about the only way to meet
+ * it: red and yellow are the classic deuteranopia confusion pair, pitch is the
+ * most-read value on a card, and it is the same pair the leading commercial
+ * scanner app misreads — so pitch may never be carried by hue alone. A numeral
+ * satisfies that. So does counting.
+ *
+ * THE CARD ITSELF COUNTS. A printed pitch value is three slots in a triangle in
+ * the top-left corner — one above, two below — filled with the resource pip
+ * from the top down: one filled for pitch one, two for pitch two, three for
+ * pitch three. It prints no numeral anywhere. A reader holding a card learns
+ * that arrangement before they learn anything else about the frame, and the
+ * panel was asking them to read a second notation for the value they already
+ * knew how to see.
+ *
+ * WHAT THAT COSTS AND WHAT IT KEEPS. It costs the numeral's exactness at a
+ * glance, which for a three-valued closed set is a smaller loss than it sounds:
+ * nobody miscounts three dots. It keeps the whole of the colour-blindness
+ * argument, because the count is not a hue — a reader who cannot separate the
+ * red stone from the yellow one still counts one pip against two. And the
+ * accessible name still says "Pitch 3" in words at every size, which is where
+ * that claim belonged all along.
+ *
+ * THREE SLOTS, NOT `value` SLOTS, and the empty ones are the point. A single
+ * filled pip and a single pip out of three are different statements; only the
+ * second says "this card pitches for one of a possible three". The slots are
+ * always rendered and `data-filled` decides which are struck.
  */
 
 import type { PitchValue } from "optfall-theme";
@@ -79,10 +103,19 @@ export function PitchJewel({ value, size = "md", label }: PitchJewelProps) {
   const spoken =
     label?.trim() || (value === 0 ? "No pitch value" : `Pitch ${value}`);
 
-  /** Rendered glyph. Zero is an absence, and reads as one. */
-  const glyph = value === 0 ? "–" : String(value);
-
   const tone = TONES[value] ?? "none";
+
+  /**
+   * THE THREE SLOTS THE CARD PRINTS, in the order it fills them: apex first,
+   * then the two below it.
+   *
+   * A card with no pitch value at all fills none of them, which is the same
+   * statement the grey `tone-none` stone makes and is why zero needs no branch
+   * of its own. Pitch four — one previewed card, none in the corpus this
+   * repository pins — would fill every slot and be told from pitch three by its
+   * stone alone; `tokens.ts` records how much of that is verifiable here.
+   */
+  const slots = [0, 1, 2];
 
   return (
     <span
@@ -98,8 +131,14 @@ export function PitchJewel({ value, size = "md", label }: PitchJewelProps) {
         it traces the child's already-clipped alpha instead.
       */}
       <span className="of-jewel__stone">
-        <span className="of-jewel__glyph" aria-hidden="true">
-          {glyph}
+        <span className="of-jewel__slots" aria-hidden="true">
+          {slots.map((slot) => (
+            <span
+              key={slot}
+              className="of-jewel__slot"
+              data-filled={slot < value ? "true" : "false"}
+            />
+          ))}
         </span>
       </span>
     </span>

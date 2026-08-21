@@ -24,24 +24,51 @@ import { StatGlyph } from "./StatGlyph";
 import { ResultRow } from "./ResultRow";
 
 describe("PitchJewel", () => {
-  test("the numeral is always rendered, at every size", () => {
+  test("the count is always rendered, at every size", () => {
     /*
-     * `docs/DESIGN.md` calls the numeral the PRIMARY channel, not a fallback:
+     * THE CHANNEL CHANGED AND THE REQUIREMENT DID NOT, which is why this test
+     * kept its place in the file rather than being replaced by a new one.
+     *
+     * `docs/DESIGN.md` calls the value the PRIMARY channel, never the colour:
      * red and yellow are the classic deuteranopia confusion pair and pitch is
-     * the most-read value on a card. There is no compact variant that drops it,
-     * because that variant would be the one that breaks for the people the
-     * design exists to serve.
+     * the most-read value on a card. It used to be a numeral; it is now three
+     * slots filled from the top, which is what the printed card does. Counting
+     * is not a hue, so the requirement is met the same way it always was — and
+     * there is still no compact variant that drops it, because that variant
+     * would be the one that breaks for the people the design exists to serve.
      */
     for (const size of ["sm", "md", "lg"] as const) {
-      const html = renderToStaticMarkup(<PitchJewel value={3} size={size} />);
-      expect(html).toContain(">3<");
+      const html = renderToStaticMarkup(<PitchJewel value={2} size={size} />);
+      expect(html.match(/data-filled="true"/g)?.length).toBe(2);
+      expect(html.match(/data-filled="false"/g)?.length).toBe(1);
     }
   });
 
+  test("the slots that are not filled are still drawn", () => {
+    /*
+     * A SINGLE PIP AND ONE PIP OUT OF THREE ARE DIFFERENT STATEMENTS, and only
+     * the second says "this card pitches for one of a possible three". Rendering
+     * `value` slots would have been the obvious implementation and would have
+     * lost the denominator the card prints.
+     */
+    const html = renderToStaticMarkup(<PitchJewel value={1} />);
+    /* The closing quote matters: `of-jewel__slots` is the container, and a bare
+       substring match counts it as a fourth slot. */
+    expect(html.match(/of-jewel__slot"/g)?.length).toBe(3);
+    expect(html.match(/data-filled="true"/g)?.length).toBe(1);
+    expect(html.match(/data-filled="false"/g)?.length).toBe(2);
+  });
+
   test("zero is an absence and reads as one", () => {
+    /*
+     * NO SLOT IS STRUCK, which is the same statement the grey `tone-none` stone
+     * makes and is why zero needs no branch of its own. It used to draw an en
+     * dash; a mark that counts has a zero already.
+     */
     const html = renderToStaticMarkup(<PitchJewel value={0} />);
     expect(html).toContain('aria-label="No pitch value"');
-    expect(html).toContain(">–<");
+    expect(html).not.toContain('data-filled="true"');
+    expect(html.match(/data-filled="false"/g)?.length).toBe(3);
   });
 
   test("an empty label cannot erase the accessible name", () => {
@@ -69,14 +96,21 @@ describe("PitchJewel", () => {
      * pinned here. The tone comes out of a lookup with a `?? "none"` fallback,
      * so a `TONES` array left one entry short does not throw and does not fail
      * a typecheck:
-     * it silently renders a purple-strip card as a card with NO pitch value,
-     * next to a numeral that says 4. The rare value is the one nobody would
-     * notice going wrong.
+     * it silently renders a purple-strip card as a card with NO pitch value.
+     * The rare value is the one nobody would notice going wrong.
+     *
+     * AND IT IS THE ONE VALUE THE SLOTS CANNOT TELL FROM ITS NEIGHBOUR. There
+     * are three slots because the card prints three, so pitch four fills every
+     * one of them and is distinguishable from pitch three by its stone alone —
+     * the one place the count stops carrying the fact on its own. The
+     * accessible name still says it in words, and the corpus this repository
+     * pins contains no such card; if one ever lands, this is the note that says
+     * what to look at.
      */
     const html = renderToStaticMarkup(<PitchJewel value={4} />);
     expect(html).toContain("of-jewel--tone-four");
     expect(html).toContain('aria-label="Pitch 4"');
-    expect(html).toContain(">4<");
+    expect(html.match(/data-filled="true"/g)?.length).toBe(3);
   });
 
   test("the stone is a separate element, because the bevel is a filter", () => {
@@ -659,17 +693,63 @@ describe("Pagination", () => {
 });
 
 describe("StatGlyph", () => {
-  test("an absent value is a dash in a recessed plate, not an empty one", () => {
+  test("an absent value greys the mark and prints no character", () => {
     /*
      * THE SILHOUETTE SURVIVES, which is the whole design: the shape is what
      * says WHICH stat is missing. So the kind class stays and only the fill
-     * changes — asserted through the class, because a plate that lost
+     * changes — asserted through the class, because a mark that lost
      * `of-stat--power` would look like an absence of nothing in particular.
+     *
+     * AND NOTHING IS DRAWN IN THE VALUE POSITION. It used to be an en dash.
+     * Inside a plate that read as a struck placeholder; beside a mark, which is
+     * where every printed value sits now, it reads as a value the card prints
+     * — the one thing this state exists to deny. The absence is spoken instead,
+     * which is where a claim about what is NOT on a card belongs.
      */
     const html = renderToStaticMarkup(<StatGlyph kind="power" value={null} />);
     expect(html).toContain("of-stat--power");
     expect(html).toContain("of-stat--absent");
-    expect(html).toContain(">–<");
+    expect(html).toContain('aria-label="No printed power"');
+    expect(html).not.toContain("–");
+  });
+
+  test("artwork replaces the drawn plate, and the value moves beside it", () => {
+    /*
+     * THE PRODUCT PATH. Every stat the card panel prints resolves to one of
+     * LSS's own files — see `STAT_ORDER` — so the drawn plates above are the
+     * fallback and this is what a reader actually meets.
+     *
+     * `--art` IS THE WHOLE CONTRACT with the stylesheet: it is what drops the
+     * background, the bevel and the clip, and it must be keyed on `src` being
+     * supplied rather than on the kind, because a story renders these kinds
+     * with no `public/` mounted and has to get the plate.
+     */
+    const html = renderToStaticMarkup(
+      <StatGlyph
+        kind="power"
+        value="4"
+        src="/symbols/icon_p.png"
+        width={105}
+        height={105}
+      />,
+    );
+    expect(html).toContain("of-stat--art");
+    expect(html).toContain('src="/symbols/icon_p.png"');
+    /* The box is stated, because an image without one reflows the row it sits
+       in as it loads. */
+    expect(html).toContain('width="105"');
+    /* `alt=""`: the wrapping `role="img"` already owns the name, and announcing
+       both would read the stat twice. */
+    expect(html).toContain('alt=""');
+    expect(html).toContain('aria-label="Power 4"');
+    expect(html).toContain(">4<");
+  });
+
+  test("no artwork means no `--art`, and the plate is what draws", () => {
+    const html = renderToStaticMarkup(<StatGlyph kind="arcane" value="3" />);
+    expect(html).not.toContain("of-stat--art");
+    expect(html).not.toContain("<img");
+    expect(html).toContain("of-stat--arcane");
   });
 
   test('`null` and `"0"` are different renderings, because they are different facts', () => {
