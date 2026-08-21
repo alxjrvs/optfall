@@ -436,13 +436,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     list with nothing to tell anybody.
 
     WHICH SURFACE ANSWERS IT DEPENDS ON WHICH PAGE, and both are above this one:
-    a pitch page carries the version tabs ("Pitch versions of In the Swing")
-    directly over the panel, and the shared name page's printings table lists
-    every version's printings outright. Note the pitch page's OWN printings
-    table does not — it lists that card's printings only — so the tabs, not the
-    table, are what cover it there.
+    a pitch page carries the "Alternate pitch values" strip directly under the
+    panel, and the shared name page's printings table lists every version's
+    printings outright. Note the pitch page's OWN printings table does not — it
+    lists that card's printings only — so the strip, not the table, is what
+    covers it there.
 
-    `page.variants` is NOT dead: the tabs and the JSON-LD both still read it.
+    `page.variants` is NOT dead: the strip and the JSON-LD both still read it.
     This removes a third rendering of the field, not the field.
 
     What is left is the two lists nothing else on the page covers: the cards
@@ -911,17 +911,42 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       : hrefForPrinting(shown.setCode, shown.number, page.slug);
 
   const versions = [
-    { pitch: page.pitch, href: currentHref, current: true },
+    { pitch: page.pitch, href: currentHref, label: page.label, current: true },
     ...page.variants.map((variant) => ({
       pitch: variant.pitch,
       href:
         (shown === undefined
           ? undefined
           : addressInSet(variant.href, shown.setCode)) ?? variant.href,
+      /*
+       * `variant.label`, not `variant.name`. It is what names the ANCHOR the
+       * mark sits inside — "Head Jab (pitch 2)" — and `CardLink` carries it
+       * ready-made for exactly the four lists that would otherwise each have to
+       * remember to compose it. See `variantSuffix`.
+       */
+      label: variant.label,
       current: false,
     })),
   ].toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch));
-  const showVersions = versions.length > 1;
+
+  /**
+   * The versions this page is NOT — what the "Alternate pitch values" strip
+   * draws.
+   *
+   * DERIVED HERE RATHER THAN FILTERED AT THE CALL SITE, so "is there anything
+   * to draw" and "what is drawn" are the same list. The strip used to be a tab
+   * row that included the current version and was guarded by
+   * `versions.length > 1`; with the current one dropped, that guard and the
+   * rendered list would have been two expressions of one fact, and the pair
+   * disagrees the first time a card turns up whose only sibling shares its
+   * pitch.
+   *
+   * `pitchTargets` below still reads the FULL list, deliberately: the `?pitch=`
+   * redirect has to be able to resolve the pitch you are already on, or a link
+   * carrying `?pitch=1` into the pitch 1 page would fall through to no target
+   * at all.
+   */
+  const alternatePitches = versions.filter((version) => !version.current);
 
   const pitchTargets = JSON.stringify(
     Object.fromEntries(
@@ -1040,53 +1065,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
           </div>
 
           <div className="of-card__facts-column">
-            {/*
-              THE TAB STRIP IS ABOVE THE PANEL, NOT IN IT. The panel below is a
-              mirror of a printed object; a control for choosing WHICH printed
-              object it mirrors belongs outside the frame, the same way the
-              printings picker sits outside the face rather than on top of it.
-            */}
-            {showVersions ? (
-              <nav
-                className="of-card__versions"
-                aria-label={`Pitch versions of ${card.name}`}
-              >
-                {/*
-                  THE TAB IS THE BOX, AND THE LABEL BESIDE IT IS GONE WITH THE
-                  STONE. Each tab used to be a jewel plus a wide-tracked
-                  uppercase "PITCH 1" — the numeral in the stone and the words
-                  next to it saying the same thing twice, which was the price of
-                  a mark that could not spell itself. `PitchBox` is those words,
-                  so the second copy went rather than being kept beside a mark
-                  that had made it redundant.
-                */}
-                <ul className="of-card__version-tabs">
-                  {versions.map((version) => (
-                    <li key={version.href}>
-                      {version.current ? (
-                        /*
-                          The current tab is not a link. An anchor pointing at
-                          the page you are already on is a control that does
-                          nothing, and `aria-current` on a link still leaves it
-                          in the tab order as a dead end.
-                        */
-                        <span
-                          className="of-card__version-tab of-card__version-tab--current"
-                          aria-current="page"
-                        >
-                          <PitchBox value={version.pitch} size="sm" />
-                        </span>
-                      ) : (
-                        <a className="of-card__version-tab" href={version.href}>
-                          <PitchBox value={version.pitch} size="sm" />
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ) : null}
-
             {/*
               THE PANEL CARRIES ITS PITCH, so the stylesheet can tint the one
               thing on the page that is allowed to say which version this is
@@ -1378,11 +1356,74 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             </BevelledPlate>
 
             {/*
-              LEGALITY LEADS THE APPARATUS, directly under the panel, with
-              nothing at all between them. `docs/SCRYFALL-GAP.md` §3: "our
-              legality table is already better than Scryfall's … put it on the
-              card page above the fold — it is the differentiator that is
-              already finished."
+              THE ALTERNATES COME AFTER THE CARD, NOT BEFORE IT. This strip
+              stood ABOVE the panel as a tab row, on the argument that a control
+              for choosing WHICH printed object the panel mirrors belongs
+              outside the frame. It does — but a reader arrives at this page for
+              a card, and the first thing the page said was "here are three
+              other cards". The card states itself first; what else that name
+              can be is the first thing said afterwards.
+
+              AND IT NO LONGER DRAWS THE VERSION YOU ARE READING. The strip was
+              a tab row, so it carried the current pitch as a non-link with an
+              accent edge — three marks to say one of them is where you already
+              are. The panel's own corner says the pitch and the breadcrumb says
+              it again; a third statement of it, styled as a control that does
+              nothing, was the only thing the heading below could not have
+              named. So the heading names the rest: these are the ALTERNATES,
+              and every one of them is a link that goes somewhere.
+
+              `alternatePitches`, NOT A FILTER HERE. The list is derived beside
+              `versions` so that "is this worth drawing at all" is one predicate
+              rather than a `.length` test written twice — see its definition.
+            */}
+            {alternatePitches.length > 0 ? (
+              <section
+                className="of-card__apparatus"
+                aria-labelledby="alternate-pitches"
+              >
+                <h2 className="of-apparatus__heading" id="alternate-pitches">
+                  Alternate pitch values
+                </h2>
+                {/*
+                  THE LINK IS THE BOX, AND THE LABEL BESIDE IT IS GONE WITH THE
+                  STONE. Each tab used to be a jewel plus a wide-tracked
+                  uppercase "PITCH 1" — the numeral in the stone and the words
+                  next to it saying the same thing twice, which was the price of
+                  a mark that could not spell itself. `PitchBox` is those words,
+                  so the second copy went rather than being kept beside a mark
+                  that had made it redundant.
+
+                  AT THE FULL STEP, NOT `sm`. These sit a few centimetres above
+                  the legality flags and are the same object as them; the small
+                  step is for a mark set beside micro type in a dense row, and
+                  using it here drew a thinner plate than the verdicts directly
+                  below, which reads as a different thing rather than the same
+                  one in another palette.
+                */}
+                <ul className="of-card__version-tabs">
+                  {alternatePitches.map((version) => (
+                    <li key={version.href}>
+                      <a className="of-card__version-tab" href={version.href}>
+                        <PitchBox value={version.pitch} label={version.label} />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
+            {/*
+              LEGALITY LEADS THE APPARATUS. It used to be "directly under the
+              panel, with nothing at all between them"; the alternate-pitch
+              strip is now between them, and that is the one thing seated
+              there. `docs/SCRYFALL-GAP.md` §3 is unchanged and is the reason
+              this is still FIRST of the apparatus proper: "our legality table
+              is already better than Scryfall's … put it on the card page above
+              the fold — it is the differentiator that is already finished."
+              What moved in front of it is a heading and a row of flags — the
+              strip that used to sit above the panel, pushing the same content
+              down by more than it does here.
 
               THE BUY ROW USED TO STAND IN THIS GAP and now follows this
               section instead. A button and one line of disclosure are not a

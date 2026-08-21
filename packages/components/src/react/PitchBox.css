@@ -39,7 +39,15 @@
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
-  padding-block: var(--of-space-tightest);
+  /*
+    THE PILL'S BLOCK PADDING TO THE PIXEL, WHICH IS THE POINT OF THE FULL STEP.
+    It was one step tighter, and on a card page that put a visibly thinner
+    plate a few centimetres above the legality flags — near enough to be
+    compared, different enough to read as another kind of object rather than
+    the same one in another palette. The small step is where a deliberately
+    lighter mark lives; this one matches.
+  */
+  padding-block: var(--of-space-tighter);
   padding-inline-start: var(--of-space-tight);
   /*
     THE END PADDING CLEARS THE NOTCH, WHICH IS WHERE THIS PARTS FROM THE PILL'S

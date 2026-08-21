@@ -1014,14 +1014,53 @@ describe("the pitch tabs stay in the set the reader is already in", () => {
       undefined,
     ) ?? "";
 
-  /** Where each version tab goes, in the strip's order. The current one is not
-      a link, so it is deliberately absent. */
+  /**
+   * Where each alternate-pitch link goes, in the strip's order.
+   *
+   * SCOPED BY THE SECTION'S `aria-labelledby`, which is the one attribute on it
+   * that names what it is. This read `<nav class="of-card__versions">` while
+   * the strip was a tab row above the panel; it is now an apparatus section
+   * under it, headed "Alternate pitch values", and the current version is not
+   * rendered at all rather than rendered as a non-link.
+   */
   const tabsIn = (html: string) =>
     [
       ...(
-        /<nav class="of-card__versions".*?<\/nav>/s.exec(html)?.[0] ?? ""
+        /<section class="of-card__apparatus" aria-labelledby="alternate-pitches">.*?<\/section>/s.exec(
+          html,
+        )?.[0] ?? ""
       ).matchAll(/<a class="of-card__version-tab" href="([^"]+)"/g),
     ].map((tab) => tab[1] ?? "");
+
+  test("the strip is headed, and does not draw the pitch you are reading", () => {
+    /*
+     * THE HEADING IS THE HALF THAT LETS THE CURRENT VERSION GO. While this was
+     * a tab row it had to draw all three and mark one, because an unlabelled
+     * row of two links beside a card is not self-evidently "the others" — so
+     * the strip spent a third of itself saying "you are here", styled as a
+     * control that does nothing. Named, it can be the rest: every mark in it is
+     * a link, and each goes somewhere.
+     *
+     * ASSERTED AS AN ABSENCE AND A PRESENCE TOGETHER. Either alone is weak —
+     * a strip that vanished would pass the absence, and one that still drew
+     * three would pass the presence.
+     */
+    const html = render("/card/wtr/098/head-jab-1");
+    expect(html).toContain(">Alternate pitch values</h2>");
+
+    const strip =
+      /<section class="of-card__apparatus" aria-labelledby="alternate-pitches">.*?<\/section>/s.exec(
+        html,
+      )?.[0] ?? "";
+    expect(strip).not.toBe("");
+    /* Pitch 2 and pitch 3 are drawn; pitch 1 — this page — is not. `data-pitch`
+       is `PitchBox`'s own attribute, so this reads what was rendered rather
+       than what the label happens to say. */
+    expect([...strip.matchAll(/data-pitch="(\d)"/g)].map((m) => m[1])).toEqual([
+      "2",
+      "3",
+    ]);
+  });
 
   test("a version printed in this set is reached at its address in this set", () => {
     /*
@@ -1066,9 +1105,13 @@ describe("the pitch tabs stay in the set the reader is already in", () => {
      * other version opens on is that set's own default, the same one its set
      * page links to.
      */
-    expect(tabsIn(render("/card/wtr/u-wtr098/head-jab-1"))).toEqual(
-      tabsIn(render("/card/wtr/098/head-jab-1")),
-    );
+    const tabs = tabsIn(render("/card/wtr/u-wtr098/head-jab-1"));
+    /* And both strips have something in them. Two empty lists are equal, so
+       without this the assertion below survives the strip disappearing
+       entirely — which is exactly how it failed to notice the markup change
+       that moved this section out of its `<nav>`. */
+    expect(tabs.length).toBeGreaterThan(0);
+    expect(tabs).toEqual(tabsIn(render("/card/wtr/098/head-jab-1")));
   });
 
   test("every tab on every page addresses a card the site actually serves", () => {
