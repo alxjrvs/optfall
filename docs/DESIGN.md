@@ -15,8 +15,8 @@ move; each expression of it does not.
 | The principle we keep | How it changes for Flesh and Blood |
 |---|---|
 | **The search field is the hero.** No marketing hero, no illustration above the fold. The first thing on the page is the thing you came to do. | **The grammar is inherited, not invented.** LSS's own Card Vault already has a syntax. We adopt it verbatim and extend it to rules and interactions, so a query someone already knows keeps working. |
-| **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on anything carrying state. The chrome should feel struck from metal, not laid out in a design tool. |
-| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch wears a cut jewel, and under a card face a band — two forms, both reserved, neither used for anything else. The mark is the single sanctioned exception to the jewel's silhouette, and both are argued below. |
+| **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on ~~anything carrying state~~ a value the card carries out of a fixed set — legality, and now pitch; see `PitchBox`. The chrome should feel struck from metal, not laid out in a design tool. |
+| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch wears a cut jewel on a card's own page, and under a card face a band — ~~two forms, both reserved, neither used for anything else~~ three now: in a list or a grid it wears the legality flag's notched plate, spelled `PITCH 1`, which is the one form deliberately NOT reserved. Sharing that silhouette is the point of it — a reader learns the plate once, at the foot of a card page, and meets it again at the top of one. See `PitchBox`. The mark is the single sanctioned exception to the jewel's silhouette, and both are argued below. |
 | **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Two voices, strictly assigned.** A serif for names and questions, a sans for everything else. ~~a wide-tracked mono for labels and anything citable~~ — see below. |
 | **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the card**, and the rules and rulings attach to it. Card pages are the shareable object; `/cr/…` sections are addressable too and a card links into them. ~~The unit is the verdict, not the card.~~ — see below. |
 | **Dark mode is not an inversion.** It is designed, and for many users it is the only mode they will ever see. | **Black is the native key.** Near-black ground, blood accent, brass for anything authoritative. Light mode is the printed-rulebook translation — ash and iron, not paper white. |
@@ -457,8 +457,10 @@ See [`PLAN.md`](PLAN.md) Phase 1.
 
 ### What the accessibility work covers
 
-**This site, and it is enforced rather than asserted.** All 13 primitives in
-`PRIMITIVES` are rendered through axe-core by
+**This site, and it is enforced rather than asserted.** Every primitive in
+`PRIMITIVES` — the count is `PRIMITIVES.length`, deliberately not spelled here,
+because it was written as "13" and stayed 13 through two additions — is
+rendered through axe-core by
 `packages/components/src/react/a11y.test.tsx`, which runs under `bun run check`
 and in the gate. The table those runs come from, `CASES`, is itself asserted
 against `PRIMITIVES` — so a primitive added without a case **fails the suite**

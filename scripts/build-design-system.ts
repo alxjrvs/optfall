@@ -86,9 +86,16 @@ function jewel(pitch: string | number, size = ""): string {
  * A pitch box, in the two-element shape `PitchBox.tsx` renders.
  *
  * THE SHAPE IS THE STATE PILL'S, so the CSS above is `.pill`'s with the pitch
- * palette and one difference: the words do not wrap. A card that drew this as
- * anything other than the notched plate would advertise a rendering the product
- * does not ship, which is the drift `jewel()`'s comment above exists to record.
+ * palette and two differences, both of which `PitchBox.css` makes for stated
+ * reasons: the words do not wrap, and the END padding carries the notch's own
+ * width so the chamfer cannot bite the digit this label ends in. `.pill`'s
+ * `overflow-wrap: anywhere` is dropped with the wrapping, and `user-select:
+ * none` is a product concern rather than a gallery one — a card nobody drags
+ * names off has nothing to keep out of a paste.
+ *
+ * A card that drew this as anything other than the notched plate would
+ * advertise a rendering the product does not ship, which is the drift
+ * `jewel()`'s comment above exists to record.
  */
 function pitchBox(pitch: string | number, size = ""): string {
   const value = String(pitch);

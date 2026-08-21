@@ -180,9 +180,15 @@
 }
 
 /*
-    THE PANEL OPENS ON THE PITCH COLOUR — the fourth carrier of a fact the
-    jewel, the tab strip and the numeral already carry, and the only one a
-    reader gets for free while looking at the card they came for.
+    THE PANEL OPENS ON THE PITCH COLOUR — the third carrier of a fact the
+    jewel and the numeral beside it already carry, and the only one a reader
+    gets for free while looking at the card they came for.
+
+    IT WAS FOUR, AND THE FOURTH WAS THE TAB STRIP. That strip is now
+    "Alternate pitch values" and deliberately does not draw the version you are
+    reading, so it carries this card's pitch zero times. What states the
+    current pitch on this page is the panel's own corner — stone and word — and
+    this stroke.
 
     ~~ABOVE THE TEXT, BECAUSE THAT IS THE RULE THE PRINTED CARD DRAWS. A Flesh
     and Blood frame closes its art and opens its text box on a single stroke,
@@ -398,8 +404,11 @@
       a rule on a printed card is the one closing the art and opening the text
       box, and that is the edge this panel now colours.~~ Struck in turn — the
       stroke spent one iteration on the text band and came back. The pitch is
-      carried four ways either way: the jewel, the tab strip, the numeral, and
-      that stroke.
+      carried three ways either way: the jewel, the numeral beside it, and that
+      stroke. ~~four ways … the jewel, the tab strip, the numeral, and that
+      stroke~~ — the strip became "Alternate pitch values" and stopped drawing
+      the version being read, so it is not one of the carriers of THIS card's
+      pitch any more.
 
       Gone with the move, and staying gone: `inline-size: fit-content`,
       `max-inline-size`, `margin-inline: auto` and the negative
@@ -921,6 +930,18 @@
 */
 .of-card__version-tab {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /*
+    THE TARGET FLOOR, NOT THE TAB'S OLD PADDING. The tab carried
+    `space.tight space.base`, which bought a hit area of about 36px as a side
+    effect of looking like a tab; dropping the tab styling dropped that with it,
+    and every mark here is the only way to reach the version it names. A minimum
+    states the requirement instead of paying for it by accident — see
+    `layout.target.min`.
+  */
+  min-inline-size: var(--of-layout-target-min);
+  min-block-size: var(--of-layout-target-min);
   text-decoration: none;
   /* Square, never rounded — stated rather than omitted, so a host stylesheet
        cannot round the one control this page owns. */
@@ -954,11 +975,19 @@
 }
 
 /* CENTRED, NOT BASELINED, because the last crumb on a disambiguated card is a
-   pitch jewel rather than a word. A diamond has no baseline worth aligning to:
-   the only thing in it that reports one is the numeral at its middle, so
-   `baseline` lines that numeral up with the trail and hangs the whole stone
-   below it. Every other crumb is one line of one size, where centring and
-   baseline agree, so nothing else moves. */
+   struck plate rather than a word. Its label sits a step under the trail's, in
+   its own padded box, so `baseline` lines that smaller text up with the crumbs
+   and hangs the plate below them; centring seats the object on the line the
+   trail is set on, which is what it is a member of.
+
+   THE REASON USED TO BE THE JEWEL'S GEOMETRY — "a diamond has no baseline
+   worth aligning to: the only thing in it that reports one is the numeral at
+   its middle". That was true of the stone and is not true of the box, which is
+   flat-topped and reports a perfectly ordinary baseline. The declaration is
+   unchanged and still right; only what makes it right has moved.
+
+   Every other crumb is one line of one size, where centring and baseline
+   agree, so nothing else moves. */
 .of-card__crumbs {
   display: flex;
   flex-wrap: wrap;
@@ -1666,22 +1695,29 @@
 }
 
 /*
-  ONE STONE, ONE DESTINATION — and the padding is a target-size requirement
+  ONE MARK, ONE DESTINATION — and the SIZE here is a target-size requirement
   rather than spacing.
 
-  `ornament.jewel.small` is 1.25rem, which is 20px at the root size: under the
-  24×24 floor WCAG 2.5.8 sets for a pointer target. A stone that is the ONLY way
-  to reach a card has to clear that, where the same stone sitting decoratively
-  beside a full-width link did not. `space.tightest` is 0.125rem a side, which
-  takes the box to exactly 24px.
+  A mark that is the only way to reach a card has to clear the 24×24 floor WCAG
+  2.5.8 sets for a pointer target, where the same mark sitting decoratively
+  beside a full-width link does not. `layout.target.min` is that floor, and the
+  token comment records why it is a minimum and no longer a sum: this rule used
+  to spell the arithmetic — a 1.25rem jewel plus `space.tightest` a side, "which
+  takes the box to exactly 24px" — and the day the jewel became a shorter
+  `PitchBox` the sum fell to about 17px while the comment went on claiming
+  compliance.
 
-  It is deliberately not solved by using a bigger jewel: the size is a typographic
-  choice about how loud pitch is in a list, and inflating it to buy hit area
-  would change how the page reads to fix how it clicks.
+  It is deliberately not solved by drawing a BIGGER mark: the size is a
+  typographic choice about how loud pitch is in a list, and inflating it to buy
+  hit area would change how the page reads to fix how it clicks. The box is
+  centred in a target that is at least the floor instead.
 */
 .of-card__pitch-link {
   display: inline-flex;
-  padding: var(--of-space-tightest);
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--of-layout-target-min);
+  min-block-size: var(--of-layout-target-min);
 }
 
 /* The table caption names the table for a screen reader without repeating the

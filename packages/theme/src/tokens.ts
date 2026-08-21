@@ -431,6 +431,24 @@ const STRUCTURE: TokenTable = {
      downscale rather than a new tier nobody publishes. */
   "layout.card.row": "2.75rem",
 
+  /* THE POINTER-TARGET FLOOR — 24px, which is what WCAG 2.5.8 (AA) sets.
+     Anything that is the ONLY way to reach a destination must be at least this
+     across, in both axes.
+
+     IT IS A TOKEN BECAUSE IT WAS ARITHMETIC, AND THE ARITHMETIC BROKE. It was
+     spelled once, in a comment beside `.of-card__pitch-link`: the mark inside
+     was `ornament.jewel.small`, 1.25rem, and `space.tightest` a side "takes the
+     box to exactly 24px". True of a 20px stone; the day the stone became a
+     `PitchBox` — a shorter object — the padding stayed, the sum fell to about
+     17px, and the comment went on asserting compliance. A floor stated as a
+     minimum holds whatever is put inside it; a floor stated as a sum holds
+     until someone changes an addend in another file.
+
+     `min-*-size` RATHER THAN A PADDING, for the same reason. Padding that adds
+     up to the floor has to be recomputed every time the content changes size;
+     a minimum simply cannot be under it. */
+  "layout.target.min": "1.5rem",
+
   /* FOUR CELLS AND THE GUTTERS BETWEEN THEM, added up — written as references
      for the same reason `page.wide` is, so there is no chosen number here to
      drift from the cell size it is built out of.

@@ -23,11 +23,15 @@
  * what colour should do in this system — repeating something already said.
  *
  * IT IS THE LEGALITY FLAG'S SHAPE, AND TAKING IT IS THE DECISION HERE. Same
- * notch, same depth token, same padding, same label voice, same bevel — see the
- * stylesheet, which is `StatePill.css` almost declaration for declaration. A
- * reader meets the pills at the foot of a card page and meets this at the top
- * of one; drawing a fifth silhouette for "a short value a card carries" would
- * be a new thing to learn in exchange for nothing.
+ * notch, same depth token, same block padding, same label voice, same bevel —
+ * see the stylesheet, which is `StatePill.css` almost declaration for
+ * declaration. A reader meets the pills at the foot of a card page and meets
+ * this at the top of one; drawing a fifth silhouette for "a short value a card
+ * carries" would be a new thing to learn in exchange for nothing.
+ *
+ * Two declarations differ and both are noted where they are made: the END
+ * padding carries the notch's own width, because this label ends in its value
+ * and the chamfer would otherwise bite the digit, and the words never wrap.
  *
  * SO THE NOTCH IS NO LONGER STATE'S ALONE, and that is a real widening rather
  * than an accident. `tokens.ts` said the clipped corner meant "this carries

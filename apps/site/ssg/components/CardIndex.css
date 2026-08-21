@@ -675,6 +675,16 @@
 .of-index__stones {
   display: inline-flex;
   align-items: center;
+  /*
+    WRAPPING, WHICH IT DID NOT NEED WHEN THE MARKS WERE STONES. Three 20px
+    jewels and their gaps were an atomic inline box about 64px wide; three
+    boxes reading "PITCH n" are nearer 215px. That still fits a 320px row
+    beside a 44px face, but with a few pixels of margin rather than the ~170 it
+    used to have — so the next thing that widens the label, a longer value or a
+    wider tracking token, would be a horizontal scrollbar instead of a second
+    line. `wrap` costs nothing here and removes the cliff.
+  */
+  flex-wrap: wrap;
   gap: var(--of-space-tightest);
   margin-inline-start: var(--of-space-tight);
 }
@@ -713,6 +723,19 @@
 
 .of-index__stone {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /*
+    THE POINTER-TARGET FLOOR. This anchor is the only way to reach the version
+    it names — that is the whole feature — so it owes WCAG 2.5.8's 24×24, and
+    the mark inside it has never been that tall on its own: a 20px jewel before,
+    a shorter `PitchBox` now. `.of-card__pitch-link` is the same control on the
+    card page and states the requirement the same way; `layout.target.min` says
+    why it is a minimum rather than a padding that has to be recomputed every
+    time the mark changes size.
+  */
+  min-inline-size: var(--of-layout-target-min);
+  min-block-size: var(--of-layout-target-min);
   text-decoration: none;
 }
 
