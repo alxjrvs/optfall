@@ -119,9 +119,10 @@ const PAGE_BY_HREF: ReadonlyMap<string, CardPage> = new Map(
  *
  * IT TAKES AN ADDRESS RATHER THAN A `CardLink`, and the widening is what let the
  * rule reach the rest of the page. It was written for the version strip and read
- * only `link.href`, so every other link on a card page — the breadcrumb, the
- * related lists, the back of a double-sided card — had no way to ask the
- * question without inventing a second answer to it. They all hold an address.
+ * only `link.href`, so every other link on a card page — the related lists, the
+ * back of a double-sided card, and the breadcrumb's name crumb while that
+ * existed — had no way to ask the question without inventing a second answer to
+ * it. They all hold an address.
  *
  * THE ARGUMENT MUST BE A DEFAULT ADDRESS, WHICH IS WHAT `PAGE_BY_HREF` KEYS ON.
  * Passing an address this function already returned would miss, because a
@@ -248,8 +249,13 @@ function versionsSuffix(links: readonly CardLink[]): string {
  * three cases fall out of it:
  *
  * - A row that IS the whole name goes to the shared page and is named by the
- *   shared name. Nothing to qualify. It reads alike to the breadcrumb and goes
- *   where the breadcrumb goes, which 2.4.4 permits and a reader expects.
+ *   shared name. Nothing to qualify: the name it announces and the page it
+ *   opens are the same thing, which is the whole of what 2.4.4 asks. This used
+ *   to be argued from the breadcrumb — "it reads alike to the breadcrumb and
+ *   goes where the breadcrumb goes" — and that anchor no longer exists: a card
+ *   page's trail is now `Optfall › <set> › <name + pitch>`, with no name link
+ *   in it. The rule is unchanged; only the thing it was compared against is
+ *   gone.
  * - A row standing for ONE version is named for that version, "(pitch 2)".
  * - A row standing for SOME of them is named for all of those — "(pitch 2 and
  *   3)". Naming it after the version its href happens to open would be a

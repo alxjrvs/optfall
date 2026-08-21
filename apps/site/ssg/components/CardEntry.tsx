@@ -62,7 +62,6 @@ import {
   type CardLink,
   type CardPage,
   facesOf,
-  HREF_BY_NAME_SLUG,
   hrefForPrinting,
   STAT_ORDER,
 } from "../../src/lib/cards";
@@ -485,11 +484,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   ];
   const soleFlavour = flavours.length === 1 ? flavours[0] : undefined;
 
-  /* THE NAME'S DESTINATION, RESOLVED AT BUILD TIME. `/card/<nameSlug>` is a
-     301 now, and a link the page draws itself has no business travelling
-     through one — the lowest-pitch version's own address is known here. */
-  const nameDefaultHref = HREF_BY_NAME_SLUG.get(page.nameSlug) ?? page.href;
-
   /*
     NO "OTHER VERSIONS" ROW. It restated, at the foot of the page, a set the
     reader has already been shown nearer the top — so it was the one related
@@ -575,29 +569,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * all has no face here and renders the placeholder.
    */
   const shown = faces[selected] ?? faces[0];
-
-  /**
-   * THE BREADCRUMB'S NAME, IN THE SET THE READER IS ALREADY IN.
-   *
-   * `nameDefaultHref` is the lowest-pitch version's DEFAULT printing, which on
-   * a reprint belongs to some other set — so the breadcrumb over
-   * `/card/mst/095/a-drop-in-the-ocean` read "A Drop in the Ocean" and pointed
-   * at `/card/eng/025/…`: a different printing OF THE CARD ALREADY ON SCREEN,
-   * reached by clicking that card's own name. Measured on the shipped build:
-   * 6,003 of the 11,378 printing pages carried a breadcrumb that left the set,
-   * and on 5,721 of them the set on screen had printed that very card.
-   *
-   * The version strip has resolved this since `addressInSet` was written; the
-   * breadcrumb asks the same question one line further up the page, and was
-   * answering it differently.
-   *
-   * HERE RATHER THAN BESIDE `nameDefaultHref`, because it needs `shown` — which
-   * is what knows which printing the page is OF, and is resolved above.
-   */
-  const nameHref =
-    (shown === undefined
-      ? undefined
-      : addressInSet(nameDefaultHref, shown.setCode)) ?? nameDefaultHref;
 
   /**
    * The storefront link for the printing that CLAIMED the art at the top of the
@@ -1021,23 +992,54 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
           <li>
             <a href="/">Optfall</a>
           </li>
+          {/*
+            THE SET, NOT "CARDS". The second crumb used to link `/search` — the
+            same destination on all 11,378 card pages, naming a container
+            ("Cards") that every page under `/card/` is trivially inside. A
+            trail earns its line when the step above the page is somewhere in
+            particular, and for a printing that is the set it was printed in:
+            this page IS `/card/<set>/<number>/<slug>`, so the set is the
+            address's own parent rather than a category invented for the trail.
+
+            IT READS OFF `shownCode`, WHICH IS THE PRINTING ON SCREEN — the same
+            value the citation beside the face prints, so the crumb cannot name
+            one set while the picture under it is from another. That hazard is
+            not hypothetical: it is what the version strip and the old name
+            crumb each had to be taught separately.
+
+            "CARDS" SURVIVES AS THE FALLBACK, because a set crumb needs a set.
+            `shownCode` is `null` where the printing publishes no set code, and
+            a trail that steps straight from the site to the page has lost the
+            step it exists for. `/search` is where such a card is found.
+
+            NO PAGE IN THE PINNED CORPUS TAKES THAT BRANCH — counted on the
+            build, 0 of 11,378 card pages. It is defence against a field
+            upstream can leave empty, not a case the site is known to have, and
+            saying so here is cheaper than the next reader measuring it again.
+          */}
           <li>
-            <a href="/search">Cards</a>
+            {shownCode === null ? (
+              <a href="/search">Cards</a>
+            ) : (
+              <a href={shownCode.href}>{shownCode.setName}</a>
+            )}
           </li>
-          {page.disambiguated ? (
-            <li>
-              <a href={nameHref}>{card.name}</a>
-            </li>
-          ) : null}
           <li>
             {/*
-              THE LAST CRUMB IS THE MARK, NOT THE NAME AGAIN. On a
-              disambiguated card the trail used to end "Celestial Reprimand ›
-              Celestial Reprimand (pitch 1)": the name printed twice, the second
-              time with the one fact that distinguishes the two crumbs spelled
-              out in parentheses at the end of it. The version is what this crumb
-              is FOR, so it says the version — in the same object the tab strip
-              below puts on each version.
+              THE LAST CRUMB IS THE NAME AND THE PITCH TOGETHER, which is one
+              crumb where there were two. A disambiguated card spent a whole
+              crumb on its name and the next one on its version — "Head Jab ›
+              [Pitch 1]" — so the trail took two steps to say one thing, and the
+              second of them was a mark with no word beside it. They were never
+              two places: `/card/wtr/098/head-jab-1` is one page, and what
+              identifies it is the name and the version at once.
+
+              THE NAME CRUMB WAS A LINK TO A CARD PAGE, WHICH IS THE OTHER
+              REASON IT IS GONE. It pointed at the lowest-pitch version's
+              printing in this set — a page of the same rank as this one, not a
+              step up the trail — and the "Alternate pitch values" strip under
+              the face already offers that, with every version on it rather than
+              one.
 
               IT IS A `PitchBox` RATHER THAN THE STONE, and the trail is why.
               A breadcrumb is a LIST, which is where the boxes belong: the
@@ -1046,26 +1048,25 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               The panel's corner still carries the jewel — that is a page about
               one card, which is the stone's whole remaining job.
 
-              THE MARK IS STILL NAMED BY THE WHOLE LABEL. `PitchBox` defaults
-              to speaking its numeral, which is right beside two other jewels in
-              a version strip and wrong as the terminal crumb of a trail: what a
-              screen reader should announce for the current page is the page,
-              "Celestial Reprimand (pitch 1)", not "Pitch 1". The `label` prop is
-              the component's sanctioned way to say so, and it is `page.label`
-              rather than a string built here for the reason `CardLink.label`
-              exists — one spelling of "which card this is", used everywhere.
+              THE MARK NOW SPEAKS ITS OWN NUMERAL, which reverses what this note
+              said when the mark was the whole crumb. It was labelled with
+              `page.label` — "Head Jab (pitch 1)", the whole of it — because a
+              crumb announcing "Pitch 1" does not name the page it is the last
+              crumb of. The name is printed beside it now, so that same label
+              would say the name twice: "Head Jab, Head Jab (pitch 1)".
+              `PitchBox`'s default is exactly the half the text is missing,
+              which is all the mark is here to add.
 
-              AN UNDISAMBIGUATED CARD KEEPS ITS NAME. There is no name crumb
-              above it to avoid repeating, `page.label` is the bare name, and its
-              pitch — which may be none at all — is not what tells it apart from
-              anything.
+              AN UNDISAMBIGUATED CARD DRAWS NO MARK. Its pitch — which may be
+              none at all — is not what tells it apart from anything. The gate
+              is unchanged; what moved is where the mark sits, not which pages
+              carry one.
             */}
             <span className="of-card__crumb-current" aria-current="page">
+              {card.name}
               {page.disambiguated ? (
-                <PitchBox value={page.pitch} size="sm" label={page.label} />
-              ) : (
-                page.label
-              )}
+                <PitchBox value={page.pitch} size="sm" />
+              ) : null}
             </span>
           </li>
         </ol>

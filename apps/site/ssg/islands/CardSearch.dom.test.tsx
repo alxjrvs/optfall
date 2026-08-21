@@ -919,9 +919,10 @@ async function browse(row: NewestRelease | null): Promise<Mounted> {
 /**
  * WHAT THE PAGE IS BEFORE ANYBODY HAS ASKED IT ANYTHING.
  *
- * This state is what a reader reaches from the header's "Cards" link and from
- * the breadcrumb on every card page, so it is the most-arrived-at screen on the
- * site after the front door — and it had no test of its own at all. The three
+ * This state is what a reader reaches from the header's "Cards" link — and,
+ * until a card page's breadcrumb started naming the set it was printed in, from
+ * every one of those too — so it is among the most-arrived-at screens on the
+ * site after the front door, and it had no test of its own at all. The three
  * things asserted here are the three that were wrong or absent before: the pin
  * is printed WITHOUT the index (`docs/PLAN.md` requires it and a fetch must not
  * gate it), the release row draws the printings it is handed, and an absent
