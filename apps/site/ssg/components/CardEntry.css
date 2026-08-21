@@ -522,13 +522,19 @@
     own sentences at full size while its type line shrank. Fixing the size makes
     the band wider at 320px, and the corner track's `auto` minimum is what keeps
     it in the box.
+
+    ONE COLOUR TOO, FOR THE SAME REASON. This line was `ink.muted` while the
+    printed text, which inherits, is plain `ink` — so the panel said in colour
+    what the sizes had just stopped saying: that the type line is apparatus
+    rather than something the card prints. It is printed, in the same band, on
+    the same object. It takes the same ink.
   */
 .of-card__type-line {
   margin: 0;
   text-align: center;
   font-family: var(--of-type-family-serif);
   font-size: var(--of-type-size-large);
-  color: var(--of-color-ink-muted);
+  color: var(--of-color-ink);
 }
 
 /*
