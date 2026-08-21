@@ -475,15 +475,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     ...new Set(card.printings.flatMap((printing) => printing.artists)),
   ];
 
-  const flavours = [
-    ...new Set(
-      page.printings
-        .map(({ printing }) => printing.flavor_text.trim())
-        .filter((flavour) => flavour !== ""),
-    ),
-  ];
-  const soleFlavour = flavours.length === 1 ? flavours[0] : undefined;
-
   /*
     NO "OTHER VERSIONS" ROW. It restated, at the foot of the page, a set the
     reader has already been shown nearer the top — so it was the one related
@@ -569,6 +560,33 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * all has no face here and renders the placeholder.
    */
   const shown = faces[selected] ?? faces[0];
+
+  /**
+   * The flavour text of the printing this page shows, or `""` where it has
+   * none. It is set in the panel, in the band under the printed text.
+   *
+   * IT USED TO BE CONDITIONAL ON THE PRINTINGS AGREEING. A card whose every
+   * printing carried the same words printed them here; a card whose printings
+   * disagreed printed none of them here and a "Flavour text, by printing" list
+   * under the printings table instead — one row per printing, keyed by
+   * collector number alone. On Steelblade Shunt (pitch 2) that list ran to six
+   * rows of which four read WTR127 and the identical sentence, because a row
+   * is a printing and those four printings are one wording across two editions
+   * and two foilings — neither of which the list named. It read as a
+   * distinction between printings that was not there.
+   *
+   * A PAGE IS ONE PRINTING, SO IT PRINTS ONE PRINTING'S FLAVOUR, on exactly
+   * the terms the rarity and the buy link above are already on: `facesOf`
+   * dedupes by image, so where two foilings share a picture this is the first
+   * one's. That is the same defensible default those two make — see `shown` —
+   * and not a new compromise introduced here.
+   *
+   * WHAT IT COSTS is a printing whose flavour differs from the one that
+   * claimed its art: those words are on no page. The trade is the same one the
+   * per-art address makes everywhere else on this page, and the alternative
+   * was the list above.
+   */
+  const flavour = shown?.printing.flavor_text.trim() ?? "";
 
   /**
    * The storefront link for the printing that CLAIMED the art at the top of the
@@ -1184,12 +1202,12 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   )}
                 </div>
 
-                {soleFlavour !== undefined ? (
+                {flavour !== "" ? (
                   <div className="of-card__band of-card__band--flavour">
                     <h2 className="of-card__visually-hidden" id="flavour-text">
                       Flavour text
                     </h2>
-                    <p className="of-card__flavour-text">{soleFlavour}</p>
+                    <p className="of-card__flavour-text">{flavour}</p>
                   </div>
                 ) : null}
 
@@ -1711,7 +1729,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
 
       <PrintingsSection
         page={page}
-        flavours={flavours}
         hrefByFace={hrefByFace}
         numberQualifier={numberQualifier}
         shown={shown}
