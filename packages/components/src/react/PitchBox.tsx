@@ -1,6 +1,6 @@
 /**
- * The pitch box — a rectangle banded in the pitch colour along its top edge,
- * reading `Pitch 1` underneath in the card's own face.
+ * The pitch box — a rectangle carrying the pitch colour, reading `Pitch 1` on
+ * it in the card's own face.
  *
  * THIS IS THE MARK FOR A LIST OR A GRID, and that is the whole of the division
  * of labour between it and {@link PitchJewel}. The jewel is a stone: one card,
@@ -28,26 +28,29 @@
  * foot of a card page has learned this at the top of one. What that bought
  * alongside the familiarity was a mark that is loud twice: the hue as a
  * background behind its own words, and a silhouette that says "this carries
- * state" a few centimetres from four objects that mean it literally.
+ * state" a few centimetres from four objects that mean it literally. The notch
+ * went back to being state's alone, and `tokens.ts` says so.
  *
- * SO THE COLOUR IS A BAND ACROSS THE TOP AND NOTHING ELSE, which is the mark
- * `PitchRule` already draws under a card face — one object in two places, and
- * here it gets the words a band under a picture has no room for. The
- * stylesheet carries the rest: why the words take the display family the card
- * name is set in rather than the pill's wide-tracked uppercase, and why a mark
- * with no filled surface carries no bevel.
+ * IT WAS THEN A HAIRLINE BAND OVER A NEUTRAL WELL, AND THAT IS HISTORY TOO.
+ * Retiring the plate retired the fill along with the notch, which was one
+ * channel too many to give up: only ONE of the two things making that mark loud
+ * was the colour, and the silhouette was the other. What the band bought
+ * instead was two renderings of one fact — a struck edge in a list, a filled
+ * surface in the card page's row — so a reader met pitch in two costumes on two
+ * screens, and the component carried a variant whose whole job was to say which
+ * costume.
  *
- * The notch goes back to being state's alone with it. `tokens.ts` says so.
+ * SO THE HUE TAKES THE SURFACE EVERYWHERE, AND THE MARK GOT SHORT INSTEAD.
+ * Loudness is a product of area as much as of saturation, and the area is what
+ * this spends now: no block padding at all and mild padding to the sides, so
+ * the box is its own line of type wearing a colour rather than a tag with a
+ * line of type inside it. That is the reduction the band was reaching for,
+ * taken on the axis that does not cost a channel — and it leaves ONE rendering
+ * of pitch in every list in the product.
  *
- * AND THERE IS ONE PLACE THE HUE TAKES THE WHOLE SURFACE AGAIN: `variant="bar"`,
- * the card page's "Alternate pitch values" row. That is not the filled plate
- * coming back — the plate was this mark WHEREVER it was drawn, beside index
- * rows and breadcrumbs that are lines of type, and the argument against it was
- * that a tag shouting its hue next to a name is loud twice. The bar is the
- * other case: a row of two or three links that is itself the furniture of a
- * section, sized by the column rather than by its own words, with nothing
- * beside it to out-weigh. A band across the top of a full-width bar is a
- * hairline stranded over a lot of empty ground; the surface IS the mark there.
+ * `variant` IS A WIDTH NOW RATHER THAN A COSTUME. Both spellings paint the same
+ * surface; the difference is only whether the mark is sized by its own words or
+ * by the row it is a member of. See {@link PitchBoxProps.variant}.
  */
 
 import type { PitchValue } from "optfall-theme";
@@ -59,12 +62,16 @@ export interface PitchBoxProps {
   readonly value: PitchValue;
   readonly size?: "sm" | "md";
   /**
-   * `band` — the default — is the mark described above: a neutral well under a
-   * struck edge, sized by its own words. `bar` is the same object with the hue
-   * spent on the whole surface and no width of its own, for the one place a
-   * row of these IS the furniture rather than a mark inside it.
+   * `inline` — the default — is the mark set into a line of type, as wide as
+   * its own words and no taller than them. `bar` is the same surface with no
+   * width of its own, for the one place a row of these IS the furniture of a
+   * section rather than a mark inside a line: the card page's "Alternate pitch
+   * values" links, which divide the column between them.
+   *
+   * IT WAS `band` AND `bar`, WHICH WAS A CHOICE OF RENDERING; this is a choice
+   * of measurement. Nothing here decides how loud the mark is any more.
    */
-  readonly variant?: "band" | "bar" | undefined;
+  readonly variant?: "inline" | "bar" | undefined;
   /** Accessible name. Defaults to the pitch value spoken in full. */
   readonly label?: string;
 }
@@ -74,7 +81,7 @@ const TONES = ["none", "one", "two", "three", "four"] as const;
 export function PitchBox({
   value,
   size = "md",
-  variant = "band",
+  variant = "inline",
   label,
 }: PitchBoxProps) {
   /**

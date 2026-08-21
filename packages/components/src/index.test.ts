@@ -294,8 +294,8 @@ describe("the reserved silhouette", () => {
      * IT WAS DRAWN BY TWO COMPONENTS AND IS DRAWN BY ONE. `PitchBox` took
      * `StatePill`'s plate — same notch, same token, same polygon — on the
      * argument that a reader learns the shape once, and this test held the two
-     * copies in step. The box is a banded rectangle now, so the second copy is
-     * gone and with it the drift this guarded against.
+     * copies in step. The box is a plain filled rectangle now, so the second
+     * copy is gone and with it the drift this guarded against.
      *
      * What is left is the pair of facts the deletion makes newly worth
      * asserting: that the pill still names the DEPTH token rather than a
@@ -325,35 +325,55 @@ describe("the reserved silhouette", () => {
     expect(box).not.toContain("--of-ornament-notch-size");
   });
 
-  test("the pitch box spends its colour on one edge and its ground on none", () => {
+  test("the pitch box spends its colour on the surface and its height on none", () => {
     /*
-     * THE MARK'S WHOLE CHANGE, PINNED WHERE IT CAN FAIL. The box shipped as a
-     * plate filled in the pitch colour; it is a rectangle banded across its top
-     * edge over a neutral well instead, and each assertion below is one a
-     * well-meaning restoration of the coloured fill would have to break.
+     * THE MARK'S WHOLE CHANGE, PINNED WHERE IT CAN FAIL. It has been three
+     * things: the legality flag's notched plate filled in the pitch colour,
+     * then two hairlines of that colour over a `color.sunken` well, and now the
+     * fill again with no notch and no height beyond its own line.
      *
-     * THE GROUND IS CHECKED BY NAME, not merely asserted to exist. `sunken` is
-     * the only grey in the table below `ground`, `surface` AND `surface.raised`
-     * in both themes, which is what makes the mark offset wherever it is set;
-     * `surface` would pass a "has a background" check and vanish inside the
-     * card panel it most often sits on.
+     * THE HEIGHT IS THE HALF WITH TEETH, because it is the half that reads as
+     * an omission. A filled mark is obviously deliberate; `padding-block: 0` on
+     * a tag looks like something nobody got round to, and the block step is the
+     * one declaration a well-meaning tidy would add back. It is what keeps the
+     * mark a line of type wearing a colour rather than a tag interrupting the
+     * row it sits in — see `PitchBox.css`, which argues area against
+     * saturation.
+     *
+     * EVERY TONE STATES BOTH HALVES OF ITS OWN CONTRAST. A tone that set the
+     * fill without the ink would inherit whatever colour the page around it
+     * happened to have, which is exactly the pairing `tokens.test.ts` computes
+     * a WCAG ratio for and would silently stop describing what is rendered.
      */
     const box = readFileSync(
       new URL("./react/PitchBox.css", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
 
-    expect(box).toContain(
-      "border-block-start: calc(var(--of-bevel-width) * 2) solid var(--band);",
-    );
-    expect(box).toContain("background: var(--of-color-sunken);");
-    // No tone may paint a surface: the hue is the band, and the `--band` custom
-    // property is the only thing a tone class is allowed to set.
+    expect(box).toContain("background: var(--band);");
+    expect(box).toContain("padding-block: 0;");
+
+    // The two retired renderings, asserted as absences: no notch is checked
+    // above, and neither the struck top edge nor the neutral well may come back
+    // while the surface carries the hue.
+    expect(box).not.toContain("border-block-start:");
+    expect(box).not.toContain("var(--of-color-sunken)");
+
     for (const tone of ["none", "one", "two", "three", "four"]) {
       expect(box).toContain(
-        `.of-pitch-box--tone-${tone} { --band: var(--of-color-pitch-${tone}); }`,
+        `.of-pitch-box--tone-${tone} { --band: var(--of-color-pitch-${tone}); color: var(--of-color-pitch-${tone}-ink); }`,
       );
     }
+
+    /* THE BAR IS A WIDTH AND NOTHING ELSE. It carried `space.tight` a side on
+       the argument that it is read as a control — a second claim on the same
+       requirement its anchor already states as `min-block-size:
+       layout.target.min`, and the taller of the two won silently. A padding
+       declaration reappearing in this rule is that bug coming back. */
+    const bar = /\.of-pitch-box--bar \{[^}]*\}/.exec(box)?.[0] ?? "";
+    expect(bar).toContain("inline-size: 100%;");
+    expect(bar).not.toContain("padding");
+
     // The words are the card's own face, which is what makes this a name's mark
     // rather than a flag's. The pill's wide-tracked shout went with the plate.
     expect(box).toContain("font-family: var(--of-type-family-display);");

@@ -1,45 +1,45 @@
 /*
- * `PitchBox`'s styles. A rectangle carrying the pitch colour and the value
- * written in the card face — struck as a band across its top edge by default,
- * or spent on the whole surface in the `bar` variant at the foot of this file,
- * which is a full-width row's rendering and nothing else's.
+ * `PitchBox`'s styles. A rectangle carrying the pitch colour across its whole
+ * surface, with the value written on it in the card's own display face — the
+ * same object at every call site, sized by its words or by its row.
  *
- * IT WAS THE STATE PILL'S NOTCHED PLATE, FILLED IN THE PITCH COLOUR, and that
- * is history now rather than the rule. The plate spent the hue as a background
- * behind its own words, which is the loudest way a small mark can carry a
- * value: on a card page the box sat a few centimetres from the legality flags
- * wearing their exact silhouette, and in an index row three of them down a
- * line read as three filled tags rather than as one fact stated three times.
+ * IT WAS THE STATE PILL'S NOTCHED PLATE, and that is history rather than the
+ * rule. The plate was loud twice over: the hue as a background behind its own
+ * words, AND a silhouette saying "this carries state" a few centimetres from
+ * four objects that mean it literally. The notch is state's alone again.
  *
- * THE BAND IS THE SAME MARK `PitchRule` DRAWS, WHICH IS THE ARGUMENT FOR IT.
- * Under a card face, where there is no line of type at all, a pitch value is
- * already a coloured band; here the band gets the words it has no room for
- * there. One object in two places beats two objects for one value, and it
- * leaves the hue doing what colour does in this system — repeating something
- * the text has already said.
+ * IT WAS THEN A TWO-HAIRLINE BAND OVER A `color.sunken` WELL, and that is
+ * history too. Retiring the plate retired the fill along with the notch — one
+ * channel too many, since only one of the two loud things was the colour — and
+ * what it bought was TWO renderings of one fact: a struck edge beside a line of
+ * type, a filled surface in the card page's row of links. One value drawn two
+ * ways on two screens is the drift this file exists to prevent, not a variant
+ * worth keeping.
+ *
+ * SO THE FILL IS BACK AND THE HEIGHT IS WHAT PAYS FOR IT. Loudness is area as
+ * much as saturation: the box carries no block padding at all now, and mild
+ * padding to the sides, so it is a line of type wearing a colour rather than a
+ * tag with a line of type inside it. `.of-pitch-box--bar` is the same surface
+ * with no width of its own, and it is a MEASUREMENT rather than a rendering —
+ * see the foot of this file.
  *
  * THE WORDS TAKE THE CARD FACE, NOT THE PILL'S LABEL VOICE. The display family
  * is what `.of-card__name` sets a card's name in, and this mark is read as part
  * of that name — "Head Jab, pitch 1" is one thought. Wide-tracked uppercase
  * sans is the voice of a FLAG (a legality verdict, a stat label); adopting it
- * here was downstream of wearing the flag's plate, and both go together.
+ * here was downstream of wearing the flag's plate, and both went together.
  *
- * THE GROUND IS `color.sunken`, WHICH IS THE ONE GREY THAT IS DARKER THAN
- * EVERYWHERE THIS MARK SITS. It first shipped with no fill at all, taking the
- * page's ground, and that made the band an underline hanging in whitespace
- * rather than the top edge of an object. `sunken` is offset DOWNWARD from
- * `ground`, `surface` and `surface.raised` alike, in both themes — so the box
- * reads as a well cut into the page whether it is in an index row, on a card
- * panel, or inside a raised plate, and "dark" stays true in light mode instead
- * of meaning "whatever the dark theme happens to do".
+ * THE INK IS THE TONE'S OWN, WHICH IS WHAT THE `*.ink` TOKENS ARE FOR. Every
+ * pitch colour carries one precisely for the case where the hue is a
+ * background: `pitch.two` is a yellow that takes near-black type and the rest
+ * take white. `tokens.test.ts` computes the WCAG ratio for every pair, in both
+ * themes, which is the check that makes a filled mark safe here at all.
  *
- * THE BEVEL IS HALF A PAIR, AND THAT IS THE GEOMETRY RATHER THAN AN OMISSION.
- * `PitchJewel` sets out the system rule — a light top edge, a dark bottom one —
- * and spelling (1) from its list is what a flat-topped filled plate takes: an
- * inset `box-shadow`. Only the DARK edge is drawn here, because the light one
- * has a tenant: the pitch band already occupies the top edge, at twice a
- * hairline, and a highlight under it would be a second line competing with the
- * one carrying the meaning. The band is the top edge, struck in colour.
+ * THE BEVEL IS THE WHOLE PAIR AGAIN — spelling (1) from `PitchJewel`'s list, an
+ * inset `box-shadow`, which is what a flat-topped filled plate takes. Only the
+ * dark half was drawn while the band held the top edge; the band is gone, so
+ * the tenant is gone with it and the light edge is back where the system rule
+ * puts it.
  */
 
 .of-pitch-box {
@@ -48,48 +48,40 @@
   justify-content: center;
   box-sizing: border-box;
 
-  /*
-    THE WHOLE OF THE COLOUR, AND IT IS TWO HAIRLINES.
-
-    Expressed against `bevel.width` rather than as its own token for the reason
-    `PitchRule` states beside the same arithmetic: a thickness token for one
-    mark is a number kept in step with nothing, and the bevel width is already
-    the system's unit of "a struck edge". Two rather than the band's three,
-    because that band is free-standing under a picture and this one is the top
-    edge of a box of type — a rule reads heavier when it has words hanging off
-    it than when it stands alone.
-  */
-  border-block-start: calc(var(--of-bevel-width) * 2) solid var(--band);
   /* Square corners are a system rule, so the rule is stated rather than relied
      upon: the token exists only to be zero. */
   border-radius: var(--of-bevel-radius);
 
   /*
-    EVEN ON ALL FOUR SIDES, WHERE THE PLATE'S WAS LOPSIDED. That one carried
-    the notch's own width on the END side so the chamfer could not bite the
-    digit this label ends in; there is no chamfer left to clear.
+    MILD TO THE SIDES, NOTHING TOP OR BOTTOM.
 
-    The inline step is a size up from the block step because the band is the
-    other thing the padding is sizing. It runs the full width of the box, and a
-    band no wider than its own words reads as an underline that has slipped
-    above them rather than as the top edge of an object.
+    The block step is gone rather than reduced, which is the change and not an
+    oversight: the mark is set into a line of type in four of its five call
+    sites, and any block padding at all makes it taller than the line it is a
+    member of — a tag interrupting a row rather than a word in it. What decides
+    the height is the type's own `leading.tight`, which is a number this file
+    already spends.
+
+    The inline step stays because a fill needs it. Words that run to the edge of
+    their own colour read as a clipped label rather than as a mark; `space.tighter`
+    is the smallest step that reads as deliberate, and the pointer-target floor
+    those marks have to clear is a `min-*-size` on the ANCHOR around them — see
+    `.of-card__pitch-link` — rather than padding here, so this is free to be
+    the typographic choice it should be.
   */
-  padding-block: var(--of-space-tightest);
-  padding-inline: var(--of-space-tight);
+  padding-block: 0;
+  padding-inline: var(--of-space-tighter);
 
-  /* The well, and the docblock argues the token: `sunken` is below `ground`,
-     `surface` and `surface.raised` in both themes, so the mark is offset from
-     every ground it is ever set on rather than from one of them. */
-  background: var(--of-color-sunken);
-  /* The page's ink, not a tone's. The pitch `*-ink` values exist to stay
-     legible on a pitch-coloured fill, and there is no such fill here — the hue
-     is the band and the ground is neutral. */
-  color: var(--of-color-ink);
+  /* The hue, on the surface. `--band` is the name a tone sets and the only
+     place a tone names a colour, so the fill and anything else that ever reads
+     the mark's colour cannot drift onto different reds. */
+  background: var(--band);
 
-  /* Struck: the dark bottom edge of the system's bevel pair. The light top
-     edge is the pitch band, which is why only half of the pair is drawn — see
-     the docblock. */
-  box-shadow: inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+  /* Struck plate: light top edge, dark bottom edge — the system's bevel pair,
+     inset because the surface is filled and flat-topped. */
+  box-shadow:
+    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
+    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
 
   /*
     THE CARD FACE, AT THE LABEL'S STEP PLUS ONE.
@@ -123,20 +115,24 @@
   type is tokens, and both dimensions fall out of them. A width token would be
   a number kept in step with the length of "No pitch" at whatever size the box
   is set — a second copy of a measurement the text already owns. Two boxes on a
-  row are therefore not equal columns: a tag is as wide as what it says, and so
-  is the band over it.
+  row are therefore not equal columns: a tag is as wide as what it says.
 
   THE WORDS NEVER BREAK. Two short words at a fixed length, and wrapping them
-  would put a second line under a two-pixel rule in a list where the marks are
-  the quiet half of the row.
+  would double the height of a mark whose whole point is that it is one line
+  tall.
 */
 .of-pitch-box__text {
   white-space: nowrap;
 }
 
 /*
-  The small step is for a dense row — an index row, a version tab, a related
-  link — where the mark sits beside micro type and must not out-weigh it.
+  The small step is for a dense row — an index row, a related link, the
+  breadcrumb — where the mark sits beside micro type and must not out-weigh it.
+
+  IT IS A TYPE STEP AND NOTHING ELSE NOW. It used to zero the block padding and
+  halve the inline one as well; the base does both of those itself, so what is
+  left here is the one thing `sm` was ever really choosing. A modifier that
+  restated its parent would be two places to change one measurement.
 
   It lands on `type.size.micro` rather than `type.size.legal`, which is the
   same correction the base step makes for the same reason: the display face
@@ -144,90 +140,63 @@
   for the fine print it exists for rather than spent on a mark meant to be read.
 */
 .of-pitch-box--sm {
-  padding-block: 0;
-  padding-inline: var(--of-space-tighter);
   font-size: var(--of-type-size-micro);
 }
 
+/*
+  ONE INK PER TONE, ALONGSIDE THE HUE IT HAS TO BE LEGIBLE ON. These were
+  compound selectors on the bar variant while the banded rendering took the
+  page's ink over a neutral well; there is one rendering now, so the pair
+  belongs to the tone — which is also the only way a tone class can guarantee
+  its own contrast rather than depending on which variant a caller picked.
+*/
 .of-pitch-box--tone-none {
   --band: var(--of-color-pitch-none);
+  color: var(--of-color-pitch-none-ink);
 }
 
 .of-pitch-box--tone-one {
   --band: var(--of-color-pitch-one);
+  color: var(--of-color-pitch-one-ink);
 }
 
 .of-pitch-box--tone-two {
   --band: var(--of-color-pitch-two);
+  color: var(--of-color-pitch-two-ink);
 }
 
 .of-pitch-box--tone-three {
   --band: var(--of-color-pitch-three);
+  color: var(--of-color-pitch-three-ink);
 }
 
-/* The fourth band: one previewed card, and none in the corpus this repository
-   currently pins. It is the tone whose hue a reader is least likely to have
-   learned, which is the case the written label answers directly — the box says
-   "Pitch 4" whether or not the purple means anything yet. */
+/* The fourth tone: one previewed card, and none in the corpus this repository
+   currently pins. It is the hue a reader is least likely to have learned, which
+   is the case the written label answers directly — the box says "Pitch 4"
+   whether or not the purple means anything yet. */
 .of-pitch-box--tone-four {
   --band: var(--of-color-pitch-four);
+  color: var(--of-color-pitch-four-ink);
 }
 
 /*
-  THE BAR: THE SAME MARK WITH THE HUE ON THE WHOLE SURFACE, AND IT IS NOT THE
-  FILLED PLATE COMING BACK. The docblock argues the distinction and the
-  geometry is the short version of it — a bar has no width of its own, so it is
-  as wide as whatever row it is a member of, and a two-hairline band across the
-  top of an object that wide is a rule with a lot of empty ground under it
-  rather than the top edge of a tag. The surface carries the value here.
+  THE BAR IS A MEASUREMENT, NOT A RENDERING. It paints exactly what every other
+  box paints; the only thing it changes is who decides its width. A row of these
+  IS the furniture of the card page's "Alternate pitch values" section — two or
+  three links dividing the column evenly — where the inline mark is a word
+  inside somebody else's line and takes its width from its own text.
 
-  `--band` IS STILL THE ONLY PLACE A TONE NAMES A HUE. The fill reads the same
-  custom property the struck edge does, so the two renderings cannot drift onto
-  different reds: a tone class sets one value and both spellings of the mark
-  spend it. The top border is unchanged and simply stops being visible, being
-  `solid var(--band)` over a ground of exactly that.
-
-  The inset bevel stays and now has its pair back: on a filled surface the dark
-  bottom edge is the whole of what a bar needs to sit in the page rather than
-  float on it.
+  IT SETS NO HEIGHT, AND THAT IS THE POINT OF THE PADDING BEING GONE. The bar
+  used to add `space.tight` a side on the argument that it is read as a control,
+  which made it about a third taller than the target floor its anchor already
+  guarantees — two numbers claiming the same requirement, and the larger one
+  winning silently. `.of-card__version-tab` states the floor as
+  `min-block-size: layout.target.min` and stretches this to fill it, so the
+  bar is exactly as tall as WCAG 2.5.8 asks and not a pixel more.
 */
 .of-pitch-box--bar {
   display: flex;
   inline-size: 100%;
-  background: var(--band);
-  /* The block padding is a step up from the band's. A bar is read as a
-     control — it is a link's whole target in the one place it is used — and
-     the tightest step is for a mark set into a line of type. */
-  padding-block: var(--of-space-tight);
-}
-
-/*
-  ONE INK PER TONE, ON THE VARIANT RATHER THAN ON THE TONE. Every pitch colour
-  carries its own `*.ink` precisely for the case where it is a background —
-  `pitch.two` is a yellow that takes near-black type and the rest take white —
-  and these pair them. They are written as compound selectors so that a tone
-  class still sets `--band` AND NOTHING ELSE: the banded rendering takes the
-  page's ink over a neutral well, and a tone that reached out to set `color`
-  would change that mark from the other end of the file.
-*/
-.of-pitch-box--bar.of-pitch-box--tone-none {
-  color: var(--of-color-pitch-none-ink);
-}
-
-.of-pitch-box--bar.of-pitch-box--tone-one {
-  color: var(--of-color-pitch-one-ink);
-}
-
-.of-pitch-box--bar.of-pitch-box--tone-two {
-  color: var(--of-color-pitch-two-ink);
-}
-
-.of-pitch-box--bar.of-pitch-box--tone-three {
-  color: var(--of-color-pitch-three-ink);
-}
-
-.of-pitch-box--bar.of-pitch-box--tone-four {
-  color: var(--of-color-pitch-four-ink);
 }
 
 /* No motion here at all. Stated so the absence is intent rather than
