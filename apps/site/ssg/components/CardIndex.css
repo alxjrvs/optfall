@@ -344,27 +344,39 @@
   --tilt: calc(var(--i, 0) - (var(--n, 1) - 1) / 2);
   transform-origin: 50% 100%;
   /*
-    AT REST IT IS A DECK, NOT A FAN, AND THE FIRST VERSION OF THIS WAS A FAN.
+    AT REST IT IS NEITHER A DECK NOR A FAN: IT IS ONE CARD-SHAPED CELL DIVIDED
+    INTO A BAND PER VERSION. Every card in the stack sits exactly where every
+    other one does, and each is clipped to its own vertical slice, so the
+    slices abut and the cell reads as one card cut into `--n` strips. The clip
+    is in the scoped rule below; this rule is what holds the cards still enough
+    for the strips to line up.
 
-    Each version behind the front one sits a few percent up and to the right, so
-    the cell shows the stepped edges of a stack — enough that a multi-version
-    cell is visibly several cards and a single-version cell is visibly one,
-    which is the fact the coloured rule used to carry, said in the object it is
-    a fact about.
+    THE DECK IS WHAT THIS REPLACED, and it went for what it could not say. Every
+    version behind the front one used to sit two percent up and to the right,
+    showing the stepped edges of a stack: a cell that was legibly SEVERAL cards
+    and legibly nothing else. Which versions it held stayed a fact a reader had
+    to open the cell to learn — and since the pitch versions of a name usually
+    share their painting, opening it did not reliably answer that either. The
+    bands answer it at rest, and `CardStack` argues the case at length.
 
-    IT IS A TRANSLATE AND NOT A ROTATION, and that is the correction. The resting
-    state used to tilt every card by `--tilt * 2deg`, which put the FRONT card of
-    every multi-version row a couple of degrees off square — so in a grid whose
-    whole discipline is that the cards line up, a handful of cells sat visibly
-    crooked and read as a rendering fault rather than as a stack. Nothing rotates
-    until the hand is picked up.
-
-    `--i` RATHER THAN `--tilt` HERE, for the same reason: `--tilt` is symmetric
-    about the middle of the hand, so it would move the front card at rest. `--i`
-    is zero for the front card by construction.
+    NOTHING ROTATES UNTIL THE HAND IS PICKED UP, which the deck established and
+    this keeps. An earlier version tilted every card by `--tilt * 2deg` at rest,
+    which put the front card of every multi-version row a couple of degrees off
+    square — in a grid whose whole discipline is that the cards line up, a
+    handful of visibly crooked cells read as a rendering fault. The identity
+    transform is written out rather than left as `none` so that the resting and
+    open states are legibly the same two operations at different values.
   */
-  transform: translate(calc(var(--i, 0) * 2%), calc(var(--i, 0) * -2%));
-  transition: transform var(--of-motion-base) var(--of-motion-ease);
+  transform: translate(0, 0) rotate(0deg);
+  /*
+    THE CLIP TRANSITIONS WITH THE TRANSFORM, so a band widens into a whole card
+    rather than snapping to one. Both states are written as a four-value
+    `inset()` against the same box, which is what lets it interpolate edge by
+    edge.
+  */
+  transition:
+    transform var(--of-motion-base) var(--of-motion-ease),
+    clip-path var(--of-motion-base) var(--of-motion-ease);
 }
 
 /*
@@ -383,14 +395,40 @@
   A z-index is a claim about siblings. A card with no siblings should not make
   one, so it does not.
 
-  The front card is `--i: 0`, so it takes the top of the ladder and every version
-  behind it steps down one. Ordering by `--i` rather than by `--tilt` is what
-  makes the open fan legible: the hand is held at its left edge, so each card
-  overlaps the one after it and every card shows a leading edge rather than being
-  buried under the middle of its neighbour.
+  THE LADDER RUNS FROM THE LEFT OF THE HAND, NOT FROM THE ROW'S OWN CARD, and
+  that follows `--i` becoming the version's place in pitch order rather than its
+  place in the markup — see `CardStack`. The lowest pitch takes the top and every
+  version to its right steps down one. Ordering by `--i` rather than by `--tilt`
+  is what makes the open fan legible: the hand is held at its left edge, so each
+  card overlaps the one after it and every card shows a leading edge rather than
+  being buried under the middle of its neighbour. At rest the ladder decides
+  nothing, because the bands do not overlap.
 */
 .of-index__stack .of-index__card {
   z-index: calc(var(--n, 1) - var(--i, 0));
+  /*
+    THE BAND THIS VERSION OWNS: the `--i`th slice of `--n`, measured from the
+    inline start. The end inset is whatever is left on the other side — `n - i
+    - 1` slices of it — so the two insets always sum to `n - 1` slices and the
+    visible strip is exactly one, at every `--n`, with no per-card arithmetic
+    in the markup.
+
+    SCOPED WITH THE LADDER, AND FOR THE SAME REASON. A row with one version
+    renders a bare anchor with no `--n` and no `--i`; the fallbacks would clip
+    it to the whole of itself, which sounds like a no-op and is not — it still
+    makes the card a clipping box, and the first thing that box would cut is
+    the focus ring drawn outside it. A card with no siblings is not divided, so
+    it is not clipped.
+
+    THE CLIP TAKES HIT-TESTING WITH IT, and that is the half that makes the
+    bands real rather than decorative: the band a reader can see a version in
+    is the band that opens that version. It is how a touch reader, who never
+    hovers and never gets the fan, reaches all three.
+  */
+  clip-path: inset(
+    0 calc((var(--n, 1) - var(--i, 0) - 1) / var(--n, 1) * 100%) 0
+      calc(var(--i, 0) / var(--n, 1) * 100%)
+  );
 }
 
 .of-index__card--behind {
@@ -450,6 +488,16 @@
       calc(-1 * var(--of-space-tight))
     )
     rotate(calc(var(--tilt) * 4deg));
+  /*
+    THE BANDS BECOME WHOLE CARDS AGAIN, AND THE INSETS ARE NEGATIVE RATHER THAN
+    ZERO. `inset(0)` is the whole border box and not one pixel more, so it
+    would cut off the focus ring — which is drawn OUTSIDE that box, and which
+    `:focus-within` has just opened the fan in order to show. Letting the clip
+    reach a little past the card is what keeps the ring on the card the
+    keyboard is on.
+  */
+  --open: calc(var(--of-space-tight) * -1);
+  clip-path: inset(var(--open) var(--open) var(--open) var(--open));
 }
 
 /*
