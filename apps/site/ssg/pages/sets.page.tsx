@@ -114,9 +114,10 @@ function page(): PageResult {
           THE WHOLE LIST CROSSES AS PROPS, and what that costs is worth stating
           because the same paragraph on `set.page.tsx` exists for a page that
           got it wrong once. 112 records of a code, a name, a date, two counts
-          and a handful of rarity slices is 34 kB of JSON in an attribute,
-          against a 512 kB per-page ceiling `assertPageBudget` fails the build
-          over. There is no pager here — a set list is not long enough to want
+          and a handful of rarity slices is 34 kB of JSON — 68 kB in the
+          document, because React escapes every quote in it — inside a 186 kB
+          page, against the 512 kB per-page ceiling `assertPageBudget` fails
+          the build over. There is no pager here — a set list is not long enough to want
           one — so every row has to be present for the filter to reach it.
         */}
         <Island name="SetIndex" props={{ entries }}>

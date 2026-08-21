@@ -1123,6 +1123,39 @@ cards.push({
   <p class="note"><strong>No slice is narrower than two pixels, and that is a deliberate inexactness.</strong> Two Fabled printings among Monarch&rsquo;s 1,182 is about a pixel, which rounds away — so the bar would state the opposite of the truth about a rarity the set does contain. Being invisible is the worse error, so the floor is paid out of the slices that can afford it: <code>flex-grow</code> shares out what is left after the floors, which is also why the bar is always exactly its container.</p>`,
 });
 
+/**
+ * One fact chip, in the shape `FactChip` renders — a plate at chip scale, the
+ * label and the value in the masthead's own two voices.
+ *
+ * Named tokens only, so this card cannot draw a mark the product does not.
+ */
+function factChip(label: string | null, value: string): string {
+  const half = (cls: string, text: string): string =>
+    cls === "label"
+      ? `<span style="font-family:var(--of-type-family-sans);font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase;color:var(--of-color-ink-faint);white-space:nowrap">${text}</span>`
+      : `<span style="font-family:var(--of-type-family-sans);font-size:var(--of-type-size-small);color:var(--of-color-ink-muted);white-space:nowrap">${text}</span>`;
+  return `<span style="display:inline-flex;align-items:baseline;gap:var(--of-space-tighter);box-sizing:border-box;padding-block:var(--of-space-tightest);padding-inline:var(--of-space-tight);border-radius:var(--of-bevel-radius);background:var(--of-color-surface);box-shadow:inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light), inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);line-height:var(--of-type-leading-tight)">${label === null ? "" : half("label", label)}${half("value", value)}</span>`;
+}
+
+cards.push({
+  path: "primitives/fact-chip.html",
+  group: "Primitives",
+  title: "Fact chip",
+  body: `
+  <p class="note">One datum, on its own plate. It exists because facts were being set as <em>sentences</em>: <code>7 August 2026 &middot; 24 cards &middot; 7 only here &middot; out of print</code> is a line a reader has to parse to find where one fact ends and the next begins, and a middot is a conjunction.</p>
+  <div class="row" style="margin-block-start:var(--of-space-loose);gap:var(--of-space-tight);flex-wrap:wrap">
+    ${factChip("Released", "7 May 2021")}${factChip("Card names", "155")}${factChip("Pitch versions", "307")}${factChip("Print status", "Out of print")}${factChip("Only here", "42")}
+  </div>
+  <div class="row" style="margin-block-start:var(--of-space-tight);gap:var(--of-space-tight);flex-wrap:wrap">
+    ${factChip(null, "7 May 2021")}${factChip(null, "155 cards")}${factChip(null, "42 only here")}${factChip(null, "Out of print")}
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>No notch.</strong> <code>docs/DESIGN.md</code>: "notched corners mark anything carrying state &mdash; the clipped corner is the only ornament in the system and it always means something". A release date is not state, so this is a plain rectangle and <code>StatePill</code> is still the only object wearing the chamfer. A chip that borrowed it would spend the system's one ornament on its commonest object.</p>
+  <p class="note"><strong>No colour either.</strong> Every filled mark here carries a DATA colour &mdash; the pitch palette, the rarity ramp, the state tones &mdash; and a fact has no value to be coloured by. So the plate is <code>color.surface</code> with the system's bevel pair struck into it: one step off the ground, saying nothing beyond "this is one thing". Where a fact <em>does</em> have a colour, the caller passes the mark that carries it into the chip's <code>mark</code> slot &mdash; which is how a set page's rarity legend is a row of these with a one-slice <code>RarityBar</code> in each.</p>
+  <p class="note"><strong>The label is optional, and which surfaces use it is a rule rather than a taste.</strong> The first row above is a set's own page: one chip per fact, and the label is the question the reader arrived with. The second is an INDEX row, where the same four facts are drawn on a hundred rows &mdash; the labels would be a column of identical words, and the values already carry their units. One object either way; what changes is whether the page has already said the label a hundred times.</p>
+  <p class="note"><strong>Two spellings, one plate.</strong> A row of chips is a pair of <code>&lt;span&gt;</code>s, because the grouping is visual and the markup should not invent a structure the page does not have. A masthead is a <code>&lt;dl&gt;</code> &mdash; those are term-and-value pairs and that is the element for them &mdash; so the chip renders a <code>&lt;div&gt;</code> holding a <code>&lt;dt&gt;</code> and a <code>&lt;dd&gt;</code> instead, which is the grouping HTML allows inside a description list and what keeps a label attached to its own value when the strip wraps.</p>
+  <p class="note">No width token in either axis, on <code>PitchBox</code>'s argument: the chip is its words plus its padding, both of which are tokens, so both dimensions fall out of them. Two chips on a row are not equal columns &mdash; a fact is as wide as what it says.</p>`,
+});
+
 cards.push({
   path: "primitives/state-pill.html",
   group: "Primitives",

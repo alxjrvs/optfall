@@ -51,90 +51,71 @@
 
 /*
   `.of-masthead__eyebrow` AND `.of-masthead__meta` WENT WITH THE MARKUP THEY
-  STYLED. The eyebrow printed "SET 1HP" over the title and the code is a cell
-  of the fact list now; the meta paragraph was the sentence that list replaced.
+  STYLED. The eyebrow printed "SET 1HP" over the title and the code is a chip in
+  the fact strip now; the meta paragraph was the sentence that strip replaced.
   Deleted rather than left behind, on the rule `CardEntry.css` states about a
   rule matching no element: dead weight that reads, to the next person, like
   the markup is still there. The eyebrow's declarations are not lost with it —
-  `.of-masthead__facts dt` below is the same uppercase micro-sans label, which
-  is why the list reads as this masthead's own furniture rather than as a table
-  dropped onto it.
+  ~~`.of-masthead__facts dt` below~~ **`FactChip`'s `.of-fact__label`, one
+  package over,** is the same uppercase micro-sans label, which is why the strip
+  reads as this masthead's own furniture rather than as a table dropped onto it.
 */
 
 /*
-  THE SET'S FACTS, ONE PER CELL, READ ACROSS.
+  THE SET'S FACTS, ONE PER CHIP, READ ACROSS.
 
   THIS WAS A TWO-COLUMN GRID, ONE FACT PER ROW, and the argument for it was
   about the label column rather than about the shape: it cited
   `.of-card__provenance` as the sibling it copied, which — measured, not
   remembered — matches nothing in this app. The living relative is
   `.of-rule__provenance` in `rule.css`, and that one is a genuinely long list
-  at the FOOT of a long page, where reading down is right. This list is six
+  at the FOOT of a long page, where reading down is right. This is a handful of
   short facts at the TOP of one, between a breadcrumb and the card index, and
-  down was costing six rows of leading to say a date, two counts, a status and
+  down was costing a row of leading each to say a date, two counts, a status and
   a three-letter code.
 
-  A WRAPPING FLEX ROW RATHER THAN A GRID, because the number of cells is not
+  A WRAPPING FLEX ROW RATHER THAN A GRID, because the number of chips is not
   fixed: Editions is present on 6 of the 112 sets in this corpus and absent on
   the rest, so a fixed track count would either strand a gap or need a second
-  rule for the five-cell case. Flex sizes each cell to its own content and
+  rule for the case without it. Flex sizes each chip to its own content and
   wraps the overflow, which is the behaviour a strip of facts wants at every
   width.
 
-  EACH CELL IS ONE LINE, LABEL BESIDE VALUE, AND THAT IS THE WHOLE SAVING —
-  laying the cells out across while each one still stacked its label over its
+  EACH CHIP IS ONE LINE, LABEL BESIDE VALUE, AND THAT IS THE WHOLE SAVING —
+  laying the facts out across while each one still stacked its label over its
   value made a phone WORSE, not better. Measured at 390 px on a five-fact set:
   137 px down the page as rows, 147 px as two-line cells, 79 px as one-line
-  cells. Six two-line cells is three tall rows where six one-line cells is
-  three short ones, and on a desktop it is the difference between a wrapped
-  strip and a single 21 px line.
+  cells. That geometry is `FactChip`'s now — it is `inline-flex` with both
+  halves `nowrap` — and it is the reason the chip has no block padding worth
+  the name.
 
-  THE TWO GAPS ARE A THREE-TO-ONE RATIO, WHICH IS WHAT MAKES A PAIR READ AS A
+  ~~THE TWO GAPS ARE A THREE-TO-ONE RATIO, WHICH IS WHAT MAKES A PAIR READ AS A
   PAIR. `tighter` (4 px) holds a label to its own value, `base` (12 px) holds
-  one cell off the next; at `loose` the six-cell sets wrapped to two rows at
-  964 px for the sake of a gap nobody asked for, and at `tight` the outer gap
-  is only twice the inner one and the strip reads as ten loose words.
+  one cell off the next.~~ **THE INNER GAP IS THE CHIP'S AND THE OUTER GAP IS
+  THIS RULE'S**, which is the same ratio arrived at from two files: the chip
+  sets `tighter` between its label and its value, and `base` here holds one
+  chip off the next. What the plate added is a third channel the ratio no longer
+  has to carry alone — a chip has an EDGE, so a reader does not have to infer
+  the grouping from spacing at all. At `loose` the six-fact sets wrapped to two
+  rows at 964 px for the sake of a gap nobody asked for, and that measurement
+  still holds.
 
   IT WRAPS RATHER THAN SHRINKS ON A PHONE, at every one of the six widths
   `CLAUDE.md` names, measured in a fixed-width iframe rather than a resized
-  window: `documentElement.scrollWidth === clientWidth` at 320, 360, 390, 430,
-  964 and 1226 on both a five-cell set and a six-cell one. `min-width: 0` is
-  what lets a cell longer than its share wrap inside itself instead of pushing
-  the page wide — the horizontal-scrollbar failure that section is entirely
-  about. Nothing here is longer than that today: the longest values in this
-  corpus are "13 February 2026" and "First, Unlimited", sixteen characters
-  each.
+  window. ~~`min-width: 0` is what lets a cell longer than its share wrap inside
+  itself instead of pushing the page wide.~~ **A chip does not wrap inside
+  itself — both halves are `nowrap` — so what wraps is the STRIP, between
+  chips**, which is the same protection one level up. Re-measured after the
+  chips landed rather than assumed: `documentElement.scrollWidth ===
+  clientWidth` at 320, 360, 390, 430, 964 and 1226. Nothing here is longer than
+  a chip's own line today: the longest values in this corpus are
+  "13 February 2026" and "First, Unlimited", sixteen characters each.
 */
 .of-masthead__facts {
   display: flex;
   flex-wrap: wrap;
   gap: var(--of-space-tight) var(--of-space-base);
   margin: 0;
-}
-
-.of-masthead__fact {
-  display: flex;
-  align-items: baseline;
-  gap: var(--of-space-tighter);
-  min-width: 0;
-}
-
-.of-masthead__facts dt {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink-faint);
-  white-space: nowrap;
-}
-
-/* No margin at all: the space between a label and its value is the cell's own
-   `gap`, set once above beside the gap it has to stay smaller than, rather
-   than here where the ratio the two make together is invisible. */
-.of-masthead__facts dd {
-  margin: 0;
-  color: var(--of-color-ink-muted);
-  font-size: var(--of-type-size-small);
 }
 
 /*
@@ -157,32 +138,28 @@
 .of-masthead__legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--of-space-tighter) var(--of-space-base);
+  gap: var(--of-space-tighter) var(--of-space-tight);
   margin-block: var(--of-space-tight) 0;
   padding: 0;
   list-style: none;
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink-faint);
-}
-
-.of-masthead__legend-item {
-  display: flex;
-  align-items: center;
-  gap: var(--of-space-tighter);
 }
 
 /*
-  THE SWATCH IS A ONE-SLICE BAR, not a square coloured here — so the ten rarity
-  colours are mapped in `RarityBar.css` and nowhere else. All this rule supplies
-  is the width, which the bar takes from its container by design.
+  `.of-masthead__legend-item` AND `.of-masthead__swatch` WENT THE SAME WAY THE
+  FACT CELLS DID. A legend entry is a fact with a colour attached, which is
+  exactly `FactChip`'s `mark` slot — so the chip carries the layout, the slot
+  carries the width, and the swatch is still a one-slice `RarityBar` rather
+  than a square coloured here. The ten rarity colours stay mapped in
+  `RarityBar.css` and nowhere else, which was the whole point of drawing the
+  swatch with the component in the first place.
+
+  WHAT IS LEFT IS THE LIST ITSELF: `list-style: none` and the gaps. The
+  uppercase micro-sans this rule used to set is the chip's, and the chip sets
+  it on the VALUE step rather than the label step now — a legend entry is a
+  value with no label, so it reads at the same weight as "24 cards" on `/sets`
+  instead of at label weight. That is a change, and it is the right one: these
+  are counts, not headings for something else.
 */
-.of-masthead__swatch {
-  display: block;
-  inline-size: var(--of-ornament-band-base);
-}
 
 /*
   THE CARD LIST IS NOT STYLED HERE ANY MORE. `.of-set-cards` was this page's own

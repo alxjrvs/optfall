@@ -34,7 +34,7 @@
  */
 
 import { readableDate } from "optfall-components";
-import { RarityBar } from "optfall-components/react";
+import { FactChip, RarityBar } from "optfall-components/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Choice, Joiner } from "../components/Choice";
@@ -140,25 +140,6 @@ function fold(text: string): string {
  */
 function matches(haystack: string, terms: readonly string[]): boolean {
   return terms.every((term) => haystack.includes(term));
-}
-
-/**
- * The row's facts after the date, as one string — " · 155 cards · 42 only here".
- *
- * THE EXCLUSIVE COUNT IS OMITTED WHEN IT IS ZERO rather than printed as a zero.
- * "0 only here" is a row of noise on the fifteen Silver Age chapter decks and
- * on every Blitz Deck, and the absence of the phrase says the same thing more
- * quietly — this release printed nothing you cannot get elsewhere. It is the
- * one figure on this page no upstream field states, which is why it earns a
- * place beside the count and the date.
- */
-function factsOf(entry: SetIndexEntry): string {
-  const facts = [`${entry.names.toLocaleString("en-GB")} cards`];
-  if (entry.exclusive > 0) {
-    facts.push(`${entry.exclusive.toLocaleString("en-GB")} only here`);
-  }
-  if (entry.outOfPrint) facts.push("out of print");
-  return ` · ${facts.join(" · ")}`;
 }
 
 /** The year a set belongs to, or `null` where it has no published date. */
@@ -381,25 +362,74 @@ export function SetIndex({ entries }: SetIndexProps) {
                 <a className="of-sets__name" href={entry.href}>
                   {entry.name}
                 </a>
-                <span className="of-sets__code">{entry.id}</span>
-                <span className="of-sets__meta">
-                  {entry.released === null ? (
-                    "undated"
-                  ) : (
-                    <time dateTime={entry.released}>
-                      {readableDate(entry.released)}
-                    </time>
+                <FactChip value={entry.id} />
+
+                {/*
+                  THE FACTS ARE CHIPS, NOT A SENTENCE, and the sentence is what
+                  this replaced:
+
+                      7 August 2026 · 24 cards · 7 only here · out of print
+
+                  Four facts strung on middots, which are conjunctions — so a
+                  reader looking up one of them had to read the line to find
+                  where it started, on a hundred and twelve rows. The same
+                  argument `set.page.tsx` makes about its own masthead, one
+                  page up the hierarchy and a hundred times over.
+
+                  NO LABELS ON THESE, WHICH IS THE INDEX'S HALF OF THE RULE
+                  `FactChip` STATES. A set's own page draws one chip per fact
+                  and prints the label, because it is the question the reader
+                  arrived with. Here the same four labels would be a column of
+                  identical words down a hundred rows, and the values already
+                  carry their units — "24 cards", "7 only here". The chip is
+                  one object either way.
+
+                  THE DATE CHIP CARRIES A `<time>` and the others carry
+                  strings, which is why `value` is a node rather than text:
+                  `readableDate` prints "7 August 2026" for a reader while
+                  `dateTime` keeps `2026-08-07` for anything parsing the page.
+                */}
+                <span className="of-sets__facts">
+                  <FactChip
+                    value={
+                      entry.released === null ? (
+                        /* NOT "unknown": upstream publishes no date for this
+                           set, which is a fact about the record rather than a
+                           gap in it. */
+                        "No published date"
+                      ) : (
+                        <time dateTime={entry.released}>
+                          {readableDate(entry.released)}
+                        </time>
+                      )
+                    }
+                  />
+                  <FactChip
+                    value={`${entry.names.toLocaleString("en-GB")} cards`}
+                  />
+                  {/* THE ONE FIGURE NO UPSTREAM FIELD STATES, and the one that
+                      separates a release with new cards in it from a
+                      repackaging of old ones. The chip goes when it is zero:
+                      "0 only here" is a chip of noise on every Blitz Deck and
+                      all fifteen Silver Age chapter decks, where its absence
+                      says the same thing more quietly. A set's own page prints
+                      the zero, because there a vanishing row would make two
+                      sets uncomparable. */}
+                  {entry.exclusive === 0 ? null : (
+                    <FactChip
+                      value={`${entry.exclusive.toLocaleString("en-GB")} only here`}
+                    />
                   )}
-                  {/*
-                    THE REST OF THE LINE IS ONE STRING RATHER THAN FIVE
-                    EXPRESSIONS, and that is markup rather than style. React
-                    separates adjacent text children with `<!-- -->` so that
-                    hydration can tell them apart, so `{count} cards` renders
-                    as `155<!-- --> cards` — a comment in the middle of a
-                    phrase, which anything reading the page as text has to
-                    know to strip. Composed once, it is one text node.
-                  */}
-                  {factsOf(entry)}
+                  {/* NOT A `StatePill`, though print status is the one fact
+                      here that genuinely IS a state. The notch is spent on
+                      legality and verification — `docs/DESIGN.md` rations it
+                      to "anything carrying state" and the product means the
+                      formats by that — so a notched chip in a row of plain
+                      ones would read as a legality verdict about a set. The
+                      chip goes when the set is in print, because "In print" on
+                      eighty-two of a hundred and twelve rows is the default
+                      stated a hundred and twelve times. */}
+                  {entry.outOfPrint ? <FactChip value="Out of print" /> : null}
                 </span>
                 {/*
                   THE ROW'S DIVIDER IS THE SET'S OWN RARITY MIX, which is the

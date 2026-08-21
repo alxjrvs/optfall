@@ -66,6 +66,7 @@ import { BevelledPlate } from "./BevelledPlate";
 import { BrassSeal } from "./BrassSeal";
 import { CardFace } from "./CardFace";
 import { Citation } from "./Citation";
+import { FactChip } from "./FactChip";
 import { FiligreeCorner } from "./FiligreeCorner";
 import { GameSymbol } from "./GameSymbol";
 import { IconButton } from "./IconButton";
@@ -184,6 +185,46 @@ const CASES: readonly Case[] = [
       size: "sm",
       label: "Ira Welcome Deck: 12 Common",
     },
+  },
+
+  /*
+   * The chip has no role and no `aria-*`: the label and the value are both real
+   * text, so the accessible name IS the visible one. What these cases are
+   * actually checking is the `description` spelling, where the halves become a
+   * `<dt>` and a `<dd>` — elements axe correctly refuses outside a `<dl>`, which
+   * is the component being right and the harness mounting it wrong. That case
+   * supplies the list, exactly as `ResultRow`'s supplies a `<ul>`.
+   */
+  {
+    name: "FactChip label and value",
+    component: FactChip,
+    props: { label: "Released", value: "7 May 2021" },
+  },
+  {
+    name: "FactChip value alone",
+    component: FactChip,
+    props: { value: "155 cards" },
+  },
+  {
+    name: "FactChip with a mark",
+    component: FactChip,
+    props: {
+      value: "231 Common",
+      mark: createElement(RarityBar, {
+        size: "sm",
+        slices: [{ rarity: "common", name: "Common", count: 231 }],
+      }),
+    },
+  },
+  {
+    name: "FactChip in a description list",
+    component: FactChip,
+    props: {
+      label: "Print status",
+      value: "Out of print",
+      semantics: "description",
+    },
+    wrap: ["<dl>", "</dl>"],
   },
 
   { name: "BevelledPlate flat", component: BevelledPlate, props: {} },

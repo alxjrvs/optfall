@@ -90,7 +90,13 @@ describe("the primitive set", () => {
     // `/sets` had no way to show at all — set logos are barred by
     // `docs/COMPLIANCE.md`, so a mark derived from the corpus is the only set
     // identity this project may draw.
-    expect(PRIMITIVES).toHaveLength(18);
+    //
+    // `fact-chip`: one datum on its own plate, and the first mark here that
+    // carries no colour at all. Facts were being set as sentences — a middot
+    // between a date and a count is a conjunction — so the chip is the object
+    // a fact is. No notch, because a release date is not state; no fill,
+    // because a fact has no value to be coloured by.
+    expect(PRIMITIVES).toHaveLength(19);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");

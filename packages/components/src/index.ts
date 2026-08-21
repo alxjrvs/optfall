@@ -46,6 +46,7 @@ export type PrimitiveName =
   | "pitch-box"
   | "pitch-rule"
   | "rarity-bar"
+  | "fact-chip"
   | "bevelled-plate"
   | "state-pill"
   | "brass-seal"
@@ -66,6 +67,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-box",
   "pitch-rule",
   "rarity-bar",
+  "fact-chip",
   "bevelled-plate",
   "state-pill",
   "brass-seal",

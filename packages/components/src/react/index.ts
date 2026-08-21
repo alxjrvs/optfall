@@ -43,6 +43,7 @@ export { BevelledPlate, type BevelledPlateProps } from "./BevelledPlate";
 export { BrassSeal, type BrassSealProps } from "./BrassSeal";
 export { CardFace, type CardFaceProps } from "./CardFace";
 export { Citation, type CitationProps } from "./Citation";
+export { FactChip, type FactChipProps } from "./FactChip";
 export { FiligreeCorner, type FiligreeCornerProps } from "./FiligreeCorner";
 export { GameSymbol, type GameSymbolProps } from "./GameSymbol";
 export { IconButton, type IconButtonProps } from "./IconButton";

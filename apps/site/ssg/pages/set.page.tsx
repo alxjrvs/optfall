@@ -19,7 +19,7 @@
  */
 
 import { readableDate } from "optfall-components";
-import { RarityBar } from "optfall-components/react";
+import { FactChip, RarityBar } from "optfall-components/react";
 
 import {
   CARD_PAGES,
@@ -430,11 +430,41 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
         */}
         <header className="of-masthead">
           <h1>{set.name}</h1>
+          {/*
+            EVERY FACT IS A CHIP NOW, AND THE STRIP THEY MAKE IS THE SAME
+            STRIP. What changed is the boundary around each pair, not the way
+            either half is set: the label is the same wide-tracked uppercase
+            micro-sans it always was and the value the same reading step above
+            it, so a reader who has learned to skim these reads the same words
+            in the same voice. What they gain is an edge — the labels and
+            values used to run together into one wrapping line, which is prose
+            with the conjunctions taken out rather than a list.
+
+            `FactChip semantics="description"` IS WHAT KEEPS THE `<dl>`. These
+            are term-and-value pairs and that is the element for them: every
+            label is announced with its own value, in order, with no `aria-*`
+            doing work the markup already does. The chip renders a `<div>`
+            holding a `<dt>` and a `<dd>`, which is the grouping HTML allows
+            inside a description list — and it is what keeps a label attached
+            to its own value when the strip wraps. Without it every `dt` and
+            `dd` is placed independently, and a wrap can put a term at the end
+            of one line and its value at the start of the next.
+
+            A `<table>` would be the wrong element twice over: this is one
+            record rather than a grid of them, so the column headers a table
+            promises a screen reader do not exist.
+
+            THE MACHINE DATE DID NOT GO ANYWHERE. `readableDate` prints "6 May
+            2022" for a reader and `dateTime` still carries `2022-05-06` for
+            anything parsing the page — which is why `FactChip` takes a NODE
+            for its value rather than a string.
+          */}
           <dl className="of-masthead__facts">
-            <div className="of-masthead__fact">
-              <dt>Released</dt>
-              <dd>
-                {set.released === null ? (
+            <FactChip
+              label="Released"
+              semantics="description"
+              value={
+                set.released === null ? (
                   /* Not "unknown": upstream publishes no date for this set,
                      which is a fact about the record rather than a gap in it. */
                   "No published date"
@@ -442,77 +472,85 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
                   <time dateTime={set.released}>
                     {readableDate(set.released)}
                   </time>
-                )}
-              </dd>
-            </div>
+                )
+              }
+            />
 
-            <div className="of-masthead__fact">
-              <dt>Card names</dt>
-              <dd>{rows.toLocaleString("en-GB")}</dd>
-            </div>
+            <FactChip
+              label="Card names"
+              semantics="description"
+              value={rows.toLocaleString("en-GB")}
+            />
 
-            <div className="of-masthead__fact">
-              <dt>Pitch versions</dt>
-              <dd>{versions.toLocaleString("en-GB")}</dd>
-            </div>
+            <FactChip
+              label="Pitch versions"
+              semantics="description"
+              value={versions.toLocaleString("en-GB")}
+            />
 
-            <div className="of-masthead__fact">
-              <dt>Print status</dt>
-              {/* `outOfPrint` is true only when EVERY printing of the set is
-                  out of print — see `SetRecord` — so the negative case is
-                  "still in print somewhere" rather than a claim about every
-                  printing. */}
-              <dd>{set.outOfPrint ? "Out of print" : "In print"}</dd>
-            </div>
+            {/* `outOfPrint` is true only when EVERY printing of the set is out
+                of print — see `SetRecord` — so the negative case is "still in
+                print somewhere" rather than a claim about every printing.
 
-            <div className="of-masthead__fact">
-              <dt>Set code</dt>
-              {/* THE EYEBROW OVER THE TITLE SAID THIS FIRST — "SET 1HP" — and
-                  it went when the list arrived. The code is a fact about the
-                  set like the other five; printing it twice on one masthead is
-                  the page saying the same thing in two registers. */}
-              <dd>{set.id}</dd>
-            </div>
+                NOT A `StatePill`, though this is the one fact here that
+                genuinely IS a state. The notch is spent on legality and
+                verification, and a notched chip in a strip of plain ones would
+                read as a verdict about a format. */}
+            <FactChip
+              label="Print status"
+              semantics="description"
+              value={set.outOfPrint ? "Out of print" : "In print"}
+            />
 
-            {/* The cell goes when there is nothing to name, rather than
+            {/* THE EYEBROW OVER THE TITLE SAID THIS FIRST — "SET 1HP" — and
+                it went when the list arrived. The code is a fact about the
+                set like the others; printing it twice on one masthead is the
+                page saying the same thing in two registers. */}
+            <FactChip label="Set code" semantics="description" value={set.id} />
+
+            {/* The chip goes when there is nothing to name, rather than
                 printing an em dash for the commonest case: `editionLabel`
                 already resolves upstream's "no specified edition" to nothing,
-                and a set with no editions has no edition cell. */}
+                and a set with no editions has no edition chip. */}
             {editions.length > 0 ? (
-              <div className="of-masthead__fact">
-                <dt>Editions</dt>
-                <dd>{editions.join(", ")}</dd>
-              </div>
+              <FactChip
+                label="Editions"
+                semantics="description"
+                value={editions.join(", ")}
+              />
             ) : null}
 
             {profile === undefined ? null : (
               <>
-                <div className="of-masthead__fact">
-                  {/* PRINTED EVEN WHEN IT IS ZERO, unlike the row on `/sets`,
-                      and the two are right for their own surfaces. A list of a
-                      hundred rows drops the phrase because it would be noise on
-                      most of them; a page ABOUT one set is where "nothing here
-                      is exclusive to this release" is an answer somebody came
-                      for, and where a cell that appears and vanishes would make
-                      two sets uncomparable. */}
-                  <dt>Only here</dt>
-                  <dd>{profile.exclusive.toLocaleString("en-GB")}</dd>
-                </div>
+                {/* PRINTED EVEN WHEN IT IS ZERO, unlike the chip on `/sets`,
+                    and the two are right for their own surfaces. A list of a
+                    hundred rows drops it because it would be noise on most of
+                    them; a page ABOUT one set is where "nothing here is
+                    exclusive to this release" is an answer somebody came for,
+                    and where a chip that appears and vanishes would make two
+                    sets uncomparable. */}
+                <FactChip
+                  label="Only here"
+                  semantics="description"
+                  value={profile.exclusive.toLocaleString("en-GB")}
+                />
 
-                <div className="of-masthead__fact">
-                  <dt>Artists</dt>
-                  <dd>{profile.artists.toLocaleString("en-GB")}</dd>
-                </div>
+                <FactChip
+                  label="Artists"
+                  semantics="description"
+                  value={profile.artists.toLocaleString("en-GB")}
+                />
 
-                <div className="of-masthead__fact">
-                  {/* THE THIRD COUNT, AND THE ONE THE BAR BELOW IS DRAWN IN.
-                      A rarity mix is counted in printing rows — Monarch's 1,182
-                      of them — so a bar sitting under a masthead that named
-                      only 155 and 307 would be proportioned in a unit neither
-                      number is in. */}
-                  <dt>Printings</dt>
-                  <dd>{profile.printings.toLocaleString("en-GB")}</dd>
-                </div>
+                {/* THE THIRD COUNT, AND THE ONE THE BAR BELOW IS DRAWN IN.
+                    A rarity mix is counted in printing rows — Monarch's 1,182
+                    of them — so a bar sitting under a masthead that named only
+                    155 and 307 would be proportioned in a unit neither number
+                    is in. */}
+                <FactChip
+                  label="Printings"
+                  semantics="description"
+                  value={profile.printings.toLocaleString("en-GB")}
+                />
               </>
             )}
           </dl>
@@ -535,11 +573,11 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
               <RarityBar slices={profile.rarities} />
               <ul className="of-masthead__legend">
                 {profile.rarities.map((slice) => (
-                  <li className="of-masthead__legend-item" key={slice.rarity}>
-                    <span aria-hidden="true" className="of-masthead__swatch">
-                      <RarityBar size="sm" slices={[slice]} />
-                    </span>
-                    {`${slice.count.toLocaleString("en-GB")} ${slice.name}`}
+                  <li key={slice.rarity}>
+                    <FactChip
+                      mark={<RarityBar size="sm" slices={[slice]} />}
+                      value={`${slice.count.toLocaleString("en-GB")} ${slice.name}`}
+                    />
                   </li>
                 ))}
               </ul>
