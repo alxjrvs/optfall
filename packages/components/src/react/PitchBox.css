@@ -1,6 +1,8 @@
 /*
- * `PitchBox`'s styles. A rectangle whose only colour is a struck band across
- * its top edge, with the value written underneath it in the card face.
+ * `PitchBox`'s styles. A rectangle carrying the pitch colour and the value
+ * written in the card face — struck as a band across its top edge by default,
+ * or spent on the whole surface in the `bar` variant at the foot of this file,
+ * which is a full-width row's rendering and nothing else's.
  *
  * IT WAS THE STATE PILL'S NOTCHED PLATE, FILLED IN THE PITCH COLOUR, and that
  * is history now rather than the rule. The plate spent the hue as a background
@@ -169,6 +171,63 @@
    "Pitch 4" whether or not the purple means anything yet. */
 .of-pitch-box--tone-four {
   --band: var(--of-color-pitch-four);
+}
+
+/*
+  THE BAR: THE SAME MARK WITH THE HUE ON THE WHOLE SURFACE, AND IT IS NOT THE
+  FILLED PLATE COMING BACK. The docblock argues the distinction and the
+  geometry is the short version of it — a bar has no width of its own, so it is
+  as wide as whatever row it is a member of, and a two-hairline band across the
+  top of an object that wide is a rule with a lot of empty ground under it
+  rather than the top edge of a tag. The surface carries the value here.
+
+  `--band` IS STILL THE ONLY PLACE A TONE NAMES A HUE. The fill reads the same
+  custom property the struck edge does, so the two renderings cannot drift onto
+  different reds: a tone class sets one value and both spellings of the mark
+  spend it. The top border is unchanged and simply stops being visible, being
+  `solid var(--band)` over a ground of exactly that.
+
+  The inset bevel stays and now has its pair back: on a filled surface the dark
+  bottom edge is the whole of what a bar needs to sit in the page rather than
+  float on it.
+*/
+.of-pitch-box--bar {
+  display: flex;
+  inline-size: 100%;
+  background: var(--band);
+  /* The block padding is a step up from the band's. A bar is read as a
+     control — it is a link's whole target in the one place it is used — and
+     the tightest step is for a mark set into a line of type. */
+  padding-block: var(--of-space-tight);
+}
+
+/*
+  ONE INK PER TONE, ON THE VARIANT RATHER THAN ON THE TONE. Every pitch colour
+  carries its own `*.ink` precisely for the case where it is a background —
+  `pitch.two` is a yellow that takes near-black type and the rest take white —
+  and these pair them. They are written as compound selectors so that a tone
+  class still sets `--band` AND NOTHING ELSE: the banded rendering takes the
+  page's ink over a neutral well, and a tone that reached out to set `color`
+  would change that mark from the other end of the file.
+*/
+.of-pitch-box--bar.of-pitch-box--tone-none {
+  color: var(--of-color-pitch-none-ink);
+}
+
+.of-pitch-box--bar.of-pitch-box--tone-one {
+  color: var(--of-color-pitch-one-ink);
+}
+
+.of-pitch-box--bar.of-pitch-box--tone-two {
+  color: var(--of-color-pitch-two-ink);
+}
+
+.of-pitch-box--bar.of-pitch-box--tone-three {
+  color: var(--of-color-pitch-three-ink);
+}
+
+.of-pitch-box--bar.of-pitch-box--tone-four {
+  color: var(--of-color-pitch-four-ink);
 }
 
 /* No motion here at all. Stated so the absence is intent rather than
