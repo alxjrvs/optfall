@@ -1612,87 +1612,72 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   Rules
                 </h2>
                 <ul className="of-card__rules">
-                  {keywordRules.map((rule) => {
-                    /*
-                      THE CITATION LINE, BUILT ONCE FOR BOTH SHAPES. A rule with
-                      a definition is a fold and this is its `<summary>`; a rule
-                      without one has nothing to disclose and this is the whole
-                      row. Composing it here is what keeps those two from
-                      drifting into two different rows.
+                  {/*
+                    ONE LINE PER RULE, READ AS A DEFINITION: the keyword in
+                    bold, a colon, and what the rules say it means. THE
+                    REMINDER TEXT IS THE POINT OF THE JOIN — 138 cards in this
+                    corpus print nothing but keyword names, so the printed text
+                    tells a reader who already knows the keyword exactly what
+                    they already knew.
 
-                      THE CITATION STAYS A LINK INSIDE THE SUMMARY, and that is
-                      not the conflict it looks like: activation behaviour runs
-                      on the nearest activation target, so a click on the anchor
-                      navigates to the rule and does NOT also toggle the fold,
-                      while a click anywhere else on the line toggles it.
-                    */
-                    const line = (
-                      <>
-                        <a
-                          className="of-card__rules-citation"
-                          href={hrefForNumber(rule.number)}
-                        >
-                          {rule.ruleId}
-                        </a>
-                        <span className="of-card__rules-keyword">
-                          {rule.keyword}
+                    ~~IT IS ALSO FOLDED AWAY.~~ Struck. The definition used to
+                    sit inside a closed `<details>` whose `<summary>` was the
+                    citation and the keyword, on the argument that the
+                    most-governed cards draw four rules each and four stacked
+                    block quotations buried the thing a reader scans this
+                    section FOR. That traded the answer for the index: a reader
+                    who has to click to learn what `Go again` does has been
+                    shown a citation instead of an answer. Four short lines
+                    cost less than four folds.
+
+                    THE CITATION GOES LAST, because it is the provenance of the
+                    sentence in front of it rather than a heading over it. Same
+                    link, same target; it now closes the line it sources.
+
+                    IT IS STILL NOT THE CARD'S OWN TEXT. Writing it into
+                    `Printed text` would be printing something the card does
+                    not say — the one thing a reference work may never do — and
+                    the quieter type here is what keeps the two apart now that
+                    no quotation rule does it.
+
+                    NOTHING TO SAY, NOTHING TO PUNCTUATE. `text` is typed as
+                    possibly empty and no row in the corpus is (0 of 3,933 rule
+                    rows across every card, measured against `cr-2.14.0`), but
+                    a colon introducing nothing is a promise the line cannot
+                    keep, so a textless row is the keyword and its citation.
+                  */}
+                  {keywordRules.map((rule) => (
+                    <li className="of-card__rules-line" key={rule.ruleId}>
+                      <strong className="of-card__rules-keyword">
+                        {rule.keyword}
+                      </strong>
+                      {rule.text === "" ? null : (
+                        <>
+                          {": "}
+                          <CardTextInline nodes={parseInline(rule.text)} />
+                        </>
+                      )}{" "}
+                      <a
+                        className="of-card__rules-citation"
+                        href={hrefForNumber(rule.number)}
+                      >
+                        {rule.ruleId}
+                      </a>
+                      {rule.via === "family" ? (
+                        /*
+                          SAID OUT LOUD, because it is a slightly weaker claim.
+                          The rules define `Specialization` once and cards
+                          instantiate it per hero, so the match is a resolution
+                          rather than a direct hit — and a reference work should
+                          say which kind of claim it is making. It sits beside
+                          the citation because it qualifies the citation.
+                        */
+                        <span className="of-card__rules-via">
+                          via the general rule
                         </span>
-                        {rule.via === "family" ? (
-                          /*
-                            SAID OUT LOUD, because it is a slightly weaker claim.
-                            The rules define `Specialization` once and cards
-                            instantiate it per hero, so the match is a resolution
-                            rather than a direct hit — and a reference work should
-                            say which kind of claim it is making.
-                          */
-                          <span className="of-card__rules-via">
-                            via the general rule
-                          </span>
-                        ) : null}
-                      </>
-                    );
-                    return (
-                      <li key={rule.ruleId}>
-                        {/*
-                          THE REMINDER TEXT, WHICH IS THE POINT OF THE JOIN. 138
-                          cards in this corpus print nothing but keyword names,
-                          so the printed text tells a reader who already knows
-                          the keyword exactly what they already knew.
-
-                          IT IS QUOTED, NOT INLINED INTO THE CARD'S TEXT. Writing
-                          it into `Printed text` would be printing something the
-                          card does not say — the one thing a reference work may
-                          never do.
-
-                          IT IS ALSO FOLDED AWAY. The most-governed cards in the
-                          corpus draw four rules each, and four stacked block
-                          quotations buried the thing a reader scans this
-                          section FOR — which rules govern the card — under the
-                          definitions of all of them. Closed by default: the
-                          citations are the index, the definitions the lookup.
-
-                          NO FOLD WHEN THERE IS NOTHING TO OPEN. `text` is
-                          typed as possibly empty and no row in the corpus is
-                          (0 of 3,933 rule rows across every card, measured
-                          against `cr-2.14.0`), but a `<details>` that opens
-                          onto nothing is an affordance that lies, so the
-                          textless row stays a plain line.
-                        */}
-                        {rule.text === "" ? (
-                          <p className="of-card__rules-line">{line}</p>
-                        ) : (
-                          <details className="of-card__rules-fold">
-                            <summary className="of-card__rules-line">
-                              {line}
-                            </summary>
-                            <p className="of-card__rules-text">
-                              <CardTextInline nodes={parseInline(rule.text)} />
-                            </p>
-                          </details>
-                        )}
-                      </li>
-                    );
-                  })}
+                      ) : null}
+                    </li>
+                  ))}
                 </ul>
               </section>
             ) : null}
