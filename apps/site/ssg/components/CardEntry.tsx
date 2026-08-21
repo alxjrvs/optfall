@@ -1557,12 +1557,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             )}
 
             {keywordRules.length > 0 ? (
-              <section
-                className="of-card__apparatus"
-                aria-labelledby="governed-by"
-              >
-                <h2 className="of-apparatus__heading" id="governed-by">
-                  Governed by
+              <section className="of-card__apparatus" aria-labelledby="rules">
+                <h2 className="of-apparatus__heading" id="rules">
+                  Rules
                 </h2>
                 <ul className="of-card__rules">
                   {keywordRules.map((rule) => {
