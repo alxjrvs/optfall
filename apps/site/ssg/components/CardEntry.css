@@ -522,13 +522,19 @@
     own sentences at full size while its type line shrank. Fixing the size makes
     the band wider at 320px, and the corner track's `auto` minimum is what keeps
     it in the box.
+
+    ONE COLOUR TOO, FOR THE SAME REASON. This line was `ink.muted` while the
+    printed text, which inherits, is plain `ink` — so the panel said in colour
+    what the sizes had just stopped saying: that the type line is apparatus
+    rather than something the card prints. It is printed, in the same band, on
+    the same object. It takes the same ink.
   */
 .of-card__type-line {
   margin: 0;
   text-align: center;
   font-family: var(--of-type-family-serif);
   font-size: var(--of-type-size-large);
-  color: var(--of-color-ink-muted);
+  color: var(--of-color-ink);
 }
 
 /*
@@ -895,90 +901,71 @@
 }
 
 /*
-    THE CITATION LINE — a `<summary>` when the rule has a definition to fold
-    away, a bare `<p>` when it has none. One class, because they are the same
-    row and only one of them is clickable.
+    THE WHOLE RULE, ON ONE LINE: keyword, colon, definition, citation. The
+    `<li>` IS the line now — there is no inner `<p>` and no `<summary>`,
+    because there are no longer two shapes for this row to be.
 
-    `display` IS LEFT ALONE, and this comment is where that rule now lives —
-    the source fold that used to record it went out with the section it
-    belonged to, and this is the only disclosure left in this component. A
-    `<summary>` is `display: list-item`, its disclosure triangle is that list
-    item's `::marker`, and setting `flex` here — which is exactly what this row
-    used to be — drops the marker entirely in Chrome, leaving a fold with no
-    affordance at all: a line that happens to be clickable, which nobody clicks.
+    ~~`display` IS LEFT ALONE~~, and the reason it was is worth keeping: this
+    row used to be a `<summary>`, which is `display: list-item` with the
+    disclosure triangle as its `::marker`, so setting `flex` here dropped the
+    marker entirely in Chrome and left a fold with no affordance. No fold, no
+    marker, no trap — but the same conclusion holds for a different reason.
+    This is inline text, and inline layout is what sets a colon against the
+    word before it and a word space after it. A flex row would space those at
+    a `gap` instead, which is the wrong distance for punctuation.
 
-    SO THE GAPS ARE MARGINS. A wrapping flex row gave the citation, the keyword
-    and the `via` note a `gap`; inline children in a list item cannot have one,
-    and `* + *` is the same spacing said in the only vocabulary left. Baseline
-    alignment and wrapping come free — inline layout does both by nature, which
-    is what the flex row was asking for in the first place.
+    ~~SO THE GAPS ARE MARGINS.~~ Struck with the `* + *` rule that said it. The
+    keyword, the definition and the citation were three items spaced at
+    `space.base`; they are one sentence now, and a sentence is spaced by its
+    own word spaces. Only the `via` note keeps a margin, because it is an aside
+    rather than a word in the line.
+
+    THE TYPE IS THE QUOTATION'S, INHERITED RATHER THAN BOXED. The definition
+    was a block quotation with a hairline down its left edge; that ornament
+    said "this is quoted" about a block that no longer exists, so what marks it
+    now is the face and the colour — serif, small, muted, deliberately quieter
+    than `Printed text`. What the card says outranks what the rules say about
+    what the card says, and a reader scanning for the former must not have to
+    sort it out of the latter.
   */
 .of-card__rules-line {
   margin: 0;
-}
-
-.of-card__rules-line > * + * {
-  margin-inline-start: var(--of-space-base);
-}
-
-.of-card__rules-fold > .of-card__rules-line {
-  cursor: pointer;
-}
-
-/*
-    AN OPEN FOLD OWNS ITS QUOTATION, and spacing is the only thing saying so.
-    The list's own `gap` is `tight`, so the quotation is set `tighter` under the
-    citation it belongs to and an open row adds `tighter` beneath itself —
-    nearer above than below, which is the whole of the grouping.
-  */
-.of-card__rules-fold[open] {
-  margin-block-end: var(--of-space-tighter);
-}
-
-/*
-    THE DEFINITION, SET AS A QUOTATION RATHER THAN AS THE CARD'S OWN TEXT.
-
-    It sits under its citation rather than beside it — a block inside the fold,
-    where it used to be a `flex-basis: 100%` item on a wrapping row — and the
-    serif marks it as prose from the rules document rather than interface text.
-    The left rule is the only ornament: it says "this is quoted" without a box,
-    which is the same argument the rest of this page makes about hairlines.
-
-    THE INDENT IS THE MARKER'S, NOT AN ORNAMENT'S. The quotation lines up under
-    the citation it belongs to rather than under the disclosure triangle, so an
-    open fold reads as one block instead of two ragged edges.
-
-    Deliberately quieter than `Printed text`. What the card says outranks what
-    the rules say about what the card says, and a reader scanning for the
-    former must not have to sort it out of the latter.
-  */
-.of-card__rules-text {
-  margin-block: var(--of-space-tighter) 0;
-  margin-inline-start: var(--of-space-base);
-  padding-inline-start: var(--of-space-base);
-  border-inline-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
   font-family: var(--of-type-family-serif);
   font-size: var(--of-type-size-small);
   line-height: var(--of-type-leading-loose);
   color: var(--of-color-ink-muted);
 }
 
-/* Monospaced, because in this system that means you can paste it into an
-     argument — which is the entire point of a citation. */
+/*
+    THE NAME, AND THE ONLY THING IN THE LINE SET AT FULL STRENGTH. Bold and a
+    step larger than the definition it introduces, so a reader scanning four
+    rules reads four names first — which is what the fold's `<summary>` was
+    for, said in type instead of in an interaction.
+
+    `capitalize` because `baseKeyword` lowercases what it stores — `Ward 10`
+    is filed as `ward` — so the transform is what puts the name back into the
+    shape the card prints it in.
+  */
+.of-card__rules-keyword {
+  font-size: var(--of-type-size-base);
+  font-weight: var(--of-type-weight-bold);
+  color: var(--of-color-ink);
+  text-transform: capitalize;
+}
+
+/* Sans and tracked, because in this system that means you can paste it into an
+     argument — which is the entire point of a citation. It never wraps: a rule
+     number broken across two lines is not a rule number. */
 .of-card__rules-citation {
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-small);
   letter-spacing: var(--of-type-tracking-wide);
+  white-space: nowrap;
   color: var(--of-color-link);
 }
 
-.of-card__rules-keyword {
-  font-family: var(--of-type-family-serif);
-  font-size: var(--of-type-size-base);
-  text-transform: capitalize;
-}
-
 .of-card__rules-via {
+  margin-inline-start: var(--of-space-tight);
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
