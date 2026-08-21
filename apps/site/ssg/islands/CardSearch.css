@@ -71,49 +71,46 @@
 */
 
 /*
-  THE COUNT IS THE FACT WORTH LEADING ON, so it is the one thing on this page
-  set at display size.
+  ~~THE COUNT IS THE FACT WORTH LEADING ON~~ — **the state's NAME is, and this
+  slot holds "All cards" rather than a figure now.** See the note where it is
+  rendered, in `CardSearch.tsx`.
 
-  NOT A HEADING. The page's `<h1>` is in the document already — clipped,
-  deliberately, see `pages/search.css` — and a second display-sized string
-  claiming to be the title of the screen would be arguing with it. This is a
-  sentence that happens to begin with a big number.
+  ~~NOT A HEADING~~ — **it is an `<h2>`.** The old note argued the page's
+  `<h1>` was in the document already — clipped, deliberately, see
+  `pages/search.css` — and that a second display-sized string claiming to be
+  the title of the screen would be arguing with it. Nothing about the `<h1>`
+  changed; what changed is that this is no longer a sentence, and that the two
+  name different things. The `<h1>` names the page, which answers queries. This
+  names the one state the page is in before it has been asked one.
 
   THE FRONT DOOR'S TREATMENT, NOT A NEW ONE. `.of-door__sentence` is the same
   gesture on the other landing surface — display face, regular weight, tight
-  leading and tracking, the sentence in `ink.muted` with the words that carry
-  the weight lifted to `ink` — and a second spelling of it would be a second
-  thing to keep in step. What differs is the size step and the centring, both
-  of which are the door's and not this page's: results start at the left edge
-  here, so the lede has to start there too.
+  leading and tracking — and a second spelling of it would be a second thing to
+  keep in step. What differs is the centring, which is the door's and not this
+  page's: results start at the left edge here, so the heading has to start
+  there too.
 
-  NO `font-variant-numeric`. A first version set `lining-nums tabular-nums` on
-  the count, with a comment claiming the display face would otherwise drop its
-  digits below the baseline. Measured in the browser against Grenze at this
-  size: the glyph box is identical with the property and without it — nothing
-  steps — and what the declaration actually did was make the figures tabular,
-  which is 8.6px wider and is a table's spelling of a number rather than a
-  sentence's. It bought a defect it had invented.
+  THE DISPLAY SIZE STAYS WITH THE SLOT RATHER THAN WITH THE COUNT. It was on
+  the number, one step above the sentence around it; there is no sentence
+  around it any more, so it is on the whole line. This is the same 2.25rem the
+  figure was set at, at the same measured place on the page.
+
+  ~~NO `font-variant-numeric`~~ — **there are no figures here to set it on.**
+  It is worth keeping why it was refused, because the slot may hold a number
+  again: measured in the browser against Grenze at this size, the glyph box is
+  identical with `lining-nums tabular-nums` and without it — nothing steps, and
+  what the declaration actually did was make the figures 8.6px wider in a
+  table's voice rather than a sentence's. It bought a defect it had invented.
 */
 .of-browse__lede {
   margin-block: 0 var(--of-space-tighter);
   font-family: var(--of-type-family-display);
-  font-size: var(--of-type-size-title);
+  font-size: var(--of-type-size-display);
   font-weight: var(--of-type-weight-regular);
   line-height: var(--of-type-leading-tight);
   letter-spacing: var(--of-type-tracking-tight);
-  color: var(--of-color-ink-muted);
-  text-wrap: balance;
-}
-
-.of-browse__size {
-  font-size: var(--of-type-size-display);
-  /* Inherited rather than bold: `<strong>` is the right ELEMENT — the count is
-     the sentence's important part — and the size step is how this design says
-     so. The door lifts its emphasis by weight because everything there is one
-     size; here the emphasis is already a size larger. */
-  font-weight: inherit;
   color: var(--of-color-ink);
+  text-wrap: balance;
 }
 
 /*
