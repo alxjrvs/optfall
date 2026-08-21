@@ -614,15 +614,25 @@ function PitchStones({
  * position: a caller whose first version is not the row would otherwise have
  * drawn the same card twice.
  *
- * BUT ITS PLACE IN THE HAND IS ITS PITCH'S, NOT THE FRONT OF IT. `--i` is the
- * version's position in the pitch-ascending list rather than its position in
- * the markup, and the split is why it had to become so: a row is the
- * best-ranked of its versions, so a query can perfectly well collapse to the
- * pitch-3 card — and dealing that card first laid the bands out 3, 1, 2. Bands
- * are read left to right and one of the two things they are read for is the
- * pitch order, so the hand is ordered by pitch and the row's own card takes its
- * seat in it. It is still the card in normal flow, still the one that sizes the
- * cell, and still the cell's primary destination; only its seat has moved.
+ * BUT ITS PLACE IN THE HAND IS ITS PITCH'S, NOT THE FRONT OF IT, AND THE
+ * MARKUP IS DEALT IN THAT ORDER TOO. A row is the best-ranked of its versions,
+ * so a query can perfectly well collapse to the pitch-3 card — and emitting
+ * that card first laid the bands out 3, 1, 2. Bands are read left to right and
+ * the pitch order is one of the two things they are read for, so the hand is
+ * ordered by pitch and the row's own card takes its seat in it. It is still the
+ * card in normal flow, still the one that sizes the cell, still the one wearing
+ * the row's own alt text; only its seat has moved.
+ *
+ * ONE ORDER, NOT TWO, AND THE SECOND ORDER WAS A BUG. The first version of this
+ * moved `--i` to pitch order and left the anchors emitted front-first, so on a
+ * name whose row is not its lowest pitch — Hyper Driver, printed at 1, 2 and 3
+ * plus an unpitched version that sorts ahead of all three — document order and
+ * band order disagreed. Two things read the DOM order directly. Tab order is
+ * one: the keyboard walked the hand right, then far left, then rightwards
+ * again. The reverse ladder in the stylesheet is the other, and it is written
+ * as `:has(~ .of-index__card:hover)` — SIBLINGS AFTER, which means "cards left
+ * of the pointer" only while the two orders are the same one. They are the same
+ * one because this deals them that way.
  *
  * EVERY CARD IN THE HAND COMES FROM ONE PRINT RUN, AND THAT IS THE CALLER'S
  * JOB RATHER THAN THIS COMPONENT'S. `set:MST` shows what Mistveil printed, so
@@ -643,12 +653,20 @@ function PitchStones({
  * hover behaviour — there is nothing to choose between, and a cell that
  * gestured at a choice it does not have would be worse than the plain one.
  *
- * A TOUCH READER NEVER HOVERS, AND THE SPLIT IS WHY THAT COSTS LESS THAN IT
- * DID. The bands are the resting state, so they are what a tap lands on: a
- * clip-path clips hit-testing as well as paint, which means the band a reader
- * can see a version in is the band that opens it. The fan is a pointer's
- * shortcut to a bigger target for the same set of destinations, not the only
- * way to reach them.
+ * THE BAND A READER SEES A VERSION IN IS THE BAND THAT OPENS IT, because a
+ * clip-path clips hit-testing along with paint — measured with
+ * `elementFromPoint` across the resting four-version Hyper Driver cell, where
+ * each quarter of the box resolves to its own version's anchor.
+ *
+ * WHAT THAT BUYS A TOUCH READER IS NOT MEASURED HERE. A touch reader never
+ * hovers, so the fan is not theirs; the bands are what they tap, and at rest
+ * every version is its own target. But a tap on a cell whose `:hover` changes
+ * the rendering is handled differently across mobile browsers — some spend the
+ * first tap on the hover state, which here opens the fan and moves the cards
+ * under the finger. That has not been checked on a device, so the claim made
+ * for touch is the modest one: the destinations are all present at rest and
+ * none of them needs a pointer to exist. Whether they take one tap or two is
+ * untested.
  */
 function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
   /*
@@ -666,20 +684,30 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
     many versions it has, so it is asked of the count.
   */
   const ordered = entry.versions.length < 2 ? [] : versionsOf(entry.versions);
-  /*
-    WHERE THE ROW'S OWN CARD SITS IN THAT ORDER, or `-1` where it is not one of
-    them at all. The second case is not reachable from either caller today —
-    `card-search.ts` collapses a row TO one of its versions and the set page
-    builds the row from the first of the group — but it is a fact about data
-    this component is handed rather than one it establishes, and a `-1` used as
-    an index silently deals the whole hand one seat wrong. So it is asked, and
-    the front card falls back to the seat it used to hold unconditionally.
-  */
   const own = ordered.findIndex((version) => version.href === entry.href);
-  const seat = own === -1 ? 1 : 0;
-  const behind = ordered
-    .map((version, position) => ({ version, index: position + seat }))
-    .filter(({ version }) => version.href !== entry.href);
+
+  /*
+    THE HAND, IN THE ONE ORDER IT IS DEALT, PAINTED AND TABBED IN. `--i` is an
+    index into this array, so band order, document order and the ladder cannot
+    come apart — and they must not: the reverse ladder in the stylesheet is
+    written as `:has(~ …)`, which reads document order and means "left of the
+    pointer" only while these are the same order.
+
+    `null` IS THE ROW'S OWN CARD WHERE IT IS NOT ONE OF THE VERSIONS IT STANDS
+    FOR — `own === -1`. That is not reachable from either caller today:
+    `card-search/` collapses a row TO one of its versions, and the set page
+    builds the row from the first of its group. But it is a fact about data this
+    component is handed rather than one it establishes, and a missing seat deals
+    the whole hand one place wrong in silence. So where the row belongs to none
+    of them it is dealt ahead of them — the arrangement this component had
+    before the bands — and where it belongs to one, it takes that seat.
+  */
+  const hand: readonly (CardIndexVersion | null)[] =
+    own === -1 ? [null, ...ordered] : ordered;
+
+  /* The guard the note above is about: a row with nothing to choose between is
+     one card and one link, with no stack, no bands and no fan. */
+  const others = ordered.filter((version) => version.href !== entry.href);
 
   const face = (
     <CardFace
@@ -691,7 +719,7 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
     />
   );
 
-  if (behind.length === 0) {
+  if (others.length === 0) {
     return (
       <a className="of-index__card" href={entry.href}>
         {face}
@@ -708,44 +736,49 @@ function CardStack({ entry }: { readonly entry: CardIndexEntry }) {
     arithmetic lives in the stylesheet beside the values it is made of; see
     `.of-index__card` for what it computes.
   */
-  const total = ordered.length + seat;
+  const total = hand.length;
 
   return (
     <span
       className="of-index__stack"
       style={{ "--n": total } as React.CSSProperties}
     >
-      <a
-        className="of-index__card"
-        href={entry.href}
-        style={{ "--i": own === -1 ? 0 : own } as React.CSSProperties}
-      >
-        {face}
-      </a>
-      {behind.map(({ version, index }) => (
-        <a
-          className="of-index__card of-index__card--behind"
-          href={version.href}
-          key={version.href}
-          style={{ "--i": index } as React.CSSProperties}
-        >
-          {/*
-            THE VERSION'S LABEL IS THE WHOLE ALT TEXT, with no type line after
-            it. The row's own face carries `label — type line` because it is the
-            cell's primary destination and the type line is a fact about the
-            card; these are a choice BETWEEN versions of one card, which share
-            a type line, so repeating it three times would be three identical
-            suffixes on the one axis the reader is trying to tell apart.
-          */}
-          <CardFace
-            src={faceSrc(version.faceKey, version.faceLandscape)}
-            alt={version.label}
-            width={GRID_BOX.width}
-            height={GRID_BOX.height}
-            loading="lazy"
-          />
-        </a>
-      ))}
+      {hand.map((version, index) =>
+        version === null || version.href === entry.href ? (
+          <a
+            className="of-index__card"
+            href={entry.href}
+            key={entry.href}
+            style={{ "--i": index } as React.CSSProperties}
+          >
+            {face}
+          </a>
+        ) : (
+          <a
+            className="of-index__card of-index__card--behind"
+            href={version.href}
+            key={version.href}
+            style={{ "--i": index } as React.CSSProperties}
+          >
+            {/*
+              THE VERSION'S LABEL IS THE WHOLE ALT TEXT, with no type line after
+              it. The row's own face carries `label — type line` because it is
+              the cell's primary destination and the type line is a fact about
+              the card; these are a choice BETWEEN versions of one card, which
+              share a type line, so repeating it three times would be three
+              identical suffixes on the one axis the reader is trying to tell
+              apart.
+            */}
+            <CardFace
+              src={faceSrc(version.faceKey, version.faceLandscape)}
+              alt={version.label}
+              width={GRID_BOX.width}
+              height={GRID_BOX.height}
+              loading="lazy"
+            />
+          </a>
+        ),
+      )}
     </span>
   );
 }
