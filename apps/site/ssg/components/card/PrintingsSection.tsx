@@ -35,8 +35,6 @@ import {
  */
 export interface PrintingsSectionProps {
   readonly page: CardPage;
-  /** Distinct flavour texts across the printings, in printing order. */
-  readonly flavours: readonly string[];
   /** Face key to the permalink for the printing that carries it. */
   readonly hrefByFace: ReadonlyMap<string, string>;
   /** Collector number to a qualifier, where two printings share a number. */
@@ -47,7 +45,6 @@ export interface PrintingsSectionProps {
 
 export function PrintingsSection({
   page,
-  flavours,
   hrefByFace,
   numberQualifier,
   shown,
@@ -259,31 +256,26 @@ export function PrintingsSection({
         </div>
 
         {/*
-        ONLY WHERE THE PRINTINGS DISAGREE. A card whose every printing carries
-        the same flavour has that flavour shown once, in the panel. Repeating
-        it here under a collector number would be the same words twice, the
-        second time implying a distinction between printings that does not
-        exist.
+        NO FLAVOUR HERE, AND THAT IS THE CHANGE. A "Flavour text, by printing"
+        list stood below this table, rendered whenever the printings carried
+        more than one distinct wording: one row per printing, keyed by
+        collector number. Its own comment defended the condition — a card whose
+        printings agree should not read its flavour twice — but the condition
+        was never the problem the list had.
+
+        A ROW IS A PRINTING AND PRINTINGS SHARE WORDING, so the list repeated
+        itself: on Steelblade Shunt (pitch 2), six rows of which four read
+        WTR127 and the identical sentence — Alpha and Unlimited, Standard and
+        Rainbow Foil, and the list keyed on the collector number alone so it
+        named none of that. It implied a distinction between printings that was
+        not there, which is precisely what the condition existed to prevent.
+        The table two lines up already tells those four apart, in columns.
+
+        The flavour is the panel's now, and it is the SHOWN printing's rather
+        than the card's. Nothing became unreachable in the move — every one of
+        the 468 wordings in the corpus is still printed on some page; see
+        `flavour` in `CardEntry.tsx`, which carries the measurement.
       */}
-        {flavours.length > 1 ? (
-          <div className="of-card__flavour">
-            <h3 className="of-apparatus__heading" id="flavour">
-              Flavour text, by printing
-            </h3>
-            <dl className="of-card__attributes">
-              {page.printings
-                .filter(({ printing }) => printing.flavor_text.trim() !== "")
-                .map(({ printing }) => (
-                  <div className="of-card__attribute" key={printing.unique_id}>
-                    <dt className="of-card__collector">{printing.id}</dt>
-                    <dd className="of-card__flavour-text">
-                      {printing.flavor_text}
-                    </dd>
-                  </div>
-                ))}
-            </dl>
-          </div>
-        ) : null}
       </section>
     </>
   );

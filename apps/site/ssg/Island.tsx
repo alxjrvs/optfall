@@ -55,6 +55,7 @@ export type IslandName =
   | "RandomCard"
   | "CardSearch"
   | "CardList"
+  | "SetIndex"
   | "HeaderSearch";
 
 export interface IslandProps<P> {

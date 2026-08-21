@@ -1,0 +1,121 @@
+/*
+ * `RarityBar`'s styles. One struck band, divided — the same plate rule every
+ * other mark in this system follows.
+ *
+ * SPELLING (4) FROM `PitchJewel`'s LIST, exactly as `PitchRule` and
+ * `OrnamentalRule` use it: the hairline is an OUTSET zero-blur `box-shadow`
+ * pair rather than a border, so the band stays exactly its own thickness of
+ * layout instead of three. It is drawn ONCE, on the bar, not per slice — the
+ * slices are divisions of one object, and edging each of them would read as a
+ * row of separate chips.
+ *
+ * THE BAR TAKES ITS CONTAINER'S WIDTH AND HAS NO SIZE TOKEN OF ITS OWN IN THAT
+ * AXIS. `PitchRule` fixes its band width deliberately, and the argument there
+ * does not transfer: its bands are a LEGEND — one band means "pitch 1" and must
+ * mean it at the same width in every cell — where these are a PROPORTION, and a
+ * proportion has to be read against the whole. Two bars of different lengths on
+ * one page would be two different scales, so length is the host's decision and
+ * every caller gives the whole column to it.
+ */
+
+.of-rarity-bar {
+  display: flex;
+  /*
+    NO GAP, AND THAT IS THE POINT OF IT. The slices are the parts of one run;
+    a gutter between them would make the bar a row of bars, and would also eat
+    a share of the width that belongs to the proportion — worst on exactly the
+    sets with the most rarities in them.
+  */
+  gap: 0;
+  inline-size: 100%;
+  /*
+    Three hairlines, the same height `PitchRule` gives a band, and for the same
+    reason: one hairline reads as a rule — a divider the eye skips — and this
+    is a mark meant to be read. Expressed against the bevel width so the band
+    can never be thinner than the two bevel edges drawn on it.
+  */
+  block-size: calc(var(--of-bevel-width) * 3);
+  /* Cut, never rounded — the system has one radius token and it is none. */
+  border-radius: var(--of-bevel-radius);
+  box-shadow:
+    0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light),
+    0 var(--of-bevel-width) 0 0 var(--of-bevel-dark);
+  overflow: hidden;
+  user-select: none;
+}
+
+/*
+  The small size is for a dense row rather than a section head: thinner, so a
+  bar sitting under a line of type does not out-weigh the name above it.
+*/
+.of-rarity-bar--sm {
+  block-size: calc(var(--of-bevel-width) * 2);
+}
+
+/*
+  The slice. `--rarity` defaults to the faint ink of the page, so a rarity
+  upstream adds tomorrow renders as a plain grey division rather than as an
+  unset `var()` and no fill at all — the same default, for the same reason, as
+  `.of-card__rarity-mark`'s bubble.
+
+  `flex-basis: 0` is what makes `flex-grow` mean the share rather than the
+  share of the SURPLUS: with the default `auto` basis an empty box contributes
+  nothing, which happens to work, and the moment a slice ever carries content
+  it would silently stop being proportional.
+
+  THE FLOOR IS TWO PIXELS AND IT IS THE ONE PLACE THIS MARK IS INEXACT. See
+  `RarityBar.tsx`: two Fabled printings among Monarch's 1,182 is about a pixel,
+  which rounds to nothing and states the opposite of the truth.
+*/
+.of-rarity-bar__slice {
+  flex-basis: 0;
+  min-inline-size: var(--of-space-tightest);
+  background: var(--rarity, var(--of-color-ink-faint));
+}
+
+.of-rarity-bar__slice[data-rarity="common"] {
+  --rarity: var(--of-color-rarity-common);
+}
+
+.of-rarity-bar__slice[data-rarity="rare"] {
+  --rarity: var(--of-color-rarity-rare);
+}
+
+.of-rarity-bar__slice[data-rarity="super"] {
+  --rarity: var(--of-color-rarity-super);
+}
+
+.of-rarity-bar__slice[data-rarity="majestic"] {
+  --rarity: var(--of-color-rarity-majestic);
+}
+
+.of-rarity-bar__slice[data-rarity="legendary"] {
+  --rarity: var(--of-color-rarity-legendary);
+}
+
+.of-rarity-bar__slice[data-rarity="fabled"] {
+  --rarity: var(--of-color-rarity-fabled);
+}
+
+.of-rarity-bar__slice[data-rarity="token"] {
+  --rarity: var(--of-color-rarity-token);
+}
+
+.of-rarity-bar__slice[data-rarity="basic"] {
+  --rarity: var(--of-color-rarity-basic);
+}
+
+.of-rarity-bar__slice[data-rarity="marvel"] {
+  --rarity: var(--of-color-rarity-marvel);
+}
+
+.of-rarity-bar__slice[data-rarity="promo"] {
+  --rarity: var(--of-color-rarity-promo);
+}
+
+/*
+  NO `prefers-reduced-motion` BLOCK, on `PitchRule`'s reasoning rather than by
+  omission: nothing in this file declares a `transition`, so `transition: none`
+  would override nothing and would read to the next person as protection that
+  is not there.
+*/

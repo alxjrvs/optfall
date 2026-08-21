@@ -33,6 +33,7 @@ import { CardSearch } from "./islands/CardSearch";
 import { HeaderSearch } from "./islands/HeaderSearch";
 import { RandomCard } from "./islands/RandomCard";
 import { RulesSearch } from "./islands/RulesSearch";
+import { SetIndex } from "./islands/SetIndex";
 
 /**
  * The islands, by the name `Island` writes into `data-island`.
@@ -49,6 +50,7 @@ const ISLANDS: Record<string, (props: any) => React.ReactNode> = {
   HeaderSearch,
   RandomCard,
   RulesSearch,
+  SetIndex,
 };
 
 for (const mount of document.querySelectorAll<HTMLElement>("[data-island]")) {

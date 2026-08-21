@@ -1757,12 +1757,21 @@
   color: var(--of-color-ink-muted);
 }
 
-.of-card__flavour {
-  margin-block-start: var(--of-space-looser);
-}
+/*
+    `.of-card__flavour` SPACED A BLOCK THAT IS GONE — the "Flavour text, by
+    printing" list under the printings table, which needed a looser gap above
+    it because it followed a table rather than a heading. The flavour is in the
+    panel now, in a band, and a band's spacing is the band's. See
+    `PrintingsSection.tsx` for why the list went.
+
+    Written down rather than silently deleted, as the buy rules above it were
+    and for the same reason: an orphaned selector reads as dead code, and a
+    deleted one reads as though nothing was ever there.
+  */
 
 /* Serif, because flavour text is prose rather than data — and italic, which
-     is how it is set on the card itself. */
+     is how it is set on the card itself. It is the panel band's text now, and
+     the only surviving flavour rule. */
 .of-card__flavour-text {
   font-family: var(--of-type-family-serif);
   font-style: italic;
