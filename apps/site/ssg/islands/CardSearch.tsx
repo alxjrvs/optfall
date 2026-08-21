@@ -804,9 +804,9 @@ export function CardSearch({
    *
    * SO IT IS THREE BLOCKS NOW, and each is derived rather than curated, which
    * is the condition `/sets` and the front door's `NEW` list are already held
-   * to. A lede that leads with the count. The newest release, as faces. The
-   * type lines, in as many columns as the container has room for. Nothing here
-   * is a list somebody has to remember to update.
+   * to. A heading naming the state, over the pin. The newest release, as faces.
+   * The type lines, in as many columns as the container has room for. Nothing
+   * here is a list somebody has to remember to update.
    *
    * THE PIN IS NOT DECORATION AND IT DID NOT MOVE OFF THE PAGE.
    * `docs/PLAN.md`: "Every surface shows when its data was last confirmed. A
@@ -824,12 +824,24 @@ export function CardSearch({
    */
   const browse = (
     <div className="of-browse">
-      <p className="of-browse__lede">
-        <strong className="of-browse__size">
-          {brief.size.toLocaleString("en-GB")}
-        </strong>{" "}
-        cards, each at a permanent address of its own.
-      </p>
+      {/*
+        THE STATE'S NAME, WHERE ITS COUNT USED TO BE. This slot read "33,145
+        cards, each at a permanent address of its own", the figure at display
+        size and the rest of the sentence around it. What a reader arriving on
+        the header's `Cards` link needs first is the name of the room they have
+        walked into, and a number is not a name. The size is not lost: it is
+        still the first thing said on the no-match state, which is the one place
+        the corpus's extent is an answer to something.
+
+        A HEADING NOW, WHICH REVERSES THE NOTE ON `.of-browse__lede`. That note
+        argued this was "not a heading — a sentence that happens to begin with a
+        big number", because a second display-sized string claiming to be the
+        title of the screen would be arguing with the clipped `<h1>`. A sentence
+        is exactly what it has stopped being. It does not argue with the `<h1>`
+        either: that names the PAGE, which answers queries, and this names the
+        STATE the page is in before it has been asked one.
+      */}
+      <h2 className="of-browse__lede">All cards</h2>
       <p className="of-cards__count">
         Pinned to upstream commit <code>{brief.commit.slice(0, 7)}</code>, last
         confirmed {brief.confirmed}.

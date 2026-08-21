@@ -940,10 +940,11 @@ describe("the browse state stands up without an index", () => {
     expect(pin).toContain(brief.commit.slice(0, 7));
     expect(pin).toContain(brief.confirmed);
 
-    /* The count leads, in its own element, so the lede can be sized as a
-       sentence with one large word in it. */
-    expect(document.querySelector(".of-browse__size")?.textContent).toBe(
-      brief.size.toLocaleString("en-GB"),
+    /* The state names itself, and names itself the same way whatever the
+       corpus holds: this heading is a constant, where the line it replaced was
+       the card count at display size. */
+    expect(document.querySelector(".of-browse__lede")?.textContent).toBe(
+      "All cards",
     );
 
     expect(document.querySelectorAll(".of-cards__browse li")).toHaveLength(

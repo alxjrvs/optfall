@@ -47,9 +47,10 @@
  * filing the disclosure where it will not be read.
  *
  * NOTHING IS UNSAID AS A RESULT, WHICH IS THE CONDITION FOR REMOVING THEM.
- * The corpus's pin — count, commit, last-confirmed date — is printed by
- * `CardSearch`'s own empty state, which is what this page shows before it is
- * asked anything, so it is the first thing a reader sees rather than the last.
+ * The corpus's pin — the upstream commit and the last-confirmed date — is
+ * printed by `CardSearch`'s own empty state, which is what this page shows
+ * before it is asked anything, so it is near the first thing a reader sees
+ * rather than the last.
  * "Legality is present day only" is said by the query engine itself, at the
  * moment it matters, as the notice `legal:cc@2024-01-01` returns. The keyword
  * coverage figure and the eight it cannot resolve are on `/about`, beside the
@@ -83,10 +84,10 @@ import "./search.css";
  *
  * THE PIN STAYS IN THE PAGE, and that is the part that could not simply be
  * deleted. `docs/PLAN.md` requires every surface to show when its data was last
- * confirmed, and the card count, the upstream commit and the confirmation date
- * are how `/search` does it. They ride in `CARD_BRIEF` — 805 bytes, rendered
- * with no fetch — because a provenance line that appears only once a request
- * succeeds is absent exactly when something has gone wrong.
+ * confirmed, and the upstream commit and the confirmation date are how
+ * `/search` does it. They ride in `CARD_BRIEF` — 805 bytes, rendered with no
+ * fetch — because a provenance line that appears only once a request succeeds
+ * is absent exactly when something has gone wrong.
  */
 const islandProps = {
   indexUrl: CARD_INDEX.url,
