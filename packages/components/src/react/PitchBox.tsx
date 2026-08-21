@@ -1,6 +1,6 @@
 /**
- * The pitch box — the state pill's object in the pitch palette, reading
- * `PITCH 1`.
+ * The pitch box — a rectangle banded in the pitch colour along its top edge,
+ * reading `Pitch 1` underneath in the card's own face.
  *
  * THIS IS THE MARK FOR A LIST OR A GRID, and that is the whole of the division
  * of labour between it and {@link PitchJewel}. The jewel is a stone: one card,
@@ -19,31 +19,25 @@
  * reason at length and it applies with more force here: red and yellow are the
  * classic deuteranopia confusion pair, pitch is the most-read value on a card,
  * and a numeral inside a stone is one glyph a reader has to already know the
- * grammar of. "PITCH 1" is the fact spelled out, so the colour is left doing
+ * grammar of. "Pitch 1" is the fact spelled out, so the colour is left doing
  * what colour should do in this system — repeating something already said.
  *
- * IT IS THE LEGALITY FLAG'S SHAPE, AND TAKING IT IS THE DECISION HERE. Same
- * notch, same depth token, same block padding, same label voice, same bevel —
- * see the stylesheet, which is `StatePill.css` almost declaration for
- * declaration. A reader meets the pills at the foot of a card page and meets
- * this at the top of one; drawing a fifth silhouette for "a short value a card
- * carries" would be a new thing to learn in exchange for nothing.
+ * IT WAS THE LEGALITY FLAG'S PLATE AND IT IS NOT ANY MORE — history, not the
+ * rule. This shipped as `StatePill`'s notched silhouette filled in the pitch
+ * colour, on the argument that a reader who has learned the verdicts at the
+ * foot of a card page has learned this at the top of one. What that bought
+ * alongside the familiarity was a mark that is loud twice: the hue as a
+ * background behind its own words, and a silhouette that says "this carries
+ * state" a few centimetres from four objects that mean it literally.
  *
- * Two declarations differ and both are noted where they are made: the END
- * padding carries the notch's own width, because this label ends in its value
- * and the chamfer would otherwise bite the digit, and the words never wrap.
+ * SO THE COLOUR IS A BAND ACROSS THE TOP AND NOTHING ELSE, which is the mark
+ * `PitchRule` already draws under a card face — one object in two places, and
+ * here it gets the words a band under a picture has no room for. The
+ * stylesheet carries the rest: why the words take the display family the card
+ * name is set in rather than the pill's wide-tracked uppercase, and why a mark
+ * with no filled surface carries no bevel.
  *
- * SO THE NOTCH IS NO LONGER STATE'S ALONE, and that is a real widening rather
- * than an accident. `tokens.ts` said the clipped corner meant "this carries
- * state"; it now means "this is one value out of a fixed set the card carries",
- * which state and pitch both are and which nothing else in the interface is.
- * The token comment has been corrected to say so rather than left standing as a
- * claim this component breaks.
- *
- * NOT LITERALLY `StatePill`, THOUGH. That component's tones are `StateTone`, a
- * closed union of legality verdicts, and widening it to carry pitch would make
- * "which tone" stop meaning "which verdict" — the distinction its stylesheet is
- * built around. Two components, one shape, no shared union.
+ * The notch goes back to being state's alone with it. `tokens.ts` says so.
  */
 
 import type { PitchValue } from "optfall-theme";
@@ -75,9 +69,10 @@ export function PitchBox({ value, size = "md", label }: PitchBoxProps) {
    * draws a dash for it, which is the most a stone can manage, and the whole
    * reason this component exists is that it has room to be plainer than that.
    *
-   * Set in sentence case and uppercased by the stylesheet, which is the house
-   * treatment for a label: `text-transform` is a rendering, so a screen reader
-   * that falls back to the text node still gets a word rather than a shout.
+   * Sentence case in the DOM and on the screen alike. It was uppercased by the
+   * stylesheet — the house treatment for a LABEL — and that went with the
+   * label voice: a mark set in the card's own display face is read as part of
+   * the name beside it, and names in this game are not shouted.
    */
   const written = value === 0 ? "No pitch" : `Pitch ${value}`;
 

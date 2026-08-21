@@ -77,10 +77,12 @@ describe("the primitive set", () => {
     //
     // `pitch-box`: the same value again, for lists and grids. A stone beside
     // every name down a page is an ornament competing with the names; the box
-    // is the fact written out — the state pill's notched plate reading
-    // "PITCH 1" — and it replaced the jewel at every list and grid site in the
-    // product. See `PitchBox` for the division of labour between the three,
-    // and for why it borrows the pill's shape without its tone union.
+    // is the fact written out — a rectangle banded in the pitch colour along
+    // its top edge, reading "Pitch 1" underneath in the card's own face — and
+    // it replaced the jewel at every list and grid site in the product. It
+    // shipped as the state pill's notched plate and no longer wears it; see
+    // `PitchBox` for that trade and for the division of labour between the
+    // three.
     expect(PRIMITIVES).toHaveLength(17);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
@@ -275,18 +277,24 @@ describe("the reserved silhouette", () => {
     expect(LIGHT_TOKENS["ornament.cut.jewel"]).toBe(silhouette);
   });
 
-  test("the notch is one shape at one depth, drawn by two components", () => {
+  test("the notch is state's alone, at the token's depth", () => {
     /*
-     * `PitchBox` takes `StatePill`'s plate deliberately: same notch, same
-     * token, same polygon. The whole argument for reusing the shape is that a
-     * reader learns it once, and that argument dies the moment one of the two
-     * drifts — a notch half as deep on the pitch mark would be a SECOND
-     * ornament wearing the first one's name, which is the exact failure
-     * `ornament.cut.jewel` was promoted to a token to end.
+     * IT WAS DRAWN BY TWO COMPONENTS AND IS DRAWN BY ONE. `PitchBox` took
+     * `StatePill`'s plate — same notch, same token, same polygon — on the
+     * argument that a reader learns the shape once, and this test held the two
+     * copies in step. The box is a banded rectangle now, so the second copy is
+     * gone and with it the drift this guarded against.
      *
-     * The clip is compared with whitespace collapsed because the two files are
-     * formatted by Biome at 80 columns and wrap in different places; what has
-     * to match is the geometry, not the line breaks.
+     * What is left is the pair of facts the deletion makes newly worth
+     * asserting: that the pill still names the DEPTH token rather than a
+     * literal of its own, and that the pitch mark has not quietly kept the
+     * silhouette `ornament.notch.size`'s comment says it gave up. The second
+     * half is the one with teeth — `check-tokens.ts` cannot catch it, because a
+     * `polygon()` of percentages carries no colour and no absolute length and
+     * passes the literal scan happily.
+     *
+     * Whitespace is collapsed because Biome wraps these files at 80 columns and
+     * what has to match is the geometry, not the line breaks.
      */
     const flat = (path: URL) => readFileSync(path, "utf8").replace(/\s+/g, " ");
     const pill = flat(new URL("./react/StatePill.css", import.meta.url));
@@ -296,12 +304,48 @@ describe("the reserved silhouette", () => {
       "clip-path: polygon( var(--notch-near) 0%, calc(var(--notch-far) - var(--notch)) 0%, var(--notch-far) var(--notch), var(--notch-far) 100%, var(--notch-near) 100% );";
 
     expect(pill).toContain(clip);
-    expect(box).toContain(clip);
-    for (const source of [pill, box]) {
-      expect(source).toContain("--notch: var(--of-ornament-notch-size);");
-      // And the mirror, so a right-to-left reader gets one notch in both.
-      expect(source).toContain("--notch-near: 100%;");
+    expect(pill).toContain("--notch: var(--of-ornament-notch-size);");
+    // And the mirror, so a right-to-left reader gets the notch on the same
+    // corner.
+    expect(pill).toContain("--notch-near: 100%;");
+
+    expect(box).not.toContain("clip-path:");
+    expect(box).not.toContain("--of-ornament-notch-size");
+  });
+
+  test("the pitch box spends its colour on one edge and its ground on none", () => {
+    /*
+     * THE MARK'S WHOLE CHANGE, PINNED WHERE IT CAN FAIL. The box shipped as a
+     * plate filled in the pitch colour; it is a rectangle banded across its top
+     * edge over a neutral well instead, and each assertion below is one a
+     * well-meaning restoration of the coloured fill would have to break.
+     *
+     * THE GROUND IS CHECKED BY NAME, not merely asserted to exist. `sunken` is
+     * the only grey in the table below `ground`, `surface` AND `surface.raised`
+     * in both themes, which is what makes the mark offset wherever it is set;
+     * `surface` would pass a "has a background" check and vanish inside the
+     * card panel it most often sits on.
+     */
+    const box = readFileSync(
+      new URL("./react/PitchBox.css", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(box).toContain(
+      "border-block-start: calc(var(--of-bevel-width) * 2) solid var(--band);",
+    );
+    expect(box).toContain("background: var(--of-color-sunken);");
+    // No tone may paint a surface: the hue is the band, and the `--band` custom
+    // property is the only thing a tone class is allowed to set.
+    for (const tone of ["none", "one", "two", "three", "four"]) {
+      expect(box).toContain(
+        `.of-pitch-box--tone-${tone} { --band: var(--of-color-pitch-${tone}); }`,
+      );
     }
+    // The words are the card's own face, which is what makes this a name's mark
+    // rather than a flag's. The pill's wide-tracked shout went with the plate.
+    expect(box).toContain("font-family: var(--of-type-family-display);");
+    expect(box).not.toContain("text-transform:");
   });
 
   test("the mark is a chain of three interlocked links", () => {
