@@ -305,6 +305,53 @@ const CASES: readonly Case[] = [
     component: StatGlyph,
     props: { kind: "defence", value: null },
   },
+  /*
+   * THE PRODUCT PATH, WHICH THE CASES ABOVE ARE NOT. Every stat a card page
+   * prints resolves to one of LSS's published files, so what a reader actually
+   * meets is a `role="img"` wrapping an `<img>` — and that shape has a failure
+   * mode the drawn plate could not have: an inner image with its own accessible
+   * name announces the stat twice. `alt=""` is what prevents it, and this is
+   * where axe is asked to agree.
+   */
+  {
+    name: "StatGlyph power with artwork",
+    component: StatGlyph,
+    props: {
+      kind: "power",
+      value: "4",
+      src: "/symbols/icon_p.png",
+      width: 105,
+      height: 105,
+    },
+  },
+  {
+    name: "StatGlyph cost with artwork",
+    component: StatGlyph,
+    props: {
+      kind: "cost",
+      value: "2",
+      src: "/symbols/icon_r.png",
+      width: 105,
+      height: 105,
+    },
+  },
+  /*
+   * AN EMPTY POSITION AS THE PANEL DRAWS IT: the artwork greyed, no character
+   * in the value position, and the absence spoken. The name is the only channel
+   * carrying it for a listener, so an unnamed `role="img"` here would be the
+   * whole fact lost rather than a redundancy.
+   */
+  {
+    name: "StatGlyph power absent with artwork",
+    component: StatGlyph,
+    props: {
+      kind: "power",
+      value: null,
+      src: "/symbols/icon_p.png",
+      width: 105,
+      height: 105,
+    },
+  },
   // `X` and `*` are printed values upstream, which is why `value` is a string.
   {
     name: "StatGlyph variable",

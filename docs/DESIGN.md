@@ -16,7 +16,7 @@ move; each expression of it does not.
 |---|---|
 | **The search field is the hero.** No marketing hero, no illustration above the fold. The first thing on the page is the thing you came to do. | **The grammar is inherited, not invented.** LSS's own Card Vault already has a syntax. We adopt it verbatim and extend it to rules and interactions, so a query someone already knows keeps working. |
 | **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on ~~anything carrying state~~ a value the card carries out of a fixed set — legality, and now pitch; see `PitchBox`. The chrome should feel struck from metal, not laid out in a design tool. |
-| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch wears a cut jewel on a card's own page, and under a card face a band — ~~two forms, both reserved, neither used for anything else~~ three now: in a list or a grid it wears the legality flag's notched plate, spelled `PITCH 1`, which is the one form deliberately NOT reserved. Sharing that silhouette is the point of it — a reader learns the plate once, at the foot of a card page, and meets it again at the top of one. See `PitchBox`. The mark is the single sanctioned exception to the jewel's silhouette, and both are argued below. |
+| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch wears ~~a cut jewel~~ **a ring of three sockets** on a card's own page, and under a card face a band — ~~two forms, both reserved, neither used for anything else~~ three now: in a list or a grid it wears the legality flag's notched plate, spelled `PITCH 1`, which is the one form deliberately NOT reserved. Sharing that silhouette is the point of it — a reader learns the plate once, at the foot of a card page, and meets it again at the top of one. See `PitchBox`. ~~The mark is the single sanctioned exception to the jewel's silhouette~~ — the mark is a chain and the jewel is a ring, so there is no reserved silhouette left to except; all three are argued below. |
 | **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Two voices, strictly assigned.** A serif for names and questions, a sans for everything else. ~~a wide-tracked mono for labels and anything citable~~ — see below. |
 | **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the card**, and the rules and rulings attach to it. Card pages are the shareable object; `/cr/…` sections are addressable too and a card links into them. ~~The unit is the verdict, not the card.~~ — see below. |
 | **Dark mode is not an inversion.** It is designed, and for many users it is the only mode they will ever see. | **Black is the native key.** Near-black ground, blood accent, brass for anything authoritative. Light mode is the printed-rulebook translation — ash and iron, not paper white. |
@@ -123,28 +123,80 @@ plate rather than as flat rectangles.
 
 ### The pitch jewel
 
-A **diamond**: vertex up, vertex down, widest across the middle, with all four
-corners cut — eight sides, and a facet highlight, carrying its numeral. Shape,
-number and colour state the same fact three times, and the silhouette is
-reserved: nothing else in the interface is ever this shape.
+A **ring**: a disc in the pitch tone holding ~~its numeral~~ **three bezelled
+sockets in an equilateral triangle, filled to the card's pitch value**. Shape,
+count and colour state the same fact three times.
 
-**The orientation is part of the specification, not a drawing detail.** This
+~~A **diamond**: vertex up, vertex down, widest across the middle, with all four
+corners cut — eight sides, and a facet highlight. The silhouette is reserved:
+nothing else in the interface is ever this shape.~~
+
+~~**The orientation is part of the specification, not a drawing detail.** This
 section used to say only "an eight-sided cut stone", which is equally true of an
 edge-up chamfered square — and so, for a while, the component drew one of those
 while the design-system cards drew the diamond, and the logo followed the
 component. Nothing failed, because nothing disagreed with the words. An edge-up
-octagon reads as a *button*; a vertex-up one reads as a *gem*. The exact
-polygon is the `ornament.cut.jewel` token in `optfall-theme`, and every surface
-names it rather than drawing it — the component, the design-system cards, all of
-it. `scripts/check-tokens.ts` fails the build on a `var(--of-*)` the theme does
-not define, so the shape cannot be redrawn in one place and not the other. That
-is the actual fix: not a second copy kept honest by a test, but no second copy.
+octagon reads as a *button*; a vertex-up one reads as a *gem*.~~
 
-The numeral is the **primary** channel, not an accessibility fallback. Red and
-yellow are the classic deuteranopia confusion pair, pitch is the most-read value
-on a card, and it is the same pair the leading commercial scanner app misreads.
-Designing colour as the redundant channel costs nothing and fixes it for everyone
-downstream.
+**The reservation is retired, and the incident behind it is the reason this
+paragraph survives.** What the diamond bought was a silhouette that meant one
+thing and could be found on a page at a glance. What it cost was the corner
+disagreeing with the card, which prints a ring — and once every other mark on
+the card panel was the game's own artwork, the stone was the last object still
+insisting on a shape the game does not draw.
+
+**What did not change is the rule the drift taught.** The exact polygon is still
+the `ornament.cut.jewel` token in `optfall-theme`, still defined in both tables,
+and still what `index.test.ts` pins as vertex-up — it is simply no longer read
+by the jewel. A shape spelled out in a component rather than named is the
+failure mode, whatever the shape is, and `scripts/check-tokens.ts` plus that
+test are what hold it. The token is kept rather than deleted because it is the
+record of what the mark used to mean, and `Mark`'s own history is written
+against it.
+
+**The facet went with the silhouette.** A cut stone catches light on its crown;
+a ring does not, and the card's ring is a flat field inside a bezel. The
+gradient also had a bug in it — an absolutely positioned band that `clip-path`
+used to cut to the octagon, which a `border-radius` does not clip, so it painted
+as a rectangle overhanging the disc. See `PitchJewel.css`, which keeps the
+contrast measurement the facet was tuned against in case anything is ever laid
+over the stone again.
+
+**The sockets are the game's own resource symbol.** A pitch value *is* a
+resource value — CR 1.12.4e — so a filled socket holds `{r}`, the same file the
+marker renders with inline in card text, and an empty one is a hole. Both wear
+the same light bezel, which is what lets a red pip sit on the red stone at pitch
+one. A caller that supplies no artwork falls back to a drawn pip in the same
+red, because a socket a few pixels across cannot resolve the file — the
+design-system gallery, which shows every size, and stories. The card page is the
+product's only stone.
+
+~~The numeral is~~ **The count is** the **primary** channel, not an
+accessibility fallback. Red and yellow are the classic deuteranopia confusion
+pair, pitch is the most-read value on a card, and it is the same pair the leading
+commercial scanner app misreads. Designing colour as the redundant channel costs
+nothing and fixes it for everyone downstream.
+
+**The channel changed and the constraint did not, which is why the sentence
+above is struck rather than deleted.** The stone carried a numeral until the
+marks on the card panel became the game's own. The printed card counts instead:
+three slots in the top-left corner, filled from the apex down — one for pitch
+one, two for pitch two, three for pitch three — with no numeral anywhere on the
+frame. Counting is not a hue, so every word of the paragraph above still holds;
+what it costs is a numeral's exactness at a glance, which for a three-valued
+closed set is a smaller loss than it sounds. The accessible name says "Pitch 3"
+in words at every size.
+
+**Three slots, not `value` slots.** A single filled pip and one pip out of three
+are different statements, and only the second says "this card pitches for one of
+a possible three". The empty slots are the denominator. They take the stone's own
+ink at a quarter opacity, which is the one colour on the component already
+guaranteed to clear AA against every tone.
+
+**The card's field is a circle and ours stays an octagon.** The silhouette is the
+one shape this system reserves, and at the size a stone is read a cut octagon and
+a disc are the same object; giving it up to match the frame would spend a
+promise to gain nothing a reader can see.
 
 **There are four stones, not three, and the fourth is why the numeral rule is
 load-bearing.** A pitch 4 has been previewed — a purple strip on a Shadow
@@ -158,10 +210,12 @@ Purple is the one hue in this
 palette that cannot be given a luminance gap: bright enough to separate from
 pitch three and its own numeral fails contrast; dark enough for white ink and it
 sits where blue sits. So three and four are told apart by hue alone for a reader
-with deuteranopia or protanopia, and by the numeral for everybody. That is the
-arrangement this section already describes rather than a new exception to it —
-but it is the first stone where the redundant channel is genuinely carrying
-less, and it is written down here rather than discovered later.
+with deuteranopia or protanopia — and the count cannot help, because there are
+three slots and both values fill all of them. ~~by the numeral for everybody~~
+**The accessible name is what separates them for everybody else**, which is
+weaker than a visible numeral was and is the one place the change above costs
+something real. It is the first stone where the redundant channel is genuinely
+carrying less, and it is written down here rather than discovered later.
 
 ### The pitch rule — the jewel's one exception, and where it applies
 
@@ -174,17 +228,18 @@ per value, ascending. `PitchRule` in `optfall-components`.
 
 **Every text surface keeps the jewel**, which is what stops this from being a
 weakening of the rule above. The card page, the rows view and the names view all
-carry numbered stones, so the numeral remains available one click — usually
-zero clicks — away, and the reserved silhouette still appears wherever there is
-room for it.
+carry ~~numbered~~ **slotted** stones, so the value remains available one click —
+usually zero clicks — away, and the reserved silhouette still appears wherever
+there is room for it.
 
-**What the bands give up, and what replaces it.** A band has no room for a
-numeral, so on that one surface colour carries more weight than this document
+**What the bands give up, and what replaces it.** A band cannot carry the stone's
+slots, so on that one surface colour carries more weight than this document
 otherwise allows. Three things stand in for it: the element is a `role="img"`
 with a written name that spells the values out ("Pitch 1, 2 and 3"); the COUNT
-of bands is a non-colour channel, which is new information the old rendering did
-not have at all; and the ORDER is fixed ascending, so the leftmost band is always
-the lowest pitch. The honest summary is that this is a trade rather than a free
+of bands is a non-colour channel, ~~which is new information the old rendering
+did not have at all~~ **which is now the same channel the jewel itself uses,
+counting versions where the stone counts pips**; and the ORDER is fixed
+ascending, so the leftmost band is always the lowest pitch. The honest summary is that this is a trade rather than a free
 win, and it is confined to the surface that could not take the jewel.
 
 **It is plural where the jewel is singular, and that is why it is a second

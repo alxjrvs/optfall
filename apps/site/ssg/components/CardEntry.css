@@ -505,11 +505,29 @@
 
 /* Same argument, one step down the scale: the type line shares the bottom
      bar with up to three stat plates, and it is the only elastic thing in it. */
+/*
+    ONE SIZE ACROSS THE PANEL'S FOUR FACTS. The printed text, the stat values,
+    the cost and this type line are all `type.size.large`, and none of them
+    steps away from it.
+
+    THEY USED NOT TO BE. The stat values were `title`, a step and a half above
+    the text they sit under; the cost was `large`; and this line clamped between
+    `base` and `large` on viewport width. Three sizes for four things that are
+    the same KIND of thing — what the card prints — so the panel read as a
+    hierarchy nobody had decided on, with the numerals loudest.
+
+    THE CLAMP WENT WITH THEM, and that is the part worth checking rather than
+    assuming. It existed to shrink the type line on a narrow panel; the printed
+    text above it has never clamped, so a phone was already setting the card's
+    own sentences at full size while its type line shrank. Fixing the size makes
+    the band wider at 320px, and the corner track's `auto` minimum is what keeps
+    it in the box.
+  */
 .of-card__type-line {
   margin: 0;
   text-align: center;
   font-family: var(--of-type-family-serif);
-  font-size: clamp(var(--of-type-size-base), 2.5vw, var(--of-type-size-large));
+  font-size: var(--of-type-size-large);
   color: var(--of-color-ink-muted);
 }
 
@@ -531,14 +549,13 @@
 }
 
 /*
-    A COMBAT POSITION THE CARD LEAVES EMPTY: ITS WIDTH, AND NOTHING ELSE.
+    A COMBAT POSITION THE CARD LEAVES EMPTY IS DRAWN, NOT HELD OPEN.
 
-    `visibility: hidden` RATHER THAN `display: none`, and that is the whole
-    rule. Both make the badge invisible; only this one leaves it in the flow, so
-    the corner keeps the width a printed value would have taken and the grid
-    track keeps its size.
+    This rule used to be `.of-card__badge--reserved { visibility: hidden }` and
+    the argument for it was a measured one, so here is what replaced it and why
+    the measurement no longer needs a rule of its own.
 
-    THE TRACK IS WHAT THIS IS PROTECTING. Both bands are
+    THE PROBLEM IT SOLVED. Both bands are
     `fit-content(28%) minmax(0, 1fr) fit-content(28%)` and the name and the type
     line are centred INSIDE the middle column — see the note on the corner bands
     above — so a corner sized to nothing does not merely leave a gap, it slides
@@ -548,23 +565,30 @@
     positions. That is half the corpus — 1,543 cards print cost and defence and
     no power, 411 print cost alone, 529 print defence alone.
 
-    The badge is `aria-hidden` in the markup as well, because an empty position
-    is not a fact about the card and nothing here should be read aloud.
+    WHY THERE IS NOTHING LEFT TO DECLARE. An empty position now renders the
+    mark, greyed — `StatGlyph`'s `--absent` state, which desaturates the artwork
+    rather than hiding it. The badge is genuinely in the flow at its genuine
+    size, so the track keeps its width for the ordinary reason that something is
+    in it, and the hidden stand-in that was holding the width open has nothing
+    left to hold.
+
+    The measurement stays written down because it is the reason the corner may
+    never collapse. Anything that makes an empty position disappear again — a
+    `display: none`, a conditional that skips the badge — puts the type line
+    back off-axis on half the corpus.
   */
-.of-card__badge--reserved {
-  visibility: hidden;
-}
 
 /*
     A CORNER WITH NOTHING IN IT, WEARING THE WIDTH OF THE CORNER OPPOSITE.
 
-    Same mechanism as `--reserved` above and the same reason — a corner sized to
-    nothing slides the centred thing off the card's axis — but a different
-    question. `--reserved` is a position this card leaves empty and whose own
-    width is therefore known. This is a corner with no position at all: a
-    pitch-0 card has no stone to hide, so there is nothing of its own to size
-    it by. It holds the OPPOSITE corner's badges instead, rendered again and
-    hidden, which makes the two widths equal by construction.
+    THE ONE HIDDEN STAND-IN THAT SURVIVED, and it survived because it answers a
+    different question from the one above. That note is about a position the
+    frame HAS and this card leaves empty — the mark is drawn, greyed, and holds
+    its own width by being there. This is a corner with no position at all: a
+    pitch-0 card has no stone to grey out, so there is nothing of its own to
+    size it by, and the axis problem is identical. It holds the OPPOSITE
+    corner's badges instead, rendered again and hidden, which makes the two
+    widths equal by construction.
 
     571 cards need it in the title band — a pitch-0 card that prints a cost, or
     a pitched card that prints none — and one needs it in the bottom bar:
@@ -578,86 +602,57 @@
 }
 
 /*
-    THE SYMBOL SITS OUTBOARD OF ITS WORD, ALWAYS.
+    THE ARTWORK SITS OUTBOARD, ALWAYS, AND THERE IS NO LONGER A WORD BESIDE IT.
 
-    The label used to sit ABOVE the plate, which is the one arrangement that
-    reads the same on both sides of the panel and is therefore the one that says
-    nothing about which side it is on. Stacked, the four corners were four
-    identical two-line towers and the eye had to read a word to find out which
-    corner it had landed in.
+    The history is worth keeping because the arrangement survived the change and
+    the reason for it did not. The label used to sit ABOVE the plate — the one
+    arrangement that reads the same on both sides of the panel and therefore the
+    one that says nothing about which side it is on, so the four corners were
+    four identical two-line towers and the eye had to read a word to find out
+    which corner it had landed in. Set side by side instead, the plate took the
+    outer position and the word the inner one, which is how the printed card
+    arranges it: the values live in the margins and everything that explains
+    them is inboard.
 
-    Set side by side instead, the plate takes the outer position and the word
-    the inner one — so the symbols form a column down each edge of the panel,
-    the words face in toward the name and the type line between them, and a
-    reader scanning for "what does this cost" travels the edge rather than the
-    middle. This is also how the printed card arranges it: the values live in
-    the margins, and everything that explains them is inboard.
+    THE WORDS ARE GONE — see `StatBadge` in `CardEntry.tsx` — and the pair the
+    mirroring applies to is now the mark and its VALUE. The card sets those the
+    same way round: `{p} 4` at the start of the combat bar, `2 {d}` at its end,
+    with the artwork against the frame in both corners and the numeral facing
+    the type line. So the rule that used to keep the label inboard now keeps the
+    numeral there, which is the same rule about the same axis.
 
-    Mirrored with `row-reverse` on the start side rather than by reordering the
-    markup, because `<dt>` before `<dd>` is what makes the pair a definition and
-    a `<dl>` whose term follows its value is a `<dl>` that has stopped being one
-    for anything reading the document rather than looking at it.
-  */
-/*
-    THE WORD WRAPS UNDER THE PLATE WHEN THE BAND RUNS OUT, and never the other
-    way round. `flex-wrap: wrap` drops the corner's min-content from
-    `plate + gap + label` to `max(plate, label)`, which is what the capped track
-    above folds INTO once 28% stops covering max-content — and, because that
-    min-content is the track's floor rather than a suggestion, it is also where
-    the folding stops. On a wide panel there is no pressure and
-    this never fires; on a phone the corner folds back to the stacked
-    arrangement this band used to have everywhere, which is the right thing to
-    degrade into. It is a worse reading of which corner you are in, and that is
-    a smaller loss than a name with nowhere to go.
-
-    PLAIN `center`, AND `safe center` WAS TRIED AND TAKEN BACK OUT. It was added
-    as a second belt against a badge somehow wider than its box, on the argument
-    that centring such an item splits the overflow both ways and the outward
-    half crosses `BevelledPlate`'s border. Two things were wrong with it.
-
-    Its fallback is not the same answer. A browser that does not understand the
-    keyword drops the declaration to the initial `normal`, which behaves as
-    `flex-start` — and the start corner is `row-reverse` (below), so
-    `flex-start` there is the RIGHT edge and the badge would spill LEFT, the
-    very direction the belt was for. `safe`'s own fallback is `start`, the left
-    edge whatever `row-reverse` says, so the two paths disagree.
-
-    And it is not neutral on the other corner either: the end badge is plain
-    `row`, so falling back to `start` pins it left and sends the WHOLE overflow
-    outward, where `center` would have spilled half as much.
-
-    So it is a belt that helps one corner, hurts the other, and behaves
-    differently depending on the browser — bought against a case that cannot
-    arise, because the guarantee is the corner track's `auto` minimum. The track
-    is the thing that keeps a badge inside its box; nothing here needs to.
+    MIRRORED ON THE END SIDE RATHER THAN THE START. It was `row-reverse` on
+    `--start`, because `<dt>` before `<dd>` is what makes a pair a definition and
+    reversing the markup would have stopped the list being one. There is no list
+    left to protect, and `StatGlyph` emits the artwork before the value, so the
+    start corner is already correct in document order and the END corner is the
+    one that flips. `.of-card__badges--start` therefore no longer reverses
+    anything and the declaration is gone rather than left saying nothing.
   */
 .of-card__badge {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--of-space-tight);
 }
 
-.of-card__badges--start .of-card__badge {
+/*
+    CENTRED ON THE MARK, NOT ON THE BOX. `align-items: center` here and in
+    `StatGlyph` are the two halves of one promise: the artwork and the numeral
+    share a centre line, and that line is the corner's own. Without both, a
+    two-digit life total sets its own baseline and the green disc beside it
+    drifts up against the bevel.
+  */
+.of-card__badges--end .of-stat--art {
   flex-direction: row-reverse;
 }
 
-.of-card__badge dt {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink-faint);
-}
-
-.of-card__badge dd {
-  margin: 0;
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-title);
-  color: var(--of-color-ink);
-}
+/*
+    A COST MARK IS A GRID, NOT A ROW — the card sets that numeral inside the
+    disc — so the mirroring above must not reach it. `flex-direction` on a grid
+    container is inert, so nothing has to exclude it; this note exists because
+    "why is the end-corner rule not breaking cost" is a question the next reader
+    will otherwise have to answer by experiment.
+  */
 
 /*
     The foot of the panel: rarity, the printing's code, attribution, what is on
@@ -1162,23 +1157,16 @@
   line-height: var(--of-type-leading-loose);
 }
 
-/* The printed marker sits beside its word, at the label’s own baseline.
-     Rehomed from `.stat dt` onto `.of-card__badge dt` when the stat block became two
-     bands of the panel — the symbols are the same fact in the same place, and
-     the selector followed the markup rather than the markup being kept for the
-     selector. */
-/* The letter chip that used to sit here beside each stat's word is gone. It
-     paired the label with the inline marker — "Power {p}" — and earned its
-     place while the marker was an abstract plate that had to be taught. The
-     markers are the card's own disc and shield now, so the chip was teaching
-     what the reader already recognised, twice per card, in the tightest line on
-     the page. `GameSymbol` is unchanged and still renders inline in the text,
-     which is the place a marker is met cold. */
-.of-card__badge dt {
-  display: flex;
-  align-items: center;
-  gap: var(--of-space-tighter);
-}
+/* The rule that laid out a badge's label is gone with the label itself. Two
+     notes lived here across two changes — one rehoming the selector when the
+     stat block became two bands, one retiring the letter chip that paired the
+     word with the inline marker — and both were about arranging things beside a
+     word this panel no longer prints. `StatBadge` in `CardEntry.tsx` carries
+     the argument for that; a selector matching no element is dead weight that
+     reads, to the next person, like the styling is still handled here.
+
+     `GameSymbol` is unchanged and still renders inline in the printed text,
+     which is the one place a marker is met cold. */
 
 /* -- Printed text -------------------------------------------------------- */
 

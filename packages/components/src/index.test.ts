@@ -252,13 +252,25 @@ describe("the reserved silhouette", () => {
 
   const silhouette = DARK_TOKENS["ornament.cut.jewel"] ?? "";
 
-  test("the jewel clips itself with the token, not a drawing of its own", () => {
-    expect(jewelSource).toContain("clip-path: var(--of-ornament-cut-jewel);");
-    // The literal it replaced must not come back. `check-tokens.ts` cannot
-    // catch that one: a raw `polygon()` of percentages contains no colour and
-    // no absolute length, so it passes the literal scan and would sit there
-    // quietly disagreeing with the token again.
+  test("the jewel is a ring, and draws no polygon of its own", () => {
+    /*
+     * THE JEWEL NO LONGER WEARS THE RESERVED SILHOUETTE, which is why this
+     * assertion inverted. It read "clips itself with the token, not a drawing
+     * of its own" and guarded a real hazard: the component once drew an edge-up
+     * square in a raw `polygon()` while the design-system cards drew the
+     * diamond, and nothing failed because `check-tokens.ts` cannot catch a
+     * polygon of percentages — no colour, no absolute length, so it passes the
+     * literal scan and sits there disagreeing with the token.
+     *
+     * The card prints a ring, so the stone is a circle. The half of this test
+     * that still matters is the half about literals: a shape spelled out here
+     * rather than named is the failure mode, whatever the shape is.
+     */
+    expect(jewelSource).toContain("border-radius: 50%;");
     expect(jewelSource).not.toContain("clip-path: polygon(");
+    expect(jewelSource).not.toContain(
+      "clip-path: var(--of-ornament-cut-jewel);",
+    );
   });
 
   test("is vertex-up, which is the half of it that drifted", () => {
