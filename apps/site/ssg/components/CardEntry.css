@@ -180,44 +180,97 @@
 }
 
 /*
-    THE TEXT BAND OPENS ON THE PITCH COLOUR — the fourth carrier of a fact the
+    THE PANEL OPENS ON THE PITCH COLOUR — the fourth carrier of a fact the
     jewel, the tab strip and the numeral already carry, and the only one a
-    reader gets for free while looking at the text they came for.
+    reader gets for free while looking at the card they came for.
 
-    ABOVE THE TEXT, BECAUSE THAT IS THE RULE THE PRINTED CARD DRAWS. A Flesh and
-    Blood frame closes its art and opens its text box on a single stroke, and
-    that stroke is the one piece of the card's geometry this panel was
+    ~~ABOVE THE TEXT, BECAUSE THAT IS THE RULE THE PRINTED CARD DRAWS. A Flesh
+    and Blood frame closes its art and opens its text box on a single stroke,
+    and that stroke is the one piece of the card's geometry this panel was
     mirroring in colour but not in position — the colour sat over the name
-    instead. The whole argument for the panel is that it is the printed
-    object's own geometry (see the band comments below); this is where the
-    object puts its rule.
+    instead.~~ Struck, and the strip is back over the name. Closing the art is
+    half of what that stroke does on a printed card, and it is the half this
+    panel has no art to do; what the panel does have is a name with a pitch
+    strip across the top of it, which is the piece of the frame a reader can
+    check against the card in their hand. The boundary under the name goes back
+    to the generic separator every other band boundary draws — and it carries
+    the bead below, which is a mark rather than a second colour.
 
-    IT REPLACES THE HAIRLINE RATHER THAN JOINING IT. The rule above already
-    draws a `rule`-coloured separator on every band boundary, and two strokes
-    on one edge is a rendering mistake, not emphasis. So this is the same
-    border, restated in the pitch colour at the bevel's weight — the band keeps
-    the margin and padding the separator rule gives it, which is why nothing
-    here touches either.
-
-    THREE CLASSES, TO WIN ON SPECIFICITY RATHER THAN ON ORDER. A bare
-    `.of-card__band--oracle` is (0,1,0) and LOSES to the (0,2,0) selector above
-    it; `.of-card__band + .of-card__band--oracle` merely ties, leaving this
-    correct only while the two rules keep their current order in the file.
-    Doubling the class takes it to (0,3,0), which no reordering can undo. It is
-    restated as the `border-block-start` SHORTHAND for the same reason: this
-    file has already been bitten by a longhand overriding one edge of a
-    shorthand, which is fragile in exactly the way a full restatement is not.
+    IT IS THE PANEL'S TOP EDGE, NOT A BOUNDARY BETWEEN BANDS, and that is why
+    this rule sets padding where the version before it deliberately touched
+    neither margin nor padding. The title band is the panel's first child, so
+    the `+` rule above never reaches it: there is no hairline here to replace
+    and no band rhythm to inherit. The plate's own padding gives the stroke its
+    air above; the `padding-block-start` gives the name its air below.
 
     Colour is the ONLY channel this adds, and deliberately not the only channel
     the fact has — `docs/DESIGN.md` puts red and yellow at the top of the
     deuteranopia confusion pair, which is why the numeral in the stone exists.
 
-    The fallback is the no-pitch grey, so a card with no pitch keeps the
-    separator it would have had rather than losing the boundary altogether.
+    The fallback is the no-pitch grey, so a card with no pitch opens on a real
+    stroke rather than on an unset `var()` and no rule at all.
   */
-.of-card__band + .of-card__band.of-card__band--oracle {
+.of-card__band--title {
   border-block-start: calc(var(--of-bevel-width) * 2) solid
     var(--card-pitch, var(--of-color-pitch-none));
+  padding-block-start: var(--of-space-tight);
+}
+
+/*
+    THE BEAD ON THE NAME'S OWN BOUNDARY — the section rule's ornament, on the
+    one break in the panel that is a division rather than a fold.
+
+    `OrnamentalRule` opens its centre and mounts a flattened lozenge there, and
+    that mark is what a reader of this site has already learned a *section*
+    break looks like. The name-to-text boundary is the only break in this panel
+    that means it: the bands under it — flavour, the stat bar, the credits — are
+    parts of one printed object and keep the bare hairline, so spending the mark
+    here says which boundary is the seam and which are folds. "Never twice on
+    one screen" is the ration `docs/DESIGN.md` sets for filigree proper; this is
+    the plain bead rather than the scrollwork, and it is spent once.
+
+    DRAWN HERE RATHER THAN COMPOSED, and that is the smaller of two costs. The
+    hairline it sits on is the `+` rule's, and so are the margin and padding
+    that give this band its rhythm. Mounting a real `OrnamentalRule` between the
+    two bands would break that adjacency and take all three with it, to buy a
+    line this boundary already has.
+
+    ORNAMENT INK, NOT THE PITCH COLOUR. The pitch is stated once, at the top of
+    the panel, and a coloured bead here would be the panel saying it twice on
+    one screen with nothing new to add. This mark says "section break" and
+    nothing else, which is exactly what it says everywhere else on the site.
+
+    THE SHAPE IS `.of-rule__mark`'s, restated rather than promoted to a token.
+    The token stylesheet is embedded verbatim in every page under
+    `design-system/`, which `scripts/design-system-coverage.test.ts` holds
+    byte-identical — so naming a two-user polygon would regenerate every one of
+    those committed pages for a shape neither user can get wrong silently. A
+    third user is when that trade flips.
+  */
+.of-card__band--oracle {
+  /* The containing block for the bead, and nothing else. */
+  position: relative;
+}
+
+.of-card__band + .of-card__band.of-card__band--oracle::before {
+  content: "";
+  position: absolute;
+  /*
+      CENTRED ON THE HAIRLINE, NOT UNDER IT. An absolutely positioned box
+      resolves its insets against the PADDING box, and a border sits outside
+      that — so zero is the inside edge of the line, and half its width,
+      negated, is the middle of it.
+    */
+  inset-block-start: calc(-1 * var(--of-ornament-rule-width) / 2);
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  inline-size: var(--of-ornament-filigree-size);
+  /* Half height: a flattened lozenge reads as a terminal on the rule rather
+     than as a shape sitting on top of it. `OrnamentalRule.css`'s words, and the
+     argument survives the move from a rule's gap to a band's edge. */
+  block-size: calc(var(--of-ornament-filigree-size) / 2);
+  background: var(--of-ornament-filigree-ink);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 
 /*
@@ -321,8 +374,8 @@
   font-family: var(--of-type-family-display);
   /* An `h1`'s own margin, zeroed. This was two longhands while the pitch stroke
      lived on this element and needed the block-start edge to itself; the stroke
-     moved to the text band, so the shorthand it was split to avoid competing
-     with is safe again. */
+     is the band's now, so the shorthand it was split to avoid competing with is
+     safe again. */
   margin-block: 0;
   overflow-wrap: anywhere;
   text-align: center;
@@ -333,25 +386,27 @@
   );
 
   /*
-      THE PITCH STROKE USED TO LIVE HERE, AND IT NOW HEADS THE TEXT BAND. See
-      `.of-card__band--oracle` above for where it went and why; what is left in
-      this rule is type and nothing else.
+      THE PITCH STROKE USED TO LIVE HERE, AND IT DOES NOT COME BACK. It heads
+      the title band now — see `.of-card__band--title` above — which is above
+      this element rather than on it. The distinction is the whole reason the
+      declarations below went away, so it is worth keeping straight: the stroke
+      is over the name again, but the name does not draw it.
 
-      ~~ABOVE THE NAME, BECAUSE THAT IS WHERE THE PRINTED CARD PUTS IT. A Flesh
+      ABOVE THE NAME, BECAUSE THAT IS WHERE THE PRINTED CARD PUTS IT. A Flesh
       and Blood card carries its pitch as a strip across the very top of the
-      frame, over the name plate — so a stroke under the name was the one part
-      of this panel that mirrored the card in colour and not in position.~~
-      Struck: the strip a reader actually reads as a rule on a printed card is
-      the one closing the art and opening the text box, and that is the edge
-      this panel now colours. The pitch is still carried four ways — the jewel,
-      the tab strip, the numeral, and now that stroke.
+      frame, over the name plate. ~~Struck: the strip a reader actually reads as
+      a rule on a printed card is the one closing the art and opening the text
+      box, and that is the edge this panel now colours.~~ Struck in turn — the
+      stroke spent one iteration on the text band and came back. The pitch is
+      carried four ways either way: the jewel, the tab strip, the numeral, and
+      that stroke.
 
-      Gone with it: `inline-size: fit-content`, `max-inline-size`,
-      `margin-inline: auto` and the negative `margin-block-start` that gave the
-      stroke's own height back. All four existed only to make a border on this
-      element end where the name's text ends and cost the band no vertical
-      space. A band border needs none of them — it spans the panel by nature,
-      and it sits on an edge the grid was already spacing.
+      Gone with the move, and staying gone: `inline-size: fit-content`,
+      `max-inline-size`, `margin-inline: auto` and the negative
+      `margin-block-start` that gave the stroke's own height back. All four
+      existed only to make a border on THIS element end where the name's text
+      ends and cost the band no vertical space. A band border needs none of them
+      — it spans the panel by nature, and the band pads itself below it.
     */
 }
 
