@@ -8,23 +8,31 @@
 
 .of-jewel {
   /*
-    THE RESERVED SILHOUETTE: the pitch diamond. Vertex up, vertex down, widest
-    across the middle, with all four corners cut — eight sides, and a stone
-    rather than a button.
+    A RING, WHICH IS WHAT THE CARD PRINTS — and this was an eight-sided cut
+    stone for most of the project's life, so the history it replaces is kept
+    rather than deleted.
 
-    IT USED TO BE EDGE-UP, a chamfered square, and that was drift rather than a
-    decision: `scripts/build-design-system.ts` drew the diamond, this drew the
-    square, and `docs/DESIGN.md` said only "an eight-sided cut stone" — true of
-    both, so nothing ever failed while the published design-system cards
-    advertised a shape the product did not render. Orientation is the whole of
-    the difference and it is what makes the shape read as a gem at a glance,
-    before the numeral is legible.
+    ~~THE RESERVED SILHOUETTE: the pitch diamond. Vertex up, vertex down,
+    widest across the middle, with all four corners cut — eight sides, and a
+    stone rather than a button.~~ ~~It used to be edge-up, a chamfered square,
+    and that was drift rather than a decision: `build-design-system.ts` drew the
+    diamond, this drew the square, and `docs/DESIGN.md` said only "an
+    eight-sided cut stone" — true of both, so nothing ever failed while the
+    published cards advertised a shape the product did not render.~~
 
-    The polygon is a TOKEN rather than a literal here, which is the same rule
-    every colour and length in this file already follows and the one that would
-    have prevented the drift outright: `scripts/check-tokens.ts` fails the build
-    on a `var(--of-*)` the theme does not define, so the shape cannot be redrawn
-    in one surface and not the other.
+    THAT INCIDENT IS THE REASON THIS NOTE SURVIVES ITS OWN SHAPE. What the
+    diamond bought was a silhouette reserved to one meaning, findable at a
+    glance and impossible to confuse with a chip or a button. What it cost was
+    the corner disagreeing with the card, which prints a ring: a light bezel
+    around a field holding three bezelled sockets. Once every other mark on the
+    panel was the game's own, the stone was the last object insisting on a shape
+    the game does not draw.
+
+    `ornament.cut.jewel` IS NO LONGER READ HERE AND STAYS DEFINED. It is the
+    shape `Mark`'s history is written against and the one `index.test.ts` pins
+    as vertex-up; deleting it to tidy an unused value is how a design system
+    loses the record of what a shape used to mean. See `docs/DESIGN.md`, where
+    the reservation is struck through rather than removed.
   */
   position: relative;
   display: inline-flex;
@@ -39,7 +47,35 @@
     proportion rather than a design value the theme could have supplied.
   */
   --jewel-size: var(--of-ornament-jewel-base);
-  --slot-size: calc(var(--jewel-size) * 0.24);
+  --slot-size: calc(var(--jewel-size) * 0.38);
+
+  /*
+    THE TRIANGLE IS EQUILATERAL AND CENTRED ON ITS CENTROID, and both halves of
+    that had to be stated because a grid gives you neither for free.
+
+    A two-column grid with the apex spanning both puts the three centres on the
+    corners of a RECTANGLE's top-middle and bottom corners — an isosceles
+    triangle whose height is whatever the row gap happens to make it. Equal
+    column and row gaps therefore drew a triangle taller than it is wide.
+
+    So the row spacing is derived from the column spacing rather than shared
+    with it: centre to centre across the bottom pair is `--slot-step`, and an
+    equilateral triangle of that side has a height of `√3/2` times it. The grid
+    gap is an EDGE gap, so the row gap is that height less one slot — which is
+    why `--slot-gap` cannot be arbitrarily small: below about 0.155 of a slot
+    the two rows would have to overlap, and a negative `row-gap` is not a thing
+    CSS grid will accept.
+
+    AND THE CLUSTER RIDES UP BY A SIXTH OF ITS OWN HEIGHT. Centring the bounding
+    box is not centring the mark: the box's midpoint is halfway between the two
+    ROWS, while the mass of three equal circles sits at their centroid, one
+    third of the way up from the bottom pair. The difference is exactly the row
+    height over six, every time, and it is what made a perfectly centred cluster
+    read as sitting low in the stone.
+  */
+  --slot-gap: calc(var(--slot-size) * 0.2);
+  --slot-step: calc(var(--slot-size) + var(--slot-gap));
+  --slot-rise: calc(var(--slot-step) * 0.866);
   inline-size: var(--jewel-size);
   block-size: var(--jewel-size);
 
@@ -75,7 +111,30 @@
   user-select: none;
 }
 
-/* The stone itself: the reserved silhouette, filled, carrying the numeral. */
+/* The stone itself: a disc, filled, carrying the three sockets.
+ *
+ * IT WAS THE OCTAGON AND THE OCTAGON WAS RESERVED, so this is the larger of the
+ * two changes on this component and it deserves the whole argument.
+ *
+ * `docs/DESIGN.md` spent a section on the silhouette: vertex up, all four
+ * corners cut, "nothing else in the interface is ever this shape", with an
+ * incident recorded where the component drew an edge-up square while the
+ * design-system cards drew the diamond and nothing failed because nothing
+ * disagreed with the words. That reservation bought a mark a reader could find
+ * on a page at a glance.
+ *
+ * WHAT IT COST WAS AGREEMENT WITH THE CARD. The printed corner is a ring: a
+ * light bezel around a field holding three bezelled sockets. Every other mark
+ * on this panel is now the card's own, and the stone was the last object still
+ * insisting on a shape the game does not draw — a reader checking the corner
+ * they know found an octagon where the card has a circle.
+ *
+ * `ornament.cut.jewel` STAYS IN THE TOKEN TABLE and is no longer read by this
+ * component. That is deliberate rather than an oversight: the polygon is still
+ * the shape `Mark`'s history is written against and still the one `index.test`
+ * pins as vertex-up, and deleting a token to chase an unused-value warning is
+ * how a design system loses the record of what it used to mean.
+ */
 .of-jewel__stone {
   position: relative;
   display: inline-flex;
@@ -84,7 +143,7 @@
   box-sizing: border-box;
   inline-size: 100%;
   block-size: 100%;
-  clip-path: var(--of-ornament-cut-jewel);
+  border-radius: 50%;
   background: var(--stone);
   color: var(--ink);
 }
@@ -97,38 +156,30 @@
   --jewel-size: var(--of-ornament-jewel-large);
 }
 
-/* The facet highlight. A cut stone catches light on its crown, which is what
-   separates it from a coloured hexagon — and the reason the shape reads as a
-   jewel at a glance, before the numeral is legible.
+/* THE CROWN FACET IS GONE, and the artefact it left is why it is recorded here
+   rather than quietly deleted.
 
-   THE HEIGHT AND THE OPACITY ARE A CONTRAST FIX RATHER THAN A TASTE ONE, and
-   the reason has outlived the numeral it was measured against. At half the
-   block size and a higher opacity the residual alpha under the top of a centred
-   glyph took pitch three from 4.66:1 to about 4.00:1 in dark mode — a 1.4.3
-   failure — and pitch one from 5.53:1 to about 4.91:1. The mark carries three
-   pips now rather than a numeral, and they are struck in that same ink on that
-   same stone, so a wash that dilutes the stone dilutes them by exactly as much:
-   the measurement is the pips' as surely as it was the glyph's. A third of the
-   block size at this opacity keeps the top pip on all but undiluted stone, and
-   the headroom still matters, since pitch three clears the threshold by only
-   0.16 before any overlay at all. The crown highlight
-   survives both changes, which is the point.
+   ~~A cut stone catches light on its crown, which is what separates it from a
+   coloured hexagon — and the reason the shape reads as a jewel at a glance.~~
+   That was true of a jewel. The mark is a ring now, and the card's ring is a
+   flat field inside a bezel with no highlight anywhere on it, so the gradient
+   was the last thing on this component still arguing for the gem it stopped
+   being.
 
-   On the stone rather than the jewel, so the highlight is clipped by the
-   silhouette that lives there. On a diamond the band is cut to a triangle by
-   the two upper edges, which is what a crown facet actually looks like — and it
-   now points at a triangle of pips, which is a coincidence of geometry rather
-   than a plan, but not one worth undoing. */
-.of-jewel__stone::before {
-  content: "";
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline: 0;
-  block-size: 33%;
-  background: linear-gradient(var(--of-color-pitch-facet) 0%, transparent 100%);
-  opacity: 0.14;
-  pointer-events: none;
-}
+   IT ALSO BROKE ON THE WAY. The facet was an absolutely positioned band that
+   `clip-path` cut to the silhouette; a `border-radius` does not clip a
+   positioned descendant, so for one build it painted as a pale RECTANGLE
+   overhanging the disc — the stone wearing a corner. `overflow: hidden` would
+   have contained it. Deleting it is better than containing something the card
+   does not draw.
+
+   WHAT GOES WITH IT IS A MEASUREMENT, so it is kept: at half the block size and
+   a higher opacity the residual alpha under a centred glyph took pitch three
+   from 4.66:1 to about 4.00:1 in dark mode — a 1.4.3 failure — and pitch one
+   from 5.53:1 to about 4.91:1. Nothing dilutes the stone now, so the pips sit
+   on undiluted colour and pitch three keeps the 0.16 it used to clear the
+   threshold by. Anything reintroduced over the stone has to be measured against
+   those numbers again. */
 
 /* -- The three slots --------------------------------------------------------
    THE TRIANGLE THE CARD PRINTS: one above, two below. It replaced a numeral —
@@ -140,10 +191,17 @@
    it without anybody positioning anything, so the arrangement survives a change
    of size, of gap, or of slot diameter with no second number to keep in step.
 
-   SIZED IN PER CENT OF THE STONE, not of the box. The silhouette is a vertex-up
-   diamond and it is at its widest across the middle, so a cluster wide enough
-   to look right inside a square would have its lower two pips cut by the two
-   lower edges. Two thirds is what clears them at every size. */
+   THE CLUSTER NEARLY FILLS THE STONE, because the card's three sockets very
+   nearly touch inside their ring — which is what makes the corner read as three
+   pips rather than as three dots on a field.
+
+   It was smaller, with a comfortable gap, while the stone was a vertex-up
+   diamond: that shape is at its widest across the middle, so a wider cluster
+   would have had its lower two pips cut by the two lower edges. A circle has no
+   such waist, so the constraint that held it back went with the shape.
+
+   The geometry itself — equilateral, and centred on the centroid rather than on
+   the bounding box — is derived in `--slot-rise` at the top of this file. */
 .of-jewel__slots {
   position: relative;
   display: grid;
@@ -151,8 +209,10 @@
   justify-content: center;
   justify-items: center;
   align-content: center;
-  gap: calc(var(--slot-size) * 0.34);
-  inline-size: 66%;
+  column-gap: var(--slot-gap);
+  row-gap: calc(var(--slot-rise) - var(--slot-size));
+  /* See `--slot-rise`: the centroid, not the bounding box. */
+  transform: translateY(calc(var(--slot-rise) / -6));
 }
 
 .of-jewel__slot:first-child {
@@ -160,27 +220,57 @@
 }
 
 /*
-  A STRUCK PIP, AND AN EMPTY ONE IS THE SAME PIP UNLIT. Both take the stone's
-  own ink, which is the one colour on this component guaranteed to clear AA
-  against every tone — `tokens.test.ts` pins that pairing for the numeral this
-  replaced, and the pips inherit the guarantee rather than needing a new one.
+  A SOCKET, BEZELLED, STRUCK OR EMPTY — which is what the card prints and not
+  what this drew first.
 
-  So the fill never changes and only the opacity does. That matters more than it
-  looks: an empty slot drawn in a colour of its own would need its own contrast
-  check against four stones, and the yellow one is where such a check goes
-  wrong. Here there is nothing to check — a quarter of a colour that already
-  passes is visible against the same ground, and the reader is comparing the
-  pips with each other rather than reading either against the stone.
+  The first pass made both states the stone's own ink and separated them by
+  opacity, on the argument that the ink is the one colour already guaranteed to
+  clear AA against every tone. That was a sound way to draw a counter and it was
+  not what the corner says: on a card the filled sockets hold the RESOURCE
+  SYMBOL — `{r}`, the mark the rules define at 1.12.4e — and the empty ones are
+  holes. A pitch value is a resource value, so the pip is the thing being
+  counted rather than a dot standing in for it.
+
+  EVERY SOCKET WEARS THE SAME LIGHT BEZEL, filled or not, exactly as the card
+  draws it. That hairline is doing real work beyond fidelity: it is what lets a
+  red pip sit on the red stone at pitch one without the two merging, so the
+  contrast question the ink answered is answered here by a ring instead. Drawn
+  as an outset `box-shadow` rather than a border, because a border would eat
+  into the socket's diameter and leave the sockets a different size from the
+  artwork inside them.
+
+  THE HOLE IS NEAR-BLACK IN BOTH THEMES, which is the one place this component
+  does not follow the ground — see `color.pitch.socket` for why a socket recedes
+  against its STONE rather than against the page.
 */
 .of-jewel__slot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   inline-size: var(--slot-size);
   block-size: var(--slot-size);
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--of-color-pitch-socket);
+  box-shadow: 0 0 0 var(--of-space-hair) var(--of-color-pitch-facet);
 }
 
-.of-jewel__slot[data-filled="false"] {
-  opacity: 0.25;
+/* THE DRAWN PIP, for the sizes where the artwork cannot be read — see the note
+   in `PitchJewel.tsx`. It is the artwork's own red rather than `pitch.one`,
+   because a pip on a pitch-three stone is not a pitch-one anything. */
+.of-jewel__slot[data-filled="true"] {
+  background: var(--of-color-pitch-pip);
+}
+
+/* The artwork fills its socket exactly, so the bezel above reads as the
+   socket's rim rather than as a ring drawn around a smaller mark. */
+.of-jewel__pip {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+  object-fit: contain;
 }
 
 .of-jewel--tone-none {

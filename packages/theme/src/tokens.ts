@@ -602,6 +602,26 @@ export const DARK_TOKENS: TokenTable = {
   "color.pitch.four.ink": "#ffffff",
   "color.pitch.facet": "#ffffff",
 
+  /* THE SLOTS INSIDE THE STONE, and both are read off a printed card rather
+     than chosen. A pitch value is three sockets in a ring in the card's
+     top-left corner, each one bezelled in a light hairline: the ones the card
+     has paid for hold the red resource symbol, and the rest are holes.
+
+     `pip` is the fallback red, for the sizes where the artwork cannot be read.
+     Sampled from `MST131` and `ARC124` at #be3631 and #a52d2d, and rounded to the brighter of the two — the same red the
+     resource symbol is drawn in, which is why it is here rather than borrowed
+     from `pitch.one`: that token means "this card pitches for one", and a pip
+     on a pitch-three stone means nothing of the kind.
+
+     `socket` is the hole, and it is near-black in BOTH themes, which is the one
+     place this file deliberately does not follow the ground. Every other
+     recessed surface here lightens in the light theme so that it recedes
+     against ash. A socket does not sit on the page — it sits on a saturated
+     stone, in both themes — so it recedes by being darker than the stone
+     whatever the stone is, exactly as the card prints it. */
+  "color.pitch.pip": "#be3631",
+  "color.pitch.socket": "#232326",
+
   /* State. The notch says "this carries state"; the colour says which. */
   /* Every coloured chip carries its own ink, exactly as every pitch stone does.
      A single shared ink token forces every state to sit in the same luminance
@@ -909,6 +929,12 @@ export const LIGHT_TOKENS: TokenTable = {
   "color.pitch.four": "#6f3aa0",
   "color.pitch.four.ink": "#ffffff",
   "color.pitch.facet": "#ffffff",
+
+  /* Sampled the same way as the dark table's pair — see the note there for
+     why the socket does not lighten with the rest of this theme. The pip is
+     a step down, because it sits on stones that are themselves darker here. */
+  "color.pitch.pip": "#a52d2d",
+  "color.pitch.socket": "#232326",
 
   "color.state.legal": "#1f6039",
   "color.state.legal.ink": "#ffffff",

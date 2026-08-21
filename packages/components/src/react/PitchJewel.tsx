@@ -87,11 +87,33 @@ export interface PitchJewelProps {
   readonly size?: "sm" | "md" | "lg";
   /** Accessible name. Defaults to the pitch value spoken in full. */
   readonly label?: string;
+  /**
+   * LSS's own artwork for the resource symbol, struck into every filled slot.
+   *
+   * Supplied by the card panel, which is the one surface where the stone is
+   * large enough for the mark to be read. Omitted everywhere else — and in a
+   * story, where the site's `public/` is not mounted — and both fall back to a
+   * drawn pip in the same red.
+   */
+  readonly src?: string | undefined;
+  /**
+   * Intrinsic box of `src`. Required with it, for the reason `CardFace`
+   * requires one: an image with no box reflows what it sits in as it loads.
+   */
+  readonly width?: number | undefined;
+  readonly height?: number | undefined;
 }
 
 const TONES = ["none", "one", "two", "three", "four"] as const;
 
-export function PitchJewel({ value, size = "md", label }: PitchJewelProps) {
+export function PitchJewel({
+  value,
+  size = "md",
+  label,
+  src,
+  width,
+  height,
+}: PitchJewelProps) {
   /**
    * `?.trim() ||`, not `??`. A default that only fires on `undefined` is a
    * default a caller can displace with `""` or `"   "` — and here that would
@@ -117,6 +139,33 @@ export function PitchJewel({ value, size = "md", label }: PitchJewelProps) {
    */
   const slots = [0, 1, 2];
 
+  /*
+   * A STRUCK SLOT HOLDS THE RESOURCE SYMBOL ITSELF where one is supplied, and
+   * a drawn red pip where it is not.
+   *
+   * THE CARD PRINTS THE SYMBOL, NOT A DOT. Each filled socket carries the same
+   * `{r}` mark the rules define at 1.12.4e and this project already serves
+   * inline in card text — a pitch value IS a resource value, so the pip is not
+   * a counter that happens to be red, it is the thing being counted.
+   *
+   * THE FALLBACK IS NOT A COMPROMISE AT `sm`. The small stone is a fifth of an
+   * inch across and its sockets are a few pixels; the swirl inside the artwork
+   * is not resolvable there, so an index of 5,554 rows would be paying three
+   * image elements a row to render a red dot. The card panel is where the stone
+   * is read, and that is where the artwork is passed.
+   */
+  const pip =
+    src === undefined ? null : (
+      <img
+        className="of-jewel__pip"
+        src={src}
+        alt=""
+        width={width}
+        height={height}
+        decoding="async"
+      />
+    );
+
   return (
     <span
       className={`of-jewel of-jewel--${size} of-jewel--tone-${tone}`}
@@ -132,13 +181,18 @@ export function PitchJewel({ value, size = "md", label }: PitchJewelProps) {
       */}
       <span className="of-jewel__stone">
         <span className="of-jewel__slots" aria-hidden="true">
-          {slots.map((slot) => (
-            <span
-              key={slot}
-              className="of-jewel__slot"
-              data-filled={slot < value ? "true" : "false"}
-            />
-          ))}
+          {slots.map((slot) => {
+            const filled = slot < value;
+            return (
+              <span
+                key={slot}
+                className="of-jewel__slot"
+                data-filled={filled ? "true" : "false"}
+              >
+                {filled ? pip : null}
+              </span>
+            );
+          })}
         </span>
       </span>
     </span>

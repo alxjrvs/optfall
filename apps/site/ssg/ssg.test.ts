@@ -649,7 +649,7 @@ describe("the ported pages", () => {
 /* The card page's empty stat positions                                       */
 /* -------------------------------------------------------------------------- */
 
-describe("a card page draws the combat positions it does not fill", () => {
+describe("a card page holds open the combat positions it does not fill", () => {
   const all = RESOLVED;
   const render = (route: string) =>
     all.find((resolved) => resolved.route === route)?.render([], undefined) ??
@@ -665,25 +665,23 @@ describe("a card page draws the combat positions it does not fill", () => {
    */
 
   /*
-   * WHAT THIS BLOCK USED TO ASSERT, AND WHY IT CHANGED. An empty position was
-   * `of-card__badge--reserved` — `visibility: hidden`, `aria-hidden`, a plate
-   * painted and then suppressed so the corner kept its width without claiming
-   * anything. These tests pinned both halves of that.
+   * WHERE THE CLASS MOVED, AND WHAT DID NOT MOVE WITH IT. An empty position was
+   * `of-card__badge--reserved` on the page. It is `of-stat--absent` on the
+   * component now, because the mark is what knows how to not paint itself — but
+   * the behaviour either name describes is the same one: `visibility: hidden`,
+   * `aria-hidden`, a mark rendered and suppressed so the corner keeps its width
+   * without claiming anything.
    *
-   * The marks are LSS's own artwork now, and an empty position greys it rather
-   * than hiding it: `of-stat--absent`, desaturated and dropped back, in the
-   * same place and at the same size as a filled one. So the class this block
-   * asserts on moved from the page's badge to the component's mark, and two
-   * expectations reversed with it — the position is VISIBLE, and it IS
-   * announced, because a mark a viewer can see is a fact a listener should get
-   * too.
+   * A GREYED MARK WAS TRIED IN BETWEEN and these tests briefly asserted it:
+   * visible, announced, the artwork desaturated. On the page it read as a
+   * rendering fault rather than a statement, so it went, and the assertions
+   * came back to where they started.
    *
-   * WHAT DID NOT CHANGE is the reason any of this exists: both bands are
+   * WHAT NEVER CHANGED is the reason any of this exists: both bands are
    * `fit-content(28%) minmax(0, 1fr) fit-content(28%)` with the name and the
    * type line centred inside the middle column, so a corner sized to nothing
    * slides the centred thing off the card's axis — 37px at a 320px viewport,
-   * 52px at 1226px. A drawn mark holds that width for the ordinary reason that
-   * it is there.
+   * 52px at 1226px.
    */
 
   /*
@@ -727,10 +725,10 @@ describe("a card page draws the combat positions it does not fill", () => {
 
   /*
    * AN EMPTY POSITION IS `of-stat--absent`, and that class is the single thing
-   * most of these tests assert on. It carries the greyscale filter and the
-   * dropped opacity, so the mark paints as a slot this card does not fill —
-   * which is the whole rule, and neither half of it is checkable from the
-   * markup alone. The class is where they meet.
+   * most of these tests assert on. It carries `visibility: hidden`, so the mark
+   * paints nothing and keeps its width — which is the whole rule, and neither
+   * half of it is checkable from the markup alone. The class is where they
+   * meet.
    */
   const absentCount = (html: string) =>
     withoutMirrors(html).match(/of-stat--absent/g)?.length ?? 0;
@@ -768,7 +766,7 @@ describe("a card page draws the combat positions it does not fill", () => {
     expect(render(hero?.href ?? "")).not.toContain("of-card__corner-mirror");
   });
 
-  test("an action with no attack greys the attack mark", () => {
+  test("an action with no attack paints no attack mark", () => {
     /*
      * `Absorb in Aether` is a Wizard Defense Reaction: cost and defence, no
      * power. The 1,543-card shape, and with the 411 cost-only cards and the
@@ -777,7 +775,8 @@ describe("a card page draws the combat positions it does not fill", () => {
     const html = render(addressOf("absorb-in-aether-1"));
     expect(html).not.toBe("");
 
-    /* ONE empty position — the attack — and it says so in words. */
+    /* ONE empty position — the attack — and it is inert to a screen
+       reader. */
     expect(absentCount(html)).toBe(1);
     expect(html).toContain('aria-label="No printed power"');
 
@@ -786,27 +785,29 @@ describe("a card page draws the combat positions it does not fill", () => {
     expect(html).toMatch(/aria-label="Defence \d+"/);
   });
 
-  test("equipment greys cost and attack, and prints neither", () => {
+  test("equipment holds cost and attack open, and prints neither", () => {
     /* `Aether Ironweave` is Runeblade Equipment: defence only, so two of the
-       three positions are empty and both are drawn greyed. */
+       three positions are empty and both are held open rather than drawn. */
     const html = render(addressOf("aether-ironweave"));
     expect(html).not.toBe("");
     expect(absentCount(html)).toBe(2);
     expect(html).toMatch(/aria-label="Defence \d+"/);
   });
 
-  test("an empty position is announced, on any shape", () => {
+  test("an empty position is never announced, on any shape", () => {
     /*
      * THE HALF A CLASS NAME CANNOT PROVE, asserted across the shapes rather
-     * than on one card, and it is the assertion that reversed. It used to read
-     * "a reserved position is NEVER announced": the badge was hidden, so the
-     * string `StatGlyph` emits had to be unreachable, and the test counted
-     * occurrences to prove none escaped an `aria-hidden` wrapper.
+     * than on one card. `StatGlyph` spells an absence out — "No printed power"
+     * — and that string is still in the markup, because the badge is the
+     * printed one hidden rather than a stand-in built to look like it. What has
+     * to hold is that it is never reachable: every occurrence sits inside an
+     * `aria-hidden` badge, because a listener should not be told about a mark a
+     * viewer cannot see.
      *
-     * The mark is visible now, so the requirement is the opposite one — every
-     * empty position must reach a listener, because it reaches a viewer. The
-     * counting method survives the reversal unchanged: if the two counts agree,
-     * every greyed mark carries its spoken absence and none is silent.
+     * Checked by counting rather than by reading the tree, because the render
+     * is a string here. If the two counts agree, no absence escaped a hidden
+     * badge — and the first count being non-zero is what stops this passing
+     * vacuously.
      */
     for (const route of [
       addressOf("absorb-in-aether-1"),
@@ -816,6 +817,11 @@ describe("a card page draws the combat positions it does not fill", () => {
       const absences = html.match(/aria-label="No printed [a-z]+"/g) ?? [];
       expect(absences.length).toBeGreaterThan(0);
       expect(absences.length).toBe(absentCount(html));
+      /* Every one of them under a hidden badge. */
+      expect(
+        (html.match(/<div class="of-card__badge" aria-hidden="true">/g) ?? [])
+          .length,
+      ).toBe(absences.length);
     }
   });
 
@@ -842,8 +848,8 @@ describe("a card page draws the combat positions it does not fill", () => {
     /*
      * THE LIMIT ON THE RULE, and why it is not "always draw three". A hero
      * prints life and intellect; cost, power and defence are not values it is
-     * missing but positions its frame does not have. Three greyed marks on a
-     * hero would be inventing slots rather than reporting an absence.
+     * missing but positions its frame does not have. Three held-open slots on
+     * a hero would be inventing positions rather than reporting an absence.
      */
     /*
      * THE ADDRESS COMES FROM `CARD_PAGES`, NOT FROM SLUGGING THE NAME HERE.
@@ -869,17 +875,17 @@ describe("a card page draws the combat positions it does not fill", () => {
     const html = render(hero?.href ?? "");
     /* Not the disambiguation page and not nothing: this has to be the card. */
     expect(html).toContain("of-card__name");
-    /* NOT EVEN A GREYED ONE. A hero does not have these positions to leave
-       empty, so there is no slot to draw for them either. */
+    /* NOT EVEN A HIDDEN ONE. A hero does not have these positions to leave
+       empty, so there is no width to hold open for them either. */
     expect(absentCount(html)).toBe(0);
     expect(html).not.toContain("No printed cost");
     expect(html).not.toContain("No printed power");
     expect(html).not.toContain("No printed defence");
   });
 
-  test("a weapon greys cost and defence, and that is a decision", () => {
+  test("a weapon holds cost and defence open, and that is a decision", () => {
     /*
-     * 81 cards print power and nothing else. They draw the other two for the
+     * 81 cards print power and nothing else. They hold the other two open for the
      * same reason the 529 equipment cards do — the positions are on the frame,
      * and a corner sized to nothing slides the type line off the card's axis —
      * and the case is pinned here because it is the one somebody will want to
@@ -914,10 +920,10 @@ describe("a card page draws the combat positions it does not fill", () => {
     expect(html).toMatch(/aria-label="Power \d+"/);
   });
 
-  test("a cost-only card greys the two positions it leaves empty", () => {
+  test("a cost-only card holds open the two positions it leaves empty", () => {
     /*
      * 411 cards print a cost and nothing else — items, instants, tokens. Both
-     * bottom corners are empty, so both are drawn: the bar is a corner, the
+     * bottom corners are empty, so both are held open: the bar is a corner, the
      * type line and a corner, and with neither corner holding its width the
      * type line has nothing to sit between.
      */
@@ -993,10 +999,10 @@ describe("a card page draws the combat positions it does not fill", () => {
     expect(html).toContain("of-card__name");
     /* The zero is drawn as a zero… */
     expect(html).toContain('aria-label="Cost 0"');
-    /* …and the mark that holds it is at full colour, not greyed. THIS IS THE
-       PAIR THE CHANGE HAD TO KEEP APART: 1,648 cards print a cost of 0, and an
-       empty cost position now draws the same disc, so "prints 0" and "prints
-       nothing" would be one rendering if the 0 ever fell through to the absent
+    /* …and the mark that holds it is painted, not hidden. THIS IS THE PAIR
+       THE CHANGE HAD TO KEEP APART: 1,648 cards print a cost of 0, and a
+       hidden cost position is also blank, so "prints 0" and "prints nothing"
+       would render identically if the 0 ever fell through to the absent
        branch. */
     expect(html).not.toContain("No printed cost");
     expect(html).not.toMatch(/of-stat--cost[^"]*of-stat--absent/);

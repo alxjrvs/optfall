@@ -798,42 +798,47 @@ describe("StatGlyph", () => {
   });
 });
 
-describe("the absent stat plate keeps its edge", () => {
-  test("`--absent` overrides the fill and nothing else", () => {
+describe("an absent stat paints nothing and keeps its place", () => {
+  test("`--absent` hides rather than recolours, and holds its box", () => {
     /*
-     * WHAT DRAWS THE SILHOUETTE IS THE BEVEL, NOT THE FILL, and that is the
-     * answer to an objection worth recording: `color.stat.absent` is only about
-     * 1.4:1 against the panel it sits on, so if the fill were the outline the
-     * shape would be near-invisible — and the shape is the channel this design
-     * says carries WHICH stat is missing.
+     * THREE ANSWERS, AND THIS TEST HAS OUTLIVED TWO OF THEM. It began as
+     * "`--absent` overrides the fill and nothing else": the plate took
+     * `color.stat.absent` and kept the inset bevel, so the SILHOUETTE still
+     * said which stat was missing even though the fill was only about 1.4:1
+     * against the panel. Then the marks became artwork, which takes no token,
+     * and the absent state was a greyscale filter at 30%. Both were attempts to
+     * SHOW an absence.
      *
-     * It is not the fill. `.of-stat` draws an inset light-above/dark-below
-     * bevel on every plate, and `.of-stat.of-stat--absent` sets `background`
-     * and `color` and stops, so the absent plate is outlined exactly as the
-     * other six are. A future edit that added `box-shadow: none` there, or
-     * moved the bevel into the per-kind rules, would take the silhouette away
-     * silently — hence a test rather than a comment.
+     * It is not shown now. What has to hold instead is the property every
+     * version depended on and none of them asserted: the position keeps its
+     * width. `visibility` does that and `display: none` does not, and the
+     * difference is a corner track collapsing and sliding the card's name off
+     * its axis on half the corpus.
      *
-     * The ratio itself is not a defect to fix: the weakest EXISTING plate,
-     * cost in the dark theme, is 2.42:1 against the same panel, so
-     * fill-against-ground is not a threshold this system holds any plate to.
-     * What it holds is ink-on-plate, asserted in `tokens.test.ts`.
+     * ASSERTED AGAINST THE STYLESHEET because that is where the distinction
+     * lives; a render tells you the element is there either way.
      */
     const css = readFileSync(
       new URL("./StatGlyph.css", import.meta.url),
       "utf-8",
     );
 
-    const base = /\.of-stat \{([^}]*)\}/.exec(css)?.[1] ?? "";
-    expect(base).toContain("box-shadow");
-    expect(base).toContain("--of-bevel-light");
-    expect(base).toContain("--of-bevel-dark");
-
     const absent = /\.of-stat\.of-stat--absent \{([^}]*)\}/.exec(css)?.[1];
     expect(absent).toBeDefined();
-    expect(absent).toContain("--of-color-stat-absent");
-    /* The two properties it is allowed to touch, and no third. */
-    expect(absent).not.toContain("box-shadow");
-    expect(absent).not.toContain("clip-path");
+    expect(absent).toContain("visibility: hidden");
+    /* The one that would take the width with it. */
+    expect(absent).not.toContain("display: none");
+  });
+
+  test("the mark still names the absence, for the one caller that unhides it", () => {
+    /*
+     * The card panel wraps an empty position in `aria-hidden`, so this string
+     * is inert there — deliberately, since a listener should not be told about
+     * a mark a viewer cannot see. It stays on the component because the
+     * component does not know who is rendering it, and a caller that chooses to
+     * show an absent mark must get a named one.
+     */
+    const html = renderToStaticMarkup(<StatGlyph kind="power" value={null} />);
+    expect(html).toContain('aria-label="No printed power"');
   });
 });

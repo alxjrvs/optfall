@@ -16,7 +16,7 @@ move; each expression of it does not.
 |---|---|
 | **The search field is the hero.** No marketing hero, no illustration above the fold. The first thing on the page is the thing you came to do. | **The grammar is inherited, not invented.** LSS's own Card Vault already has a syntax. We adopt it verbatim and extend it to rules and interactions, so a query someone already knows keeps working. |
 | **Density without clutter.** Enormous information per screen, held together by tight vertical rhythm and hairline rules rather than cards, shadows and padding. | **Same discipline, forged rather than printed.** Square corners, bevelled plates, angular notches on ~~anything carrying state~~ a value the card carries out of a fixed set — legality, and now pitch; see `PitchBox`. The chrome should feel struck from metal, not laid out in a design tool. |
-| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch wears a cut jewel on a card's own page, and under a card face a band — ~~two forms, both reserved, neither used for anything else~~ three now: in a list or a grid it wears the legality flag's notched plate, spelled `PITCH 1`, which is the one form deliberately NOT reserved. Sharing that silhouette is the point of it — a reader learns the plate once, at the foot of a card page, and meets it again at the top of one. See `PitchBox`. The mark is the single sanctioned exception to the jewel's silhouette, and both are argued below. |
+| **Colour must mean something.** Scryfall's chrome is neutral; colour is reserved for the colour pie, rarity and legality. It is data, never decoration. | **Pitch is data, blood red is chrome.** They can share a hue because they never share a shape. Pitch wears ~~a cut jewel~~ **a ring of three sockets** on a card's own page, and under a card face a band — ~~two forms, both reserved, neither used for anything else~~ three now: in a list or a grid it wears the legality flag's notched plate, spelled `PITCH 1`, which is the one form deliberately NOT reserved. Sharing that silhouette is the point of it — a reader learns the plate once, at the foot of a card page, and meets it again at the top of one. See `PitchBox`. ~~The mark is the single sanctioned exception to the jewel's silhouette~~ — the mark is a chain and the jewel is a ring, so there is no reserved silhouette left to except; all three are argued below. |
 | **Typography carries hierarchy.** Weight, size and rhythm do the work that boxes, gradients and accent bars do on lesser sites. | **Two voices, strictly assigned.** A serif for names and questions, a sans for everything else. ~~a wide-tracked mono for labels and anything citable~~ — see below. |
 | **Every view is a URL.** Scryfall's real product is the link you paste into a conversation to settle it. | **The unit is the card**, and the rules and rulings attach to it. Card pages are the shareable object; `/cr/…` sections are addressable too and a card links into them. ~~The unit is the verdict, not the card.~~ — see below. |
 | **Dark mode is not an inversion.** It is designed, and for many users it is the only mode they will ever see. | **Black is the native key.** Near-black ground, blood accent, brass for anything authoritative. Light mode is the printed-rulebook translation — ash and iron, not paper white. |
@@ -123,23 +123,51 @@ plate rather than as flat rectangles.
 
 ### The pitch jewel
 
-A **diamond**: vertex up, vertex down, widest across the middle, with all four
-corners cut — eight sides, and a facet highlight, carrying ~~its numeral~~
-**three slots filled to the card's pitch value**. Shape, count and colour state
-the same fact three times, and the silhouette is reserved: nothing else in the
-interface is ever this shape.
+A **ring**: a disc in the pitch tone holding ~~its numeral~~ **three bezelled
+sockets in an equilateral triangle, filled to the card's pitch value**. Shape,
+count and colour state the same fact three times.
 
-**The orientation is part of the specification, not a drawing detail.** This
+~~A **diamond**: vertex up, vertex down, widest across the middle, with all four
+corners cut — eight sides, and a facet highlight. The silhouette is reserved:
+nothing else in the interface is ever this shape.~~
+
+~~**The orientation is part of the specification, not a drawing detail.** This
 section used to say only "an eight-sided cut stone", which is equally true of an
 edge-up chamfered square — and so, for a while, the component drew one of those
 while the design-system cards drew the diamond, and the logo followed the
 component. Nothing failed, because nothing disagreed with the words. An edge-up
-octagon reads as a *button*; a vertex-up one reads as a *gem*. The exact
-polygon is the `ornament.cut.jewel` token in `optfall-theme`, and every surface
-names it rather than drawing it — the component, the design-system cards, all of
-it. `scripts/check-tokens.ts` fails the build on a `var(--of-*)` the theme does
-not define, so the shape cannot be redrawn in one place and not the other. That
-is the actual fix: not a second copy kept honest by a test, but no second copy.
+octagon reads as a *button*; a vertex-up one reads as a *gem*.~~
+
+**The reservation is retired, and the incident behind it is the reason this
+paragraph survives.** What the diamond bought was a silhouette that meant one
+thing and could be found on a page at a glance. What it cost was the corner
+disagreeing with the card, which prints a ring — and once every other mark on
+the card panel was the game's own artwork, the stone was the last object still
+insisting on a shape the game does not draw.
+
+**What did not change is the rule the drift taught.** The exact polygon is still
+the `ornament.cut.jewel` token in `optfall-theme`, still defined in both tables,
+and still what `index.test.ts` pins as vertex-up — it is simply no longer read
+by the jewel. A shape spelled out in a component rather than named is the
+failure mode, whatever the shape is, and `scripts/check-tokens.ts` plus that
+test are what hold it. The token is kept rather than deleted because it is the
+record of what the mark used to mean, and `Mark`'s own history is written
+against it.
+
+**The facet went with the silhouette.** A cut stone catches light on its crown;
+a ring does not, and the card's ring is a flat field inside a bezel. The
+gradient also had a bug in it — an absolutely positioned band that `clip-path`
+used to cut to the octagon, which a `border-radius` does not clip, so it painted
+as a rectangle overhanging the disc. See `PitchJewel.css`, which keeps the
+contrast measurement the facet was tuned against in case anything is ever laid
+over the stone again.
+
+**The sockets are the game's own resource symbol.** A pitch value *is* a
+resource value — CR 1.12.4e — so a filled socket holds `{r}`, the same file the
+marker renders with inline in card text, and an empty one is a hole. Both wear
+the same light bezel, which is what lets a red pip sit on the red stone at pitch
+one. Small stones — indexes, version tabs — fall back to a drawn pip in the same
+red, because a socket a few pixels across cannot resolve the artwork.
 
 ~~The numeral is~~ **The count is** the **primary** channel, not an
 accessibility fallback. Red and yellow are the classic deuteranopia confusion

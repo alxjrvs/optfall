@@ -87,11 +87,21 @@ function jewel(pitch: string | number, size = ""): string {
   /* THREE SLOTS ALWAYS, filled from the apex — the denominator is half the
      statement. Zero fills none of them, which is the same claim the grey
      `none` stone makes and is why it needs no branch here. */
+  /* THE SOCKETS THE CARD PAYS FOR HOLD THE RESOURCE SYMBOL, and the rest are
+     holes. A pitch value IS a resource value — CR 1.12.4e — so the pip is the
+     thing being counted rather than a dot standing in for it. The artwork is
+     drawn at the base size and the drawn red at `sm`, exactly as the component
+     splits it: a socket a few pixels across cannot resolve the swirl. */
+  const art = size === "sm" ? null : symbolArt("cost");
   const slots = [0, 1, 2]
-    .map(
-      (slot) =>
-        `<span class="slot" data-filled="${slot < value ? "true" : "false"}"></span>`,
-    )
+    .map((slot) => {
+      const filled = slot < value;
+      const pip =
+        filled && art !== null
+          ? `<img class="pip" src="${art}" alt="" width="105" height="105">`
+          : "";
+      return `<span class="slot" data-filled="${filled ? "true" : "false"}">${pip}</span>`;
+    })
     .join("");
   return `<span class="jewel${size ? ` ${size}` : ""}"><span class="stone p${value}"><span class="slots">${slots}</span></span></span>`;
 }
@@ -204,7 +214,7 @@ function statPlate(kind: string, value: string, absent = false): string {
      component overrides `background` and `color` and leaves the clip alone, so
      this does the same. */
   const surface = absent
-    ? "background:var(--of-color-stat-absent);color:var(--of-color-stat-absent-ink)"
+    ? "visibility:hidden"
     : spec.tone === null
       ? "background:var(--of-color-surface-raised);color:var(--of-color-ink)"
       : `background:var(--of-color-stat-${spec.tone});color:var(--of-color-stat-${spec.tone}-ink)`;
@@ -240,7 +250,11 @@ function statMark(
   const art = symbolArt(kind);
   if (art === null) return statPlate(kind, value, absent);
 
-  const dim = absent ? ";filter:grayscale(1);opacity:0.3" : "";
+  /* AN EMPTY POSITION PAINTS NOTHING AND KEEPS ITS WIDTH. It was greyed here
+     for one build — the artwork desaturated and dropped back — and on a page
+     that read as a rendering fault rather than a statement. `visibility` is the
+     spelling, because the width is the whole reason the position renders. */
+  const dim = absent ? ";visibility:hidden" : "";
   const img = `<img src="${art}" alt="" width="105" height="105" style="display:block;inline-size:var(--of-ornament-stat-size);block-size:var(--of-ornament-stat-size);object-fit:contain;flex:none${dim}">`;
   const numeral = absent ? "" : value;
 
@@ -248,7 +262,7 @@ function statMark(
     return `<span style="display:inline-grid;place-items:center"><span style="grid-area:1/1">${img}</span><span style="grid-area:1/1;font-family:var(--of-type-family-serif);font-size:var(--of-type-size-large);font-weight:var(--of-type-weight-bold);line-height:1;color:var(--of-color-stat-cost-ink)">${numeral}</span></span>`;
   }
 
-  const text = `<span style="font-family:var(--of-type-family-serif);font-size:var(--of-type-size-title);font-weight:var(--of-type-weight-bold);line-height:1;color:var(--of-color-ink);font-variant-numeric:tabular-nums">${numeral}</span>`;
+  const text = `<span style="font-family:var(--of-type-family-serif);font-size:var(--of-type-size-large);font-weight:var(--of-type-weight-bold);line-height:1;color:var(--of-color-ink);font-variant-numeric:tabular-nums">${numeral}</span>`;
   const order = mirror ? `${text}${img}` : `${img}${text}`;
   return `<span style="display:inline-flex;align-items:center;gap:var(--of-space-tight)">${order}</span>`;
 }
@@ -361,14 +375,25 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
   font-size: var(--of-type-size-base);
   line-height: var(--of-type-leading-tight);
   --jewel-size: var(--of-ornament-jewel-base);
-  --slot-size: calc(var(--jewel-size) * 0.24);
+  --slot-size: calc(var(--jewel-size) * 0.38);
+  /* Equilateral, and centred on the centroid rather than the bounding box —
+     both derived in \`PitchJewel.css\`, which explains why the row spacing is
+     not the column spacing and why the cluster rides up by a sixth of its
+     height. */
+  --slot-gap: calc(var(--slot-size) * 0.2);
+  --slot-step: calc(var(--slot-size) + var(--slot-gap));
+  --slot-rise: calc(var(--slot-step) * 0.866);
   filter: drop-shadow(0 calc(-1 * var(--of-bevel-width)) 0 var(--of-bevel-light))
     drop-shadow(0 var(--of-bevel-width) 0 var(--of-bevel-dark));
 }
+/* A DISC, BECAUSE THE CARD PRINTS A RING. This clipped itself to
+   \`ornament.cut.jewel\` — the reserved eight-sided silhouette — for most of the
+   project's life. See \`PitchJewel.css\` and \`docs/DESIGN.md\`, where the
+   reservation is struck through rather than deleted. */
 .jewel .stone {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
   inline-size: 100%; block-size: 100%;
-  clip-path: var(--of-ornament-cut-jewel);
+  border-radius: 50%;
 }
 /* THE TRIANGLE THE CARD PRINTS: one slot above, two below, filled from the top.
    Spanning the first across both columns centres the apex over the gap beneath
@@ -379,8 +404,9 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
   position: relative; display: grid;
   grid-template-columns: repeat(2, auto);
   justify-content: center; justify-items: center; align-content: center;
-  gap: calc(var(--slot-size) * 0.34);
-  inline-size: 66%;
+  column-gap: var(--slot-gap);
+  row-gap: calc(var(--slot-rise) - var(--slot-size));
+  transform: translateY(calc(var(--slot-rise) / -6));
 }
 /* THE APEX SPANS BOTH COLUMNS, which is the whole of the triangle — and
    leaving it out of this copy published a gallery card with two pips above one
@@ -388,15 +414,24 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
    drift this file's other notes are about, committed within the same change
    that wrote them. */
 .jewel .slot:first-child { grid-column: 1 / -1; }
+/* EVERY SOCKET WEARS THE SAME LIGHT BEZEL, filled or not, exactly as the card
+   draws it — and that hairline is what lets a red pip sit on the red stone at
+   pitch one without the two merging. An outset shadow rather than a border,
+   because a border would eat into the socket and leave it a different size from
+   the artwork inside it. */
 .jewel .slot {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
   inline-size: var(--slot-size); block-size: var(--slot-size);
-  border-radius: 50%; background: currentColor;
+  border-radius: 50%;
+  background: var(--of-color-pitch-socket);
+  box-shadow: 0 0 0 var(--of-space-hair) var(--of-color-pitch-facet);
 }
-/* A quarter of a colour that already clears AA against the stone. The reader is
-   comparing the pips with each other rather than reading either against the
-   ground, so there is nothing here to check that the ink has not already
-   answered. */
-.jewel .slot[data-filled="false"] { opacity: 0.25; }
+.jewel .slot[data-filled="true"] { background: var(--of-color-pitch-pip); }
+.jewel .pip {
+  display: block; inline-size: 100%; block-size: 100%;
+  border-radius: 50%; object-fit: contain;
+}
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
 .jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-title); }
 .pbox {

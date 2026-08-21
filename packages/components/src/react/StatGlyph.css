@@ -190,31 +190,6 @@
 
 /* -- The empty socket ------------------------------------------------------ */
 
-/*
-  A STAT THE CARD DOES NOT PRINT, which is not the same as one printed 0 — and
-  0 is common enough that the difference has to be visible: 1,648 cards print a
-  cost of 0, 191 a defence of 0, 13 a power of 0.
-
-  THE SILHOUETTE IS UNTOUCHED and only the fill changes, because the shape is
-  the channel saying WHICH stat is absent. Every `clip-path` above still
-  applies; this overrides `background` and `color` and nothing else.
-
-  `.of-stat.of-stat--absent` IS TWO CLASSES ON PURPOSE. `.of-stat--cost` and
-  friends are (0,1,0), so a single-class rule here would tie with them and be
-  decided by source order — the exact fragility that put ink-on-ink into the
-  pager earlier in this repository's history. Doubling the class makes it
-  (0,2,0) and the outcome a fact rather than a line number.
-
-  NO CHARACTER IS DRAWN IN EITHER MODE. The plate used to carry an en dash and
-  the component no longer emits one — see `StatGlyphProps.value`. The recessed
-  fill and the surviving silhouette are what say "this stat, absent"; a dash was
-  a second statement of it that read, beside a mark, as a printed value.
-*/
-.of-stat.of-stat--absent {
-  background: var(--of-color-stat-absent);
-  color: var(--of-color-stat-absent-ink);
-}
-
 /* -- The printed mark -------------------------------------------------------
    LSS'S OWN ARTWORK, WITH THE VALUE BESIDE IT. This is what the card panel
    renders; everything above is the fallback. See the note at the head of
@@ -281,7 +256,11 @@
 */
 .of-stat.of-stat--art .of-stat__value {
   font-family: var(--of-type-family-serif);
-  font-size: var(--of-type-size-title);
+  /* THE SIZE THE PANEL'S PRINTED TEXT IS SET AT, and that is the point rather
+     than a coincidence. This was `title`, a step and a half above the card's own
+     sentences immediately above it, which made the numerals the loudest thing on
+     a panel where they are one fact among four. See `.of-card__type-line`. */
+  font-size: var(--of-type-size-large);
   font-weight: var(--of-type-weight-bold);
   line-height: 1;
   color: var(--of-color-ink);
@@ -289,7 +268,7 @@
 }
 
 .of-stat.of-stat--art.of-stat--sm .of-stat__value {
-  font-size: var(--of-type-size-large);
+  font-size: var(--of-type-size-base);
 }
 
 /*
@@ -326,20 +305,30 @@
 }
 
 /*
-  AN ABSENT STAT, WHEN THE MARK IS SOMEBODY ELSE'S FILE. The recessed fill above
-  cannot apply — an ingested PNG takes no token — so the artwork desaturates and
-  drops back instead, and the value position stays empty.
+  AN ABSENT STAT PAINTS NOTHING AND KEEPS ITS PLACE.
 
-  This is the weakest join in the change and it is worth naming: the absent
-  state stops being a colour the theme owns and becomes a filter. What it buys
-  is that the mark still says WHICH stat is missing, which is the property the
-  recessed plate was keeping and the reason an absence draws anything at all.
+  THREE ANSWERS WERE TRIED AND THIS IS THE THIRD, so here is why the other two
+  went. A recessed plate with an en dash was right while the mark was a plate:
+  the fill was a token, and the silhouette said which stat was missing. When the
+  marks became LSS's files that stopped working — an ingested PNG takes no
+  token — so the artwork was desaturated and dropped to 30% instead. That was
+  legible in the abstract and wrong on a page: at roughly 1.3:1 against the
+  panel it read as a rendering fault rather than a statement, and it spent the
+  reader's attention on a mark that exists to say "nothing here".
+
+  So an empty position is simply not drawn. `visibility` rather than `display`,
+  because the whole reason the position is rendered at all is to hold its width:
+  both bands are `fit-content(28%) minmax(0, 1fr) fit-content(28%)` with the
+  name and type line centred inside the middle column, so a corner sized to
+  nothing slides the centred thing off the card's axis — measured at 37px on a
+  320px viewport and 52px at 1226px. See `CardEntry.css`.
+
+  WHICH MAKES THE ACCESSIBLE NAME THE ONLY CARRIER, and `CardEntry` answers that
+  by hiding the badge from assistive technology too: a reader hearing the page
+  should not be told about a mark a reader seeing it cannot see. The claim is
+  not lost, because a stat the card does not print is not a fact the card
+  states.
 */
-.of-stat.of-stat--art.of-stat--absent {
-  background: none;
-}
-
-.of-stat.of-stat--art.of-stat--absent .of-stat__art {
-  filter: grayscale(1);
-  opacity: 0.3;
+.of-stat.of-stat--absent {
+  visibility: hidden;
 }

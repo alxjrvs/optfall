@@ -208,34 +208,28 @@ const PERMANENT_STATS = ["Life", "Intellect"] as const;
  * corners are rows of marks, so they are `<div>`s. The class names stayed —
  * they name the corner, not the element that fills it.
  *
- * AN EMPTY POSITION IS NOW DRAWN, WHERE IT USED TO BE HELD OPEN AND HIDDEN.
- * That is a reversal of a recent decision and it deserves its reasons written
- * down rather than quietly overwritten.
+ * AN EMPTY POSITION HOLDS ITS WIDTH AND PAINTS NOTHING, which is where this
+ * ended after two attempts at showing it.
  *
- * The old rule was `of-card__badge--reserved` and `visibility: hidden`: the
- * badge painted nothing and kept its width, so a corner the card leaves empty
- * could not slide the centred name off the card's axis. It solved a real,
- * measured problem — 37px off-axis at 320px, 52px at 1226px — and it solved it
- * by making an absence invisible, because a hidden plate was the least bad way
- * to say nothing while occupying something.
+ * The position is rendered and hidden — `visibility: hidden`, from
+ * `StatGlyph`'s own `--absent` rule — because the width is the whole reason it
+ * exists. Both bands are `fit-content(28%) minmax(0, 1fr) fit-content(28%)`
+ * with the name and the type line centred inside the middle column, so a corner
+ * sized to nothing slides the centred thing off the card's axis: measured at
+ * 37px on a 320px viewport and 52px at 1226px, on half the corpus.
  *
- * A MARK CAN SAY "EMPTY" IN A WAY A PLATE COULD NOT. `StatGlyph` desaturates
- * the artwork and drops it back — see its `--absent` rule — so the position
- * reads as a slot on the frame that this card does not fill, in the same place
- * and at the same size as a filled one. That is a better answer than a gap: a
- * reader can see that this card has no attack, rather than inferring it from a
- * space. The width problem takes care of itself, because the mark is genuinely
- * there rather than reserved.
+ * WHAT WAS TRIED IN BETWEEN. A greyed mark — the artwork desaturated and
+ * dropped to 30% — on the argument that a reader should SEE the slot this card
+ * does not fill rather than infer it from a gap. On the page it read as a
+ * rendering fault: about 1.3:1 against the panel, faint enough to look broken
+ * and present enough to spend attention on. A mark whose only message is
+ * "nothing here" is better off not competing with the marks carrying values.
  *
- * SO IT IS ANNOUNCED, TOO. The old badge was `aria-hidden` on the sound
- * argument that a reader hearing the page should not be told about a plate a
- * reader seeing it cannot see. The mark is visible now, so the argument
- * reverses with it: `StatGlyph` names the absence in full — "No printed power"
- * — and suppressing that would give a listener less than a viewer gets.
- *
- * AND IT PRINTS NO CHARACTER. The absent state used to draw an en dash. Beside
- * a mark rather than inside a plate, a dash reads as a value the card prints,
- * which is the one thing this state exists to deny.
+ * SO IT IS `aria-hidden` AGAIN, and that follows from the rest rather than
+ * being a separate decision: a reader hearing the page should not be told about
+ * a mark a reader seeing it cannot see. `StatGlyph` still spells the absence
+ * out in an `aria-label`; that string is inert under this wrapper and is what
+ * would be read if the badge were ever un-hidden.
  */
 function StatBadge({
   value,
@@ -247,7 +241,10 @@ function StatBadge({
   readonly symbol: GameSymbol | null;
 }) {
   return (
-    <div className="of-card__badge">
+    <div
+      className="of-card__badge"
+      aria-hidden={value === null ? true : undefined}
+    >
       {kind === null ? (
         value
       ) : (
@@ -437,10 +434,21 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
      the other's mirror — see `Corner` — and a corner cannot be handed its
      opposite until both exist.
   */
+  /*
+     THE STONE'S PIPS ARE THE RESOURCE SYMBOL, and only here. A pitch value is a
+     resource value — CR 1.12.4e — and the card strikes `{r}` into each socket it
+     has paid for, so the panel passes the same file `{r}` renders with inline in
+     the text a few lines below. Every other stone on the site is `sm`, where the
+     socket is a few pixels and the artwork's swirl cannot resolve; those keep
+     `PitchJewel`'s drawn pip, which is the same red.
+  */
   const pitchBadge =
     page.pitch === 0 ? null : (
       <div className="of-card__badge">
-        <PitchJewel value={page.pitch} />
+        <PitchJewel
+          value={page.pitch}
+          {...artworkFor(symbolForKind("resource"))}
+        />
       </div>
     );
   const costBadge =

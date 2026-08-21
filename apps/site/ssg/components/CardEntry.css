@@ -421,11 +421,29 @@
 
 /* Same argument, one step down the scale: the type line shares the bottom
      bar with up to three stat plates, and it is the only elastic thing in it. */
+/*
+    ONE SIZE ACROSS THE PANEL'S FOUR FACTS. The printed text, the stat values,
+    the cost and this type line are all `type.size.large`, and none of them
+    steps away from it.
+
+    THEY USED NOT TO BE. The stat values were `title`, a step and a half above
+    the text they sit under; the cost was `large`; and this line clamped between
+    `base` and `large` on viewport width. Three sizes for four things that are
+    the same KIND of thing — what the card prints — so the panel read as a
+    hierarchy nobody had decided on, with the numerals loudest.
+
+    THE CLAMP WENT WITH THEM, and that is the part worth checking rather than
+    assuming. It existed to shrink the type line on a narrow panel; the printed
+    text above it has never clamped, so a phone was already setting the card's
+    own sentences at full size while its type line shrank. Fixing the size makes
+    the band wider at 320px, and the corner track's `auto` minimum is what keeps
+    it in the box.
+  */
 .of-card__type-line {
   margin: 0;
   text-align: center;
   font-family: var(--of-type-family-serif);
-  font-size: clamp(var(--of-type-size-base), 2.5vw, var(--of-type-size-large));
+  font-size: var(--of-type-size-large);
   color: var(--of-color-ink-muted);
 }
 
