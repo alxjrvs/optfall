@@ -1113,6 +1113,17 @@
   margin-block: 0;
 }
 
+/* The face column is a flex column with its own `gap`, exactly as the facts
+   column is, so an apparatus section seated there needs the same reset for the
+   same reason: the margin and the gap would otherwise both apply and open the
+   alternate-pitch strip twice as far off the picture as it sits off anything
+   else. Two selectors rather than one on the parents' shared shape, because
+   there is no shared class — and inventing one to save a line here would be a
+   third name for two columns that are deliberately not interchangeable. */
+.of-card__face-column > .of-card__apparatus {
+  margin-block: 0;
+}
+
 /*
   THE HEADING RULE LIVED HERE TOO AND IS GONE, because it was byte-identical to
   the one in `rule.css` — a real heading, restyled rather than downgraded to a
