@@ -32,6 +32,7 @@ import {
   renderRedirects,
 } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
+import { CARD_NEWEST } from "./searchIndexes";
 import { HEADER_FIELD_ID } from "./islands/HeaderSearch";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
 import { routes } from "./routes";
@@ -2970,5 +2971,56 @@ describe("the nav collapses to a disclosure without a script", () => {
     expect(html).not.toBe("");
     expect(html).not.toContain("of-bar__menu");
     expect(html).not.toContain("of-bar__nav");
+  });
+});
+
+/**
+ * The row of faces `/search` opens on, held to the set it names.
+ *
+ * WRITTEN AFTER GETTING IT WRONG. The first version of `CARD_NEWEST` read
+ * `CardPage.face` — the card's DEFAULT art, whichever set first printed it —
+ * which is correct for every surface that shows A CARD and wrong for the one
+ * surface that shows A SET. It headed the row "Newest: Mastery Pack Warrior"
+ * over four faces keyed `DDD001`, `AHA001-RF`, `MPW004` and `HVY093`: a mastery
+ * pack is reprints, so three of the four pictures belonged to older sets. Every
+ * card really was in the set and only one of the pictures was, which is the
+ * shape of defect nothing else here would have caught — the page renders, the
+ * links resolve, and only somebody who knows the sets can see it is lying.
+ *
+ * THE ADDRESSES ARE CHECKED AGAINST THE ROUTER'S OWN LIST rather than against a
+ * pattern. `facesOf` is what `CARD_ROUTES` mints printing URLs from, so an href
+ * built any other way is an href that may not be a page — and a 404 from the
+ * busiest browse surface on the site is worse than the bad picture was.
+ */
+describe("the newest release the browse state opens on", () => {
+  test("every face and every address belongs to the set it names", () => {
+    /* `null` is a legal value — a corpus with no set over `RELEASE_SIZE` has no
+       release to show — so this is a guard on the shape, not an assumption that
+       today's corpus has one. */
+    if (CARD_NEWEST === null) return;
+
+    const code = CARD_NEWEST.code.toUpperCase();
+    expect(CARD_NEWEST.cards.length).toBeGreaterThan(0);
+
+    for (const card of CARD_NEWEST.cards) {
+      expect(card.faceKey.toUpperCase().startsWith(code)).toBe(true);
+      expect(card.href.startsWith(`/card/${CARD_NEWEST.code}/`)).toBe(true);
+    }
+  });
+
+  test("it names a real set, and the set is dated", () => {
+    if (CARD_NEWEST === null) return;
+
+    const set = setFor(CARD_NEWEST.code.toUpperCase());
+    expect(set).toBeDefined();
+    expect(set?.name).toBe(CARD_NEWEST.name);
+    expect(set?.released).toBe(CARD_NEWEST.released);
+  });
+
+  test("no card is drawn twice", () => {
+    if (CARD_NEWEST === null) return;
+
+    const keys = CARD_NEWEST.cards.map((card) => card.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });

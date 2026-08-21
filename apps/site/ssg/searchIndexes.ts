@@ -55,6 +55,9 @@ import {
   type EncodedCardIndex,
 } from "../src/lib/card-search";
 import { CARD_PAGES, CORPUS, LAST_CONFIRMED } from "../src/lib/cards";
+import { orientationOfFace } from "../src/lib/faces";
+import { facesOf, hrefForPrinting } from "../src/lib/printings";
+import { RECENT_RELEASES } from "../src/lib/releases";
 import {
   buildIndex,
   chapters,
@@ -192,6 +195,140 @@ export interface CardCorpusBrief {
   /** Printed type lines and how many cards carry each, for the empty state. */
   readonly browse: readonly (readonly [string, number])[];
 }
+
+/**
+ * The newest release, and the first few of its cards, for `/search` to open on.
+ *
+ * WHY THIS PAGE GETS PICTURES AT ALL. `/search` with no query was a paragraph
+ * of build metadata over twenty-four type lines in one column — the second-most
+ * visited surface on a site whose subject is card art, rendering none of it. A
+ * browse is an INVITATION, and an invitation made entirely of a database schema
+ * is the shape `docs/SCRYFALL-GAP.md` §2 names about the empty field — "a
+ * demand, not an invitation" — arrived at one level down.
+ *
+ * DERIVED, NEVER CURATED, which is the condition for it being here. Nothing in
+ * this row is chosen: the set is whatever `RECENT_RELEASES` puts at the front,
+ * the cards are that set's lowest collector numbers, and both move on the next
+ * corpus sync with no edit to any file. A hand-picked row would be one more
+ * thing to maintain and the first one to go stale.
+ *
+ * IT RIDES IN THE PAGE RATHER THAN IN THE INDEX, for the reason `CARD_BRIEF`
+ * exists: the browse state must render with no fetch. A row of art that appears
+ * only once a 900 kB request lands is a row of art that is missing on exactly
+ * the connection it would have helped.
+ *
+ * IT SHOWS THE SET'S OWN PRINTINGS, WHICH IS THE WHOLE DIFFICULTY. A first
+ * version read `CardPage.face` — the card's DEFAULT art, whichever set first
+ * printed it — and headed the row "Newest: Mastery Pack Warrior" over four
+ * faces keyed `DDD001`, `AHA001-RF` and `HVY093`. Every card in it really was
+ * in the set, and not one of the pictures was: a mastery pack is reprints, so
+ * the default face of almost every card in it belongs to an older set. The row
+ * has to go through `facesOf`, which is the list the ROUTER mints printing URLs
+ * from, so the picture, the address and the heading name one printing.
+ *
+ * PORTRAIT ONLY. The strip sets one aspect ratio, and the corpus's sideways
+ * cards — measured, see `LANDSCAPE_FACES` in `src/lib/faces.ts` — would either
+ * letterbox in a portrait cell or force every cell to the wider box for the
+ * sake of one. Skipping them costs nothing: the row is the first few cards of a
+ * set, never a claim to be all of them.
+ */
+export interface NewestRelease {
+  /** The set's published name — "Part the Mistveil". */
+  readonly name: string;
+  /** The three-letter code, lowercased, for the search this row links to. */
+  readonly code: string;
+  /** `YYYY-MM-DD`. Non-null by construction: `RECENT_RELEASES` is dated. */
+  readonly released: string;
+  readonly cards: readonly {
+    /** The face key, which is unique per art and so unique per cell. */
+    readonly key: string;
+    /** The PRINTING's address, not the card's. See the note above. */
+    readonly href: string;
+    readonly label: string;
+    /** `""` where upstream publishes none — never the word "null". */
+    readonly typeLine: string;
+    readonly faceKey: string;
+  }[];
+}
+
+/**
+ * How many faces the row carries.
+ *
+ * FOUR, WHICH IS A LAYOUT FACT RATHER THAN A TASTE. The strip is drawn on the
+ * same grid `CardIndex` draws results on — one `layout.card.cell` track per
+ * card — and `layout.page.index`, which is this page's width, is defined as
+ * exactly four of those cells plus their gutters. Four is therefore the number
+ * that fills one row and wraps to none, at the width the page already has.
+ *
+ * A fifth card would not be more art, it would be a second row holding one.
+ */
+const NEWEST_FACES = 4;
+
+export const CARD_NEWEST: NewestRelease | null = (() => {
+  const set = RECENT_RELEASES[0];
+  /* No qualifying set is a real state rather than a defect: a corpus whose
+     newest dated set is under `RELEASE_SIZE` has no release to show, and the
+     browse renders its type lines without a strip. Nothing downstream may
+     assume the row is there. */
+  if (set === undefined || set.released === null) return null;
+
+  const code = set.id.toUpperCase();
+  const numbered = CARD_PAGES.flatMap((page) => {
+    /* THE FIRST FACE THIS CARD PUBLISHES IN THIS SET. `facesOf` is in corpus
+       order and deduped by image, so a card struck Regular and Rainbow Foil
+       from one picture contributes one entry, and a card with two arts in the
+       set contributes its first. Filtering it is also the membership test: a
+       card with no face here is not in this set, or is in it with no published
+       art, and either way there is nothing to draw. */
+    const face = facesOf(page.card).find(
+      (ref) => ref.setCode.toUpperCase() === code,
+    );
+    if (face === undefined) return [];
+
+    if (
+      orientationOfFace({
+        key: face.key,
+        playedHorizontally: page.card.played_horizontally,
+        rotationDegrees: face.printing.image_rotation_degrees,
+      }) !== "portrait"
+    )
+      return [];
+
+    return [
+      {
+        /* The collector number as PRINTED, which is what sorts a set into the
+           order a reader would flip through it. `face.number` is the URL
+           segment and collapses punctuation, so it is the wrong key here. */
+        number: face.printing.id,
+        card: {
+          key: face.key,
+          href: hrefForPrinting(face.setCode, face.number, page.slug),
+          label: page.label,
+          typeLine: page.card.type_text ?? "",
+          faceKey: face.key,
+        },
+      },
+    ];
+  });
+
+  /* Collector number ascending, then face key, so the order is total and two
+     builds cannot draw the row differently. */
+  const cards = numbered
+    .toSorted((a, b) => {
+      if (a.number !== b.number) return a.number < b.number ? -1 : 1;
+      return a.card.key < b.card.key ? -1 : 1;
+    })
+    .slice(0, NEWEST_FACES)
+    .map((entry) => entry.card);
+
+  if (cards.length === 0) return null;
+  return {
+    name: set.name,
+    code: set.id.toLowerCase(),
+    released: set.released,
+    cards,
+  };
+})();
 
 export const CARD_BRIEF: CardCorpusBrief = (() => {
   /* Decoded once, at build time, purely to read four fields off it. The decode

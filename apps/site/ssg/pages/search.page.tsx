@@ -60,7 +60,7 @@
 import { Island } from "../Island";
 import { CardSearch } from "../islands/CardSearch";
 import { HEADER_FIELD_ID } from "../islands/HeaderSearch";
-import { CARD_BRIEF, CARD_INDEX } from "../searchIndexes";
+import { CARD_BRIEF, CARD_INDEX, CARD_NEWEST } from "../searchIndexes";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
 
@@ -91,6 +91,24 @@ import "./search.css";
 const islandProps = {
   indexUrl: CARD_INDEX.url,
   brief: CARD_BRIEF,
+  /*
+    THE ROW OF FACES THE BROWSE STATE OPENS ON, and it rides in the page for
+    the same reason the pin does: it has to render with no fetch. Six cards'
+    worth of slug, address, label, type line and blob key — under a kilobyte
+    against a document held to 512 — so the state a reader arrives on has
+    pictures in it before the index has been asked for.
+
+    `null` WHERE THE CORPUS HAS NO RELEASE TO SHOW, which `searchIndexes.ts`
+    argues is a state rather than a defect. The island renders its type lines
+    and no strip.
+
+    THIS IS ALSO WHERE THE TWO DECLARATIONS OF EACH SHAPE MEET. `CardSearch`
+    cannot import `searchIndexes.ts` — that module reads the 18 MB corpus at
+    module scope and this island's bundle would carry it — so `CardCorpusBrief`
+    and `NewestRelease` are each spelled twice, and this assignment is the one
+    place a compiler sees both spellings at once.
+  */
+  newest: CARD_NEWEST,
 };
 
 function page(): PageResult {

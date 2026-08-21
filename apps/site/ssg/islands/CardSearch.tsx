@@ -38,7 +38,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Pagination } from "optfall-components/react";
+import { CardFace, OrnamentalRule, Pagination } from "optfall-components/react";
 import { useStore } from "@tanstack/react-store";
 
 import {
@@ -63,6 +63,7 @@ import {
   requestFor,
   writeQueryUrl,
 } from "../../src/lib/pagination";
+import { FACE_TIERS, faceUrl } from "../../src/lib/faces";
 import { CardIndex, type CardIndexEntry } from "../components/CardIndex";
 import { HEADER_FIELD_ID } from "./HeaderSearch";
 import {
@@ -120,6 +121,49 @@ export interface CardCorpusBrief {
   readonly browse: readonly (readonly [string, number])[];
 }
 
+/**
+ * The newest release and the first few of its cards, for the browse state.
+ *
+ * DECLARED HERE RATHER THAN IMPORTED FROM `ssg/searchIndexes.ts`, for the
+ * reason {@link CardCorpusBrief} above is: that module reads the 18 MB corpus
+ * at module scope, and this file is reached by the island bundle. The two
+ * declarations are checked against each other at the one place both are in
+ * scope, which is `search.page.tsx`.
+ *
+ * `searchIndexes.ts` carries the argument for why the row exists and how it is
+ * derived. What matters on this side is only that it may be ABSENT: a corpus
+ * with no set big enough to be a release has no newest release, and the browse
+ * renders its type lines without a strip. That is a state, not a failure, so
+ * there is nothing here to report when it happens.
+ */
+export interface NewestRelease {
+  readonly name: string;
+  /** The three-letter code, lowercased, for the search this row links to. */
+  readonly code: string;
+  /** `YYYY-MM-DD`. */
+  readonly released: string;
+  readonly cards: readonly {
+    /** The face key, unique per art and so usable as the cell's key. */
+    readonly key: string;
+    /** The PRINTING's address — this set's, not the card's default. */
+    readonly href: string;
+    readonly label: string;
+    /** `""` where upstream publishes none — never the word "null". */
+    readonly typeLine: string;
+    readonly faceKey: string;
+  }[];
+}
+
+/**
+ * The two headings the browse state carries, named once each.
+ *
+ * Fixed strings rather than generated ids, because both are server-rendered and
+ * then hydrated: an id that differs between the two renders is a hydration
+ * mismatch, and `useId` would produce exactly that across a build and a browser.
+ */
+const NEWEST_HEADING = "of-browse-newest";
+const TYPES_HEADING = "of-browse-types";
+
 export interface CardSearchProps {
   /**
    * Where the encoded index is, NOT the index.
@@ -140,6 +184,13 @@ export interface CardSearchProps {
    * when something has gone wrong. 805 bytes, against the 909,626 they replace.
    */
   readonly brief: CardCorpusBrief;
+  /**
+   * The row of faces the browse state opens on, or `null` where the corpus has
+   * no release to show. Optional so a caller with no corpus behind it — the DOM
+   * suite, which builds its brief from the twenty-card sample — can leave it
+   * out and still render the state under test.
+   */
+  readonly newest?: NewestRelease | null | undefined;
   /*
     NO `ornament` FLAG, because there is no rule left here to spend it on. See
     the note where that rule used to be rendered, below.
@@ -199,7 +250,11 @@ const NO_OUTCOME: CardOutcome = {
   setFocus: null,
 };
 
-export function CardSearch({ indexUrl, brief }: CardSearchProps) {
+export function CardSearch({
+  indexUrl,
+  brief,
+  newest = null,
+}: CardSearchProps) {
   /*
    * THE INDEX IS FETCHED, AND ON THE SERVER IT IS SIMPLY ABSENT — which is the
    * correct server render and always was. This island has never produced a
@@ -728,6 +783,131 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
     </ul>
   );
 
+  /**
+   * THE WHOLE OF WHAT THIS PAGE IS BEFORE ANYBODY HAS ASKED IT ANYTHING.
+   *
+   * It was one paragraph of build metadata over `browseList`, and on the
+   * site's second-busiest surface that is the wrong shape twice over. It was
+   * SPARSE — twenty-four rows in a single column across a container sized for
+   * four card faces, so every row carried a link at one edge and its count at
+   * the other with 700px of nothing between them, and the state ran two screens
+   * deep saying very little on either. And on a site whose subject is card art
+   * it rendered none: the pictures are the reason `width: "index"` is set on
+   * this page at all, and the state that a reader arrives on first was the one
+   * state with no picture in it.
+   *
+   * SO IT IS THREE BLOCKS NOW, and each is derived rather than curated, which
+   * is the condition `/sets` and the front door's `NEW` list are already held
+   * to. A lede that leads with the count. The newest release, as faces. The
+   * type lines, in as many columns as the container has room for. Nothing here
+   * is a list somebody has to remember to update.
+   *
+   * THE PIN IS NOT DECORATION AND IT DID NOT MOVE OFF THE PAGE.
+   * `docs/PLAN.md`: "Every surface shows when its data was last confirmed. A
+   * stale Optfall must look stale." The commit and the confirmation date are
+   * still printed, still without a fetch, in the same faint voice the rest of
+   * the site states provenance in — they are simply no longer the first and
+   * loudest sentence a reader meets.
+   *
+   * THE RULES DIVIDE TWO BLOCKS OF CONTENT, WHICH IS WHAT MAKES THEM LEGAL
+   * HERE. The note further down records a section rule being deleted from the
+   * top of `<main>`, where it had nothing above it and so announced the break
+   * between the header and the page — furniture the header already draws. Each
+   * of these sits between two things this component rendered, which is the
+   * thematic break `OrnamentalRule` is for.
+   */
+  const browse = (
+    <div className="of-browse">
+      <p className="of-browse__lede">
+        <strong className="of-browse__size">
+          {brief.size.toLocaleString("en-GB")}
+        </strong>{" "}
+        cards, each at a permanent address of its own.
+      </p>
+      <p className="of-cards__count">
+        Pinned to upstream commit <code>{brief.commit.slice(0, 7)}</code>, last
+        confirmed {brief.confirmed}.
+      </p>
+
+      {newest === null ? null : (
+        <>
+          <OrnamentalRule />
+          <section aria-labelledby={NEWEST_HEADING}>
+            <div className="of-browse__head">
+              <h2 className="of-browse__title" id={NEWEST_HEADING}>
+                Newest: {newest.name}
+              </h2>
+              {/*
+                A SEARCH RATHER THAN `/sets/<code>`, which is the front door's
+                choice and the front door's reason: the set page is a
+                description of a set, and somebody who has just been shown six
+                of its cards wants the rest of them.
+              */}
+              <a
+                className="of-browse__more"
+                href={`/search?q=${encodeURIComponent(`set:${newest.code}`)}`}
+              >
+                All {newest.name} cards
+              </a>
+            </div>
+            {/*
+              NO NAME UNDER THE FACE, and `CardIndex` settled that argument
+              already: "the name was a caption repeating what the face already
+              says". The card's name reaches a screen reader through the alt
+              text, which is where it is not a duplicate.
+            */}
+            <ul className="of-browse__faces">
+              {newest.cards.map((card) => (
+                <li className="of-browse__face" key={card.key}>
+                  <a href={card.href}>
+                    {/*
+                      THE `normal` TIER INTO A `layout.card.cell` BOX, which is
+                      the pairing `CardIndex` arrived at and recorded: 180px
+                      drawn into a 240px cell is a card the reader can see is
+                      soft. The strip is the result grid's twin, so it takes the
+                      grid's tier as well as the grid's track.
+                    */}
+                    <CardFace
+                      src={faceUrl(card.faceKey, "normal")}
+                      alt={
+                        card.typeLine === ""
+                          ? card.label
+                          : `${card.label} — ${card.typeLine}`
+                      }
+                      width={FACE_TIERS.normal.width}
+                      height={FACE_TIERS.normal.height}
+                      loading="lazy"
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
+
+      <OrnamentalRule />
+      <section aria-labelledby={TYPES_HEADING}>
+        <div className="of-browse__head">
+          <h2 className="of-browse__title" id={TYPES_HEADING}>
+            Browse by type
+          </h2>
+          {/*
+            `/syntax` IS THE RIGHT SECOND DESTINATION HERE even though the
+            header already links it. A reader who has run out of type lines has
+            reached the edge of what this page can offer by clicking, and the
+            operator reference is the only page that tells them what else the
+            field will accept.
+          */}
+          <a className="of-browse__more" href="/syntax">
+            Search syntax
+          </a>
+        </div>
+        {browseList}
+      </section>
+    </div>
+  );
+
   return (
     <>
       {/* Always present, never emptied. */}
@@ -916,14 +1096,7 @@ export function CardSearch({ indexUrl, brief }: CardSearchProps) {
           </p>
         )
       ) : (
-        <>
-          <p className="of-cards__count">
-            {brief.size.toLocaleString("en-GB")} cards, pinned to upstream
-            commit <code>{brief.commit.slice(0, 7)}</code> and last confirmed{" "}
-            {brief.confirmed}. Start with a type, or type above.
-          </p>
-          {browseList}
-        </>
+        <>{browse}</>
       )}
     </>
   );
