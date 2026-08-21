@@ -1037,9 +1037,10 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               THE NAME CRUMB WAS A LINK TO A CARD PAGE, WHICH IS THE OTHER
               REASON IT IS GONE. It pointed at the lowest-pitch version's
               printing in this set — a page of the same rank as this one, not a
-              step up the trail — and the "Alternate pitch values" strip under
-              the face already offers that, with every version on it rather than
-              one.
+              step up the trail — and the "Alternate pitch values" strip already
+              offers that, with every version on it rather than one. Which
+              column that strip is in has changed twice and is not the point;
+              that it is on this page, above the fold, is.
 
               IT IS A `PitchBox` RATHER THAN THE STONE, and the trail is why.
               A breadcrumb is a LIST, which is where the boxes belong: the
