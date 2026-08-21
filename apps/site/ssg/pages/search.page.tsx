@@ -93,7 +93,7 @@ const islandProps = {
   brief: CARD_BRIEF,
   /*
     THE ROW OF FACES THE BROWSE STATE OPENS ON, and it rides in the page for
-    the same reason the pin does: it has to render with no fetch. Six cards'
+    the same reason the pin does: it has to render with no fetch. Four cards'
     worth of slug, address, label, type line and blob key — under a kilobyte
     against a document held to 512 — so the state a reader arrives on has
     pictures in it before the index has been asked for.

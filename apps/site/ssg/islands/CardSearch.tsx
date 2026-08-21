@@ -846,8 +846,8 @@ export function CardSearch({
               {/*
                 A SEARCH RATHER THAN `/sets/<code>`, which is the front door's
                 choice and the front door's reason: the set page is a
-                description of a set, and somebody who has just been shown six
-                of its cards wants the rest of them.
+                description of a set, and somebody who has just been shown
+                four of its cards wants the rest of them.
               */}
               <a
                 className="of-browse__more"
