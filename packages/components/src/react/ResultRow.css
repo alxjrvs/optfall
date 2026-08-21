@@ -21,8 +21,8 @@
     three pitch stones: the name began a stone's width to the right of the
     picture and the two read as two columns with an alley between them. The
     stones travel with the name now — see `.of-result__trail` — so what is left
-    to separate is a 44px thumbnail from the type it labels, and at that size a
-    wide alley reads as the picture belonging to nothing.
+    to separate is a thumbnail from the type it labels, and a wide alley there
+    reads as the picture belonging to nothing.
   */
   gap: var(--of-space-tighter);
   padding-block: var(--of-space-base);

@@ -180,9 +180,15 @@
 }
 
 /*
-    THE PANEL OPENS ON THE PITCH COLOUR — the fourth carrier of a fact the
-    jewel, the tab strip and the numeral already carry, and the only one a
-    reader gets for free while looking at the card they came for.
+    THE PANEL OPENS ON THE PITCH COLOUR — the third carrier of a fact the
+    jewel and the numeral beside it already carry, and the only one a reader
+    gets for free while looking at the card they came for.
+
+    IT WAS FOUR, AND THE FOURTH WAS THE TAB STRIP. That strip is now
+    "Alternate pitch values" and deliberately does not draw the version you are
+    reading, so it carries this card's pitch zero times. What states the
+    current pitch on this page is the panel's own corner — stone and word — and
+    this stroke.
 
     ~~ABOVE THE TEXT, BECAUSE THAT IS THE RULE THE PRINTED CARD DRAWS. A Flesh
     and Blood frame closes its art and opens its text box on a single stroke,
@@ -203,6 +209,14 @@
     and no band rhythm to inherit. The plate's own padding gives the stroke its
     air above; the `padding-block-start` gives the name its air below.
 
+    IT CROSSES THE NAME AND NOTHING ELSE. ~~As a border it was the whole of the
+    panel's top edge~~ — struck, because that edge runs over the pitch jewel and
+    over the cost plate, and both of those are already saying what they are, in
+    their own colour, an inch below. What the printed card carries is a strip
+    across the top of the NAME; a strip across the top of the corners is a rule
+    the card does not draw. See the `::before` below for why the middle column
+    can only be measured by the grid itself.
+
     Colour is the ONLY channel this adds, and deliberately not the only channel
     the fact has — `docs/DESIGN.md` puts red and yellow at the top of the
     deuteranopia confusion pair, which is why the numeral in the stone exists.
@@ -211,9 +225,48 @@
     stroke rather than on an unset `var()` and no rule at all.
   */
 .of-card__band--title {
-  border-block-start: calc(var(--of-bevel-width) * 2) solid
-    var(--card-pitch, var(--of-color-pitch-none));
-  padding-block-start: var(--of-space-tight);
+  /* The containing block for the stroke, and the two pixels that stroke used to
+     occupy as a border given back as padding — so the name and both corners sit
+     on exactly the rows the full-width border left them on. */
+  position: relative;
+  padding-block-start: calc(var(--of-space-tight) + var(--of-bevel-width) * 2);
+}
+
+/*
+    THE STROKE, AS A GRID-PLACED BOX RATHER THAN AS A BORDER.
+
+    A border spans its element, and the element here is a three-column band; the
+    stroke has to span the middle column of it. That column is
+    `minmax(0, 1fr)` — whatever the two capped corners leave, at this viewport,
+    with this name, with this corner present and that one absent — so nothing
+    outside the grid can state its width. An absolutely positioned child of a
+    grid container takes its GRID AREA as its containing block, which makes
+    `grid-column: 2` with `inset-inline: 0` that track and exactly that track,
+    without a number appearing anywhere in this file.
+
+    OUT OF FLOW, SO IT COSTS THE BAND NO HEIGHT — which is the whole reason the
+    rule above restates the border's two pixels as padding. Between them the
+    band's box is the size it was.
+
+    `inset-block-start: 0` IS THE LINE THE BORDER DREW. Insets resolve against
+    the padding box, and with the border gone that box now starts where the
+    border did, so zero is the same pixel row.
+
+    BOTH COLUMN LINES ARE NAMED, AND THE SHORTHAND'S DEFAULT IS WHY. For an
+    in-flow item `grid-column: 2` means "line 2, span one track"; for an
+    absolutely positioned one the implied `auto` end line means the container's
+    PADDING EDGE instead. Written that way the stroke started at the name and
+    ran on over the cost — the exact half of the bug this rule exists to fix,
+    and it renders, so nothing but looking at it would have said so.
+  */
+.of-card__band--title::before {
+  content: "";
+  position: absolute;
+  grid-column: 2 / 3;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: calc(var(--of-bevel-width) * 2);
+  background: var(--card-pitch, var(--of-color-pitch-none));
 }
 
 /*
@@ -250,6 +303,43 @@
 .of-card__band--oracle {
   /* The containing block for the bead, and nothing else. */
   position: relative;
+}
+
+/*
+    THE TEXT BAND IS THE ONE BAND GIVEN AIR RATHER THAN RHYTHM.
+
+    Every other boundary in this panel is a fold, and the `+` rule's `tight`
+    padding is the fold's whole spacing budget — the bands are parts of one
+    printed object and reading them as a stack is the point. The printed text is
+    the exception a reader arrives for: it is the widest band, set a step
+    larger than everything around it, and it sits under the one boundary in the
+    panel that carries the section bead. A seam that announces itself and then
+    opens onto text pressed against it is the panel undercutting its own mark.
+
+    THE TWO EDGES ARE NOT THE SAME NUMBER, AND THAT IS WHAT CENTRES THE TEXT.
+    The space under the text is not this band's alone: the band below adds its
+    own `tight` margin before its hairline, so a symmetric `padding-block` here
+    would put `loose` above the text and `loose + tight` below it and hang the
+    paragraph high in a box that looks square. The block-end is `loose` less
+    that margin, which makes the measured gap from the bead to the first line
+    and from the last line to the next hairline both `loose`.
+
+    So it is written as the SHORTHAND with two values rather than as a single
+    `padding-block-start` longhand: the block-end value only means anything
+    beside the block-start one, and splitting them is how a later edit changes
+    one and silently decentres the text.
+
+    THE DOUBLED CLASS IS FOR SPECIFICITY. The `padding-block-start` this
+    replaces belongs to `.of-card__band + .of-card__band`, which is (0,2,0); a
+    bare `.of-card__band--oracle` is (0,1,0) and loses, and the adjacency alone
+    merely ties, leaving the result hostage to the order of the two rules in
+    this file. (0,3,0) is not something a reorder can undo. The bead selector
+    below wears the same shape for a different reason — it needs the adjacency
+    because it draws on a hairline that only exists when a band precedes.
+  */
+.of-card__band + .of-card__band.of-card__band--oracle {
+  padding-block: var(--of-space-loose)
+    calc(var(--of-space-loose) - var(--of-space-tight));
 }
 
 .of-card__band + .of-card__band.of-card__band--oracle::before {
@@ -398,8 +488,11 @@
       a rule on a printed card is the one closing the art and opening the text
       box, and that is the edge this panel now colours.~~ Struck in turn — the
       stroke spent one iteration on the text band and came back. The pitch is
-      carried four ways either way: the jewel, the tab strip, the numeral, and
-      that stroke.
+      carried three ways either way: the jewel, the numeral beside it, and that
+      stroke. ~~four ways … the jewel, the tab strip, the numeral, and that
+      stroke~~ — the strip became "Alternate pitch values" and stopped drawing
+      the version being read, so it is not one of the carriers of THIS card's
+      pitch any more.
 
       Gone with the move, and staying gone: `inline-size: fit-content`,
       `max-inline-size`, `margin-inline: auto` and the negative
@@ -760,6 +853,13 @@
   break, if one is needed, falls at the space the name and the number already
   have between them.
 
+  THE NUMBER SITS A LITTLE FURTHER OFF THAN A WORD SPACE PUTS IT. `Enigma Blitz
+  Deck #014` is a name and then an identifier, not two words of a phrase, and at
+  a bare space the `#` crowds the last letter of the set — the more so because
+  the name is an underlined anchor whose rule runs to the space's edge. The
+  margin is ADDED to that space rather than replacing it: the space is what the
+  line breaks at, and what a `user-select: all` copy carries between the halves.
+
   `user-select: all` SO ONE CLICK TAKES THE WHOLE CITATION. The clipped set
   name that used to sit inside the anchor is gone — the visible text is the
   name now — so the rule excluding it from the selection went with it.
@@ -775,6 +875,7 @@
 }
 
 .of-card__printing-number {
+  margin-inline-start: var(--of-space-tighter);
   letter-spacing: var(--of-type-tracking-wide);
   white-space: nowrap;
 }
@@ -787,7 +888,7 @@
   color: var(--of-color-ink-faint);
 }
 
-/* -- Governed by ---------------------------------------------------------- */
+/* -- Rules ---------------------------------------------------------------- */
 
 .of-card__rules {
   display: flex;
@@ -890,14 +991,18 @@
   color: var(--of-color-ink-faint);
 }
 
-/* -- Pitch version tabs --------------------------------------------------- */
+/* -- Alternate pitch values ------------------------------------------------ */
 
-.of-card__versions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--of-space-tight);
-}
-
+/*
+  A ROW OF LINKS, NOT A TAB STRIP, AND THE RULE UNDER IT WENT WITH THE TABS.
+  This was `.of-card__versions` above the panel: a tab row whose `border-block-
+  end` hairline was there because "a tab row is a region boundary by nature".
+  It is now an apparatus section under the panel, sitting between two
+  `of-card__apparatus` blocks that bring their own separation — so the extra
+  hairline was one boundary too many, drawn under a heading it did not belong
+  to. `.of-card__versions` itself is deleted with the `<nav>` it wrapped: the
+  `<section>` is the apparatus, and the apparatus already has a layout.
+*/
 .of-card__version-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -905,45 +1010,50 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  /* The strip sits on a rule rather than in a box: the system separates
-       regions with hairlines, and a tab row is a region boundary by nature. */
-  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
-}
-
-.of-card__version-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--of-space-tight);
-  padding: var(--of-space-tight) var(--of-space-base);
-  text-decoration: none;
-  color: var(--of-color-ink-muted);
-  /* Square, never rounded — stated rather than omitted, so a host stylesheet
-       cannot round the one control this page owns. */
-  border-radius: var(--of-bevel-radius);
-  /* Every tab reserves the selected edge, so selecting one moves no pixels. */
-  border-block-end: var(--of-bevel-width) solid transparent;
-}
-
-.of-card__version-tab:hover {
-  color: var(--of-color-ink);
 }
 
 /*
-    The current tab is marked by weight, ink AND a bevelled edge — three
-    channels, because "which version am I reading" is the single most important
-    fact on a page that shows one of three near-identical cards.
+  The anchor is transparent to layout, because the mark is the control. It
+  carries no padding and no ink of its own any more — both were the tab's, and
+  a tab needed a hit area larger than its label and a resting colour to be
+  brightened on hover. What is inside now is a struck plate at full contrast
+  that already fills the target; wrapping it in a box that reserved a bevel
+  edge for a selected state simply drew a gap around it.
+*/
+.of-card__version-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /*
+    THE TARGET FLOOR, NOT THE TAB'S OLD PADDING. The tab carried
+    `space.tight space.base`, which bought a hit area of about 36px as a side
+    effect of looking like a tab; dropping the tab styling dropped that with it,
+    and every mark here is the only way to reach the version it names. A minimum
+    states the requirement instead of paying for it by accident — see
+    `layout.target.min`.
   */
-.of-card__version-tab--current {
-  color: var(--of-color-ink);
-  border-block-end-color: var(--of-color-accent);
+  min-inline-size: var(--of-layout-target-min);
+  min-block-size: var(--of-layout-target-min);
+  text-decoration: none;
+  /* Square, never rounded — stated rather than omitted, so a host stylesheet
+       cannot round the one control this page owns. */
+  border-radius: var(--of-bevel-radius);
 }
 
-.of-card__version-label {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-}
+/*
+  NO `.of-card__version-tab--current`, AND NO `.of-card__version-label`.
+
+  The current version is not drawn at all now, so the three channels that used
+  to mark it — weight, ink and a bevelled edge — mark nothing; the heading says
+  these are the ALTERNATES, and the panel's own corner says which one you are
+  reading. The label was a wide-tracked uppercase "PITCH 1" beside the tab's
+  stone, the same fact the stone's numeral already carried, in the one place
+  the duplication was unavoidable because a jewel cannot spell itself.
+  `PitchBox` is that label, struck in the pitch colour.
+
+  Both are deleted rather than left unused: a selector for a state nothing can
+  be in is a rule the next reader has to disprove.
+*/
 
 /* Layout and voice assignment only. Every value is a token — no literal
      colour, no literal length — and no media query, because a breakpoint is a
@@ -957,11 +1067,19 @@
 }
 
 /* CENTRED, NOT BASELINED, because the last crumb on a disambiguated card is a
-   pitch jewel rather than a word. A diamond has no baseline worth aligning to:
-   the only thing in it that reports one is the numeral at its middle, so
-   `baseline` lines that numeral up with the trail and hangs the whole stone
-   below it. Every other crumb is one line of one size, where centring and
-   baseline agree, so nothing else moves. */
+   struck plate rather than a word. Its label sits a step under the trail's, in
+   its own padded box, so `baseline` lines that smaller text up with the crumbs
+   and hangs the plate below them; centring seats the object on the line the
+   trail is set on, which is what it is a member of.
+
+   THE REASON USED TO BE THE JEWEL'S GEOMETRY — "a diamond has no baseline
+   worth aligning to: the only thing in it that reports one is the numeral at
+   its middle". That was true of the stone and is not true of the box, which is
+   flat-topped and reports a perfectly ordinary baseline. The declaration is
+   unchanged and still right; only what makes it right has moved.
+
+   Every other crumb is one line of one size, where centring and baseline
+   agree, so nothing else moves. */
 .of-card__crumbs {
   display: flex;
   flex-wrap: wrap;
@@ -1669,22 +1787,29 @@
 }
 
 /*
-  ONE STONE, ONE DESTINATION — and the padding is a target-size requirement
+  ONE MARK, ONE DESTINATION — and the SIZE here is a target-size requirement
   rather than spacing.
 
-  `ornament.jewel.small` is 1.25rem, which is 20px at the root size: under the
-  24×24 floor WCAG 2.5.8 sets for a pointer target. A stone that is the ONLY way
-  to reach a card has to clear that, where the same stone sitting decoratively
-  beside a full-width link did not. `space.tightest` is 0.125rem a side, which
-  takes the box to exactly 24px.
+  A mark that is the only way to reach a card has to clear the 24×24 floor WCAG
+  2.5.8 sets for a pointer target, where the same mark sitting decoratively
+  beside a full-width link does not. `layout.target.min` is that floor, and the
+  token comment records why it is a minimum and no longer a sum: this rule used
+  to spell the arithmetic — a 1.25rem jewel plus `space.tightest` a side, "which
+  takes the box to exactly 24px" — and the day the jewel became a shorter
+  `PitchBox` the sum fell to about 17px while the comment went on claiming
+  compliance.
 
-  It is deliberately not solved by using a bigger jewel: the size is a typographic
-  choice about how loud pitch is in a list, and inflating it to buy hit area
-  would change how the page reads to fix how it clicks.
+  It is deliberately not solved by drawing a BIGGER mark: the size is a
+  typographic choice about how loud pitch is in a list, and inflating it to buy
+  hit area would change how the page reads to fix how it clicks. The box is
+  centred in a target that is at least the floor instead.
 */
 .of-card__pitch-link {
   display: inline-flex;
-  padding: var(--of-space-tightest);
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--of-layout-target-min);
+  min-block-size: var(--of-layout-target-min);
 }
 
 /* The table caption names the table for a screen reader without repeating the

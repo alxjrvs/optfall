@@ -13,7 +13,7 @@
  * The CSS stays in `CardEntry.css` — see `PrintingsSection` for why.
  */
 
-import { OrnamentalRule, PitchJewel } from "optfall-components/react";
+import { OrnamentalRule, PitchBox } from "optfall-components/react";
 
 import type { CardLink } from "../../../src/lib/cards";
 import {
@@ -111,17 +111,17 @@ export function RelatedCards({
                         </a>
                         <span className="of-card__link-pitches">
                           {group.links.map((link) => {
-                            /* THE STONE GOES WHERE THE NAME BESIDE IT GOES —
+                            /* THE MARK GOES WHERE THE NAME BESIDE IT GOES —
                                this set's copy of the version, or the version's
                                own address where this set never printed it. The
-                               name was resolved by `groupTarget` and the stones
+                               name was resolved by `groupTarget` and the marks
                                were not, so a row could send its name into the
-                               set and its stones out of it. */
+                               set and its marks out of it. */
                             const versionHref =
                               addressInSet(link.href, setCode) ?? link.href;
                             return group.links.length === 1 ? (
                               /*
-                            A SOLE VERSION DRAWS A PLAIN STONE, unlinked, for
+                            A SOLE VERSION DRAWS A PLAIN BOX, unlinked, for
                             the reason `PitchStones` gives: it would point
                             where the name beside it already points — a second
                             control, in a smaller target, for one destination.
@@ -129,22 +129,22 @@ export function RelatedCards({
                             have one version), so it is the common shape rather
                             than an edge.
                           */
-                              <PitchJewel
+                              <PitchBox
                                 key={link.href}
                                 value={link.pitch}
                                 size="sm"
                               />
                             ) : (
                               /*
-                            THE STONE CARRIES THE LINK'S NAME, via
-                            `PitchJewel`'s own `label` prop rather than a
+                            THE BOX CARRIES THE LINK'S NAME, via
+                            `PitchBox`'s own `label` prop rather than a
                             hidden span beside it. A `role="img"` with an
                             `aria-label` contributes that string to the
                             anchor's accessible name, so the link is called
-                            "Head Jab (pitch 2)" with NO text in the DOM at
-                            all — which is what keeps two stones on one row
-                            from being two links called the same thing, and
-                            leaves nothing for a drag-select to pick up.
+                            "Head Jab (pitch 2)" while the box's own words stay
+                            `aria-hidden` — which is what keeps two boxes on one
+                            row from being two links called the same thing, and
+                            what stops the mark's text being read twice.
 
                             `link.label`, not `link.name`: the label is the one
                             composed to tell two same-named cards apart, and
@@ -155,7 +155,7 @@ export function RelatedCards({
                                 href={versionHref}
                                 key={link.href}
                               >
-                                <PitchJewel
+                                <PitchBox
                                   value={link.pitch}
                                   size="sm"
                                   label={link.label}

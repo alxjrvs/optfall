@@ -49,6 +49,7 @@ export { IconButton, type IconButtonProps } from "./IconButton";
 export { Mark, type MarkProps } from "./Mark";
 export { OrnamentalRule, type OrnamentalRuleProps } from "./OrnamentalRule";
 export { Pagination, type PaginationProps } from "./Pagination";
+export { PitchBox, type PitchBoxProps } from "./PitchBox";
 export { PitchJewel, type PitchJewelProps } from "./PitchJewel";
 export { PitchRule, type PitchRuleProps } from "./PitchRule";
 export { ResultRow, type ResultRowProps } from "./ResultRow";

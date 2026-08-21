@@ -44,7 +44,6 @@ import { useStore } from "@tanstack/react-store";
 import {
   type CardDisplayMode,
   type CardIndex as DecodedCardIndex,
-  type CardMatchField,
   type CardOutcome,
   decodeCardIndex,
   type EncodedCardIndex,
@@ -197,16 +196,20 @@ export interface CardSearchProps {
   */
 }
 
-/** Why a row is on the page, in the words of the ranking that put it there. */
-const WHY: Record<CardMatchField, string> = {
-  "name-exact": "exact name",
-  "name-prefix": "name starts with",
-  name: "name",
-  type: "type line",
-  keyword: "keyword",
-  text: "card text",
-  filter: "filter",
-};
+/*
+ * `WHY` WAS HERE: a table turning `CardMatchField` into English — "exact name",
+ * "type line", "filter" — printed in italics after the stats under every result.
+ * It is gone with the line it was printed on; `CardIndexEntry` records why the
+ * row prints a type line and nothing else now.
+ *
+ * WHAT IT WAS FOR IS WORTH KEEPING IN VIEW, because it was not decoration.
+ * `card-search/index.ts` names explicability a property of this engine, and
+ * `matchedIn` is how a result carries it — a card on the page for its rules
+ * text rather than its name could say so. The engine still computes it and
+ * still ranks by it; what changed is that a row no longer narrates it. If it
+ * comes back, it comes back as something the reader asks for, not as a word
+ * under all forty names.
+ */
 
 /**
  * The legacy `?display=` parameter, which predates the operator.
@@ -398,10 +401,15 @@ export function CardSearch({
   /**
    * The rows, in the shape every list of cards on this site is rendered from.
    *
-   * THE MAPPING IS THE WHOLE OF WHAT SEARCH ADDS. A result knows why it is on
-   * the page and which versions it stands for; a set page's row knows neither
-   * and carries a printing instead. Both are `CardIndexEntry`, which is what
-   * makes them one rendering rather than two that look alike.
+   * THE MAPPING IS THE WHOLE OF WHAT SEARCH ADDS. A result knows which
+   * versions it stands for — the ones that MATCHED, which is a fact only a
+   * query has; a set page's row knows the ones that set printed and carries a
+   * printing instead. Both are `CardIndexEntry`, which is what makes them one
+   * rendering rather than two that look alike.
+   *
+   * IT ADDED A SECOND THING UNTIL THE ROW STOPPED PRINTING IT: `why`, the
+   * ranking's own account of which field matched. See the note where `WHY`
+   * was.
    */
   const entries: readonly CardIndexEntry[] = outcome.results.map((result) => ({
     href: result.href,
@@ -425,8 +433,6 @@ export function CardSearch({
       it has just put on a banned list.
     */
     versions: result.matchedVersions,
-    stats: result.stats,
-    why: WHY[result.matchedIn],
   }));
 
   /**

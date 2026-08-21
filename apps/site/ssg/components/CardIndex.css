@@ -4,7 +4,7 @@
  * MOST OF THIS IS MOVED RATHER THAN WRITTEN, out of `CardSearch.css`, and the
  * move is the point: the grid, the view switch and the name list were styles
  * belonging to one PAGE that turned out to be describing a component. What is
- * genuinely new is the pager, the jewels in the name list, and the fan.
+ * genuinely new is the pager, the pitch boxes in the name list, and the fan.
  *
  * THE IMAGES VIEW IS THE ONE THAT HAS CHANGED SHAPE SINCE. It was a grid of
  * thumbnails each captioned with its name and underlined with a row of coloured
@@ -15,9 +15,9 @@
  *
  * THE ROWS VIEW HAS ALMOST NOTHING HERE, because `ResultRow` owns it — the
  * hairline, the baseline alignment, the two type voices. What is left is the
- * one class the metadata slot needs and the grouping span around the jewels.
+ * one class the metadata slot needs and the grouping span around the boxes.
  * That is the primitive doing its job: a list of card results is a `ResultRow`
- * with a face in the leading slot and a pitch stone trailing the name, which is
+ * with a face in the leading slot and a pitch box trailing the name, which is
  * the exact shape its own documentation describes.
  */
 
@@ -595,9 +595,9 @@
   text keeps the alignment it needs.
 
   THE FACE IS THE ONLY THING IN THE LEADING SLOT NOW, so it is also the only
-  thing this exemption has to cover. The pitch stones were here too and did not
-  need it — they sit on the baseline happily, because `PitchJewel` offers its
-  numeral's — and they now ride the name's own line instead.
+  thing this exemption has to cover. The pitch marks were here too and did not
+  need it — they sit on the baseline happily, because `PitchBox` offers its
+  text's — and they now ride the name's own line instead.
 
   THE WIDTH IS THE WHOLE SIZING, and the height follows from `CardFace`'s
   `aspect-ratio` — see `ROW_BOX` for why that box is portrait even for the
@@ -617,56 +617,53 @@
   A HAIRLINE AROUND THE PICTURE, WHICH IS NOT DECORATION.
 
   A card face is printed with a black border and this list sits on a dark
-  ground, so at 44px the picture's own edge disappears into the page and the
-  art reads as an unbounded smudge rather than as a card. The rule is the same
-  device every other separable thing on this site is closed with, at the one
-  size where the face cannot close itself.
+  ground, so at `layout.card.row` the picture's own edge disappears into the
+  page and the art reads as an unbounded smudge rather than as a card. The rule
+  is the same device every other separable thing on this site is closed with,
+  at the one size where the face cannot close itself.
 */
 .of-index__row-face img {
   border: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
 
 /*
-  Why the row is here, said in a quieter voice than what the card says about
-  itself — a match reason is the engine talking, not the card.
+  `.of-index__row-why` WAS HERE and is gone with the span it styled. It set the
+  match reason in italic `ink-muted` so that the engine's voice — "matched on
+  card text" — was distinguishable from the card's own. Two things in it are
+  worth carrying forward for whoever next adds a word to a result row:
 
-  THE SELECTOR HAS TO NAME THE SPAN. `ResultRow`'s own `.of-result__meta span`
-  is (0,1,1) and a bare `.of-index__row-why` is (0,1,0), so the override lost on
-  specificity and this was dead CSS describing a distinction that never
-  rendered.
+  A CLASS ON A `.of-result__meta` CHILD MUST NAME THE ELEMENT TO WIN.
+  `ResultRow`'s own `.of-result__meta span` is (0,1,1) and a bare class is
+  (0,1,0), so the first version of this rule was dead CSS describing a
+  distinction that never rendered.
 
-  IT IS `ink-muted` ON A DIMMER GROUND RATHER THAN `ink-faint`, and that is the
-  second half of the fix. `packages/theme/src/tokens.test.ts` states the rule:
-  anything at `type.size.base` or smaller uses `color.ink` or `color.ink.muted`,
-  because `ink.faint` is asserted at 3:1 and 3:1 is a LARGE-TEXT threshold. This
-  row is `type.size.micro`. So the separation is carried by italics, which cost
-  no contrast at all.
+  AND ITALIC RATHER THAN FAINTER. `packages/theme/src/tokens.test.ts` states
+  the rule: anything at `type.size.base` or smaller uses `color.ink` or
+  `color.ink.muted`, because `ink.faint` is asserted at 3:1 and 3:1 is a
+  LARGE-TEXT threshold. A meta line is `type.size.micro`, so a quieter voice
+  there has to be carried by something other than contrast.
 */
-.of-result__meta span.of-index__row-why {
-  color: var(--of-color-ink-muted);
-  font-style: italic;
-}
 
 /*
-  The stones for a row that stands for several pitch versions, kept together as
-  one object rather than as separate inline children — otherwise the space
-  between them is whatever the line's word spacing happens to be and a
+  The pitch boxes for a row that stands for several pitch versions, kept
+  together as one object rather than as separate inline children — otherwise the
+  space between them is whatever the line's word spacing happens to be and a
   three-version card reads as three facts instead of one.
 
-  THEY FOLLOW THE NAME NOW, AND THEY USED TO LEAD THE ROW. The stones were a
+  THEY FOLLOW THE NAME NOW, AND THEY USED TO LEAD THE ROW. The marks were a
   flex child of `.of-result` beside the face, with a `min-inline-size` here wide
   enough for three of them so that every row's name began at the same x — a
-  one-version row reserved two stones' worth of empty space to keep the column
+  one-version row reserved two marks' worth of empty space to keep the column
   straight. That is a real problem the reservation really solved, and it solved
   it by putting about 44px of nothing between a 44px picture and the name it
-  labels, on every row that had one stone or none.
+  labels, on every row that had one mark or none.
 
   Stating the pitch AFTER the name removes the problem instead of paying for it.
   The names all start at the same x because there is nothing variable in front
   of them any more, so no slot has to be reserved and no row is padded to the
-  width of a case it is not. The stones ride the name's line — see
+  width of a case it is not. The boxes ride the name's line — see
   `ResultRow.css`, which deliberately leaves that line in inline flow — and a
-  row with no pitch to state draws no stone at all, which is the other half of
+  row with no pitch to state draws no box at all, which is the other half of
   why the column is now straight without help.
 
   THE MARGIN IS THIS FILE'S BECAUSE THE MARK IS. `ResultRow` owns the baseline
@@ -675,22 +672,45 @@
 .of-index__stones {
   display: inline-flex;
   align-items: center;
+  /*
+    WRAPPING, WHICH IT DID NOT NEED WHEN THE MARKS WERE STONES. Three 20px
+    jewels and their gaps were an atomic inline box about 64px wide; three
+    boxes reading "PITCH n" measure 202px.
+
+    IT IS NOT WHAT PUTS THEM UNDER THE NAME ON A PHONE, and the distinction is
+    the whole reason to keep it. This box is an inline-flex child of the name's
+    paragraph, so where the name and the boxes together outrun the line, the
+    paragraph moves the WHOLE box down as one inline item — measured at a
+    320px viewport, where the three sit together on their own line under the
+    name and this declaration never fires. What it guards is the step after
+    that: the line is 220px wide there against the box's 202px, so 18px of
+    slack stands between a longer label or a wider tracking token and a box
+    that outgrows its own line. Without `wrap` that overflows the page, which
+    is the failure CLAUDE.md names six viewport widths to catch and
+    `scripts/mobile-overflow.test.ts` covers only the static half of.
+  */
+  flex-wrap: wrap;
   gap: var(--of-space-tightest);
   margin-inline-start: var(--of-space-tight);
 }
 
 /*
-  A STONE THAT IS A LINK, in the list view — the same control the grid's fanned
+  A MARK THAT IS A LINK, in the list view — the same control the grid's fanned
   card faces are, drawn as the object this view uses.
 
-  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX. The stone sits on the name's
-  own line, so the baseline it offers is the one the name is set on; an inline
-  anchor would offer its own baseline instead of the jewel's numeral's. The
-  anchor has to be as transparent to layout as the stone it wraps.
+  THE CLASS NAMES STILL SAY `stone`, AND THAT IS DELIBERATE RATHER THAN STALE.
+  These wrapped `PitchJewel` until the boxes landed; renaming the two selectors
+  would touch this file, the component and every test that asserts on them, to
+  say nothing new. What the mark IS lives in `PitchBox`.
 
-  NO UNDERLINE AND NO COLOUR CHANGE, because there is no text here to decorate —
-  the affordance is the pointer and the ring, and the jewel already carries its
-  numeral at full contrast.
+  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX. The mark sits on the name's
+  own line, so the baseline it offers is the one the name is set on; an inline
+  anchor would offer its own baseline instead of the box's text's. The
+  anchor has to be as transparent to layout as the mark it wraps.
+
+  NO UNDERLINE AND NO COLOUR CHANGE, because the text inside is `aria-hidden`
+  and is a mark rather than a label — the affordance is the pointer and the
+  ring, and the box already carries its words at full contrast.
 
   IT USED TO NEED THREE SELECTORS, AND THE REASON IS GONE WITH THE NAMES VIEW.
   That view set `text-decoration: underline` on `a:hover` at (0,2,1), which beat
@@ -708,6 +728,19 @@
 
 .of-index__stone {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /*
+    THE POINTER-TARGET FLOOR. This anchor is the only way to reach the version
+    it names — that is the whole feature — so it owes WCAG 2.5.8's 24×24, and
+    the mark inside it has never been that tall on its own: a 20px jewel before,
+    a shorter `PitchBox` now. `.of-card__pitch-link` is the same control on the
+    card page and states the requirement the same way; `layout.target.min` says
+    why it is a minimum rather than a padding that has to be recomputed every
+    time the mark changes size.
+  */
+  min-inline-size: var(--of-layout-target-min);
+  min-block-size: var(--of-layout-target-min);
   text-decoration: none;
 }
 

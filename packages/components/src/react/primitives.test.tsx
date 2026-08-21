@@ -17,6 +17,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { BevelledPlate } from "./BevelledPlate";
 import { OrnamentalRule } from "./OrnamentalRule";
 import { PAGE_GAP, Pagination, pageWindow } from "./Pagination";
+import { PitchBox } from "./PitchBox";
 import { PitchJewel } from "./PitchJewel";
 import { PitchRule } from "./PitchRule";
 import { StatGlyph } from "./StatGlyph";
@@ -85,6 +86,70 @@ describe("PitchJewel", () => {
     const html = renderToStaticMarkup(<PitchJewel value={2} />);
     expect(html).toContain('class="of-jewel of-jewel--md of-jewel--tone-two"');
     expect(html).toContain('class="of-jewel__stone"');
+  });
+});
+
+describe("PitchBox", () => {
+  test("the value is written out, at every size", () => {
+    /*
+     * THE WORDS ARE THE WHOLE POINT. The jewel's numeral is a glyph a reader
+     * has to know the grammar of; this is the same fact spelled. There is no
+     * size that drops it, for the reason there is no jewel that drops the
+     * numeral.
+     */
+    for (const size of ["sm", "md"] as const) {
+      const html = renderToStaticMarkup(<PitchBox value={3} size={size} />);
+      expect(html).toContain(">Pitch 3<");
+    }
+  });
+
+  test("the words are sentence case; the shouting is a rendering", () => {
+    // `text-transform` in the stylesheet, not uppercase in the DOM, so a
+    // reader that falls back to the text node gets a word rather than a shout.
+    expect(renderToStaticMarkup(<PitchBox value={1} />)).not.toContain("PITCH");
+  });
+
+  test("zero says so in words, where the stone can only draw a dash", () => {
+    const html = renderToStaticMarkup(<PitchBox value={0} />);
+    expect(html).toContain('aria-label="No pitch value"');
+    expect(html).toContain(">No pitch<");
+  });
+
+  test("an empty label cannot erase the accessible name", () => {
+    // The house idiom, asserted here too: `label?.trim() ||`, never `??`.
+    expect(renderToStaticMarkup(<PitchBox value={1} label="" />)).toContain(
+      'aria-label="Pitch 1"',
+    );
+    expect(renderToStaticMarkup(<PitchBox value={1} label="   " />)).toContain(
+      'aria-label="Pitch 1"',
+    );
+    expect(
+      renderToStaticMarkup(<PitchBox value={1} label="Head Jab (pitch 1)" />),
+    ).toContain('aria-label="Head Jab (pitch 1)"');
+  });
+
+  test("the fourth pitch value gets its own tone, not the grey fallback", () => {
+    // Same `?? "none"` lookup the jewel has, and the same failure it hides: a
+    // `TONES` array one entry short renders a pitch-4 card as a card with no
+    // pitch at all, beside words that say otherwise.
+    const html = renderToStaticMarkup(<PitchBox value={4} />);
+    expect(html).toContain("of-pitch-box--tone-four");
+    expect(html).toContain('aria-label="Pitch 4"');
+    expect(html).toContain(">Pitch 4<");
+  });
+
+  test("the words are a separate, hidden element under the role", () => {
+    // The box is a `role="img"` named by `aria-label`, so its visible words
+    // have to be `aria-hidden` or a caller's label and the mark's own text
+    // both reach the anchor around it — which is the WCAG 2.4.4 shape the
+    // `label` prop exists to fix in the first place.
+    const html = renderToStaticMarkup(<PitchBox value={2} />);
+    expect(html).toContain(
+      'class="of-pitch-box of-pitch-box--md of-pitch-box--tone-two"',
+    );
+    expect(html).toContain(
+      '<span class="of-pitch-box__text" aria-hidden="true">',
+    );
   });
 });
 
