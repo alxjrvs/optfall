@@ -77,9 +77,10 @@ describe("the primitive set", () => {
     //
     // `pitch-box`: the same value again, for lists and grids. A stone beside
     // every name down a page is an ornament competing with the names; the box
-    // is the fact written out — a coloured spine reading "PITCH 1" — and it
-    // replaced the jewel at every list and grid site in the product. See
-    // `PitchBox` for the division of labour between the three.
+    // is the fact written out — the state pill's notched plate reading
+    // "PITCH 1" — and it replaced the jewel at every list and grid site in the
+    // product. See `PitchBox` for the division of labour between the three,
+    // and for why it borrows the pill's shape without its tone union.
     expect(PRIMITIVES).toHaveLength(17);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
@@ -272,6 +273,35 @@ describe("the reserved silhouette", () => {
 
   test("is structure rather than palette, so both themes state it identically", () => {
     expect(LIGHT_TOKENS["ornament.cut.jewel"]).toBe(silhouette);
+  });
+
+  test("the notch is one shape at one depth, drawn by two components", () => {
+    /*
+     * `PitchBox` takes `StatePill`'s plate deliberately: same notch, same
+     * token, same polygon. The whole argument for reusing the shape is that a
+     * reader learns it once, and that argument dies the moment one of the two
+     * drifts — a notch half as deep on the pitch mark would be a SECOND
+     * ornament wearing the first one's name, which is the exact failure
+     * `ornament.cut.jewel` was promoted to a token to end.
+     *
+     * The clip is compared with whitespace collapsed because the two files are
+     * formatted by Biome at 80 columns and wrap in different places; what has
+     * to match is the geometry, not the line breaks.
+     */
+    const flat = (path: URL) => readFileSync(path, "utf8").replace(/\s+/g, " ");
+    const pill = flat(new URL("./react/StatePill.css", import.meta.url));
+    const box = flat(new URL("./react/PitchBox.css", import.meta.url));
+
+    const clip =
+      "clip-path: polygon( var(--notch-near) 0%, calc(var(--notch-far) - var(--notch)) 0%, var(--notch-far) var(--notch), var(--notch-far) 100%, var(--notch-near) 100% );";
+
+    expect(pill).toContain(clip);
+    expect(box).toContain(clip);
+    for (const source of [pill, box]) {
+      expect(source).toContain("--notch: var(--of-ornament-notch-size);");
+      // And the mirror, so a right-to-left reader gets one notch in both.
+      expect(source).toContain("--notch-near: 100%;");
+    }
   });
 
   test("the mark is a chain of three interlocked links", () => {

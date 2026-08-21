@@ -1,84 +1,139 @@
 /*
- * `PitchBox`'s styles. A struck column carrying its own label, sized across by
- * a token and along by the words in it.
+ * `PitchBox`'s styles. The state pill's object, in the pitch palette: a struck
+ * plate with one corner clipped, carrying a wide-tracked uppercase label.
  *
- * SPELLING (2) FROM `PitchJewel`'s LIST: the bordered plate. The box is a
- * flat-topped rectangle with no clip on it, so the bevel is two border colours
- * and costs nothing — `BevelledPlate` is the other user of the spelling and
- * takes it for the same reason. The jewel's `drop-shadow()` pair is for an
- * arbitrary silhouette; there is nothing arbitrary about this one.
+ * THE GEOMETRY IS `StatePill`'s, DELIBERATELY AND ALMOST DECLARATION FOR
+ * DECLARATION. Same notch, same token for its depth, same `:dir(rtl)` mirror,
+ * same label voice, same bevel. A reader who has learned the legality flags at
+ * the bottom of a card page has learned this at the top of one, which is the
+ * whole argument for taking the shape rather than drawing a fifth one.
+ *
+ * Two declarations differ and both are noted where they are made: the end
+ * padding clears the notch, because this label ends in its value, and the words
+ * never wrap.
+ *
+ * SPELLING (1) FROM `PitchJewel`'s LIST — a clipped surface with a FLAT top
+ * and bottom takes an INSET `box-shadow` pair, because a border cannot follow
+ * a `clip-path` and an inset shadow is clipped by the same polygon. That is
+ * what makes the notch read as a chamfer taken out of metal rather than a
+ * triangle drawn on top of it. The flatness is the precondition and this shape
+ * has it; the jewel's `drop-shadow()` filter is for a silhouette with no flat
+ * top, and using it here would cost a filter pass to draw the same edge worse.
+ *
+ * WHY IT IS NOT LITERALLY `StatePill`. That component's tones are `StateTone`,
+ * a closed union of legality verdicts, and widening it to carry pitch would
+ * make "which tone" stop meaning "which verdict" — the discrimination its own
+ * stylesheet is built around. Two components, one shape, no shared union.
  */
 
 .of-pitch-box {
+  /* One corner, clipped, at the notch's own token depth — the same size the
+     pills use, because a notch half as deep somewhere else is a second
+     ornament rather than the same one. */
+  --notch: var(--of-ornament-notch-size);
+  /* Clip geometry is physical, so the inline-end corner is named once here and
+     mirrored under `:dir(rtl)` below rather than being hard-coded right. */
+  --notch-near: 0%;
+  --notch-far: 100%;
+
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   box-sizing: border-box;
+  padding-block: var(--of-space-tightest);
+  padding-inline-start: var(--of-space-tight);
   /*
-    ACROSS ONLY. The width is the token; the height is whatever the rotated
-    string needs, which is the one measurement the text already owns. See
-    `ornament.pitch-box.*` in `tokens.ts`.
+    THE END PADDING CLEARS THE NOTCH, WHICH IS WHERE THIS PARTS FROM THE PILL'S
+    EVEN `padding-inline`. The chamfer cuts a notch's width in from the end
+    edge, and this label ends in its VALUE — the digit is the fact, and a
+    verdict pill ends in a letter of a word a reader can still infer. At the
+    pill's padding the cut took a bite out of the top-right of the 1, the 2 and
+    the 3, worst at the small step where there is no block padding to spend it
+    on. Adding the notch's own width means the cut can only ever eat padding,
+    at any type size and any box height, rather than being a clearance that
+    happens to work at one of them.
   */
-  inline-size: var(--of-ornament-pitch-box-base);
-  padding-block: var(--of-space-tighter);
+  padding-inline-end: calc(
+    var(--of-space-tight) +
+    var(--of-ornament-notch-size)
+  );
 
-  /* Struck, not printed: a light top edge and a dark bottom one, as every
-     plate in this system carries. The inline edges take the fill rather than
-     the rule colour — a spine is a solid column of its own hue, and a border
-     in `color.rule` down each side would draw a frame around a mark that is
-     supposed to read as one object. */
-  border-style: solid;
-  border-width: var(--of-bevel-width);
-  /* Stated, not omitted. The token exists only to be zero. */
+  clip-path: polygon(
+    var(--notch-near) 0%,
+    calc(var(--notch-far) - var(--notch)) 0%,
+    var(--notch-far) var(--notch),
+    var(--notch-far) 100%,
+    var(--notch-near) 100%
+  );
+  /* Square corners are a system rule, so the rule is stated rather than relied
+     upon: the token exists only to be zero. */
   border-radius: var(--of-bevel-radius);
-  border-block-start-color: var(--of-bevel-light);
-  border-block-end-color: var(--of-bevel-dark);
-  border-inline-color: var(--box);
 
   background: var(--box);
   color: var(--ink);
 
+  /* Struck plate: light top edge, dark bottom edge, clipped by the same
+     polygon the notch is. */
+  box-shadow:
+    inset 0 var(--of-bevel-width) 0 0 var(--of-bevel-light),
+    inset 0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-dark);
+
+  /* The label voice, which is the pill's. Wide tracking is what separates a
+     label from code. `text-transform` rather than shouting in the DOM, so the
+     text node stays a word. */
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-medium);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+
   /* Beside a line of type, and the line is what it belongs to. */
   vertical-align: middle;
 
+  /*
+    `user-select: none` IS THE ONE THING THE PILL DOES NOT DO, and the reason is
+    in `grammar.ts`: a reader dragging forty names off the card index to build a
+    deck list must not pick up "PITCH 1" forty times. A verdict pill is never in
+    that path; this mark is in nothing else.
+  */
   user-select: none;
 }
 
-/*
-  THE WRITING MODE IS ON THE TEXT, NOT ON THE BOX. `writing-mode` on the box
-  would swap what `inline-size` and `padding-block` mean, so the token width
-  would become a height and the bevel would run down one side; on the child it
-  rotates the string and leaves the box's own axes alone.
+.of-pitch-box:dir(rtl) {
+  --notch-near: 100%;
+  --notch-far: 0%;
+}
 
-  `vertical-rl` rather than `vertical-lr`, which is the difference between a
-  spine read head-down-to-the-right and one read upside down in every browser
-  that honours it.
+/*
+  NO SIZE TOKEN, IN EITHER AXIS, AND THAT IS THE DESIGN RATHER THAN AN
+  OMISSION. The box is its words plus its padding: the padding is tokens, the
+  type is tokens, and both dimensions fall out of them. A width token would be
+  a number kept in step with the length of "NO PITCH" at whatever size the box
+  is set — a second copy of a measurement the text already owns. Two boxes on a
+  row are therefore not equal columns, exactly as two pills are not: a tag is as
+  wide as what it says.
+
+  THE WORDS NEVER BREAK, which is where this parts company with the pill. A
+  verdict wraps because a clipped verdict is a wrong verdict and the label has
+  to survive; this label is two short words at a fixed length, and wrapping it
+  would make the mark twice the height of the line it sits beside in a list
+  where the marks are the quiet half of the row.
 */
 .of-pitch-box__text {
-  writing-mode: vertical-rl;
   white-space: nowrap;
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  font-weight: var(--of-type-weight-bold);
-  line-height: var(--of-type-leading-tight);
-  /* The house label treatment: wide-tracked uppercase sans. `text-transform`
-     rather than shouting in the DOM, so the text node stays a word. */
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
 }
 
 /*
   The small step is for a dense row — an index row, a version tab, a related
-  link — where the mark sits beside micro type and must not out-weigh it. The
-  type inside goes down with the box for the same reason: a legal-sized label
-  in a narrower column is still the same number of millimetres of ink.
+  link — where the mark sits beside micro type and must not out-weigh it.
 */
 .of-pitch-box--sm {
-  inline-size: var(--of-ornament-pitch-box-small);
-  padding-block: var(--of-space-tightest);
-}
-
-.of-pitch-box--sm .of-pitch-box__text {
+  padding-block: 0;
+  padding-inline-start: var(--of-space-tighter);
+  padding-inline-end: calc(
+    var(--of-space-tighter) +
+    var(--of-ornament-notch-size)
+  );
   font-size: var(--of-type-size-legal);
 }
 
@@ -102,11 +157,19 @@
   --ink: var(--of-color-pitch-three-ink);
 }
 
-/* The fourth column: one previewed card, and none in the corpus this
-   repository currently pins. It is the tone whose hue a reader is least likely
-   to have learned, which is the case the written label answers directly — the
-   box says "PITCH 4" whether or not the purple means anything yet. */
+/* The fourth box: one previewed card, and none in the corpus this repository
+   currently pins. It is the tone whose hue a reader is least likely to have
+   learned, which is the case the written label answers directly — the box says
+   "PITCH 4" whether or not the purple means anything yet. */
 .of-pitch-box--tone-four {
   --box: var(--of-color-pitch-four);
   --ink: var(--of-color-pitch-four-ink);
+}
+
+/* No motion here at all, exactly as the pill declares. Stated so the absence is
+   intent rather than oversight. */
+@media (prefers-reduced-motion: reduce) {
+  .of-pitch-box {
+    transition: none;
+  }
 }

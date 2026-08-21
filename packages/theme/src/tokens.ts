@@ -143,8 +143,16 @@ const STRUCTURE: TokenTable = {
   "bevel.width": "1px",
   "bevel.radius": "0",
 
-  /* The notch on anything carrying state. The clipped corner is the only
-     ornament in the system and it always means something. */
+  /* The notch on a value a card carries out of a fixed set. The clipped corner
+     is the only ornament in the system and it always means something.
+
+     IT SAID "ANYTHING CARRYING STATE" AND THAT WAS NARROWER THAN THE SET IT
+     DESCRIBES. `StatePill` was the only user while legality verdicts were the
+     only such value on the page; `PitchBox` draws the same notch at the same
+     depth for pitch, which is the other one — a short label, one of five, that
+     a card either has or does not. What the corner rules out is unchanged and
+     is the part that matters: it never appears on a control, on a heading, or
+     as decoration. */
   "ornament.notch.size": "0.5rem",
   "ornament.rule.width": "1px",
   "ornament.filigree.size": "1.25rem",
@@ -319,21 +327,14 @@ const STRUCTURE: TokenTable = {
   "ornament.band.small": "0.875rem",
   "ornament.band.base": "1.25rem",
 
-  /* THE PITCH BOX IS SIZED ACROSS ONLY, and that is the whole of what a token
-     can say about it. `PitchBox` is a spine: a column of the pitch colour with
-     the words "PITCH 1" set down it, so its LENGTH is the length of that
-     string at the size the box is drawn — a number CSS derives and a token
-     could only ever disagree with. Writing a height here would be a second
-     copy of a measurement the text already owns, which is the failure
-     `MARK_GEOMETRY` exists to avoid one primitive over.
-
-     Its own steps rather than the jewel's or the band's, for the reason the
-     two blocks above both record: a borrowed size is a size that moves when
-     the thing it was borrowed from moves, on a commit about something else.
-     The two steps are the two places the spine appears — `small` beside micro
-     type in a dense list row, `base` beside a line of body type. */
-  "ornament.pitch-box.small": "1rem",
-  "ornament.pitch-box.base": "1.25rem",
+  /* NO `ornament.pitch-box.*`, DELIBERATELY, AND THIS NOTE IS WHY THERE IS NO
+     ENTRY RATHER THAN A GAP. `PitchBox` is a label in a clipped plate — its
+     words plus the pill's padding — so both of its dimensions fall out of the
+     type and space tokens it already reads. A width token here would be a
+     number kept in step with the length of "NO PITCH" at whatever size the box
+     is set: a second copy of a measurement the text owns, which is the failure
+     `MARK_GEOMETRY` exists to avoid one primitive over. It briefly had two,
+     from a draft where the mark was a vertical spine of fixed width. */
 
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and

@@ -138,15 +138,18 @@ describe("PitchBox", () => {
     expect(html).toContain(">Pitch 4<");
   });
 
-  test("the text is a separate element, because the rotation is the text's", () => {
-    // `writing-mode` on the box would swap what `inline-size` and
-    // `padding-block` mean and stand the bevel on its side. The extra span is
-    // what keeps the rotation off the box.
+  test("the words are a separate, hidden element under the role", () => {
+    // The box is a `role="img"` named by `aria-label`, so its visible words
+    // have to be `aria-hidden` or a caller's label and the mark's own text
+    // both reach the anchor around it — which is the WCAG 2.4.4 shape the
+    // `label` prop exists to fix in the first place.
     const html = renderToStaticMarkup(<PitchBox value={2} />);
     expect(html).toContain(
       'class="of-pitch-box of-pitch-box--md of-pitch-box--tone-two"',
     );
-    expect(html).toContain('class="of-pitch-box__text"');
+    expect(html).toContain(
+      '<span class="of-pitch-box__text" aria-hidden="true">',
+    );
   });
 });
 
