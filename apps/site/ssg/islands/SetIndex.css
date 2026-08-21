@@ -1,0 +1,285 @@
+/*
+ * `/sets`'s list, its filter and its era spine.
+ *
+ * IT LIVES BESIDE THE ISLAND RATHER THAN IN `pages/sets.css`, because the
+ * island renders every one of these elements and the page renders none of them.
+ * `styles.entry.ts` globs both directories into the one stylesheet, so this is
+ * a question of where the rules can be found rather than of what ships.
+ *
+ * HAIRLINES RATHER THAN CARDS, WHICH IS THE RULE THIS LIST HAS ALWAYS FOLLOWED
+ * and the one the new mark had to be made to fit rather than the other way
+ * round. A grid of plates was the obvious way to give each set something to
+ * look at; what it would have cost is the only device this site uses to
+ * separate anything, on the page where a hundred separations happen. So the
+ * rarity bar IS the hairline — two pixels, full width, in the set's own
+ * colours — and the ROW is still a row rather than a card.
+ *
+ * THE FACTS ARE PLATES AND THE ROW IS NOT, WHICH IS THE DISTINCTION THAT KEEPS
+ * BOTH SENTENCES TRUE. A `FactChip` is a plate the size of the words in it;
+ * what the paragraph above refuses is a plate around the whole SET — a card,
+ * with the name and the date and the mix inside a border, which is the shape
+ * that would have taken this list's separations away from it. Four small plates
+ * at the end of a row do the opposite: they give each fact an edge the middot
+ * that used to join them never could, and leave the row's own boundary to the
+ * bar underneath it.
+ */
+
+/* -- The filter ------------------------------------------------------------ */
+
+.of-sets__filter {
+  margin-block-end: var(--of-space-loose);
+}
+
+/*
+  A VISIBLE LABEL, WHERE EVERY OTHER CONTROL ON THIS SITE CLIPS ITS OWN. The
+  header carries a search field on every page of the site, and it searches
+  CARDS; a second field immediately below it with no visible name is an
+  invitation to type a card name into the wrong box. The label is the one thing
+  that tells the two apart before the first keystroke.
+*/
+.of-sets__filter-label {
+  display: block;
+  margin-block-end: var(--of-space-tighter);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+/*
+  DRESSED LIKE THE SELECTS BESIDE IT, not like the hero field above it.
+  `SearchField` is the site's search — a sunken plate, the mark inside the well,
+  a real form that navigates. This filters a list that is already on the page
+  and submits nowhere, so it takes the control bar's costume instead: no border
+  but the hairline under it, which is the same affordance `.of-choice__select`
+  uses two lines down.
+*/
+.of-sets__filter-field {
+  inline-size: 100%;
+  appearance: none;
+  border: 0;
+  border-block-end: var(--of-ornament-rule-width) solid
+    var(--of-color-rule-strong);
+  border-radius: var(--of-bevel-radius);
+  background: transparent;
+  padding-block: var(--of-space-tight);
+  padding-inline: 0;
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-large);
+  color: var(--of-color-ink);
+}
+
+.of-sets__filter-field::placeholder {
+  color: var(--of-color-ink-faint);
+}
+
+.of-sets__filter-field:hover {
+  border-block-end-color: var(--of-color-accent);
+}
+
+.of-sets__filter-field:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: var(--of-space-tightest);
+}
+
+.of-sets__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-tighter) var(--of-space-tight);
+  margin-block: var(--of-space-tight) 0;
+}
+
+.of-sets__suggestions-label {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+/*
+  A BUTTON THAT READS AS A LINK, BECAUSE THAT IS WHAT IT DOES TO THE READER —
+  it takes them to a shorter list. It is a `<button>` in the markup because
+  there is nowhere for a link to go; the filter is not in the URL, and a `href`
+  that did nothing would be the worse lie.
+
+  NO PLATE, AND THE ROWS BELOW ARE MADE OF PLATES, WHICH IS THE REASON RATHER
+  THAN AN INCONSISTENCY WITH THEM. A `FactChip` is a fact: a thing the page is
+  telling you, sitting still. These are the opposite — the only objects above
+  the list that DO something when pressed — and dressing an action in the
+  costume of a datum is how a reader learns that nothing here is pressable. The
+  underline is the affordance, which is the same device `.of-choice__select`
+  uses two controls over, and the same one this page's filter field takes.
+
+  NO PILL EITHER: `StatePill`'s notch means "this carries state" and a search
+  term carries none.
+*/
+.of-sets__suggestion {
+  appearance: none;
+  border: 0;
+  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
+  border-radius: var(--of-bevel-radius);
+  background: transparent;
+  padding: 0;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-muted);
+  cursor: pointer;
+}
+
+.of-sets__suggestion:hover {
+  color: var(--of-color-accent);
+  border-block-end-color: var(--of-color-accent);
+}
+
+.of-sets__suggestion:focus-visible {
+  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
+  outline-offset: var(--of-space-tightest);
+}
+
+/* The clear is an escape rather than a search, so it is set apart from the
+   four that fill the field rather than emptying it. */
+.of-sets__suggestion--clear {
+  margin-inline-start: auto;
+}
+
+.of-sets__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--of-space-base);
+  margin-block-start: var(--of-space-base);
+}
+
+/* -- The count ------------------------------------------------------------- */
+
+/*
+  The announcement is for assistive technology; the same words are printed
+  visibly by `.of-sets__count` directly below it, so this one is off-screen
+  rather than duplicated on the page. Sized from `space.hair` rather than
+  collapsed to zero: a zero-area element is skipped by some screen readers.
+
+  THE FOURTH COPY OF THIS RULE IN THIS APP, and that is a fact worth writing
+  down rather than a thing to fix in passing. `.of-cards__announcement`,
+  `.of-rules__announcement` and `.of-index__announcement` are the other three,
+  each holding a live region for a surface that renders outside the others.
+  Consolidating them is a change to four surfaces at once and belongs in its own
+  diff.
+*/
+.of-sets__announcement {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.of-sets__count {
+  margin-block: 0 var(--of-space-loose);
+  color: var(--of-color-ink-muted);
+  font-size: var(--of-type-size-small);
+}
+
+.of-sets__empty {
+  margin-block: 0 var(--of-space-loose);
+  color: var(--of-color-ink-muted);
+}
+
+/* -- The era spine --------------------------------------------------------- */
+
+/*
+  THE YEAR IS THE HEADING, AND IT IS SET AS A MARGIN NOTE RATHER THAN AS A
+  TITLE. It is furniture: the reader is looking for a set, not for a year, and
+  a run of display-sized numerals down the page would compete with the set
+  names, which are the only things here worth reading first. Same wide-tracked
+  micro-sans as every other label in this system, with the hairline over it
+  doing the separating.
+*/
+.of-sets__era + .of-sets__era {
+  margin-block-start: var(--of-space-looser);
+}
+
+.of-sets__year {
+  margin-block: 0 var(--of-space-tight);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-medium);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+/* -- The list -------------------------------------------------------------- */
+
+.of-sets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+  NO `border-block-end`, AND ITS ABSENCE IS THE POINT. The row used to close on
+  a hairline in `color.rule`; it closes on `.of-sets__mix` now, which is the
+  same weight and the same job carrying the set's rarity mix. Drawing both would
+  be two dividers under every row — and the argument for the bar is precisely
+  that a divider that says something is worth more than one that says nothing.
+*/
+.of-sets__set {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-tight) var(--of-space-base);
+  padding-block: var(--of-space-tight);
+}
+
+.of-sets__name {
+  font-family: var(--of-type-family-serif);
+  font-size: var(--of-type-size-large);
+}
+
+/*
+  THE FACTS ARE A GROUP, PUSHED TO THE FAR END, and the group is what has the
+  auto margin rather than each chip. `.of-sets__meta` used to be one span of
+  middot-joined text doing both jobs at once; four chips each taking their own
+  `margin-inline-start: auto` would have spread them across the whole row
+  instead of keeping them together at the end of it.
+
+  IT WRAPS INTERNALLY BEFORE THE ROW DOES. On a phone the name takes the first
+  line and these take the second, and four chips are wider than 320px — so this
+  is its own flex line with its own wrapping, and the gap between chips is the
+  tight step rather than the row's base step, because a chip already carries
+  padding of its own and two steps of air between them reads as a gap in the
+  group.
+*/
+.of-sets__facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--of-space-tighter) var(--of-space-tight);
+  margin-inline-start: auto;
+}
+
+/*
+  `flex-basis: 100%` IS WHAT PUTS THE BAR ON ITS OWN LINE, in a row that
+  otherwise wraps as it likes. The name, the code and the facts arrange
+  themselves by width — one line on a desktop, two or three on a phone — and the
+  bar has to be last and full width whichever way that falls, because it is the
+  rule closing the row.
+
+  THE TOP MARGIN IS THE ROW'S BREATHING SPACE AND NOT THE BAR'S. `space.tight`
+  above it against `space.tight` of row padding below leaves the same gap either
+  side of the line, which is what makes it read as a divider between two rows
+  rather than as an underline belonging to the one above.
+*/
+.of-sets__mix {
+  flex-basis: 100%;
+  margin-block-start: var(--of-space-tight);
+}

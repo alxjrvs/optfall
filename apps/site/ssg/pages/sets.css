@@ -1,55 +1,16 @@
 /*
- * `/sets`'s own styles, ported from the Astro page's scoped block.
+ * `/sets`'s own styles — which is now the heading and nothing else.
+ *
+ * EVERYTHING ELSE MOVED TO `islands/SetIndex.css` WITH THE MARKUP IT STYLES.
+ * The list, the row, the code, the facts and the rules between them are drawn
+ * by the island; leaving their rules here would be a stylesheet describing
+ * markup its own page no longer contains, which is the dead-CSS failure
+ * `CardEntry.css` names — dead weight that reads, to the next person, like the
+ * markup is still there. `styles.entry.ts` globs both directories into one
+ * sheet, so nothing about what SHIPS changed; what changed is where the rules
+ * can be found.
  */
 
 .of-sets__heading {
-  margin-block: 0 var(--of-space-base);
+  margin-block: 0 var(--of-space-loose);
 }
-
-/* Hairlines rather than cards, exactly as every other list here. */
-.of-sets {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.of-sets__set {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--of-space-tight) var(--of-space-base);
-  padding-block: var(--of-space-tight);
-  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
-}
-
-.of-sets__name {
-  font-family: var(--of-type-family-serif);
-  font-size: var(--of-type-size-large);
-}
-
-.of-sets__code,
-.of-sets__meta {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink-faint);
-}
-
-/* The code is the citable identity, so it sits next to the name rather than at
-   the end of the row with the incidental facts. */
-.of-sets__code {
-  color: var(--of-color-ink-muted);
-}
-
-.of-sets__meta {
-  margin-inline-start: auto;
-}
-
-/*
-  `.of-sets__provenance` WENT WITH THE PARAGRAPH IT STYLED, on the rule
-  `set.css` states in the same words about the same deletion: a rule matching
-  no element is dead weight that reads, to the next person, like the markup is
-  still there. `.of-sets__meta` is unrelated despite the neighbouring name — it
-  is the per-row date and count, which is still drawn.
-*/

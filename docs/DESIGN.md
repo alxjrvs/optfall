@@ -271,6 +271,46 @@ rule rather than an implementation detail:
   three anchors in it: the children of a `role="img"` are not exposed, so links
   inside one would be links nothing could reach.
 
+### The rarity bar — a set's mark, because a set may not have its own
+
+**`docs/COMPLIANCE.md` bars product set logos, and this is what that constraint
+produced.** Set identity on this site has always been typographic — the name,
+the code, the date — which is one of the places the policy "pushed the design
+somewhere more original than it would otherwise have gone". The rarity bar is
+the other half of that answer: a per-set mark **derived from the corpus** rather
+than borrowed from the publisher, drawn as one proportional band of the
+printings in a set, sliced by rarity in the search grammar's own ladder.
+`RarityBar` in `optfall-components`.
+
+**It says something the logo could not.** A booster set is a long common tail
+under a thin gold edge; a preconstructed deck is commons and rares and nothing
+else; a promo run is one colour end to end. Those three are told apart at a
+glance and are three identical-looking numbers in a table — so the mark is
+information rather than decoration, which is the condition for putting a
+hundred and twelve of them on one page.
+
+**On a list it IS the hairline.** This system separates with rules rather than
+with fills, and `/sets` is a hundred separations deep. So the bar is drawn at
+two pixels, full width, in place of the row's divider rather than beside it: a
+divider that says something, at the weight of one that says nothing. The larger
+size is for a set's own page, where it is the subject rather than the furniture.
+
+**Colour carries more weight here than this document otherwise allows, and the
+accounting is the pitch rule's.** A slice has no room for a letter, so the
+element is a `role="img"` with a written name spelling the mix out in full —
+"282 Common, 243 Rare, 110 Majestic". The ORDER is the rarity ladder and is
+therefore the same on every bar on the page, the WIDTHS are the proportions
+themselves, and every surface that draws the bar prints the counts as text: on a
+set page as a legend of one-slice swatches, on `/sets` as the row's own card
+count beside it.
+
+**No slice is narrower than two pixels, and that is a deliberate inexactness.**
+Two Fabled printings among Monarch's 1,182 is about a pixel, which rounds to
+nothing — so an exactly proportional bar would state the opposite of the truth
+about a rarity the set does contain. Being invisible is the worse error. The
+floor is paid out of the slices that can afford it, and the exact numbers are in
+the accessible name and in the legend.
+
 ### Blood and brass
 
 Red is the game's own accent, and refusing it made an earlier pass read like a
@@ -282,6 +322,52 @@ else. A material used once is a signal; used twice it is a theme.
 Notched corners mark anything carrying state: `Legal`, `Banned`, `Unverified`,
 `Not in format`. The clipped corner is the only ornament in the system and it
 always means something.
+
+### The fact chip — and why it is the state pill with everything taken off it
+
+**Facts were being set as sentences, and a middot is a conjunction.** `/sets`
+printed a row as `7 August 2026 · 24 cards · 7 only here · out of print`, and a
+set page ran its labels and their values together into one wrapping strip. Both
+read as prose: a reader looking up *one* of those facts had to parse the line to
+find where it started, on a hundred and twelve rows. A fact is an object, and
+`FactChip` is the object — a plate at chip scale carrying a label and a value.
+
+**No notch.** The section above is the reason: the clipped corner always means
+something, and what it means is state. A release date and a card count are not
+state, so the chip is a plain rectangle and `StatePill` is still the only thing
+in the system wearing the chamfer. A chip that borrowed it would spend the one
+ornament this design has on the commonest object on the page — and print status,
+which genuinely *is* a state, deliberately does **not** get a pill either, because
+a notched chip in a strip of plain ones reads as a legality verdict.
+
+**No colour.** Every filled mark here carries a *data* colour — the pitch
+palette, the rarity ramp, the state tones — and a fact has no value to be
+coloured by. The plate is `color.surface` with the system's bevel pair struck
+into it: one step off the ground, saying nothing beyond "this is one thing".
+Where a fact *does* have a colour, the caller passes the mark that carries it
+into the chip's `mark` slot, which is how a set page's rarity legend is a row of
+chips with a one-slice `RarityBar` in each.
+
+**The label is optional, and which surfaces print it is a rule.** A set's own
+page draws one chip per fact and prints the label, because it is the question the
+reader arrived with. An index draws the same four facts on a hundred rows, where
+the labels would be a column of identical words and the values already carry
+their units — "24 cards", "7 only here" — so the label is dropped. One object
+either way; what changes is whether the page has already said the label a hundred
+times.
+
+**Two spellings, one plate.** A row of chips is a pair of `<span>`s, because the
+grouping is visual and the markup should not invent a structure the page does not
+have. A masthead is a `<dl>` — these are term-and-value pairs and that is the
+element for them — so the chip renders a `<div>` holding a `<dt>` and a `<dd>`
+instead, which is the grouping HTML allows inside a description list and what
+keeps a label attached to its own value when the strip wraps.
+
+**A control never wears it.** The chip is a thing the page is *telling* you,
+sitting still. `/sets`'s filter suggestions sit directly above a hundred of them
+and are deliberately not chips: they are the only objects on that screen that do
+something when pressed, and dressing an action in the costume of a datum is how a
+reader learns that nothing there is pressable. Controls keep the underline.
 
 ### Filigree, rationed
 

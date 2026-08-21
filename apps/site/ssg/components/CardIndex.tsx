@@ -63,6 +63,8 @@ import type { PitchValue } from "optfall-theme";
 
 import { FACE_TIERS, faceUrl, placeholderUrl } from "../../src/lib/faces";
 
+import { Choice, Joiner } from "./Choice";
+
 import "./CardIndex.css";
 
 /**
@@ -433,54 +435,13 @@ const DIRECTIONS = [
   ["desc", "Descending"],
 ] as const;
 
-/**
- * One labelled `<select>` in the control bar.
- *
- * A SELECT RATHER THAN THE RADIO GROUP THE VIEW SWITCH USED TO BE, and the
- * reason is arithmetic rather than taste. One control with three options is a
- * legible row of radios; four such controls is sixteen radios in a line, which
- * is a wall. The reference solves it with four dropdowns reading as a sentence —
- * "Cards as Images sorted by Name" — and that is what this is.
- *
- * THE LABEL IS OFF-SCREEN AND THE CONNECTIVE WORDS ARE NOT. What a sighted
- * reader sees is the sentence; what a screen reader announces is "Order by,
- * combo box", because "sorted by" as an accessible name would be read out of the
- * sentence that gives it meaning. Both need naming, and they are not the same
- * name.
+/*
+ * `Choice` AND `Joiner` USED TO BE DEFINED HERE and are imported now. `/sets`
+ * grew a control sentence of its own — "Sets in print, largest first" — and the
+ * choice was a second copy of a dressed-down `<select>` or one component both
+ * bars call. The argument for a select over a radio group is unchanged and
+ * moved with it; see `Choice.tsx`.
  */
-function Choice<T extends string>({
-  id,
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  readonly id: string;
-  readonly label: string;
-  readonly value: T;
-  readonly options: readonly (readonly [T, string])[];
-  readonly onChange: (value: T) => void;
-}) {
-  return (
-    <span className="of-index__choice">
-      <label className="of-index__choice-label" htmlFor={id}>
-        {label}
-      </label>
-      <select
-        className="of-index__select"
-        id={id}
-        value={value}
-        onChange={(event) => onChange(event.target.value as T)}
-      >
-        {options.map(([option, text]) => (
-          <option key={option} value={option}>
-            {text}
-          </option>
-        ))}
-      </select>
-    </span>
-  );
-}
 
 /**
  * The versions a row stands for, one per pitch, ascending.
@@ -975,7 +936,7 @@ export function CardIndex({
 
           {order !== undefined && onOrderChange !== undefined ? (
             <>
-              <span className="of-index__joiner">sorted by</span>
+              <Joiner>sorted by</Joiner>
               <Choice
                 id={`${controlName}-order`}
                 label="Order by"

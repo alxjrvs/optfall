@@ -43,6 +43,7 @@ export { BevelledPlate, type BevelledPlateProps } from "./BevelledPlate";
 export { BrassSeal, type BrassSealProps } from "./BrassSeal";
 export { CardFace, type CardFaceProps } from "./CardFace";
 export { Citation, type CitationProps } from "./Citation";
+export { FactChip, type FactChipProps } from "./FactChip";
 export { FiligreeCorner, type FiligreeCornerProps } from "./FiligreeCorner";
 export { GameSymbol, type GameSymbolProps } from "./GameSymbol";
 export { IconButton, type IconButtonProps } from "./IconButton";
@@ -52,6 +53,11 @@ export { Pagination, type PaginationProps } from "./Pagination";
 export { PitchBox, type PitchBoxProps } from "./PitchBox";
 export { PitchJewel, type PitchJewelProps } from "./PitchJewel";
 export { PitchRule, type PitchRuleProps } from "./PitchRule";
+export {
+  RarityBar,
+  type RarityBarProps,
+  type RaritySlice,
+} from "./RarityBar";
 export { ResultRow, type ResultRowProps } from "./ResultRow";
 export { SearchField, type SearchFieldProps } from "./SearchField";
 export { StatePill, type StatePillProps } from "./StatePill";

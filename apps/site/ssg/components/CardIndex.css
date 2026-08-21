@@ -101,42 +101,13 @@
 }
 
 /*
-  EACH CONTROL'S NAME IS FOR ASSISTIVE TECHNOLOGY AND NOT FOR THE SCREEN, and
-  the two are different words on purpose. What a sighted reader sees is the
-  sentence the joiners make — "Images sorted by Cost" — and what a
-  screen reader announces is "Order by, combo box", because "sorted by" pulled
-  out of that sentence names nothing.
-
-  Sized from `space.hair` rather than collapsed to zero: a zero-area element is
-  skipped by some screen readers.
+  THE CONTROL BAR'S OWN RULES ARE ALL THAT IS LEFT HERE. The dressed-down
+  `<select>`, its off-screen name and the joiner words between two of them moved
+  to `Choice.css` with the component, because `/sets` grew a control sentence of
+  its own and a second copy of a select's styling is a second select that drifts.
+  What stays is the BAR — its layout, its live region and its count — which is
+  this component's and not a shared control's.
 */
-.of-index__choice-label {
-  position: absolute;
-  inline-size: var(--of-space-hair);
-  block-size: var(--of-space-hair);
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.of-index__choice {
-  display: inline-flex;
-  align-items: center;
-}
-
-/*
-  THE JOINERS ARE THE SENTENCE, and they are set in the quiet voice the rest of
-  the bar's furniture uses. Lower case, because they are the middle of a
-  sentence rather than labels — the one place in this system where sans at this
-  size is NOT wide-tracked uppercase, since a tracked "sorted by" would read as
-  a heading between two controls rather than as the word joining them.
-*/
-.of-index__joiner {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  color: var(--of-color-ink-faint);
-}
 
 /*
   `.of-index__copy` AND `.of-index__copy-status` ARE GONE, and the rules went
@@ -151,59 +122,6 @@
   The bar is the selects and the words joining them and nothing else now,
   which is the sentence it was always trying to be.
 */
-
-/*
-  A NATIVE `<select>`, DRESSED DOWN RATHER THAN REPLACED.
-
-  `appearance: none` and a transparent ground, so it reads as a word in the
-  sentence with a rule under it rather than as a form field bolted into a page
-  of prose — but it is still a real `<select>`, which is what buys the keyboard
-  behaviour, the platform's own picker on a phone, and a control that works
-  before any of our CSS loads. A div with a listbox role would have to
-  re-implement all three and would get one of them wrong.
-
-  THE UNDERLINE IS THE AFFORDANCE. There is no border and no chevron; what says
-  "this is a control" is the hairline beneath it, which is the same device the
-  site uses for every other row it wants read as separable.
-*/
-.of-index__select {
-  appearance: none;
-  border: 0;
-  border-block-end: var(--of-ornament-rule-width) solid
-    var(--of-color-rule-strong);
-  border-radius: var(--of-bevel-radius);
-  background: transparent;
-  padding-block: var(--of-space-tightest);
-  padding-inline: 0 var(--of-space-tightest);
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink);
-  cursor: pointer;
-}
-
-.of-index__select:hover {
-  border-block-end-color: var(--of-color-accent);
-}
-
-.of-index__select:focus-visible {
-  outline: calc(var(--of-bevel-width) * 2) solid var(--of-color-focus);
-  outline-offset: var(--of-space-tightest);
-}
-
-/*
-  THE OPTIONS ARE A PLATFORM POPUP AND THE PAGE DOES NOT STYLE IT — except for
-  the ground and the ink, which it MUST. The bar inherits `color: ink` from a
-  transparent select, and a popup that took the page's ink onto the platform's
-  own default white would be dark-on-dark in this theme: unreadable, and
-  invisible to every check that looks at the document rather than at a native
-  menu. Stating both together is the only safe pairing.
-*/
-.of-index__select option {
-  background: var(--of-color-surface);
-  color: var(--of-color-ink);
-}
 
 /* -- Images ---------------------------------------------------------------- */
 
