@@ -1023,13 +1023,25 @@
   The anchor is transparent to layout, because the mark is the control. It
   carries no padding and no ink of its own any more — both were the tab's, and
   a tab needed a hit area larger than its label and a resting colour to be
-  brightened on hover. What is inside now is a banded mark at full contrast
+  brightened on hover. What is inside now is a filled mark at full contrast
   that already fills the target; wrapping it in a box that reserved a bevel
   edge for a selected state simply drew a gap around it.
 */
 .of-card__version-tab {
   display: flex;
-  align-items: center;
+  /*
+    STRETCH, NOT CENTRE, AND IT IS THE HEIGHT RULE BELOW THAT NEEDS IT. The bar
+    inside used to set its own block padding, which made it taller than the
+    floor and pushed this anchor out to match; centring a child that is bigger
+    than its parent's minimum is the same thing as stretching it, so nothing
+    showed. `PitchBox` spends no height of its own now — the mark is a line of
+    type wearing a colour — so a centred bar would sit as a short stripe inside
+    the target below, with ground above and below it, which is the opposite of
+    what the next comment claims. (Written without a length anywhere on purpose:
+    `check-tokens.ts` reads prose inside a stylesheet as CSS, and describing a
+    literal is how one gets committed. `PitchJewel.css` records the same care.)
+  */
+  align-items: stretch;
   justify-content: center;
   /* The anchor is the whole share the row gave its item, and the bar inside is
      the whole anchor — three elements, one rectangle, so the hit area and the

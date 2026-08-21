@@ -1451,19 +1451,21 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   so the second copy went rather than being kept beside a mark
                   that had made it redundant.
 
-                  AND THE BOX IS A BAR: `variant="bar"`, the pitch colour on the
-                  whole surface, with the row dividing the column's width evenly
-                  between however many alternates there are. ~~AT THE FULL STEP,
-                  NOT `sm`. These sit a few centimetres above the legality flags
-                  and are the same object as them.~~ ~~The flags are in the
-                  other column now, so the comparison that chose this step is no
-                  longer on the screen to make.~~ Struck twice: the flags ARE
-                  directly under this row again, and the mark is no longer a tag
-                  whose width its own words decide, so neither sentence is
-                  choosing anything any more. The stylesheet on
-                  `.of-card__version-tabs` carries how the row divides, and
-                  `PitchBox` carries why a full-width bar takes the fill that a
-                  tag beside a line of type does not.
+                  AND THE BOX IS A BAR: `variant="bar"`, with the row dividing
+                  the column's width evenly between however many alternates
+                  there are. ~~AT THE FULL STEP, NOT `sm`. These sit a few
+                  centimetres above the legality flags and are the same object
+                  as them.~~ ~~The flags are in the other column now, so the
+                  comparison that chose this step is no longer on the screen to
+                  make.~~ Struck twice: the flags ARE directly under this row
+                  again, and the mark is no longer a tag whose width its own
+                  words decide, so neither sentence is choosing anything any
+                  more. ~~`PitchBox` carries why a full-width bar takes the fill
+                  that a tag beside a line of type does not.~~ Every pitch mark
+                  takes the fill now, so the variant chooses a WIDTH and nothing
+                  else — the stylesheet on `.of-card__version-tabs` carries how
+                  the row divides, and `.of-card__version-tab` carries why the
+                  bar itself sets no height.
                 */}
                 <ul className="of-card__version-tabs">
                   {alternatePitches.map((version) => (

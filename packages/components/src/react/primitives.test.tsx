@@ -180,29 +180,33 @@ describe("PitchBox", () => {
     // `label` prop exists to fix in the first place.
     const html = renderToStaticMarkup(<PitchBox value={2} />);
     expect(html).toContain(
-      'class="of-pitch-box of-pitch-box--md of-pitch-box--tone-two of-pitch-box--band"',
+      'class="of-pitch-box of-pitch-box--md of-pitch-box--tone-two of-pitch-box--inline"',
     );
     expect(html).toContain(
       '<span class="of-pitch-box__text" aria-hidden="true">',
     );
   });
 
-  test("the band is the default rendering, and the bar is asked for", () => {
+  test("the inline mark is the default, and the bar is asked for", () => {
     /*
      * THE DEFAULT IS THE HALF WITH TEETH. `variant` exists for one caller —
      * the card page's "Alternate pitch values" row — and every other call site
      * in the product omits it: the index rows, the related links and the
-     * breadcrumb are lines of type with a mark set into them, and a filled bar
-     * in any of them is the loud plate `PitchBox.css` records the retirement
-     * of. A default that flipped would change all of them silently.
+     * breadcrumb are lines of type with a mark set into them, and a bar in any
+     * of them would be a mark stretched to the width of whatever contained it.
+     * A default that flipped would change all of them silently.
+     *
+     * IT WAS `band` VERSUS `bar` AND BOTH PAINTED DIFFERENTLY; they paint the
+     * same surface now and differ only in what decides their width, which is
+     * why the class is still worth asserting and the rendering no longer is.
      */
     expect(renderToStaticMarkup(<PitchBox value={1} />)).toContain(
-      "of-pitch-box--band",
+      "of-pitch-box--inline",
     );
 
     const bar = renderToStaticMarkup(<PitchBox value={1} variant="bar" />);
     expect(bar).toContain("of-pitch-box--bar");
-    expect(bar).not.toContain("of-pitch-box--band");
+    expect(bar).not.toContain("of-pitch-box--inline");
     // The variant is a rendering and nothing else: same words, same tone, same
     // accessible name, so a caller choosing it cannot change what is said.
     expect(bar).toContain("of-pitch-box--tone-one");

@@ -149,7 +149,7 @@ const STRUCTURE: TokenTable = {
      IT WAS WIDENED TO "A VALUE A CARD CARRIES OUT OF A FIXED SET" AND HAS BEEN
      NARROWED BACK. `PitchBox` drew the same notch at the same depth for pitch
      while it wore `StatePill`'s plate, and the definition was widened to cover
-     it; the box is a banded rectangle now and draws no notch at all, so
+     it; the box is a plain filled rectangle now and draws no notch at all, so
      `StatePill` is once again the only user and the corner means legality and
      nothing else. Restated rather than left standing — a definition kept broad
      for a user that has gone is a licence nobody asked for.
@@ -331,13 +331,14 @@ const STRUCTURE: TokenTable = {
   "ornament.band.base": "1.25rem",
 
   /* NO `ornament.pitch-box.*`, DELIBERATELY, AND THIS NOTE IS WHY THERE IS NO
-     ENTRY RATHER THAN A GAP. `PitchBox` is a label in a clipped plate — its
-     words plus the pill's padding — so both of its dimensions fall out of the
-     type and space tokens it already reads. A width token here would be a
-     number kept in step with the length of "NO PITCH" at whatever size the box
-     is set: a second copy of a measurement the text owns, which is the failure
-     `MARK_GEOMETRY` exists to avoid one primitive over. It briefly had two,
-     from a draft where the mark was a vertical spine of fixed width. */
+     ENTRY RATHER THAN A GAP. `PitchBox` is a label on a filled rectangle — its
+     words plus one mild step to each side, and nothing at all above or below —
+     so both of its dimensions fall out of the type and space tokens it already
+     reads. A width token here would be a number kept in step with the length of
+     "No pitch" at whatever size the box is set: a second copy of a measurement
+     the text owns, which is the failure `MARK_GEOMETRY` exists to avoid one
+     primitive over. It briefly had two, from a draft where the mark was a
+     vertical spine of fixed width. */
 
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and
