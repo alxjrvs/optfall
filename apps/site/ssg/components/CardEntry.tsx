@@ -1123,68 +1123,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               height={shownBox.height}
               loading="eager"
             />
-
-            {/*
-              UNDER THE PICTURE, BECAUSE THE OTHER VERSIONS ARE A FACT ABOUT
-              THE OBJECT RATHER THAN ABOUT THE PANEL OF FACTS.
-
-              ~~The alternates come after the card, not before it.~~ That much
-              is unchanged and is why this is not back above the panel: a
-              reader arrives for a card, and a page that opens with "here are
-              three other cards" has answered a question nobody asked. What
-              moved is which COLUMN says it. This column is where the card as
-              an object lives — this art, this printing — and "the same card in
-              another colour" belongs to the object, not to the table of facts
-              beside it. Seated in the facts column the strip was also the one
-              thing standing between the panel and the legality verdict; see
-              the note there, which is now true again.
-
-              AND IT STILL DOES NOT DRAW THE VERSION YOU ARE READING. The strip
-              was once a tab row carrying the current pitch as a non-link with
-              an accent edge — three marks to say one of them is where you
-              already are. The panel's own corner says the pitch and the
-              breadcrumb says it again. So the heading names the rest: these
-              are the ALTERNATES, and every one is a link that goes somewhere.
-
-              `alternatePitches`, NOT A FILTER HERE. The list is derived beside
-              `versions` so that "is this worth drawing at all" is one predicate
-              rather than a `.length` test written twice — see its definition.
-            */}
-            {alternatePitches.length > 0 ? (
-              <section
-                className="of-card__apparatus"
-                aria-labelledby="alternate-pitches"
-              >
-                <h2 className="of-apparatus__heading" id="alternate-pitches">
-                  Alternate pitch values
-                </h2>
-                {/*
-                  THE LINK IS THE BOX, AND THE LABEL BESIDE IT IS GONE WITH THE
-                  STONE. Each tab used to be a jewel plus a wide-tracked
-                  uppercase "PITCH 1" — the numeral in the stone and the words
-                  next to it saying the same thing twice, which was the price of
-                  a mark that could not spell itself. `PitchBox` is those words,
-                  so the second copy went rather than being kept beside a mark
-                  that had made it redundant.
-
-                  AT THE FULL STEP, NOT `sm`. ~~These sit a few centimetres
-                  above the legality flags and are the same object as them.~~
-                  The flags are in the other column now, so the comparison that
-                  chose this step is no longer on the screen to make — but the
-                  step stays, because the small one is for a mark set beside
-                  micro type in a dense row and nothing here is dense.
-                */}
-                <ul className="of-card__version-tabs">
-                  {alternatePitches.map((version) => (
-                    <li key={version.href}>
-                      <a className="of-card__version-tab" href={version.href}>
-                        <PitchBox value={version.pitch} label={version.label} />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
           </div>
 
           <div className="of-card__facts-column">
@@ -1465,12 +1403,94 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             </BevelledPlate>
 
             {/*
-              LEGALITY LEADS THE APPARATUS, AND NOTHING IS IN FRONT OF IT
-              AGAIN. ~~The alternate-pitch strip is now between them, and that
-              is the one thing seated there.~~ Struck: that strip moved to the
-              face column, so this is once more "directly under the panel, with
-              nothing at all between them" — the arrangement the sentence
-              described before the strip was seated here at all.
+              DIRECTLY UNDER THE CARD, ABOVE THE VERDICT. ~~Under the picture,
+              because the other versions are a fact about the object rather
+              than about the panel of facts. This column is where the card as
+              an object lives — this art, this printing — and "the same card in
+              another colour" belongs to the object, not to the table of facts
+              beside it.~~ Struck: the strip is back in the facts column, in
+              the gap between the panel and the legality grid. What it states
+              is a fact about the READING rather than about the artefact — a
+              reader who has just finished this card's text is the reader who
+              asks whether the same name pitches for anything else, and the
+              answer belongs where that text ends rather than at the foot of a
+              picture a column away from it.
+
+              THE ALTERNATES STILL COME AFTER THE CARD AND NEVER BEFORE IT.
+              That much has not moved through any of this, and it is why the
+              strip is not above the panel: a reader arrives for a card, and a
+              page that opens with "here are three other cards" has answered a
+              question nobody asked.
+
+              AND IT STILL DOES NOT DRAW THE VERSION YOU ARE READING. The strip
+              was once a tab row carrying the current pitch as a non-link with
+              an accent edge — three marks to say one of them is where you
+              already are. The panel's own corner says the pitch and the
+              breadcrumb says it again. So the heading names the rest: these
+              are the ALTERNATES, and every one is a link that goes somewhere.
+
+              `alternatePitches`, NOT A FILTER HERE. The list is derived beside
+              `versions` so that "is this worth drawing at all" is one predicate
+              rather than a `.length` test written twice — see its definition.
+            */}
+            {alternatePitches.length > 0 ? (
+              <section
+                className="of-card__apparatus"
+                aria-labelledby="alternate-pitches"
+              >
+                <h2 className="of-apparatus__heading" id="alternate-pitches">
+                  Alternate pitch values
+                </h2>
+                {/*
+                  THE LINK IS THE BOX, AND THE LABEL BESIDE IT IS GONE WITH THE
+                  STONE. Each tab used to be a jewel plus a wide-tracked
+                  uppercase "PITCH 1" — the numeral in the stone and the words
+                  next to it saying the same thing twice, which was the price of
+                  a mark that could not spell itself. `PitchBox` is those words,
+                  so the second copy went rather than being kept beside a mark
+                  that had made it redundant.
+
+                  AND THE BOX IS A BAR: `variant="bar"`, the pitch colour on the
+                  whole surface, with the row dividing the column's width evenly
+                  between however many alternates there are. ~~AT THE FULL STEP,
+                  NOT `sm`. These sit a few centimetres above the legality flags
+                  and are the same object as them.~~ ~~The flags are in the
+                  other column now, so the comparison that chose this step is no
+                  longer on the screen to make.~~ Struck twice: the flags ARE
+                  directly under this row again, and the mark is no longer a tag
+                  whose width its own words decide, so neither sentence is
+                  choosing anything any more. The stylesheet on
+                  `.of-card__version-tabs` carries how the row divides, and
+                  `PitchBox` carries why a full-width bar takes the fill that a
+                  tag beside a line of type does not.
+                */}
+                <ul className="of-card__version-tabs">
+                  {alternatePitches.map((version) => (
+                    <li key={version.href}>
+                      <a className="of-card__version-tab" href={version.href}>
+                        <PitchBox
+                          value={version.pitch}
+                          label={version.label}
+                          variant="bar"
+                        />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
+            {/*
+              LEGALITY LEADS THE APPARATUS, AND THE ALTERNATE-PITCH ROW IS THE
+              ONE THING IN FRONT OF IT. ~~Nothing is in front of it again.~~
+              ~~Struck: that strip moved to the face column, so this is once
+              more "directly under the panel, with nothing at all between
+              them".~~ Struck in turn — the strip is seated here again, and it
+              is still the only thing that is: a heading and a row of two or
+              three links, which is a few lines and pushes nothing below the
+              fold. What may never stand in this gap is a control that is not
+              about the card, which is what the note on the buy row below
+              records.
               `docs/SCRYFALL-GAP.md` §3 is unchanged and is the reason this is
               FIRST of the apparatus proper: "our legality table is already
               better than Scryfall's … put it on the card page above the fold —
@@ -1613,87 +1633,72 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   Rules
                 </h2>
                 <ul className="of-card__rules">
-                  {keywordRules.map((rule) => {
-                    /*
-                      THE CITATION LINE, BUILT ONCE FOR BOTH SHAPES. A rule with
-                      a definition is a fold and this is its `<summary>`; a rule
-                      without one has nothing to disclose and this is the whole
-                      row. Composing it here is what keeps those two from
-                      drifting into two different rows.
+                  {/*
+                    ONE LINE PER RULE, READ AS A DEFINITION: the keyword in
+                    bold, a colon, and what the rules say it means. THE
+                    REMINDER TEXT IS THE POINT OF THE JOIN — 138 cards in this
+                    corpus print nothing but keyword names, so the printed text
+                    tells a reader who already knows the keyword exactly what
+                    they already knew.
 
-                      THE CITATION STAYS A LINK INSIDE THE SUMMARY, and that is
-                      not the conflict it looks like: activation behaviour runs
-                      on the nearest activation target, so a click on the anchor
-                      navigates to the rule and does NOT also toggle the fold,
-                      while a click anywhere else on the line toggles it.
-                    */
-                    const line = (
-                      <>
-                        <a
-                          className="of-card__rules-citation"
-                          href={hrefForNumber(rule.number)}
-                        >
-                          {rule.ruleId}
-                        </a>
-                        <span className="of-card__rules-keyword">
-                          {rule.keyword}
+                    ~~IT IS ALSO FOLDED AWAY.~~ Struck. The definition used to
+                    sit inside a closed `<details>` whose `<summary>` was the
+                    citation and the keyword, on the argument that the
+                    most-governed cards draw four rules each and four stacked
+                    block quotations buried the thing a reader scans this
+                    section FOR. That traded the answer for the index: a reader
+                    who has to click to learn what `Go again` does has been
+                    shown a citation instead of an answer. Four short lines
+                    cost less than four folds.
+
+                    THE CITATION GOES LAST, because it is the provenance of the
+                    sentence in front of it rather than a heading over it. Same
+                    link, same target; it now closes the line it sources.
+
+                    IT IS STILL NOT THE CARD'S OWN TEXT. Writing it into
+                    `Printed text` would be printing something the card does
+                    not say — the one thing a reference work may never do — and
+                    the quieter type here is what keeps the two apart now that
+                    no quotation rule does it.
+
+                    NOTHING TO SAY, NOTHING TO PUNCTUATE. `text` is typed as
+                    possibly empty and no row in the corpus is (0 of 3,933 rule
+                    rows across every card, measured against `cr-2.14.0`), but
+                    a colon introducing nothing is a promise the line cannot
+                    keep, so a textless row is the keyword and its citation.
+                  */}
+                  {keywordRules.map((rule) => (
+                    <li className="of-card__rules-line" key={rule.ruleId}>
+                      <strong className="of-card__rules-keyword">
+                        {rule.keyword}
+                      </strong>
+                      {rule.text === "" ? null : (
+                        <>
+                          {": "}
+                          <CardTextInline nodes={parseInline(rule.text)} />
+                        </>
+                      )}{" "}
+                      <a
+                        className="of-card__rules-citation"
+                        href={hrefForNumber(rule.number)}
+                      >
+                        {rule.ruleId}
+                      </a>
+                      {rule.via === "family" ? (
+                        /*
+                          SAID OUT LOUD, because it is a slightly weaker claim.
+                          The rules define `Specialization` once and cards
+                          instantiate it per hero, so the match is a resolution
+                          rather than a direct hit — and a reference work should
+                          say which kind of claim it is making. It sits beside
+                          the citation because it qualifies the citation.
+                        */
+                        <span className="of-card__rules-via">
+                          via the general rule
                         </span>
-                        {rule.via === "family" ? (
-                          /*
-                            SAID OUT LOUD, because it is a slightly weaker claim.
-                            The rules define `Specialization` once and cards
-                            instantiate it per hero, so the match is a resolution
-                            rather than a direct hit — and a reference work should
-                            say which kind of claim it is making.
-                          */
-                          <span className="of-card__rules-via">
-                            via the general rule
-                          </span>
-                        ) : null}
-                      </>
-                    );
-                    return (
-                      <li key={rule.ruleId}>
-                        {/*
-                          THE REMINDER TEXT, WHICH IS THE POINT OF THE JOIN. 138
-                          cards in this corpus print nothing but keyword names,
-                          so the printed text tells a reader who already knows
-                          the keyword exactly what they already knew.
-
-                          IT IS QUOTED, NOT INLINED INTO THE CARD'S TEXT. Writing
-                          it into `Printed text` would be printing something the
-                          card does not say — the one thing a reference work may
-                          never do.
-
-                          IT IS ALSO FOLDED AWAY. The most-governed cards in the
-                          corpus draw four rules each, and four stacked block
-                          quotations buried the thing a reader scans this
-                          section FOR — which rules govern the card — under the
-                          definitions of all of them. Closed by default: the
-                          citations are the index, the definitions the lookup.
-
-                          NO FOLD WHEN THERE IS NOTHING TO OPEN. `text` is
-                          typed as possibly empty and no row in the corpus is
-                          (0 of 3,933 rule rows across every card, measured
-                          against `cr-2.14.0`), but a `<details>` that opens
-                          onto nothing is an affordance that lies, so the
-                          textless row stays a plain line.
-                        */}
-                        {rule.text === "" ? (
-                          <p className="of-card__rules-line">{line}</p>
-                        ) : (
-                          <details className="of-card__rules-fold">
-                            <summary className="of-card__rules-line">
-                              {line}
-                            </summary>
-                            <p className="of-card__rules-text">
-                              <CardTextInline nodes={parseInline(rule.text)} />
-                            </p>
-                          </details>
-                        )}
-                      </li>
-                    );
-                  })}
+                      ) : null}
+                    </li>
+                  ))}
                 </ul>
               </section>
             ) : null}

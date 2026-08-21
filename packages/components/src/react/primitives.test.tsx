@@ -138,8 +138,9 @@ describe("PitchBox", () => {
   });
 
   test("the words are sentence case; the shouting is a rendering", () => {
-    // `text-transform` in the stylesheet, not uppercase in the DOM, so a
-    // reader that falls back to the text node gets a word rather than a shout.
+    // Sentence case in the DOM and on the screen alike. It was uppercased by
+    // the stylesheet once — the house treatment for a LABEL — and that went
+    // with the label voice when the mark took the card's own display face.
     expect(renderToStaticMarkup(<PitchBox value={1} />)).not.toContain("PITCH");
   });
 
@@ -179,11 +180,34 @@ describe("PitchBox", () => {
     // `label` prop exists to fix in the first place.
     const html = renderToStaticMarkup(<PitchBox value={2} />);
     expect(html).toContain(
-      'class="of-pitch-box of-pitch-box--md of-pitch-box--tone-two"',
+      'class="of-pitch-box of-pitch-box--md of-pitch-box--tone-two of-pitch-box--band"',
     );
     expect(html).toContain(
       '<span class="of-pitch-box__text" aria-hidden="true">',
     );
+  });
+
+  test("the band is the default rendering, and the bar is asked for", () => {
+    /*
+     * THE DEFAULT IS THE HALF WITH TEETH. `variant` exists for one caller —
+     * the card page's "Alternate pitch values" row — and every other call site
+     * in the product omits it: the index rows, the related links and the
+     * breadcrumb are lines of type with a mark set into them, and a filled bar
+     * in any of them is the loud plate `PitchBox.css` records the retirement
+     * of. A default that flipped would change all of them silently.
+     */
+    expect(renderToStaticMarkup(<PitchBox value={1} />)).toContain(
+      "of-pitch-box--band",
+    );
+
+    const bar = renderToStaticMarkup(<PitchBox value={1} variant="bar" />);
+    expect(bar).toContain("of-pitch-box--bar");
+    expect(bar).not.toContain("of-pitch-box--band");
+    // The variant is a rendering and nothing else: same words, same tone, same
+    // accessible name, so a caller choosing it cannot change what is said.
+    expect(bar).toContain("of-pitch-box--tone-one");
+    expect(bar).toContain('aria-label="Pitch 1"');
+    expect(bar).toContain(">Pitch 1<");
   });
 });
 
