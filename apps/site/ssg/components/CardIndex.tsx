@@ -26,8 +26,8 @@
  * cell that opens into the three cards it stands for.
  *
  * THE TWO VIEWS DRAW IT DIFFERENTLY BECAUSE THEY CAN AFFORD DIFFERENT THINGS.
- * The list view has a line of type to hang a mark off, so it puts a numbered
- * stone per version at the end of the name. The grid has a whole card, so it
+ * The list view has a line of type to hang a mark off, so it puts a written
+ * box per version at the end of the name. The grid has a whole card, so it
  * draws the versions AS cards: stacked behind the front one, fanned on hover,
  * each face its own link. See {@link CardIndexEntry.versions} and `CardStack`.
  *
@@ -56,7 +56,7 @@ import type { ReactNode, Ref } from "react";
 import {
   CardFace,
   OrnamentalRule,
-  PitchJewel,
+  PitchBox,
   ResultRow,
 } from "optfall-components/react";
 import type { PitchValue } from "optfall-theme";
@@ -132,7 +132,7 @@ export interface CardIndexVersion {
    * standing for three pitch versions is a stack of three faces that fans on
    * hover, and the three Head Jabs are three different paintings — a stack of
    * one image repeated would be a decoration rather than a choice between
-   * cards. The list view never looks at this; it draws stones.
+   * cards. The list view never looks at this; it draws boxes.
    */
   readonly faceKey: string | null;
   /** True where this version's face is landscape and needs a transposed box. */
@@ -144,8 +144,9 @@ export interface CardIndexVersion {
    *
    * IT IS THE ACCESSIBLE NAME OF THIS VERSION'S MARK, which is why it is
    * qualified and why it is supplied rather than composed here. A row standing
-   * for three versions renders three links that carry no text at all — a stone
-   * is a numeral in a shape, a fanned card is a picture — so each one's name is
+   * for three versions renders three links with no text a reader is given — a
+   * box's words sit `aria-hidden` inside a `role="img"`, a fanned card is a
+   * picture — so each one's name is
    * the only thing telling them apart, and "Pitch 2" alone would give a
    * screen-reader user three links named for a value with no card attached.
    */
@@ -175,7 +176,7 @@ export interface CardIndexEntry {
    *
    * THE QUALIFIER MOVED OUT OF THE TYPE AND INTO THE MARK. Every row used to
    * print "Belly Buster (pitch 3)", which said in four words what the pitch
-   * rule under the name and the jewel beside it already say in a glyph — three
+   * rule under the name and the box beside it already say in a mark — three
    * times over on the three versions of a card, in the one place the reader is
    * scanning names rather than reading them.
    *
@@ -191,7 +192,7 @@ export interface CardIndexEntry {
    *
    * WHAT A SIGHTED READER HAS IN THE GRID IS THE ART, and that is worth
    * stating plainly rather than leaving to be discovered. The list view
-   * carries a numbered stone, so hue is redundant there; the grid has no
+   * carries the value written in a box, so hue is redundant there; the grid has no
    * mark of any kind, so two cells the reader is comparing are told apart by
    * their pictures. That is a stronger channel than the coloured bands it
    * replaced — the versions of a name are DIFFERENT PAINTINGS, not one painting
@@ -208,7 +209,7 @@ export interface CardIndexEntry {
    * equivalent and was not: an `unique:art` row's label carries the art key as
    * well as the pitch, so the subtraction hid the key too and left several rows
    * of one card reading identically in the list view — same name, same
-   * stones, same type line, same stats, differing only in where they pointed.
+   * boxes, same type line, same stats, differing only in where they pointed.
    * The picture is what separates them in the grid, and the key is what has to
    * separate them without one.
    */
@@ -230,7 +231,7 @@ export interface CardIndexEntry {
    * one specifically had to arrive at the name and then find it in the strip.
    * Now the row still goes to the row — the address for "this card", whichever
    * version you meant — and each MARK goes to the version it is drawn for: a
-   * stone in the list view, the version's own card face in the grid.
+   * box in the list view, the version's own card face in the grid.
    *
    * THE FIELD WAS `pitches: PitchValue[]` AND THE HREFS ARE NOT BESIDE IT.
    * Two arrays — values here, links there — is two orderings of one fact and
@@ -238,12 +239,18 @@ export interface CardIndexEntry {
    * of versions cannot disagree with itself.
    *
    * TWO RENDERINGS, CHOSEN BY VIEW, AND THAT IS A DESIGN DECISION RATHER THAN
-   * AN INCONSISTENCY. The list view has a line of type to put a jewel at the
-   * end of, so it draws {@link PitchJewel}, which carries the numeral
-   * `docs/DESIGN.md` calls the primary channel. The grid has a whole card, so
-   * it draws the versions as CARDS — a stack that fans on hover, each face a
-   * link to its own version. The information is identical; what differs is
-   * what the surface can afford to say it with.
+   * AN INCONSISTENCY. The list view has a line of type to put a mark at the
+   * end of, so it draws {@link PitchBox} — a coloured spine reading "PITCH 1",
+   * which states in words the value `docs/DESIGN.md` calls the primary
+   * channel. The grid has a whole card, so it draws the versions as CARDS — a
+   * stack that fans on hover, each face a link to its own version. The
+   * information is identical; what differs is what the surface can afford to
+   * say it with.
+   *
+   * IT DREW `PitchJewel` HERE UNTIL THE BOXES LANDED. The stone is the mark
+   * for a page ABOUT one card; forty of them down a list of names is forty
+   * ornaments competing with the names they caption, and a row here commonly
+   * carries three.
    *
    * THE GRID USED TO DRAW BANDS — one `PitchRule` per version, as an
    * underline, on the argument that there was no room under a face for a stone
@@ -279,7 +286,7 @@ export interface CardIndexEntry {
    * versions a partial match covered — "1 of 3 versions" — and it is gone:
    * every card list on this site now says which versions it stands for by
    * drawing them, and what it draws is what a reader can click. A row standing
-   * for one version draws one stone or one card; the words under it were a
+   * for one version draws one box or one card; the words under it were a
    * second telling of a fact the object had already told, and the site would
    * rather be read than narrated.
    */
@@ -499,7 +506,7 @@ function Choice<T extends string>({
  * a row rendering blue before red would be stating one fact in two orders on
  * one screen. A card printed twice in one set arrives with its pitch twice, and
  * the two arrivals are the same destination — so the first wins and the second
- * is dropped rather than drawn as a fourth stone or a fourth card in the fan.
+ * is dropped rather than drawn as a fourth box or a fourth card in the fan.
  */
 function versionsOf(
   versions: readonly CardIndexVersion[],
@@ -512,37 +519,41 @@ function versionsOf(
 }
 
 /**
- * The pitch versions as jewels — the rendering the list view uses.
+ * The pitch versions as boxes — the rendering the list view uses.
  *
- * ONE STONE PER VERSION, so a row standing for three pitch versions of a name
- * carries three, exactly as the grid draws three cards. `PitchJewel` is
- * singular by contract because a card page shows one card; the plurality is a
- * fact about a list, so it lives in the list.
+ * THE NAME IS HISTORICAL AND IS KEPT ON PURPOSE. These were `PitchJewel`s, and
+ * the stone is still what the card page draws; what changed is that a list is
+ * not a page about one card. See {@link PitchBox}.
  *
- * A STONE IS A LINK ONLY WHERE THERE IS SOMETHING TO CHOOSE BETWEEN. On a row
- * standing for one card the stone would point where the name beside it already
+ * ONE BOX PER VERSION, so a row standing for three pitch versions of a name
+ * carries three, exactly as the grid draws three cards. `PitchBox` is singular
+ * by contract because a card page shows one card; the plurality is a fact
+ * about a list, so it lives in the list.
+ *
+ * A BOX IS A LINK ONLY WHERE THERE IS SOMETHING TO CHOOSE BETWEEN. On a row
+ * standing for one card the box would point where the name beside it already
  * points — a second control, in a smaller target, for the same destination —
  * so the single-version row keeps the plain mark it has always had. Where a row
- * stands for several, each stone goes to its own version: that is the whole
- * feature, and the numeral in the stone is what says which one is under the
+ * stands for several, each box goes to its own version: that is the whole
+ * feature, and the words in the box are what say which one is under the
  * pointer before it is clicked.
  *
- * A ROW WITH NO PITCH TO STATE DRAWS NO STONE AT ALL, which is what the guard
+ * A ROW WITH NO PITCH TO STATE DRAWS NO BOX AT ALL, which is what the guard
  * below is. Pitch is a value most of this corpus does not have — every hero,
- * every weapon, every piece of equipment — and for those the stone was a grey
- * diamond with a dash in it, one per row, down the whole page: a column of
- * marks saying *nothing here*, in the reserved silhouette that is supposed to
- * mean pitch. An absent value is absent; the row says so by not drawing it.
+ * every weapon, every piece of equipment — and for those the mark was a grey
+ * one saying *no pitch*, one per row, down the whole page: a column of marks
+ * saying *nothing here*, in the object that is supposed to mean pitch. An
+ * absent value is absent; the row says so by not drawing it.
  *
  * IT IS `every`, NOT A FILTER, AND THE DIFFERENCE IS ONE GROUP IN THE CORPUS.
  * `Hyper Driver` is a pitch-0 token sharing its name with three pitched
  * actions — the one name disambiguated by an ABSENCE — so on a collapsed row
- * for that name the dash stone is the only thing distinguishing a real version
- * from its siblings, and it is a door to that version's page. Dropping every
- * zero would take that door away. What is being removed is a stone with nothing
- * to say, not the pitch-0 version.
+ * for that name the "No pitch" box is the only thing distinguishing a real
+ * version from its siblings, and it is a door to that version's page. Dropping
+ * every zero would take that door away. What is being removed is a mark with
+ * nothing to say, not the pitch-0 version.
  *
- * THE STONES SIT OUTSIDE THE NAME'S ANCHOR — `ResultRow` renders its `trail`
+ * THE BOXES SIT OUTSIDE THE NAME'S ANCHOR — `ResultRow` renders its `trail`
  * after the link rather than inside it — so this needs no markup contortion to
  * avoid nesting an anchor in an anchor. The grid did need one; see the cell.
  */
@@ -558,14 +569,14 @@ function PitchStones({
     <span className="of-index__stones">
       {shown.map((version) =>
         shown.length === 1 ? (
-          <PitchJewel key={version.pitch} value={version.pitch} size="sm" />
+          <PitchBox key={version.pitch} value={version.pitch} size="sm" />
         ) : (
           <a
             className="of-index__stone"
             href={version.href}
             key={version.pitch}
           >
-            <PitchJewel value={version.pitch} size="sm" label={version.label} />
+            <PitchBox value={version.pitch} size="sm" label={version.label} />
           </a>
         ),
       )}
@@ -862,21 +873,21 @@ const ROW_BOX = FACE_TIERS.thumb;
  * for one destination in a smaller target — two links with the same
  * destination and different accessible names is the WCAG 2.4.4 shape this
  * component's own `label` field exists to avoid. It sits outside the anchor
- * for the same reason the stones do — `ResultRow` renders both of its marks
+ * for the same reason the boxes do — `ResultRow` renders both of its marks
  * outside the link, the `lead` before it and the `trail` after it, so neither
  * can nest an anchor inside one.
  *
  * `alt=""` FOLLOWS FROM THAT. The picture repeats what the name, the type line
- * and the stones already say in text on the same row, so naming it again would
+ * and the boxes already say in text on the same row, so naming it again would
  * make every result announce itself twice. It is decorative in the precise
  * technical sense — not unimportant, but carrying nothing a screen reader
  * cannot already reach.
  *
  * ONE FACE, NOT A STACK, WHERE THE ROW STANDS FOR SEVERAL VERSIONS. The grid
  * draws a stack because a cell IS a card and there is room to fan it; here the
- * stones are already the version links, and three cards fanned at 44px would
+ * boxes are already the version links, and three cards fanned at 44px would
  * be three slivers of nothing. A row that gestured at a choice it could not
- * legibly offer is worse than a row that leaves the choice to the stones.
+ * legibly offer is worse than a row that leaves the choice to the boxes.
  */
 function RowFace({ entry }: { readonly entry: CardIndexEntry }) {
   return (
@@ -909,8 +920,8 @@ function rowFaceSrc(key: string | null, landscape: boolean): string {
  *
  * WHAT IS LOST, STATED PLAINLY rather than glossed, because the retirement of
  * `display:text` is written down in `grammar.ts` and pointed here. Taking forty
- * names off the page is a drag-select again. `PitchJewel` still carries
- * `user-select: none`, so a stone's numeral will not arrive in a deck list, but
+ * names off the page is a drag-select again. `PitchBox` carries
+ * `user-select: none`, so the boxes' words will not arrive in a deck list, but
  * the list view's type lines and pitch qualifiers will — which is exactly the
  * mess the control was better than. `grammar.ts` has been corrected to say so
  * instead of pointing at a button that is not there.
@@ -1092,27 +1103,27 @@ export function CardIndex({
         /*
           Dense rows: the view for comparing printed values down a column, and
           `ResultRow` is exactly the primitive for it — a leading slot, a name,
-          a trailing slot, and facts underneath. THE FACE LEADS AND THE JEWEL
-          TRAILS THE NAME, because this view has a line of type to hang a stone
-          off, so it can afford the rendering that carries the numeral.
+          a trailing slot, and facts underneath. THE FACE LEADS AND THE BOX
+          TRAILS THE NAME, because this view has a line of type to hang a mark
+          off, so it can afford the rendering that spells the value out.
 
-          THE JEWEL LED THE ROW UNTIL IT DID NOT EARN THE COLUMN. Beside the
-          face it needed a slot as wide as three stones so that every row's name
-          started at the same x, which meant a one-version row put an empty
-          stone's width between a 44px picture and the name it labels. Trailing
+          THE MARK LED THE ROW UNTIL IT DID NOT EARN THE COLUMN. Beside the
+          face it needed a slot as wide as three of them so that every row's
+          name started at the same x, which meant a one-version row put an empty
+          mark's width between a 44px picture and the name it labels. Trailing
           the name, the mark is a qualifier ON the name — where a reader looking
           up a pitch is already looking — and the names need no slot to line up
           because nothing variable precedes them. See `.of-index__stones`.
 
-          ONE JEWEL PER PITCH VALUE, exactly as the grid draws one card
+          ONE BOX PER PITCH VALUE, exactly as the grid draws one card
           per value. A row stands for a NAME and a name is commonly three cards, so
-          a single stone would be picking one of the three versions to speak for
+          a single box would be picking one of the three versions to speak for
           the other two — which is the same "collapses two true facts into one"
           failure the engine builds its whole verdict model to avoid.
 
           AND NONE AT ALL WHERE THE CARD HAS NO PITCH, which most of the corpus
           does not — see `PitchStones` for why an absence is drawn by drawing
-          nothing rather than by a grey stone with a dash in it.
+          nothing rather than by a grey box saying so.
         */
         <ol className="of-index__rows">
           {entries.map((entry) => (

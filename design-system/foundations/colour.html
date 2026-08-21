@@ -59,6 +59,8 @@
   --of-ornament-mark-large: 1.75rem;
   --of-ornament-band-small: 0.875rem;
   --of-ornament-band-base: 1.25rem;
+  --of-ornament-pitch-box-small: 1rem;
+  --of-ornament-pitch-box-base: 1.25rem;
   --of-card-face-thumb: 11.25rem;
   --of-card-face-normal: 28.125rem;
   --of-layout-page-measure: 46rem;
@@ -205,6 +207,8 @@
   --of-ornament-mark-large: 1.75rem;
   --of-ornament-band-small: 0.875rem;
   --of-ornament-band-base: 1.25rem;
+  --of-ornament-pitch-box-small: 1rem;
+  --of-ornament-pitch-box-base: 1.25rem;
   --of-card-face-thumb: 11.25rem;
   --of-card-face-normal: 28.125rem;
   --of-layout-page-measure: 46rem;
@@ -352,6 +356,8 @@
     --of-ornament-mark-large: 1.75rem;
     --of-ornament-band-small: 0.875rem;
     --of-ornament-band-base: 1.25rem;
+    --of-ornament-pitch-box-small: 1rem;
+    --of-ornament-pitch-box-base: 1.25rem;
     --of-card-face-thumb: 11.25rem;
     --of-card-face-normal: 28.125rem;
     --of-layout-page-measure: 46rem;
@@ -500,6 +506,8 @@
 --of-ornament-mark-large: 1.75rem;
 --of-ornament-band-small: 0.875rem;
 --of-ornament-band-base: 1.25rem;
+--of-ornament-pitch-box-small: 1rem;
+--of-ornament-pitch-box-base: 1.25rem;
 --of-card-face-thumb: 11.25rem;
 --of-card-face-normal: 28.125rem;
 --of-layout-page-measure: 46rem;
@@ -644,6 +652,32 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 }
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
 .jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-title); }
+.pbox {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+  inline-size: var(--pbox-size);
+  padding-block: var(--of-space-tighter);
+  border-style: solid; border-width: var(--of-bevel-width);
+  border-radius: var(--of-bevel-radius);
+  border-block-start-color: var(--of-bevel-light);
+  border-block-end-color: var(--of-bevel-dark);
+  vertical-align: middle;
+  --pbox-size: var(--of-ornament-pitch-box-base);
+}
+.pbox > span {
+  writing-mode: vertical-rl; white-space: nowrap;
+  font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-bold);
+  font-size: var(--of-type-size-micro);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-wide); text-transform: uppercase;
+}
+.pbox.sm { --pbox-size: var(--of-ornament-pitch-box-small); padding-block: var(--of-space-tightest); }
+.pbox.sm > span { font-size: var(--of-type-size-legal); }
+.pbox.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); border-inline-color: var(--of-color-pitch-none); }
+.pbox.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); border-inline-color: var(--of-color-pitch-one); }
+.pbox.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); border-inline-color: var(--of-color-pitch-two); }
+.pbox.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); border-inline-color: var(--of-color-pitch-three); }
+.pbox.p4 { background: var(--of-color-pitch-four); color: var(--of-color-pitch-four-ink); border-inline-color: var(--of-color-pitch-four); }
 .stone.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
 .stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
 .stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }

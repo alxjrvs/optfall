@@ -4,7 +4,7 @@
  * MOST OF THIS IS MOVED RATHER THAN WRITTEN, out of `CardSearch.css`, and the
  * move is the point: the grid, the view switch and the name list were styles
  * belonging to one PAGE that turned out to be describing a component. What is
- * genuinely new is the pager, the jewels in the name list, and the fan.
+ * genuinely new is the pager, the pitch boxes in the name list, and the fan.
  *
  * THE IMAGES VIEW IS THE ONE THAT HAS CHANGED SHAPE SINCE. It was a grid of
  * thumbnails each captioned with its name and underlined with a row of coloured
@@ -15,9 +15,9 @@
  *
  * THE ROWS VIEW HAS ALMOST NOTHING HERE, because `ResultRow` owns it — the
  * hairline, the baseline alignment, the two type voices. What is left is the
- * one class the metadata slot needs and the grouping span around the jewels.
+ * one class the metadata slot needs and the grouping span around the boxes.
  * That is the primitive doing its job: a list of card results is a `ResultRow`
- * with a face in the leading slot and a pitch stone trailing the name, which is
+ * with a face in the leading slot and a pitch box trailing the name, which is
  * the exact shape its own documentation describes.
  */
 
@@ -595,9 +595,9 @@
   text keeps the alignment it needs.
 
   THE FACE IS THE ONLY THING IN THE LEADING SLOT NOW, so it is also the only
-  thing this exemption has to cover. The pitch stones were here too and did not
-  need it — they sit on the baseline happily, because `PitchJewel` offers its
-  numeral's — and they now ride the name's own line instead.
+  thing this exemption has to cover. The pitch marks were here too and did not
+  need it — they sit on the baseline happily, because `PitchBox` offers its
+  text's — and they now ride the name's own line instead.
 
   THE WIDTH IS THE WHOLE SIZING, and the height follows from `CardFace`'s
   `aspect-ratio` — see `ROW_BOX` for why that box is portrait even for the
@@ -648,25 +648,25 @@
 }
 
 /*
-  The stones for a row that stands for several pitch versions, kept together as
-  one object rather than as separate inline children — otherwise the space
-  between them is whatever the line's word spacing happens to be and a
+  The pitch boxes for a row that stands for several pitch versions, kept
+  together as one object rather than as separate inline children — otherwise the
+  space between them is whatever the line's word spacing happens to be and a
   three-version card reads as three facts instead of one.
 
-  THEY FOLLOW THE NAME NOW, AND THEY USED TO LEAD THE ROW. The stones were a
+  THEY FOLLOW THE NAME NOW, AND THEY USED TO LEAD THE ROW. The marks were a
   flex child of `.of-result` beside the face, with a `min-inline-size` here wide
   enough for three of them so that every row's name began at the same x — a
-  one-version row reserved two stones' worth of empty space to keep the column
+  one-version row reserved two marks' worth of empty space to keep the column
   straight. That is a real problem the reservation really solved, and it solved
   it by putting about 44px of nothing between a 44px picture and the name it
-  labels, on every row that had one stone or none.
+  labels, on every row that had one mark or none.
 
   Stating the pitch AFTER the name removes the problem instead of paying for it.
   The names all start at the same x because there is nothing variable in front
   of them any more, so no slot has to be reserved and no row is padded to the
-  width of a case it is not. The stones ride the name's line — see
+  width of a case it is not. The boxes ride the name's line — see
   `ResultRow.css`, which deliberately leaves that line in inline flow — and a
-  row with no pitch to state draws no stone at all, which is the other half of
+  row with no pitch to state draws no box at all, which is the other half of
   why the column is now straight without help.
 
   THE MARGIN IS THIS FILE'S BECAUSE THE MARK IS. `ResultRow` owns the baseline
@@ -680,17 +680,22 @@
 }
 
 /*
-  A STONE THAT IS A LINK, in the list view — the same control the grid's fanned
+  A MARK THAT IS A LINK, in the list view — the same control the grid's fanned
   card faces are, drawn as the object this view uses.
 
-  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX. The stone sits on the name's
-  own line, so the baseline it offers is the one the name is set on; an inline
-  anchor would offer its own baseline instead of the jewel's numeral's. The
-  anchor has to be as transparent to layout as the stone it wraps.
+  THE CLASS NAMES STILL SAY `stone`, AND THAT IS DELIBERATE RATHER THAN STALE.
+  These wrapped `PitchJewel` until the boxes landed; renaming the two selectors
+  would touch this file, the component and every test that asserts on them, to
+  say nothing new. What the mark IS lives in `PitchBox`.
 
-  NO UNDERLINE AND NO COLOUR CHANGE, because there is no text here to decorate —
-  the affordance is the pointer and the ring, and the jewel already carries its
-  numeral at full contrast.
+  `inline-flex` RATHER THAN THE DEFAULT INLINE BOX. The mark sits on the name's
+  own line, so the baseline it offers is the one the name is set on; an inline
+  anchor would offer its own baseline instead of the box's text's. The
+  anchor has to be as transparent to layout as the mark it wraps.
+
+  NO UNDERLINE AND NO COLOUR CHANGE, because the text inside is `aria-hidden`
+  and is a mark rather than a label — the affordance is the pointer and the
+  ring, and the box already carries its words at full contrast.
 
   IT USED TO NEED THREE SELECTORS, AND THE REASON IS GONE WITH THE NAMES VIEW.
   That view set `text-decoration: underline` on `a:hover` at (0,2,1), which beat

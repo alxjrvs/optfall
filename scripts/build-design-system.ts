@@ -83,6 +83,24 @@ function jewel(pitch: string | number, size = ""): string {
 }
 
 /**
+ * A pitch box, in the two-element shape `PitchBox.tsx` renders.
+ *
+ * THE NESTING IS THE ROTATION, and it is on the inner span deliberately:
+ * `writing-mode` on the box would swap what `inline-size` and `padding-block`
+ * mean, turning the token width into a height and standing the bevel on its
+ * side. Same reason the component carries the extra element, and the same
+ * reason `jewel()` above carries one for its filter — a card that drew the
+ * shape a different way would be advertising a rendering the product does not
+ * ship, which is the drift both of those comments exist to record.
+ */
+function pitchBox(pitch: string | number, size = ""): string {
+  const value = String(pitch);
+  // Sentence case here too: the shouting is `text-transform`, in both places.
+  const words = value === "0" ? "No pitch" : `Pitch ${value}`;
+  return `<span class="pbox p${value}${size ? ` ${size}` : ""}"><span>${words}</span></span>`;
+}
+
+/**
  * A stat plate, in the shape `StatGlyph` actually renders.
  *
  * WRITTEN ONCE HERE BECAUSE IT WAS WRITTEN TWICE INLINE, AND BOTH COPIES WERE
@@ -251,6 +269,32 @@ code, .mono { font-family: var(--of-type-family-sans); font-size: var(--of-type-
 }
 .jewel.sm { --jewel-size: var(--of-ornament-jewel-small); font-size: var(--of-type-size-micro); }
 .jewel.lg { --jewel-size: var(--of-ornament-jewel-large); font-size: var(--of-type-size-title); }
+.pbox {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box;
+  inline-size: var(--pbox-size);
+  padding-block: var(--of-space-tighter);
+  border-style: solid; border-width: var(--of-bevel-width);
+  border-radius: var(--of-bevel-radius);
+  border-block-start-color: var(--of-bevel-light);
+  border-block-end-color: var(--of-bevel-dark);
+  vertical-align: middle;
+  --pbox-size: var(--of-ornament-pitch-box-base);
+}
+.pbox > span {
+  writing-mode: vertical-rl; white-space: nowrap;
+  font-family: var(--of-type-family-sans); font-weight: var(--of-type-weight-bold);
+  font-size: var(--of-type-size-micro);
+  line-height: var(--of-type-leading-tight);
+  letter-spacing: var(--of-type-tracking-wide); text-transform: uppercase;
+}
+.pbox.sm { --pbox-size: var(--of-ornament-pitch-box-small); padding-block: var(--of-space-tightest); }
+.pbox.sm > span { font-size: var(--of-type-size-legal); }
+.pbox.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); border-inline-color: var(--of-color-pitch-none); }
+.pbox.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); border-inline-color: var(--of-color-pitch-one); }
+.pbox.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); border-inline-color: var(--of-color-pitch-two); }
+.pbox.p3 { background: var(--of-color-pitch-three); color: var(--of-color-pitch-three-ink); border-inline-color: var(--of-color-pitch-three); }
+.pbox.p4 { background: var(--of-color-pitch-four); color: var(--of-color-pitch-four-ink); border-inline-color: var(--of-color-pitch-four); }
 .stone.p0 { background: var(--of-color-pitch-none); color: var(--of-color-pitch-none-ink); }
 .stone.p1 { background: var(--of-color-pitch-one); color: var(--of-color-pitch-one-ink); }
 .stone.p2 { background: var(--of-color-pitch-two); color: var(--of-color-pitch-two-ink); }
@@ -760,6 +804,21 @@ cards.push({
   </div>
   <p class="note" style="margin-block-start:var(--of-space-loose)">Red and yellow are the classic deuteranopia confusion pair, pitch is the most-read value on a card, and it is the same pair the leading commercial scanner misreads. Designing colour as the <em>redundant</em> channel costs nothing and fixes it for everyone downstream. The silhouette is reserved: nothing else in the interface is ever this shape.</p>
   <p class="note"><strong>Pitch four is drawn here before it is drawn anywhere in the product.</strong> A fourth value has been previewed — a purple strip on a Shadow resource gem, card code <code>IAR000</code> — and no card in the pinned corpus carries <code>pitch: "4"</code> yet, though the corpus does already hold other cards from that set. It sits beside the other four rather than being kept as a special case, because a stone the reader meets once is the one whose colour they will not have learned. It is also the stone whose colour channel is weakest: purple sits beside blue in luminance wherever it is still legible under white ink, so for a reader with deuteranopia or protanopia the numeral is what separates three from four.</p>`,
+});
+
+cards.push({
+  path: "primitives/pitch-box.html",
+  group: "Primitives",
+  title: "Pitch box",
+  body: `
+  <p class="note">The same value as the jewel, written out and stood on end. This is the rendering for a LIST or a GRID — the card index, the version tabs, the related links, the breadcrumb — and it replaced the stone at every one of those sites.</p>
+  <div class="row" style="margin-block-start:var(--of-space-loose);align-items:center">
+    ${pitchBox("0")}${pitchBox("1")}${pitchBox("2")}${pitchBox("3")}${pitchBox("4")}
+    ${pitchBox("1", "sm")}${pitchBox("1")}
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Why the stones left the lists.</strong> A jewel is an object: one card, one value, set beside the name of the thing it belongs to on a page about that thing. Down the left of a list it became a scatter of cut gems, each one an ornament competing with the name it was captioning — and a row in this index stands for a NAME, which in this game is commonly three cards, so it was three of them per row.</p>
+  <p class="note"><strong>The words are the point, not a caption on an icon.</strong> Red and yellow are the classic deuteranopia confusion pair and pitch is the most-read value on a card; the jewel answers that with a numeral, which is still one glyph a reader has to know the grammar of. "PITCH 1" is the fact spelled, which leaves colour doing what colour should do in this system — repeating something already said.</p>
+  <p class="note"><strong>The text runs down the box rather than across it</strong>, which is what makes the mark a spine rather than a tag: horizontally it is a column of prose wide enough to be read as part of the name beside it, vertically it is an edge. It also keeps the WIDTH fixed and independent of the value, so three boxes on one row are three equal columns rather than a ragged strip. Sized across by a token and along by its own words — a height token would be a second copy of a measurement the text already owns.</p>`,
 });
 
 /**

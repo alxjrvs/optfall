@@ -46,6 +46,7 @@ import {
   BevelledPlate,
   CardFace,
   IconButton,
+  PitchBox,
   PitchJewel,
   StatGlyph,
 } from "optfall-components/react";
@@ -945,17 +946,22 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
           ) : null}
           <li>
             {/*
-              THE LAST CRUMB IS THE STONE, NOT THE NAME AGAIN. On a
+              THE LAST CRUMB IS THE MARK, NOT THE NAME AGAIN. On a
               disambiguated card the trail used to end "Celestial Reprimand ›
               Celestial Reprimand (pitch 1)": the name printed twice, the second
               time with the one fact that distinguishes the two crumbs spelled
               out in parentheses at the end of it. The version is what this crumb
-              is FOR, so it says the version — in the reserved silhouette the
-              rest of the page already uses for exactly this, the same stone the
-              tab strip below puts on each version and the panel puts in its
-              corner.
+              is FOR, so it says the version — in the same object the tab strip
+              below puts on each version.
 
-              THE STONE IS STILL NAMED BY THE WHOLE LABEL. `PitchJewel` defaults
+              IT IS A `PitchBox` RATHER THAN THE STONE, and the trail is why.
+              A breadcrumb is a LIST, which is where the boxes belong: the
+              crumb is read as a word in a sentence of crumbs, and a cut gem
+              dropped into that sentence is an ornament where a word should be.
+              The panel's corner still carries the jewel — that is a page about
+              one card, which is the stone's whole remaining job.
+
+              THE MARK IS STILL NAMED BY THE WHOLE LABEL. `PitchBox` defaults
               to speaking its numeral, which is right beside two other jewels in
               a version strip and wrong as the terminal crumb of a trail: what a
               screen reader should announce for the current page is the page,
@@ -971,7 +977,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             */}
             <span className="of-card__crumb-current" aria-current="page">
               {page.disambiguated ? (
-                <PitchJewel value={page.pitch} size="sm" label={page.label} />
+                <PitchBox value={page.pitch} size="sm" label={page.label} />
               ) : (
                 page.label
               )}
@@ -1045,6 +1051,15 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 className="of-card__versions"
                 aria-label={`Pitch versions of ${card.name}`}
               >
+                {/*
+                  THE TAB IS THE BOX, AND THE LABEL BESIDE IT IS GONE WITH THE
+                  STONE. Each tab used to be a jewel plus a wide-tracked
+                  uppercase "PITCH 1" — the numeral in the stone and the words
+                  next to it saying the same thing twice, which was the price of
+                  a mark that could not spell itself. `PitchBox` is those words,
+                  so the second copy went rather than being kept beside a mark
+                  that had made it redundant.
+                */}
                 <ul className="of-card__version-tabs">
                   {versions.map((version) => (
                     <li key={version.href}>
@@ -1059,21 +1074,11 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                           className="of-card__version-tab of-card__version-tab--current"
                           aria-current="page"
                         >
-                          <PitchJewel value={version.pitch} size="sm" />
-                          <span className="of-card__version-label">
-                            {version.pitch === 0
-                              ? "No pitch"
-                              : `Pitch ${version.pitch}`}
-                          </span>
+                          <PitchBox value={version.pitch} size="sm" />
                         </span>
                       ) : (
                         <a className="of-card__version-tab" href={version.href}>
-                          <PitchJewel value={version.pitch} size="sm" />
-                          <span className="of-card__version-label">
-                            {version.pitch === 0
-                              ? "No pitch"
-                              : `Pitch ${version.pitch}`}
-                          </span>
+                          <PitchBox value={version.pitch} size="sm" />
                         </a>
                       )}
                     </li>

@@ -301,8 +301,9 @@ export const STATE_OPERATORS: Readonly<Record<string, StateTone>> = {
  * WHAT `text` WAS ACTUALLY FOR IS WORTH NAMING BECAUSE IT WAS REAL, AND
  * BECAUSE NOTHING SERVES IT NOW. Its job was to be SELECTED AND COPIED: a
  * player building a deck list wants forty names, not forty pictures, and
- * `PitchJewel` carries `user-select: none` specifically so the stone's numeral
- * stayed out of the paste.
+ * `PitchBox` carries `user-select: none` specifically so the mark's words stay
+ * out of the paste — as `PitchJewel` did for its numeral before the list views
+ * drew boxes.
  *
  * THIS PARAGRAPH USED TO SAY THE JOB HAD MOVED TO A CONTROL, naming
  * `CardIndex`'s copy button — which reached the rows below the fold, needed no

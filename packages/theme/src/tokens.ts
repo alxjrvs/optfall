@@ -319,6 +319,22 @@ const STRUCTURE: TokenTable = {
   "ornament.band.small": "0.875rem",
   "ornament.band.base": "1.25rem",
 
+  /* THE PITCH BOX IS SIZED ACROSS ONLY, and that is the whole of what a token
+     can say about it. `PitchBox` is a spine: a column of the pitch colour with
+     the words "PITCH 1" set down it, so its LENGTH is the length of that
+     string at the size the box is drawn — a number CSS derives and a token
+     could only ever disagree with. Writing a height here would be a second
+     copy of a measurement the text already owns, which is the failure
+     `MARK_GEOMETRY` exists to avoid one primitive over.
+
+     Its own steps rather than the jewel's or the band's, for the reason the
+     two blocks above both record: a borrowed size is a size that moves when
+     the thing it was borrowed from moves, on a commit about something else.
+     The two steps are the two places the spine appears — `small` beside micro
+     type in a dense list row, `base` beside a line of body type. */
+  "ornament.pitch-box.small": "1rem",
+  "ornament.pitch-box.base": "1.25rem",
+
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and
      nothing else, so a surface free to pick its own width would be asking for a

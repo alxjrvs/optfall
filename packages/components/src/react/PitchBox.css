@@ -1,0 +1,112 @@
+/*
+ * `PitchBox`'s styles. A struck column carrying its own label, sized across by
+ * a token and along by the words in it.
+ *
+ * SPELLING (2) FROM `PitchJewel`'s LIST: the bordered plate. The box is a
+ * flat-topped rectangle with no clip on it, so the bevel is two border colours
+ * and costs nothing — `BevelledPlate` is the other user of the spelling and
+ * takes it for the same reason. The jewel's `drop-shadow()` pair is for an
+ * arbitrary silhouette; there is nothing arbitrary about this one.
+ */
+
+.of-pitch-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /*
+    ACROSS ONLY. The width is the token; the height is whatever the rotated
+    string needs, which is the one measurement the text already owns. See
+    `ornament.pitch-box.*` in `tokens.ts`.
+  */
+  inline-size: var(--of-ornament-pitch-box-base);
+  padding-block: var(--of-space-tighter);
+
+  /* Struck, not printed: a light top edge and a dark bottom one, as every
+     plate in this system carries. The inline edges take the fill rather than
+     the rule colour — a spine is a solid column of its own hue, and a border
+     in `color.rule` down each side would draw a frame around a mark that is
+     supposed to read as one object. */
+  border-style: solid;
+  border-width: var(--of-bevel-width);
+  /* Stated, not omitted. The token exists only to be zero. */
+  border-radius: var(--of-bevel-radius);
+  border-block-start-color: var(--of-bevel-light);
+  border-block-end-color: var(--of-bevel-dark);
+  border-inline-color: var(--box);
+
+  background: var(--box);
+  color: var(--ink);
+
+  /* Beside a line of type, and the line is what it belongs to. */
+  vertical-align: middle;
+
+  user-select: none;
+}
+
+/*
+  THE WRITING MODE IS ON THE TEXT, NOT ON THE BOX. `writing-mode` on the box
+  would swap what `inline-size` and `padding-block` mean, so the token width
+  would become a height and the bevel would run down one side; on the child it
+  rotates the string and leaves the box's own axes alone.
+
+  `vertical-rl` rather than `vertical-lr`, which is the difference between a
+  spine read head-down-to-the-right and one read upside down in every browser
+  that honours it.
+*/
+.of-pitch-box__text {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-bold);
+  line-height: var(--of-type-leading-tight);
+  /* The house label treatment: wide-tracked uppercase sans. `text-transform`
+     rather than shouting in the DOM, so the text node stays a word. */
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+}
+
+/*
+  The small step is for a dense row — an index row, a version tab, a related
+  link — where the mark sits beside micro type and must not out-weigh it. The
+  type inside goes down with the box for the same reason: a legal-sized label
+  in a narrower column is still the same number of millimetres of ink.
+*/
+.of-pitch-box--sm {
+  inline-size: var(--of-ornament-pitch-box-small);
+  padding-block: var(--of-space-tightest);
+}
+
+.of-pitch-box--sm .of-pitch-box__text {
+  font-size: var(--of-type-size-legal);
+}
+
+.of-pitch-box--tone-none {
+  --box: var(--of-color-pitch-none);
+  --ink: var(--of-color-pitch-none-ink);
+}
+
+.of-pitch-box--tone-one {
+  --box: var(--of-color-pitch-one);
+  --ink: var(--of-color-pitch-one-ink);
+}
+
+.of-pitch-box--tone-two {
+  --box: var(--of-color-pitch-two);
+  --ink: var(--of-color-pitch-two-ink);
+}
+
+.of-pitch-box--tone-three {
+  --box: var(--of-color-pitch-three);
+  --ink: var(--of-color-pitch-three-ink);
+}
+
+/* The fourth column: one previewed card, and none in the corpus this
+   repository currently pins. It is the tone whose hue a reader is least likely
+   to have learned, which is the case the written label answers directly — the
+   box says "PITCH 4" whether or not the purple means anything yet. */
+.of-pitch-box--tone-four {
+  --box: var(--of-color-pitch-four);
+  --ink: var(--of-color-pitch-four-ink);
+}

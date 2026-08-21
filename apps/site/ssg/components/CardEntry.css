@@ -938,12 +938,12 @@
   border-block-end-color: var(--of-color-accent);
 }
 
-.of-card__version-label {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-}
+/* NO `.of-card__version-label` ANY MORE, and it is deleted rather than left
+   unused. It set a wide-tracked uppercase "PITCH 1" beside the tab's stone —
+   the same fact the stone's numeral was already carrying, in the one place the
+   duplication was unavoidable, because a jewel cannot spell itself. `PitchBox`
+   is that label, struck in the pitch colour, so the tab is one object instead
+   of two saying the same thing. */
 
 /* Layout and voice assignment only. Every value is a token — no literal
      colour, no literal length — and no media query, because a breakpoint is a

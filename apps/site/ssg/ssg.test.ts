@@ -960,15 +960,14 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
   const crumbsIn = (html: string) =>
     /<ol class="of-card__crumbs">.*?<\/ol>/s.exec(html)?.[0] ?? "";
 
-  test("a disambiguated card ends in its stone, named by the whole label", () => {
+  test("a disambiguated card ends in its mark, named by the whole label", () => {
     /*
      * THE TRAIL USED TO SAY THE NAME TWICE — "Head Jab › Head Jab (pitch 1)" —
      * with the one fact distinguishing the two crumbs spelled out in
-     * parentheses at the end. The stone is that fact, in the silhouette the
-     * page already reserves for it.
+     * parentheses at the end. The pitch box is that fact, written out.
      *
-     * THE LABEL IS THE HALF A TEST HAS TO HOLD. `PitchJewel` falls back to
-     * speaking its numeral, so dropping `label` would leave the page
+     * THE LABEL IS THE HALF A TEST HAS TO HOLD. `PitchBox` falls back to
+     * speaking its own value, so dropping `label` would leave the page
      * pixel-identical, keep every other test green, and rename the current-page
      * crumb to "Pitch 1" on every disambiguated card — a crumb that no longer
      * names the page, and the WCAG 2.4.4 hazard `labelFor` exists to prevent.
@@ -987,19 +986,20 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
        may be none at all — is not what tells it apart from anything. */
     const crumbs = crumbsIn(render(addressOf("crouching-tiger")));
     expect(crumbs).toContain("Crouching Tiger");
+    expect(crumbs).not.toContain("of-pitch-box");
     expect(crumbs).not.toContain("of-jewel");
   });
 
-  test("a no-pitch version still gets a stone, and it says so", () => {
+  test("a no-pitch version still gets a mark, and it says so", () => {
     /*
      * `hyper-driver` is the one group in the corpus disambiguated by an ABSENCE
      * — a pitch-0 token sharing its name with three pitched actions — so the
-     * crumb is the grey stone with a dash, and the label is what carries the
-     * distinction to anything reading it aloud.
+     * crumb is the grey box reading "NO PITCH", and the label is what carries
+     * the distinction to anything reading it aloud.
      */
     const crumbs = crumbsIn(render(addressOf("hyper-driver-0")));
     expect(crumbs).toContain('aria-label="Hyper Driver (no pitch)"');
-    expect(crumbs).toContain("of-jewel--tone-none");
+    expect(crumbs).toContain("of-pitch-box--tone-none");
   });
 });
 
@@ -1791,22 +1791,23 @@ describe("a related-cards list is one row per name, stones beside it", () => {
     ]);
   });
 
-  test("each stone is a link named for the card it reaches", () => {
+  test("each box is a link named for the card it reaches", () => {
     /*
-     * THE STONE CARRIES THE ACCESSIBLE NAME, through `PitchJewel`'s `label`
+     * THE BOX CARRIES THE ACCESSIBLE NAME, through `PitchBox`'s `label`
      * rather than a hidden span. A `role="img"` with an `aria-label` inside an
      * anchor contributes that string to the anchor's name, so the link is
-     * called "Hyper Driver (pitch 2)" with no text in the DOM — which is what
-     * keeps two stones on one row from being two links called the same thing
-     * (WCAG 2.4.4), and leaves nothing for a drag-select to pick up.
+     * called "Hyper Driver (pitch 2)" while the box's own words stay
+     * `aria-hidden` — which is what keeps two boxes on one row from being two
+     * links called the same thing (WCAG 2.4.4), and what stops the mark's text
+     * being announced twice.
      *
      * ASSERTED AS A PAIRING, not merely as presence: the label has to match the
-     * href it sits inside, since a row of stones all correctly labelled but
+     * href it sits inside, since a row of boxes all correctly labelled but
      * wired to the wrong cards would pass any weaker check.
      */
     const list = listIn(render(addressOf("fist-pump")));
     for (const [, href, label] of list.matchAll(
-      /<a class="of-card__pitch-link" href="([^"]+)"><span class="of-jewel[^"]*" role="img" aria-label="([^"]+)"/g,
+      /<a class="of-card__pitch-link" href="([^"]+)"><span class="of-pitch-box[^"]*" role="img" aria-label="([^"]+)"/g,
     )) {
       const pitch = href?.match(/-(\d)$/)?.[1];
       expect(`${href}:${label}`).toBe(`${href}:Hyper Driver (pitch ${pitch})`);
