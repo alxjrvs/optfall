@@ -1373,6 +1373,23 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             </BevelledPlate>
 
             {/*
+              LEGALITY LEADS THE APPARATUS, directly under the panel, with
+              nothing at all between them. `docs/SCRYFALL-GAP.md` §3: "our
+              legality table is already better than Scryfall's … put it on the
+              card page above the fold — it is the differentiator that is
+              already finished."
+
+              THE BUY ROW USED TO STAND IN THIS GAP and now follows this
+              section instead. A button and one line of disclosure are not a
+              section, so seating them here pushed nothing below the fold —
+              but it did put a commercial control between the card and the
+              verdict, and the verdict is what this project is for. A reader
+              who has just read the card is asking whether they may play it.
+              That answer comes first now, and the button comes after it.
+            */}
+            <LegalitySection verdicts={page.verdicts} />
+
+            {/*
               THE ONLY BUY LINK ON THE PAGE, and it used to be one of several.
               A "Buy" section below the printings table listed a row per
               purchasable printing; it is gone, and this is what commerce on a
@@ -1386,9 +1403,15 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               grid and the rules join stacked together — so a button at the end
               of that column rendered level with the BOTTOM of the image, a
               screenful below the facts it belongs beside, with empty ground to
-              the right of it, and on a phone below the fold. Here it is the
-              first thing after the card itself, where a reader who has just
-              read the card is.
+              the right of it, and on a phone below the fold. It is in the
+              facts column instead, with the rest of the card's apparatus.
+
+              UNDER LEGALITY, NOT ABOVE IT, which is the other half of where
+              it goes. It was the first thing after the panel for a while,
+              which put a link to a marketplace between the card and the
+              legality verdict — see the note on that section for why the
+              verdict answers first. Where to buy a card does not go
+              ahead of what the card is and whether it may be played.
 
               THE LABEL DOES THE WORK THE PICTURE USED TO. Adjacency to the face
               was the argument for a bare button once; the `detail` below is
@@ -1485,17 +1508,6 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 </p>
               </div>
             )}
-
-            {/*
-              LEGALITY LEADS THE APPARATUS, under the panel and the one control
-              that sits with it. `docs/SCRYFALL-GAP.md` §3: "our legality table
-              is already better than Scryfall's … put it on the card page above
-              the fold — it is the differentiator that is already finished." A
-              button and one line of disclosure are not a section, so nothing
-              was pushed below the fold to seat them; legality is still the
-              first thing this page SAYS about the card after the card.
-            */}
-            <LegalitySection verdicts={page.verdicts} />
 
             {keywordRules.length > 0 ? (
               <section

@@ -1159,8 +1159,8 @@
     list of one row per purchasable printing — a quiet wide-tracked label, a
     button, wrapping rather than scrolling because a label and a button fit a
     320px screen stacked. They went with the section. What is left of Buy on a
-    card page is the three rules below: the row under the card panel, the button
-    that starts it, and the sentence that has to accompany that button.
+    card page is the three rules below: the row under the legality grid, the
+    button that starts it, and the sentence that has to accompany that button.
 
     IT IS WRITTEN DOWN RATHER THAN SILENTLY DELETED because that is what this
     file did for the buy column it replaced, one screen down, and for the same
@@ -1169,9 +1169,10 @@
   */
 
 /*
-    THE BUTTON AND ITS DISCLOSURE, SIDE BY SIDE, under the panel that mirrors
-    the printing they are about. See `CardEntry.tsx` for why they left the face
-    column and why they are one row rather than two.
+    THE BUTTON AND ITS DISCLOSURE, SIDE BY SIDE, in the facts column below the
+    legality grid. See `CardEntry.tsx` for why they left the face column, why
+    they sit after Legality rather than before it, and why they are one row
+    rather than two.
 
     IT IS THE `.of-card__attribute` SHAPE, DELIBERATELY — the shape, not the
     values. A label that takes its content width, a body that takes what is

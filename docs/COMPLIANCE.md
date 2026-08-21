@@ -241,10 +241,16 @@ is not — which is the whole reason `buyDisclosure` lives in the same module as
 `buyHref`.
 
 **There is one buy link on a card page, and the sentence shares its row** — to
-the right of the button under the card panel where there is room, wrapped
-directly under that button where there is not, above the fold either way. The
-comment on `.of-card__buy-verify` in `apps/site/ssg/components/CardEntry.css`
-records the widths each arrangement was measured at.
+the right of the button where there is room, wrapped directly under that button
+where there is not. ~~The row sits under the card panel, above the fold either
+way.~~ **Overtaken 2026-08-20**: the row and the legality grid swapped places,
+so the button now follows Legality rather than leading it, and how far down the
+page that lands is a function of how many formats a card has a flag in. What the
+Partner Guidelines ask for is adjacency to the link, which is a property of the
+row and not of its position on the page, so the swap did not touch it — the
+button and the sentence moved together, as one element. The comment on
+`.of-card__buy-verify` in `apps/site/ssg/components/CardEntry.css` records the
+widths each arrangement was measured at.
 
 **The sentence is two sentences, and was four** (2026-08-19). What ships is the
 material connection and nothing else: where the link goes, and that Optfall is
