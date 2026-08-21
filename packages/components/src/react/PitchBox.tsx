@@ -38,6 +38,16 @@
  * with no filled surface carries no bevel.
  *
  * The notch goes back to being state's alone with it. `tokens.ts` says so.
+ *
+ * AND THERE IS ONE PLACE THE HUE TAKES THE WHOLE SURFACE AGAIN: `variant="bar"`,
+ * the card page's "Alternate pitch values" row. That is not the filled plate
+ * coming back — the plate was this mark WHEREVER it was drawn, beside index
+ * rows and breadcrumbs that are lines of type, and the argument against it was
+ * that a tag shouting its hue next to a name is loud twice. The bar is the
+ * other case: a row of two or three links that is itself the furniture of a
+ * section, sized by the column rather than by its own words, with nothing
+ * beside it to out-weigh. A band across the top of a full-width bar is a
+ * hairline stranded over a lot of empty ground; the surface IS the mark there.
  */
 
 import type { PitchValue } from "optfall-theme";
@@ -48,13 +58,25 @@ export interface PitchBoxProps {
   /** 1, 2, 3 or 4 — or 0 for a card with no pitch value at all. */
   readonly value: PitchValue;
   readonly size?: "sm" | "md";
+  /**
+   * `band` — the default — is the mark described above: a neutral well under a
+   * struck edge, sized by its own words. `bar` is the same object with the hue
+   * spent on the whole surface and no width of its own, for the one place a
+   * row of these IS the furniture rather than a mark inside it.
+   */
+  readonly variant?: "band" | "bar" | undefined;
   /** Accessible name. Defaults to the pitch value spoken in full. */
   readonly label?: string;
 }
 
 const TONES = ["none", "one", "two", "three", "four"] as const;
 
-export function PitchBox({ value, size = "md", label }: PitchBoxProps) {
+export function PitchBox({
+  value,
+  size = "md",
+  variant = "band",
+  label,
+}: PitchBoxProps) {
   /**
    * `?.trim() ||`, not `??` — the house idiom, and `PitchJewel` sets out why:
    * a default that only fires on `undefined` is one a caller can displace with
@@ -80,7 +102,7 @@ export function PitchBox({ value, size = "md", label }: PitchBoxProps) {
 
   return (
     <span
-      className={`of-pitch-box of-pitch-box--${size} of-pitch-box--tone-${tone}`}
+      className={`of-pitch-box of-pitch-box--${size} of-pitch-box--tone-${tone} of-pitch-box--${variant}`}
       role="img"
       aria-label={spoken}
       data-pitch={value}

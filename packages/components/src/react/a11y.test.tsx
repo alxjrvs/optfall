@@ -122,6 +122,11 @@ const CASES: readonly Case[] = [
   { name: "PitchBox one", component: PitchBox, props: { value: 1 } },
   { name: "PitchBox four", component: PitchBox, props: { value: 4 } },
   {
+    name: "PitchBox bar",
+    component: PitchBox,
+    props: { value: 2, variant: "bar" },
+  },
+  {
     name: "PitchBox small, labelled",
     component: PitchBox,
     props: { value: 2, size: "sm", label: "Head Jab (pitch 2)" },

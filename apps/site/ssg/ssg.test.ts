@@ -1152,6 +1152,34 @@ describe("the pitch tabs stay in the set the reader is already in", () => {
     ]);
   });
 
+  test("the strip is between the card and the verdict, and is drawn as bars", () => {
+    /*
+     * PLACEMENT, PINNED, BECAUSE IT HAS MOVED THREE TIMES. The strip has been
+     * a tab row above the panel, an apparatus section under it, and a block at
+     * the foot of the face column; it is back between the panel and the
+     * legality grid. Nothing else in this file would notice another move — the
+     * tests around it read the section's contents, which travel with it — so
+     * this reads the one property the moves were about: what it sits between.
+     *
+     * BY THE PANEL'S CLOSING MARK, NOT BY ITS OPENING ONE. `of-card__panel`
+     * opens a screenful above the strip, so its own position proves nothing about
+     * where the strip landed; what has to be true is that the strip follows the
+     * panel's LAST band — the credit footer — with the legality heading bracketing
+     * it from the other side.
+     */
+    const html = render("/card/wtr/098/head-jab-1");
+
+    const strip = html.indexOf('aria-labelledby="alternate-pitches"');
+    const legality = html.indexOf('id="legality"');
+    expect(strip).toBeGreaterThan(html.indexOf("of-card__band--credits"));
+    expect(strip).toBeLessThan(legality);
+
+    /* The bar, not the tag: the row divides the column, so the mark inside
+       each link takes the fill rather than the struck edge. `PitchBox` names
+       the variant in its class list, which is what this reads. */
+    expect(html.slice(strip, legality)).toContain("of-pitch-box--bar");
+  });
+
   test("a version printed in this set is reached at its address in this set", () => {
     /*
      * HEAD JAB IS PRINTED THREE PITCHES WIDE IN SIX SETS, so a reader on the

@@ -997,6 +997,13 @@
   hairline was one boundary too many, drawn under a heading it did not belong
   to. `.of-card__versions` itself is deleted with the `<nav>` it wrapped: the
   `<section>` is the apparatus, and the apparatus already has a layout.
+
+  THE ROW SPENDS THE WHOLE COLUMN AND DIVIDES IT EVENLY. Each link was as wide
+  as the words inside it — two tags at the left of a column the width of the
+  card panel, with the rest of the line empty — which read as two marks that
+  had been left somewhere rather than as a row of controls. Every alternate is
+  the same kind of thing and none of them ranks the others, so they get the
+  same width, and the width they share is the column's.
 */
 .of-card__version-tabs {
   display: flex;
@@ -1008,6 +1015,24 @@
 }
 
 /*
+  EQUAL SHARES, AND `flex-basis` IS WHAT MAKES THEM EQUAL. Growing from `auto`
+  distributes the leftover space evenly but starts each item at its own text,
+  so "No pitch" would end up a few pixels wider than "Pitch 3" — the same
+  content-sized row, less obviously. An identical basis plus an identical grow
+  is the whole of "equal columns".
+
+  THE BASIS IS THE TARGET FLOOR, WHICH IS ALSO THE WRAP POINT. Below two of
+  them per line the row wraps rather than squeezing bars under their own words,
+  and it wraps into lines that are themselves evenly divided. The card face is
+  450px and every phone in the list on `CLAUDE.md` is narrower, so this column
+  gets narrow on real hardware and a row that could not wrap would be the
+  horizontal scrollbar that file warns about.
+*/
+.of-card__version-tabs > li {
+  flex: 1 1 var(--of-layout-target-min);
+}
+
+/*
   The anchor is transparent to layout, because the mark is the control. It
   carries no padding and no ink of its own any more — both were the tab's, and
   a tab needed a hit area larger than its label and a resting colour to be
@@ -1016,9 +1041,14 @@
   edge for a selected state simply drew a gap around it.
 */
 .of-card__version-tab {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  /* The anchor is the whole share the row gave its item, and the bar inside is
+     the whole anchor — three elements, one rectangle, so the hit area and the
+     coloured surface are the same object rather than one centred inside the
+     other. */
+  inline-size: 100%;
   /*
     THE TARGET FLOOR, NOT THE TAB'S OLD PADDING. The tab carried
     `space.tight space.base`, which bought a hit area of about 36px as a side
