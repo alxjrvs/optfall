@@ -143,8 +143,16 @@ const STRUCTURE: TokenTable = {
   "bevel.width": "1px",
   "bevel.radius": "0",
 
-  /* The notch on anything carrying state. The clipped corner is the only
-     ornament in the system and it always means something. */
+  /* The notch on a value a card carries out of a fixed set. The clipped corner
+     is the only ornament in the system and it always means something.
+
+     IT SAID "ANYTHING CARRYING STATE" AND THAT WAS NARROWER THAN THE SET IT
+     DESCRIBES. `StatePill` was the only user while legality verdicts were the
+     only such value on the page; `PitchBox` draws the same notch at the same
+     depth for pitch, which is the other one — a short label, one of five, that
+     a card either has or does not. What the corner rules out is unchanged and
+     is the part that matters: it never appears on a control, on a heading, or
+     as decoration. */
   "ornament.notch.size": "0.5rem",
   "ornament.rule.width": "1px",
   "ornament.filigree.size": "1.25rem",
@@ -319,6 +327,15 @@ const STRUCTURE: TokenTable = {
   "ornament.band.small": "0.875rem",
   "ornament.band.base": "1.25rem",
 
+  /* NO `ornament.pitch-box.*`, DELIBERATELY, AND THIS NOTE IS WHY THERE IS NO
+     ENTRY RATHER THAN A GAP. `PitchBox` is a label in a clipped plate — its
+     words plus the pill's padding — so both of its dimensions fall out of the
+     type and space tokens it already reads. A width token here would be a
+     number kept in step with the length of "NO PITCH" at whatever size the box
+     is set: a second copy of a measurement the text owns, which is the failure
+     `MARK_GEOMETRY` exists to avoid one primitive over. It briefly had two,
+     from a draft where the mark was a vertical spine of fixed width. */
+
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and
      nothing else, so a surface free to pick its own width would be asking for a
@@ -413,6 +430,24 @@ const STRUCTURE: TokenTable = {
      satisfied by the `thumb` tier, which is 180px and therefore a comfortable
      downscale rather than a new tier nobody publishes. */
   "layout.card.row": "2.75rem",
+
+  /* THE POINTER-TARGET FLOOR — 24px, which is what WCAG 2.5.8 (AA) sets.
+     Anything that is the ONLY way to reach a destination must be at least this
+     across, in both axes.
+
+     IT IS A TOKEN BECAUSE IT WAS ARITHMETIC, AND THE ARITHMETIC BROKE. It was
+     spelled once, in a comment beside `.of-card__pitch-link`: the mark inside
+     was `ornament.jewel.small`, 1.25rem, and `space.tightest` a side "takes the
+     box to exactly 24px". True of a 20px stone; the day the stone became a
+     `PitchBox` — a shorter object — the padding stayed, the sum fell to about
+     17px, and the comment went on asserting compliance. A floor stated as a
+     minimum holds whatever is put inside it; a floor stated as a sum holds
+     until someone changes an addend in another file.
+
+     `min-*-size` RATHER THAN A PADDING, for the same reason. Padding that adds
+     up to the floor has to be recomputed every time the content changes size;
+     a minimum simply cannot be under it. */
+  "layout.target.min": "1.5rem",
 
   /* FOUR CELLS AND THE GUTTERS BETWEEN THEM, added up — written as references
      for the same reason `page.wide` is, so there is no chosen number here to

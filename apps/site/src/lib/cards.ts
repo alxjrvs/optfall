@@ -341,7 +341,7 @@ export function pitchValueOf(card: Card): PitchValue {
  * implementation, `<a href={link.href}>{link.name}</a>`, therefore produced a
  * page of links with identical accessible names and different destinations:
  * WCAG 2.4.4 Link Purpose, and axe's `identical-links-same-purpose`. Colour and
- * position cannot fix that, and a `PitchJewel` set *beside* the link does not
+ * position cannot fix that, and a `PitchBox` set *beside* the link does not
  * either — it is outside the link's accessible name unless it is placed inside
  * the anchor.
  */
