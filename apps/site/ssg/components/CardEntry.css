@@ -1078,11 +1078,11 @@
   margin-block-end: var(--of-space-looser);
 }
 
-/* CENTRED, NOT BASELINED, because the last crumb on a disambiguated card is a
-   banded mark rather than a word. Its label sits a step under the trail's, in
-   its own padded box under a rule, so `baseline` lines that smaller text up
-   with the crumbs and hangs the band above them; centring seats the object on
-   the line the trail is set on, which is what it is a member of.
+/* CENTRED, NOT BASELINED, because the last crumb on a disambiguated card ends
+   in a banded mark. Its label sits a step under the trail's, in its own padded
+   box under a rule, so `baseline` lines that smaller text up with the crumbs
+   and hangs the band above them; centring seats the object on the line the
+   trail is set on, which is what it is a member of.
 
    THE REASON USED TO BE THE JEWEL'S GEOMETRY — "a diamond has no baseline
    worth aligning to: the only thing in it that reports one is the numeral at
@@ -1110,7 +1110,18 @@
   margin-inline-end: var(--of-space-tight);
 }
 
+/* THE NAME AND ITS MARK ARE ONE CRUMB, SO THEY LAY OUT LIKE ONE. Two children
+   in a line box would seat the box on the text's baseline — the same
+   mismatch the list above sets `align-items: center` to avoid, one level down
+   — and would be separated by whatever whitespace the JSX happened to emit.
+   An inline flex row centres the mark against the name and spends the trail's
+   own gap between them, so the pair reads as a single crumb rather than as a
+   word with an object after it. `inline-flex`, not `flex`: the crumb is a
+   phrase inside a list item that wraps with the rest of the trail. */
 .of-card__crumb-current {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--of-space-tight);
   color: var(--of-color-ink-muted);
 }
 

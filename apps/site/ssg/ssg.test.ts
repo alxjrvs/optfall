@@ -1037,10 +1037,10 @@ describe("a card page holds open the combat positions it does not fill", () => {
 });
 
 /* -------------------------------------------------------------------------- */
-/* The last crumb                                                             */
+/* The trail: the set above the page, and the page named in one crumb         */
 /* -------------------------------------------------------------------------- */
 
-describe("a card's breadcrumb ends in the fact that crumb is for", () => {
+describe("a card's breadcrumb is the set it is in and the card it is", () => {
   const render = (route: string) =>
     RESOLVED.find((resolved) => resolved.route === route)?.render(
       [],
@@ -1050,30 +1050,33 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
   const crumbsIn = (html: string) =>
     /<ol class="of-card__crumbs">.*?<\/ol>/s.exec(html)?.[0] ?? "";
 
-  test("a disambiguated card ends in its mark, named by the whole label", () => {
+  test("a disambiguated card ends in one crumb saying the name and the pitch", () => {
     /*
-     * THE TRAIL USED TO SAY THE NAME TWICE — "Head Jab › Head Jab (pitch 1)" —
-     * with the one fact distinguishing the two crumbs spelled out in
-     * parentheses at the end. The pitch box is that fact, written out.
+     * THE TRAIL USED TO SPEND TWO CRUMBS ON ONE PAGE — "Head Jab › [Pitch 1]" —
+     * a name crumb linking another printing, then a mark with no word beside
+     * it. One page, one crumb, and it carries both halves of what names the
+     * page.
      *
-     * THE LABEL IS THE HALF A TEST HAS TO HOLD. `PitchBox` falls back to
-     * speaking its own value, so dropping `label` would leave the page
-     * pixel-identical, keep every other test green, and rename the current-page
-     * crumb to "Pitch 1" on every disambiguated card — a crumb that no longer
-     * names the page, and the WCAG 2.4.4 hazard `labelFor` exists to prevent.
+     * THE NAME IS PRINTED ONCE, WHICH IS THE HALF A TEST HAS TO HOLD. The mark
+     * used to be labelled `page.label` — "Head Jab (pitch 1)" — because it WAS
+     * the whole crumb; leaving that label beside the printed name would keep
+     * the page pixel-identical and have a screen reader announce "Head Jab,
+     * Head Jab (pitch 1)". `aria-label`s are stripped before counting so the
+     * count is of the visible text.
      */
     const crumbs = crumbsIn(render(addressOf("head-jab-1")));
     expect(crumbs).not.toBe("");
-    expect(crumbs).toContain('aria-label="Head Jab (pitch 1)"');
-    /* And the name is not printed a second time beside it. */
     expect(
       crumbs.replace(/aria-label="[^"]*"/g, "").match(/Head Jab/g),
     ).toEqual(["Head Jab"]);
+    /* And the mark beside it speaks its own value rather than the page's. */
+    expect(crumbs).toContain('aria-label="Pitch 1"');
+    expect(crumbs).not.toContain("Head Jab (pitch 1)");
   });
 
-  test("a card whose name identifies it keeps the name", () => {
-    /* There is no name crumb above it to avoid repeating, and its pitch — which
-       may be none at all — is not what tells it apart from anything. */
+  test("a card whose name identifies it draws no mark", () => {
+    /* Its pitch — which may be none at all — is not what tells it apart from
+       anything, so the crumb is the name and nothing else. */
     const crumbs = crumbsIn(render(addressOf("crouching-tiger")));
     expect(crumbs).toContain("Crouching Tiger");
     expect(crumbs).not.toContain("of-pitch-box");
@@ -1084,12 +1087,34 @@ describe("a card's breadcrumb ends in the fact that crumb is for", () => {
     /*
      * `hyper-driver` is the one group in the corpus disambiguated by an ABSENCE
      * — a pitch-0 token sharing its name with three pitched actions — so the
-     * crumb is the grey box reading "NO PITCH", and the label is what carries
-     * the distinction to anything reading it aloud.
+     * crumb is the name followed by the grey box reading "No pitch", which is
+     * the most a mark can say about a value that is not there.
      */
     const crumbs = crumbsIn(render(addressOf("hyper-driver-0")));
-    expect(crumbs).toContain('aria-label="Hyper Driver (no pitch)"');
+    expect(crumbs).toContain("Hyper Driver");
+    expect(crumbs).toContain('aria-label="No pitch value"');
     expect(crumbs).toContain("of-pitch-box--tone-none");
+  });
+
+  test("the crumb above the page is the set this printing is in", () => {
+    /*
+     * NOT "CARDS", WHICH WAS THE SAME LINK ON EVERY CARD PAGE. The step above
+     * `/card/wtr/098/head-jab-1` is Welcome to Rathe — the set in the address
+     * — and the crumb has to follow the printing rather than the card, or it
+     * would name one set while the picture under it came from another.
+     */
+    const crumbs = crumbsIn(render("/card/wtr/098/head-jab-1"));
+    expect(crumbs).toContain('href="/sets/wtr"');
+    expect(crumbs).toContain("Welcome to Rathe");
+    expect(crumbs).not.toContain('href="/search"');
+  });
+
+  test("another set's printing of the same card names that set", () => {
+    /* The same card, the same name crumb, a different set above it — which is
+       the whole of what makes this crumb worth a line. */
+    const crumbs = crumbsIn(render("/card/ira/008/head-jab-3"));
+    expect(crumbs).toContain('href="/sets/ira"');
+    expect(crumbs).not.toContain('href="/sets/wtr"');
   });
 });
 
