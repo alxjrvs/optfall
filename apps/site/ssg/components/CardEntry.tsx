@@ -1122,6 +1122,68 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               height={shownBox.height}
               loading="eager"
             />
+
+            {/*
+              UNDER THE PICTURE, BECAUSE THE OTHER VERSIONS ARE A FACT ABOUT
+              THE OBJECT RATHER THAN ABOUT THE PANEL OF FACTS.
+
+              ~~The alternates come after the card, not before it.~~ That much
+              is unchanged and is why this is not back above the panel: a
+              reader arrives for a card, and a page that opens with "here are
+              three other cards" has answered a question nobody asked. What
+              moved is which COLUMN says it. This column is where the card as
+              an object lives — this art, this printing — and "the same card in
+              another colour" belongs to the object, not to the table of facts
+              beside it. Seated in the facts column the strip was also the one
+              thing standing between the panel and the legality verdict; see
+              the note there, which is now true again.
+
+              AND IT STILL DOES NOT DRAW THE VERSION YOU ARE READING. The strip
+              was once a tab row carrying the current pitch as a non-link with
+              an accent edge — three marks to say one of them is where you
+              already are. The panel's own corner says the pitch and the
+              breadcrumb says it again. So the heading names the rest: these
+              are the ALTERNATES, and every one is a link that goes somewhere.
+
+              `alternatePitches`, NOT A FILTER HERE. The list is derived beside
+              `versions` so that "is this worth drawing at all" is one predicate
+              rather than a `.length` test written twice — see its definition.
+            */}
+            {alternatePitches.length > 0 ? (
+              <section
+                className="of-card__apparatus"
+                aria-labelledby="alternate-pitches"
+              >
+                <h2 className="of-apparatus__heading" id="alternate-pitches">
+                  Alternate pitch values
+                </h2>
+                {/*
+                  THE LINK IS THE BOX, AND THE LABEL BESIDE IT IS GONE WITH THE
+                  STONE. Each tab used to be a jewel plus a wide-tracked
+                  uppercase "PITCH 1" — the numeral in the stone and the words
+                  next to it saying the same thing twice, which was the price of
+                  a mark that could not spell itself. `PitchBox` is those words,
+                  so the second copy went rather than being kept beside a mark
+                  that had made it redundant.
+
+                  AT THE FULL STEP, NOT `sm`. ~~These sit a few centimetres
+                  above the legality flags and are the same object as them.~~
+                  The flags are in the other column now, so the comparison that
+                  chose this step is no longer on the screen to make — but the
+                  step stays, because the small one is for a mark set beside
+                  micro type in a dense row and nothing here is dense.
+                */}
+                <ul className="of-card__version-tabs">
+                  {alternatePitches.map((version) => (
+                    <li key={version.href}>
+                      <a className="of-card__version-tab" href={version.href}>
+                        <PitchBox value={version.pitch} label={version.label} />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </div>
 
           <div className="of-card__facts-column">
@@ -1402,74 +1464,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             </BevelledPlate>
 
             {/*
-              THE ALTERNATES COME AFTER THE CARD, NOT BEFORE IT. This strip
-              stood ABOVE the panel as a tab row, on the argument that a control
-              for choosing WHICH printed object the panel mirrors belongs
-              outside the frame. It does — but a reader arrives at this page for
-              a card, and the first thing the page said was "here are three
-              other cards". The card states itself first; what else that name
-              can be is the first thing said afterwards.
-
-              AND IT NO LONGER DRAWS THE VERSION YOU ARE READING. The strip was
-              a tab row, so it carried the current pitch as a non-link with an
-              accent edge — three marks to say one of them is where you already
-              are. The panel's own corner says the pitch and the breadcrumb says
-              it again; a third statement of it, styled as a control that does
-              nothing, was the only thing the heading below could not have
-              named. So the heading names the rest: these are the ALTERNATES,
-              and every one of them is a link that goes somewhere.
-
-              `alternatePitches`, NOT A FILTER HERE. The list is derived beside
-              `versions` so that "is this worth drawing at all" is one predicate
-              rather than a `.length` test written twice — see its definition.
-            */}
-            {alternatePitches.length > 0 ? (
-              <section
-                className="of-card__apparatus"
-                aria-labelledby="alternate-pitches"
-              >
-                <h2 className="of-apparatus__heading" id="alternate-pitches">
-                  Alternate pitch values
-                </h2>
-                {/*
-                  THE LINK IS THE BOX, AND THE LABEL BESIDE IT IS GONE WITH THE
-                  STONE. Each tab used to be a jewel plus a wide-tracked
-                  uppercase "PITCH 1" — the numeral in the stone and the words
-                  next to it saying the same thing twice, which was the price of
-                  a mark that could not spell itself. `PitchBox` is those words,
-                  so the second copy went rather than being kept beside a mark
-                  that had made it redundant.
-
-                  AT THE FULL STEP, NOT `sm`. These sit a few centimetres above
-                  the legality flags and are the same object as them; the small
-                  step is for a mark set beside micro type in a dense row, and
-                  using it here drew a thinner plate than the verdicts directly
-                  below, which reads as a different thing rather than the same
-                  one in another palette.
-                */}
-                <ul className="of-card__version-tabs">
-                  {alternatePitches.map((version) => (
-                    <li key={version.href}>
-                      <a className="of-card__version-tab" href={version.href}>
-                        <PitchBox value={version.pitch} label={version.label} />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-
-            {/*
-              LEGALITY LEADS THE APPARATUS. It used to be "directly under the
-              panel, with nothing at all between them"; the alternate-pitch
-              strip is now between them, and that is the one thing seated
-              there. `docs/SCRYFALL-GAP.md` §3 is unchanged and is the reason
-              this is still FIRST of the apparatus proper: "our legality table
-              is already better than Scryfall's … put it on the card page above
-              the fold — it is the differentiator that is already finished."
-              What moved in front of it is a heading and a row of flags — the
-              strip that used to sit above the panel, pushing the same content
-              down by more than it does here.
+              LEGALITY LEADS THE APPARATUS, AND NOTHING IS IN FRONT OF IT
+              AGAIN. ~~The alternate-pitch strip is now between them, and that
+              is the one thing seated there.~~ Struck: that strip moved to the
+              face column, so this is once more "directly under the panel, with
+              nothing at all between them" — the arrangement the sentence
+              described before the strip was seated here at all.
+              `docs/SCRYFALL-GAP.md` §3 is unchanged and is the reason this is
+              FIRST of the apparatus proper: "our legality table is already
+              better than Scryfall's … put it on the card page above the fold —
+              it is the differentiator that is already finished."
 
               THE BUY ROW USED TO STAND IN THIS GAP and now follows this
               section instead. A button and one line of disclosure are not a
