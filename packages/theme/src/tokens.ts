@@ -722,32 +722,38 @@ export const DARK_TOKENS: TokenTable = {
   "color.stat.life": "#5aa544",
   "color.stat.life.ink": "#0a1405",
 
-  /* THE SLOT EXISTS AND IS EMPTY — which is a different statement from a zero,
-     and the reason this is a colour rather than a missing element.
+  /* NOTHING READS THIS PAIR ANY MORE, and it is kept rather than deleted for
+     the reason the strike-through convention exists: it is the record of an
+     argument, and the argument may come back.
 
-     1,648 cards print a cost of 0, 191 a defence of 0 and 13 a power of 0. So
-     "0" is a real, common, printed value, and a card page that answered "no
-     printed power" by rendering nothing at all left the reader to infer an
-     absence from a gap — indistinguishable from a layout they had not scrolled
-     to. An absent stat now keeps its silhouette, because the shape is what says
-     WHICH stat is missing, and takes this recessed plate with an en dash in it.
+     ~~THE SLOT EXISTS AND IS EMPTY — which is a different statement from a
+     zero. 1,648 cards print a cost of 0, 191 a defence of 0 and 13 a power of
+     0, so "0" is a real, common, printed value, and a card page that answered
+     "no printed power" by rendering nothing at all left the reader to infer an
+     absence from a gap. An absent stat keeps its silhouette and takes this
+     recessed plate, because the shape is what says WHICH stat is missing.~~
 
-     RECESSED RATHER THAN TINTED. It is darker than every other chip in this
-     table here and lighter than every one of them in the light table, so on
-     either ground it reads as a socket rather than as a seventh stat with a
-     colour of its own. It is deliberately far from `stat.defence`, the other
-     neutral, which is a mid steel in both themes. Same idiom as the pitch
-     jewel's `none` stone, which has meant exactly this since it was drawn.
+     ~~RECESSED RATHER THAN TINTED. Darker than every other chip in this table
+     and lighter than every one of them in the light table, so on either ground
+     it reads as a socket rather than as a seventh stat with a colour of its
+     own — deliberately far from `stat.defence`, the other neutral. Same idiom
+     as the pitch jewel's `none` stone.~~
 
-     IT IS ~1.4:1 AGAINST THE PANEL AND THAT IS NOT THE CHANNEL. Receding is the
-     stated goal, so the fill deliberately sits close to the ground — but the
-     SHAPE is what says which stat is missing, and the shape is drawn by the
-     inset bevel `.of-stat` puts on every plate, which `.of-stat--absent` does
-     not touch. A test in `primitives.test.tsx` pins that it does not. Nor is
-     the ratio out of family: the weakest existing plate, cost in this table, is
-     2.42:1 against the same panel, so fill-against-ground is not a threshold
-     any plate here is held to. What is held, and asserted in `tokens.test.ts`,
-     is the ink on the plate. */
+     WHAT REPLACED IT. The stat marks are LSS's own artwork now, and an ingested
+     PNG takes no token. A greyed mark was tried — the artwork desaturated and
+     dropped back — and read as a rendering fault at about 1.3:1 against the
+     panel. An empty position paints nothing at all now: `.of-stat--absent` is
+     `visibility: hidden`, so the corner keeps its width and shows no mark. The
+     claim moved to the accessible name, which the card panel then hides,
+     because a stat the card does not print is not a fact the card states.
+
+     THE OLD MEASUREMENT, SINCE IT IS THE REASON THIS PAIR WAS EVER SAFE: at
+     ~1.4:1 against the panel the fill was never the channel — the silhouette
+     was, drawn by the inset bevel every plate carries. The weakest plate that
+     is still rendered, cost in this table, is 2.42:1 against the same panel, so
+     fill-against-ground has never been a threshold any plate here is held to.
+     `tokens.test.ts` still asserts the ink on this plate, which is the check
+     that would have to be retired with the tokens. */
   "color.stat.absent": "#3a3a3a",
   "color.stat.absent.ink": "#c8c8c8",
 
