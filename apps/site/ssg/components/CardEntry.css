@@ -209,6 +209,14 @@
     and no band rhythm to inherit. The plate's own padding gives the stroke its
     air above; the `padding-block-start` gives the name its air below.
 
+    IT CROSSES THE NAME AND NOTHING ELSE. ~~As a border it was the whole of the
+    panel's top edge~~ — struck, because that edge runs over the pitch jewel and
+    over the cost plate, and both of those are already saying what they are, in
+    their own colour, an inch below. What the printed card carries is a strip
+    across the top of the NAME; a strip across the top of the corners is a rule
+    the card does not draw. See the `::before` below for why the middle column
+    can only be measured by the grid itself.
+
     Colour is the ONLY channel this adds, and deliberately not the only channel
     the fact has — `docs/DESIGN.md` puts red and yellow at the top of the
     deuteranopia confusion pair, which is why the numeral in the stone exists.
@@ -217,9 +225,48 @@
     stroke rather than on an unset `var()` and no rule at all.
   */
 .of-card__band--title {
-  border-block-start: calc(var(--of-bevel-width) * 2) solid
-    var(--card-pitch, var(--of-color-pitch-none));
-  padding-block-start: var(--of-space-tight);
+  /* The containing block for the stroke, and the two pixels that stroke used to
+     occupy as a border given back as padding — so the name and both corners sit
+     on exactly the rows the full-width border left them on. */
+  position: relative;
+  padding-block-start: calc(var(--of-space-tight) + var(--of-bevel-width) * 2);
+}
+
+/*
+    THE STROKE, AS A GRID-PLACED BOX RATHER THAN AS A BORDER.
+
+    A border spans its element, and the element here is a three-column band; the
+    stroke has to span the middle column of it. That column is
+    `minmax(0, 1fr)` — whatever the two capped corners leave, at this viewport,
+    with this name, with this corner present and that one absent — so nothing
+    outside the grid can state its width. An absolutely positioned child of a
+    grid container takes its GRID AREA as its containing block, which makes
+    `grid-column: 2` with `inset-inline: 0` that track and exactly that track,
+    without a number appearing anywhere in this file.
+
+    OUT OF FLOW, SO IT COSTS THE BAND NO HEIGHT — which is the whole reason the
+    rule above restates the border's two pixels as padding. Between them the
+    band's box is the size it was.
+
+    `inset-block-start: 0` IS THE LINE THE BORDER DREW. Insets resolve against
+    the padding box, and with the border gone that box now starts where the
+    border did, so zero is the same pixel row.
+
+    BOTH COLUMN LINES ARE NAMED, AND THE SHORTHAND'S DEFAULT IS WHY. For an
+    in-flow item `grid-column: 2` means "line 2, span one track"; for an
+    absolutely positioned one the implied `auto` end line means the container's
+    PADDING EDGE instead. Written that way the stroke started at the name and
+    ran on over the cost — the exact half of the bug this rule exists to fix,
+    and it renders, so nothing but looking at it would have said so.
+  */
+.of-card__band--title::before {
+  content: "";
+  position: absolute;
+  grid-column: 2 / 3;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: calc(var(--of-bevel-width) * 2);
+  background: var(--card-pitch, var(--of-color-pitch-none));
 }
 
 /*
@@ -256,6 +303,43 @@
 .of-card__band--oracle {
   /* The containing block for the bead, and nothing else. */
   position: relative;
+}
+
+/*
+    THE TEXT BAND IS THE ONE BAND GIVEN AIR RATHER THAN RHYTHM.
+
+    Every other boundary in this panel is a fold, and the `+` rule's `tight`
+    padding is the fold's whole spacing budget — the bands are parts of one
+    printed object and reading them as a stack is the point. The printed text is
+    the exception a reader arrives for: it is the widest band, set a step
+    larger than everything around it, and it sits under the one boundary in the
+    panel that carries the section bead. A seam that announces itself and then
+    opens onto text pressed against it is the panel undercutting its own mark.
+
+    THE TWO EDGES ARE NOT THE SAME NUMBER, AND THAT IS WHAT CENTRES THE TEXT.
+    The space under the text is not this band's alone: the band below adds its
+    own `tight` margin before its hairline, so a symmetric `padding-block` here
+    would put `loose` above the text and `loose + tight` below it and hang the
+    paragraph high in a box that looks square. The block-end is `loose` less
+    that margin, which makes the measured gap from the bead to the first line
+    and from the last line to the next hairline both `loose`.
+
+    So it is written as the SHORTHAND with two values rather than as a single
+    `padding-block-start` longhand: the block-end value only means anything
+    beside the block-start one, and splitting them is how a later edit changes
+    one and silently decentres the text.
+
+    THE DOUBLED CLASS IS FOR SPECIFICITY. The `padding-block-start` this
+    replaces belongs to `.of-card__band + .of-card__band`, which is (0,2,0); a
+    bare `.of-card__band--oracle` is (0,1,0) and loses, and the adjacency alone
+    merely ties, leaving the result hostage to the order of the two rules in
+    this file. (0,3,0) is not something a reorder can undo. The bead selector
+    below wears the same shape for a different reason — it needs the adjacency
+    because it draws on a hairline that only exists when a band precedes.
+  */
+.of-card__band + .of-card__band.of-card__band--oracle {
+  padding-block: var(--of-space-loose)
+    calc(var(--of-space-loose) - var(--of-space-tight));
 }
 
 .of-card__band + .of-card__band.of-card__band--oracle::before {
@@ -769,6 +853,13 @@
   break, if one is needed, falls at the space the name and the number already
   have between them.
 
+  THE NUMBER SITS A LITTLE FURTHER OFF THAN A WORD SPACE PUTS IT. `Enigma Blitz
+  Deck #014` is a name and then an identifier, not two words of a phrase, and at
+  a bare space the `#` crowds the last letter of the set — the more so because
+  the name is an underlined anchor whose rule runs to the space's edge. The
+  margin is ADDED to that space rather than replacing it: the space is what the
+  line breaks at, and what a `user-select: all` copy carries between the halves.
+
   `user-select: all` SO ONE CLICK TAKES THE WHOLE CITATION. The clipped set
   name that used to sit inside the anchor is gone — the visible text is the
   name now — so the rule excluding it from the selection went with it.
@@ -784,6 +875,7 @@
 }
 
 .of-card__printing-number {
+  margin-inline-start: var(--of-space-tighter);
   letter-spacing: var(--of-type-tracking-wide);
   white-space: nowrap;
 }

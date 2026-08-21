@@ -1280,8 +1280,9 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     else in this footer is wrapped. Here it works the other way:
                     the name and the number are ONE citation, so letting the row
                     space them would set them at the footer's gap rather than at
-                    a word space. The span makes them a single item, the same
-                    trick `.of-card__rarity` uses on the bubble and its word.
+                    the word space and hair of margin the stylesheet gives them.
+                    The span makes them a single item, the same trick
+                    `.of-card__rarity` uses on the bubble and its word.
                   */}
                   {shownCode === null ? null : (
                     <p className="of-card__credit">
