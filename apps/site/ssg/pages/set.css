@@ -138,6 +138,53 @@
 }
 
 /*
+  THE PRINT RUN, DRAWN. `docs/COMPLIANCE.md` bars the set's own logo, so the
+  rarity bar is the only per-set mark this page may carry — and it goes UNDER
+  the fact strip rather than inside it, because it is proportioned across the
+  whole measure and a cell in a wrapping row has no width of its own to be
+  proportional to.
+*/
+.of-masthead__mix {
+  margin-block-start: var(--of-space-base);
+}
+
+/*
+  THE LEGEND IS WHAT MAKES THE BAR READABLE WITHOUT COLOUR VISION, which
+  `RarityBar` states is the caller's job rather than the component's. Set in the
+  same quiet sans as the labels above it: it is furniture for the bar, not a
+  list somebody came to read.
+*/
+.of-masthead__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--of-space-tighter) var(--of-space-base);
+  margin-block: var(--of-space-tight) 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+.of-masthead__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--of-space-tighter);
+}
+
+/*
+  THE SWATCH IS A ONE-SLICE BAR, not a square coloured here — so the ten rarity
+  colours are mapped in `RarityBar.css` and nowhere else. All this rule supplies
+  is the width, which the bar takes from its container by design.
+*/
+.of-masthead__swatch {
+  display: block;
+  inline-size: var(--of-ornament-band-base);
+}
+
+/*
   THE CARD LIST IS NOT STYLED HERE ANY MORE. `.of-set-cards` was this page's own
   column of names; the page renders `CardIndex` now, which brings its own
   stylesheet — and that is the point of the component rather than an incidental

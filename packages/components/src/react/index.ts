@@ -52,6 +52,11 @@ export { Pagination, type PaginationProps } from "./Pagination";
 export { PitchBox, type PitchBoxProps } from "./PitchBox";
 export { PitchJewel, type PitchJewelProps } from "./PitchJewel";
 export { PitchRule, type PitchRuleProps } from "./PitchRule";
+export {
+  RarityBar,
+  type RarityBarProps,
+  type RaritySlice,
+} from "./RarityBar";
 export { ResultRow, type ResultRowProps } from "./ResultRow";
 export { SearchField, type SearchFieldProps } from "./SearchField";
 export { StatePill, type StatePillProps } from "./StatePill";

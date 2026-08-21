@@ -75,6 +75,7 @@ import { Pagination } from "./Pagination";
 import { PitchBox } from "./PitchBox";
 import { PitchJewel } from "./PitchJewel";
 import { PitchRule } from "./PitchRule";
+import { RarityBar } from "./RarityBar";
 import { ResultRow } from "./ResultRow";
 import { SearchField } from "./SearchField";
 import { StatePill } from "./StatePill";
@@ -150,6 +151,39 @@ const CASES: readonly Case[] = [
     name: "PitchRule small",
     component: PitchRule,
     props: { values: [2, 3], size: "sm" },
+  },
+
+  /*
+   * The bar's whole meaning is fill colour, so what these cases are really
+   * checking is that the `role="img"` always carries a name — including the
+   * one-slice case, where the sentence has no conjunction to compose, and the
+   * labelled case, where a caller's own wording must not be able to blank it.
+   */
+  {
+    name: "RarityBar one rarity",
+    component: RarityBar,
+    props: { slices: [{ rarity: "promo", name: "Promo", count: 45 }] },
+  },
+  {
+    name: "RarityBar a booster mix",
+    component: RarityBar,
+    props: {
+      slices: [
+        { rarity: "common", name: "Common", count: 282 },
+        { rarity: "rare", name: "Rare", count: 243 },
+        { rarity: "majestic", name: "Majestic", count: 110 },
+        { rarity: "legendary", name: "Legendary", count: 8 },
+      ],
+    },
+  },
+  {
+    name: "RarityBar small, labelled",
+    component: RarityBar,
+    props: {
+      slices: [{ rarity: "common", name: "Common", count: 12 }],
+      size: "sm",
+      label: "Ira Welcome Deck: 12 Common",
+    },
   },
 
   { name: "BevelledPlate flat", component: BevelledPlate, props: {} },

@@ -271,6 +271,46 @@ rule rather than an implementation detail:
   three anchors in it: the children of a `role="img"` are not exposed, so links
   inside one would be links nothing could reach.
 
+### The rarity bar — a set's mark, because a set may not have its own
+
+**`docs/COMPLIANCE.md` bars product set logos, and this is what that constraint
+produced.** Set identity on this site has always been typographic — the name,
+the code, the date — which is one of the places the policy "pushed the design
+somewhere more original than it would otherwise have gone". The rarity bar is
+the other half of that answer: a per-set mark **derived from the corpus** rather
+than borrowed from the publisher, drawn as one proportional band of the
+printings in a set, sliced by rarity in the search grammar's own ladder.
+`RarityBar` in `optfall-components`.
+
+**It says something the logo could not.** A booster set is a long common tail
+under a thin gold edge; a preconstructed deck is commons and rares and nothing
+else; a promo run is one colour end to end. Those three are told apart at a
+glance and are three identical-looking numbers in a table — so the mark is
+information rather than decoration, which is the condition for putting a
+hundred and twelve of them on one page.
+
+**On a list it IS the hairline.** This system separates with rules rather than
+with fills, and `/sets` is a hundred separations deep. So the bar is drawn at
+two pixels, full width, in place of the row's divider rather than beside it: a
+divider that says something, at the weight of one that says nothing. The larger
+size is for a set's own page, where it is the subject rather than the furniture.
+
+**Colour carries more weight here than this document otherwise allows, and the
+accounting is the pitch rule's.** A slice has no room for a letter, so the
+element is a `role="img"` with a written name spelling the mix out in full —
+"282 Common, 243 Rare, 110 Majestic". The ORDER is the rarity ladder and is
+therefore the same on every bar on the page, the WIDTHS are the proportions
+themselves, and every surface that draws the bar prints the counts as text: on a
+set page as a legend of one-slice swatches, on `/sets` as the row's own card
+count beside it.
+
+**No slice is narrower than two pixels, and that is a deliberate inexactness.**
+Two Fabled printings among Monarch's 1,182 is about a pixel, which rounds to
+nothing — so an exactly proportional bar would state the opposite of the truth
+about a rarity the set does contain. Being invisible is the worse error. The
+floor is paid out of the slices that can afford it, and the exact numbers are in
+the accessible name and in the legend.
+
 ### Blood and brass
 
 Red is the game's own accent, and refusing it made an earlier pass read like a

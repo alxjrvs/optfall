@@ -19,6 +19,7 @@
  */
 
 import { readableDate } from "optfall-components";
+import { RarityBar } from "optfall-components/react";
 
 import {
   CARD_PAGES,
@@ -28,6 +29,7 @@ import {
   variantSuffix,
 } from "../../src/lib/cards";
 import { orientationOfFace } from "../../src/lib/faces";
+import { SET_PROFILES } from "../../src/lib/set-profiles";
 import { editionLabel, setFor } from "../../src/lib/sets";
 import type { CardIndexEntry } from "../components/CardIndex";
 import { Island } from "../Island";
@@ -333,6 +335,21 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
   const versions = listed.length;
   const rows = entries.length;
 
+  /*
+    THE THREE FIGURES THE CORPUS KNOWS AND `sets.json` DOES NOT.
+
+    `set-profiles.ts` computes them for every set in one pass, which is where
+    `/sets` gets the same numbers from — so the index row and this masthead
+    cannot disagree about how many of a set's names are printed nowhere else.
+
+    UNDEFINED IS UNREACHABLE HERE and is written out rather than asserted, for
+    the same reason the `set === undefined` guard above is: a profile exists for
+    every set with a printing, and `getStaticPaths` builds a route only from
+    sets that have cards. What a broken filter would produce is a masthead
+    missing three cells and a page with no bar, which is visible.
+  */
+  const profile = SET_PROFILES.get(props.id);
+
   return {
     title: `${set.name} — Optfall`,
     /* THE SAME TWO NUMBERS THE MASTHEAD PRINTS, because this string is what a
@@ -467,7 +484,67 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
                 <dd>{editions.join(", ")}</dd>
               </div>
             ) : null}
+
+            {profile === undefined ? null : (
+              <>
+                <div className="of-masthead__fact">
+                  {/* PRINTED EVEN WHEN IT IS ZERO, unlike the row on `/sets`,
+                      and the two are right for their own surfaces. A list of a
+                      hundred rows drops the phrase because it would be noise on
+                      most of them; a page ABOUT one set is where "nothing here
+                      is exclusive to this release" is an answer somebody came
+                      for, and where a cell that appears and vanishes would make
+                      two sets uncomparable. */}
+                  <dt>Only here</dt>
+                  <dd>{profile.exclusive.toLocaleString("en-GB")}</dd>
+                </div>
+
+                <div className="of-masthead__fact">
+                  <dt>Artists</dt>
+                  <dd>{profile.artists.toLocaleString("en-GB")}</dd>
+                </div>
+
+                <div className="of-masthead__fact">
+                  {/* THE THIRD COUNT, AND THE ONE THE BAR BELOW IS DRAWN IN.
+                      A rarity mix is counted in printing rows — Monarch's 1,182
+                      of them — so a bar sitting under a masthead that named
+                      only 155 and 307 would be proportioned in a unit neither
+                      number is in. */}
+                  <dt>Printings</dt>
+                  <dd>{profile.printings.toLocaleString("en-GB")}</dd>
+                </div>
+              </>
+            )}
           </dl>
+
+          {/*
+            WHAT THE PRINT RUN IS MADE OF. `docs/COMPLIANCE.md` bars the set's
+            own logo, so this is the only per-set mark this project may draw —
+            and it says more than a logo would: the shape of the bar is what
+            separates a booster set from a preconstructed deck from a promo run.
+
+            THE LEGEND IS THE NON-COLOUR CHANNEL, which `RarityBar` states is
+            the caller's job to supply. Each swatch is a one-slice bar rather
+            than a square styled here, so the ten rarity colours are mapped in
+            one stylesheet rather than in a second copy that can drift from it —
+            and each swatch is `aria-hidden`, because the count and the name
+            beside it are the same fact and the bar would announce it twice.
+          */}
+          {profile === undefined ? null : (
+            <div className="of-masthead__mix">
+              <RarityBar slices={profile.rarities} />
+              <ul className="of-masthead__legend">
+                {profile.rarities.map((slice) => (
+                  <li className="of-masthead__legend-item" key={slice.rarity}>
+                    <span aria-hidden="true" className="of-masthead__swatch">
+                      <RarityBar size="sm" slices={[slice]} />
+                    </span>
+                    {`${slice.count.toLocaleString("en-GB")} ${slice.name}`}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </header>
 
         {/*

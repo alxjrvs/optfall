@@ -1028,6 +1028,101 @@ cards.push({
   <p class="note">A card with no pitch — equipment, weapons — draws the grey <code>none</code> tone rather than nothing, exactly as the jewel draws a grey stone with a dash. An empty list is the different claim that the pitch is unknown, and draws no mark at all.</p>`,
 });
 
+/**
+ * One rarity bar, in the shape `RarityBar` renders — slices in ladder order,
+ * grown in proportion to their counts.
+ *
+ * Struck once around the whole band rather than per slice: the divisions are
+ * parts of one object, and edging each of them would read as a row of chips.
+ * Named tokens only, so this card cannot draw a mark the product does not.
+ */
+function rarityBar(
+  mix: readonly (readonly [string, number])[],
+  size: "sm" | "md" = "md",
+): string {
+  const slices = mix
+    .map(
+      ([slug, count]) =>
+        `<span style="flex-basis:0;flex-grow:${count};min-inline-size:var(--of-space-tightest);background:var(--of-color-rarity-${slug})"></span>`,
+    )
+    .join("");
+  const height = size === "sm" ? 2 : 3;
+  return `<span style="display:flex;gap:0;inline-size:100%;block-size:calc(var(--of-bevel-width) * ${height});border-radius:var(--of-bevel-radius);overflow:hidden;box-shadow:0 calc(-1 * var(--of-bevel-width)) 0 0 var(--of-bevel-light), 0 var(--of-bevel-width) 0 0 var(--of-bevel-dark)">${slices}</span>`;
+}
+
+/**
+ * Three real sets, named, with their real mixes — a booster set, a
+ * preconstructed deck and a promo run.
+ *
+ * MEASURED FROM THE CORPUS RATHER THAN INVENTED, and named so the claim is
+ * checkable: these are `SET_PROFILES.get("PEN")`, `("SVI")` and `("GEM")` at
+ * the pinned commit. A demonstration of a distribution drawn from made-up
+ * numbers is a demonstration of nothing, and this card's whole argument is that
+ * three kinds of release are distinguishable at a glance.
+ */
+const RARITY_BAR_EXAMPLES: readonly {
+  readonly caption: string;
+  readonly mix: readonly (readonly [string, number])[];
+}[] = [
+  {
+    caption: "Compendium of Rathe — 681 printings",
+    mix: [
+      ["common", 282],
+      ["rare", 243],
+      ["majestic", 110],
+      ["legendary", 8],
+      ["marvel", 38],
+    ],
+  },
+  {
+    caption: "Silver Age Chapter 1 — Viserai — 34 printings",
+    mix: [
+      ["basic", 1],
+      ["common", 14],
+      ["rare", 19],
+    ],
+  },
+  {
+    caption: "GEM Pack Promos — 308 printings",
+    mix: [["promo", 308]],
+  },
+];
+
+cards.push({
+  path: "primitives/rarity-bar.html",
+  group: "Primitives",
+  title: "Rarity bar",
+  body: `
+  <p class="note">Rarity again, and the first mark here that stands for MANY printings rather than one. The bubble on a card row says what a single printing is; this says what a whole print run is made of.</p>
+  <div style="margin-block-start:var(--of-space-loose);display:grid;gap:var(--of-space-loose)">
+    ${RARITY_BAR_EXAMPLES.map(
+      ({ caption, mix }) => `<div>
+          <p style="font-family:var(--of-type-family-sans);font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase;color:var(--of-color-ink-faint);margin:0 0 var(--of-space-tighter)">${caption}</p>
+          ${rarityBar(mix)}
+        </div>`,
+    ).join("")}
+    <div>
+      <p style="font-family:var(--of-type-family-sans);font-size:var(--of-type-size-micro);letter-spacing:var(--of-type-tracking-wide);text-transform:uppercase;color:var(--of-color-ink-faint);margin:0 0 var(--of-space-tighter)">The small size, for a dense row — The Hunted, 541 printings, two of them Fabled</p>
+      ${rarityBar(
+        [
+          ["token", 16],
+          ["common", 253],
+          ["rare", 134],
+          ["majestic", 90],
+          ["legendary", 12],
+          ["fabled", 2],
+          ["marvel", 34],
+        ],
+        "sm",
+      )}
+    </div>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>It exists because the set symbol may not.</strong> <code>docs/COMPLIANCE.md</code> counts product set logos as FAB logos and the policy bars them, so <code>/sets</code> has always been a wall of typography with nothing per-set to look at. A mark derived from the corpus is the version of set identity this project is allowed to draw — and it carries information a logo never did: the three bars above are a booster set, a preconstructed deck and a promo run, told apart at a glance where three numbers in a table cannot be.</p>
+  <p class="note"><strong>The ladder is the caller's, not this component's.</strong> <code>RARITY_RANK</code> lives in the app's search grammar with a paragraph arguing why Promo sits last and Marvel above Fabled. A second ordering invented in a package that cannot import the first would be a second answer to a settled question, so the slices arrive in the order they should read — the same split <code>StatePill</code> makes about its label.</p>
+  <p class="note"><strong>Colour carries more weight here than this system otherwise allows, and that is the stated cost.</strong> A slice has no room for a letter, so the redundancy moves to the accessible layer: a <code>role="img"</code> with a written name, always, spelling the mix out in full — "282 Common, 243 Rare, 110 Majestic". What remains as non-colour channels is the ORDER, which is the same ladder in every bar on the page, and the WIDTHS, which are the proportions themselves. Every surface that draws this prints the counts as text beside it.</p>
+  <p class="note"><strong>No slice is narrower than two pixels, and that is a deliberate inexactness.</strong> Two Fabled printings among Monarch&rsquo;s 1,182 is about a pixel, which rounds away — so the bar would state the opposite of the truth about a rarity the set does contain. Being invisible is the worse error, so the floor is paid out of the slices that can afford it: <code>flex-grow</code> shares out what is left after the floors, which is also why the bar is always exactly its container.</p>`,
+});
+
 cards.push({
   path: "primitives/state-pill.html",
   group: "Primitives",

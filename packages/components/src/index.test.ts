@@ -83,7 +83,14 @@ describe("the primitive set", () => {
     // shipped as the state pill's notched plate and no longer wears it; see
     // `PitchBox` for that trade and for the division of labour between the
     // three.
-    expect(PRIMITIVES).toHaveLength(17);
+    //
+    // `rarity-bar`: rarity again, and the first of these that stands for MANY
+    // printings rather than one. The bubble on a card row says what a single
+    // printing is; this says what a whole set is made of, which is the fact
+    // `/sets` had no way to show at all — set logos are barred by
+    // `docs/COMPLIANCE.md`, so a mark derived from the corpus is the only set
+    // identity this project may draw.
+    expect(PRIMITIVES).toHaveLength(18);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
