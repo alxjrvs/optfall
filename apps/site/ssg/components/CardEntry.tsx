@@ -881,28 +881,30 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   );
 
   /**
-   * THE STRIP STAYS IN THE SET THE READER IS IN, WHERE THE SET PRINTED THE
+   * THE VERSIONS STAY IN THE SET THE READER IS IN, WHERE THE SET PRINTED THE
    * VERSION THEY ASKED FOR.
    *
-   * Every tab used to point at its version's DEFAULT printing, so the one
+   * Every link used to point at its version's DEFAULT printing, so the one
    * control for moving between three versions of a card also moved you to a
    * different set, a different art and a different collector number — three
-   * changes for a click that asked for one. Measured: 2,601 of the 5,799 pages
-   * carrying this strip now send at least one tab somewhere else than they did.
-   * `shown` is the printing this page is a page OF, so its set code is what the
-   * reader has already chosen, and {@link addressInSet} answers whether the
-   * version they are asking for was printed in that box.
+   * changes for a click that asked for one. Measured when the rule landed:
+   * 2,601 of the 5,799 pages carrying this control now send at least one link
+   * somewhere else than they did. `shown` is the printing this page is a page
+   * OF, so its set code is what the reader has already chosen, and
+   * {@link addressInSet} answers whether the version they are asking for was
+   * printed in that box.
    *
    * IT FALLS BACK TO THE DEFAULT ADDRESS, AND HAS TO. A set does not have to
    * print every version of a name — a later set adds a pitch 3, a promo carries
    * one art of one version — so "the same set" is a preference and not a rule.
-   * The tab goes somewhere either way.
+   * The link goes somewhere either way.
    *
    * THE CURRENT VERSION'S OWN ENTRY IS THIS PAGE, NOT THE CARD'S DEFAULT. It is
-   * not rendered as a link (see the strip below), but it IS what `?pitch=` is
-   * resolved against, and naming the default there made `?pitch=1` on an
-   * alternate art of the pitch 1 card a redirect OFF the printing the reader is
-   * looking at. Same rule as the tabs, applied to the tab that is already here.
+   * not drawn at all — the bands below are the versions this page is NOT — but
+   * it IS what `?pitch=` is resolved against, and naming the default there made
+   * `?pitch=1` on an alternate art of the pitch 1 card a redirect OFF the
+   * printing the reader is looking at. Same rule as the bands, applied to the
+   * version that is already here.
    */
   const currentHref =
     shown === undefined
@@ -920,7 +922,17 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       current: false,
     })),
   ].toSorted((a, b) => pitchRank(a.pitch) - pitchRank(b.pitch));
-  const showVersions = versions.length > 1;
+  /*
+   * THE BANDS ARE THE VERSIONS THIS PAGE IS NOT. The strip that stood above the
+   * panel drew every version including this one, so one entry in it was always
+   * a dead control — marked `aria-current`, going nowhere, beside the ones that
+   * go somewhere. A reader on the pitch 1 page is not choosing between three
+   * cards, they are looking at one and may want another — so the section names
+   * the others and nothing else, and `current` is what selects them out. It
+   * also makes the section's own existence the answer to "are there any": no
+   * separate count to keep in step.
+   */
+  const alternates = versions.filter((version) => !version.current);
 
   const pitchTargets = JSON.stringify(
     Object.fromEntries(
@@ -1031,57 +1043,51 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
               height={shownBox.height}
               loading="eager"
             />
-          </div>
 
-          <div className="of-card__facts-column">
             {/*
-              THE TAB STRIP IS ABOVE THE PANEL, NOT IN IT. The panel below is a
-              mirror of a printed object; a control for choosing WHICH printed
-              object it mirrors belongs outside the frame, the same way the
-              printings picker sits outside the face rather than on top of it.
+              UNDER THE PICTURE, WHERE THE OTHER VERSIONS OF IT BELONG. This was
+              a tab strip above the facts panel, on the argument that a control
+              choosing WHICH printed object the panel mirrors belongs outside the
+              frame. That argument survives; the placement did not. The face
+              column is where the card as an OBJECT lives — this art, this
+              printing — and "the same card in another colour" is a fact about
+              the object, not about the panel of facts beside it.
+
+              NO JEWEL HERE, AND THAT IS THE SAME CALL `PitchRule` MAKES. The
+              stone is the rendering for a line of type; under a picture the
+              band is the mark, and a band carrying its own words needs no
+              second object to say what it already says. The colour is a
+              repetition of the words rather than the only channel, which is the
+              part `PitchRule` cannot manage in a grid cell and this can.
             */}
-            {showVersions ? (
+            {alternates.length > 0 ? (
               <nav
-                className="of-card__versions"
-                aria-label={`Pitch versions of ${card.name}`}
+                className="of-card__alt-pitches"
+                aria-labelledby="alternate-pitches"
               >
-                <ul className="of-card__version-tabs">
-                  {versions.map((version) => (
+                <h2 className="of-apparatus__heading" id="alternate-pitches">
+                  Alternate pitches
+                </h2>
+                <ul className="of-card__alt-pitch-bands">
+                  {alternates.map((version) => (
                     <li key={version.href}>
-                      {version.current ? (
-                        /*
-                          The current tab is not a link. An anchor pointing at
-                          the page you are already on is a control that does
-                          nothing, and `aria-current` on a link still leaves it
-                          in the tab order as a dead end.
-                        */
-                        <span
-                          className="of-card__version-tab of-card__version-tab--current"
-                          aria-current="page"
-                        >
-                          <PitchJewel value={version.pitch} size="sm" />
-                          <span className="of-card__version-label">
-                            {version.pitch === 0
-                              ? "No pitch"
-                              : `Pitch ${version.pitch}`}
-                          </span>
-                        </span>
-                      ) : (
-                        <a className="of-card__version-tab" href={version.href}>
-                          <PitchJewel value={version.pitch} size="sm" />
-                          <span className="of-card__version-label">
-                            {version.pitch === 0
-                              ? "No pitch"
-                              : `Pitch ${version.pitch}`}
-                          </span>
-                        </a>
-                      )}
+                      <a
+                        className="of-card__alt-pitch"
+                        href={version.href}
+                        data-pitch={version.pitch}
+                      >
+                        {version.pitch === 0
+                          ? "No pitch"
+                          : `Pitch ${version.pitch}`}
+                      </a>
                     </li>
                   ))}
                 </ul>
               </nav>
             ) : null}
+          </div>
 
+          <div className="of-card__facts-column">
             {/*
               THE PANEL CARRIES ITS PITCH, so the stylesheet can tint the one
               thing on the page that is allowed to say which version this is

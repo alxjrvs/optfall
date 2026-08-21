@@ -890,59 +890,120 @@
   color: var(--of-color-ink-faint);
 }
 
-/* -- Pitch version tabs --------------------------------------------------- */
+/* -- Alternate pitch bands ------------------------------------------------ */
 
-.of-card__versions {
+/*
+    THE BAND IS THE MARK FOR UNDER A PICTURE. `PitchRule` sets out why at
+    length and this section is the same argument one size up: a stone belongs
+    beside a LINE OF TYPE, and under a card face there is no line of type to
+    sit it beside. What is different here is that these bands have room for
+    their own words, so the colour is a second channel rather than the only
+    one — which is the cost `PitchRule` has to pay in a grid cell and this does
+    not.
+  */
+
+.of-card__alt-pitches {
   display: flex;
   flex-direction: column;
   gap: var(--of-space-tight);
 }
 
-.of-card__version-tabs {
+.of-card__alt-pitch-bands {
   display: flex;
   flex-wrap: wrap;
+  /* Aligned to the TOP rather than stretched: the bands are as long as their
+       own words, and "No pitch" beside "Pitch 3" is a legend of two lengths
+       rather than one row that grew. */
+  align-items: flex-start;
   gap: var(--of-space-tight);
   margin: 0;
   padding: 0;
   list-style: none;
-  /* The strip sits on a rule rather than in a box: the system separates
-       regions with hairlines, and a tab row is a region boundary by nature. */
-  border-block-end: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
 
-.of-card__version-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--of-space-tight);
-  padding: var(--of-space-tight) var(--of-space-base);
+.of-card__alt-pitch {
+  display: block;
+  /*
+      UPRIGHT, WHICH IS THE WHOLE OF THE SHAPE. A band that ran across the
+      column would be a row of buttons under the face, and the page already has
+      one horizontal band per fact inside the panel — a second vocabulary of
+      horizontal strips immediately below it reads as more of the same panel.
+      Turned on its side it reads as what it is: a spine, one per version, in
+      that version's colour.
+
+      `writing-mode` rather than a `rotate()`, because the box has to turn with
+      the text. A rotated inline box keeps its untransformed size in layout, so
+      the row would reserve a wide short slot and paint a tall thin band across
+      whatever sits under it.
+    */
+  writing-mode: vertical-rl;
+  /* Logical, and the writing mode is why: `padding-inline` runs WITH the text,
+       so it lengthens the band, and `padding-block` thickens it. Written
+       physically these two would swap the moment the mode changed. */
+  padding-block: var(--of-space-tight);
+  padding-inline: var(--of-space-base);
   text-decoration: none;
-  color: var(--of-color-ink-muted);
-  /* Square, never rounded — stated rather than omitted, so a host stylesheet
-       cannot round the one control this page owns. */
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  font-weight: var(--of-type-weight-medium);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  background: var(--band);
+  color: var(--band-ink);
+  /* Cut, never rounded — the system has one radius token and it is none. */
   border-radius: var(--of-bevel-radius);
-  /* Every tab reserves the selected edge, so selecting one moves no pixels. */
-  border-block-end: var(--of-bevel-width) solid transparent;
+  /*
+      Struck, not printed — `PitchRule`'s spelling, turned through a right angle
+      with the band. The light edge is on the side the light comes from, which
+      for an upright object is its inline start rather than its top.
+    */
+  box-shadow:
+    calc(-1 * var(--of-bevel-width)) 0 0 0 var(--of-bevel-light),
+    var(--of-bevel-width) 0 0 0 var(--of-bevel-dark);
 }
 
-.of-card__version-tab:hover {
-  color: var(--of-color-ink);
+/* Pressed, by inverting the two edges. The band moves no pixels and gains no
+     colour — a tinted plate has nowhere to go for a hover tint that would not
+     collide with another pitch's fill. */
+.of-card__alt-pitch:hover {
+  box-shadow:
+    calc(-1 * var(--of-bevel-width)) 0 0 0 var(--of-bevel-dark),
+    var(--of-bevel-width) 0 0 0 var(--of-bevel-light);
 }
 
 /*
-    The current tab is marked by weight, ink AND a bevelled edge — three
-    channels, because "which version am I reading" is the single most important
-    fact on a page that shows one of three near-identical cards.
+    THE TONE TABLE, SPELLED OUT AS THE PANEL'S IS. Same closed set, same
+    default: no-pitch grey is what an unlisted value gets, so a pitch upstream
+    invents tomorrow is a legible band rather than an unset custom property.
+    Each tone carries its own ink, exactly as every coloured chip in this system
+    does — the yellow band's words are dark and the red band's are light, and
+    neither is a choice made here.
   */
-.of-card__version-tab--current {
-  color: var(--of-color-ink);
-  border-block-end-color: var(--of-color-accent);
+.of-card__alt-pitch {
+  --band: var(--of-color-pitch-none);
+  --band-ink: var(--of-color-pitch-none-ink);
 }
 
-.of-card__version-label {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
+.of-card__alt-pitch[data-pitch="1"] {
+  --band: var(--of-color-pitch-one);
+  --band-ink: var(--of-color-pitch-one-ink);
+}
+
+.of-card__alt-pitch[data-pitch="2"] {
+  --band: var(--of-color-pitch-two);
+  --band-ink: var(--of-color-pitch-two-ink);
+}
+
+.of-card__alt-pitch[data-pitch="3"] {
+  --band: var(--of-color-pitch-three);
+  --band-ink: var(--of-color-pitch-three-ink);
+}
+
+/* Pitch four is one previewed card and none in the pinned corpus — the panel's
+     table above carries the same entry for the same reason. */
+.of-card__alt-pitch[data-pitch="4"] {
+  --band: var(--of-color-pitch-four);
+  --band-ink: var(--of-color-pitch-four-ink);
 }
 
 /* Layout and voice assignment only. Every value is a token — no literal

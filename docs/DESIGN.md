@@ -379,10 +379,18 @@ address decides, at build time. Where two rows share a number and reach
 different arts, the anchor carries a hidden qualifier — the edition, the foiling,
 or the art's own key, whichever actually separates the two addresses.
 
-**Pitch versions are tabs, not separate pages.** A player calls the red, yellow
-and blue versions one card, so they share one page and one heading, switched by
-a strip of real links. Each version keeps its own permanent URL, so a tab is
-something you can paste.
+**Pitch versions are bands under the face, not separate pages.** A player calls
+the red, yellow and blue versions one card, so they share one page and one
+heading, switched by real links. Each version keeps its own permanent URL, so a
+link to one is something you can paste.
+
+~~They are a tab strip above the facts panel, one tab per version including the
+one you are reading.~~ Replaced: the strip is now an **Alternate pitches**
+section under the card face, listing only the versions this page is NOT — one
+upright coloured band per version, carrying its own words. A tab marked
+`aria-current` that goes nowhere is a third of a three-version control spent
+saying what the panel beside it already says, and the versions of a card are a
+fact about the object in the picture rather than about the panel of facts.
 
 **The verdict shows its working, in proportion.** Every format's pills are
 always visible. The raw upstream flags behind them open unasked whenever the

@@ -27,8 +27,8 @@
   background: var(--of-color-surface-raised);
 
   /* Square, never rounded — stated rather than omitted, for the same reason
-     `.of-card__version-tab` states it: a host stylesheet cannot round the one
-     control this page owns. */
+     `.of-card__alt-pitch` states it: a host stylesheet cannot round the one
+     control that page owns. */
   border-radius: var(--of-bevel-radius);
   border-block-start: var(--of-bevel-width) solid var(--of-bevel-light);
   border-block-end: var(--of-bevel-width) solid var(--of-bevel-dark);
