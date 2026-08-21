@@ -435,12 +435,16 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
      opposite until both exist.
   */
   /*
-     THE STONE'S PIPS ARE THE RESOURCE SYMBOL, and only here. A pitch value is a
-     resource value — CR 1.12.4e — and the card strikes `{r}` into each socket it
-     has paid for, so the panel passes the same file `{r}` renders with inline in
-     the text a few lines below. Every other stone on the site is `sm`, where the
-     socket is a few pixels and the artwork's swirl cannot resolve; those keep
-     `PitchJewel`'s drawn pip, which is the same red.
+     THE STONE'S PIPS ARE THE RESOURCE SYMBOL. A pitch value is a resource value
+     — CR 1.12.4e — and the card strikes `{r}` into each socket it has paid for,
+     so the panel passes the same file `{r}` renders with inline in the text a
+     few lines below.
+
+     THIS IS THE ONLY STONE THE PRODUCT DRAWS, which is why the artwork is
+     passed unconditionally rather than behind a size test. Lists and grids wore
+     `sm` stones until `PitchBox` took that job; `PitchJewel`'s drawn-pip
+     fallback is now exercised by the design-system gallery and by stories
+     rather than by anything a reader meets here.
   */
   const pitchBadge =
     page.pitch === 0 ? null : (

@@ -166,8 +166,10 @@ over the stone again.
 resource value — CR 1.12.4e — so a filled socket holds `{r}`, the same file the
 marker renders with inline in card text, and an empty one is a hole. Both wear
 the same light bezel, which is what lets a red pip sit on the red stone at pitch
-one. Small stones — indexes, version tabs — fall back to a drawn pip in the same
-red, because a socket a few pixels across cannot resolve the artwork.
+one. A caller that supplies no artwork falls back to a drawn pip in the same
+red, because a socket a few pixels across cannot resolve the file — the
+design-system gallery, which shows every size, and stories. The card page is the
+product's only stone.
 
 ~~The numeral is~~ **The count is** the **primary** channel, not an
 accessibility fallback. Red and yellow are the classic deuteranopia confusion

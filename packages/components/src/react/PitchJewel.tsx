@@ -90,10 +90,9 @@ export interface PitchJewelProps {
   /**
    * LSS's own artwork for the resource symbol, struck into every filled slot.
    *
-   * Supplied by the card panel, which is the one surface where the stone is
-   * large enough for the mark to be read. Omitted everywhere else — and in a
-   * story, where the site's `public/` is not mounted — and both fall back to a
-   * drawn pip in the same red.
+   * Supplied by the card panel, which is the product's only caller. Omitted by
+   * the design-system gallery's small stones and in a story, where the site's
+   * `public/` is not mounted; both fall back to a drawn pip in the same red.
    */
   readonly src?: string | undefined;
   /**
@@ -148,11 +147,16 @@ export function PitchJewel({
    * inline in card text — a pitch value IS a resource value, so the pip is not
    * a counter that happens to be red, it is the thing being counted.
    *
-   * THE FALLBACK IS NOT A COMPROMISE AT `sm`. The small stone is a fifth of an
-   * inch across and its sockets are a few pixels; the swirl inside the artwork
-   * is not resolvable there, so an index of 5,554 rows would be paying three
-   * image elements a row to render a red dot. The card panel is where the stone
-   * is read, and that is where the artwork is passed.
+   * THE FALLBACK IS FOR THE SMALL STONE, WHICH THE PRODUCT NO LONGER DRAWS. A
+   * `sm` stone is a fifth of an inch across and its sockets are a few pixels;
+   * the swirl inside the artwork is not resolvable there, so three image
+   * elements would be spent rendering a red dot.
+   *
+   * There is exactly one caller in the product now — the card panel — and it
+   * passes the artwork. Lists and grids used to draw `sm` stones and stopped:
+   * they wear `PitchBox`, the notched plate spelled `PITCH 1`. So the drawn pip
+   * survives for the design-system gallery, which shows every size at once, and
+   * for a story, where the site's `public/` is not mounted.
    */
   const pip =
     src === undefined ? null : (

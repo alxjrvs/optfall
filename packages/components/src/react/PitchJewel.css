@@ -256,8 +256,8 @@
   box-shadow: 0 0 0 var(--of-space-hair) var(--of-color-pitch-facet);
 }
 
-/* THE DRAWN PIP, for the sizes where the artwork cannot be read — see the note
-   in `PitchJewel.tsx`. It is the artwork's own red rather than `pitch.one`,
+/* THE DRAWN PIP, for a caller that supplies no artwork — the gallery's small
+   stones, and a story. It is the artwork's own red rather than `pitch.one`,
    because a pip on a pitch-three stone is not a pitch-one anything. */
 .of-jewel__slot[data-filled="true"] {
   background: var(--of-color-pitch-pip);
