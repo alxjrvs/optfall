@@ -7,6 +7,11 @@
  * fan itself, no magic numbers, and everything below the fan lands below the
  * fold by construction rather than by a spacer that happens to be tall enough.
  *
+ * THE SAME AUTO MARGIN, DECLARED A SECOND TIME, CENTRES THE FIELD. The sentence
+ * carries one above it and the fan one above itself, so the column splits its
+ * free space evenly and the search field lands in the middle of the room the fan
+ * leaves rather than at the top of it. See `.of-door__sentence`.
+ *
  * `svh` RATHER THAN `vh`. On a phone `100vh` is the viewport with the browser
  * chrome hidden, which is taller than what the reader can actually see — so a
  * fan anchored to `100vh` sits under the address bar until they scroll. `svh`
@@ -66,9 +71,20 @@
   ONE SENTENCE, NOT A WORDMARK. The name and the game are the two things a
   first-time reader needs to bind together, so they carry the weight and the
   connective tissue does not.
+
+  IT ALSO CARRIES THE SECOND AUTO MARGIN, which is what centres the field. The
+  fan is pinned to the floor by an auto margin above it; a matching auto margin
+  above the first child makes the flex column split its free space equally
+  between the two, so the sentence-field-links group sits midway between the top
+  of the screen and the fan rather than pressed against the top of it. No
+  viewport unit and no magic number: the group is centred in whatever room the
+  fan leaves, at whatever height the screen turns out to be. The column's
+  `padding-block-start` remains the floor for the case where there is no free
+  space to split.
 */
 .of-door__sentence {
   margin: 0;
+  margin-block-start: auto;
   text-align: center;
   font-family: var(--of-type-family-display);
   font-size: var(--of-type-size-display);
