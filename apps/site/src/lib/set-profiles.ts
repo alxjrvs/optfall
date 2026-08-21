@@ -151,10 +151,14 @@ export const SET_PROFILES: ReadonlyMap<string, SetProfile> = (() => {
 
   for (const card of CORPUS.cards) {
     const nameSlug = slugify(card.name);
-    /* `?? false` rather than `!`: the map is built from this same loop over the
-       same corpus, so a miss is impossible — and a non-null assertion here
-       would be a claim about that staying true, which `CLAUDE.md` asks to be
-       guarded on the line above rather than asserted. */
+    /* `?.size === 1` RATHER THAN `!.size === 1`, and the difference is the
+       whole of it: the map is built from this same loop over the same corpus,
+       so a miss is impossible today — and a non-null assertion would be a claim
+       about that staying true, which `CLAUDE.md` asks to be guarded on the line
+       above rather than asserted. Optional chaining yields `undefined`, which
+       compares unequal to 1, so a name that somehow escaped the first pass is
+       counted as NOT exclusive: the conservative answer, and the one that
+       under-reports rather than inventing a claim about a set. */
     const only = setsOfName.get(nameSlug)?.size === 1;
 
     for (const printing of card.printings) {

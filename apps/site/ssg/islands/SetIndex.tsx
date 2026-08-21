@@ -114,18 +114,58 @@ const SUGGESTIONS: readonly string[] = [
 ];
 
 /**
- * Lower case, and stripped of the marks a reader will not type.
+ * The characters in this corpus's set names that a fold has to spell out.
  *
- * "Armory Deck Origins - Jarl Vetreiði" is in this corpus, and a reader typing
- * "vetreidi" is not making a mistake — they are typing what their keyboard
- * offers. `NFD` splits the base letter from its diacritic and the class removes
- * the diacritic, so the fold is one pass and needs no table of substitutions.
+ * MEASURED, NOT GUESSED, AND THE MEASUREMENT IS THE WHOLE ENTRY. Across every
+ * set name `/sets` lists, the entire non-ASCII surface is these two characters:
+ * `ð` in "Armory Deck Origins - Jarl Vetreiði", and the en dash in the two
+ * Classic Battles sets. Neither is reachable from `NFD` — see {@link fold}.
+ *
+ * `ð` → `d` IS A TRANSLITERATION AND THEREFORE A CHOICE. Icelandic eth is also
+ * written `dh`, and a reader who knows that will type it and find nothing. `d`
+ * is the letter the character looks like on a card and the one an English
+ * keyboard reaches for, which is the question this table answers — what will
+ * somebody actually press — rather than how the name is romanised.
  */
-function fold(text: string): string {
-  return text
+const FOLDED: Readonly<Record<string, string>> = {
+  ð: "d",
+  "–": "-",
+};
+
+/**
+ * Lower case, folded to the letters a reader will actually press.
+ *
+ * THIS WAS A ONE-LINER AND THE ONE-LINER DID NOTHING. It was `NFD` plus a
+ * `\p{Diacritic}` strip, documented with exactly the example that proves it
+ * wrong: "a reader typing `vetreidi` is not making a mistake". `NFD` splits a
+ * base letter from a combining mark, and `ð` is not a `d` with a mark on it —
+ * it is a letter of its own, which `NFD` leaves entirely alone. So the fold ran
+ * on every keystroke, folded nothing, and its docblock claimed the one case in
+ * the corpus that it silently failed. The en dash is the same shape of miss for
+ * the same reason: it is punctuation, not an accent.
+ *
+ * THE NORMALISE STAYS, AND IT IS NOT DECORATION EVEN THOUGH IT MATCHES NOTHING
+ * TODAY. It is the general case — "Fáelán", any accented artist or hero name
+ * upstream has not published yet — and it costs one pass over a set name. What
+ * it cannot do is invent a substitution, which is what {@link FOLDED} is for,
+ * and the two are kept apart so that the table stays exactly as long as the
+ * characters somebody has actually looked at.
+ *
+ * `SetIndex.test.ts` holds the pair to the corpus: every listed set name must
+ * fold to printable ASCII, which is the invariant that would have caught this
+ * the day it was written.
+ */
+export function fold(text: string): string {
+  let folded = text
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
+  /* Applied AFTER the lower-casing, so `Ð` and `ð` are one entry rather than
+     two — the uppercase form folds to the lowercase one first. */
+  for (const [from, to] of Object.entries(FOLDED)) {
+    folded = folded.replaceAll(from, to);
+  }
+  return folded;
 }
 
 /**
@@ -201,6 +241,17 @@ export function SetIndex({ entries }: SetIndexProps) {
    * have to work out which of the two claims to believe.
    */
   const eras = useMemo(() => {
+    /*
+      NO ERAS AT ALL WHEN NOTHING MATCHES, WHICH THE DATE ORDERS GOT FOR FREE
+      AND THE OTHER TWO DID NOT. The loop below produces an empty array from an
+      empty list; the single-era shortcut produced one era holding no sets, so a
+      filter that matched nothing rendered an empty `<section>` and an empty
+      `<ul>` underneath the "no set matches" line. Valid markup for a list that
+      is not there, which is the kind of thing that reads as a bug in a DOM
+      inspector and as a stray gap on the page.
+    */
+    if (shown.length === 0) return [];
+
     if (order !== "newest" && order !== "oldest") {
       return [{ year: null, sets: shown }];
     }
