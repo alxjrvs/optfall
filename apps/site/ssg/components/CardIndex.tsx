@@ -259,39 +259,23 @@ export interface CardIndexEntry {
    * `CardStack`.
    */
   readonly versions: readonly CardIndexVersion[];
-  /**
-   * The card's printed values, label and value. Rows view only.
-   *
-   * ALL FIVE, NOT THREE — Cost, Power, Defence, Life, Intellect, in the order
-   * `docs/DESIGN.md` reads a card. This said "cost, power, defence" while both
-   * callers already supplied the full list, which is the exact three-value
-   * vocabulary this component exists to stop the two surfaces disagreeing
-   * about. Only the values a card actually prints are present, so an ordinary
-   * action carries three and a hero carries three different ones.
-   *
-   * ARCANE WAS A SIXTH AND IS NOT A PRINTED VALUE — see `STAT_ORDER` in
-   * `cards.ts`. It is gone from both callers, so the two surfaces still agree.
-   */
-  readonly stats?: readonly (readonly [string, string])[] | undefined;
-  /**
-   * Why this row is on the page, in the words of the ranking that put it there.
-   *
-   * LIST VIEW ONLY, AND IT IS ABOUT THE QUERY RATHER THAN THE CARD — which is
-   * the distinction that decides what may appear under a name at all. A set
-   * page has no ranking and therefore nothing true to say here, while every
-   * search result does. Under a grid of faces it would be a line of engine
-   * chatter under every picture.
-   *
-   * THIS IS THE ONLY SUCH LINE LEFT. There was a `note` beside it saying which
-   * versions a partial match covered — "1 of 3 versions" — and it is gone:
-   * every card list on this site now says which versions it stands for by
-   * drawing them, and what it draws is what a reader can click. A row standing
-   * for one version draws one box or one card; the words under it were a
-   * second telling of a fact the object had already told, and the site would
-   * rather be read than narrated.
-   */
-  readonly why?: string | undefined;
 }
+
+/*
+ * TWO FIELDS WERE HERE AND ARE GONE, AND THE ROW IS WHY. `stats` carried the
+ * card's printed values — Cost, Power, Defence, Life, Intellect — and `why`
+ * carried a word from the ranking naming which field a search matched on. Both
+ * were list-view only and both printed on the one line under a name, which the
+ * list view now spends entirely on the type line. See the rows branch of
+ * `CardIndex` for the argument and `layout.card.row` for what it bought.
+ *
+ * THEY ARE DELETED RATHER THAN LEFT OPTIONAL AND UNREAD. An interface field
+ * nothing renders is a promise to a caller that something will be drawn with
+ * it, and both callers were computing one: the set page mapped a printing's
+ * stats into pairs and `CardSearch` kept a `WHY` table from `CardMatchField`
+ * to English. Keeping the fields would have kept both of those alive to feed a
+ * renderer that had stopped reading them.
+ */
 
 export interface CardIndexProps {
   /** The rows on THIS page, already cut by the caller. */
@@ -849,9 +833,10 @@ const GRID_BOX = FACE_TIERS.normal;
  * THE `thumb` TIER, WHICH IS THE ONE PLACE ON THIS SITE IT IS THE RIGHT
  * ANSWER. `faceSrc` records why the grid abandoned it: 180px drawn into a
  * 240px cell is a third of an upscale, so the grid asked for `normal` instead.
- * The row draws at `layout.card.row` — 44px — so the same tier is a 4×
- * DOWNSCALE here. Asking for `normal` would ship a 450px picture to paint
- * forty-four points of it, sixty times a page.
+ * The row draws at `layout.card.row` — 72px — so the same tier is still a
+ * DOWNSCALE here, two and a half times over. That margin is why the row could
+ * grow from 44px without changing which picture it fetches; a further step up
+ * would start upscaling and the tier would have to be revisited with it.
  *
  * PORTRAIT FOR THE LANDSCAPE CARDS TOO, exactly as {@link GRID_BOX} is, and
  * the reason is the same one restated for a different axis: a row that changed
@@ -864,9 +849,10 @@ const ROW_BOX = FACE_TIERS.thumb;
 /**
  * The row's face — small, silent, and not a link.
  *
- * IT IS A RECOGNITION MARK RATHER THAN A PICTURE TO LOOK AT. See the
- * `layout.card.row` token for the size argument; what matters here is what the
- * element is NOT.
+ * IT IS A RECOGNITION MARK RATHER THAN A PICTURE TO READ, and it is a bigger
+ * one than it was — see the `layout.card.row` token for that argument and for
+ * what the row gave up to afford it. What matters here is what the element is
+ * NOT, and none of that changed with the size.
  *
  * NOT A LINK, AND THAT IS THE ACCESSIBILITY CALL. The name beside it already
  * points at the row, so an anchor around the face would be a second control
@@ -885,9 +871,10 @@ const ROW_BOX = FACE_TIERS.thumb;
  *
  * ONE FACE, NOT A STACK, WHERE THE ROW STANDS FOR SEVERAL VERSIONS. The grid
  * draws a stack because a cell IS a card and there is room to fan it; here the
- * boxes are already the version links, and three cards fanned at 44px would
- * be three slivers of nothing. A row that gestured at a choice it could not
- * legibly offer is worse than a row that leaves the choice to the boxes.
+ * boxes are already the version links, and three cards fanned at the row's
+ * width would be three slivers of nothing. A row that gestured at a choice it
+ * could not legibly offer is worse than a row that leaves the choice to the
+ * boxes.
  */
 function RowFace({ entry }: { readonly entry: CardIndexEntry }) {
   return (
@@ -1101,11 +1088,27 @@ export function CardIndex({
         </ul>
       ) : (
         /*
-          Dense rows: the view for comparing printed values down a column, and
-          `ResultRow` is exactly the primitive for it — a leading slot, a name,
-          a trailing slot, and facts underneath. THE FACE LEADS AND THE BOX
-          TRAILS THE NAME, because this view has a line of type to hang a mark
-          off, so it can afford the rendering that spells the value out.
+          Rows: a face, a name, a pitch and what the card IS, and `ResultRow` is
+          exactly the primitive for it — a leading slot, a name, a trailing
+          slot, and one fact underneath. THE FACE LEADS AND THE BOX TRAILS THE
+          NAME, because this view has a line of type to hang a mark off, so it
+          can afford the rendering that spells the value out.
+
+          IT PRINTED THE STATS UNTIL IT DID NOT. Cost, Power, Defence, Life and
+          Intellect ran along this line under every name, and on a search a
+          word after them naming which field the query matched. Four to six
+          facts set in micro type under a name is a table pretending to be a
+          list — and the values it tabulated are on the card, which the row now
+          draws big enough to be worth looking at. What is left under a name is
+          the one fact the picture cannot carry at this size: what the card is.
+          `layout.card.row` records what the bigger picture cost in rows.
+
+          THE VALUES ARE NOT LOST, AND WHERE THEY WENT MATTERS. The card page
+          prints all five. Three of them — cost, power and defence — are what
+          the grammar's `STAT_FIELDS` filter on and what `SORT_KEYS` order by,
+          so a reader comparing costs asks for `order:cost` and gets the column
+          in an order no printed list of them ever had. Life and intellect are
+          in neither table; a reader after those goes to the card.
 
           THE MARK LED THE ROW UNTIL IT DID NOT EARN THE COLUMN. Beside the
           face it needed a slot as wide as three of them so that every row's
@@ -1134,19 +1137,7 @@ export function CardIndex({
               qualifier={entry.qualifier}
               lead={<RowFace entry={entry} />}
               trail={<PitchStones versions={entry.versions} />}
-              meta={
-                <>
-                  <span>{entry.typeLine}</span>
-                  {(entry.stats ?? []).map(([label, value]) => (
-                    <span key={label}>
-                      {label} {value}
-                    </span>
-                  ))}
-                  {entry.why !== undefined && entry.why !== "" ? (
-                    <span className="of-index__row-why">{entry.why}</span>
-                  ) : null}
-                </>
-              }
+              meta={<span>{entry.typeLine}</span>}
             />
           ))}
         </ol>
