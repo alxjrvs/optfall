@@ -32,9 +32,9 @@ that.
 
 This constrains the product and I think it improves it. There is no chat box
 here and there will not be one. Where Optfall does not know something it says so
-— the eight keywords the rules do not define, the fifty-three cards with no
-published release date, the formats where upstream publishes no flag — rather
-than generating a plausible sentence to fill the gap.
+— the keywords the rules do not define, the cards with no published release
+date, the formats where upstream publishes no flag — rather than generating a
+plausible sentence to fill the gap.
 
 I support open-weight models. I am against consolidated ownership of LLM
 infrastructure, and against the obtrusive, environmentally unsound data centers
