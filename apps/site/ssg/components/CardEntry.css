@@ -1036,8 +1036,10 @@
     than its parent's minimum is the same thing as stretching it, so nothing
     showed. `PitchBox` spends no height of its own now — the mark is a line of
     type wearing a colour — so a centred bar would sit as a short stripe inside
-    a 24px target with ground above and below it, which is the opposite of what
-    the next comment claims.
+    the target below, with ground above and below it, which is the opposite of
+    what the next comment claims. (Written without a length anywhere on purpose:
+    `check-tokens.ts` reads prose inside a stylesheet as CSS, and describing a
+    literal is how one gets committed. `PitchJewel.css` records the same care.)
   */
   align-items: stretch;
   justify-content: center;

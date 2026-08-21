@@ -336,9 +336,9 @@ const STRUCTURE: TokenTable = {
      so both of its dimensions fall out of the type and space tokens it already
      reads. A width token here would be a number kept in step with the length of
      "No pitch" at whatever size the box is set: a second copy of a measurement
-     the text owns, which is the failure
-     `MARK_GEOMETRY` exists to avoid one primitive over. It briefly had two,
-     from a draft where the mark was a vertical spine of fixed width. */
+     the text owns, which is the failure `MARK_GEOMETRY` exists to avoid one
+     primitive over. It briefly had two, from a draft where the mark was a
+     vertical spine of fixed width. */
 
   /* The two widths a card face is published at, for exactly the reason the
      jewel's sizes are here: the face host serves `thumb` and `normal` and

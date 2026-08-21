@@ -56,18 +56,21 @@
     MILD TO THE SIDES, NOTHING TOP OR BOTTOM.
 
     The block step is gone rather than reduced, which is the change and not an
-    oversight: the mark is set into a line of type in four of its five call
-    sites, and any block padding at all makes it taller than the line it is a
-    member of — a tag interrupting a row rather than a word in it. What decides
-    the height is the type's own `leading.tight`, which is a number this file
-    already spends.
+    oversight: every call site but the bar sets this mark into a line of type,
+    and any block padding at all makes it taller than the line it is a member of
+    — a tag interrupting a row rather than a word in it. What decides the height
+    is the type's own `leading.tight`, which is a number this file already
+    spends. (No count of those sites here on purpose: a number in prose is a
+    number nothing keeps in step, which is the drift `PRIMITIVES.length` is
+    cited for rather than spelled.)
 
     The inline step stays because a fill needs it. Words that run to the edge of
-    their own colour read as a clipped label rather than as a mark; `space.tighter`
-    is the smallest step that reads as deliberate, and the pointer-target floor
-    those marks have to clear is a `min-*-size` on the ANCHOR around them — see
-    `.of-card__pitch-link` — rather than padding here, so this is free to be
-    the typographic choice it should be.
+    their own colour read as a clipped label rather than as a mark;
+    `space.tighter` is the smallest step that reads as deliberate. Where one of
+    these marks is also a LINK, the pointer-target floor is a `min-*-size` on
+    the anchor around it — see `.of-card__pitch-link` — rather than padding
+    here, so this stays the typographic choice it should be instead of being
+    sized by a requirement it is not the right place to state.
   */
   padding-block: 0;
   padding-inline: var(--of-space-tighter);
