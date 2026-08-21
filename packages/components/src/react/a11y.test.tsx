@@ -72,6 +72,7 @@ import { IconButton } from "./IconButton";
 import { Mark } from "./Mark";
 import { OrnamentalRule } from "./OrnamentalRule";
 import { Pagination } from "./Pagination";
+import { PitchBox } from "./PitchBox";
 import { PitchJewel } from "./PitchJewel";
 import { PitchRule } from "./PitchRule";
 import { ResultRow } from "./ResultRow";
@@ -108,6 +109,22 @@ const CASES: readonly Case[] = [
     name: "PitchJewel small",
     component: PitchJewel,
     props: { value: 3, size: "sm" },
+  },
+
+  /*
+   * The box carries the same value as the jewel and one thing the jewel
+   * cannot: its own words. The cases are the two that differ — the no-pitch
+   * column, which says "No pitch" where the stone can only draw a dash, and a
+   * box whose `label` has been displaced by a caller, which is how the card
+   * index names a stone that is also a link.
+   */
+  { name: "PitchBox none", component: PitchBox, props: { value: 0 } },
+  { name: "PitchBox one", component: PitchBox, props: { value: 1 } },
+  { name: "PitchBox four", component: PitchBox, props: { value: 4 } },
+  {
+    name: "PitchBox small, labelled",
+    component: PitchBox,
+    props: { value: 2, size: "sm", label: "Head Jab (pitch 2)" },
   },
 
   /*

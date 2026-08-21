@@ -254,13 +254,13 @@ function versionsSuffix(links: readonly CardLink[]): string {
  * - A row standing for SOME of them is named for all of those — "(pitch 2 and
  *   3)". Naming it after the version its href happens to open would be a
  *   third true-but-partial statement: it would announce the same string as the
- *   first stone beside it, for a row that covers two cards. See
+ *   first pitch box beside it, for a row that covers two cards. See
  *   {@link versionsSuffix}.
  *
  * IT IS HIDDEN, NOT PRINTED. `CardIndex` does exactly this with
  * `of-index__variant`: the suffix stays inside the anchor and out of sight, so
  * the list still reads as bare names and the links are still told apart by
- * anything reading them aloud. The stones were already right — `PitchJewel`'s
+ * anything reading them aloud. The pitch marks were already right — `PitchBox`'s
  * `label` names each of them — and this is the same fix applied to the one
  * anchor on the row that was left carrying a bare name.
  */

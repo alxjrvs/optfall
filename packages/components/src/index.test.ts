@@ -60,9 +60,11 @@ describe("the primitive set", () => {
     // went rather than being kept as a wrapper whose documented reason for
     // existing had gone.
     //
-    // FIFTEEN NOW, AND THE LAST TWO ARRIVED THE SAME WAY — from a product
-    // failure rather than from a plan, which is the opposite of how
-    // `card-face-group` left.
+    // THE ADDITIONS SINCE ALL ARRIVED THE SAME WAY — from a product failure
+    // rather than from a plan, which is the opposite of how
+    // `card-face-group` left. The count itself is the assertion below and is
+    // deliberately not restated in this comment: it has been written into
+    // prose twice and been wrong both times.
     //
     // `pagination`: docs/SCRYFALL-GAP.md §4 named the hard 60-result cap "a
     // refusal where Scryfall paginates", and both search surfaces needed the
@@ -72,7 +74,14 @@ describe("the primitive set", () => {
     // card index — that did not exist when the list was closed. See
     // `PitchRuleProps` for why it is a second primitive rather than a variant
     // of the jewel.
-    expect(PRIMITIVES).toHaveLength(16);
+    //
+    // `pitch-box`: the same value again, for lists and grids. A stone beside
+    // every name down a page is an ornament competing with the names; the box
+    // is the fact written out — the state pill's notched plate reading
+    // "PITCH 1" — and it replaced the jewel at every list and grid site in the
+    // product. See `PitchBox` for the division of labour between the three,
+    // and for why it borrows the pill's shape without its tone union.
+    expect(PRIMITIVES).toHaveLength(17);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");
@@ -93,31 +102,32 @@ describe("the primitive set", () => {
     expect(PRIMITIVES).toContain("pitch-rule");
   });
 
-  test("the two pitch renderings are both declared, and are not the same one", () => {
+  test("the three pitch renderings are all declared, and are not one thing", () => {
     /*
-     * The failure this pins is a merge, not an omission. `pitch-rule` states
-     * the same value as `pitch-jewel` in a different medium, so the obvious
-     * economy is to make one a `variant` prop of the other — and that would
-     * quietly delete the jewel's guarantee, which is that the NUMERAL is
-     * always rendered. A band cannot carry a numeral; a component that can be
-     * asked for either rendering therefore has a spelling that drops the
-     * primary channel while still being called a jewel.
+     * The failure this pins is a merge, not an omission. All three state the
+     * same value in a different medium, so the obvious economy is to make two
+     * of them a `variant` prop of the third — and that would quietly delete
+     * the jewel's guarantee, which is that the NUMERAL is always rendered. A
+     * band cannot carry a numeral; a component that can be asked for either
+     * rendering therefore has a spelling that drops the primary channel while
+     * still being called a jewel.
      *
-     * Two entries make "there is a rendering with a numeral" a fact about the
-     * library rather than about how somebody calls it.
+     * Separate entries make "there is a rendering with a numeral" a fact about
+     * the library rather than about how somebody calls it.
      */
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("pitch-rule");
+    expect(PRIMITIVES).toContain("pitch-box");
     /*
-     * AND THEY ARE TWO ENTRIES, NOT ONE NAME WEARING TWO SPELLINGS. This line
-     * replaces `expect(new Set(["pitch-jewel", "pitch-rule"]).size).toBe(2)`,
-     * which asserted a property of two string literals written in the test
-     * itself and could therefore never fail whatever `PRIMITIVES` said. The
-     * check that carries the claim is against the array.
+     * AND THEY ARE SEPARATE ENTRIES, NOT ONE NAME WEARING THREE SPELLINGS.
+     * This line replaces `expect(new Set([…]).size).toBe(2)`, which asserted a
+     * property of two string literals written in the test itself and could
+     * therefore never fail whatever `PRIMITIVES` said. The check that carries
+     * the claim is against the array.
      */
     expect(
       PRIMITIVES.filter((name) => name.startsWith("pitch-")).toSorted(),
-    ).toEqual(["pitch-jewel", "pitch-rule"]);
+    ).toEqual(["pitch-box", "pitch-jewel", "pitch-rule"]);
   });
 });
 
@@ -263,6 +273,35 @@ describe("the reserved silhouette", () => {
 
   test("is structure rather than palette, so both themes state it identically", () => {
     expect(LIGHT_TOKENS["ornament.cut.jewel"]).toBe(silhouette);
+  });
+
+  test("the notch is one shape at one depth, drawn by two components", () => {
+    /*
+     * `PitchBox` takes `StatePill`'s plate deliberately: same notch, same
+     * token, same polygon. The whole argument for reusing the shape is that a
+     * reader learns it once, and that argument dies the moment one of the two
+     * drifts — a notch half as deep on the pitch mark would be a SECOND
+     * ornament wearing the first one's name, which is the exact failure
+     * `ornament.cut.jewel` was promoted to a token to end.
+     *
+     * The clip is compared with whitespace collapsed because the two files are
+     * formatted by Biome at 80 columns and wrap in different places; what has
+     * to match is the geometry, not the line breaks.
+     */
+    const flat = (path: URL) => readFileSync(path, "utf8").replace(/\s+/g, " ");
+    const pill = flat(new URL("./react/StatePill.css", import.meta.url));
+    const box = flat(new URL("./react/PitchBox.css", import.meta.url));
+
+    const clip =
+      "clip-path: polygon( var(--notch-near) 0%, calc(var(--notch-far) - var(--notch)) 0%, var(--notch-far) var(--notch), var(--notch-far) 100%, var(--notch-near) 100% );";
+
+    expect(pill).toContain(clip);
+    expect(box).toContain(clip);
+    for (const source of [pill, box]) {
+      expect(source).toContain("--notch: var(--of-ornament-notch-size);");
+      // And the mirror, so a right-to-left reader gets one notch in both.
+      expect(source).toContain("--notch-near: 100%;");
+    }
   });
 
   test("the mark is a chain of three interlocked links", () => {

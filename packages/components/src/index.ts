@@ -43,6 +43,7 @@ export type { BevelEdge, OrnamentRole, PitchValue, StateTone, Voice };
  */
 export type PrimitiveName =
   | "pitch-jewel"
+  | "pitch-box"
   | "pitch-rule"
   | "bevelled-plate"
   | "state-pill"
@@ -61,6 +62,7 @@ export type PrimitiveName =
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
+  "pitch-box",
   "pitch-rule",
   "bevelled-plate",
   "state-pill",
