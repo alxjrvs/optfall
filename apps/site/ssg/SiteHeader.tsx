@@ -54,8 +54,24 @@ const FORM_ATTRS = {
 } as const;
 
 export interface SiteHeaderProps {
-  /** Which section is current, for `aria-current`. */
+  /** Which section is current, for the section marking. */
   readonly section?: HeaderSection | undefined;
+  /**
+   * The route being rendered, so `aria-current` can tell "page" from "section".
+   *
+   * WITHOUT IT THIS HEADER ASSERTED THE WRONG THING ON MOST OF THE SITE. The
+   * marking was driven by `section` alone and emitted `aria-current="page"`,
+   * which is a claim that the link points at the page you are on. On a DETAIL
+   * page under a section — a card, a set, a rule, which between them are
+   * essentially the whole site — it does not: `/search` is not the card page,
+   * and a screen reader was told it was. Those pages carried two or three
+   * elements each claiming to be the current page, pointing at different
+   * targets, with the nav contradicting the breadcrumb a few elements later.
+   *
+   * `"true"` is the value for "current within this set" and is what a section
+   * match earns; `"page"` is kept for the case it actually describes.
+   */
+  readonly route?: string | undefined;
   /**
    * The search field. On everywhere; nothing turns it off today.
    *
@@ -95,8 +111,28 @@ const LINKS: readonly {
 /** What the disclosure discloses. Named, because it is not its child. */
 const SECTIONS_LIST_ID = "bar-sections";
 
+/**
+ * `"page"` only when the link really is this page; `"true"` for its section.
+ *
+ * The trailing slash is compared both ways because the two forms name the same
+ * document — `routes.ts` resolves `/cr`, every canonical and every sitemap entry
+ * is `/cr/`, and which one arrives here should not decide what a screen reader
+ * is told.
+ */
+function currentness(
+  key: HeaderSection | undefined,
+  href: string,
+  section: HeaderSection | undefined,
+  route: string | undefined,
+): "page" | "true" | undefined {
+  if (key === undefined || key !== section) return undefined;
+  if (route === undefined) return "true";
+  return route === href || route === `${href}/` ? "page" : "true";
+}
+
 export function SiteHeader({
   section,
+  route,
   field = true,
   fieldIsland = false,
 }: SiteHeaderProps) {
@@ -234,11 +270,12 @@ export function SiteHeader({
               <li key={link.href}>
                 <a
                   href={link.href}
-                  aria-current={
-                    link.key !== undefined && link.key === section
-                      ? "page"
-                      : undefined
-                  }
+                  aria-current={currentness(
+                    link.key,
+                    link.href,
+                    section,
+                    route,
+                  )}
                 >
                   {link.label}
                 </a>

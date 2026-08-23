@@ -281,8 +281,15 @@
   color: var(--of-color-ink);
 }
 
-/* The current section is marked by ink and a rule, never by colour alone. */
-.of-bar__links a[aria-current="page"] {
+/* The current section is marked by ink and a rule, never by colour alone.
+
+   `[aria-current]` RATHER THAN `[aria-current="page"]`, because the value now
+   distinguishes two claims that look identical on screen: "page" where the link
+   IS this page, "true" where it is the section this page sits under. The
+   marking means the same thing in both cases — you are in here — so matching on
+   the attribute's presence keeps the underline on the detail pages that used to
+   get it by asserting something false. */
+.of-bar__links a[aria-current] {
   color: var(--of-color-ink);
   box-shadow: inset 0 calc(-1 * var(--of-bevel-width)) 0 0
     var(--of-color-accent);

@@ -131,8 +131,16 @@
   cursor: pointer;
 }
 
+/*
+  THE HOVER TAKES `link.hover`, NOT THE ACCENT ITSELF. 1.4.3 applies to a hover
+  state like any other, and the accent on the page ground is 3.22:1 in dark —
+  under 4.5:1 for text this size. `link.hover` exists for exactly this: it is
+  the accent lifted far enough to be read AS text rather than seen as a mark,
+  and it reaches 6.69:1. The rule beneath keeps the accent, because a 2px
+  hairline is a non-textual mark and 1.4.11's 3:1 is what governs it.
+*/
 .of-sets__suggestion:hover {
-  color: var(--of-color-accent);
+  color: var(--of-color-link-hover);
   border-block-end-color: var(--of-color-accent);
 }
 
