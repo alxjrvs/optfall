@@ -25,6 +25,7 @@
  */
 
 import { Document } from "./document";
+import { notFoundPage } from "./pages/404.page";
 import { aboutPage } from "./pages/about.page";
 import { cardPage } from "./pages/card.page";
 import { homePage } from "./pages/home.page";
@@ -85,4 +86,12 @@ export const routes: readonly RouteRegistration[] = [
   register(searchPage),
   register(homePage),
   register(aboutPage),
+  /*
+    THE ONLY REGISTRATION THAT IS NOT AN ADDRESS. `/404` is what the host
+    serves for a path that names nothing, so it is a RESPONSE rather than a
+    place — listing it in the sitemap would ask a crawler to index a page whose
+    content is "this is not a page". `outputPath.ts` maps this route to
+    `404.html`, which is the filename `wrangler.jsonc` points at.
+  */
+  register(notFoundPage, { sitemap: false }),
 ];

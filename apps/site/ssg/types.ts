@@ -90,6 +90,18 @@ export interface PageResult {
    */
   readonly section?: HeaderSection | "none";
   /**
+   * Keep this page out of an index, and out of its own canonical.
+   *
+   * ONE PAGE SETS IT AND THE NARROWNESS IS THE POINT. `/404` is served by the
+   * host for every address that names nothing, so it is a RESPONSE rather than
+   * a place. `{ sitemap: false }` stops it being advertised; this stops the
+   * page advertising itself, which it otherwise did twice — `canonicalFor`
+   * builds a trailing-slashed URL for every route, and `outputPath.ts` writes
+   * this one to `404.html` at the root, so `/404/` is itself a miss. Every dead
+   * address the site served was pointing a canonical at another dead address.
+   */
+  readonly noindex?: boolean;
+  /**
    * The header's search field, on by default, and nothing turns it off now.
    *
    * IT USED TO BE OFF ON `/search` AND `/cr`, on the rule that two fields is

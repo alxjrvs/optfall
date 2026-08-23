@@ -71,7 +71,14 @@ export function Document({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{result.title}</title>
         <meta name="description" content={result.description} />
-        <link rel="canonical" href={canonicalFor(route, result.canonical)} />
+        {result.noindex === true ? (
+          /* NO CANONICAL AND NO `og:url` EITHER — see `PageResult.noindex`. A
+             canonical is a claim about where this content really lives, and the
+             404 has no such address: it is what the host returns instead of one. */
+          <meta name="robots" content="noindex" />
+        ) : (
+          <link rel="canonical" href={canonicalFor(route, result.canonical)} />
+        )}
         {/*
           THE LINK PREVIEW, AND IT IS NOT DECORATION ON THIS SITE. Flesh and
           Blood rules questions are settled in Discord and on Reddit, which is
@@ -91,15 +98,21 @@ export function Document({
           advertised the request instead would seed a second address for one
           answer — the duplication the canonical exists to prevent, propagated
           by every share.
+
+          AND IT IS ABSENT WHERE THE CANONICAL IS. A `noindex` page has no
+          address to advertise, so a share card claiming one would be the same
+          defect arriving through the other channel.
         */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Optfall" />
         <meta property="og:title" content={result.title} />
         <meta property="og:description" content={result.description} />
-        <meta
-          property="og:url"
-          content={canonicalFor(route, result.canonical)}
-        />
+        {result.noindex === true ? null : (
+          <meta
+            property="og:url"
+            content={canonicalFor(route, result.canonical)}
+          />
+        )}
         {/*
           THE CARD SHAPE FOLLOWS THE PICTURE. `summary_large_image` on a page
           with no image is a card with a blank panel where the image should be,

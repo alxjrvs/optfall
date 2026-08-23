@@ -178,6 +178,22 @@ const checks: Check[] = [
   { path: defaultRoute.href, contentType: "text/html" },
   { path: alternateRoute.href, contentType: "text/html" },
   /*
+   * THE 404 PAGE, WHICH NOTHING ELSE HERE WOULD NOTICE VANISHING.
+   *
+   * The host serves it for every address that names nothing, and it is excluded
+   * from the sitemap by design — so a sitemap check cannot see it, and
+   * `build.ts` emitting nothing for it looks exactly like the state that
+   * existed before it was written: a zero-byte body, which is the defect the
+   * page exists to end.
+   *
+   * WHAT THIS DOES NOT CHECK, SO NOBODY READS IT AS MORE THAN IT IS: the card
+   * path the page prints as an example is a literal in `404.page.tsx`, and it
+   * is not fetched here. Importing it would mean importing a `.tsx` from a
+   * script whose tsconfig sets no `--jsx`. `ssg.test.ts` is where a route-shape
+   * assertion belongs if that link ever earns one.
+   */
+  { path: "/404", contentType: "text/html" },
+  /*
    * A REDIRECT IS A ROUTE THE SITE OWNS. There is exactly one left — the 12,278
    * card-scheme rules were retired — and it reaches the reader through a
    * mechanism nothing else here touches: `hostConfig.ts` is rendered into
