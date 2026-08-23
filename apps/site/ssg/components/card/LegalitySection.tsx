@@ -20,7 +20,7 @@
 
 import { StatePill } from "optfall-components/react";
 
-import type { FormatVerdict } from "../../../src/lib/cards";
+import { type FormatVerdict, LAST_CONFIRMED } from "../../../src/lib/cards";
 
 export function LegalitySection({
   verdicts,
@@ -74,6 +74,33 @@ export function LegalitySection({
           </li>
         ))}
       </ul>
+
+      {/*
+        WHEN THESE FLAGS WERE LAST TRUE, BESIDE THE FLAGS.
+
+        `docs/PLAN.md` requires every surface to show when its data was last
+        confirmed, and this one did not. The date was on `/search` and nowhere
+        else — so the page carrying the actual verdict, the one a reader arrives
+        at from a search engine and reads without seeing `/search` at all, was
+        the page that said nothing about its own age.
+
+        IT IS HERE RATHER THAN IN THE FOOTER because it is a fact about THESE
+        pills rather than about the site. A card page also states its printed
+        text, its printings and its rules join, none of which move when upstream
+        re-syncs; legality is the part that goes stale, and "a stale Optfall must
+        look stale" is a claim about the thing that staled.
+
+        `/about` DECLINES TO GIVE A DATE, and that is not a contradiction — it
+        argues a page is identified by the bytes it was built from, which is
+        right for a rules corpus carrying a PDF hash. A ban list is the case it
+        is wrong for: the reader's question is not "which bytes" but "is this
+        current as of the last Banned and Suspended announcement", and only a
+        date answers it.
+      */}
+      <p className="of-card__scope">
+        Legality last confirmed against upstream on{" "}
+        <time dateTime={LAST_CONFIRMED}>{LAST_CONFIRMED}</time>.
+      </p>
     </section>
   );
 }
