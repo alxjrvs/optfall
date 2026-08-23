@@ -1378,10 +1378,36 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                     footer spaces has to be an element, because the footer's
                     children are elements.
                   */}
+                  {/*
+                    EACH ARTIST IS A LINK, BECAUSE `a:` IS A WORKING OPERATOR.
+                    This was plain text while `artist:` (and its `a:` alias)
+                    answered the exact question a reader has on seeing a name
+                    they like — what else did they draw — and `/search`'s own
+                    browse list already links type lines this same way. The
+                    query form is copied from there rather than invented.
+
+                    QUOTED, BECAUSE ARTIST NAMES CONTAIN SPACES. An unquoted
+                    `a:Igor Heras` is two terms, and the second one matches
+                    every card whose text happens to say "heras".
+                  */}
                   <p className="of-card__credit">
-                    {artists.length === 0
-                      ? "No artist is credited in the published dataset."
-                      : `Illustrated by ${artists.join(", ")}`}
+                    {artists.length === 0 ? (
+                      "No artist is credited in the published dataset."
+                    ) : (
+                      <>
+                        Illustrated by{" "}
+                        {artists.map((artist, index) => (
+                          <span key={artist}>
+                            {index > 0 ? ", " : ""}
+                            <a
+                              href={`/search?q=${encodeURIComponent(`a:"${artist}"`)}`}
+                            >
+                              {artist}
+                            </a>
+                          </span>
+                        ))}
+                      </>
+                    )}
                   </p>
                   {/*
                     WHAT IS ON THE BACK OF THE CARD IN THE PICTURE, when there
