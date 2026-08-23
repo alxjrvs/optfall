@@ -44,7 +44,7 @@
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /*
@@ -71,7 +71,7 @@
 }
 
 .of-sets__filter-field::placeholder {
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 .of-sets__filter-field:hover {
@@ -96,7 +96,7 @@
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /*
@@ -214,7 +214,7 @@
   font-weight: var(--of-type-weight-medium);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /* -- The list -------------------------------------------------------------- */

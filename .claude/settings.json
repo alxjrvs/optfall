@@ -8,6 +8,7 @@
       "Bash(bun run check:ci-aggregator)",
       "Bash(bun run check:no-llm)",
       "Bash(bun run check:tokens)",
+      "Bash(bun run check:faint-ink)",
       "Bash(bun run check:built-tokens)",
       "Bash(bun run check:bun-version)",
       "Bash(bun run check:provenance)",

@@ -39,7 +39,7 @@
 .of-choice__joiner {
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /*

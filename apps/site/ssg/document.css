@@ -330,5 +330,5 @@ strong {
   margin: 0;
   font-size: var(--of-type-size-legal);
   letter-spacing: var(--of-type-tracking-tight);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }

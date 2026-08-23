@@ -10,10 +10,10 @@ one more thing to drift.
 
 ## `bun run check` is not the whole gate
 
-`check` covers seven of the ten jobs `CI Success` needs: format, lint, tokens,
-bun-version, provenance, the no-language-model scan, the CI-aggregator
-assertion, typecheck and tests. Ordered cheapest first, so the commonest
-failures surface in under two seconds.
+`check` covers eight of the eleven jobs `CI Success` needs: format, lint,
+tokens, faint-ink, bun-version, provenance, the no-language-model scan, the
+CI-aggregator assertion, typecheck and tests. Ordered cheapest first, so the
+commonest failures surface in under two seconds.
 
 The other three need a full 12,776-page build and are `bun run check:full`
 (under 2 min): `build` itself, the `disclaimer`, `built-tokens` and
