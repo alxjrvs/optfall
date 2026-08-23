@@ -1106,11 +1106,11 @@ export function CardSearch({
           </>
         ) : (
           <p className="of-cards__count">
-            Nothing in the {brief.size.toLocaleString("en-GB")} cards matches
-            every part of <strong>{submitted.trim()}</strong>. Words match whole
-            words and the start of words, so <code>domin</code> finds{" "}
-            <code>dominate</code> — but every word you type has to appear in the
-            name, the type line, a keyword or the printed text.
+            Nothing matches every part of <strong>{submitted.trim()}</strong>.
+            Words match whole words and the start of words, so{" "}
+            <code>domin</code> finds <code>dominate</code> — but every word you
+            type has to appear in the name, the type line, a keyword or the
+            printed text.
           </p>
         )
       ) : (

@@ -28,7 +28,6 @@
  * before anything with state is attempted.
  */
 
-import { SETS } from "../../src/lib/sets";
 import type { PageModule, PageResult } from "../types";
 import "./syntax.css";
 
@@ -88,10 +87,15 @@ const FIELDS: readonly Row[] = [
   },
   {
     example: "date>=2024-06-21",
-    /* COUNTED FROM THE CORPUS, NOT TYPED. This page is the manual, so a number
-       here that a re-sync can falsify is a published wrong answer with nothing
-       to catch it — the same drift this operator's own PR documents elsewhere. */
-    meaning: `The same question by the day rather than the year. ${SETS.counts.sets - SETS.counts.dated} sets carry no published date and no date filter can match them; the search says so when you use one.`,
+    /* NO COUNT AT ALL, WHICH IS A STEP PAST WHAT THIS COMMENT USED TO ARGUE.
+       It said the figure was counted from the corpus rather than typed, because
+       a number on the manual page that a re-sync can falsify is a published
+       wrong answer with nothing to catch it. True, and it fixes the wrong half:
+       a reader asking what `date:` matches is not helped by knowing how many
+       sets it misses, only THAT it misses some — and the search says so, with
+       the real figure, at the moment the question is actually being asked. */
+    meaning:
+      "The same question by the day rather than the year. Some sets carry no published date and no date filter can match them; the search says so when you use one.",
   },
   {
     example: "rarity:majestic",
@@ -352,9 +356,7 @@ function page(): PageResult {
           </dt>
           <dd>
             One row per NAME. The red, yellow and blue Head Jabs are one result,
-            linking to the card page where the versions are tabs. A player calls
-            them one card, and being told "3 cards match" should mean three
-            things to click.
+            linking to the card page where the versions are tabs.
           </dd>
 
           <dt>
@@ -375,24 +377,24 @@ function page(): PageResult {
           </dd>
         </dl>
 
-        <p>
-          <strong>
-            <code>unique:prints</code> resolves to <code>unique:art</code>, and
-            that is a fact about this data rather than a shortcut.
-          </strong>{" "}
-          The corpus carries 16,502 printing rows and 11,378 distinct pictures:
-          a card printed Regular, Rainbow Foil and Cold Foil in one set is three
-          rows sharing one image, one collector number and one page. A separate{" "}
-          <code>prints</code> level could only have emitted three identical rows
-          pointing at the same URL.
-        </p>
+        {/*
+          TWO PARAGRAPHS WENT FROM HERE, AND NEITHER WAS WRONG.
 
-        <p>
-          <strong>Collapsing happens after matching, never before it.</strong> A
-          query only one pitch version satisfies still finds the card under the
-          default, and the row links to the version that actually matched — not
-          to whichever version happens to be first.
-        </p>
+          The first argued that `unique:prints` resolving to `unique:art` was "a
+          fact about this data rather than a shortcut", and carried two TYPED
+          corpus totals to prove it. The `<dt>` above already reads
+          `unique:art` (also `unique:prints`) — a reader learns the synonym
+          there, in the entry that defines it, and the paragraph existed to
+          defend the decision to somebody who had not questioned it. The two
+          totals were the worse half: hand-written figures on the page that
+          documents the grammar, which a re-sync falsifies silently.
+
+          The second described collapsing happening after matching. That one
+          stated real behaviour rather than commentary, and it is the only
+          deletion here that costs the manual a fact — recorded so that putting
+          a terse version back into the `<dl>` is a decision someone can make on
+          purpose, rather than a gap they rediscover.
+        */}
 
         <h2 id="comparisons">Comparisons</h2>
 

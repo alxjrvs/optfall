@@ -230,20 +230,23 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
               Cards this rule governs
             </h2>
             {/*
-              THE COUNT, AND NOT A PARAGRAPH DEFENDING THE MATCH. This used to
-              carry a second sentence explaining that the join is on the
-              published keyword vocabulary rather than on resemblance. Its twin
-              on the card page went for the reason that applies here too: it
-              answered a doubt the reader had not raised, in a place where the
-              heading above and the citation beside each entry already say what
-              the list is. A reference work that keeps reassuring you it is
-              accurate reads as less sure of itself, not more.
+              NOTHING BETWEEN THE HEADING AND THE LIST, and that is the end of
+              an argument this comment has already made twice.
+
+              It first said: not a paragraph defending the match. A sentence
+              explaining that the join is on the published keyword vocabulary
+              rather than on resemblance went, because its twin on the card page
+              had gone for the same reason — it answered a doubt the reader had
+              not raised, where the heading above and the citation beside each
+              entry already say what the list is.
+
+              What survived that cut was a COUNT — "N cards print the keyword
+              this section defines" — sitting above a list of those cards. The
+              same reasoning finishes the job: the heading names the list, the
+              list is the cards, and counting them in a sentence is the reader
+              being told what is already in front of them. A count belongs to
+              the data, never to a sentence about it.
             */}
-            <p className="of-rule__scope">
-              {governedCards.length.toLocaleString("en-GB")} card
-              {governedCards.length === 1 ? "" : "s"} print the keyword this
-              section defines.
-            </p>
             <ul className="of-rule__governs">
               {governedShown.map((card) => (
                 <li key={card.href}>
@@ -256,8 +259,7 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
                 <a
                   href={`/search?q=${encodeURIComponent(`keyword:"${governedKeyword}"`)}`}
                 >
-                  All {governedCards.length.toLocaleString("en-GB")} in card
-                  search
+                  Every card with this keyword, in card search
                 </a>
               </p>
             ) : null}
