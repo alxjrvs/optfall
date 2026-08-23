@@ -346,13 +346,29 @@ function page(): PageResult {
             neither could rot; only one of them was information. A coverage
             figure invites the reader to be satisfied, and the list invites them
             to check. The list is also the shorter sentence.
+
+            AND THEN THE SENTENCE ASSERTED THE COMPLETENESS ANYWAY. It read
+            "every card page cites the rules that govern it", two lines under a
+            paragraph arguing that a join which drops what it cannot answer must
+            not claim to be total — and it was false: a third of cards cite
+            nothing, because the join reads `card_keywords` and
+            `ability_and_effect_keywords`, and upstream leaves those empty on
+            plenty of cards that plainly have keywords. Art of War grants go
+            again, banishes and touches arsenal, and carries no citation at all.
+
+            THE REPLACEMENT DOES NOT COUNT EITHER, which is the same argument
+            this comment already made about the percentage. "A third" belongs in
+            this comment, where it explains a decision, and not in the prose,
+            where it would be a number the reader is asked to take on trust
+            about a page they are already looking at.
           */}
           <p>
             Card keywords are matched to the Comprehensive Rules section that
-            defines each one, and every card page cites the rules that govern
-            it. The keywords the rules never define outright are named rather
-            than hidden: {unmatchedList}. A keyword the rules do not define
-            carries no citation instead of a guessed one.
+            defines each one, and a card page cites what its own keywords
+            resolve to. The keywords the rules never define outright are named
+            rather than hidden: {unmatchedList}. A keyword the rules do not
+            define carries no citation instead of a guessed one, and a card
+            upstream records no keywords for carries none at all.
           </p>
         </section>
 

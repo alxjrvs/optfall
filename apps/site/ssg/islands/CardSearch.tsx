@@ -984,8 +984,9 @@ export function CardSearch({
           <p className="of-cards__count">
             The card index did not load, so <strong>{submitted.trim()}</strong>{" "}
             cannot be answered here. Reloading may fix it. Every card is still
-            reachable directly: <code>/card/head-jab</code> finds the card by
-            name, and the type lines below are ordinary links.
+            reachable directly: <code>/card/mst/131/10-000-year-reunion</code>{" "}
+            is the set code and collector number printed on the card, then its
+            name — and the type lines below are ordinary links.
           </p>
           {browseList}
         </>

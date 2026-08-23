@@ -217,16 +217,26 @@ function page(): PageResult {
             never offer. Set code and collector number are printed on every
             Flesh and Blood card.
 
-            The name is still named as a way in, because it still works: it is a
-            redirect rather than a page, and a reader does not need to be told
-            the difference to use it.
+            THE BARE NAME IS NO LONGER OFFERED, BECAUSE IT 404s. This paragraph
+            used to add that "typing a name alone — `/card/head-jab` — still
+            finds the card", which was true when `/card/<name>` was one of
+            12,278 redirect rules and false from the commit that retired them.
+            `hostConfig.ts` has the reasoning: Cloudflare caps `_redirects` at
+            2,000 static rules, and the 3,158 distinct name slugs do not fit
+            either, so this cannot come back as a redirect table — it would
+            need 3,158 stub pages, which is a feature to decide on rather than a
+            repair to make quietly.
+
+            That it survived here this long is the worst version of the defect:
+            of everyone on the site, the reader of a `<noscript>` block is the
+            one who cannot check the advice, and following it got them a
+            zero-byte 404.
           */}
           <p className="of-search-page__noscript">
             Live results need JavaScript. Every printing is addressable without
             it: <code>/card/mst/131/10-000-year-reunion</code> is the set code
-            and collector number printed on the card, then its name. Typing a
-            name alone — <code>/card/head-jab</code> — still finds the card, at
-            its first printing, with its pitch versions as tabs.
+            and collector number printed on the card, then its name — all three,
+            in that order.
           </p>
         </noscript>
 

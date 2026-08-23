@@ -123,9 +123,18 @@ function page(): PageResult {
     islands: false,
     children: (
       <div className="of-door">
+        {/*
+          "POWERFUL" WENT, AND NOTHING REPLACED IT. It was the one word in this
+          sentence doing no work: a reader cannot check it, it distinguishes
+          this from nothing, and it is the first thing anyone reads on the site.
+          `/about` already describes what this is in words that carry a claim —
+          "a card search engine and rules reference" — and "rules reference" is
+          the half the front door was leaving out entirely while an adjective
+          took the space.
+        */}
         <h1 className="of-door__sentence">
-          <strong>Optfall</strong> is a powerful{" "}
-          <strong>Flesh and Blood</strong> card search
+          <strong>Optfall</strong> is a <strong>Flesh and Blood</strong> card
+          search and rules reference
         </h1>
 
         {/*
