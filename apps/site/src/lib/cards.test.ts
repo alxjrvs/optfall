@@ -29,6 +29,8 @@ import { describe, expect, test } from "bun:test";
 
 import type { StateTone } from "optfall-theme";
 
+import { tokeniseCard } from "./card-search/tokenise";
+
 import {
   CARD_PAGES,
   CARD_ROUTES,
@@ -732,5 +734,52 @@ describe("descriptionFor", () => {
     expect(description).toContain("6 or more power");
     expect(description).not.toContain("{p}");
     expect(description).not.toContain("**");
+  });
+});
+
+describe("a name folds the same way for a URL and for the index", () => {
+  /*
+    THE INVARIANT THIS FIX IS REALLY ABOUT. `slugify` builds the address and
+    `tokeniseCard` builds what a reader's typing is matched against, and for the
+    life of the site they folded differently: the first decomposed with NFKD and
+    transliterated, the second was `toLowerCase().match(/[a-z0-9]+/g)`, which
+    treats an accented letter as a SEPARATOR. So `Jarl Vetreiði` had the working
+    URL `/card/ajv/001-rf/jarl-vetreidi` and could not be found by typing "jarl
+    vetreidi" into the search box — reachable by address and not by name.
+
+    Asserting over the whole corpus rather than over the five known cards,
+    because the five are a symptom: what has to hold is that the two callers of
+    `foldLatin` cannot disagree again, on any name, including ones upstream has
+    not published yet.
+  */
+  test("every token of a name appears in that name's slug", () => {
+    const disagreeing = CARD_PAGES.filter((page) => {
+      const fromSlug = slugify(page.card.name)
+        .split("-")
+        .filter((part) => part.length > 0);
+      return tokeniseCard(page.card.name).some(
+        (token) => !fromSlug.includes(token),
+      );
+    }).map((page) => page.card.name);
+
+    expect(disagreeing.slice(0, 5)).toEqual([]);
+  });
+
+  /*
+    THE CONTROL. The assertion above is only meaningful while the corpus still
+    contains names that NEED folding — otherwise it would pass on a corpus of
+    plain ASCII and say nothing about the rule.
+  */
+  test("the corpus still carries names that need folding", () => {
+    const accented = CARD_PAGES.filter((page) =>
+      /[^\x20-\x7e]/.test(page.card.name),
+    ).map((page) => page.card.name);
+
+    expect(accented.length).toBeGreaterThan(0);
+
+    /* And each of them tokenises to something an ASCII keyboard can type. */
+    for (const name of accented) {
+      expect(tokeniseCard(name).join(" ")).toMatch(/^[a-z0-9 ]*$/);
+    }
   });
 });
