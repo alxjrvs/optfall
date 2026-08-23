@@ -194,6 +194,28 @@ export function Document({
             it, and the one that forgot would be the one nobody could navigate
             away from.
           */}
+          {/*
+            THE FIRST THING IN THE TAB ORDER, ON EVERY PAGE, BECAUSE THE HEADER
+            IS TOO. The bar carries a wordmark, a search field and a nav, so a
+            keyboard reader who wants the page itself passes about ten stops to
+            reach it — and on a reference work "the page itself" is the card
+            they looked up, so that toll is paid on every lookup rather than
+            once a session.
+
+            IT IS EMITTED HERE RATHER THAN BY THE HEADER, and that is not a
+            detail: `section: "none"` removes the whole bar on the front door,
+            and a skip link that disappeared with it would be missing from the
+            one page whose whole content is a form. The target below is
+            unconditional for the same reason.
+
+            VISIBLE ON FOCUS, NOT HIDDEN OUTRIGHT. `display: none` would take it
+            out of the tab order and leave the affordance to nobody; it is
+            clipped until focused, which is the one state a sighted keyboard
+            user needs it in.
+          */}
+          <a className="skip-link" href="#main">
+            Skip to content
+          </a>
           {result.section === "none" ? null : (
             <SiteHeader
               section={result.section}
@@ -201,7 +223,19 @@ export function Document({
               fieldIsland={result.headerSearchIsland ?? false}
             />
           )}
-          <main data-width={result.width ?? "measure"}>{result.children}</main>
+          {/*
+            `tabIndex={-1}` IS WHAT MAKES THE SKIP LINK ACTUALLY SKIP. Following
+            `#main` sets the sequential-navigation START POINT, so the next Tab
+            continues from here — but focus itself does not move to a target
+            that cannot hold it, and a screen reader is never told it arrived.
+            The link would look like it worked, silently, to the readers it
+            exists for. `-1` makes `<main>` programmatically focusable without
+            adding a tab stop of its own, which is the same trick
+            `.of-index__count` uses as a post-pagination focus target.
+          */}
+          <main id="main" tabIndex={-1} data-width={result.width ?? "measure"}>
+            {result.children}
+          </main>
         </div>
         {/*
           THE DISCLAIMER IS EMITTED BY THE SHELL, NOT BY A PAGE, and it is not

@@ -332,3 +332,47 @@ strong {
   letter-spacing: var(--of-type-tracking-tight);
   color: var(--of-color-ink-muted);
 }
+
+/*
+  The skip link, clipped until it is focused.
+
+  THE SAME IDIOM `.of-search__submit` USES, deliberately rather than
+  coincidentally: a one-pixel clipped box that returns to full size on
+  `:focus-visible`. Copying the shape means there is one way to hide a control
+  from sight while leaving it in the tab order, and a reader who has learnt it
+  in one place recognises it in the other.
+
+  `:focus-visible` RATHER THAN `:focus`, which is the opposite of what
+  `SearchField.css` argues for its field — and both are right. A text field
+  focused with a mouse is still a field somebody is about to type into, so it
+  shows its ring either way. A skip link focused with a mouse is a skip link
+  nobody asked for: it can only be reached deliberately, by keyboard, and
+  appearing on a stray click would be a control the reader did not summon
+  covering the top of the page.
+*/
+.skip-link {
+  position: absolute;
+  inline-size: var(--of-space-hair);
+  block-size: var(--of-space-hair);
+  margin: calc(var(--of-space-hair) * -1);
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.skip-link:focus-visible {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  margin: 0;
+  padding-block: var(--of-space-tighter);
+  padding-inline: var(--of-space-base);
+  clip-path: none;
+  background: var(--of-color-surface-raised);
+  color: var(--of-color-ink);
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-base);
+  text-decoration: underline;
+}
