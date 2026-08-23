@@ -833,6 +833,40 @@ export function searchCards(
   */
   const dateFiltered =
     tree !== null && leaves(tree).some((leaf) => leaf.field === "released");
+
+  /*
+    A SET CODE THAT NAMES NO SET, SAID OUT LOUD.
+
+    `set:zzz` returned an empty page and explained nothing, which is the same
+    page `set:wtr pitch:9` returns — and a reader cannot tell "there is no such
+    set" from "no cards match" by looking at either. `docs/DESIGN.md` is
+    explicit that a query which silently does something other than what it says
+    is the one failure that breaks the grammar for good, and `legal:` has always
+    named the six formats when it does not recognise one. This is that, for the
+    operator most likely to be typed from memory.
+
+    HERE RATHER THAN AT PARSE TIME, for the reason the date notice above gives:
+    only the index knows which sets exist. The parser has never seen it.
+
+    IT NAMES WHAT IT COULD NOT RESOLVE AND DOES NOT COUNT WHAT IT COULD. There
+    are 112 set codes and listing them would bury the answer; `/sets` is the
+    page that shows them, so the notice points there.
+  */
+  const unknownSets =
+    tree === null
+      ? []
+      : [
+          ...new Set(
+            leaves(tree)
+              .filter(
+                (leaf) =>
+                  leaf.field === "set" &&
+                  !index.setCodes.has(leaf.value.toLowerCase()),
+              )
+              .map((leaf) => leaf.value),
+          ),
+        ];
+
   const withNotices =
     dateFiltered && index.undatedCards > 0
       ? [
@@ -850,6 +884,19 @@ export function searchCards(
         ]
       : notices;
 
+  /* Appended after the date notice rather than woven into it: the two are
+     independent, and a query can trip both. */
+  const allNotices =
+    unknownSets.length === 0
+      ? withNotices
+      : [
+          ...withNotices,
+          {
+            kind: "operand-unknown" as const,
+            text: `${unknownSets.map((code) => `set:${code}`).join(", ")} ${unknownSets.length === 1 ? "names no set" : "name no set"} Optfall carries. Every set code is on /sets.`,
+          },
+        ];
+
   const ranked: { ordinal: number; field: CardMatchField }[] = [];
 
   if (tree === null) {
@@ -857,7 +904,7 @@ export function searchCards(
       query: raw,
       terms,
       filters,
-      notices: withNotices,
+      notices: allNotices,
       sort,
       unique,
       display,
@@ -1126,7 +1173,7 @@ export function searchCards(
     query: raw,
     terms,
     filters,
-    notices: withNotices,
+    notices: allNotices,
     sort,
     unique,
     display,

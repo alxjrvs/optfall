@@ -73,7 +73,11 @@ const FIELDS: readonly Row[] = [
     meaning: "The flavour text on any printing — never the rules text.",
     aliases: ["flavour:", "flavor:"],
   },
-  { example: "set:wtr", meaning: "The card was printed in this set." },
+  {
+    example: "set:wtr",
+    meaning:
+      "The card was printed in this set. A code naming no set says so rather than returning nothing — the codes are on the sets page.",
+  },
   {
     example: "power>defence",
     meaning:

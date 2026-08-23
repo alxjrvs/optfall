@@ -2084,3 +2084,43 @@ describe("name, qualifier and label are three different jobs", () => {
     }
   });
 });
+
+describe("an unknown set code says so instead of returning nothing", () => {
+  const unknown = (query: string) =>
+    searchCards(index, query)
+      .notices.filter((notice) => notice.kind === "operand-unknown")
+      .map((notice) => notice.text);
+
+  /*
+    `set:zzz` AND `set:wtr pitch:9` WERE THE SAME PAGE. Both empty, neither
+    saying why, and a reader has no way to tell "there is no such set" from "no
+    cards match" by looking at either. `legal:` has always named the six formats
+    when it does not recognise one; `set:` is the operator most likely to be
+    typed from memory and it explained nothing.
+  */
+  test("an unknown code is named", () => {
+    expect(unknown("set:zzz")[0]).toContain("set:zzz");
+    expect(unknown("set:zzz")[0]).toContain("names no set");
+  });
+
+  test("two unknown codes are both named, and the verb agrees", () => {
+    const [text] = unknown("set:zzz set:qqq");
+    expect(text).toContain("set:zzz");
+    expect(text).toContain("set:qqq");
+    expect(text).toContain("name no set");
+  });
+
+  /*
+    THE CONTROL, AND THE HALF THAT WOULD DO REAL DAMAGE IF IT BROKE. A notice
+    on a set that DOES exist tells a reader their correct query is wrong, which
+    is worse than the silence this replaces. Cased deliberately: operands arrive
+    folded and the dictionary holds upstream's own casing, so comparing without
+    lowering makes every upper-case code unknown.
+  */
+  test("a real set is never flagged, whatever its casing", () => {
+    expect(unknown("set:wtr")).toEqual([]);
+    expect(unknown("set:WTR")).toEqual([]);
+    expect(unknown("set:wtr pitch:1")).toEqual([]);
+    expect(searchCards(index, "set:wtr").results.length).toBeGreaterThan(0);
+  });
+});
