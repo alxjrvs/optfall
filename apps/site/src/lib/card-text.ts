@@ -213,3 +213,76 @@ export function symbolsUsed(source: string): readonly GameSymbol[] {
   }
   return SYMBOLS.filter((symbol) => seen.has(symbol.token));
 }
+
+/**
+ * The same text as one plain line — for `<meta>`, where markup cannot go.
+ *
+ * WHY THIS EXISTS AT ALL. `descriptionFor` used to hand `functional_text`
+ * straight to the description attribute, having only collapsed its whitespace,
+ * under a docblock that said flattening "is the only change made to it". That
+ * was true and it was the bug: upstream writes emphasis as `**bold**` and
+ * symbols as `{p}`, so the description Google indexes and Discord unfurls read
+ * "6 or more {p} … **intimidate**" while the page body — which parses the same
+ * string through {@link parseCardText} — rendered both correctly. Markdown
+ * leaked to 7,927 of 11,378 card pages and symbol tokens to 5,704.
+ *
+ * SO IT PARSES RATHER THAN STRIPS. A regex removing `*` and `{}` would have
+ * been shorter and would have thrown the symbol away, leaving "6 or more during
+ * your action phase" — a sentence missing its noun, which is worse than the
+ * one with the token still in it. Walking the parsed tree means the symbol
+ * arrives as {@link GameSymbol.name}, the word the Comprehensive Rules use, so
+ * the description says "6 or more power" and agrees with what the page's own
+ * `aria-label` already announces to a screen reader.
+ *
+ * EMPHASIS IS DROPPED RATHER THAN MARKED. There is no way to carry bold into an
+ * attribute, and the alternatives — asterisks, capitals, unicode maths letters —
+ * are all louder than the emphasis they replace.
+ */
+export function plainCardText(source: string): string {
+  /*
+    A SPACE BETWEEN TWO ADJACENT SYMBOLS, AND NOWHERE ELSE.
+
+    Upstream writes a cost of two resources as `{r}{r}`, with nothing between
+    them, so naming each one and joining on "" produced `resourceresource` — on
+    239 cards, which is worse than the token it replaced. A space only helps
+    where two symbols MEET: putting one around every symbol would turn `{r}:`
+    into "resource :", and `6 or more {p}` already carries its own spacing.
+
+    The page body has no equivalent problem because two pips side by side read
+    as two pips. This is the flatten paying for that.
+  */
+  const flatten = (nodes: readonly Inline[]): string => {
+    let previousWasSymbol = false;
+    let out = "";
+
+    for (const node of nodes) {
+      if (node.kind === "symbol") {
+        out += (previousWasSymbol ? " " : "") + node.symbol.name;
+        previousWasSymbol = true;
+        continue;
+      }
+      out += node.kind === "text" ? node.value : flatten(node.children);
+      previousWasSymbol = false;
+    }
+
+    return out;
+  };
+
+  /*
+    LIST ITEMS KEEP A BOUNDARY. `parseCardText` has already thrown the bullet
+    away by the time this sees the block, so joining on a space ran a card's
+    options into one sentence — "this costs 1 less to play, 3 or more, this gets
+    overpower" reads as a single clause with a comma splice. The middle dot is
+    the separator this description already uses between stats, so it needs no
+    explaining where it lands.
+  */
+  return parseCardText(source)
+    .map((block) =>
+      block.kind === "paragraph"
+        ? flatten(block.children)
+        : block.items.map(flatten).join(" \u00b7 "),
+    )
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}

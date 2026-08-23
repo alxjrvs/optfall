@@ -35,6 +35,7 @@ import {
   CORPUS,
   FORMATS,
   LAST_CONFIRMED,
+  descriptionFor,
   NAME_GROUPS,
   facesOf,
   hrefForPrinting,
@@ -657,5 +658,79 @@ describe("stats", () => {
       (candidate) => candidate.card.unique_id === x?.unique_id,
     );
     expect(page?.stats.find((stat) => stat.label === "Cost")?.value).toBe("XX");
+  });
+});
+
+describe("descriptionFor", () => {
+  /*
+    THE WHOLE CORPUS, NOT A SAMPLE, and the reason is how this defect got out.
+    `descriptionFor` collapsed whitespace and nothing else, under a docblock
+    saying that was the only change it made — so `**bold**` reached 7,927 of
+    11,378 card pages and `{p}` reached 5,704, on the one surface that renders
+    neither. The page body was correct throughout, so nothing a reader looked at
+    was wrong and no test that read the body would have caught it. A sample
+    would have found this too; asserting over all 4,941 is what keeps a future
+    upstream marker from reaching production on the cards the sample skipped.
+  */
+  test("no description carries upstream's markup", () => {
+    const markdown: string[] = [];
+    const tokens: string[] = [];
+
+    for (const page of CARD_PAGES) {
+      const description = descriptionFor(page);
+      if (description.includes("**")) markdown.push(page.card.name);
+      if (/\{[a-z]\}/.test(description)) tokens.push(page.card.name);
+    }
+
+    expect({
+      markdown: markdown.slice(0, 5),
+      tokens: tokens.slice(0, 5),
+    }).toEqual({
+      markdown: [],
+      tokens: [],
+    });
+  });
+
+  /*
+    A SYMBOL BECOMES ITS NAME RATHER THAN VANISHING, which is the half a regex
+    would have got wrong. Stripping `{}` leaves "6 or more during your action
+    phase" — a sentence missing the noun it counts — so the parser hands back
+    `GameSymbol.name`, the word the Comprehensive Rules use and the same one the
+    page's `aria-label` already announces.
+  */
+  /*
+    ADJACENT SYMBOLS KEEP A BOUNDARY, and this test exists because the first
+    version of the fix did not. Upstream writes a two-resource cost as `{r}{r}`,
+    so naming each and joining on "" produced `resourceresource` on 239 cards —
+    which the markup assertion above passes cleanly, since it contains neither
+    `**` nor `{x}`. A test that only asks whether the old markers are gone
+    cannot see a new defect the replacement introduced.
+  */
+  test("two symbols in a row do not run together", () => {
+    const runOn = CARD_PAGES.filter((page) =>
+      /resourceresource|powerpower|defencedefence|lifelife/i.test(
+        descriptionFor(page),
+      ),
+    ).map((page) => page.card.name);
+
+    expect(runOn.slice(0, 5)).toEqual([]);
+
+    /* The control: cards that DO print two symbols in a row still exist, so the
+       assertion above is about the flatten rather than about absent input. */
+    const doubled = CARD_PAGES.filter((page) =>
+      /\{[a-z]\}\{[a-z]\}/.test(page.card.functional_text),
+    );
+    expect(doubled.length).toBeGreaterThan(0);
+  });
+
+  test("a symbol reads as the word the rules use", () => {
+    const rhinar = CARD_PAGES.find((page) => page.card.name === "Rhinar");
+    expect(rhinar).toBeDefined();
+    if (rhinar === undefined) return;
+
+    const description = descriptionFor(rhinar);
+    expect(description).toContain("6 or more power");
+    expect(description).not.toContain("{p}");
+    expect(description).not.toContain("**");
   });
 });
