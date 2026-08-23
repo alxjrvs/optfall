@@ -84,6 +84,25 @@ export interface HeaderRule {
  * DO NOT "SIMPLIFY" THIS BY DELETING IT ON THE GROUNDS THAT IT CHANGES NOTHING.
  * That is true, it is why this paragraph exists, and it is not the argument.
  */
+/**
+ * A year, and `immutable` — the strongest thing a cache header can say.
+ *
+ * ONLY EVER APPLIED TO A NAME THAT CARRIES ITS OWN DIGEST, which is what makes
+ * the claim true rather than optimistic. `immutable` tells a browser not to
+ * revalidate even when the reader presses reload; on a file whose contents can
+ * change under a fixed name that is a year of serving something stale.
+ *
+ * WHICH FILES THOSE ARE IS THE CALLER'S TO KNOW, NOT THIS MODULE'S TO GUESS.
+ * A first attempt inferred it from the filename — eight-plus characters after
+ * the last hyphen — and it was wrong in both directions: `icon-maskable.svg`
+ * and `apple-touch-icon.png` matched, and tightening the rule to require a
+ * digit then excluded `SearchField-BOLseuIY.css`, whose Vite hash happens to
+ * contain none. A test that depends on whether a digest rolled a digit is
+ * worse than no test. `build.ts` reads the names out of Vite's own manifest
+ * and hands them over; see {@link headersFor}.
+ */
+const IMMUTABLE = "public, max-age=31536000, immutable";
+
 export const HEADERS: readonly HeaderRule[] = [
   {
     pattern: "/*",
@@ -132,10 +151,39 @@ export function renderRedirects(
  */
 export function headersFor(options: {
   readonly preview: boolean;
+  /**
+   * Served paths whose names carry a content digest, so they can be cached for
+   * a year. Omitted means "no cache rules" — which is what the tests that only
+   * exercise the preview merge want, and what a caller that cannot prove a file
+   * is hashed should pass.
+   */
+  readonly immutable?: readonly string[];
 }): readonly HeaderRule[] {
-  if (!options.preview) return HEADERS;
+  /*
+    ONE RULE PER FILE, RATHER THAN ONE PATTERN OVER `assets/`.
 
-  return HEADERS.map((rule) =>
+    The pattern is the tempting shape and it is wrong here for a reason this
+    file already knows: `assets/tokens.css` sits in that directory and is NOT
+    hashed — it is generated from `packages/theme` under a fixed name — so
+    `/assets/*` would promise a year of immutability for a stylesheet that
+    changes whenever a token does, in every returning reader's browser.
+
+    Naming each file means the header is derived from what was actually
+    emitted. Cloudflare caps this file at 100 rules; the build emits a handful
+    of hashed assets, and {@link renderHeaders} asserts the ceiling rather than
+    trusting the arithmetic.
+  */
+  const cache: readonly HeaderRule[] = (options.immutable ?? []).map(
+    (file) => ({
+      pattern: file.startsWith("/") ? file : `/${file}`,
+      headers: { "Cache-Control": IMMUTABLE },
+    }),
+  );
+
+  const base = [...HEADERS, ...cache];
+  if (!options.preview) return base;
+
+  return base.map((rule) =>
     rule.pattern === "/*"
       ? { ...rule, headers: { ...rule.headers, "X-Robots-Tag": "noindex" } }
       : rule,
@@ -155,6 +203,25 @@ export function headersFor(options: {
  * silent deletion rather than a merge. Asserted in the tests.
  */
 export function renderHeaders(rules: readonly HeaderRule[] = HEADERS): string {
+  /* The ceiling the comment above names, asserted rather than assumed — the
+     cache rules are derived per file, so this is the one number that grows
+     when the build gains an asset. */
+  if (rules.length > 100) {
+    throw new Error(
+      `hostConfig: ${rules.length} header rules, over Cloudflare's cap of 100. The cache rules are one per content-hashed asset; if the build has grown that many, they need collapsing into a pattern that still cannot match assets/tokens.css.`,
+    );
+  }
+
+  const seen = new Set<string>();
+  for (const rule of rules) {
+    if (seen.has(rule.pattern)) {
+      throw new Error(
+        `hostConfig: two rules share the pattern ${rule.pattern}. A later block REPLACES an earlier one with the same pattern rather than merging, so this would silently drop headers — see the note on headersFor.`,
+      );
+    }
+    seen.add(rule.pattern);
+  }
+
   const blocks = rules.map((rule) => {
     const lines = Object.entries(rule.headers).map(
       ([name, value]) => `  ${name}: ${value}`,
