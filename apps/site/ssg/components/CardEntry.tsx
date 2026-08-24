@@ -1592,11 +1592,18 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                 which is a paragraph several times the height of the control it
                 describes, in the slot the row held then — directly under the
                 card panel, above Legality rather than below it — while
-                the ground to the right of a 192px button sat empty at exactly
-                the widths where the paragraph was longest. It goes there now,
-                and drops back underneath when there is no room for it beside.
-                The rule on `.of-card__buy-verify` names the widths each
-                arrangement was measured at.
+                the ground to the right of a 189px button sat empty at exactly
+                the widths where the paragraph was longest. It goes there now.
+
+                AT EVERY WIDTH, INCLUDING A PHONE, and that is the part that
+                changed most recently. It used to drop back underneath when the
+                row got narrow, which meant the arrangement inverted on the
+                screens where the empty ground beside the button is widest
+                relative to the page. On a phone the sentence is now a narrow
+                column beside the button rather than a full-measure paragraph
+                below it: more lines, less page. The rule on
+                `.of-card__buy-verify` names the width and line count it was
+                measured at, at each of ten viewports.
 
                 IT IS STILL ADJACENT, WHICH IS THE PROPERTY THAT MATTERS.
                 `docs/COMPLIANCE.md` §2 asks for disclosure next to the link it
@@ -1623,8 +1630,13 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
                   unambiguous to the average member of your audience", and being
                   next to the link is most of that. The column changed, and then
                   the side did — it is beside the button rather than under it
-                  now, see the wrapper above — and neither move touched the
-                  adjacency that requirement is about.
+                  now, see the wrapper above — and then the side stopped
+                  depending on the viewport, which is the one of the three moves
+                  that STRENGTHENS the requirement rather than merely preserving
+                  it: "conspicuous to the average member of your audience" is a
+                  claim about the reader on the small screen too, and that
+                  reader is now shown the sentence beside the link rather than
+                  after it.
 
                   ONCE, BECAUSE THERE IS ONE LINK. The "exactly once" assertion
                   in `ssg.test.ts` predates this and still holds — it just holds

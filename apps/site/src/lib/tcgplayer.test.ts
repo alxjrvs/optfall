@@ -128,21 +128,32 @@ describe("buyDisclosure", () => {
   /*
    * THE ONE LAYOUT RULE THAT CAN BE TESTED FROM HERE, and it is here rather
    * than in a stylesheet because nothing in this repository renders CSS. The
-   * sentence sits in the same row as the buy button, to its right, and must
-   * never be taller than it — `CardEntry.css` caps the type step at the size
-   * two lines fit the button's height at, and the only thing that can then
-   * break the rule is a sentence long enough to need a third line.
+   * sentence sits in the same row as the buy button, to its right, and on a
+   * wide screen it must not be taller than it — `CardEntry.css` caps the type
+   * step at the size two lines fit the button's height at, and the only thing
+   * that can then break the rule is a sentence long enough to need a third
+   * line.
+   *
+   * ~~ON EVERY SCREEN.~~ Struck, and it is the assertion's scope that narrowed
+   * rather than the assertion. The paragraph used to drop onto its own line
+   * below about 693px, so every width where it sat BESIDE the button was a wide
+   * one; it now takes whatever gutter the row has left at every width, and on a
+   * phone that gutter is 91–201px and the sentence is four to eight lines in
+   * it, taller than the button and deliberately so. `CardEntry.css` argues that
+   * trade where it is made. What is left for this test is the wide case, which
+   * is still the case a growing sentence would silently spoil.
    *
    * THE BUDGET, MEASURED on the built site at `/card/mst/131/
-   * 10-000-year-reunion` in a fixed-width iframe. The paragraph sits beside the
-   * button only while its flex basis fits, which leaves it 485px at the
-   * narrowest and 528px at 1440 — so two lines hold about 970px of text. This
-   * sentence renders 653px wide at `type.size.micro`, 5.8px per character, so
-   * 130 characters is roughly 760px: comfortably over the 112 it is, and
-   * comfortably under the point where a third line becomes possible. It is a
+   * 10-000-year-reunion` in a fixed-width iframe. The narrowest gutter that
+   * renders two lines is 321px, at a 1040px viewport; at 1226 it is 507px and
+   * at 1440, 531px. This sentence renders 653px wide at `type.size.micro`, 5.8px
+   * per character, so 130 characters is roughly 760px — two lines of the 507px
+   * gutter and up, comfortably over the 112 characters it is. Below that band
+   * (964px, a 245px gutter, three lines today) the paragraph is the taller item
+   * and the ceiling this test guards is not the one that applies. It is a
    * budget for rewording, not a target.
    */
-  test("stays inside the two lines the button's height allows", () => {
+  test("stays inside the two lines a wide row's height allows", () => {
     for (const text of [buyDisclosure(null), buyDisclosure(ID)]) {
       expect(text.length).toBeLessThanOrEqual(130);
     }
