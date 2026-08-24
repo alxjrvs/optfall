@@ -1445,9 +1445,10 @@
   /* THE WRAP NO LONGER FIRES, AND IT STAYS. With the disclosure on a zero
        basis (see below) the line is a button and a paragraph at every width
        from 320px up — measured, not assumed. What is left of this declaration
-       is the floor: below about 205px the button's own width stops fitting, and
-       wrapping is a better failure than overflowing. The `row` half of the gap
-       below belongs to the same case. */
+       is the floor: a row narrower than about 205px — the button's own 189px
+       and the 16px gap — cannot seat the pair however little the paragraph
+       asks for, and wrapping is a better failure there than overflowing. The
+       `row` half of the gap below belongs to the same case. */
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--of-space-base) var(--of-space-loose);
