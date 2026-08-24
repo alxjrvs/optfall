@@ -237,14 +237,19 @@ it is worth naming what it rests on. TCGplayer's Partner Guidelines put FTC
 compliance on the partner and require disclosure that is "clear, conspicuous,
 prominent and unambiguous to the average member of your audience". Optfall's
 sits adjacent to the link it describes rather than in the site footer — beside
-the button where the row is wide enough to seat both, directly under it where it
-is not — which is the whole reason `buyDisclosure` lives in the same module as
-`buyHref`.
+the button, at every width — which is the whole reason `buyDisclosure` lives in
+the same module as `buyHref`.
 
 **There is one buy link on a card page, and the sentence shares its row** — to
-the right of the button where there is room, wrapped directly under that button
-where there is not. ~~The row sits under the card panel, above the fold either
-way.~~ **Overtaken 2026-08-20**: the row and the legality grid swapped places,
+the right of the button. ~~Where there is room, wrapped directly under that
+button where there is not.~~ **Overtaken 2026-08-24**: the disclosure's flex
+basis went to zero, so it takes whatever gutter the row has left instead of
+dropping onto its own line when that gutter gets small. Beside is now the
+arrangement at every width the site is measured at, phones included, which is
+where "conspicuous to the average member of your audience" is hardest to satisfy
+and most worth satisfying. What it costs is height: the sentence is four to
+eight lines in a 91–201px gutter on a phone, against a one-line button.
+~~The row sits under the card panel, above the fold either way.~~ **Overtaken 2026-08-20**: the row and the legality grid swapped places,
 so the button now follows Legality rather than leading it — six format rows
 further down, because `verdicts` is `FORMATS.map(…)` and every card page prints
 all six whether upstream published a flag or not. What the
@@ -252,7 +257,7 @@ Partner Guidelines ask for is adjacency to the link, which is a property of the
 row and not of its position on the page, so the swap did not touch it — the
 button and the sentence moved together, as one element. The comment on
 `.of-card__buy-verify` in `apps/site/ssg/components/CardEntry.css` records the
-widths each arrangement was measured at.
+width and line count the sentence was measured at, at each of ten viewports.
 
 **The sentence is two sentences, and was four** (2026-08-19). What ships is the
 material connection and nothing else: where the link goes, and that Optfall is
@@ -275,14 +280,17 @@ commission on purchases made through them" is what it was, word for word; it
 lost a leading "and" and became its own sentence, matching the form the unpaid
 state was already written in. `tcgplayer.test.ts` asserts both states, now
 including that neither quotes a price and that neither outgrows the two lines
-the button's height allows — the layout rule it is possible to test from a
-repository that renders no CSS.
+the button's height allows on a wide screen — the layout rule it is possible to
+test from a repository that renders no CSS. On a phone the sentence is the
+taller of the two, deliberately; the test says so, and says why.
 
 ~~There is one buy link on a card page, and the sentence is directly under it —
 the button beneath the card face, above the fold.~~ **Overtaken 2026-08-19**:
 the button and its disclosure became one flex row, so "under" is now only the
 narrow-screen half of the answer. Adjacency is what the Partner Guidelines ask
-for and it holds at every width; "directly under" no longer does.
+for and it holds at every width; "directly under" no longer does. **And on
+2026-08-24 it stopped being half of anything**: the narrow-screen case is beside
+too.
 
 ~~One buy link on the page
 does not have the sentence directly under it — the button beneath the card face,

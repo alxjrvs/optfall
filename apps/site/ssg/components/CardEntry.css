@@ -91,6 +91,33 @@
       threshold, no number anybody chose.
     */
   max-inline-size: min(var(--of-card-face-normal), 72%);
+
+  /*
+      AND WHAT THE CAP LEAVES OVER GOES TO BOTH SIDES, not to the right of the
+      picture. The rule above stops the face taking the whole width once the
+      columns have wrapped; until this line, the 28% it gave back was all
+      collected on one edge, so a phone showed a picture flush to the left
+      margin with a column of empty ground beside it — the only left-aligned
+      element on a page whose panel, legality grid and printings table all run
+      the full measure.
+
+      AN AUTO MARGIN RATHER THAN `justify-content`, because the two columns
+      must not both move. `justify-content: center` on `.of-card__page` would
+      centre the wrapped line AND the unwrapped one, pulling the face and the
+      facts away from the left margin the rest of the page is set against.
+      Main-axis auto margins are resolved from the free space that is left
+      AFTER flex grow, and `.of-card__facts-column` grows: on a two-column line
+      it takes every spare pixel, this margin resolves to zero, and the face
+      stays flush left beside it. On a wrapped line the face is alone, nothing
+      grows, and the 28% splits in two.
+
+      Measured on the built site, `/card/mst/131/10-000-year-reunion`, in a
+      fixed-width iframe: centred at 320, 360, 390, 430, 700 and 800 — the
+      widths where the columns are stacked — and flush with the left edge of
+      `.of-card__page` at 964, 1040, 1226 and 1440, where they are not.
+      `documentElement.scrollWidth === clientWidth` at all ten.
+    */
+  margin-inline: auto;
 }
 
 /*
@@ -1391,9 +1418,10 @@
     left, wrapping to a second line when what is left stops being enough: that
     is the definition row under "Definition rows" above, and this is the same
     problem solved the same way rather than a new arrangement invented for one
-    row. The two numbers differ on purpose and neither should be made to follow
-    the other — this row has a wider column gap because a button is not a label,
-    and a higher wrap basis for the reason argued below.
+    row. WHERE IT NOW PARTS COMPANY WITH THAT ROW IS THE WRAP, and deliberately:
+    a definition row wraps its body under its label when the room runs out, and
+    this one does not — see the zero basis below. A wider column gap, because a
+    button is not a label.
 
     `flex-start`, AND IT WAS `baseline`. Baseline aligned the button's label
     with the sentence's first line, which is a defensible thing to align and the
@@ -1405,13 +1433,21 @@
     That was the arrangement's whole tell while the sentence was four sentences
     long: it was three or four lines against a one-line control, so it set the
     row's height, and being the taller item is what made the offset visible. It
-    is two lines at its longest now — see `buyDisclosure`, which was cut to the
-    disclosure the FTC and TCGplayer actually require — and shorter than the
-    button, so `flex-start` is the alignment that is also stable when the
-    sentence reflows: neither box moves the other.
+    is the taller item again on a phone — four lines at 430 and eight at 320,
+    where it takes the gutter a 189px button leaves rather than a line of its
+    own. `flex-start` is what makes that harmless: tops flush is the one
+    alignment that does not move either box when the sentence reflows, at any
+    width. See `buyDisclosure` for why it is two lines wherever there is room
+    for two.
   */
 .of-card__buy {
   display: flex;
+  /* THE WRAP NO LONGER FIRES, AND IT STAYS. With the disclosure on a zero
+       basis (see below) the line is a button and a paragraph at every width
+       from 320px up — measured, not assumed. What is left of this declaration
+       is the floor: below about 205px the button's own width stops fitting, and
+       wrapping is a better failure than overflowing. The `row` half of the gap
+       below belongs to the same case. */
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--of-space-base) var(--of-space-loose);
@@ -1435,73 +1471,84 @@
 }
 
 /*
-    THE DISCLOSURE TAKES WHAT THE BUTTON LEAVES, AND WRAPS RATHER THAN NARROWS.
-    `1 1 70%` is the growth, the shrink and the wrap in one declaration. Asking
-    for 70% of the row is asking for more than fits beside a 192px button until
-    the row is about 700px wide, so above that the sentence sits to the right
-    and grows into whatever is left, and below it the whole paragraph drops onto
-    its own line at full width.
+    THE DISCLOSURE TAKES WHAT THE BUTTON LEAVES, AT EVERY WIDTH. `1 1 0` asks
+    for none of the row and then grows into all of what is left of it, which is
+    a basis that always fits: the line has one button and one paragraph on it
+    from 320px up, and the paragraph is beside the button on a phone exactly as
+    it is on a desktop.
 
-    THE PROPORTION IS THE WHOLE CHOICE, and 60% was tried first. It also seats
-    the sentence beside the button — but it seats it in a 318px gutter at a
-    1040px viewport, against a one-line control, for the same row height a
-    full-measure paragraph underneath would have taken. 70% gives that band the
-    readable arrangement instead, and costs the wide layouts nothing: the
-    sentence is still beside the button, at the same width, wherever it was
-    before.
+    ~~`1 1 70%`, AND WRAPS RATHER THAN NARROWS.~~ Struck. Asking for 70% of the
+    row asked for more than fits beside a 189px button until the row was about
+    693px wide, so below that the whole paragraph dropped onto its own line —
+    which on a phone is the arrangement that leaves a phone-width band of empty
+    ground to the right of the button and then spends a full measure of vertical
+    space, on the narrowest screen, restating what the button already says. The
+    proportion was the whole choice and the choice was the wrong shape: what it
+    really encoded was "a paragraph and a button do not share a phone screen",
+    and they do.
 
-    AND IT IS NOW WHAT KEEPS THE SENTENCE INSIDE THE BUTTON'S HEIGHT, which was
-    a side effect and is now the load-bearing part. 70% of the row is more than
-    fits beside a 192px button and its 16px gap until the row is about 693px
-    wide, so the narrowest gutter this paragraph is ever given beside the button
-    is around 485px. The sentence renders 653px wide at `type.size.micro`, so
-    two lines need about 327px of it: every gutter it can be handed holds it in
-    two, and two is what the `font-size` rule below sizes to the button's
-    height. Below that width the whole paragraph drops onto its own line, where
-    it is a paragraph rather than a caption and the button's height is not its
-    business.
+    WHAT THE ZERO BASIS COSTS IS THE TWO-LINE GUARANTEE, and it is worth being
+    explicit that it is gone rather than letting the `font-size` rule below read
+    as though it still holds everywhere. Beside a 189px button and a 16px gap,
+    the gutter is what the row has minus 205px — 91px at 320, and the sentence
+    takes eight lines of it. It is a narrow column against a one-line control
+    and it is taller than that control on every phone. That is the trade the
+    arrangement makes deliberately: adjacency at the width where adjacency is
+    hardest to arrange and most useful to a reader, who sees the vendor and what
+    the link is in one glance rather than after a scroll.
 
     Measured on the built site, `/card/mst/131/10-000-year-reunion`, in a
-    fixed-width iframe with no scrollbar. Every number below is THIS
-    PARAGRAPH's rendered width, not the row's and not the column's. Beside the
-    button — tops flush, two lines, 41px against the button's 47px — at 800
-    (568px), 1226 (504px) and 1440 (528px). Under the button at 320 and 360
-    (three lines), at 390, 430 and 700, where a button and a paragraph do not
-    share a phone screen, and through the 964–1040 band, where the columns have
-    split and the facts column is too narrow to seat both.
+    fixed-width iframe with no scrollbar. Every pair below is THIS PARAGRAPH's
+    rendered width and its line count, beside the button with tops flush at all
+    ten: 91px/8 at 320, 131/6 at 360, 161/5 at 390, 201/4 at 430, 471/2 at 700,
+    571/2 at 800, 245/3 at 964, 321/2 at 1040, 507/2 at 1226 and 531/2 at 1440.
     `documentElement.scrollWidth === clientWidth` at all ten widths, which
     includes the six in `CLAUDE.md`.
 
-    Nothing here is a breakpoint. The number is a proportion of the row, so the
-    arrangement follows the room the row actually has.
+    Nothing here is a breakpoint, and the basis is no longer even a proportion:
+    the paragraph takes the room the row actually has, whatever that is.
 
     `min-inline-size: 0` lets the flex item be narrower than its longest word
-    wants, which is the 320px case — a paragraph is not allowed to set a floor
-    under the column it sits in.
+    wants — a paragraph is not allowed to set a floor under the column it sits
+    in. IT IS SLACK AT EVERY WIDTH THIS PAGE IS MEASURED AT, and that is the
+    honest description rather than the one this comment used to give: the
+    paragraph's min-content width is 68.7px, set by "marketplace.", against the
+    91px gutter it is handed at 320. Removing the declaration at 320 changes
+    neither the paragraph's width nor `scrollWidth`. It stays as the guard on
+    the case that would bind — a longer word in a reworded disclosure, or a
+    larger `micro` — because that case is a horizontal scrollbar on a phone and
+    this is one declaration.
   */
 .of-card__buy-verify {
-  flex: 1 1 70%;
+  flex: 1 1 0;
   min-inline-size: 0;
 
   /*
-       TWO LINES, INSIDE THE BUTTON'S HEIGHT. The type step is whichever is
-       smaller: the `micro` this paragraph would take from `.of-card__verify`,
-       or the size at which two lines of it fit in the height of the control
-       beside it. The second operand is the button's box restated from the
-       tokens `IconButton` builds it out of — a line of `small` at the browser's
-       normal leading, plus its two `space.base` paddings and its two bevel
-       borders — divided by the two lines of `leading.loose` this paragraph
-       sets. It computes to 13.8px against a `micro` of 12px, so `micro` is what
-       ships; the cap is what stops that from being an accident. Shrink the
-       control, or grow `micro`, and the sentence follows rather than outgrowing
-       the row.
+       TWO LINES, INSIDE THE BUTTON'S HEIGHT, WHEREVER THE ROW LEAVES ROOM
+       FOR TWO LINES TO BE ENOUGH. Measured, that is 700px and up bar the
+       964px notch, where the columns have just split and the gutter is the
+       narrowest any layout above a phone hands this paragraph — 245px, and
+       three lines. On a phone it is four to eight lines and taller than the
+       button, which the comment above this selector argues for. So the cap
+       keeps the wide case from drifting; it is not a promise about every case.
+
+       The type step is whichever is smaller: the `micro` this paragraph would
+       take from `.of-card__verify`, or the size at which two lines of it fit in
+       the height of the control beside it. The second operand is the button's
+       box restated from the tokens `IconButton` builds it out of — a line of
+       `small` at the browser's normal leading, plus its two `space.base`
+       paddings and its two bevel borders — divided by the two lines of
+       `leading.loose` this paragraph sets. It computes to 13.8px against a
+       `micro` of 12px, so `micro` is what ships; the cap is what stops that
+       from being an accident. Shrink the control, or grow `micro`, and the
+       sentence follows rather than outgrowing the row.
 
        IT IS A CAP ON THE TYPE, NOT ON THE LINE COUNT, and CSS cannot give the
        second without clipping — which is not available to a paragraph a
        regulator reads. The two-line ceiling is held instead by how long the
        sentence is, and `tcgplayer.test.ts` is where that is enforced: it fails
-       if the disclosure grows past what two lines hold at the narrowest width
-       it sits beside the button.
+       if the disclosure grows past what two lines hold in the narrowest gutter
+       the wide layouts hand it.
 
        `leading.base` IS THE BUTTON'S LEADING BY MEASUREMENT, NOT BY
        DECLARATION. `.of-icon-button` sets no `line-height`, so its label takes
@@ -1527,7 +1574,7 @@
   /* The row has a gap of its own, and `.of-card__verify` adds a `base` margin —
        which in the section it came from was the only separation there was.
        Beside the button that margin would push the sentence off the button's
-       baseline; wrapped underneath it, it doubles the row gap. */
+       top edge, which is the alignment the row is built on. */
   margin-block-start: 0;
 }
 
