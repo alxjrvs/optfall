@@ -96,7 +96,7 @@ import { StatGlyph } from "./StatGlyph";
  */
 interface Case {
   readonly name: string;
-  // biome-ignore lint/suspicious/noExplicitAny: the table is heterogeneous by design — fourteen components with fourteen prop types. Each row's props are checked against its own component where it is written; the table's element type only has to hold them.
+  // biome-ignore lint/suspicious/noExplicitAny: the table is heterogeneous by design — one row per primitive, each with its own prop type. Each row's props are checked against its own component where it is written; the table's element type only has to hold them.
   readonly component: ComponentType<any>;
   readonly props: Record<string, unknown>;
   readonly wrap?: readonly [string, string];
