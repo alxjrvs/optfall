@@ -28,20 +28,24 @@ all), and `RulesSearch` mounts on `/cr`. The Astro page named here,
 [#107](https://github.com/alxjrvs/optfall/pull/107) deleted it.
 
 **`docs/DESIGN.md` still encodes the abandoned position, in two named places.**
+✅ Fixed — both are struck through in `DESIGN.md` itself, with the replacement
+beside them, which is this repository's convention for a reversed decision.
 
 - The principles table, row 5: *"The unit is the verdict, not the card. Card
   pages exist, but the shareable objects are `/i/…` interactions and `/cr/…`
-  rules."*
+  rules."* — now struck, replaced by *"The unit is the card, and the rules and
+  rulings attach to it."*
 - Screen 5: *"Card page — **supporting cast, explicitly not a destination.**"*
+  — now struck, replaced by *"The destination."*
 
-`docs/PLAN.md` Phase 2 now says the opposite in as many words: *"cards are what
+`docs/PLAN.md` Phase 2 says the same thing in as many words: *"cards are what
 people arrive for,"* and *"a card page that cannot be linked is a lookup rather
-than a reference."* Both documents are checked in, both are published, and they
-disagree about what the product is.
+than a reference."* The two documents agreed some time ago; this section went on
+saying they did not, which is the failure it was itself written to describe.
 
 **The two searches are strangers.** `/search` answers rules, `/cards` answers
 cards, and the card query parser explicitly refuses to bridge them —
-`PENDING_OPERATORS` in `apps/site/src/lib/card-search.ts` documents `cr:` as
+`PENDING_OPERATORS` in `apps/site/src/lib/card-search/grammar.ts` documents `cr:` as
 *"searches the Comprehensive Rules — that lives at /search, not here."* A card
 page links to no rule; a rule page lists no card. `docs/PLAN.md` Phase 4 lists
 *"Card ↔ rules cross-reference, the join nothing currently makes"* as a

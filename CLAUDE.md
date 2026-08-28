@@ -166,7 +166,9 @@ that page is wrong and no test will say so.
 
 1. `apps/site/src/lib/card-search/grammar.ts` — `FIELD_OPERATORS`, `STATE_OPERATORS`,
    `FORMAT_ALIASES`, `STAT_FIELDS`, `SORT_KEYS`, `DISPLAY_MODES`,
-   `UNIQUE_MODES`, `WORD_VALUED`
+   `UNIQUE_MODES`, `WORD_VALUED`, and `PENDING_OPERATORS` / `RETIRED_OPERATORS`
+   for an operator this refuses on purpose — the refusal tables are how a
+   dead link answers instead of vanishing
 2. the hand-written `Supported: …` string in the unknown-operator error
 3. `apps/site/src/lib/query.ts`, if tokenising changes
 4. **`apps/site/ssg/pages/syntax.page.tsx`** — the one everyone forgets
