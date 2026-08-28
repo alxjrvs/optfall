@@ -2758,6 +2758,133 @@ describe("a fan holds the versions it was handed, once each", () => {
     expect(faces.some((src) => src.includes("MPW113"))).toBe(false);
   });
 });
+describe("the pitch stones open the version they stand for", () => {
+  /**
+   * The LIST view of one row, and the stones it drew.
+   *
+   * The fan above is the grid's rendering of the same fact; this is the list's,
+   * and it had no test of any kind. That matters here more than it would
+   * elsewhere: `rank.ts` records three separately measured bugs on this path,
+   * all of the same shape — a row whose mark and whose destination were
+   * resolved from different versions. The grid grew tests for that after the
+   * fact. The list did not.
+   *
+   * Returns each stone as the pair that can disagree: where it points, and what
+   * it is labelled.
+   */
+  const render = (
+    entry: Parameters<typeof CardIndex>[0]["entries"][number],
+  ): string =>
+    renderToStaticMarkup(
+      createElement(CardIndex, {
+        entries: [entry],
+        display: "list" as const,
+        onDisplayChange: () => undefined,
+        summary: "1 card",
+        controlName: "test",
+        interactive: false,
+      }),
+    );
+
+  const stones = (entry: Parameters<typeof CardIndex>[0]["entries"][number]) =>
+    [
+      ...render(entry).matchAll(
+        /<a[^>]*class="of-index__stone"[^>]*href="([^"]*)"/g,
+      ),
+    ].map((match) => match[1] ?? "");
+
+  const boxes = (entry: Parameters<typeof CardIndex>[0]["entries"][number]) =>
+    (render(entry).match(/of-pitch-box/g) ?? []).length;
+
+  /* Built from the pitch, so a fixture cannot hand the component a stone whose
+     label and whose link are different versions — the defect these tests exist
+     for, which a hand-written pair would hide by agreeing accidentally. */
+  const version = (pitch: 0 | 1 | 2 | 3) => ({
+    pitch,
+    href: `/card/mpw/11${pitch}/hit-and-run-${pitch}`,
+    label: `Hit and Run (pitch ${pitch})`,
+    faceKey: `MPW11${pitch}.webp`,
+    faceLandscape: false,
+  });
+
+  const row = (versions: readonly ReturnType<typeof version>[]) => ({
+    href: versions[0]?.href ?? "/card/mpw/111/hit-and-run-1",
+    label: "Hit and Run",
+    name: "Hit and Run",
+    qualifier: "",
+    typeLine: "Warrior Action",
+    faceKey: "MPW111.webp",
+    faceLandscape: false,
+    versions,
+  });
+
+  test("every stone opens its own version, not the row's", () => {
+    /*
+     * THE INVARIANT, and the one the past bugs broke: a stone is a door to the
+     * version it is drawn for. Asserting the hrefs are DISTINCT and that each
+     * carries its own pitch is what separates "three links" from "three links
+     * to the same card", which is how this failed before.
+     */
+    const drawn = stones(row([version(1), version(2), version(3)]));
+
+    expect(drawn.length).toBe(3);
+    expect(new Set(drawn).size).toBe(3);
+    for (const [index, href] of drawn.entries()) {
+      expect(href).toContain(`hit-and-run-${index + 1}`);
+    }
+  });
+
+  test("a row with one version draws a box and no link", () => {
+    /* Deliberate: a link to the page you are already looking at is a door to
+       the room you are standing in. The box is still drawn, because it says
+       which pitch this is. */
+    const single = row([version(2)]);
+
+    expect(stones(single).length).toBe(0);
+    expect(boxes(single)).toBeGreaterThan(0);
+  });
+
+  test("a row whose every version pitches for nothing draws no stones", () => {
+    /* A mark with nothing to say. Note this is NOT the same as dropping the
+       pitch-0 version — the row itself survives; only its mark goes. */
+    expect(boxes(row([version(0)]))).toBe(0);
+    expect(stones(row([version(0)])).length).toBe(0);
+  });
+
+  test("but a zero beside a real pitch is kept, because it distinguishes", () => {
+    /*
+     * The case the component's own comment singles out: where a name is
+     * disambiguated by an ABSENCE, the "No pitch" box is the only thing telling
+     * that version from its siblings, and it is the door to it.
+     */
+    const drawn = stones(row([version(0), version(1)]));
+
+    expect(drawn.length).toBe(2);
+    expect(drawn[0]).toContain("hit-and-run-0");
+  });
+
+  test("two versions at one pitch draw one stone, and it is the first", () => {
+    /* `versionsOf` keeps the first version at each pitch and sorts by it, so a
+       name with two red printings is one red door rather than two identical
+       ones. */
+    const first = { ...version(1), href: "/card/mpw/first/hit-and-run-1" };
+    const second = { ...version(1), href: "/card/mpw/second/hit-and-run-1" };
+    const drawn = stones(row([first, second, version(3)]));
+
+    expect(drawn.length).toBe(2);
+    expect(drawn[0]).toBe("/card/mpw/first/hit-and-run-1");
+  });
+
+  test("the stones are drawn in pitch order however they arrive", () => {
+    const drawn = stones(row([version(3), version(1), version(2)]));
+
+    expect(drawn).toEqual([
+      "/card/mpw/111/hit-and-run-1",
+      "/card/mpw/112/hit-and-run-2",
+      "/card/mpw/113/hit-and-run-3",
+    ]);
+  });
+});
 
 /* -------------------------------------------------------------------------- */
 /* The files the host reads and never serves                                   */
