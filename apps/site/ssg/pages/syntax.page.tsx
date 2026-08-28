@@ -41,13 +41,13 @@ import "./syntax.css";
  * copies, so it is rendered as `<code>` and never as a sentence that happens to
  * mention it.
  */
-interface Row {
+export interface Row {
   readonly example: string;
   readonly meaning: string;
   readonly aliases?: readonly string[];
 }
 
-const FIELDS: readonly Row[] = [
+export const FIELDS: readonly Row[] = [
   { example: "name:dash", meaning: "The card's name contains this word." },
   {
     example: "text:dominate",
@@ -78,8 +78,8 @@ const FIELDS: readonly Row[] = [
   {
     example: "power>defence",
     meaning:
-      "Compare two printed values on the same card. Scryfall's pow>tou works too. Cards printing X or nothing have no place in the order and do not match.",
-    aliases: ["pow>tou", "power=defence"],
+      "Compare two printed values on the same card. Cards printing X or nothing have no place in the order and do not match.",
+    aliases: ["pow>def", "power=defence"],
   },
   {
     example: "year:2024",
@@ -107,7 +107,7 @@ const FIELDS: readonly Row[] = [
   },
 ];
 
-const BOOLEANS: readonly Row[] = [
+export const BOOLEANS: readonly Row[] = [
   {
     example: "dash dagger",
     meaning:
@@ -135,7 +135,7 @@ const BOOLEANS: readonly Row[] = [
   },
 ];
 
-const ORDERING: readonly Row[] = [
+export const ORDERING: readonly Row[] = [
   {
     example: "order:cost",
     meaning: "Sort by printed cost instead of by relevance.",
@@ -177,7 +177,7 @@ const ORDERING: readonly Row[] = [
   },
 ];
 
-const LEGALITY: readonly Row[] = [
+export const LEGALITY: readonly Row[] = [
   { example: "legal:cc", meaning: "Legal in Classic Constructed." },
   { example: "banned:blitz", meaning: "Banned in Blitz." },
   { example: "suspended:cc", meaning: "Suspended in Classic Constructed." },

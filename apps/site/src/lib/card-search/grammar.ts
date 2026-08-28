@@ -813,8 +813,12 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
           FIELD-TO-FIELD, WHICH IS THE OTHER HALF OF A COMPARISON. `power>defence`
           asks a question about one card against itself — "is this attack worth
           more than it blocks" — and there is no number that expresses it.
-          Scryfall spells it `pow>tou`; the aliases below make both spellings
-          work, because a reader arriving from there types theirs.
+          Scryfall spells it `pow>tou`, and this file used to accept that
+          spelling for the sake of a reader arriving from there. It no longer
+          does: `tou` is another game's word for defence and was retired along
+          with `toughness` and `o`. `pow>def` and `power>defence` are the
+          spellings this game uses, and `pow>tou` now answers with the
+          retirement message rather than pretending not to recognise it.
 
           Encoded with a `@` prefix rather than as a bare field name so the
           matcher can tell `power>2` from `power>defence` without inspecting the
@@ -837,6 +841,21 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
             compare: token.compare,
             label: `${field} ${token.compare} ${against}`,
           };
+        }
+
+        /*
+          A RETIRED NAME ON THE RIGHT-HAND SIDE GETS THE SAME ANSWER IT GETS ON
+          THE LEFT. `RETIRED_OPERATORS` was only ever consulted for a token
+          shaped `field:value`, so `tou:3` explained itself and `pow>tou` — the
+          spelling this very file used to advertise — fell through to the
+          generic message below and said only that it was not a number. That is
+          the worse of the two answers, and it was reaching the reader who had
+          followed our own documentation.
+        */
+        const retired = RETIRED_OPERATORS[operand];
+        if (retired !== undefined) {
+          note("operand-retired", `${operand} ${retired}.`);
+          return null;
         }
 
         if (!/^\d+$/.test(operand)) {
