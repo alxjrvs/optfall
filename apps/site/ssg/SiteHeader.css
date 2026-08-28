@@ -117,6 +117,20 @@
   scale is right and the field should not shout; what grows is the box around
   it, which is what makes it look like something you can type into.
 */
+/*
+  NOT A `BevelledPlate`, AND IT CANNOT BE ONE. An audit read the three
+  declarations below as the plate's flat recipe hand-rolled, which is the right
+  thing to look for and the wrong call here: this class is on an
+  `<input type="search">`, not on a container. The plate renders a wrapping
+  element with its own padding and children, so composing it would mean putting
+  a box AROUND the field and stripping the field's own border — a different
+  control, with `::placeholder`, `:focus` and `::-webkit-search-cancel-button`
+  all needing rehoming.
+
+  A form control drawing its own border from the bevel tokens is what those
+  tokens are for. "Compose, never restyle" is about a screen redrawing a
+  primitive's SHAPE; it is not a rule against an input having a border.
+*/
 .of-bar__field {
   inline-size: 100%;
   padding: var(--of-space-tight) var(--of-space-base);
@@ -235,6 +249,19 @@
   margin: 0;
   padding: var(--of-space-tight) var(--of-space-base);
   list-style: none;
+  /*
+    NOT A `BevelledPlate` EITHER, AND FOR A STRUCTURAL REASON RATHER THAN A
+    TASTE ONE. This list is the disclosure's SIBLING — the comment above says
+    that is what hides it, "by this rule and by nothing else" — and it is
+    absolutely positioned against the bar. Wrapping it in a plate puts a `<div>`
+    between the two, which is exactly the relationship the open/closed states
+    are selected on, and leaves the positioning and the three responsive display
+    states split across a wrapper and the list it wraps.
+
+    The three declarations below are the plate's flat recipe, and they are here
+    on purpose. Composing the primitive would cost the mechanism to save the
+    duplication.
+  */
   background: var(--of-color-surface);
   border: var(--of-bevel-width) solid var(--of-color-rule);
   border-radius: var(--of-bevel-radius);

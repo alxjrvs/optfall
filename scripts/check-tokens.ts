@@ -331,7 +331,12 @@ function undefinedReferences(file: string, source: string): Violation[] {
   const found: Violation[] = [];
   source.split("\n").forEach((text, index) => {
     for (const match of text.matchAll(/var\(\s*(--of-[a-z0-9-]+)/g)) {
-      const name = match[1]!;
+      const name = match[1];
+      /* The pattern has one non-optional group, so this cannot be
+         undefined — but the house rule asks for a guard rather than a
+         justification, and a guard is cheaper to trust than a proof
+         living several lines away in a regex literal. */
+      if (name === undefined) continue;
       if (!DEFINED.has(name)) {
         found.push({
           file,
@@ -372,7 +377,8 @@ function danglingTokenValues(): Violation[] {
     for (const [id, value] of Object.entries(table)) {
       if (typeof value !== "string") continue;
       for (const match of value.matchAll(/var\(\s*(--of-[a-z0-9-]+)/g)) {
-        const name = match[1]!;
+        const name = match[1];
+        if (name === undefined) continue;
         if (!DEFINED.has(name)) {
           found.push({
             file: "packages/theme/src/tokens.ts",

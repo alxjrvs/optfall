@@ -294,7 +294,20 @@ function Corner({
   }
   if (mirror !== null) {
     return (
-      // biome-ignore lint/a11y/noAriaHiddenOnFocusable: a corner is a `<div>` and nothing it holds is focusable — a mark, a stone. The rule fires on the literal `"true"`; the same attribute two branches up, written as an expression, does not trip it. Keep the corners non-interactive: a focusable thing in here WOULD be the bug this rule is about, because the mirror renders it a second time.
+      /*
+        KEEP THE CORNERS NON-INTERACTIVE. A corner is a `<div>` holding a mark
+        or a stone, and nothing in it is focusable — which is the only reason
+        `aria-hidden` is safe here. Putting something focusable inside WOULD be
+        the bug `noAriaHiddenOnFocusable` is about, and worse than usual,
+        because the mirror renders it a second time.
+
+        THIS CARRIED A `biome-ignore` FOR THAT RULE AND THE IGNORE DID NOTHING.
+        It justified itself with "the rule fires on the literal `true`" — Biome
+        reports the suppression as unused, so the rule does not fire here at
+        all, on the literal or otherwise. The claim was wrong, or stopped being
+        true and nothing said so. The reasoning above is worth keeping; the
+        directive was not.
+      */
       <div
         className={`of-card__badges of-card__badges--${side} of-card__corner-mirror`}
         aria-hidden="true"
