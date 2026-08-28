@@ -44,6 +44,10 @@ import {
   type CardIndex,
 } from "./card-search";
 import { SETS } from "./sets";
+/* The token stream, asserted directly: the negation bugs lived here rather
+   than in any operator, and a total alone cannot tell a fixed tokeniser from a
+   coincidence downstream. */
+import { tokenise } from "./query";
 
 const encoded = buildCardIndex(CARD_PAGES, {
   commit: CORPUS.source.commit,
@@ -721,6 +725,102 @@ describe("negation, OR and grouping", () => {
 
   test("negation of a bare word still works", () => {
     expect(total("attack -dominate")).toBeLessThan(total("attack"));
+  });
+
+  /*
+    THE THREE TESTS BELOW ARE ONE BUG. The bare-word alternative of the
+    tokeniser is `[^\s()]+` — it excludes parentheses and whitespace but not
+    the quote — and it matched before the `-` branch could see the token. Every
+    case here returned the OPPOSITE of what was typed, with no notice at all,
+    which is the part that made it worth three tests rather than one: the
+    engine did not decline to answer, it answered a different question.
+
+    They assert on the token stream as well as the totals, because the totals
+    alone would pass again if a later change negated the right thing for the
+    wrong reason.
+  */
+  test("a negated group is negated, not silently ignored", () => {
+    // `-(banned:cc)` matched as the lone `-`, which fails the `length > 1`
+    // guard, so it was emitted as a free term and then dropped downstream as
+    // noise. The query ran as `(banned:cc)` — an exact inversion.
+    expect(tokenise("-(banned:cc)")).toContainEqual({ kind: "not" });
+
+    const inside = total("type:guardian (banned:cc)");
+    const outside = total("type:guardian -(banned:cc)");
+    const all = total("type:guardian");
+
+    expect(inside).toBeGreaterThan(0);
+    expect(inside + outside).toBe(all);
+    expect(outside).toBe(total("type:guardian -banned:cc"));
+  });
+
+  test("a negated quoted operand negates the whole phrase", () => {
+    // The bare alternative stopped at the space, so the remainder re-tokenised
+    // from `type:"illusionist` — closing quote already lost. The negation took
+    // the first word and the SECOND came back as a required term.
+    expect(tokenise('-type:"illusionist action"')).toEqual([
+      { kind: "not" },
+      { kind: "field", field: "type", value: "illusionist action" },
+    ]);
+
+    /*
+      DE MORGAN, ASSERTED RATHER THAN ASSUMED. A quoted operand on a word-valued
+      field expands to an AND of its words, so negating it is `NOT (a AND b)` —
+      which is `NOT a OR NOT b`, and emphatically NOT `-type:illusionist
+      -type:action`. Writing that second form here is the mistake this comment
+      exists to stop: it passes for a broken tokeniser and fails for a correct
+      one.
+    */
+    expect(total('-type:"illusionist action"')).toBe(
+      total("-type:illusionist or -type:action"),
+    );
+
+    // And it is a true complement: every card is on exactly one side.
+    expect(
+      total('type:"illusionist action" unique:cards') +
+        total('-type:"illusionist action" unique:cards'),
+    ).toBe(4941);
+  });
+
+  test("negation composes with the exact-name and comparison operators", () => {
+    // Neither reached the negation branch either, for the same reason.
+    expect(tokenise('-!"head jab"')).toEqual([
+      { kind: "not" },
+      { kind: "exact", value: "head jab" },
+    ]);
+    expect(tokenise("-cost>=3")).toEqual([
+      { kind: "not" },
+      { kind: "field", field: "cost", value: "3", compare: ">=" },
+    ]);
+
+    // A true complement again — an empty query returns nothing rather than
+    // everything, so the whole corpus has to be named explicitly.
+    expect(total("cost>=3 unique:cards") + total("-cost>=3 unique:cards")).toBe(
+      4941,
+    );
+  });
+
+  test("a hyphen inside a word is still a hyphen", () => {
+    // The guard the fix must not break: neither of these is followed by a
+    // paren, a quote or a `field:`, so neither reaches the negation
+    // alternative at all.
+    expect(tokenise("silver-age")).toEqual([
+      { kind: "term", value: "silver-age", quoted: false },
+    ]);
+    expect(tokenise("-attack")).toEqual([
+      { kind: "not" },
+      { kind: "term", value: "attack", quoted: false },
+    ]);
+  });
+
+  test("an unclosed quote is answered out loud", () => {
+    // Tokenising cannot repair this without guessing where the quote belonged,
+    // so the contract is that the reader is told. Before, this silently made
+    // `action` a REQUIRED term with `notices: []`.
+    expect(notices('type:"illusionist action')).toContain("quote-unbalanced");
+    expect(notices('type:"illusionist action"')).not.toContain(
+      "quote-unbalanced",
+    );
   });
 
   test("OR widens, and never beyond the sum of its sides", () => {

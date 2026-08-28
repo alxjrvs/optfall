@@ -143,6 +143,11 @@ export interface CardNotice {
     | "operand-retired"
     | "term-ignored"
     | "phrase-approximate"
+    /* THE QUERY IS MALFORMED AND WAS ANSWERED ANYWAY. Distinct from every kind
+       above, which describe a decision the engine made about a token it
+       understood: this one says the tokeniser could not see the query the
+       reader meant to write, because a quote never closed. */
+    | "quote-unbalanced"
     /* The engine answered, and is telling you what it could not see. Distinct
        from `operator-pending`, which means it did not answer at all. */
     | "coverage-partial";
@@ -922,6 +927,24 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
      said nothing", because only the second may be overridden by the legacy
      `?display=` parameter that predates this operator. */
   let display: CardDisplayMode | null = null;
+
+  /*
+    AN ODD NUMBER OF QUOTES IS ANSWERED, NOT SWALLOWED. `type:"illusionist
+    action` — a closing quote simply forgotten — cannot match the quoted-field
+    alternative, so it falls to `field:value`, which takes `"illusionist` as
+    the operand and leaves `action` behind as an ordinary REQUIRED term. The
+    engine still answers, and the answer is not the question that was asked.
+    Tokenising cannot repair this without guessing where the quote belonged, so
+    the reader is told instead: this file's rule is that the engine degrades
+    visibly, and the shape it degrades into here is not one anybody would
+    predict from what they typed.
+  */
+  if ((raw.match(/"/g) ?? []).length % 2 === 1) {
+    note(
+      "quote-unbalanced",
+      "There is an odd number of quotes here, so one phrase runs to the end of the query rather than where it was meant to close. Results may include terms you meant to keep together.",
+    );
+  }
 
   const remaining = tokenise(raw).filter((token) => {
     if (token.kind !== "field") return true;
