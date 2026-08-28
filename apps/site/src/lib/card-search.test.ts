@@ -48,6 +48,9 @@ import { SETS } from "./sets";
    than in any operator, and a total alone cannot tell a fixed tokeniser from a
    coincidence downstream. */
 import { tokenise } from "./query";
+/* The two stat tables, asserted against each other: a filter and a sort that
+   disagree about a stat's name reads as the search being broken. */
+import { SORT_KEYS, STAT_FIELDS } from "./card-search/grammar";
 
 const encoded = buildCardIndex(CARD_PAGES, {
   commit: CORPUS.source.commit,
@@ -1553,6 +1556,31 @@ describe("comparing two printed values", () => {
 /* -------------------------------------------------------------------------- */
 
 describe("one card index, one stat vocabulary", () => {
+  /*
+   * FILTERING AND SORTING HAVE TO AGREE ON WHAT A STAT IS CALLED, and for a
+   * while they did not. When `tou` and `toughness` were retired, `STAT_FIELDS`
+   * was edited and `SORT_KEYS` was not — so `pow`, which was deliberately KEPT
+   * because power is a word this game uses, filtered but could not sort. A
+   * reader was encouraged to type `pow:6`, did, and was then told `order:pow`
+   * names nothing this can sort by.
+   *
+   * Asserted over the tables rather than over a list written here, so that the
+   * next spelling to arrive or depart cannot land in one table only.
+   */
+  test("every stat spelling that filters can also sort", () => {
+    for (const [spelling, stat] of Object.entries(STAT_FIELDS)) {
+      expect(SORT_KEYS[spelling]).toBe(stat);
+    }
+  });
+
+  test("and it holds through the parser, not just the tables", () => {
+    for (const spelling of Object.keys(STAT_FIELDS)) {
+      expect(notices(`dash order:${spelling}`)).not.toContain(
+        "operand-unknown",
+      );
+    }
+  });
+
   test("a search row and a set-page row name the same printed values", () => {
     /*
      * THE ROWS VIEW IS ONE COMPONENT ON TWO SURFACES, and for a while it spoke
