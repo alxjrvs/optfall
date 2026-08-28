@@ -15,9 +15,9 @@
  *
  * What it buys here specifically: `CARD_ROUTES` in `lib/cards.ts` already
  * returns `{ params, props }[]`, because that is what Astro wanted. It feeds
- * this generator with no adapter at all, which means the 13,675-page route
- * table — the part of the build most expensive to get wrong — moves across
- * untouched and provably identical.
+ * this generator with no adapter at all, which means the card route table — the
+ * part of the build most expensive to get wrong, and by some distance the
+ * largest — moves across untouched and provably identical.
  */
 
 import type { ReactNode } from "react";

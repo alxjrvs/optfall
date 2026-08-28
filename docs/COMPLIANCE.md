@@ -569,7 +569,9 @@ never depended on the notice.
 `CardFaceGroup` was deleted with the move. It existed solely to hoist the notice
 — its wrapper and its context had no other behaviour — so keeping it would have
 left a primitive whose documented reason for existing had gone. The closed
-primitive set is thirteen.
+primitive set is `PRIMITIVES` in `packages/components/src/index.ts`, and the
+count is deliberately not restated here: it was written down as thirteen and was
+wrong at fourteen, sixteen and nineteen without anybody noticing.
 
 **Status.** **Enforced in the built output.**
 
