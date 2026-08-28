@@ -113,6 +113,80 @@ const FIGURES: readonly {
   },
 ];
 
+/**
+ * Two figures that look like drift and are not.
+ *
+ * BOTH WERE RAISED AS SUSPECTED DEFECTS BY AN AUDIT, and both turned out to be
+ * correct prose describing a DIFFERENT metric from the obvious one. Neither was
+ * changed — "fixing" a number that was right is the same defect as leaving one
+ * that is wrong, committed fresh — but a claim that reads as an error every time
+ * someone counts will keep being re-raised until the relationship behind it is
+ * written down somewhere that fails.
+ *
+ * So the arithmetic is asserted rather than argued. If either relationship
+ * changes, this says so, and until then it is a standing answer to the question.
+ */
+describe("the two figures that look wrong and are not", () => {
+  test("1,269 and 1,278 count different things, and both are right", () => {
+    /*
+     * `PHASE-2-STATUS.md` and `SOURCES.md` say 1,269 — "87 sections + 548 rules
+     * + 634 subrules". Everywhere else says 1,278. The nine between them are the
+     * CHAPTERS, which are pages like any other node but are not one of the three
+     * things that subtotal names.
+     */
+    const byLevel = new Map<string, number>();
+    for (const page of RULE_PAGES) {
+      const level = page.section.level;
+      byLevel.set(level, (byLevel.get(level) ?? 0) + 1);
+    }
+
+    expect(byLevel.get("chapter")).toBe(9);
+    expect(byLevel.get("section")).toBe(87);
+    expect(byLevel.get("rule")).toBe(548);
+    expect(byLevel.get("subrule")).toBe(634);
+
+    /* The published subtotal, and the total it is nine short of. */
+    expect(87 + 548 + 634).toBe(1269);
+    expect(1269 + 9).toBe(RULE_PAGES.length);
+  });
+
+  test("faces.ts counts URLs where a reader counts basenames", () => {
+    /*
+     * `faces.ts` says 11,377 distinct images and 11,376 distinct basenames in
+     * the same docblock, and names the single cause: `LGS387.webp` is served
+     * from two hosts, byte-identical, so collapsing it to one key is correct
+     * rather than lossy. Count the keys and the prose looks off by one; read the
+     * next sentence and it is exact.
+     */
+    const urls = new Set<string>();
+    const basenames = new Set<string>();
+    for (const card of CORPUS.cards) {
+      for (const printing of card.printings ?? []) {
+        const url = printing.image_url;
+        if (!url) continue;
+        urls.add(url);
+        basenames.add(url.split("/").pop() ?? "");
+      }
+    }
+
+    expect(urls.size).toBe(11_377);
+    expect(basenames.size).toBe(11_376);
+
+    /* Named in the docblock, so the "one collision" stays exactly one and stays
+       the one the prose says it is. */
+    const perBasename = new Map<string, number>();
+    for (const url of urls) {
+      const base = url.split("/").pop() ?? "";
+      perBasename.set(base, (perBasename.get(base) ?? 0) + 1);
+    }
+    expect(
+      [...perBasename.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([base]) => base),
+    ).toEqual(["LGS387.webp"]);
+  });
+});
+
 describe("the figures written into prose are still true", () => {
   test("there are files to read", () => {
     // A walker that silently returned nothing would make every mention count
