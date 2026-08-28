@@ -407,7 +407,9 @@ const UNIQUE_MODES: Readonly<Record<string, CardUniqueMode>> = {
  * word they know should get the value they meant rather than an error telling
  * them this game uses a different noun.
  */
-const STAT_FIELDS: Readonly<Record<string, "cost" | "power" | "defence">> = {
+export const STAT_FIELDS: Readonly<
+  Record<string, "cost" | "power" | "defence">
+> = {
   cost: "cost",
   power: "power",
   pow: "power",
@@ -416,13 +418,29 @@ const STAT_FIELDS: Readonly<Record<string, "cost" | "power" | "defence">> = {
   def: "defence",
 };
 
-const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
+/**
+ * What `order:` will sort by.
+ *
+ * EVERY SPELLING OF A STAT IN {@link STAT_FIELDS} HAS TO APPEAR HERE, and one
+ * did not. `pow` was deliberately kept when `tou` and `toughness` were retired
+ * — power is a word this game uses, and only the other two were another
+ * game's — but the retirement changed `STAT_FIELDS` and left this table alone.
+ * The result was a reader being encouraged to type `pow:6`, doing so, and then
+ * being told `order:pow` names nothing this can sort by. A filter and a sort
+ * disagreeing about what a stat is called is the kind of thing that reads as
+ * the search being broken rather than as a missing alias.
+ *
+ * `card-search.test.ts` asserts the two tables agree, so the next stat spelling
+ * to arrive or depart cannot land in one of them only.
+ */
+export const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
   name: "name",
   released: "released",
   release: "released",
   pitch: "pitch",
   cost: "cost",
   power: "power",
+  pow: "power",
   defence: "defence",
   defense: "defence",
   def: "defence",
@@ -1054,7 +1072,11 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     if (key === undefined) {
       note(
         "operand-unknown",
-        `order:${token.value} names nothing this can sort by. The seven are ${[...new Set(Object.values(SORT_KEYS))].join(", ")}.`,
+        /* NO COUNT IN FRONT OF A LIVE LIST. This read "The seven are" before a
+           list the line itself interpolates, and had been wrong since the
+           eighth key landed — a spelled number in front of a computed list can
+           only ever be right by coincidence. */
+        `order:${token.value} names nothing this can sort by. The options are ${[...new Set(Object.values(SORT_KEYS))].join(", ")}.`,
       );
       return false;
     }
