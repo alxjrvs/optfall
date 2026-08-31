@@ -1,4 +1,6 @@
-# Phase 2 — status
+# Phase 2 — delivery report
+
+![Archive][chip-archive]
 
 > **Historical.** This is a snapshot of Phase 2 and is kept as the record of
 > what was true then. Its verification run is the part to read carefully and
@@ -601,7 +603,8 @@ rules work."*
 **LSS's own site is not the route.** `fabtcg.com` still returns **HTTP 403** to
 automated fetches — reproduced today against
 `https://fabtcg.com/articles/banned-and-restricted-announcement-sep02/`. That
-is the same blocker `docs/PHASE-0-STATUS.md` recorded, and it has not lifted.
+is the same blocker the Phase 0 report recorded — that document was deleted in
+[#219](https://github.com/alxjrvs/optfall/pull/219) — and it has not lifted.
 
 **The Wayback Machine is the route, and it is a good one.** Its CDX API is
 public, needs no key, and — decisively — serves the archived content that the
@@ -706,8 +709,8 @@ actively maintained means there is somebody there to answer.
 ### Answer: not blocked. The document is obtainable, and it is well-formed.
 
 **The 403 was on the wrong host.** `fabtcg.com` refuses automated fetches, and
-that led an earlier draft of this very document — and `docs/PHASE-0-STATUS.md`
-before it — to record Phase 4 as blocked on unreachable source material. That
+that led an earlier draft of this very document — and the Phase 0 report before
+it — to record Phase 4 as blocked on unreachable source material. That
 conclusion was wrong, and it was wrong because only one hostname was ever
 tried.
 
@@ -775,7 +778,7 @@ exists today.
   numbering is clearly designed to be stable, but that should be checked by
   diffing two versions before permanent identifiers are promised to anyone.
 
-> **Status of these three, re-checked:**
+> **These three, re-checked:**
 >
 > - **HTML pages: unchanged.** `/en/cr/` 200, `/en/cr/cr1/` **403**, in the same
 >   minute, today. The parser works from the PDF, so this is not blocking — but
@@ -847,9 +850,11 @@ capacity blocker rather than a technical one.
 ## Contradictions with `docs/PLAN.md` and with our own records
 
 **One, and it is ours rather than the plan's.**
-`docs/PHASE-0-STATUS.md` records *"The LSS terms page has never been read.
-`fabtcg.com` returns 403 to automated fetches"* and carries that forward as a
-constraint on Phase 4. The 403 is real, but the inference drawn from it was too
+The Phase 0 report — since deleted in
+[#219](https://github.com/alxjrvs/optfall/pull/219) — recorded *"The LSS terms
+page has never been read. `fabtcg.com` returns 403 to automated fetches"* and
+carried that forward as a constraint on Phase 4. The 403 is real, but the
+inference drawn from it was too
 broad: the rules documents are on `rules.fabtcg.com` and are served without
 complaint. **Phase 4 is not blocked on source access.** That line should be
 narrowed to what it actually established — the *terms* page, on `fabtcg.com`,
@@ -885,3 +890,9 @@ whoever edits it next:
 >   came from bytes retrieved over HTTP, verbatim including the Tournament Rules'
 >   own typos — "card-poll" in 7.4, "the what cards in are placed" in `cr:4.1.2a`
 >   — because a tidied quotation is not a quotation.
+
+<!-- `color.rule.strong`, from the dark set of `packages/theme/src/tokens.ts`.
+     The legend saying what each chip commits to is in `COMPLIANCE.md`, under
+     "How to read a chip". -->
+
+[chip-archive]: https://img.shields.io/badge/archive-3f3f3f?style=flat-square

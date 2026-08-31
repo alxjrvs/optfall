@@ -4,30 +4,37 @@
 rules engine attached — every card, every printing, every rule, each citable and
 each with a permanent URL.
 
-| Phase | | State |
-|---|---|---|
-| 0 | Repo and infrastructure | **done** |
-| 1 | Theme and components | **done** |
-| 2 | The card layer — search, cards, printings | **done** |
-| 3 | Legality that remembers | not started |
-| 4 | The rules, made addressable | **built**; exit criterion is external |
-| — | *Gate: are the questions actually novel?* | days |
-| 5 | The interaction record | not started |
-| 6 | Off Astro | **done** |
+| Phase | | | |
+|---|---|---|---|
+| 0 | Repo and infrastructure | ![Done][chip-done] | |
+| 1 | Theme and components | ![Done][chip-done] | |
+| 2 | The card layer — search, cards, printings | ![Done][chip-done] | |
+| 3 | Legality that remembers | ![Blocked][chip-blocked] | on a dataset, not on code |
+| 4 | The rules, made addressable | ![Live][chip-live] | built; the exit criterion is external |
+| — | *Gate: are the questions actually novel?* | | days |
+| 5 | The interaction record | ![Planned][chip-planned] | |
+| 6 | Off Astro | ![Done][chip-done] | |
 
-> **The state column describes what is BUILT, which is not the same as what
-> has EXITED.** Phases 3 and 4 both exit on adoption — "at least one other
+The chips are Optfall's own state palette, and
+[`COMPLIANCE.md`](COMPLIANCE.md#how-to-read-a-chip) carries the legend that says
+what each word commits to.
+
+> **The chips describe what is BUILT, which is not the same as what has
+> EXITED.** Phases 3 and 4 both exit on adoption — "at least one other
 > tool has adopted the library", "a citation appears in a community discussion
 > without you putting it there" — and neither is a fact this repository can
 > report on itself. Phase 4's surface is live at `/cr` and `/rule/:number`
 > against a committed CR 2.14.0 corpus; whether anyone has cited it is not
-> something a status table should claim.
+> something this table should claim.
 >
-> Phase 3 is *not started* rather than in progress: `packages/legality` exists
-> and is tested, but its headline export `isLegal` throws `NotImplementedError`
-> and nothing under `apps/` imports the package. The live legality logic is
-> `apps/site/src/lib/cards.ts`, which reads upstream's flags rather than
-> computing a timeline.
+> Phase 3's chip reads *blocked* rather than *in progress*, and the distinction
+> matters: `packages/legality` exists and is tested, but its headline export
+> `isLegal` throws `NotImplementedError` and nothing under `apps/` imports the
+> package. Nobody is working around a blocker — the work has not started,
+> because what it needs is `data/legality`, which needs the licence request in
+> [`upstream-licence-issue.md`](upstream-licence-issue.md) to be sent by a
+> person. The live legality logic is `apps/site/src/lib/cards.ts`, which reads
+> upstream's flags rather than computing a timeline.
 
 > **This document was reordered on 2026-08-11**, when the owner settled the
 > positioning: Optfall is *mostly a card browser and lookup with a rules engine
@@ -1050,7 +1057,7 @@ engine attached.**
 *This line read "Svelte components, Astro site" until Phase 6 deleted both, and
 went on reading that way after they were gone. It is corrected rather than
 quietly rewritten because it is the third instance of the same failure this
-document now records twice elsewhere: a status line nobody re-measures drifts in
+document now records twice elsewhere: a summary line nobody re-measures drifts in
 whichever direction is least visible, and the summary of what is settled is
 exactly the kind of prose nobody re-reads.*
 
@@ -1058,7 +1065,7 @@ exactly the kind of prose nobody re-reads.*
 revisions *are* publicly archived — the Wayback Machine carries 202 archived
 announcement URLs spanning 2021-03-18 to 2025-11-14, and a capture retrieves as
 readable content carrying date, author, card, format and action. **Time travel is
-a scraping job, not an excavation.** See `docs/PHASE-2-STATUS.md` for the
+a scraping job, not an excavation.** See `docs/PHASE-2-REPORT.md` for the
 evidence and for the one caveat: the announcements are editorial prose rather
 than tables, so extraction is closed-vocabulary matching against known card names
 with human review, never a language model.
@@ -1098,3 +1105,18 @@ never confirmed against the current rules — the official site blocks automated
 access. Community pain-point evidence is largely inferential, since research was
 blocked from Reddit: the gaps are well evidenced, the intensity of demand for
 them is not.
+
+<!--
+  Chip definitions for the phase table. The colours are hexes from the DARK set
+  of `packages/theme/src/tokens.ts` — the light set gives the same names
+  different values — namely `color.state.legal`, `color.brass`,
+  `color.state.restricted` and `color.ink.faint`. The legend that says what each
+  word commits to is in `COMPLIANCE.md`, under "How to read a chip". Markdown
+  has no link table shared across files, so `README.md` and `COMPLIANCE.md` each
+  repeat the definitions they use.
+-->
+
+[chip-done]: https://img.shields.io/badge/done-2f7d4f?style=flat-square
+[chip-live]: https://img.shields.io/badge/live-b08d3f?style=flat-square
+[chip-blocked]: https://img.shields.io/badge/blocked-6f5aa6?style=flat-square
+[chip-planned]: https://img.shields.io/badge/planned-787878?style=flat-square

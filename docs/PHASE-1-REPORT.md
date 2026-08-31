@@ -1,4 +1,6 @@
-# Phase 1 — status
+# Phase 1 — delivery report
+
+![Archive][chip-archive]
 
 Written against the `phase-1-*` stack. Every claim here was checked by running
 the thing, not by reading a summary.
@@ -138,3 +140,9 @@ by `svelte-check` rather than inferred at build time.
   clean. The rule then caught a raw `46rem` in the new layout, which is how
   `type.measure` came to be a token: the system was missing a value and said so,
   rather than a human deciding to add one.
+
+<!-- `color.rule.strong`, from the dark set of `packages/theme/src/tokens.ts`.
+     The legend saying what each chip commits to is in `COMPLIANCE.md`, under
+     "How to read a chip". -->
+
+[chip-archive]: https://img.shields.io/badge/archive-3f3f3f?style=flat-square
