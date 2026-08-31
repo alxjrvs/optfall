@@ -6,7 +6,7 @@
  *
  * `docs/PLAN.md` calls the existence of a public archive of past
  * banned-and-restricted revisions "the question that decides a headline
- * feature". `docs/PHASE-2-STATUS.md` answers it: **yes, and the Wayback
+ * feature". `docs/PHASE-2-REPORT.md` answers it: **yes, and the Wayback
  * Machine is the route.** LSS's own host returns HTTP 403 to automated
  * fetches; the archive serves the same documents without complaint and needs
  * no API key.
@@ -21,7 +21,7 @@
  * the prose, and that omission is a decision rather than an unfinished edge.
  * The announcements are editorial prose, not tables — the 21 Sep 2021 article
  * says "removing Seeds of Agony from the Classic Constructed format", not a
- * field called `banned`. `docs/PHASE-2-STATUS.md` fixes the only admissible
+ * field called `banned`. `docs/PHASE-2-REPORT.md` fixes the only admissible
  * method: closed-vocabulary matching against the card dataset (which is
  * currently unlicensed, so it does not exist here yet), with **human review of
  * every extracted entry before publication**. A wrong ban date is precisely

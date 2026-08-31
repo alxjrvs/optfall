@@ -29,7 +29,7 @@ six days on the wrong side of.
 ## 1. The community card dataset is the right choice, and that is now measured
 
 `the-fab-cube/flesh-and-blood-cards` was adopted on the reasoning in
-[`PHASE-2-STATUS.md`](PHASE-2-STATUS.md) without a survey of alternatives. The
+[`PHASE-2-REPORT.md`](PHASE-2-REPORT.md) without a survey of alternatives. The
 survey has now been done, and it confirms the choice on stronger grounds than
 the original argument used.
 
@@ -114,7 +114,7 @@ life  name  object_type  pitch  power  text  textbox  typebox  url
 ```
 
 **No legality data of any kind.** No format flags, no banned or restricted
-status, no Living Legend, no set, no rarity, no printings, no artist. `typebox`
+marking, no Living Legend, no set, no rarity, no printings, no artist. `typebox`
 is one unparsed string. The detail endpoint returns the same 17 fields as the
 list endpoint — there is no fuller representation behind it.
 
@@ -214,7 +214,7 @@ afternoon and a script run, and it is worth knowing before starting.
 
 ## 4. The rules corpus is current and unchanged
 
-Re-verified byte-for-byte against what [`PHASE-2-STATUS.md`](PHASE-2-STATUS.md)
+Re-verified byte-for-byte against what [`PHASE-2-REPORT.md`](PHASE-2-REPORT.md)
 recorded:
 
 | Document | Result |
@@ -230,7 +230,7 @@ SHA-256 is identical to the one Phase 2 computed, so the parsed corpus in
 `data/rules/cr-2.14.0.json` — **1,278 records**, being 9 chapters, 87 sections,
 548 rules and 634 subrules — remains valid and no re-parse is required. (1,269
 is the same corpus with the 9 chapter records excluded; it is the figure
-[`PHASE-2-STATUS.md`](PHASE-2-STATUS.md) uses when reconciling against a grep of
+[`PHASE-2-REPORT.md`](PHASE-2-REPORT.md) uses when reconciling against a grep of
 the extracted text. Both are correct about different things, and the shipped
 record count is 1,278.) **No 2.15 release exists** — a search
 for one returns nothing, and the `2.15.x` tokens in the extracted text are
@@ -262,7 +262,8 @@ retrieval route — the Wayback path in `sources/wayback.ts` still stands.
 Second, Comprehensive Rules **9.4.2** names
 `https://fabtcg.com/living-legend/` as *"the official Flesh and Blood living
 legend resource page"*. That is the rules document pointing at an official
-source for Living Legend status — and it 403s like everything else on that host.
+source for which heroes are Living Legend — and it 403s like everything else on
+that host.
 Worth adding to any eventual request to LSS for automated access.
 
 ---

@@ -1,4 +1,6 @@
-# Phase 2 — status
+# Phase 2 — delivery report
+
+![Archive][chip-archive]
 
 > **Historical.** This is a snapshot of Phase 2 and is kept as the record of
 > what was true then. Its verification run is the part to read carefully and
@@ -31,9 +33,9 @@ pass wrote the first Phase 2 code, and this half of the document describes what
 now exists.
 
 Every claim here was checked by running the thing. Commands and exit codes are
-in the next section; where a value came off the network, the HTTP status and
-byte count are quoted. Where the spike turned out to be wrong, it says so and
-says by how much.
+in the next section; where a value came off the network, the HTTP response code
+and byte count are quoted. Where the spike turned out to be wrong, it says so
+and says by how much.
 
 ---
 
@@ -150,8 +152,8 @@ where a plausible guess would have been wrong:
   meta-static ability can change the zone count. Identical across all six,
   because it is not a format rule at all.
 
-**`src/timeline.ts`** — the date arithmetic that answers *what was this card's
-status on this day*. It asserts nothing about Flesh and Blood: no card names, no
+**`src/timeline.ts`** — the date arithmetic that answers *was this card legal on
+this day*. It asserts nothing about Flesh and Blood: no card names, no
 ban dates, no deck sizes. Every test fixture is deliberately fictional, prefixed
 `fixture:`, citing a document named "FIXTURE — not an official document", so that
 no test data can be mistaken for a published claim.
@@ -159,8 +161,8 @@ no test data can be mistaken for a published claim.
 Its four load-bearing decisions:
 
 - `effectiveFrom` **inclusive**, `effectiveUntil` **exclusive** — a half-open
-  interval, so `until = successor.from` encodes a status change with no gap, no
-  double-cover and no subtraction anywhere.
+  interval, so `until = successor.from` encodes a change of legality with no
+  gap, no double-cover and no subtraction anywhere.
 - **Overlapping entries are surfaced, never resolved.** If two covering entries
   disagree, `statusAsOf` returns `kind: "conflict"` and that variant has no
   `status` and no `legal` field — there is nothing to read. Any tie-break would
@@ -316,7 +318,7 @@ which is exactly why they need to be written down somewhere a human reads.
    a source. Marked `UNVERIFIED` in `coversDate`'s docstring.
 4. **`effectiveUntil` being exclusive is our convention, not a published one.**
    The field name reads inclusive. A dataset author who writes it as "the last day
-   the status held" is wrong by one day, and `validateTimeline` catches the
+   the record held" is wrong by one day, and `validateTimeline` catches the
    zero-length-interval signature of that mistake but cannot catch the
    off-by-one-day version. **This is the largest correctness risk in the timeline
    module and it belongs in the dataset authoring contract, not only in a
@@ -368,7 +370,7 @@ review, once in this document before I checked.
 The Blitz Living Legend archive page carries **two** tables. The first is the
 ranked leaderboard, topped by a hero at 975 points and descending to 2. The
 second, below it, lists **twelve heroes with rank "LL" and totals from 1,005 to
-1,178** — the heroes that actually attained the status. The page's only caption,
+1,178** — the heroes that actually attained it. The page's only caption,
 "as of December 16, 2025", sits between them.
 
 1. The pass that first cited this page quoted the top of it and stopped, missing
@@ -480,8 +482,8 @@ dictionary, no licence, and no language model.
 
 So the work splits cleanly:
 
-- **Current status per format** — structured extraction from one archived page.
-  Unblocked today.
+- **Current legality per format** — structured extraction from one archived
+  page. Unblocked today.
 - **Historical backfill** — prose extraction from ~67 archived announcements,
   needs the card dataset as a dictionary, needs human review of every entry.
   Blocked behind (1).
@@ -551,7 +553,7 @@ is not "do 4 before 2" but:
    unverified constraints. Small, unblocked, and it is the difference between a
    format library that answers and one that refuses.
 2. **Implement `isLegal` against `formats.ts` alone** — construction rules only,
-   no card status. That validates deck size, copy limits, rarity and hero
+   no card legality. That validates deck size, copy limits, rarity and hero
    eligibility, which is most of what a tournament organiser at 6:50pm actually
    needs, and it needs no card dataset and no timeline. `LegalityResult` will need
    a field for a rule it could not evaluate — an `unevaluated: readonly {rule,
@@ -561,7 +563,7 @@ is not "do 4 before 2" but:
    Tournament Rules and Policy and the Penalty and Procedure Guide with the same
    machinery, then version-diff. The permalink is the product and it needs
    nobody's permission.
-4. **Current banned and restricted status**, from the Card Legality Policy.
+4. **The current banned and restricted lists**, from the Card Legality Policy.
 5. **Historical backfill**, once the licence lands, with human review of every
    entry.
 
@@ -601,7 +603,8 @@ rules work."*
 **LSS's own site is not the route.** `fabtcg.com` still returns **HTTP 403** to
 automated fetches — reproduced today against
 `https://fabtcg.com/articles/banned-and-restricted-announcement-sep02/`. That
-is the same blocker `docs/PHASE-0-STATUS.md` recorded, and it has not lifted.
+is the same blocker the Phase 0 report recorded — that document was deleted in
+[#219](https://github.com/alxjrvs/optfall/pull/219) — and it has not lifted.
 
 **The Wayback Machine is the route, and it is a good one.** Its CDX API is
 public, needs no key, and — decisively — serves the archived content that the
@@ -669,7 +672,7 @@ publication.** A wrong ban date is precisely the failure this project exists to
 eliminate, and an automated parse of prose is exactly where one would enter.
 
 > **Narrowed.** This holds for the *historical* backfill. It does not hold for
-> present-day status: the Card Legality Policy publishes current banned and
+> present-day legality: the Card Legality Policy publishes current banned and
 > restricted lists per format as structured HTML lists, so that half needs no
 > dictionary and no review of prose. See *Blockers* above.
 
@@ -706,8 +709,8 @@ actively maintained means there is somebody there to answer.
 ### Answer: not blocked. The document is obtainable, and it is well-formed.
 
 **The 403 was on the wrong host.** `fabtcg.com` refuses automated fetches, and
-that led an earlier draft of this very document — and `docs/PHASE-0-STATUS.md`
-before it — to record Phase 4 as blocked on unreachable source material. That
+that led an earlier draft of this very document — and the Phase 0 report before
+it — to record Phase 4 as blocked on unreachable source material. That
 conclusion was wrong, and it was wrong because only one hostname was ever
 tried.
 
@@ -775,7 +778,7 @@ exists today.
   numbering is clearly designed to be stable, but that should be checked by
   diffing two versions before permanent identifiers are promised to anyone.
 
-> **Status of these three, re-checked:**
+> **These three, re-checked:**
 >
 > - **HTML pages: unchanged.** `/en/cr/` 200, `/en/cr/cr1/` **403**, in the same
 >   minute, today. The parser works from the PDF, so this is not blocking — but
@@ -832,8 +835,8 @@ are the obvious next work:
   than card data. Every constraint must cite a source or be marked UNVERIFIED in
   the code — a confidently wrong deck-size limit is the same class of failure as
   a wrong ban.
-- **Timeline mechanics**: the date logic that answers *what was this card's
-  status on this day*. Needs no card data at all, and its boundary semantics are
+- **Timeline mechanics**: the date logic that answers *was this card legal on
+  this day*. Needs no card data at all, and its boundary semantics are
   where it will be wrong: whether `effectiveFrom` is inclusive, how overlapping
   entries resolve, and — most important — that "legal then" and "no record for
   then" must never be conflated.
@@ -847,9 +850,11 @@ capacity blocker rather than a technical one.
 ## Contradictions with `docs/PLAN.md` and with our own records
 
 **One, and it is ours rather than the plan's.**
-`docs/PHASE-0-STATUS.md` records *"The LSS terms page has never been read.
-`fabtcg.com` returns 403 to automated fetches"* and carries that forward as a
-constraint on Phase 4. The 403 is real, but the inference drawn from it was too
+The Phase 0 report — since deleted in
+[#219](https://github.com/alxjrvs/optfall/pull/219) — recorded *"The LSS terms
+page has never been read. `fabtcg.com` returns 403 to automated fetches"* and
+carried that forward as a constraint on Phase 4. The 403 is real, but the
+inference drawn from it was too
 broad: the rules documents are on `rules.fabtcg.com` and are served without
 complaint. **Phase 4 is not blocked on source access.** That line should be
 narrowed to what it actually established — the *terms* page, on `fabtcg.com`,
@@ -885,3 +890,9 @@ whoever edits it next:
 >   came from bytes retrieved over HTTP, verbatim including the Tournament Rules'
 >   own typos — "card-poll" in 7.4, "the what cards in are placed" in `cr:4.1.2a`
 >   — because a tidied quotation is not a quotation.
+
+<!-- `color.rule.strong`, from the dark set of `packages/theme/src/tokens.ts`.
+     The legend saying what each chip commits to is in `COMPLIANCE.md`, under
+     "How to read a chip". -->
+
+[chip-archive]: https://img.shields.io/badge/archive-3f3f3f?style=flat-square

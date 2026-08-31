@@ -498,7 +498,7 @@ export function isLegal(
  *
  * `isLegal` still throws {@link NotImplementedError}: joining these two needs
  * the card dataset, and the community dataset ships no licence (see
- * `docs/PHASE-2-STATUS.md`). Both halves work today regardless — a caller can
+ * `docs/PHASE-2-REPORT.md`). Both halves work today regardless — a caller can
  * read `FORMAT_RULES` for construction limits and `statusAsOf` for card status
  * without waiting for that licence.
  *

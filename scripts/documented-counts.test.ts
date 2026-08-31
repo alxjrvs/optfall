@@ -129,7 +129,7 @@ const FIGURES: readonly {
 describe("the two figures that look wrong and are not", () => {
   test("1,269 and 1,278 count different things, and both are right", () => {
     /*
-     * `PHASE-2-STATUS.md` and `SOURCES.md` say 1,269 — "87 sections + 548 rules
+     * `PHASE-2-REPORT.md` and `SOURCES.md` say 1,269 — "87 sections + 548 rules
      * + 634 subrules". Everywhere else says 1,278. The nine between them are the
      * CHAPTERS, which are pages like any other node but are not one of the three
      * things that subtotal names.

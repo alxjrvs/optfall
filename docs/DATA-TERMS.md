@@ -55,7 +55,7 @@ Precisely and exhaustively — this is the enumeration, not an illustration:
   URL scheme that addresses them. The identifier is ours; the rule text it points
   at is not.
 - **The legality timeline.** Records of the form *(format, card identifier,
-  status, effective date, source citation)* — every banned-and-restricted
+  legality, effective date, source citation)* — every banned-and-restricted
   revision and Living Legend threshold, date-stamped.
 - **Version diffs.** The computed difference between two versions of an official
   document — the structure of the change, our section mapping across versions,

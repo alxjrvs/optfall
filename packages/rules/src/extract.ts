@@ -41,7 +41,7 @@ export interface DownloadedDocument {
  * `rules.fabtcg.com` serves it without complaint. `fabtcg.com` — a different
  * host — returns 403 to automated requests; that blocker is real and does not
  * apply here, and conflating the two is what previously had this work recorded
- * as blocked (see `docs/PHASE-2-STATUS.md`).
+ * as blocked (see `docs/PHASE-2-REPORT.md`).
  *
  * @param directory - Where to write the file. A fresh temp directory by default.
  * @throws {Error} On any non-200 response, rather than parsing an error page.
