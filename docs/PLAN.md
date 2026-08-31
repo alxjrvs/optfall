@@ -4,7 +4,7 @@
 rules engine attached — every card, every printing, every rule, each citable and
 each with a permanent URL.
 
-| Phase | | | |
+| Phase | | State | |
 |---|---|---|---|
 | 0 | Repo and infrastructure | ![Done][chip-done] | |
 | 1 | Theme and components | ![Done][chip-done] | |
@@ -218,8 +218,8 @@ an org later would be expensive to undo.
 
 **Script the repo settings, don't click them.** The agent-friendly configuration
 is a real specification: squash-only merges, rebase-preferred branch updates,
-required linear history, a single aggregate status check rather than per-job
-checks, no required human review, and an empty bypass list so nobody — including
+required linear history, one aggregate required check rather than per-job ones,
+no required human review, and an empty bypass list so nobody — including
 you — can route around it. That set is fiddly enough to drift when applied by
 hand, so it lives in `scripts/repo-settings.sh` and is checked on a schedule.
 
@@ -243,7 +243,7 @@ the repository can satisfy on its own.** Anything needing a human-issued
 credential belongs on a schedule, reporting to an issue.
 
 **The aggregate gate is the part most often got wrong.** Requiring each
-individual CI job as a status check strands required checks in "pending" forever
+individual CI job strands the required checks in "pending" forever
 on path-filtered pull requests. One `gate` job that depends on every other job
 and always runs is the shape that actually works with auto-merge.
 
@@ -1057,9 +1057,9 @@ engine attached.**
 *This line read "Svelte components, Astro site" until Phase 6 deleted both, and
 went on reading that way after they were gone. It is corrected rather than
 quietly rewritten because it is the third instance of the same failure this
-document now records twice elsewhere: a summary line nobody re-measures drifts in
-whichever direction is least visible, and the summary of what is settled is
-exactly the kind of prose nobody re-reads.*
+document now records twice elsewhere: a claim about state that nobody
+re-measures drifts in whichever direction is least visible, and the summary of
+what is settled is exactly the kind of prose nobody re-reads.*
 
 **Settled, and it was the headline question.** Past banned-and-restricted
 revisions *are* publicly archived — the Wayback Machine carries 202 archived

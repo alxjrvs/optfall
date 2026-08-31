@@ -114,7 +114,7 @@ life  name  object_type  pitch  power  text  textbox  typebox  url
 ```
 
 **No legality data of any kind.** No format flags, no banned or restricted
-status, no Living Legend, no set, no rarity, no printings, no artist. `typebox`
+marking, no Living Legend, no set, no rarity, no printings, no artist. `typebox`
 is one unparsed string. The detail endpoint returns the same 17 fields as the
 list endpoint — there is no fuller representation behind it.
 
@@ -262,7 +262,8 @@ retrieval route — the Wayback path in `sources/wayback.ts` still stands.
 Second, Comprehensive Rules **9.4.2** names
 `https://fabtcg.com/living-legend/` as *"the official Flesh and Blood living
 legend resource page"*. That is the rules document pointing at an official
-source for Living Legend status — and it 403s like everything else on that host.
+source for which heroes are Living Legend — and it 403s like everything else on
+that host.
 Worth adding to any eventual request to LSS for automated access.
 
 ---

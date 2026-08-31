@@ -76,13 +76,13 @@ Both conditions appear in the checklist below.
 Six obligations. Each is a section: the requirement, where it is enforced, what
 would break it, and how we would find out.
 
-Every enforcement point named below resolves to a file that is on `main` —
-`scripts/repo-settings.sh`, `scripts/canonical-disclaimer.ts`,
-`scripts/check-disclaimer.ts`, `apps/site/src/lib/compliance.ts`,
-`apps/site/src/lib/tcgplayer.ts` and `apps/site/ssg/document.tsx`. *(This
-paragraph read "files that mostly do not exist yet — Phase 0 is the phase that
-creates them" until 2026-08-31. Phase 0 shipped and the sentence did not move,
-which is the exact failure mode the chips below are meant to make visible.)*
+Every file named as an enforcement point below is on `main` — all seventeen of
+them, checked one by one on 2026-08-31, from `scripts/repo-settings.sh` to
+`data/brand/brand.json`. *(This paragraph read "Enforcement points name files
+that mostly do not exist yet — Phase 0 is the phase that creates them" until
+that date. Phase 0 shipped and the sentence did not move, which is the failure
+mode the chips below exist to make visible: a claim about state, written once,
+owned by nobody.)*
 
 ### How to read a chip
 

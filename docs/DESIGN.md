@@ -336,8 +336,9 @@ find where it started, on a hundred and twelve rows. A fact is an object, and
 something, and what it means is state. A release date and a card count are not
 state, so the chip is a plain rectangle and `StatePill` is still the only thing
 in the system wearing the chamfer. A chip that borrowed it would spend the one
-ornament this design has on the commonest object on the page — and print status,
-which genuinely *is* a state, deliberately does **not** get a pill either, because
+ornament this design has on the commonest object on the page — and whether a set
+is in print, which genuinely *is* a state, deliberately does **not** get a pill
+either, because
 a notched chip in a strip of plain ones reads as a legality verdict.
 
 **No colour.** Every filled mark here carries a *data* colour — the pitch
