@@ -26,20 +26,23 @@ confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
 
 | Document | Contents |
 |---|---|
-| [`docs/PLAN.md`](docs/PLAN.md) | Phased build plan — what gets built, in what order, and why |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | The roadmap — the phases still open, what is out of scope and why, with the finished phases summarised |
+| [`docs/DISCLAIMER.md`](docs/DISCLAIMER.md) | The permission envelope, and the required LSS disclaimer as the parsed specification |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Design language, component system, and screen designs |
 | [`docs/SCRYFALL-GAP.md`](docs/SCRYFALL-GAP.md) | Comparative analysis against Scryfall, and the remove/update/extend plan to close it |
-| [`docs/SOURCES.md`](docs/SOURCES.md) | Every upstream, re-verified — what is current, what the community trusts, and where an official source exists |
 | [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) | The permission envelope, as an operational checklist with enforcement points |
 | [`docs/DATA-TERMS.md`](docs/DATA-TERMS.md) | Terms on the data Optfall publishes, and what is *not* ours to license |
 
-Two delivery reports are kept as the record of what was true when a phase
-landed, and are **not** descriptions of the build as it stands:
-[`docs/PHASE-1-REPORT.md`](docs/PHASE-1-REPORT.md) ![Archive][chip-archive] and
-[`docs/PHASE-2-REPORT.md`](docs/PHASE-2-REPORT.md) ![Archive][chip-archive].
-Each opens with a banner naming what has since changed.
+Two delivery reports and a source-verification pass were kept here and have
+been retired: each recorded what was true when a phase landed rather than the
+build as it stands, and they are in the git history. What they verified has not
+changed — the card corpus is pinned to a commit of the community dataset
+[`the-fab-cube/flesh-and-blood-cards`](https://github.com/the-fab-cube/flesh-and-blood-cards)
+by `scripts/build-card-corpus.ts`, and the Comprehensive Rules come from
+`rules.fabtcg.com`, which serves automated clients where `fabtcg.com` returns
+403.
 
-Chips like those are Optfall's own state palette, and
+The chips are Optfall's own state palette, and
 [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md#how-to-read-a-chip) carries the legend
 that says what each word commits to.
 
@@ -47,8 +50,8 @@ that says what each word commits to.
 
 **Phases 0, 1, 2 and 6 are on `main`**, and the product surface is built: a
 12,776-page site with card pages, set pages, the Comprehensive Rules, a card
-search and a rules search. See [`docs/PLAN.md`](docs/PLAN.md) for what each
-phase covers and what remains.
+search and a rules search. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what
+each phase covers and what remains.
 
 - ![Live][chip-live] **Repository and CI** — a single aggregate gate,
   squash-only merges with linear history, and a weekly drift check that opens
@@ -85,14 +88,16 @@ upstream's flags, read by `apps/site/src/lib/cards.ts`.
 What is missing is `data/legality`, which does not exist. Building it means
 prose extraction from roughly 67 archived announcements, with human review of
 every entry, reachable only through the Wayback Machine because `fabtcg.com`
-returns 403 — and it is blocked behind the licence request drafted in
-[`docs/upstream-licence-issue.md`](docs/upstream-licence-issue.md), which **has
-never been sent**. That file says why it has not: it asks a favour of a
+returns 403. A courteous request to the upstream maintainers for an explicit
+licence was drafted and **has never been sent** — it asks a favour of a
 volunteer maintainer and cites a third party's legal terms, so a person should
-post it under their own name.
+post it under their own name. It is **not** a gate on this work, and treating
+it as one was an error:
+[`docs/ROADMAP.md`](docs/ROADMAP.md#the-upstream-licence-request) carries the
+current position, and the drafted text is in the git history.
 
-So the next action on Phase 3 is not a commit. It is somebody reading that
-draft and deciding whether to send it.
+So the next action on Phase 3 is `data/legality` itself. Sending the draft is
+worth five minutes and is not something to clear first.
 
 ## Working on it
 
@@ -139,8 +144,9 @@ Legend Story Studios.
   same object a `StatePill` draws on a card page. The definitions are
   reference-style so the prose above stays inside 80 columns.
 
-  `docs/COMPLIANCE.md` and `docs/PLAN.md` each repeat the definitions they use,
-  because Markdown has no link table shared across files. The legend saying what
+  `docs/COMPLIANCE.md` and `docs/ROADMAP.md` each repeat the definitions they
+  use, because Markdown has no link table shared across files. The legend
+  saying what
   each word COMMITS TO is written once, in `docs/COMPLIANCE.md` under "How to
   read a chip", and linked from the others rather than restated.
 -->
@@ -151,4 +157,3 @@ Legend Story Studios.
 [chip-mit]: https://img.shields.io/badge/code-MIT-787878?style=flat-square
 [chip-no-llm]: https://img.shields.io/badge/no%20language%20model-2f7d4f?style=flat-square
 [chip-blocked]: https://img.shields.io/badge/blocked-6f5aa6?style=flat-square
-[chip-archive]: https://img.shields.io/badge/archive-3f3f3f?style=flat-square

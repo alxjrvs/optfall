@@ -1,7 +1,7 @@
 # Repository-configuration drift check.
 #
-# docs/PLAN.md, "Asserted, not merely declared": a settings file nobody re-runs
-# is a description of the past. This is the job that makes the configuration in
+# Asserted, not merely declared: a settings file nobody re-runs is a
+# description of the past. This is the job that makes the configuration in
 # scripts/repo-settings.sh a claim something can falsify.
 #
 # WHY THIS IS SCHEDULED AND NOT PART OF ci.yml's GATE — two reasons, and the

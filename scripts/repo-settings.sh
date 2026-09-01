@@ -5,9 +5,10 @@
 #   scripts/repo-settings.sh            apply the configuration
 #   scripts/repo-settings.sh --check    verify the live repo matches; exit non-zero on drift
 #
-# THIS IS THE ONLY MECHANISM. There is deliberately no Terraform: docs/PLAN.md
-# ("Stack") settles it — one repository and a short checklist does not justify a
-# state file, a provider dependency and a language nobody on this project
+# THIS IS THE ONLY MECHANISM. There is deliberately no Terraform:
+# docs/ROADMAP.md ("Settled") records the decision — one repository and a short
+# checklist does not justify a state file, a provider dependency and a language
+# nobody on this project
 # writes. If you are about to add a second mechanism, don't: two declarations of
 # the same ruleset means whichever ran last wins and neither can tell you so.
 #
@@ -53,9 +54,10 @@
 #   Every change to `main` after that is a pull request. Direct pushes are
 #   blocked by the required status check, which is the intended end state.
 #
-# Every value below is a specification, not a preference. Read docs/PLAN.md
-# "Phase 0" before changing one — several are load-bearing in non-obvious ways,
-# and each is annotated with why.
+# Every value below is a specification, not a preference — several are
+# load-bearing in non-obvious ways, and each is annotated with why. The decision
+# they implement is docs/ROADMAP.md's Phase 0: repository settings as a `gh api`
+# script rather than Terraform.
 
 set -euo pipefail
 
@@ -550,4 +552,4 @@ if [[ "$drift" -ne 0 ]]; then
   echo "Configuration has drifted. Run scripts/repo-settings.sh to restore it."
   exit 1
 fi
-echo "Repository configuration matches docs/PLAN.md."
+echo "Repository configuration matches scripts/repo-settings.sh."

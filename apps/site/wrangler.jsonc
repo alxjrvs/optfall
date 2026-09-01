@@ -3,7 +3,9 @@
   //
   // THERE IS NO WORKER SCRIPT, AND THAT IS THE WHOLE POINT. This site is
   // static output only — no functions, no edge handlers, no runtime — and
-  // docs/PLAN.md's "no uptime story to fail" rests on that. Cloudflare serves
+  // having no uptime story to fail rests on that: docs/ROADMAP.md, Phase 6 and
+  // "Settled", a static generator this project owns on Cloudflare hosting.
+  // Cloudflare serves
   // the built files straight from the assets binding: no `main`, no script,
   // nothing to boot and nothing to page anyone about at 3am.
   //

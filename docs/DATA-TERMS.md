@@ -12,7 +12,7 @@ comes from a conditional grant by Legend Story Studios, and **that grant binds
 recipients too**. So these terms are not a formality: passing LSS's conditions
 downstream intact is one of the six things we owe in exchange for being allowed
 to exist. See [`COMPLIANCE.md`](COMPLIANCE.md) for the full obligation set and
-[`PLAN.md`](PLAN.md) for the envelope it derives from.
+[`DISCLAIMER.md`](DISCLAIMER.md) for the envelope it derives from.
 
 The short version, before the detail:
 
@@ -103,7 +103,7 @@ possible to disagree with it on the merits:
 
 3. **We are asking upstream for a permissive licence.** Optfall's dependency on
    the community card dataset turns on that maintainer choosing permissive terms
-   (see [`upstream-licence-issue.md`](upstream-licence-issue.md)). Asking for
+   (see [`ROADMAP.md`](ROADMAP.md#the-upstream-licence-request)). Asking for
    permissive while giving copyleft is bad faith, and it weakens the ask.
 
 4. **ShareAlike over a mixed corpus is a trap for the people who trust us.**
@@ -113,7 +113,7 @@ possible to disagree with it on the merits:
    CC0 over our layer keeps the boundary legible: the only conditions on the file
    are LSS's, stated plainly, and none of them are ours.
 
-5. **It has to survive us.** `PLAN.md` commits that if the site disappears, the
+5. **It has to survive us.** Optfall commits that if the site disappears, the
    corpus does not. That only holds if a stranger can fork the data without
    consulting a lawyer first. Three Flesh and Blood tools have already died or
    decayed; the licence should assume we are the fourth.
@@ -209,9 +209,10 @@ underlying game content. So, until that resolves:
 - Consumers who want the card corpus itself should go to the upstream repository
   and form their own view of what its absent licence permits.
 
-We have drafted a courteous request for an explicit licence
-([`upstream-licence-issue.md`](upstream-licence-issue.md)). This section gets
-rewritten when it resolves.
+We have drafted a courteous request for an explicit licence and have not sent
+it; its status is in
+[`ROADMAP.md`](ROADMAP.md#the-upstream-licence-request), and the drafted text is
+in the git history. This section gets rewritten when it resolves.
 
 ---
 
@@ -221,7 +222,7 @@ Not yet in effect. Recorded now so the terms exist before the first contributor
 does, rather than being invented under pressure afterwards.
 
 Judge-authored ruling text is neither ours by default nor LSS's. The commitments
-that shape whatever licence lands here, from `PLAN.md`:
+that shape whatever licence lands here, from `ROADMAP.md`'s Phase 5:
 
 - **Authors keep their byline.** Every verified entry carries a name, a date and
   the rules version it was answered under. Contributing must read as

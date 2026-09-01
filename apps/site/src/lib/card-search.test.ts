@@ -1,8 +1,9 @@
 /**
  * The card query engine, pinned.
  *
- * Two properties are being defended here, and they are the two `docs/PLAN.md`
- * trades on.
+ * Two properties are being defended here, and they are the two the project
+ * trades on: `README.md`'s "being right", and `LLM_STATEMENT.md`'s refusal to
+ * fill a gap with a plausible answer.
  *
  * **The engine never answers a question it did not understand.** A silently
  * dropped operator is worse than an error: `legal:cc@2026-03-14` ignored would

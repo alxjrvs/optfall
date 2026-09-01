@@ -129,10 +129,12 @@ const FIGURES: readonly {
 describe("the two figures that look wrong and are not", () => {
   test("1,269 and 1,278 count different things, and both are right", () => {
     /*
-     * `PHASE-2-REPORT.md` and `SOURCES.md` say 1,269 — "87 sections + 548 rules
-     * + 634 subrules". Everywhere else says 1,278. The nine between them are the
-     * CHAPTERS, which are pages like any other node but are not one of the three
-     * things that subtotal names.
+     * 1,269 is "87 sections + 548 rules + 634 subrules" — the subtotal two
+     * now-retired documents quoted, being the figure they used when reconciling
+     * the parsed corpus against a grep of the extracted rules text. Both were
+     * deleted on 2026-09-01 and are in the git history. Everywhere else says
+     * 1,278. The nine between them are the CHAPTERS, which are pages like any
+     * other node but are not one of the three things that subtotal names.
      */
     const byLevel = new Map<string, number>();
     for (const page of RULE_PAGES) {

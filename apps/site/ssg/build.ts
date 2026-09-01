@@ -2,8 +2,8 @@
 /**
  * The static generator. `bun ssg/build.ts`.
  *
- * `docs/PLAN.md` Phase 6. **This is the build now.** It rendered alongside Astro
- * into `dist-next/` for four layers, matched it at 12,776 pages, and layer 5
+ * `docs/ROADMAP.md` Phase 6. **This is the build now.** It rendered alongside
+ * Astro into `dist-next/` for four layers, matched it at 12,776 pages, and layer 5
  * deleted the other one — so the output is `dist/`, which is what gets
  * published and what every compliance check reads.
  *

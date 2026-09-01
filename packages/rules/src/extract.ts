@@ -6,9 +6,9 @@
  * anywhere; this module touches the network and shells out to `pdftotext`, and
  * a browser consumer must not pull it in by accident.
  *
- * Neither the PDF nor the extracted corpus is committed. `docs/PLAN.md` wants
- * ingestion to run as a scheduled job that opens a pull request, not as a blob
- * in the tree, so this fetches on demand into a temporary directory.
+ * Neither the PDF nor the extracted corpus is committed. Ingestion runs as a
+ * scheduled job that opens a pull request, never as a blob in the tree, so
+ * this fetches on demand into a temporary directory.
  *
  * Zero runtime dependencies still holds: `node:crypto`, `node:child_process`,
  * `node:fs` and `node:os` are platform builtins, not packages.
@@ -41,7 +41,9 @@ export interface DownloadedDocument {
  * `rules.fabtcg.com` serves it without complaint. `fabtcg.com` — a different
  * host — returns 403 to automated requests; that blocker is real and does not
  * apply here, and conflating the two is what previously had this work recorded
- * as blocked (see `docs/PHASE-2-REPORT.md`).
+ * as blocked. A 403 is a fact about a URL, never about a document — the
+ * Phase 2 delivery report that corrected that record was retired on
+ * 2026-09-01 and is in the git history.
  *
  * @param directory - Where to write the file. A fresh temp directory by default.
  * @throws {Error} On any non-200 response, rather than parsing an error page.

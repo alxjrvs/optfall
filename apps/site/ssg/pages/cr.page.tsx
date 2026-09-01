@@ -4,8 +4,9 @@
  *
  * IT MOVED OFF `/search`, and the reason is that `/search` now means what it
  * means everywhere else: cards. Optfall is a card search engine with a rules
- * engine attached — `docs/PLAN.md` — and a reader who types `/search` is looking
- * for a card. Scryfall's `/search?q=` is the shape people arrive fluent in, and
+ * engine attached — `docs/ROADMAP.md`, and it is settled — and a reader who
+ * types `/search` is looking for a card. Scryfall's `/search?q=` is the shape
+ * people arrive fluent in, and
  * having it answer the Comprehensive Rules instead was a private joke at a
  * stranger's expense.
  *
@@ -115,9 +116,10 @@ function page(): PageResult {
         </Island>
 
         {/*
-          Degrade visibly. `docs/PLAN.md`: "Every surface shows when its data was
-          last confirmed. A stale Optfall must look stale." The version, the date
-          and the source are stated on the surface that serves the text, not
+          Degrade visibly. `docs/DATA-TERMS.md`: "every surface shows when its
+          data was last confirmed. A stale Optfall is required to look stale."
+          The version, the date and the source are stated on the surface that
+          serves the text, not
           buried in an about page — and the source is a link, so the claim is
           checkable.
         */}

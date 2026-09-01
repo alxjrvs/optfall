@@ -773,9 +773,10 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
         corpus cannot support.
 
         So the operator that has a defensible meaning is offered and the one
-        that does not is named. `docs/PLAN.md`, "degrade visibly": an engine
-        that cannot answer honestly says so rather than picking whichever
-        answer looks reasonable.
+        that does not is named. `LLM_STATEMENT.md`: where Optfall does not
+        know something it says so, rather than generating a plausible sentence
+        to fill the gap — an engine that cannot answer honestly says so rather
+        than picking whichever answer looks reasonable.
       */
       if (token.compare === "!=") {
         note(

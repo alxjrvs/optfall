@@ -9,8 +9,8 @@
  *
  * The figure was written when the corpus was 16 MB and stayed there while the
  * corpus grew to 18. It was repeated in twenty-one places across CLAUDE.md,
- * `docs/PLAN.md` and eighteen docblocks, so by the time anyone noticed, the
- * correction was a sweep rather than an edit. That is the shape of defect this
+ * the since-retired build plan and eighteen docblocks, so by the time anyone
+ * noticed, the correction was a sweep rather than an edit. That is the shape of defect this
  * repository corrects most often, and the only durable answer is to stop
  * asserting the number by hand.
  *
@@ -40,7 +40,6 @@ const CORPUS_PATH = "data/cards/cards.json";
  */
 const CLAIMANTS: readonly string[] = [
   "CLAUDE.md",
-  "docs/PLAN.md",
   "apps/site/ssg/build.ts",
   "apps/site/ssg/hostConfig.ts",
   "apps/site/ssg/components/CardIndex.tsx",
