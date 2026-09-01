@@ -12,10 +12,22 @@
  * EVERY OPERATOR BELOW WAS READ OFF THE PARSER, not remembered. The field list
  * is `FIELD_OPERATORS`, the legality list is `STATE_OPERATORS` crossed with
  * `FORMAT_ALIASES`, the booleans are `tokenise()` in `lib/query.ts`, and the
- * comparison rule is the branch in `lib/card-search.ts`. When one of those
- * changes this page is wrong, and there is no test that will say so — the
- * honest mitigation is that they sit three files apart and this comment names
- * all three.
+ * comparison rule is a branch under `lib/card-search/`.
+ *
+ * THERE IS NOW A TEST, AND THIS COMMENT USED TO DENY IT. `syntax.test.ts` sits
+ * beside this file and runs in both directions: every operator the grammar
+ * accepts must be named here, every operator this page documents must be one
+ * the grammar accepts, and every example printed here is executed through
+ * `parseCardQuery`. Omit an operator, document a refused one, or leave a stale
+ * example, and the suite goes red.
+ *
+ * WHAT IT STILL CANNOT SEE IS PROSE. The test is a text search for the
+ * operator's NAME, so a sentence that has gone stale around a name it still
+ * contains is invisible to it — `syntax.test.ts` says so itself rather than
+ * implying more coverage than it has. That is the residual gap, and it is
+ * narrower than "no test will say so", which is what this comment claimed
+ * until 2026-09-01 and which CLAUDE.md and the search-filter skill both
+ * repeated on this file's authority.
  *
  * The tone is the project's: it documents what the engine DOES, including the
  * two places it deliberately refuses to guess. A syntax page that quietly omits
