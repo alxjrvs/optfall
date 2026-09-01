@@ -3064,7 +3064,57 @@ describe("_headers and _redirects say what the host is told", () => {
   test("production is never noindexed, which is the other half of that", () => {
     const rendered = renderHeaders(headersFor({ preview: false }));
     expect(rendered).not.toContain("X-Robots-Tag");
-    expect(headersFor({ preview: false })).toBe(HEADERS);
+    /* CONTENT RATHER THAN IDENTITY. This asserted `toBe(HEADERS)` while the
+       non-preview path returned the constant untouched; it composes a cache
+       rule per hashed asset now, so it always builds a new array. What the
+       test is actually about — production carries the standing rules and no
+       robots directive — is unchanged. */
+    expect(headersFor({ preview: false })).toEqual([...HEADERS]);
+  });
+
+  test("only the files the caller names are cached forever", () => {
+    const rules = headersFor({
+      preview: false,
+      immutable: ["/assets/styles-BQMe_s02.css"],
+    });
+    const cached = rules.filter(
+      (rule) => rule.headers["Cache-Control"] !== undefined,
+    );
+    expect(cached.map((rule) => rule.pattern)).toEqual([
+      "/assets/styles-BQMe_s02.css",
+    ]);
+    expect(cached[0]?.headers["Cache-Control"]).toContain("immutable");
+  });
+
+  /*
+    THE EXCLUSION THIS WHOLE ARRANGEMENT EXISTS FOR. `assets/tokens.css` is
+    generated from `packages/theme` under a FIXED name, so it is the one file in
+    that directory whose bytes change while its URL does not. The obvious
+    implementation — a `/assets/*` pattern — would freeze the design system in a
+    returning reader's browser for a year, and it would do it silently.
+  */
+  test("a pattern can never sweep assets/tokens.css into immutable", () => {
+    const rendered = renderHeaders(
+      headersFor({
+        preview: false,
+        immutable: ["/assets/styles-BQMe_s02.css", "/assets/islands-abc123.js"],
+      }),
+    );
+    expect(rendered).not.toContain("/assets/*");
+    expect(rendered).not.toContain("tokens.css");
+  });
+
+  test("a repeated pattern is refused rather than silently dropped", () => {
+    /* A later block with the same pattern REPLACES the earlier one rather than
+       merging — the behaviour that once cost previews their security headers.
+       The cache rules are derived from a manifest that really does list one
+       stylesheet twice, so this is a live hazard rather than a hypothetical. */
+    expect(() =>
+      renderHeaders([
+        { pattern: "/a", headers: { "Cache-Control": "x" } },
+        { pattern: "/a", headers: { "Cache-Control": "y" } },
+      ]),
+    ).toThrow(/share the pattern/);
   });
 
   test("both files stay under Cloudflare's ceilings", () => {

@@ -49,6 +49,9 @@ import {
   renderRedirects,
   TOKENS_PATH,
 } from "./hostConfig";
+/* The two indexes this build hashes itself, named so `_headers` can cache
+   them forever alongside Vite's own hashed output. */
+import { CARD_INDEX, RULES_INDEX } from "./searchIndexes";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
@@ -417,24 +420,16 @@ async function main(): Promise<void> {
   }
 
   /*
-   * THE HOST'S OWN TWO FILES, WRITTEN LAST AMONG THE FLAT ONES. They are not in
-   * `generatedAssets()` on purpose — that registry is what the site SERVES, and
-   * these are read by the host and then hidden. `hostConfig.ts` says why.
+   * THE HOST'S OWN TWO FILES. They are not in `generatedAssets()` on purpose —
+   * that registry is what the site SERVES, and these are read by the host and
+   * then hidden. `hostConfig.ts` says why.
+   *
+   * ONLY ONE OF THEM IS WRITTEN HERE NOW. `_redirects` is a constant and can be
+   * written the moment the directory exists; `_headers` carries a cache rule
+   * per content-hashed asset, so it cannot be written until the manifest has
+   * been read. It moved down to where those names are known.
    */
-  /*
-   * `OPTFALL_PREVIEW` is set by the deploy workflow on a pull request and by
-   * nothing else. It adds `X-Robots-Tag: noindex` to the wildcard rule so a
-   * preview host cannot be indexed alongside production — see `headersFor`,
-   * which also records why this is a merge rather than an extra rule.
-   */
-  const preview = process.env["OPTFALL_PREVIEW"] === "1";
-  await writeFile(
-    join(OUT_DIR, "_headers"),
-    renderHeaders(headersFor({ preview })),
-    "utf-8",
-  );
   await writeFile(join(OUT_DIR, "_redirects"), renderRedirects(), "utf-8");
-  if (preview) console.log("[ssg] preview build — _headers carries noindex");
 
   /*
    * TOKENS FIRST, COMPONENTS SECOND. The component sheets consume `--of-*`
@@ -445,6 +440,50 @@ async function main(): Promise<void> {
    * `<head>` nobody rereads.
    */
   const assets = await assetsFromManifest();
+
+  /*
+   * `_headers`, WRITTEN HERE BECAUSE THIS IS WHERE THE HASHED NAMES ARE KNOWN.
+   *
+   * It used to be written above, beside `_redirects`, which was fine while it
+   * carried nothing but two constant rules. It carries the cache policy now,
+   * and that policy is a list of FILES rather than a pattern — `hostConfig.ts`
+   * says why at length, the short version being that `assets/tokens.css` is
+   * generated under a fixed name and a `/assets/*` rule would freeze the design
+   * system in a returning reader's browser for a year.
+   *
+   * THE NAMES COME FROM VITE'S MANIFEST, NOT FROM THEIR SHAPE. Everything in
+   * `assets.styles` and `assets.islandChunks` was emitted by Vite with a
+   * content hash in its name, and the two search indexes are hashed by this
+   * build. That is the whole set: proven by construction rather than inferred
+   * from the filename, which is a test that fails in both directions — see the
+   * note above `IMMUTABLE`.
+   *
+   * `OPTFALL_PREVIEW` is set by the deploy workflow on a pull request and by
+   * nothing else. It adds `X-Robots-Tag: noindex` to the wildcard rule so a
+   * preview host cannot be indexed alongside production — see `headersFor`,
+   * which also records why this is a merge rather than an extra rule.
+   */
+  const preview = process.env["OPTFALL_PREVIEW"] === "1";
+  /* DEDUPED, AND THE DUPLICATE IS REAL RATHER THAN THEORETICAL. `assets.styles`
+     comes from `entries.flatMap` over the Vite manifest, and two entries list
+     the same `SearchField` stylesheet — which is also why it is linked twice in
+     every page's `<head>`. `renderHeaders` refuses a repeated pattern outright,
+     because a later block REPLACES an earlier one rather than merging, so a
+     duplicate here would silently drop a rule instead of adding one. */
+  const immutable = [
+    ...new Set([
+      ...assets.styles.map((href) => `/${href}`),
+      ...assets.islandChunks.map((chunk) => `/${chunk}`),
+      CARD_INDEX.url,
+      RULES_INDEX.url,
+    ]),
+  ];
+  await writeFile(
+    join(OUT_DIR, "_headers"),
+    renderHeaders(headersFor({ preview, immutable })),
+    "utf-8",
+  );
+  if (preview) console.log("[ssg] preview build — _headers carries noindex");
   const styles: readonly string[] = [
     `/${TOKENS_PATH}`,
     ...assets.styles.map((href) => `/${href}`),
