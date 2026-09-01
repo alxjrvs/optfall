@@ -352,10 +352,17 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
 
   return {
     title: `${set.name} — Optfall`,
-    /* THE SAME TWO NUMBERS THE MASTHEAD PRINTS, because this string is what a
-       pasted link says about itself and a description claiming 155 cards over a
-       page that also says 307 is the disagreement `counted` exists to end. */
-    description: `The ${rows} Flesh and Blood cards Optfall carries from ${set.name} (${set.id})${versions === rows ? "" : `, ${versions} counting each pitch version`}, each with its printed text, its printings and its per-format legality.`,
+    /* NO COUNTS, WHERE THERE USED TO BE TWO OF THEM.
+
+       This string once opened "The 243 Flesh and Blood cards Optfall carries
+       from …, 423 counting each pitch version" — the masthead's two numbers
+       repeated, so that a pasted link could not contradict the page it points
+       at. That reasoning was sound and the premise is gone: a description is
+       the one place those figures are read WITHOUT the page beside them, in a
+       search result or a chat unfurl, where a total tells a reader nothing
+       about whether this set holds what they are looking for. The masthead
+       still prints both, beside the grid that justifies them. */
+    description: `The Flesh and Blood cards Optfall carries from ${set.name} (${set.id}), each with its printed text, its printings and its per-format legality.`,
     section: "sets",
     /*
       THE SAME COLUMN `/search` USES, because it is the same `CardIndex` showing

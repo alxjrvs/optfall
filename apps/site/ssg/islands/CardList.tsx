@@ -236,12 +236,21 @@ export function CardList({ entries, subject }: CardListProps) {
     THE SENTENCE NAMES THE SLICE, NOT THE TOTAL, because the masthead above it
     already gives the total. Two counts saying one number is one of them being
     noise; "cards 61–120 of 412" is the fact the masthead cannot state.
+
+    WHICH IS WHY THE SINGLE-PAGE CASE NOW COUNTS NOTHING. It used to read "24
+    cards from Armory Deck - Olympia" — and on a set page that is the THIRD
+    statement of 24, after the masthead's own `Cards` row and the grid of
+    twenty-four faces directly beneath it. There is no slice to name when there
+    is only one page, so the sentence had nothing left to say that the page was
+    not already saying twice. The paginated branch keeps its numbers because
+    they are navigational: they tell a reader where they are and how much is
+    left, which nothing else on the page does.
   */
   const summary =
     entries.length === 0
       ? `Optfall carries no cards from ${subject}.`
       : slice.pages === 1
-        ? `${entries.length.toLocaleString("en-GB")} card${entries.length === 1 ? "" : "s"} from ${subject}.`
+        ? `Cards from ${subject}.`
         : `Cards ${slice.from.toLocaleString("en-GB")}–${slice.to.toLocaleString("en-GB")} of ${slice.total.toLocaleString("en-GB")} from ${subject}.`;
 
   return (

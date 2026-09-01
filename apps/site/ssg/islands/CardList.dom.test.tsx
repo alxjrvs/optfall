@@ -339,18 +339,30 @@ describe("the sentence over the list", () => {
     expect(summary()).toBe("Cards 1–60 of 140 from Mistveil.");
   });
 
-  test("names the total when the list fits on one page, and draws no pager", async () => {
+  test("counts nothing when the list fits on one page, and draws no pager", async () => {
     /* Two counts saying one number is one of them being noise; the masthead
        above already gives the total, so the pager's sentence is what this can
-       add — and with one page there is nothing to add. */
+       add — and with one page there is nothing to add.
+
+       THIS TEST USED TO ASSERT "12 cards from Mistveil." — the count the
+       comment above had just finished arguing was noise. The reasoning was
+       right and the assertion was a snapshot of what the component happened to
+       do, which is how a test ends up defending the thing its own comment
+       objects to. On a set page that sentence is the THIRD statement of 12,
+       after the masthead's `Cards` row and the twelve faces below it. */
     live = await mount(rows(12));
-    expect(summary()).toBe("12 cards from Mistveil.");
+    expect(summary()).toBe("Cards from Mistveil.");
     expect(document.querySelector(".of-pages")).toBeNull();
   });
 
-  test("a single card is not pluralised", async () => {
+  test("one card gets the same sentence as twelve", async () => {
+    /* There is no plural left to get wrong. The previous test here asserted
+       "1 card from Mistveil." against "12 cards from Mistveil.", which was the
+       only reason the singular branch existed; with the count gone the two
+       cases are one sentence, and that is worth pinning so a future edit does
+       not reintroduce a count on one side only. */
     live = await mount(rows(1));
-    expect(summary()).toBe("1 card from Mistveil.");
+    expect(summary()).toBe("Cards from Mistveil.");
   });
 
   test("an empty set says so rather than showing an empty grid", async () => {

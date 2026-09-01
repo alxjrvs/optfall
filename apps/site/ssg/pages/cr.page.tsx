@@ -67,7 +67,6 @@ const islandProps = {
   version: corpus.version,
 };
 
-const sections = corpus.sections.length.toLocaleString("en-GB");
 const published = new Date(
   `${corpus.publishedDateIso}T00:00:00Z`,
 ).toLocaleDateString("en-GB", {
@@ -106,8 +105,8 @@ function page(): PageResult {
           <p className="of-cr__noscript">
             Live results need JavaScript. Every section is addressable without
             it: <code>/cr/8.3.4b</code> is the section cited as{" "}
-            <code>cr:8.3.4b</code>, and the chapter list under the field is nine
-            links into the same corpus.
+            <code>cr:8.3.4b</code>, and the chapter list under the field links
+            into the same corpus.
           </p>
         </noscript>
 
@@ -125,8 +124,7 @@ function page(): PageResult {
         */}
         <p className="of-cr__provenance">
           {corpus.title} <strong>{corpus.version}</strong>, published{" "}
-          {published} by Legend Story Studios and parsed to {sections}{" "}
-          addressable sections. Read from{" "}
+          {published} by Legend Story Studios. Read from{" "}
           <a href={corpus.sourceUrl}>the published document</a>.
         </p>
       </>
