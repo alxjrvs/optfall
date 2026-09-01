@@ -38,11 +38,52 @@ const ROUTES = join(ROOT, "apps/site/ssg/routes.ts");
  */
 const UNREGISTERED: Readonly<Record<string, string>> = {};
 
-/** `about.page.tsx` -> `aboutPage`, the export `routes.ts` registers. */
-function exportNameFor(file: string): string {
+/**
+ * The binding `routes.ts` imports from a page file, or `undefined` if it
+ * imports nothing from it.
+ *
+ * DERIVING THE NAME FROM THE FILENAME WAS THE FIRST VERSION, AND A PAGE THAT
+ * CANNOT OBEY THE CONVENTION BROKE IT. It mapped `about.page.tsx` to
+ * `aboutPage` and looked for `register(aboutPage)`, which works only while
+ * every page stem is a valid JavaScript identifier. `404.page.tsx` is not one:
+ * an identifier cannot begin with a digit, so that page MUST export a name the
+ * convention cannot spell — it exports `notFoundPage` — and the guard failed a
+ * page that was correctly wired, which is the one outcome a guard must not
+ * produce.
+ *
+ * Reading the import is convention-independent and strictly stronger. It
+ * follows the binding `routes.ts` actually took from the file through to its
+ * `register(...)` call, so a page imported under any name is checked properly,
+ * and a rename that updates the import but not the registration — invisible to
+ * a name guessed from the filename — now fails.
+ */
+function importedBinding(file: string): string | undefined {
   const stem = file.replace(/\.page\.tsx$/, "");
-  const camel = stem.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-  return `${camel}Page`;
+  /* Stems are file names, so anything regex-significant in one is escaped
+     rather than trusted; `data-terms.page.tsx` is the only punctuated case
+     today and `-` is harmless, but the next one need not be. */
+  const escaped = stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(
+    `import\\s*\\{\\s*([A-Za-z_$][\\w$]*)[^}]*\\}\\s*from\\s*"\\./pages/${escaped}\\.page"`,
+  );
+  return pattern.exec(routesSource)?.[1];
+}
+
+/**
+ * Whether `routes.ts` registers this binding.
+ *
+ * THE SECOND ARGUMENT IS WHY THIS IS NOT `includes("register(" + name + ")")`.
+ * `register` takes optional route options, and the first page to use them —
+ * `register(notFoundPage, { sitemap: false })` — has a comma where that
+ * substring wants a bracket. The literal check called a correctly registered
+ * page unregistered, which is the same false alarm the filename convention
+ * produced, arriving from the other end of the same line.
+ *
+ * So the closing bracket is matched as "end of this argument": `)` for the
+ * no-options form, `,` for the form that passes them.
+ */
+function isRegistered(name: string): boolean {
+  return new RegExp(`register\\(${name}\\s*[,)]`).test(routesSource);
 }
 
 const pageFiles = readdirSync(PAGES)
@@ -58,11 +99,13 @@ describe("the route registry", () => {
   });
 
   for (const file of pageFiles) {
-    const name = exportNameFor(file);
     const reason = UNREGISTERED[file];
 
     test(`${file} is registered${reason ? " — or exempt" : ""}`, () => {
-      const registered = routesSource.includes(`register(${name})`);
+      const name = importedBinding(file);
+      /* No import and no registration are the same state to a reader — the
+         page is not a URL — so an exempt page is allowed to have neither. */
+      const registered = name !== undefined && isRegistered(name);
 
       if (reason !== undefined) {
         /* An exempt page must ALSO not be registered — otherwise the allowlist
@@ -73,6 +116,13 @@ describe("the route registry", () => {
         );
         return;
       }
+
+      /* Reported separately from the registration below, because "routes.ts
+         never imported this file" and "it imported it and never registered it"
+         are different mistakes with different fixes. */
+      expect(`${file} imported by routes.ts: ${name !== undefined}`).toBe(
+        `${file} imported by routes.ts: true`,
+      );
 
       expect(`${file} -> register(${name}): ${registered}`).toBe(
         `${file} -> register(${name}): true`,

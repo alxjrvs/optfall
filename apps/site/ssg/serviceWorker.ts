@@ -8,7 +8,7 @@
  *
  * **PRECACHE THE SHELL, NEVER THE PAGES.** `apps/srd` — the precedent this
  * migration copies — globs `**` + `/*.{js,css,woff2,svg}` and deliberately
- * excludes HTML, with no navigation fallback. Optfall has **12,776 pages**, so
+ * excludes HTML, with no navigation fallback. Optfall has **12,777 pages**, so
  * here it is not a preference at all: precaching them would mean shipping the
  * whole site to every visitor's disk on first load. Visited pages get
  * `NetworkFirst` — network when there is one, cache when there is not — and
@@ -335,7 +335,7 @@ export async function writeServiceWorker(
            */
           networkTimeoutSeconds: 3,
           /*
-           * A ceiling, because there are 12,776 pages and a determined browse
+           * A ceiling, because there are 12,777 pages and a determined browse
            * would otherwise store all of them. 200 is generous for the reading
            * this cache exists to serve — the deck you are building, the cards
            * you just looked up — and small enough that it cannot become an

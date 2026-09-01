@@ -63,7 +63,7 @@ bun run check:full                              # REQUIRED — see below
 ```
 
 **`bun run check` is not sufficient here and that is the whole trap.**
-`check:disclaimer` reads BUILT output — it walks all 12,776 pages of
+`check:disclaimer` reads BUILT output — it walks all 12,777 pages of
 `apps/site/dist` — so it only runs under `check:full`, which needs the build.
 A green `check` on a disclaimer change tells you the sources agree with each
 other, not that the site says it.

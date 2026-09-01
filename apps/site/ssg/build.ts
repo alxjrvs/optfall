@@ -28,7 +28,7 @@
  *
  * THE DUPLICATE-OUTPUT GUARD IS NOT DEFENSIVE PROGRAMMING. Two routes resolving
  * to one file is silent by default: the second write wins and a page vanishes
- * from a site that reported success. This project has 12,776 URLs derived from a
+ * from a site that reported success. This project has 12,777 URLs derived from a
  * corpus that resyncs on a schedule, and `cards.ts` already throws on exactly
  * this hazard at the route level. The generator asserts it again at the FILE
  * level, because that is where the collision actually lands and where a rule
@@ -400,7 +400,7 @@ async function main(): Promise<void> {
 
   /*
    * The non-page files, written before the pages so a failure to derive one
-   * stops the build before it emits 12,776 documents linking it.
+   * stops the build before it emits 12,777 documents linking it.
    */
   const generated = await generatedAssets();
   for (const asset of generated) {
@@ -460,7 +460,7 @@ async function main(): Promise<void> {
    * THE SITEMAP IS COLLECTED HERE RATHER THAN BUILT IN A SECOND PASS, because
    * this loop is the only place that has both the route and the HTML it
    * produced. Re-resolving the routes afterwards to ask each page for its
-   * canonical would render all 12,776 of them twice.
+   * canonical would render all 12,777 of them twice.
    */
   const sitemapUrls: string[] = [];
 
@@ -507,7 +507,7 @@ async function main(): Promise<void> {
   /*
    * The sitemap is sorted so the file is stable between builds: the route order
    * is the registration order, which is a decision about the code rather than
-   * about the URLs, and a diff that reshuffles 12,776 lines because a page moved
+   * about the URLs, and a diff that reshuffles 12,777 lines because a page moved
    * in `routes.ts` hides the one line that actually changed.
    */
   sitemapUrls.sort();

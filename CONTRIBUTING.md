@@ -15,7 +15,7 @@ bun run check:full   # ~2 min — REQUIRED if you touched rendered output
 `bun run --cwd apps/site dev` serves the site.
 
 **A green `bun run check` is not a green gate.** It covers nine of the twelve
-things CI runs. The other three need a full 12,776-page build and only
+things CI runs. The other three need a full 12,777-page build and only
 `check:full` does them. If your change touches **rendered output, the
 disclaimer, attribution or licence copy, or the token stylesheet**, run
 `check:full` before you push.

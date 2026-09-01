@@ -24,7 +24,7 @@
  * So they stay inline and are hashed instead, which is what hashes are for.
  *
  * WHAT MADE THIS POSSIBLE. The pitch redirect used to interpolate a per-card
- * JSON literal directly into its body, so every one of the 12,776 card pages
+ * JSON literal directly into its body, so every one of the 12,777 card pages
  * had a DIFFERENT script and therefore a different hash. `_headers` is
  * pattern-based with a 100-rule cap, so a per-page hash could not have been
  * expressed at all — which is why the first pass at a CSP left `script-src`

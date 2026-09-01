@@ -82,7 +82,7 @@ import { serveReadyLine } from "../apps/site/ssg/serveBanner";
 const PORT = 4399;
 
 /**
- * Generous, because `dev` BUILDS before it serves — 12,776 pages plus a Vite
+ * Generous, because `dev` BUILDS before it serves — 12,777 pages plus a Vite
  * bundle, on a cold CI runner. The old value was 120s and covered a dev server
  * that rendered nothing up front.
  */
@@ -172,7 +172,7 @@ const checks: Check[] = [
    * THE PWA SURFACE, which is a fourth mechanism: the manifest and the install
    * icon are derived like the favicon, and `sw.js` is written by Workbox after
    * everything else exists. Every page links the manifest and registers the
-   * worker, so a missing one of these is 12,776 pages pointing at nothing.
+   * worker, so a missing one of these is 12,777 pages pointing at nothing.
    */
   { path: "/manifest.webmanifest", contentType: "application/manifest+json" },
   { path: "/icon.svg", contentType: "image/svg+xml" },
@@ -205,6 +205,22 @@ const checks: Check[] = [
   { path: defaultRoute.href, contentType: "text/html" },
   { path: alternateRoute.href, contentType: "text/html" },
   { path: `/cr/${rulePage.section.number}`, contentType: "text/html" },
+  /*
+   * THE 404 PAGE, WHICH NOTHING ELSE HERE WOULD NOTICE VANISHING.
+   *
+   * The host serves it for every address that names nothing, and it is excluded
+   * from the sitemap by design — so a sitemap check cannot see it, and
+   * `build.ts` emitting nothing for it looks exactly like the state that
+   * existed before it was written: a zero-byte body, which is the defect the
+   * page exists to end.
+   *
+   * WHAT THIS DOES NOT CHECK, SO NOBODY READS IT AS MORE THAN IT IS: the card
+   * path the page prints as an example is a literal in `404.page.tsx`, and it
+   * is not fetched here. Importing it would mean importing a `.tsx` from a
+   * script whose tsconfig sets no `--jsx`. `ssg.test.ts` is where a route-shape
+   * assertion belongs if that link ever earns one.
+   */
+  { path: "/404", contentType: "text/html" },
   /*
    * A REDIRECT IS A ROUTE THE SITE OWNS. There is exactly one left — the 12,278
    * card-scheme rules were retired — and it reaches the reader through a

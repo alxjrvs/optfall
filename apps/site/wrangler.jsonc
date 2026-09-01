@@ -21,7 +21,7 @@
   "name": "optfall",
   // NO `<name>.workers.dev` COPY OF THIS SITE. Left at its default, Cloudflare
   // also publishes every Worker on that subdomain — which for this one is a
-  // second, fully public copy of all 12,776 pages at a hostname nothing here
+  // second, fully public copy of all 12,777 pages at a hostname nothing here
   // controls.
   //
   // The canonical tags in `ssg/document.tsx` point at optfall.com and would

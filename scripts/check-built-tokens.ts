@@ -60,7 +60,7 @@ function stylesheetHrefs(html: string): string[] {
   return found;
 }
 
-/** Read once per file rather than once per page — there are 12,776 pages. */
+/** Read once per file rather than once per page — there are 12,777 pages. */
 const sheetCache = new Map<string, string | undefined>();
 
 function sheetContents(href: string): string | undefined {
@@ -86,7 +86,7 @@ function sheetContents(href: string): string | undefined {
  *
  * The failures below are systemic by construction — "the generated theme
  * stylesheet did not reach this page" is not a property one page has and its
- * neighbour does not — so the realistic failure is all 12,776 at once, where
+ * neighbour does not — so the realistic failure is all 12,777 at once, where
  * the first annotation already carries the whole diagnosis. Twelve thousand
  * copies of it bury the summary underneath rather than reinforcing it.
  *

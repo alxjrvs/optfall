@@ -978,7 +978,7 @@ export function CardSearch({
         <>
           {/*
             DEGRADE VISIBLY. Every card is still addressable — that is what the
-            12,776 pages are for, and it does not depend on the index — so the
+            12,777 pages are for, and it does not depend on the index — so the
             failure is stated alongside the routes that still work rather than
             as a bare apology, and the browse is drawn under it for the same
             reason: those links are ordinary hrefs and they never needed an

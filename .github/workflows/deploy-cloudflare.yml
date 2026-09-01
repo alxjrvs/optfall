@@ -80,7 +80,7 @@ jobs:
       # is visible in a preview and invisible in a diff, which is why this repo
       # cares about them more than most. Cloudflare noindexes Pages preview
       # deployments automatically; it does NOT do that for Workers preview URLs,
-      # so a preview would otherwise be a second indexable copy of all 12,776
+      # so a preview would otherwise be a second indexable copy of all 12,777
       # pages — the duplication the canonical tags exist to prevent.
       #
       # `OPTFALL_PREVIEW` makes the build merge `X-Robots-Tag: noindex` into the

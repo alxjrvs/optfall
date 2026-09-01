@@ -18,7 +18,7 @@
  * reported no violation either way. The skip link added alongside this file is
  * there for keyboard users on the merits; nothing automated defends it.
  *
- * WHY IT SAMPLES RATHER THAN SWEEPS. The build emits 12,776 pages, and running
+ * WHY IT SAMPLES RATHER THAN SWEEPS. The build emits 12,777 pages, and running
  * axe under jsdom over all of them would take longer than the rest of the gate
  * put together. The pages are generated from a small number of templates, so
  * the interesting variable is the ROUTE KIND, not the card. One page per kind

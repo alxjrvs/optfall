@@ -306,7 +306,7 @@ jobs:
       # defers to this. It said so before this existed, which meant the four
       # were enforced nowhere at all.
       #
-      # It samples one page per ROUTE KIND rather than sweeping 12,776, because
+      # It samples one page per ROUTE KIND rather than sweeping 12,777, because
       # the pages come from a handful of templates and a second card page only
       # re-tests the first one's template.
       - name: Assert every page kind satisfies the document-level a11y rules

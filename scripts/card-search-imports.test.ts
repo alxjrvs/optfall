@@ -8,7 +8,7 @@
  * import is erased.
  *
  * IT WAS ALREADY CAUGHT, BUT ONLY IN THE COMMAND PEOPLE SKIP. The island byte
- * budget in `build.ts` fails on it — after a full 12,776-page build, which is
+ * budget in `build.ts` fails on it — after a full 12,777-page build, which is
  * `check:full` at about two minutes. This is the same rule as a static read of
  * eight small files, which puts it in the 25-second loop where a mistake is
  * cheap to find.

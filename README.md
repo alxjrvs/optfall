@@ -1,7 +1,7 @@
 # Optfall
 
 [![optfall.com][chip-site]](https://optfall.com)
-![12,776 pages][chip-pages]
+![12,777 pages][chip-pages]
 ![code MIT][chip-mit]
 ![no language model][chip-no-llm]
 
@@ -49,7 +49,7 @@ that says what each word commits to.
 ## What is live
 
 **Phases 0, 1, 2 and 6 are on `main`**, and the product surface is built: a
-12,776-page site with card pages, set pages, the Comprehensive Rules, a card
+12,777-page site with card pages, set pages, the Comprehensive Rules, a card
 search and a rules search. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what
 each phase covers and what remains.
 
@@ -106,7 +106,7 @@ Built on **[the Butter Stack](https://alxjrvs.github.io/butter/)** — Bun · Un
 ```sh
 bun install
 bun run check          # 7 of the gate's 10 jobs — everything that needs no build
-bun run check:full     # the whole gate, including the 12,776-page build (~2 min)
+bun run check:full     # the whole gate, including the 12,777-page build (~2 min)
 bun run design-system  # regenerate the workbench after changing a primitive
 ```
 
@@ -166,6 +166,6 @@ Legend Story Studios.
 
 [chip-site]: https://img.shields.io/badge/optfall.com-live-b08d3f?style=flat-square
 [chip-live]: https://img.shields.io/badge/live-b08d3f?style=flat-square
-[chip-pages]: https://img.shields.io/badge/12,776%20pages-3f3f3f?style=flat-square
+[chip-pages]: https://img.shields.io/badge/12,777%20pages-3f3f3f?style=flat-square
 [chip-mit]: https://img.shields.io/badge/code-MIT-787878?style=flat-square
 [chip-no-llm]: https://img.shields.io/badge/no%20language%20model-2f7d4f?style=flat-square

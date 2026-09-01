@@ -158,7 +158,7 @@ let facePages = 0;
  *
  * The failure this check is most afraid of — the universal footer losing the
  * notice — is one edit that hits every page at once, so the honest report is
- * one annotation and a count, not 12,776 identical ones. `--verbose`
+ * one annotation and a count, not 12,777 identical ones. `--verbose`
  * annotates every page.
  */
 const MAX_REPORTED = 10;

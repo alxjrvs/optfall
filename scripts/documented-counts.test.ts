@@ -78,11 +78,19 @@ const setPages = new Set(
 
 /**
  * The pages with a single fixed URL: home, search, sets, cr, random, about,
- * syntax and data-terms. Spelled here because there is no list to import — an
- * unregistered page is not a URL, by design, so `routes.ts` is the only record
- * and it mixes these with the generated ones.
+ * syntax and data-terms — and `/404`, which is the ninth. Spelled here because
+ * there is no list to import — an unregistered page is not a URL, by design, so
+ * `routes.ts` is the only record and it mixes these with the generated ones.
+ *
+ * `/404` IS COUNTED EVEN THOUGH IT IS NOT AN ADDRESS. `routes.ts` registers it
+ * `sitemap: false` and calls it "the only registration that is not an address",
+ * which is right about what it IS — a response to a path that names nothing.
+ * But this constant feeds a total that is quoted as what the BUILD EMITS, and
+ * the build emits `404.html` like any other page: check:disclaimer walks it,
+ * check:built-tokens walks it, check:card-notice walks it. A total that skipped
+ * it would be a number no check in the gate could reproduce.
  */
-const FIXED_PAGES = 8;
+const FIXED_PAGES = 9;
 
 const TOTAL_PAGES =
   CARD_ROUTES.length + RULE_PAGES.length + setPages + FIXED_PAGES;
@@ -108,7 +116,7 @@ const FIGURES: readonly {
     what: "card routes — the figure two files got wrong, two different ways",
   },
   {
-    literal: "12,776",
+    literal: "12,777",
     live: TOTAL_PAGES,
     what: "pages in the build, the most-quoted number in the repository",
   },

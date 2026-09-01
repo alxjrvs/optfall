@@ -394,7 +394,7 @@ the footer were not `OrnamentalRule`s at all — each was a `border-block-start`
 `border-block-end` on the box itself, the same hairline at the same weight in the
 same ink, spelled a second way. A border has no middle, so those four were the
 only dividers on the site that *could not* carry the mark, and they were four of
-the most-seen: the footer's is on all 12,776 built pages and the header's on
+the most-seen: the footer's is on all 12,777 built pages and the header's on
 12,775 of them — the front door is the one surface that opts the header out.
 They compose the primitive now, with a `flush` variant that drops the vertical
 rhythm a border never had: at a container's edge the host already owns the space
