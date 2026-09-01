@@ -35,22 +35,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { DARK_TOKENS } from "../packages/theme/src/index";
+import { builtPages } from "./lib/built-pages";
 
 const args = process.argv.slice(2);
-const verbose = args.includes("--verbose");
-const outputDirectory =
-  args.find((arg) => !arg.startsWith("--")) ?? "apps/site/dist";
-
-const pages = [
-  ...new Bun.Glob("**/*.html").scanSync({ cwd: outputDirectory, dot: false }),
-].toSorted();
-
-if (pages.length === 0) {
-  console.log(
-    `::error::No HTML found in ${outputDirectory}. Run \`bun run build\` first — an empty build is a failure here, not a pass.`,
-  );
-  process.exit(1);
-}
+const { directory: outputDirectory, pages, verbose } = builtPages(args);
 
 const expected = Object.keys(DARK_TOKENS).map(
   (id) => `--of-${id.replaceAll(".", "-")}`,

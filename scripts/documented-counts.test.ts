@@ -30,11 +30,12 @@ import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 
+import { ROOT } from "./lib/root";
+
 import { CARD_PAGES, CARD_ROUTES, CORPUS } from "../apps/site/src/lib/cards";
 import { RULE_PAGES } from "../apps/site/src/lib/rules";
 import { SETS } from "../apps/site/src/lib/sets";
 
-const ROOT = new URL("..", import.meta.url).pathname;
 const SKIP = new Set(["node_modules", ".git", "dist", "data", "design-system"]);
 const READ = new Set([".ts", ".tsx", ".md", ".css"]);
 

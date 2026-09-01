@@ -66,22 +66,10 @@ import { readFileSync } from "node:fs";
 import { CARD_IMAGE_COPYRIGHT } from "../packages/components/src/index";
 import { FACE_HOST } from "../apps/site/src/lib/faces";
 import { CORPUS } from "../apps/site/src/lib/cards";
+import { builtPages } from "./lib/built-pages";
 
 const args = process.argv.slice(2);
-const verbose = args.includes("--verbose");
-const outputDirectory =
-  args.find((arg) => !arg.startsWith("--")) ?? "apps/site/dist";
-
-const pages = [
-  ...new Bun.Glob("**/*.html").scanSync({ cwd: outputDirectory, dot: false }),
-].toSorted();
-
-if (pages.length === 0) {
-  console.log(
-    `::error::No HTML found in ${outputDirectory}. Run \`bun run build\` first — an empty build is a failure here, not a pass.`,
-  );
-  process.exit(1);
-}
+const { directory: outputDirectory, pages, verbose } = builtPages(args);
 
 /**
  * Every host a card image can be served from.

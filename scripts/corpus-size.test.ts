@@ -28,9 +28,8 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url));
+import { ROOT } from "./lib/root";
 
 /** The file whose size the prose keeps claiming. */
 const CORPUS_PATH = "data/cards/cards.json";

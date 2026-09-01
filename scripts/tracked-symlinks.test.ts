@@ -29,21 +29,8 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { fileURLToPath } from "node:url";
 
-/**
- * The repository root, resolved from THIS FILE rather than from the working
- * directory, so the test means the same thing wherever it is run from.
- *
- * Spelled inline rather than imported from `scripts/lib/root.ts`, which does
- * not exist on this branch yet — it arrives with the consolidation wave. When
- * it does, this should import it instead of keeping a second copy.
- *
- * `fileURLToPath` rather than `new URL(...).pathname`: the latter is
- * percent-encoded, so a checkout under a path with a space in it yields a
- * directory `git` cannot find.
- */
-const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, "");
+import { ROOT } from "./lib/root";
 
 /** One tracked symlink: where it lives, and the blob id holding its target. */
 interface TrackedLink {
