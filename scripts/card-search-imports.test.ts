@@ -27,7 +27,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { ROOT } from "./lib/root";
-
 const DIRECTORY = join(ROOT, "apps/site/src/lib/card-search");
 
 /**

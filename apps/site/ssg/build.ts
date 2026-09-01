@@ -43,7 +43,12 @@ import { themeStylesheet } from "optfall-theme";
 
 import { generatedAssets } from "./assets";
 import { canonicalFor } from "./document";
-import { headersFor, renderHeaders, renderRedirects } from "./hostConfig";
+import {
+  headersFor,
+  renderHeaders,
+  renderRedirects,
+  TOKENS_PATH,
+} from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
@@ -96,7 +101,15 @@ const VITE_BIN = new URL("../node_modules/.bin/vite", import.meta.url).pathname;
  * is no `.css` to import; there is a function that returns one, and this is
  * where its output becomes a file.
  */
-const TOKENS_PATH = "assets/tokens.css";
+/*
+  DECLARED IN `hostConfig.ts` RATHER THAN HERE, AND IMPORTED BACK. It is the
+  one file this build writes into `/assets/` under a fixed name, which makes it
+  a fact the HEADER RULES have to respect — a cache rule that covers it
+  promises immutability for a stylesheet that changes whenever a design token
+  does, which is exactly what shipped once. Keeping the constant beside those
+  rules is what lets a test assert the relationship without importing this
+  module, which runs the whole build on import.
+*/
 
 interface ManifestEntry {
   readonly file: string;

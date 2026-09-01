@@ -174,7 +174,6 @@ checkable.
   file by hand, which is worse, because it produces a plausible file with no
   provenance and `check:provenance` verifies that an origin is RECORDED rather
   than true.
-
 ## Pre-approved commands, and the three that are not
 
 `.claude/settings.json` pre-approves the read-only and build commands that

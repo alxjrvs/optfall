@@ -128,6 +128,18 @@ const STRICT_TRANSPORT_SECURITY = "max-age=31536000; includeSubDomains";
  * DO NOT "SIMPLIFY" THIS BY DELETING IT ON THE GROUNDS THAT IT CHANGES NOTHING.
  * That is true, it is why this paragraph exists, and it is not the argument.
  */
+/**
+ * The one file the build writes into `/assets/` under a name it reuses.
+ *
+ * IT LIVES HERE BECAUSE IT IS A CONSTRAINT ON THE RULES BELOW, not because
+ * this module writes it — `build.ts` does, from `packages/theme`'s generator,
+ * and imports the path back from here. A `/assets/*` cache rule once claimed
+ * that every file in that directory carried its own digest; this one does not,
+ * and naming it beside the rules is what lets `ssg.test.ts` assert that no
+ * rule covers it without importing `build.ts`, which runs the build on import.
+ */
+export const TOKENS_PATH = "assets/tokens.css";
+
 export const HEADERS: readonly HeaderRule[] = [
   {
     pattern: "/*",
@@ -140,33 +152,45 @@ export const HEADERS: readonly HeaderRule[] = [
     },
   },
   /*
-    EVERY FILE UNDER `/assets/` CARRIES ITS OWN DIGEST, WHICH IS WHAT MAKES A
-    YEAR HONEST. Vite sets no `assetFileNames`, so its default
-    `assets/[name]-[hash][extname]` applies to the stylesheet and the island
-    bundles, and `searchIndexes.ts` writes `assets/${name}-${digest}.json`.
-    Content that changes gets a new name, so a cached copy can never be the
-    wrong answer — the same argument the face host makes for its own
-    `immutable`.
+    ~~EVERY FILE UNDER `/assets/` CARRIES ITS OWN DIGEST, WHICH IS WHAT MAKES A
+    YEAR HONEST.~~ **IT DOES NOT, AND THE RULE THAT SAID SO IS WITHDRAWN.**
 
-    Until this rule existed there was NO `Cache-Control` here at all, and the
-    platform default made a returning reader revalidate every asset on every
-    navigation. That is a conditional round trip per asset per page view, paid
-    forever, to re-fetch bytes that are addressed by their own hash.
+    THE CLAIM WAS FALSE WHEN IT WAS WRITTEN, AND CHECKING IT TOOK ONE `ls`.
+    Vite's default `assets/[name]-[hash][extname]` does cover the stylesheets
+    and the island bundles, and `searchIndexes.ts` does write
+    `assets/${name}-${digest}.json`. But `build.ts` writes one more file into
+    that directory itself, under a FIXED name — `TOKENS_PATH =
+    "assets/tokens.css"`, generated from `packages/theme` — so a rule over
+    `/assets/*` promised a year of immutability for the one stylesheet in the
+    build that changes whenever a design token does.
 
-    `/*` IS DELIBERATELY LEFT ALONE. Pages must revalidate: the corpus syncs,
-    and a stale card page is a wrong answer rather than a slow one — which is
-    the whole product. Do not "finish the job" by adding a long TTL to the
-    wildcard; the asymmetry is the point.
+    `immutable` IS WHY THIS WAS WORTH REVERTING RATHER THAN SHORTENING. It
+    tells a browser not to revalidate even when the reader presses reload, so
+    the damage is not proportional to how long the header is live: one page
+    load while it was served pins that reader's token stylesheet for a year,
+    and every later token change silently fails to reach them. Measured on the
+    built output — `dist/assets/` holds eight files and `tokens.css` is the
+    one with no digest in its name.
 
-    This block sits BELOW the wildcard on purpose. Cloudflare applies the most
-    specific match, but a later same-pattern block REPLACES an earlier one
-    rather than merging — the failure `headersFor` was written to avoid — so
-    the ordering here is kept explicit rather than incidental.
+    NO PATTERN OVER THIS DIRECTORY CAN BE RIGHT, which is the reason this is a
+    deletion rather than a narrower glob. Inferring hashedness from the shape
+    of a filename is the fix that looks obvious and is not — it has to be
+    right about every file the build emits now and every one it emits later,
+    and it is wrong the first time somebody adds a second fixed-name asset.
+    The cache rule has to be derived from what Vite actually hashed, which
+    means `build.ts` reading its own manifest and handing the list over.
+
+    That work already exists, written independently and with tests, in the
+    branch behind #326 — which was authored against a tree that had no rule
+    here at all. Removing this restores exactly the state it expects, so the
+    correct version lands there rather than being hand-rolled twice.
+
+    `/*` IS DELIBERATELY LEFT ALONE, and that half of the original argument
+    still stands. Pages must revalidate: the corpus syncs, and a stale card
+    page is a wrong answer rather than a slow one — which is the whole
+    product. Do not "finish the job" by adding a long TTL to the wildcard; the
+    asymmetry is the point.
   */
-  {
-    pattern: "/assets/*",
-    headers: { "Cache-Control": "public, max-age=31536000, immutable" },
-  },
   {
     pattern: "/manifest.webmanifest",
     headers: { "Content-Type": "application/manifest+json" },
