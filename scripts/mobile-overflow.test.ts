@@ -34,6 +34,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
+import { repoFile } from "./lib/root";
 
 /** The token wider than a 320px viewport. The only one. */
 const WIDE_TOKEN = "--of-card-face-normal";
@@ -53,7 +54,9 @@ const BOUNDED_ELSEWHERE: readonly string[] = [
   "flex: 0 1 var(--of-card-face-normal);",
 ];
 
-const ROOTS = ["apps/site/ssg", "packages/components/src"] as const;
+const ROOTS = ["apps/site/ssg", "packages/components/src"].map((segment) =>
+  repoFile(segment),
+);
 const SKIP = new Set(["node_modules", "dist"]);
 
 function stylesheets(dir: string): string[] {

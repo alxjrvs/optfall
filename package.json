@@ -19,26 +19,30 @@
     "bun": ">=1.4.0"
   },
   "catalog": {
-    "@types/react": "19",
-    "@types/react-dom": "19",
-    "react": "19",
-    "react-dom": "19",
+    "axe-core": "4.13.0",
+    "jsdom": "30.0.1",
+    "@types/jsdom": "30.0.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "sharp": "0.35.3",
     "vite": "8.2.1"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && bun run --filter './packages/*' --filter './apps/*' typecheck",
-    "lint": "biome lint .",
+    "lint": "biome lint --error-on-warnings .",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "test": "bun test",
     "build": "bun run --filter './packages/*' --filter './apps/*' build",
     "check": "bun run format:check && bun run lint && bun run check:tokens && bun run check:faint-ink && bun run check:bun-version && bun run check:provenance && bun run check:no-llm && bun run check:ci-aggregator && bun run typecheck && bun run test",
-    "check:full": "bun run check && bun run build && bun run check:disclaimer && bun run check:built-tokens && bun run check:card-notice && bun run check:dev-server",
+    "check:full": "bun run check && bun run build && bun run check:disclaimer && bun run check:built-tokens && bun run check:card-notice && bun run check:a11y && bun run check:dev-server",
     "check:ci-aggregator": "bun scripts/check-ci-aggregator.ts",
     "check:no-llm": "bun scripts/check-no-llm-deps.ts",
     "check:disclaimer": "bun scripts/check-disclaimer.ts",
     "check:card-notice": "bun scripts/check-card-notice.ts",
+    "check:a11y": "bun scripts/check-a11y.ts",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:faint-ink": "bun scripts/check-faint-ink.ts",
     "check:repo-settings": "scripts/repo-settings.sh --check",
@@ -46,6 +50,7 @@
     "check:built-tokens": "bun scripts/check-built-tokens.ts",
     "check:dev-server": "bun scripts/check-dev-server.ts",
     "check:provenance": "bun scripts/check-asset-provenance.ts",
+    "check:coverage": "bun scripts/check-coverage.ts",
     "check:symbols": "bun scripts/ingest-game-symbols.ts --check",
     "check:face-orientation": "bun scripts/check-face-orientation.ts",
     "check:design-system": "bun test scripts/design-system-coverage.test.ts",
@@ -57,10 +62,14 @@
     "design-system": "bun scripts/build-design-system.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.8",
-    "@happy-dom/global-registrator": "20.11.2",
+    "@biomejs/biome": "2.5.11",
+    "@happy-dom/global-registrator": "20.11.12",
     "@types/bun": "1.4.0",
     "sharp": "catalog:",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "wrangler": "4.127.1",
+    "axe-core": "catalog:",
+    "jsdom": "catalog:",
+    "@types/jsdom": "catalog:"
   }
 }

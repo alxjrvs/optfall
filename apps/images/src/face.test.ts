@@ -141,6 +141,24 @@ describe("the handler", () => {
     expect(cacheControl).toContain("max-age=300");
   });
 
+  test("a store outage is NOT cached at all", async () => {
+    /*
+      THE 503 USED TO CARRY `public, max-age=300`, which is an explicit grant
+      of freshness to a failure. HTTP caches do not normally store a 503, so
+      this was opting in: an R2 blip kept being served as NO IMAGE for up to
+      five minutes AFTER R2 recovered, in browsers and in any intermediary that
+      honoured it.
+
+      The miss above keeps its five minutes — "no art published yet" is a fact
+      worth caching briefly. A failure is not a fact about the card.
+    */
+    const handler = makeFaceHandler(() => brokenStore);
+    const response = await handler(request("/normal/MST131.webp"));
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+
   test("a store outage degrades to a placeholder and is reported", async () => {
     const reported: Record<string, unknown>[] = [];
     const handler = makeFaceHandler(

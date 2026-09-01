@@ -30,6 +30,7 @@ import {
   REDIRECTS,
   renderHeaders,
   renderRedirects,
+  TOKENS_PATH,
 } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { CARD_NEWEST } from "./searchIndexes";
@@ -37,6 +38,7 @@ import { HEADER_FIELD_ID } from "./islands/HeaderSearch";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
 import { routes } from "./routes";
 import type { PageModule, PageResult } from "./types";
+import { createHash } from "node:crypto";
 
 /**
  * Where a card lives, by slug.
@@ -284,7 +286,7 @@ describe("the document shell", () => {
   test("no hydration markers, because no root here hydrates", () => {
     // `renderToStaticMarkup`, not `renderToString`. The pages are documents;
     // interactivity arrives as islands in their own containers. Hydration
-    // scaffolding on 12,776 pages would describe a handover that never happens.
+    // scaffolding on 12,777 pages would describe a handover that never happens.
     const html = render({ title: "t", description: "d", children: null }, "/x");
     expect(html).not.toContain("data-reactroot");
     expect(html).not.toContain("<!--$-->");
@@ -2758,6 +2760,133 @@ describe("a fan holds the versions it was handed, once each", () => {
     expect(faces.some((src) => src.includes("MPW113"))).toBe(false);
   });
 });
+describe("the pitch stones open the version they stand for", () => {
+  /**
+   * The LIST view of one row, and the stones it drew.
+   *
+   * The fan above is the grid's rendering of the same fact; this is the list's,
+   * and it had no test of any kind. That matters here more than it would
+   * elsewhere: `rank.ts` records three separately measured bugs on this path,
+   * all of the same shape — a row whose mark and whose destination were
+   * resolved from different versions. The grid grew tests for that after the
+   * fact. The list did not.
+   *
+   * Returns each stone as the pair that can disagree: where it points, and what
+   * it is labelled.
+   */
+  const render = (
+    entry: Parameters<typeof CardIndex>[0]["entries"][number],
+  ): string =>
+    renderToStaticMarkup(
+      createElement(CardIndex, {
+        entries: [entry],
+        display: "list" as const,
+        onDisplayChange: () => undefined,
+        summary: "1 card",
+        controlName: "test",
+        interactive: false,
+      }),
+    );
+
+  const stones = (entry: Parameters<typeof CardIndex>[0]["entries"][number]) =>
+    [
+      ...render(entry).matchAll(
+        /<a[^>]*class="of-index__stone"[^>]*href="([^"]*)"/g,
+      ),
+    ].map((match) => match[1] ?? "");
+
+  const boxes = (entry: Parameters<typeof CardIndex>[0]["entries"][number]) =>
+    (render(entry).match(/of-pitch-box/g) ?? []).length;
+
+  /* Built from the pitch, so a fixture cannot hand the component a stone whose
+     label and whose link are different versions — the defect these tests exist
+     for, which a hand-written pair would hide by agreeing accidentally. */
+  const version = (pitch: 0 | 1 | 2 | 3) => ({
+    pitch,
+    href: `/card/mpw/11${pitch}/hit-and-run-${pitch}`,
+    label: `Hit and Run (pitch ${pitch})`,
+    faceKey: `MPW11${pitch}.webp`,
+    faceLandscape: false,
+  });
+
+  const row = (versions: readonly ReturnType<typeof version>[]) => ({
+    href: versions[0]?.href ?? "/card/mpw/111/hit-and-run-1",
+    label: "Hit and Run",
+    name: "Hit and Run",
+    qualifier: "",
+    typeLine: "Warrior Action",
+    faceKey: "MPW111.webp",
+    faceLandscape: false,
+    versions,
+  });
+
+  test("every stone opens its own version, not the row's", () => {
+    /*
+     * THE INVARIANT, and the one the past bugs broke: a stone is a door to the
+     * version it is drawn for. Asserting the hrefs are DISTINCT and that each
+     * carries its own pitch is what separates "three links" from "three links
+     * to the same card", which is how this failed before.
+     */
+    const drawn = stones(row([version(1), version(2), version(3)]));
+
+    expect(drawn.length).toBe(3);
+    expect(new Set(drawn).size).toBe(3);
+    for (const [index, href] of drawn.entries()) {
+      expect(href).toContain(`hit-and-run-${index + 1}`);
+    }
+  });
+
+  test("a row with one version draws a box and no link", () => {
+    /* Deliberate: a link to the page you are already looking at is a door to
+       the room you are standing in. The box is still drawn, because it says
+       which pitch this is. */
+    const single = row([version(2)]);
+
+    expect(stones(single).length).toBe(0);
+    expect(boxes(single)).toBeGreaterThan(0);
+  });
+
+  test("a row whose every version pitches for nothing draws no stones", () => {
+    /* A mark with nothing to say. Note this is NOT the same as dropping the
+       pitch-0 version — the row itself survives; only its mark goes. */
+    expect(boxes(row([version(0)]))).toBe(0);
+    expect(stones(row([version(0)])).length).toBe(0);
+  });
+
+  test("but a zero beside a real pitch is kept, because it distinguishes", () => {
+    /*
+     * The case the component's own comment singles out: where a name is
+     * disambiguated by an ABSENCE, the "No pitch" box is the only thing telling
+     * that version from its siblings, and it is the door to it.
+     */
+    const drawn = stones(row([version(0), version(1)]));
+
+    expect(drawn.length).toBe(2);
+    expect(drawn[0]).toContain("hit-and-run-0");
+  });
+
+  test("two versions at one pitch draw one stone, and it is the first", () => {
+    /* `versionsOf` keeps the first version at each pitch and sorts by it, so a
+       name with two red printings is one red door rather than two identical
+       ones. */
+    const first = { ...version(1), href: "/card/mpw/first/hit-and-run-1" };
+    const second = { ...version(1), href: "/card/mpw/second/hit-and-run-1" };
+    const drawn = stones(row([first, second, version(3)]));
+
+    expect(drawn.length).toBe(2);
+    expect(drawn[0]).toBe("/card/mpw/first/hit-and-run-1");
+  });
+
+  test("the stones are drawn in pitch order however they arrive", () => {
+    const drawn = stones(row([version(3), version(1), version(2)]));
+
+    expect(drawn).toEqual([
+      "/card/mpw/111/hit-and-run-1",
+      "/card/mpw/112/hit-and-run-2",
+      "/card/mpw/113/hit-and-run-3",
+    ]);
+  });
+});
 
 /* -------------------------------------------------------------------------- */
 /* The files the host reads and never serves                                   */
@@ -2821,6 +2950,57 @@ describe("_headers and _redirects say what the host is told", () => {
       if (line === "") continue;
       expect(line.startsWith("  ") || line.startsWith("/")).toBe(true);
     }
+  });
+
+  test("nothing promises immutability over a name the build reuses", () => {
+    /*
+     * THIS TEST REPLACES ONE THAT ASSERTED THE BUG. It read "hashed assets are
+     * immutable, and pages are not" and checked that `/assets/*` carried a
+     * year plus `immutable` — restating, as its own justification, the claim
+     * that every file under `/assets/` is content-addressed. That claim was
+     * false: `build.ts` writes `assets/tokens.css` there itself, under a fixed
+     * name, generated from `packages/theme`. So the rule pinned the one
+     * stylesheet that changes whenever a design token does, and the test
+     * agreed with it.
+     *
+     * `immutable` is why it mattered more than a wrong TTL usually would — a
+     * browser is told not to revalidate even on reload, so a single page load
+     * while that header was served pins that reader for a year.
+     *
+     * SO THE ASSERTION IS INVERTED: instead of naming the rule that should
+     * exist, this names the file that must never be covered by one. It holds
+     * whether the cache rules are absent (as now) or per-file (as #326 makes
+     * them), and it fails for the next fixed-name asset somebody adds.
+     */
+    const immutable = HEADERS.filter((rule) =>
+      (rule.headers["Cache-Control"] ?? "").includes("immutable"),
+    );
+
+    /* Glob semantics, kept deliberately crude: a rule covers a path if its
+       pattern matches with `*` standing for any run of characters. Anything
+       cleverer here would be a second implementation of Cloudflare's matcher
+       and could disagree with it. */
+    const covers = (pattern: string, path: string): boolean =>
+      new RegExp(
+        `^${pattern
+          .split("*")
+          .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join(".*")}$`,
+      ).test(path);
+
+    const pinned = immutable
+      .filter((rule) => covers(rule.pattern, `/${TOKENS_PATH}`))
+      .map((rule) => rule.pattern);
+
+    expect(pinned).toEqual([]);
+  });
+
+  test("pages keep revalidating", () => {
+    /* The corpus syncs, so a stale card page is a WRONG answer rather than a
+       slow one — which is the whole product. An edit that gives the wildcard a
+       long TTL fails here. */
+    const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
+    expect(wildcard?.headers["Cache-Control"]).toBeUndefined();
   });
 
   test("the security posture the site ships with is stated here", () => {
@@ -3209,4 +3389,66 @@ describe("the newest release the browse state opens on", () => {
     const keys = CARD_NEWEST.cards.map((card) => card.key);
     expect(new Set(keys).size).toBe(keys.length);
   });
+});
+
+describe("every inline script the site renders is admitted by the CSP", () => {
+  /*
+   * THE DIRECTION THAT MATTERS. `inlineScripts.ts` derives the hashes from the
+   * constants it exports, so a script whose BODY changes moves its own hash and
+   * cannot drift. What that arrangement cannot catch is a script added to a page
+   * and never added to `INLINE_SCRIPT_HASHES` — it renders, the policy does not
+   * name it, and the browser blocks it. That failure surfaces in a console on a
+   * live page, not in CI.
+   *
+   * So this reads the built markup and works backwards: every inline `<script>`
+   * that actually renders must have its hash in the policy. A `src=` script is
+   * skipped — those are covered by `'self'` — and an empty body is skipped
+   * because React emits none.
+   *
+   * The three routes are one per shape that carries a script: the shell's
+   * service-worker registration is on all of them, `/search` adds the prefill,
+   * and a card page adds the pitch redirect, which is the one whose body was
+   * per-card until it was moved to `data-pitch-targets`.
+   */
+  const INLINE = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g;
+
+  const policy = (): string => {
+    const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
+    return wildcard?.headers["Content-Security-Policy"] ?? "";
+  };
+
+  const routesToCheck = (): readonly string[] => {
+    const card = RESOLVED.find((resolved) =>
+      resolved.route.startsWith("/card/"),
+    );
+    return ["/", "/search", card?.route].filter(
+      (route): route is string => typeof route === "string",
+    );
+  };
+
+  for (const route of routesToCheck()) {
+    test(`${route} renders no inline script the policy omits`, () => {
+      const resolved = RESOLVED.find((entry) => entry.route === route);
+      expect(resolved).toBeDefined();
+
+      const html = resolved?.render([], undefined) ?? "";
+      const bodies = [...html.matchAll(INLINE)]
+        .map((match) => match[1] ?? "")
+        .filter((body) => body.trim() !== "");
+
+      /* A route that stopped rendering any inline script would pass this
+         vacuously, and the pitch redirect disappearing is exactly the kind of
+         regression worth failing on. */
+      expect(bodies.length).toBeGreaterThan(0);
+
+      const missing = bodies
+        .map(
+          (body) =>
+            `'sha256-${createHash("sha256").update(body, "utf8").digest("base64")}'`,
+        )
+        .filter((expression) => !policy().includes(expression));
+
+      expect(missing).toEqual([]);
+    });
+  }
 });

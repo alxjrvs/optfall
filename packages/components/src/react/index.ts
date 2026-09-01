@@ -58,6 +58,12 @@ export {
   type RarityBarProps,
   type RaritySlice,
 } from "./RarityBar";
+export {
+  Eyebrow,
+  type EyebrowAs,
+  type EyebrowProps,
+  type EyebrowTone,
+} from "./Eyebrow";
 export { ResultRow, type ResultRowProps } from "./ResultRow";
 export { SearchField, type SearchFieldProps } from "./SearchField";
 export { StatePill, type StatePillProps } from "./StatePill";

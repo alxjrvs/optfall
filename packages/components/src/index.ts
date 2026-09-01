@@ -60,7 +60,8 @@ export type PrimitiveName =
   | "stat-glyph"
   | "game-symbol"
   | "pagination"
-  | "icon-button";
+  | "icon-button"
+  | "eyebrow";
 
 export const PRIMITIVES: readonly PrimitiveName[] = [
   "pitch-jewel",
@@ -82,6 +83,7 @@ export const PRIMITIVES: readonly PrimitiveName[] = [
   "game-symbol",
   "pagination",
   "icon-button",
+  "eyebrow",
 ];
 
 /* -------------------------------------------------------------------------- */

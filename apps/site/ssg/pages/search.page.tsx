@@ -60,10 +60,10 @@
 
 import { Island } from "../Island";
 import { CardSearch } from "../islands/CardSearch";
-import { HEADER_FIELD_ID } from "../islands/HeaderSearch";
 import { CARD_BRIEF, CARD_INDEX, CARD_NEWEST } from "../searchIndexes";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
+import { SEARCH_PREFILL } from "../inlineScripts";
 
 /**
  * WHAT THE ISLAND IS HANDED, AND IT IS NO LONGER THE INDEX.
@@ -83,8 +83,9 @@ import "./search.css";
  * `ssg/searchIndexes.ts` carries the argument for the change.
  *
  * THE PIN STAYS IN THE PAGE, and that is the part that could not simply be
- * deleted. `docs/PLAN.md` requires every surface to show when its data was last
- * confirmed, and the upstream commit and the confirmation date are how
+ * deleted. `docs/DATA-TERMS.md` warrants that every surface shows when its
+ * data was last confirmed, and the upstream commit and the confirmation date
+ * are how
  * `/search` does it. They ride in `CARD_BRIEF` — 805 bytes, rendered with no
  * fetch — because a provenance line that appears only once a request succeeds
  * is absent exactly when something has gone wrong.
@@ -193,11 +194,7 @@ function page(): PageResult {
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `{
-  const asked = new URLSearchParams(window.location.search).get("q");
-  const field = document.getElementById(${JSON.stringify(HEADER_FIELD_ID)});
-  if (asked !== null && field !== null) field.value = asked;
-}`,
+            __html: SEARCH_PREFILL,
           }}
         />
 

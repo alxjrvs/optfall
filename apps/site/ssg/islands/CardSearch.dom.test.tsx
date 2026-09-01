@@ -22,9 +22,17 @@
  * `window`, and most of this codebase's modules branch on not having one —
  * `queryFromUrl` reads `window.location`, the generator renders to a string on
  * purpose. Giving 790 server-side assertions a DOM to change their minds about
- * is a large, silent change to buy one file an environment. The cost of the
- * narrow version is that this file must be the only one that registers it; the
- * suite is run after this landed to prove nothing else moved.
+ * is a large, silent change to buy one file an environment. The suite is run
+ * after this landed to prove nothing else moved.
+ *
+ * ~~The cost of the narrow version is that this file must be the only one that
+ * registers it.~~ **The cost is that every file which registers must also
+ * UNREGISTER**, which is a smaller claim and the one that was actually being
+ * relied on. `RulesSearch.dom.test.tsx` registers too, and carries the
+ * measurement: `bun test` loads a file, runs its tests, and only then loads the
+ * next, so a second file's module body executes between the previous file's
+ * `afterAll` and its own — inside its own window either way. Verified with the
+ * second file sorting both before and after this one.
  */
 
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
@@ -924,8 +932,9 @@ async function browse(row: NewestRelease | null): Promise<Mounted> {
  * every one of those too — so it is among the most-arrived-at screens on the
  * site after the front door, and it had no test of its own at all. The three
  * things asserted here are the three that were wrong or absent before: the pin
- * is printed WITHOUT the index (`docs/PLAN.md` requires it and a fetch must not
- * gate it), the release row draws the printings it is handed, and an absent
+ * is printed WITHOUT the index (`docs/DATA-TERMS.md` requires it and a fetch
+ * must not gate it), the release row draws the printings it is handed, and an
+ * absent
  * release costs the type lines nothing.
  *
  * NOTHING HERE WAITS FOR THE INDEX, deliberately — `settle()` is absent from
