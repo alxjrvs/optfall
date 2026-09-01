@@ -60,10 +60,10 @@
 
 import { Island } from "../Island";
 import { CardSearch } from "../islands/CardSearch";
-import { HEADER_FIELD_ID } from "../islands/HeaderSearch";
 import { CARD_BRIEF, CARD_INDEX, CARD_NEWEST } from "../searchIndexes";
 import type { PageModule, PageResult } from "../types";
 import "./search.css";
+import { SEARCH_PREFILL } from "../inlineScripts";
 
 /**
  * WHAT THE ISLAND IS HANDED, AND IT IS NO LONGER THE INDEX.
@@ -194,11 +194,7 @@ function page(): PageResult {
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `{
-  const asked = new URLSearchParams(window.location.search).get("q");
-  const field = document.getElementById(${JSON.stringify(HEADER_FIELD_ID)});
-  if (asked !== null && field !== null) field.value = asked;
-}`,
+            __html: SEARCH_PREFILL,
           }}
         />
 
