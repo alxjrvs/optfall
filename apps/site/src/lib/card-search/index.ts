@@ -7,8 +7,8 @@
  *
  * - **Deterministic.** No embedding, no learned ranking, no floating-point
  *   score anywhere in the sort, and every comparison ends in corpus order — so
- *   there is no tie left for an engine to break differently. `docs/PLAN.md`,
- *   "Rules that hold across every phase": no language model in the shipped
+ *   there is no tie left for an engine to break differently.
+ *   `LLM_STATEMENT.md` states the rule: no language model runs in the shipped
  *   product.
  * - **Explicable.** Every result carries {@link CardResult.matchedIn}: which
  *   field put it on the page. A user can look at a row and say why it is there.

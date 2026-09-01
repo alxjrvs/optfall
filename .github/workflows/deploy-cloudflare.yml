@@ -1,10 +1,20 @@
 # Deploy to Cloudflare: production on merge to `main`, a preview URL per PR.
 #
 # The build runs here rather than on the platform. Workers Builds exists, but
-# keeping the build in Actions means one build path, one place for path
-# filtering, and the whole aggregate gate in front of every deploy — a deploy
-# that succeeded where `CI Success` failed would be a lie about the state of
-# `main`.
+# keeping the build in Actions means one build path and one place for path
+# filtering.
+#
+# THIS WORKFLOW DOES NOT DEPEND ON THE GATE, AND SAID IT DID UNTIL 2026-09-01.
+# There is no `needs:` and no `workflow_run:` here: on a push to `main` this
+# runs in PARALLEL with `ci.yml`, and on a pull request the preview upload runs
+# whether or not `CI Success` passed.
+#
+# What actually keeps a red commit off production is the ruleset, not this
+# file: `scripts/repo-settings.sh` requires the `CI Success` context with
+# `strict_required_status_checks_policy`, so only a green, up-to-date head can
+# reach `main` in the first place. That is a real guarantee — it is just a
+# property of branch protection rather than of anything written here, and the
+# previous wording claimed the latter.
 #
 # EVERY JOB SKIPS RATHER THAN FAILS WHEN `CLOUDFLARE_API_TOKEN` IS ABSENT. That
 # is the state of the world until the secret is added, and a workflow that fails
@@ -58,13 +68,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+          install: "true"
 
       # Deliberately the same command production has always run, so that a
       # deploy and the gate are attesting to the same thing.
@@ -73,7 +80,7 @@ jobs:
       # is visible in a preview and invisible in a diff, which is why this repo
       # cares about them more than most. Cloudflare noindexes Pages preview
       # deployments automatically; it does NOT do that for Workers preview URLs,
-      # so a preview would otherwise be a second indexable copy of all 12,776
+      # so a preview would otherwise be a second indexable copy of all 12,777
       # pages — the duplication the canonical tags exist to prevent.
       #
       # `OPTFALL_PREVIEW` makes the build merge `X-Robots-Tag: noindex` into the
@@ -88,6 +95,20 @@ jobs:
           OPTFALL_PREVIEW: ${{ github.event_name == 'pull_request' && '1' || '0' }}
         run: bun run build
 
+      # WRANGLER IS PINNED IN `package.json`, NOT FLOATED HERE. These commands
+      # read `bunx wrangler`, which resolves the exact version the
+      # `bun install --frozen-lockfile` above just installed.
+      #
+      # They said `wrangler@4` until 2026-09-01, and that was the one floating
+      # executable in this repository — resolved fresh from npm at deploy time,
+      # in a step holding a token that can deploy to the live zone. Every
+      # argument this project already makes applied to it and to nothing else:
+      # `ci.yml` on why a floating Bun means a green gate can attest to a build
+      # that never produced the deploy preview, `bunfig.toml` on exact pinning,
+      # and every action in this file pinned to a SHA.
+      #
+      # In the manifest it is also a version Dependabot moves, which a `bunx`
+      # range never was.
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -102,7 +123,7 @@ jobs:
           fi
 
           if [ "$IS_PR" != "true" ]; then
-            bunx wrangler@4 deploy -c apps/site/wrangler.jsonc
+            bunx wrangler deploy -c apps/site/wrangler.jsonc
             exit 0
           fi
 
@@ -111,7 +132,7 @@ jobs:
           # deploy. The alias is per-PR, so a second push replaces the first
           # rather than accumulating URLs nobody will revisit.
           set +e
-          bunx wrangler@4 versions upload \
+          bunx wrangler versions upload \
             -c apps/site/wrangler.jsonc \
             --preview-alias "pr-${PR_NUMBER}" 2>&1 | tee upload.log
           status=${PIPESTATUS[0]}
@@ -154,13 +175,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+          install: "true"
 
       # No build step: wrangler bundles `src/index.ts` itself, and the only
       # static asset is robots.txt. A script that exists to look busy would be
@@ -175,4 +193,4 @@ jobs:
             echo "Add the secret to enable Cloudflare deploys."
             exit 0
           fi
-          bunx wrangler@4 deploy -c apps/images/wrangler.jsonc
+          bunx wrangler deploy -c apps/images/wrangler.jsonc

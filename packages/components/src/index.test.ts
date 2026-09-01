@@ -96,7 +96,7 @@ describe("the primitive set", () => {
     // between a date and a count is a conjunction — so the chip is the object
     // a fact is. No notch, because a release date is not state; no fill,
     // because a fact has no value to be coloured by.
-    expect(PRIMITIVES).toHaveLength(19);
+    expect(PRIMITIVES).toHaveLength(20);
     expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
     expect(PRIMITIVES).toContain("pitch-jewel");
     expect(PRIMITIVES).toContain("citation");

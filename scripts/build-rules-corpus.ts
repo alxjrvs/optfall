@@ -2,9 +2,10 @@
 /**
  * Regenerates the committed Comprehensive Rules corpus at `data/rules/`.
  *
- * `docs/PLAN.md`, Stack: **"Data as committed JSON. Every dataset lives
- * versioned in the repo and is served as a static file — simultaneously the
- * storage layer, the public API, the backup and the audit trail."** This script
+ * `docs/DATA-TERMS.md`, "What we warrant": **"Everything is a committed file.
+ * Each dataset lives versioned in a public git repository and is served as a
+ * static file — simultaneously the storage layer, the public API, the backup
+ * and the audit trail."** This script
  * is the only thing that writes that file, and the file is the only thing the
  * site reads. A build that needs the network is a build that breaks when LSS is
  * down, so ingestion happens here, deliberately, with a reviewed diff — never at

@@ -1,7 +1,8 @@
 /**
  * A citation — the thing you paste into an argument to end it. React port.
  *
- * `docs/PLAN.md` Phase 4: **the permalink is the product.** A judge pasting
+ * `docs/ROADMAP.md` Phase 4 — every rules paragraph at a permanent URL,
+ * citable by number: **the permalink is the product.** A judge pasting
  * `cr:8.3.4b` into Discord instead of describing which paragraph they mean is
  * the whole share moment, so this primitive has exactly two jobs: make the
  * identifier *look* copyable, and make it genuinely clickable.
