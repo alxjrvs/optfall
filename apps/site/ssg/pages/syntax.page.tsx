@@ -219,16 +219,71 @@ const FORMATS: readonly { readonly name: string; readonly aliases: string }[] =
     { name: "Ultimate Pit Fight", aliases: "upf, ultimate-pit-fight" },
   ];
 
+/**
+ * A table that can scroll sideways, and can be scrolled by a keyboard.
+ *
+ * `of-table-wrap` is `overflow-x: auto`, and these tables hold `<code>` and
+ * prose — nothing focusable inside them. A region that scrolls and contains no
+ * tab stop cannot be scrolled by a keyboard at all, which is WCAG 2.1.1. The
+ * card page's equivalent scroller needs none of this and has none: its table is
+ * full of links, so the keyboard reaches the overflow by reaching the content.
+ *
+ * A TAB STOP WITH NO NAME WOULD BE WORSE THAN NO TAB STOP, so every region is
+ * named for the table it holds. `<section>` with an accessible name IS a
+ * region — the role is implicit, and spelling it would trip
+ * `lint/a11y/noRedundantRoles`.
+ *
+ * IT IS A COMPONENT SO THERE IS ONE SUPPRESSION RATHER THAN A FILE-WIDE ONE.
+ * The first version put `biome-ignore-all` on line 1, on the diagnosis that
+ * Biome reports this rule at the ATTRIBUTE where no inline suppression can sit.
+ * That is true of a MULTI-LINE tag and false of a single-line one — and the
+ * format-names table was only multi-line because its opening tag ran past 80
+ * columns. Collapsing the two call sites into one component makes the tag short
+ * enough to carry a scoped suppression, so the rule stays live for the rest of
+ * the file.
+ */
+function ScrollRegion({
+  label,
+  children,
+}: {
+  readonly label: string;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    // biome-ignore lint/a11y/noNoninteractiveTabindex: see above — an overflow region with no focusable descendant needs a tab stop, or its overflow is unreachable by keyboard.
+    <section aria-label={label} className="of-table-wrap" tabIndex={0}>
+      {children}
+    </section>
+  );
+}
+
 /** One operator table. Three of them differ only in their column heading. */
 function OperatorTable({
   rows,
   answers,
+  label,
 }: {
   readonly rows: readonly Row[];
   readonly answers: string;
+  /** Names the scroll region, which is a landmark once it can be focused. */
+  readonly label: string;
 }) {
   return (
-    <div className="of-table-wrap">
+    /*
+      FOCUSABLE, BECAUSE IT SCROLLS. `of-table-wrap` is `overflow-x: auto`, and
+      these tables hold `<code>` and prose — nothing focusable inside them. A
+      region that scrolls and contains no tab stop cannot be scrolled by a
+      keyboard at all, which is WCAG 2.1.1. The card page's equivalent scroller
+      needs none of this and has none: its table is full of links, so the
+      keyboard reaches the overflow by reaching the content.
+
+      A TAB STOP WITH NO NAME WOULD BE WORSE THAN NO TAB STOP. A focusable
+      element that announces nothing leaves a reader somewhere they cannot
+      identify, so each region is named for the table it holds. `<section>` with
+      an accessible name IS a region — the role is implicit, and spelling it
+      would be the redundancy `useSemanticElements` exists to catch.
+    */
+    <ScrollRegion label={label}>
       <table>
         <thead>
           <tr>
@@ -252,7 +307,7 @@ function OperatorTable({
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
   );
 }
 
@@ -265,15 +320,12 @@ function page(): PageResult {
     children: (
       <>
         <h1>Search syntax</h1>
-
         <p>
           Typing words searches names and printed text. Everything below narrows
           that, and all of it composes — an operator can be negated, grouped, or
           joined with another.
         </p>
-
         <h2>Fields</h2>
-
         <p>
           A field operator scopes a word to one part of the card. Operands on{" "}
           <code>name</code>, <code>text</code>, <code>type</code>,{" "}
@@ -282,9 +334,11 @@ function page(): PageResult {
           <code>type:"illusionist action"</code> asks for both. Everything else
           — a set code, a rarity, a printed number — is matched whole.
         </p>
-
-        <OperatorTable rows={FIELDS} answers="Matches" />
-
+        <OperatorTable
+          rows={FIELDS}
+          answers="Matches"
+          label="Field operators"
+        />
         <p>
           <strong>
             <code>class:</code> and <code>type:</code> are the same operator
@@ -296,7 +350,6 @@ function page(): PageResult {
           Documenting them as one operator is the honest description of what the
           engine can answer.
         </p>
-
         <p>
           <strong>
             <code>artist:</code>, <code>ft:</code>, <code>set:</code> and{" "}
@@ -307,7 +360,6 @@ function page(): PageResult {
           printing carries different flavour is found by either. That is usually
           what you want, and it is worth knowing when it is not.
         </p>
-
         <p>
           <strong>
             Flavour text is a separate index from rules text, and neither
@@ -319,15 +371,12 @@ function page(): PageResult {
           never flavour, because a card that merely mentions a thing is not a
           card that does it.
         </p>
-
         <h2 id="display">What the answer looks like</h2>
-
         <p>
           <code>display:</code> picks the shape of the results, and it is part
           of the query rather than a setting beside it — so the link you copy
           shows what you were looking at.
         </p>
-
         <dl className="of-modes">
           <dt>
             <code>display:grid</code> — the default
@@ -345,23 +394,19 @@ function page(): PageResult {
             the card matched.
           </dd>
         </dl>
-
         <p>
           <code>display:text</code>, <code>display:checklist</code> and{" "}
           <code>display:names</code> used to name a third view — names one per
           line, and nothing else. They still work and now mean{" "}
           <code>display:list</code>, which is the same rows with more on them.
         </p>
-
         <h2 id="uniqueness">How much one row stands for</h2>
-
         <p>
           A search returns ROWS, and a row is not obviously a card. Head Jab is
           printed at three pitches and reprinted in six sets, so "how many Head
           Jabs are there" has three defensible answers. <code>unique:</code>{" "}
           picks which one you get.
         </p>
-
         <dl className="of-modes">
           <dt>
             <code>unique:names</code> — the default
@@ -388,7 +433,6 @@ function page(): PageResult {
             to that art's own page.
           </dd>
         </dl>
-
         {/*
           TWO PARAGRAPHS WENT FROM HERE, AND NEITHER WAS WRONG.
 
@@ -407,9 +451,7 @@ function page(): PageResult {
           a terse version back into the `<dl>` is a decision someone can make on
           purpose, rather than a gap they rediscover.
         */}
-
         <h2 id="comparisons">Comparisons</h2>
-
         <p>
           <code>cost</code>, <code>power</code> and <code>defence</code> accept{" "}
           <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>,{" "}
@@ -417,7 +459,6 @@ function page(): PageResult {
           is a query. No other field does, because no other field has an order
           to compare along.
         </p>
-
         <p>
           <strong>
             A card printing <code>X</code> matches no comparison at all.
@@ -428,17 +469,17 @@ function page(): PageResult {
           comparison", and a card printing <code>X</code> is simply absent from
           the answer rather than sorted arbitrarily into it.
         </p>
-
         <h2>Legality</h2>
-
         <p>
           Four operators, each naming a format. Legality here is{" "}
           <em>today's</em>.
         </p>
-
-        <OperatorTable rows={LEGALITY} answers="Matches" />
-
-        <div className="of-table-wrap">
+        <OperatorTable
+          rows={LEGALITY}
+          answers="Matches"
+          label="Legality operators"
+        />
+        <ScrollRegion label="Format names">
           <table>
             <thead>
               <tr>
@@ -457,19 +498,19 @@ function page(): PageResult {
               ))}
             </tbody>
           </table>
-        </div>
-
+        </ScrollRegion>
         <h2>Ordering</h2>
-
         <p>
           Results come back by relevance — an exact name match ahead of a text
           match — until you ask for something else. <code>order:</code> replaces
           that ranking rather than refining it, and <code>dir:</code> reverses
           whatever it chose.
         </p>
-
-        <OperatorTable rows={ORDERING} answers="Sorts by" />
-
+        <OperatorTable
+          rows={ORDERING}
+          answers="Sorts by"
+          label="Ordering operators"
+        />
         <p>
           <strong>
             A card with no value for the key sorts last, whichever direction you
@@ -483,7 +524,6 @@ function page(): PageResult {
           value and the rest go to the end. It is the same refusal{" "}
           <a href="#comparisons">comparisons</a> already make.
         </p>
-
         <p>
           An ordering is an option on the whole query rather than a term in it,
           so it can be written anywhere and does not change which cards match.{" "}
@@ -491,13 +531,13 @@ function page(): PageResult {
           arrange results, not which to find — and says so rather than returning
           an empty page.
         </p>
-
         <h2>Booleans and grouping</h2>
-
-        <OperatorTable rows={BOOLEANS} answers="Means" />
-
+        <OperatorTable
+          rows={BOOLEANS}
+          answers="Means"
+          label="Boolean operators"
+        />
         <h2>What Optfall will not guess</h2>
-
         <p>
           <strong>Dated legality is not answered yet.</strong>{" "}
           <code>legal:cc@2026-03-14</code> parses, and asks a real question —
@@ -507,7 +547,6 @@ function page(): PageResult {
           feature is unbuilt. A wrong answer is worse than a missing one, and it
           is worse precisely because it looks like an answer.
         </p>
-
         <p>
           An unknown operator, an unknown format name, or an operator typed with
           nothing after it is reported the same way: the query says what it
