@@ -24,8 +24,9 @@
  * TWO PORT DIFFERENCES, BOTH FORCED BY REACT AND BOTH WORTH NAMING.
  *
  * Svelte's `bind:value` and `bind:this` are two-way. React has no such thing, so
- * the value is a controlled prop with an `onChange`, and the element is reached
- * through a forwarded `ref` — which is what the `/` shortcut needs. The
+ * the value is a controlled prop with a change handler — `onInput`, for the
+ * reason written on it below — and the element is reached through a forwarded
+ * `ref`, which is what the `/` shortcut needs. The
  * component is deliberately CONTROLLED rather than defaulting to uncontrolled:
  * every caller here already holds the query in state because the URL is derived
  * from it, and an uncontrolled field would let the DOM and that state disagree.
@@ -171,7 +172,27 @@ export function SearchField({
             aria-activedescendant={activeDescendant}
             aria-autocomplete={listboxId ? "list" : undefined}
             value={value}
-            onChange={(event) => onValueChange?.(event.currentTarget.value)}
+            /*
+              `onInput`, NOT `onChange`, AND THE SECOND FIELD ON THIS SITE TO
+              MAKE THAT CHOICE. `HeaderSearch` already carries the measurement
+              and the reasoning in full; the short version is that they are the
+              same event for a text field in a browser — React's `onChange` IS
+              the native `input` event, renamed — so nothing a reader can see
+              differs. What differs is that `onInput` is a direct passthrough
+              while `onChange` goes through React's ChangeEventPlugin, and that
+              plugin is silent under happy-dom for a dispatched `input` event.
+
+              THE CONSEQUENCE WAS THAT THIS PRIMITIVE COULD NOT BE TYPED INTO BY
+              A TEST AT ALL, which is not a small thing: `RulesSearch` is built
+              entirely around this field, and every behaviour that begins with a
+              keystroke — the page reset, the debounced URL write, Escape — was
+              unreachable. `RulesSearch.dom.test.tsx` drives them now.
+
+              The empty `onChange` is what stops React warning that a `value`
+              prop has no handler; the real one is directly above it.
+            */
+            onInput={(event) => onValueChange?.(event.currentTarget.value)}
+            onChange={() => {}}
             ref={inputRef}
             onKeyDown={onKeyDown}
           />
