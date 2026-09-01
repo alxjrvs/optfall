@@ -17,19 +17,24 @@
  * here would be slower and no truer. What is here is the handful of things that
  * are only true once a browser is involved.
  *
- * HAPPY-DOM IS REGISTERED IN THIS FILE, NOT IN A PRELOAD, and that is
+ * HAPPY-DOM IS REGISTERED FOR THIS FILE, NOT IN A PRELOAD, and that is
  * deliberate. `bunfig.toml`'s `preload` would give every test in the repo a
  * `window`, and most of this codebase's modules branch on not having one —
  * `queryFromUrl` reads `window.location`, the generator renders to a string on
  * purpose. Giving 790 server-side assertions a DOM to change their minds about
  * is a large, silent change to buy one file an environment. The cost of the
- * narrow version is that this file must be the only one that registers it; the
- * suite is run after this landed to prove nothing else moved.
+ * narrow version is that the DOM has to be handed back, and ~~that this file
+ * must be the only one that registers it~~ — **there are two runtime test files
+ * now, and `./domHarness.ts` counts the holders so the last one out turns the
+ * lights off.** Registering twice swapped `document` under a live React root
+ * and unregistering once pulled it out from under the scheduler; that module
+ * records both failures. The suite is run after this landed to prove nothing
+ * else moved.
  */
 
-import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { holdDom, releaseDom } from "./domHarness";
 
-GlobalRegistrator.register({ url: "https://optfall.com/search" });
+holdDom("https://optfall.com/search");
 
 /*
  * REACT'S OWN FLAG, AND WITHOUT IT `act` DOES NOT FLUSH. React logs "the
@@ -320,7 +325,7 @@ beforeEach(() => {
  * `bunfig.toml`'s preload, and it is much cheaper than the alternative.
  */
 afterAll(async () => {
-  await GlobalRegistrator.unregister();
+  await releaseDom();
 });
 
 describe("the island drives the field the shell renders", () => {

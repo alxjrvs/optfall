@@ -23,6 +23,7 @@
 
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
   FIELD_OPERATORS,
@@ -35,7 +36,24 @@ import {
    the last describe block in this file. */
 import { BOOLEANS, FIELDS, LEGALITY, ORDERING, type Row } from "./syntax.page";
 
-const PAGE = "apps/site/ssg/pages/syntax.page.tsx";
+/**
+ * The page's own source, resolved from THIS FILE rather than from the working
+ * directory.
+ *
+ * It was the bare repository-relative string, which is a path that only exists
+ * when `bun test` is run from the repository root — and running it from
+ * anywhere else made this file throw ENOENT during import, taking the whole
+ * suite's exit code with it while reporting zero failed assertions. The same
+ * defect was swept out of `scripts/` (see `scripts/lib/root.ts`); this was the
+ * last one left, and it is simpler here because the file being read is the
+ * test's own neighbour.
+ *
+ * `fileURLToPath` rather than `new URL(...).pathname`: the latter is
+ * percent-encoded, so a checkout under a path with a space in it — which
+ * `.claude/worktrees/` is one `git worktree add` away from — yields an ENOENT
+ * naming a path that visibly exists.
+ */
+const PAGE = fileURLToPath(new URL("./syntax.page.tsx", import.meta.url));
 const source = readFileSync(PAGE, "utf8");
 
 /**
