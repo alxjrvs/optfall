@@ -33,11 +33,16 @@ import { ROOT } from "./lib/root";
 /**
  * The floor, as a percentage of executable lines.
  *
- * MEASURED, NOT CHOSEN — see the header. The value below was written from the
- * first CI run of this script and is the tree's own figure at that commit,
- * rounded down. Raise it when coverage rises; do not lower it.
+ * MEASURED, NOT CHOSEN. The first CI run of this script reported **88.58%
+ * (9491/10715 lines)** across 1,067 tests in 40 files. Eighty-eight is that
+ * figure rounded DOWN to a whole percent, which leaves half a point of room —
+ * enough that adding a file with no tests does not fail the build on the commit
+ * that adds it, and little enough that a real regression still does.
+ *
+ * Raise it when coverage rises. Do not lower it to make a change pass; see the
+ * header for why that is the failure this check exists to prevent.
  */
-const FLOOR = 0;
+const FLOOR = 88;
 
 const COVERAGE_DIR = join(ROOT, "coverage");
 const LCOV = join(COVERAGE_DIR, "lcov.info");
