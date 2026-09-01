@@ -83,8 +83,9 @@ import "./search.css";
  * `ssg/searchIndexes.ts` carries the argument for the change.
  *
  * THE PIN STAYS IN THE PAGE, and that is the part that could not simply be
- * deleted. `docs/PLAN.md` requires every surface to show when its data was last
- * confirmed, and the upstream commit and the confirmation date are how
+ * deleted. `docs/DATA-TERMS.md` warrants that every surface shows when its
+ * data was last confirmed, and the upstream commit and the confirmation date
+ * are how
  * `/search` does it. They ride in `CARD_BRIEF` — 805 bytes, rendered with no
  * fetch — because a provenance line that appears only once a request succeeds
  * is absent exactly when something has gone wrong.

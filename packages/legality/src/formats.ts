@@ -1,6 +1,7 @@
 /**
- * Deck-construction rules for the six formats named in `docs/PLAN.md`, encoded
- * as data rather than as branches in a validator.
+ * Deck-construction rules for the six sanctioned formats, encoded as data
+ * rather than as branches in a validator. `docs/ROADMAP.md` Phase 3 is the
+ * surface they serve.
  *
  * These are *tournament* rules, not card data, so they can be written down
  * without the card dataset — which is why this file exists before the timeline

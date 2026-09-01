@@ -2,9 +2,10 @@
  * Accessibility, asserted on every primitive. The React port of
  * `src/svelte/a11y.test.ts`, case for case.
  *
- * `docs/PLAN.md` Phase 1: "The accessibility addon runs on every story in CI,
- * which turns the pitch jewel's contract — shape, numeral and colour carrying
- * the same fact three times — from an intention into a test."
+ * `docs/DESIGN.md`, "What the accessibility work covers": every primitive is
+ * rendered through axe-core in CI, which turns the pitch jewel's contract —
+ * shape, numeral and colour carrying the same fact three times — from an
+ * intention into a test. That section names this file as where it happens.
  *
  * WHY THIS FILE EXISTS SEPARATELY rather than the Svelte one having been edited
  * in place: Phase 6 deleted the Svelte sources, and this is the coverage that

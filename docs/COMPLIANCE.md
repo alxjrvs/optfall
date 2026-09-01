@@ -4,9 +4,9 @@ Optfall exists inside a written grant from Legend Story Studios. This document i
 the operational form of that grant: what we were given, what we owe in return,
 where each obligation is enforced in the codebase, and what would break it.
 
-It is derived from the **Permission envelope** section of
-[`PLAN.md`](PLAN.md) and does not supersede it. Where the two disagree,
-`PLAN.md` is the specification and this file has a bug.
+It is derived from [`DISCLAIMER.md`](DISCLAIMER.md), which carries the
+**Permission envelope**, and does not supersede it. Where the two disagree,
+`DISCLAIMER.md` is the specification and this file has a bug.
 
 **Treat this as a checklist, not an essay.** Every requirement below has an
 enforcement point. A requirement whose only enforcement is "remember it" is not
@@ -47,8 +47,8 @@ enforced, and should be read as an open action rather than a satisfied one.
 >
 > The disclaimer is no longer subject to any of this. It is asserted
 > byte-for-byte against the live page's own Third Party Apps clause, and matches
-> in all four documents that carry it — `README.md`, `PLAN.md`, `DATA-TERMS.md`
-> and this one.
+> in all four documents that carry it — `README.md`, `DISCLAIMER.md`,
+> `DATA-TERMS.md` and this one.
 
 ---
 
@@ -148,8 +148,9 @@ and stops.
 - A sponsor, employer or client acquiring any ownership interest.
 - Accepting contributions under a corporate CLA that vests rights in a company.
 
-`PLAN.md` is explicit that this is expensive to undo, which is why it is decided
-before the first commit rather than after.
+`ROADMAP.md` records Phase 0 as satisfying the envelope before the first public
+commit. This is expensive to undo, which is why it is decided then rather than
+after.
 
 **How we would find out.** The drift check above fails the build on an owner
 change or an org transfer. Everything outside the repository — the hosting
@@ -234,7 +235,7 @@ on the argument that "what exists" and "where do I get one" are different
 questions, then removed outright, which answers the same question by subtraction.
 The face button is what is left of commerce on a card page.
 **No price, ever** — that is a separate decision on separate grounds, recorded in
-that module and in `docs/PLAN.md`'s collector-economy exclusion.
+that module and in `ROADMAP.md`'s collector-economy exclusion.
 
 **What is still not settled**, and should not be overstated: this is a reading of
 published terms plus a live precedent, not written approval, and the grant is
@@ -382,8 +383,9 @@ mark, not just borrowed assets.
 
 **Enforced at.**
 
-- **The design tokens.** `PLAN.md` requires the no-logo constraint be written
-  into the token layer rather than left as a thing to remember. Concretely:
+- **The design tokens.** `DISCLAIMER.md` bars FAB and LSS logos in the app, and
+  that constraint is written into the token layer rather than left as a thing
+  to remember. Concretely:
   set identity is **typographic** — a set code rendered in type — and there is
   no set-symbol icon token, no icon slot on set chrome that could accept one,
   and no `set-symbol` asset directory. The absence is the enforcement; adding
@@ -423,7 +425,8 @@ Three things make that argument checkable rather than asserted:
 - `data/symbols/symbols.json` records each file's URL, SHA-256, byte length and
   pixel box, plus a rights statement naming LSS and disclaiming relicensing.
 
-![Partial][chip-partial] Specified in `DESIGN.md` and `PLAN.md`; the token
+![Partial][chip-partial] Specified in `DESIGN.md` and `DISCLAIMER.md`; the
+token
 constraint landed with Phase 1, and the asset-provenance half is now enforced in
 CI. The half that is not is the judgement call — no check can tell a set symbol
 used as data from one used as a filter icon.
@@ -486,7 +489,8 @@ makes, applied to bytes; review is still what judges the URL.
 **Requirement.** The disclaimer appears in the footer, verbatim.
 
 **The canonical text.** This is the single source of truth for the string. It is
-reproduced from `PLAN.md` ("Required disclaimer") and cross-checks against
+reproduced from `DISCLAIMER.md` ("Required disclaimer") and cross-checks
+against
 `README.md`. Line wrapping is not significant; the character sequence is,
 including the `®` after *Legend Story Studios* and the `™` after
 *Flesh and Blood*.
@@ -513,7 +517,7 @@ not a shortened version because the footer is crowded.
   obligation and the one-constant rule are unchanged — only the renderer moved,
   and the link above pointed at a file that no longer exists.)
 - [`scripts/canonical-disclaimer.ts`](../scripts/canonical-disclaimer.ts) reads
-  the canonical text out of `PLAN.md` itself, so no check compares a copy
+  the canonical text out of `DISCLAIMER.md` itself, so no check compares a copy
   against another copy. `scripts/canonical-disclaimer.test.ts` asserts that the
   site constant, `README.md` and this document all still say exactly that, and
   runs in the `test` job.
@@ -523,7 +527,8 @@ not a shortened version because the footer is crowded.
   `disclaimer` job in CI, which is wired into the aggregate `gate`. An empty
   output directory fails rather than passing vacuously.
 
-![Enforced][chip-enforced] Text canonicalised in `PLAN.md`, rendered from one
+![Enforced][chip-enforced] Text canonicalised in `DISCLAIMER.md`, rendered from
+one
 constant, and asserted in CI on both the source and the built output.
 
 **What would break it.** Paraphrasing it. Reflowing it into a component that
@@ -628,8 +633,9 @@ was wrong.
 **Still open, and neither is small.** The second failure is not covered by
 anything: the check reads HTML, so it knows the notice is on the page and cannot
 know whether a stylesheet has put it where nobody reads it. That is the
-visual-regression bullet in [`PLAN.md`](PLAN.md) Phase 1 — committed Playwright
-screenshots rather than a hosted service — still unbuilt, and framework-neutral
+visual-regression half of Phase 1 ([`ROADMAP.md`](ROADMAP.md)) — committed
+Playwright screenshots rather than a hosted service — still unbuilt, and
+framework-neutral
 now that the Storybook it was once phrased against is gone. And the serving boundary is
 unbuilt — nothing applies the line at the image host, so a hotlinked face is an
 unmarked face.
@@ -806,8 +812,8 @@ Carried, not closed. Each needs a human.
   `color.state.restricted` for blocked, and `color.ink.faint` for planned. So a
   chip in this document is the same object a `StatePill` draws on a card page.
 
-  Markdown has no link table shared across files, so `README.md` and `PLAN.md`
-  repeat the definitions they use. If a token moves, all three move. The legend
+  Markdown has no link table shared across files, so `README.md` and
+  `ROADMAP.md` repeat the definitions they use. If a token moves, all three move. The legend
   that says what each word COMMITS TO lives here and only here; the other two
   files link to it rather than restating it.
 -->

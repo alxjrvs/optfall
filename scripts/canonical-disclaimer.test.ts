@@ -1,8 +1,9 @@
 /**
  * The disclaimer says the same thing everywhere it is written down.
  *
- * `docs/PLAN.md` is the specification; `apps/site/src/lib/compliance.ts` is the
- * constant the site renders; `README.md` and `docs/COMPLIANCE.md` each carry a
+ * `docs/DISCLAIMER.md` is the specification; `apps/site/src/lib/compliance.ts`
+ * is the constant the site renders; `README.md` and `docs/COMPLIANCE.md` each
+ * carry a
  * copy for readers who never open the source. Four copies of one legally
  * load-bearing sentence is three chances for a typo, so their agreement is
  * asserted rather than assumed.
@@ -23,7 +24,7 @@ import { CARD_IMAGE_COPYRIGHT } from "../packages/components/src/index";
 const expected = readCanonicalDisclaimer();
 
 describe("the canonical disclaimer", () => {
-  test("is extracted from docs/PLAN.md and is not empty", () => {
+  test("is extracted from docs/DISCLAIMER.md and is not empty", () => {
     expect(expected.length).toBeGreaterThan(100);
     expect(expected.startsWith("Optfall is in no way affiliated")).toBe(true);
   });

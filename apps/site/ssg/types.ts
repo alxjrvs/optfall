@@ -1,8 +1,8 @@
 /**
  * The page contract, and it is deliberately Astro's.
  *
- * `docs/PLAN.md` Phase 6 moves this site off Astro onto a static generator we
- * own. The single decision that makes that a port rather than a rewrite is
+ * `docs/ROADMAP.md` Phase 6 moved this site off Astro onto a static generator
+ * we own. The single decision that makes that a port rather than a rewrite is
  * this file: **a page is `{ pattern, getStaticPaths, page }`**, which is
  * `getStaticPaths` with a different spelling.
  *

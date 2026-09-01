@@ -6,9 +6,9 @@
  * anywhere; this module touches the network and shells out to `pdftotext`, and
  * a browser consumer must not pull it in by accident.
  *
- * Neither the PDF nor the extracted corpus is committed. `docs/PLAN.md` wants
- * ingestion to run as a scheduled job that opens a pull request, not as a blob
- * in the tree, so this fetches on demand into a temporary directory.
+ * Neither the PDF nor the extracted corpus is committed. Ingestion runs as a
+ * scheduled job that opens a pull request, never as a blob in the tree, so
+ * this fetches on demand into a temporary directory.
  *
  * Zero runtime dependencies still holds: `node:crypto`, `node:child_process`,
  * `node:fs` and `node:os` are platform builtins, not packages.

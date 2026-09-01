@@ -48,13 +48,14 @@ rendered output.
 | Touching… | Read first |
 |---|---|
 | disclaimer, attribution, credit or licence copy | `docs/COMPLIANCE.md` §4–§5 |
-| any prose in `docs/PLAN.md` | it is parsed — see below |
+| any prose in `docs/DISCLAIMER.md` | it is parsed — see below |
 | a design token, or component CSS | `packages/theme/src/tokens.ts` |
 | a search operator | the four-file list below |
 | what a page is | `apps/site/ssg/routes.ts` |
 
-**`docs/PLAN.md` is parsed programmatically.** `scripts/canonical-disclaimer.ts`
-extracts its disclaimer blockquote and normalises it;
+**`docs/DISCLAIMER.md` is parsed programmatically.**
+`scripts/canonical-disclaimer.ts` extracts its disclaimer blockquote and
+normalises it;
 `scripts/canonical-disclaimer.test.ts` is where the comparison lives, asserting
 that text appears identically in `apps/site/src/lib/compliance.ts`, `README.md`,
 `docs/COMPLIANCE.md` and *both* copies in `docs/DATA-TERMS.md`. Reflowing the

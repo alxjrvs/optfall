@@ -1411,8 +1411,9 @@ cards.push({
     the retired face as the reason the primitive works.
   - The brass seal was a flat inline badge reading "Verified · judge name ·
     2026-08-12". The component is a two-part struck plate whose lower band
-    carries the rules version in inverted material, which `docs/PLAN.md` Phase 5
-    requires be impossible to miss. The card had no band and no version.
+    carries the rules version in inverted material, which `docs/DATA-TERMS.md`
+    Layer 3 requires be impossible to miss — every verified entry carries the
+    rules version it was answered under. The card had no band and no version.
 
   One card per primitive is what makes that kind of drift a diff.
 */

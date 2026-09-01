@@ -4,14 +4,15 @@
  *
  *   bun scripts/check-no-llm-deps.ts
  *
- * This enforces the first of the project-wide rules in `docs/PLAN.md` ("Rules
- * that hold across every phase"): no language model in the shipped product.
- * It is the check behind the claim the README opens with, so it guards the
- * product's central promise rather than a preference.
+ * This enforces the rule stated in `LLM_STATEMENT.md`: no language model in
+ * the shipped product. That statement describes this check in as many words —
+ * "continuous integration fails if a language model so much as appears in a
+ * dependency manifest" — so it guards the product's central promise rather
+ * than a preference.
  *
- * IT MATCHES DEPENDENCY NAMES, NEVER SOURCE OR PROSE. `docs/PLAN.md` discusses
- * language models at length and by name, and a content grep would fail the
- * build on the very document that states the rule.
+ * IT MATCHES DEPENDENCY NAMES, NEVER SOURCE OR PROSE. `LLM_STATEMENT.md`
+ * discusses language models at length and by name, and a content grep would
+ * fail the build on the very document that states the rule.
  *
  * WHY IT IS A FILE RATHER THAN A WORKFLOW STEP. This lived as ~240 lines of
  * TypeScript heredoc'd into `.github/workflows/ci.yml`, written to
@@ -218,7 +219,7 @@ if (import.meta.main) {
   // Manifests only describe what WE declared. `bun.lock` describes what
   // will be installed — so an LLM SDK arriving as somebody else's
   // transitive dependency ships in the built product while every
-  // manifest stays clean. docs/PLAN.md's rule is about what the product
+  // manifest stays clean. LLM_STATEMENT.md's rule is about what the product
   // contains, not about what we chose to type, so the lockfile is the
   // authority and a manifest-only scan is a gate with a hole in it.
   try {
@@ -269,7 +270,7 @@ if (import.meta.main) {
     "Optfall ships no language model: nothing a user touches may call one, and no published dataset may contain model-generated content.",
   );
   console.log(
-    'See docs/PLAN.md, "Rules that hold across every phase" — the first rule. It is structural, and there is no exception behind a toggle.',
+    "See LLM_STATEMENT.md. The rule is structural, and there is no exception behind a toggle.",
   );
   process.exit(1);
 }

@@ -19,10 +19,11 @@
  *
  * WHY THIS IS A SEPARATE WORKER FROM THE MAIN SITE. `apps/site` is served
  * entirely from static assets with no Worker script at all, and that is what
- * "no uptime story to fail" in `docs/PLAN.md` rests on. Serving images needs
- * code. Confining that code to its own Worker keeps the runtime inside the one
- * layer the plan already calls expendable: losing images costs a rendering
- * layer, never the product. If this host is down, every card page still renders
+ * having no uptime story to fail rests on — `docs/ROADMAP.md`, Phase 6 and
+ * *Settled*: a static generator this project owns, on Cloudflare hosting.
+ * Serving images needs code. Confining that code to its own Worker keeps the
+ * runtime inside the one layer the plan already calls expendable: losing
+ * images costs a rendering layer, never the product. If this host is down, every card page still renders
  * and every fact on it is still correct.
  *
  * A MISS RETURNS THE PLACEHOLDER WITH 200, NOT A 404, and that is the one

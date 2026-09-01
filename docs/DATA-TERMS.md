@@ -12,7 +12,7 @@ comes from a conditional grant by Legend Story Studios, and **that grant binds
 recipients too**. So these terms are not a formality: passing LSS's conditions
 downstream intact is one of the six things we owe in exchange for being allowed
 to exist. See [`COMPLIANCE.md`](COMPLIANCE.md) for the full obligation set and
-[`PLAN.md`](PLAN.md) for the envelope it derives from.
+[`DISCLAIMER.md`](DISCLAIMER.md) for the envelope it derives from.
 
 The short version, before the detail:
 
@@ -113,7 +113,7 @@ possible to disagree with it on the merits:
    CC0 over our layer keeps the boundary legible: the only conditions on the file
    are LSS's, stated plainly, and none of them are ours.
 
-5. **It has to survive us.** `PLAN.md` commits that if the site disappears, the
+5. **It has to survive us.** Optfall commits that if the site disappears, the
    corpus does not. That only holds if a stranger can fork the data without
    consulting a lawyer first. Three Flesh and Blood tools have already died or
    decayed; the licence should assume we are the fourth.
@@ -222,7 +222,7 @@ Not yet in effect. Recorded now so the terms exist before the first contributor
 does, rather than being invented under pressure afterwards.
 
 Judge-authored ruling text is neither ours by default nor LSS's. The commitments
-that shape whatever licence lands here, from `PLAN.md`:
+that shape whatever licence lands here, from `ROADMAP.md`'s Phase 5:
 
 - **Authors keep their byline.** Every verified entry carries a name, a date and
   the rules version it was answered under. Contributing must read as

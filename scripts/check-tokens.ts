@@ -2,11 +2,11 @@
 /**
  * Fails the build on a raw colour or length inside component source.
  *
- * `docs/PLAN.md` Phase 1: "A lint rule fails the build on a raw hex or a raw
- * pixel value inside a component. A design system maintained by good intentions
- * is a design system that erodes the first time someone is shipping at
- * midnight; the rule is the whole difference between a language and a folder of
- * screenshots."
+ * `docs/ROADMAP.md` Phase 1: a raw hex or raw length inside a component fails
+ * the build, because the difference between a design language and a folder of
+ * screenshots is enforcement rather than intent. A design system maintained by
+ * good intentions is one that erodes the first time someone is shipping at
+ * midnight.
  *
  * This is that rule. It began as a purpose-built scanner because the linter
  * could not parse `.svelte` or `.astro`; those files are gone, and it stays
@@ -458,7 +458,7 @@ if (failures > 0 || staleDeferrals > 0) {
     "or add the value to packages/theme/src/tokens.ts if the system genuinely lacks it.",
   );
   console.log(
-    "See docs/PLAN.md, Phase 1 — 'Tokens are the only source of truth'.",
+    "See docs/DESIGN.md, Implementation — 'Tokens are the only source of truth'.",
   );
   process.exit(1);
 }

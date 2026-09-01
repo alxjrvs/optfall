@@ -336,7 +336,7 @@ export class NotImplementedError extends Error {
 
   constructor(subject: string, phase: number) {
     super(
-      `${subject} is not implemented until Phase ${String(phase)} of the Optfall build plan (docs/PLAN.md).`,
+      `${subject} is not implemented until Phase ${String(phase)} of the Optfall build plan (docs/ROADMAP.md).`,
     );
     this.name = "NotImplementedError";
     this.phase = phase;

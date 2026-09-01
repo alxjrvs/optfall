@@ -9,9 +9,9 @@
  * editor autocorrecting `®` or `™`, a page rendered outside the shared layout,
  * or a component that splits the sentence across elements.
  *
- * The expected text comes from `docs/PLAN.md`, never from the site source —
- * checking the build against a constant the build itself imports would only
- * prove the build is self-consistent.
+ * The expected text comes from `docs/DISCLAIMER.md`, never from the site
+ * source — checking the build against a constant the build itself imports
+ * would only prove the build is self-consistent.
  *
  * Empty output is a FAILURE, not a vacuous pass. "No pages, therefore no page
  * is missing the disclaimer" is exactly how this check would rot into
@@ -112,7 +112,9 @@ if (missing.length === 0) {
 }
 
 console.log("");
-console.log('The expected text, from docs/PLAN.md ("Required disclaimer"):');
+console.log(
+  'The expected text, from docs/DISCLAIMER.md ("Required disclaimer"):',
+);
 console.log(`  ${expected}`);
 console.log("");
 console.log(

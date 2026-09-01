@@ -24,8 +24,9 @@
  *
  * **IT IS NOT A GENERAL STATE LAYER, AND SHOULD NOT BECOME ONE.** Everything
  * else on `/search` — the page, the size, the display mode, the submitted query
- * — lives in the URL, deliberately, because `docs/PLAN.md` makes the address the
- * product. This holds the ONE value that has no business in the URL: the
+ * — lives in the URL, deliberately, because `docs/DESIGN.md` keeps Scryfall's
+ * "Every view is a URL" and makes the address the product. This holds the ONE
+ * value that has no business in the URL: the
  * unsubmitted text in a box. Anything that belongs in a link belongs in the
  * link.
  *

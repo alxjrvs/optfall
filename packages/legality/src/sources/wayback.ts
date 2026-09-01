@@ -4,11 +4,10 @@
  *
  * ## Why this exists
  *
- * `docs/PLAN.md` calls the existence of a public archive of past
- * banned-and-restricted revisions "the question that decides a headline
- * feature". `docs/ROADMAP.md` answers it under "Phase 3 — Legality that
- * remembers", in "What blocks it": **yes, and the Wayback Machine is the
- * route.** LSS's own host returns HTTP 403 to automated fetches; the archive
+ * Whether a public archive of past banned-and-restricted revisions exists was
+ * the question that decided a headline feature. `docs/ROADMAP.md` answers it
+ * under "Phase 3 — Legality that remembers", in "What blocks it": **yes, and
+ * the Wayback Machine is the route.** LSS's own host returns HTTP 403 to automated fetches; the archive
  * serves the same documents without complaint and needs no API key.
  *
  * ## What this module does, and deliberately does not do

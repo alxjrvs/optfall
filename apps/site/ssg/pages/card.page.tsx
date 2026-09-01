@@ -1,8 +1,9 @@
 /**
  * The `/card/` route — 11,378 URLs, every one of them a printing.
  *
- * `docs/PLAN.md` Phase 2: **"Every view is a URL … a card page that cannot be
- * linked is a lookup rather than a reference."** `docs/SCRYFALL-GAP.md` §5.1c
+ * `docs/DESIGN.md` keeps Scryfall's **"Every view is a URL"**, and a card page
+ * that cannot be linked is a lookup rather than a reference.
+ * `docs/SCRYFALL-GAP.md` §5.1c
  * says which URL: **"Scryfall treats the printing as the addressable unit; so
  * should we."** This file is where that stopped being half true.
  *

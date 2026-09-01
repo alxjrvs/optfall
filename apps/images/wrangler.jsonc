@@ -3,9 +3,11 @@
   //
   // THIS IS THE ONLY RUNTIME IN THE REPOSITORY, and the split is deliberate.
   // `apps/site` is served entirely from static assets with no Worker script at
-  // all, which is what docs/PLAN.md's "no uptime story to fail" rests on.
-  // Serving card images needs code. Confining that code here keeps the runtime
-  // inside the one layer the plan already calls expendable:
+  // all, which is what having no uptime story to fail rests on —
+  // docs/ROADMAP.md, Phase 6 and "Settled": a static generator this project
+  // owns, on Cloudflare hosting. Serving card images needs code. Confining
+  // that code here keeps the runtime inside the one layer the plan already
+  // calls expendable:
   //
   //   "Losing images costs a rendering layer, never the product."
   //

@@ -174,11 +174,13 @@ jobs:
         with:
           bun-version-file: .bun-version
 
-      # Enforces the project-wide rule in docs/PLAN.md ("Rules that hold across
-      # every phase"): no language model in the shipped product.
+      # Enforces the rule stated in LLM_STATEMENT.md: no language model in the
+      # shipped product. That statement describes this job in as many words —
+      # "continuous integration fails if a language model so much as appears in
+      # a dependency manifest".
       #
       # This matches dependency NAMES declared in package.json manifests. It
-      # deliberately does NOT grep source or documentation: docs/PLAN.md
+      # deliberately does NOT grep source or documentation: LLM_STATEMENT.md
       # discusses language models at length and by name, and a content grep
       # would fail the build on the very document that states the rule.
       #
@@ -189,10 +191,10 @@ jobs:
       - name: Assert no language-model or AI SDK dependency
         run: bun run check:no-llm
 
-  # docs/PLAN.md Phase 1: "A lint rule fails the build on a raw hex or a raw
-  # pixel value inside a component." This is that rule, and it is a required
-  # job because the plan is explicit that the difference between a design
-  # language and a folder of screenshots is enforcement rather than intent.
+  # docs/ROADMAP.md Phase 1: a raw hex or raw length inside a component fails
+  # the build. This is that rule, and it is a required job because the roadmap
+  # is explicit that the difference between a design language and a folder of
+  # screenshots is enforcement rather than intent.
   #
   # It is a separate job from `lint` because it is a different KIND of check:
   # `check-tokens.ts` reads the project's `.css` files and asserts them against
@@ -307,11 +309,12 @@ jobs:
       # That costs a second build and buys independence — this job fails on its
       # own evidence, not on an artifact another job says is fine.
       #
-      # The expected text is read from docs/PLAN.md, never from the site
+      # The expected text is read from docs/DISCLAIMER.md, never from the site
       # source: comparing the build against a constant the build imports would
       # only prove the build is self-consistent. The matching source-side
-      # assertion (constant == PLAN.md == README.md == COMPLIANCE.md) lives in
-      # scripts/canonical-disclaimer.test.ts and runs in the `test` job.
+      # assertion (constant == DISCLAIMER.md == README.md == COMPLIANCE.md)
+      # lives in scripts/canonical-disclaimer.test.ts and runs in the `test`
+      # job.
       - name: Build the site
         run: bun run build
 
@@ -454,9 +457,10 @@ jobs:
       # A gate can only aggregate what it was told to need, and `needs:` above
       # is maintained by hand. Adding a job to this workflow and forgetting to
       # list it there is a silent downgrade: the gate goes green without it and
-      # nothing anywhere says so. docs/PLAN.md schedules exactly that change for
-      # Phase 1 ("a11y and visual-regression checks wired into the aggregate
-      # gate"), so the trigger is already on the roadmap.
+      # nothing anywhere says so. Wiring the a11y and visual-regression checks
+      # into this aggregate gate is exactly that change, and the
+      # visual-regression half is still unbuilt — docs/COMPLIANCE.md tracks it
+      # as an open action.
       #
       # THIS WAS FORTY LINES OF INLINE awk AND jq, AND IT IS A SCRIPT NOW.
       # Inline, it could not be run before pushing, could not be tested, and

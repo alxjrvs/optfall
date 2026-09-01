@@ -97,9 +97,10 @@ body > .shell {
   flex: 1 0 auto;
 
   /*
-    NOTHING MAY EVER SCROLL THE DOCUMENT SIDEWAYS — `docs/PLAN.md`'s mobile rule,
-    stated as the one thing that must not happen, and until now enforced only by
-    each overflowing thing clipping itself.
+    NOTHING MAY EVER SCROLL THE DOCUMENT SIDEWAYS — `CLAUDE.md`'s mobile rule,
+    "six numbers, not an adjective", stated as the one thing that must not
+    happen, and until now enforced only by each overflowing thing clipping
+    itself.
 
     `CardIndex`'s fan is what made that insufficient. A cell in the last column
     opens a hand of cards wider than the cell, deliberately, and the whole point

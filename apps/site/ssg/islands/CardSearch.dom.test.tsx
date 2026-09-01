@@ -924,8 +924,9 @@ async function browse(row: NewestRelease | null): Promise<Mounted> {
  * every one of those too — so it is among the most-arrived-at screens on the
  * site after the front door, and it had no test of its own at all. The three
  * things asserted here are the three that were wrong or absent before: the pin
- * is printed WITHOUT the index (`docs/PLAN.md` requires it and a fetch must not
- * gate it), the release row draws the printings it is handed, and an absent
+ * is printed WITHOUT the index (`docs/DATA-TERMS.md` requires it and a fetch
+ * must not gate it), the release row draws the printings it is handed, and an
+ * absent
  * release costs the type lines nothing.
  *
  * NOTHING HERE WAITS FOR THE INDEX, deliberately — `settle()` is absent from

@@ -26,7 +26,8 @@ confidently wrong ruling is not a risk to manage but a thing the tool cannot do.
 
 | Document | Contents |
 |---|---|
-| [`docs/PLAN.md`](docs/PLAN.md) | Phased build plan — what gets built, in what order, and why |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | The roadmap — the phases still open, what is out of scope and why, with the finished phases summarised |
+| [`docs/DISCLAIMER.md`](docs/DISCLAIMER.md) | The permission envelope, and the required LSS disclaimer as the parsed specification |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | Design language, component system, and screen designs |
 | [`docs/SCRYFALL-GAP.md`](docs/SCRYFALL-GAP.md) | Comparative analysis against Scryfall, and the remove/update/extend plan to close it |
 | [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) | The permission envelope, as an operational checklist with enforcement points |
@@ -49,8 +50,8 @@ that says what each word commits to.
 
 **Phases 0, 1, 2 and 6 are on `main`**, and the product surface is built: a
 12,776-page site with card pages, set pages, the Comprehensive Rules, a card
-search and a rules search. See [`docs/PLAN.md`](docs/PLAN.md) for what each
-phase covers and what remains.
+search and a rules search. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what
+each phase covers and what remains.
 
 - ![Live][chip-live] **Repository and CI** — a single aggregate gate,
   squash-only merges with linear history, and a weekly drift check that opens
@@ -143,8 +144,9 @@ Legend Story Studios.
   same object a `StatePill` draws on a card page. The definitions are
   reference-style so the prose above stays inside 80 columns.
 
-  `docs/COMPLIANCE.md` and `docs/PLAN.md` each repeat the definitions they use,
-  because Markdown has no link table shared across files. The legend saying what
+  `docs/COMPLIANCE.md` and `docs/ROADMAP.md` each repeat the definitions they
+  use, because Markdown has no link table shared across files. The legend
+  saying what
   each word COMMITS TO is written once, in `docs/COMPLIANCE.md` under "How to
   read a chip", and linked from the others rather than restated.
 -->

@@ -2,9 +2,11 @@
  * One page per addressable section of the Comprehensive Rules — 1,278 of them,
  * every one a permalink. Ported to the generator.
  *
- * `docs/PLAN.md` Phase 4: **"The permalink is the product. A judge pasting a
- * citation into Discord instead of describing which paragraph they mean is the
- * unprompted-share moment."** That sentence decides every argument on this page.
+ * `docs/ROADMAP.md` Phase 4 puts every Comprehensive Rules paragraph at a
+ * permanent URL, citable by number. **The permalink is the product: a judge
+ * pasting a citation into Discord instead of describing which paragraph they
+ * mean is the unprompted-share moment.** That sentence decides every argument
+ * on this page.
  *
  * **THE IDENTIFIER IS THE HEADING.** Not the chapter title, not a rewritten
  * question — the `<h1>` is `cr:8.3.4b`, at display size, `user-select: all`. The
@@ -63,8 +65,9 @@ type Props = { readonly page: RulePage };
  * WHICH CARDS THIS RULE GOVERNS — the direction that makes a rules corpus worth
  * visiting rather than merely correct.
  *
- * `docs/PLAN.md` Phase 4 asks for the cross-reference in both directions, and a
- * rule that lists its cards is the half nothing else in the game has: the
+ * `docs/DESIGN.md`, screen 4, asks for the cross-reference in both directions
+ * — "a rule knows which interactions cite it" — and a rule that lists its
+ * cards is the half nothing else in the game has: the
  * Comprehensive Rules is a PDF with a search box, and no tool joins it to the
  * cards it governs.
  */
