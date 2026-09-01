@@ -727,11 +727,16 @@ The answer we are committing to: **a rendering layer, and nothing else.**
 
 - **Rulings, rules and legality data are ours.** They are derived from published
   official documents and from named human authors, not from licensed assets.
-- **The legality package keys on stable identifiers, never on card text.**
-  `isLegal(deck, format, asOf)` resolves ids against a timeline of ban and
-  retirement events. Card *names* are a display-layer join, not a load-bearing
-  key. A legality verdict that requires the card's rules text to compute has
-  welded the product to the licence.
+- **Legality keys on stable identifiers, never on card text.** Card *names* are
+  a display-layer join, not a load-bearing key: a legality verdict that requires
+  the card's rules text to compute has welded the product to the licence.
+  `verdictFor` in `apps/site/src/lib/cards.ts` reads upstream's per-format flags
+  against a printing id, and satisfies this.
+
+  *This bullet described `isLegal(deck, format, asOf)` in `packages/legality`
+  until 2026-09-01, when that package was deleted along with Phase 3. The
+  requirement is unchanged and is met by the code that actually serves readers;
+  only the example moved.*
 - **Card images are a separate, droppable layer.** Phase 3 exists to serve the
   other phases, not to be a product — which is also why it is one week and
   explicitly minimal.
