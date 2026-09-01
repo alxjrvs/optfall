@@ -91,18 +91,50 @@ const drifted = surfaces.filter((s) => s.actual !== s.expected);
  * version in the workflow is the exact state this change removed.
  */
 const workflow = read(".github/workflows/ci.yml");
+const deployWorkflow = read(".github/workflows/deploy-cloudflare.yml");
+const setupAction = read(".github/actions/setup/action.yml");
+
+/*
+  THE PIN MOVED INTO A COMPOSITE ACTION, SO THIS FOLLOWS IT — and then asserts
+  the move was total.
+
+  `ci.yml` and `deploy-cloudflare.yml` used to carry ten and two copies of the
+  setup-bun step respectively; they now call `.github/actions/setup`. Scanning
+  only `ci.yml`, as this did, would find zero setup-bun steps and report that
+  the workflow had stopped reading `.bun-version` at all.
+
+  The consolidation also creates a NEW way to go wrong that did not exist when
+  every job spelled it out: a single job quietly reintroducing its own
+  setup-bun with a different pin, while the composite action keeps the other
+  eleven honest and this check keeps passing. So the workflows are asserted to
+  contain none, rather than merely not counted.
+*/
 const setupBunSteps =
-  workflow.match(/uses:[ \t]*oven-sh\/setup-bun@/g)?.length ?? 0;
+  setupAction.match(/uses:[ \t]*oven-sh\/setup-bun@/g)?.length ?? 0;
 const fromFile =
-  workflow.match(/^[ \t]*bun-version-file:[ \t]*\.bun-version[ \t]*$/gm)
+  setupAction.match(/^[ \t]*bun-version-file:[ \t]*\.bun-version[ \t]*$/gm)
     ?.length ?? 0;
+
+const strayWorkflows = (
+  [
+    [".github/workflows/ci.yml", workflow],
+    [".github/workflows/deploy-cloudflare.yml", deployWorkflow],
+  ] as const
+).filter(([, text]) => /uses:[ \t]*oven-sh\/setup-bun@/.test(text));
 // `[ \t]` rather than `\s`, deliberately: `\s` crosses newlines, so the job
 // named `bun-version:` below matched as a hardcoded pin whose "value" was the
 // `name:` on the next line.
-const hardcoded = workflow.match(/^[ \t]*bun-version:[ \t]*\S+/gm) ?? [];
+const hardcoded = [workflow, deployWorkflow, setupAction].flatMap(
+  (text) => text.match(/^[ \t]*bun-version:[ \t]*\S+/gm) ?? [],
+);
 
 const workflowProblems: string[] = [];
 
+for (const [name] of strayWorkflows) {
+  workflowProblems.push(
+    `${name} uses setup-bun directly — \`.github/actions/setup\` is the only place it belongs, so that one pin governs every job.`,
+  );
+}
 if (setupBunSteps === 0) {
   workflowProblems.push(
     "ci.yml sets up Bun nowhere — this check cannot see what CI runs on, which is a failure, not a pass.",

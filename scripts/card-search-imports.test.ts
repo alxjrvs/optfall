@@ -25,9 +25,9 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url));
+import { ROOT } from "./lib/root";
+
 const DIRECTORY = join(ROOT, "apps/site/src/lib/card-search");
 
 /**

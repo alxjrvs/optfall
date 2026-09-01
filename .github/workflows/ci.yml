@@ -13,9 +13,10 @@ on:
     branches: [main]
 
 # NO DEPENDENCY CACHE, AND THAT IS MEASURED RATHER THAN OVERLOOKED. Six jobs
-# below each run `bun install --frozen-lockfile`, which looks like five
-# redundant installs and reads like an obvious `actions/cache` candidate. It is
-# not one. Timed on run 32324572946:
+# below pass `install: "true"` to `.github/actions/setup`, which runs
+# `bun install --frozen-lockfile` — five apparently redundant installs, and an
+# obvious-looking `actions/cache` candidate. It is not one. Timed on run
+# 32324572946, when each job spelled the install out itself:
 #
 #   dev-server 1s   build 1s   lint 2s   test 1s   typecheck 2s   disclaimer 2s
 #
@@ -60,22 +61,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Typecheck
         run: bun run typecheck
@@ -85,22 +74,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Lint
         run: bun run lint
@@ -116,22 +93,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Test
         run: bun run test
@@ -141,22 +106,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Build
         run: bun run build
@@ -166,13 +119,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       # Enforces the rule stated in LLM_STATEMENT.md: no language model in the
       # shipped product. That statement describes this job in as many words —
@@ -215,13 +163,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       - name: Assert components consume tokens, never literals
         run: bun run check:tokens
@@ -237,13 +180,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       - name: Assert every Bun version declaration matches .bun-version
         run: bun run check:bun-version
@@ -268,13 +206,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       - name: Assert every committed binary asset has a verified origin
         run: bun run check:provenance
@@ -284,22 +217,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       # docs/COMPLIANCE.md §4 names this as an enforcement point, and it is the
       # only one that catches what review does not: a reflow, an editor
@@ -377,22 +298,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Assert the dev server serves every kind of route
         run: bun run check:dev-server
@@ -449,22 +358,24 @@ jobs:
       - disclaimer
       - dev-server
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          # `.bun-version`, like the other ten steps in this file. This one
-          # pinned `${{ env.BUN_VERSION }}` inline and reached main anyway,
-          # because the PR that added the step and the PR that added the rule
-          # were each green against a main that did not yet have the other, and
-          # required checks were not `strict` — so the combination was never run
-          # until a third PR inherited it.
-          #
-          # That is the incident that turned `strict` ON; see the ruleset note
-          # in scripts/repo-settings.sh. It cannot recur the same way.
-          bun-version-file: .bun-version
+      # THIS STEP IS WHY `strict` IS ON, and the story is worth keeping even
+      # now that the pin lives in the composite action rather than here.
+      #
+      # It once pinned `${{ env.BUN_VERSION }}` inline and reached main anyway,
+      # because the PR that added the step and the PR that added the rule
+      # forbidding it were each green against a main that did not yet have the
+      # other, and required checks were not `strict` — so the combination was
+      # never run until a third PR inherited it.
+      #
+      # That is the incident that turned `strict` ON; see the ruleset note in
+      # scripts/repo-settings.sh. It cannot recur the same way.
+      #
+      # The inline-pin half cannot recur either: `.github/actions/setup` is now
+      # the only place `setup-bun` appears, and `check:bun-version` asserts
+      # that — so a job cannot quietly reintroduce its own copy with a
+      # different version.
+      - name: Set up
+        uses: ./.github/actions/setup
 
       # A gate can only aggregate what it was told to need, and `needs:` above
       # is maintained by hand. Adding a job to this workflow and forgetting to

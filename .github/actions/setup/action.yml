@@ -1,0 +1,51 @@
+# Checkout, Bun, and optionally dependencies.
+#
+# WHY THIS EXISTS. `ci.yml` repeated a byte-identical seven-line checkout and
+# setup-bun preamble ten times, and an eight-line install block six times —
+# 132 of its 525 lines. `deploy-cloudflare.yml` repeated the same preamble
+# twice more, WITHOUT the install block's comment, so the rationale was already
+# inconsistent across the two files that shared it.
+#
+# WHAT DELIBERATELY DID NOT MOVE. The essays in `ci.yml` are job-level, not
+# step-level: the arguments for why `tokens` is separate from `lint`, why
+# `disclaimer` rebuilds rather than trusting another job's artifact, why
+# `repo-settings` is scheduled rather than gated, and the whole `gate` design
+# all sit above `jobs.<id>` and are untouched. The only prose that moved is the
+# one paragraph that was previously copied six times, and it is below, once.
+#
+# THE COST, STATED. The `actions/checkout` and `setup-bun` SHA pins now live one
+# directory away from the jobs using them. Dependabot's `github-actions`
+# ecosystem does update composite actions, so they still move — and
+# `check:bun-version` now asserts that `setup-bun` appears HERE AND NOWHERE
+# ELSE, which is what stops a job quietly reintroducing its own copy with a
+# different pin.
+name: Set up
+description: Check out the repository and install the pinned Bun, optionally with dependencies.
+
+inputs:
+  install:
+    description: Run `bun install --frozen-lockfile` as well.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      with:
+        bun-version-file: .bun-version
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        # No fallback branch. bun.lock is committed, so the only thing an
+        # `else` could ever do is let a pull request that DELETES the lockfile
+        # silently downgrade every job to an unpinned install and still go
+        # green — which is the one case where failing loudly is the point.
+        bun install --frozen-lockfile

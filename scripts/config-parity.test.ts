@@ -14,11 +14,11 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+
+import { ROOT } from "./lib/root";
 
 import { DARK_TOKENS } from "../packages/theme/src/tokens";
 
-const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const read = (path: string): string => readFileSync(join(ROOT, path), "utf8");
 
 /* ------------------------------------------------------------------------ */
