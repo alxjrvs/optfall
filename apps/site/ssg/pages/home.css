@@ -169,7 +169,13 @@
   padding-inline: var(--of-space-tighter);
   border-radius: var(--of-bevel-radius);
   background: var(--of-color-accent);
-  color: var(--of-color-ink-inverse);
+  /* `accent.ink`, NOT `ink.inverse`, and the two differ only in dark. This read
+     `ink.inverse` — #0b0b0b on the accent, 3.64:1 — and the badge is 12px BOLD,
+     which does not reach the 18.66px large-text threshold, so 4.5:1 applies to
+     it. `accent.ink` is the white the accent was chosen to carry (its own
+     docblock says the accent "has to stay dark enough to carry accent.ink") and
+     it lands at 5.41:1. Light was never wrong: 7.99 before, 8.94 now. */
+  color: var(--of-color-accent-ink);
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
   font-weight: var(--of-type-weight-bold);

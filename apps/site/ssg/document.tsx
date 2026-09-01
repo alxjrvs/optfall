@@ -231,6 +231,7 @@ export function Document({
           {result.section === "none" ? null : (
             <SiteHeader
               section={result.section}
+              route={route}
               field={result.headerSearch ?? true}
               fieldIsland={result.headerSearchIsland ?? false}
             />
