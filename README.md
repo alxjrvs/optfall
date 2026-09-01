@@ -79,25 +79,26 @@ each phase covers and what remains.
 
 ## What is next
 
-![Blocked][chip-blocked] **Phase 3, legality that remembers, is blocked on a
-dataset rather than on code.** `packages/legality` is written and tested — 3,854
-lines and 185 passing tests — but its headline export `isLegal` still throws and
-nothing under `apps/` imports it; the legality shown on card pages today is
-upstream's flags, read by `apps/site/src/lib/cards.ts`.
+![Live][chip-live] **Phase 4 is built and serving.** Every Comprehensive Rules
+paragraph has a permanent URL at `/rule/:number`, with `/cr` over the whole
+corpus and a search across it. Its exit criterion is external and this
+repository cannot report on it: a citation appearing in a community discussion
+without me putting it there.
 
-What is missing is `data/legality`, which does not exist. Building it means
-prose extraction from roughly 67 archived announcements, with human review of
-every entry, reachable only through the Wayback Machine because `fabtcg.com`
-returns 403. A courteous request to the upstream maintainers for an explicit
-licence was drafted and **has never been sent** — it asks a favour of a
-volunteer maintainer and cites a third party's legal terms, so a person should
-post it under their own name. It is **not** a gate on this work, and treating
-it as one was an error:
-[`docs/ROADMAP.md`](docs/ROADMAP.md#the-upstream-licence-request) carries the
-current position, and the drafted text is in the git history.
+**Phase 5, the interaction record, is the destination** — a searchable,
+judge-attributed record of what happens when card X meets card Y. It is gated on
+people rather than code: recruiting certified judges as bylined authors, not
+mining an archive nobody consented to. [`docs/ROADMAP.md`](docs/ROADMAP.md)
+carries the reasoning, including the three days of work that decide whether it
+is worth a quarter.
 
-So the next action on Phase 3 is `data/legality` itself. Sending the draft is
-worth five minutes and is not something to clear first.
+**Phase 3, legality that remembers, was dropped on 2026-09-01**, and its
+implementation deleted with it. `packages/legality` was 6,505 lines and 185
+passing tests against an export that threw, imported by nothing, waiting on a
+dataset that was never built. The legality on card pages is upstream's own
+flags, read by `apps/site/src/lib/cards.ts` — which is what has always actually
+served readers. The work is in the git history if the decision reverses.
+
 
 ## Working on it
 
@@ -169,4 +170,3 @@ Legend Story Studios.
 [chip-pages]: https://img.shields.io/badge/12,776%20pages-3f3f3f?style=flat-square
 [chip-mit]: https://img.shields.io/badge/code-MIT-787878?style=flat-square
 [chip-no-llm]: https://img.shields.io/badge/no%20language%20model-2f7d4f?style=flat-square
-[chip-blocked]: https://img.shields.io/badge/blocked-6f5aa6?style=flat-square

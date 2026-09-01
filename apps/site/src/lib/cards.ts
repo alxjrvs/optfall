@@ -408,10 +408,14 @@ export interface Format {
 }
 
 /**
- * The six formats `packages/legality/src/formats.ts` encodes — the surface
- * `docs/ROADMAP.md` Phase 3 is written about — in the order a Flesh and Blood
- * player would look for them: the two constructed formats people actually
- * queue for first.
+ * The six formats this corpus carries, in the order a Flesh and Blood player
+ * would look for them: the two constructed formats people actually queue for
+ * first.
+ *
+ * This list was duplicated in `packages/legality/src/formats.ts` until that
+ * package was deleted on 2026-09-01. This is now the only place the format
+ * order is stated, which is a simplification rather than a loss — the copy
+ * there was never imported by anything that shipped.
  *
  * The key lists are not guesses — they are the keys this corpus actually
  * carries, censused before this file was written. Note what is absent as much
