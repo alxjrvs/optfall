@@ -128,7 +128,7 @@
   min-inline-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
   min-block-size: calc(var(--of-space-loosest) + var(--of-space-tighter));
   padding-inline: var(--of-space-tight);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 .of-pages__gap {
@@ -136,7 +136,7 @@
   align-items: center;
   justify-content: center;
   min-inline-size: var(--of-space-loose);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 .of-pages__sizes {
@@ -149,7 +149,7 @@
 
 .of-pages__sizes-label {
   margin-inline-end: var(--of-space-tighter);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 .of-pages__size {

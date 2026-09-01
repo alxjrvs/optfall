@@ -751,7 +751,7 @@
   gap: var(--of-space-tight);
   margin: 0;
   font-size: var(--of-type-size-micro);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /* -- Rarity -------------------------------------------------------------- */
@@ -913,7 +913,7 @@
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /* -- Rules ---------------------------------------------------------------- */
@@ -997,7 +997,7 @@
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /* -- Alternate pitch values ------------------------------------------------ */
@@ -1379,7 +1379,7 @@
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /* The full-cycle note belongs to its row rather than to the grid, so it takes

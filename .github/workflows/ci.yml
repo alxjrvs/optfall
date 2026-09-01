@@ -199,6 +199,26 @@ jobs:
       - name: Assert components consume tokens, never literals
         run: bun run check:tokens
 
+  # `color.ink.faint` is the large-text ink, held to 3:1 rather than 4.5:1 by
+  # `tokens.test.ts` on purpose. That distinction has been misread twice, both
+  # times putting the LSS disclaimer — the one piece of text the licence
+  # requires to be legible — below AA on every page, with every other check
+  # green because the token-level assertion was passing at the threshold that
+  # does not apply to body text. A rule broken twice the same way needs a job.
+  faint-ink:
+    name: faint-ink
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up
+        uses: ./.github/actions/setup
+
+      - name: Assert small text never uses the large-text ink
+        run: bun run check:faint-ink
+
   # `.bun-version` is the pin every `Set up Bun` step above reads, but
   # `engines.bun` and the `@types/bun` pin are npm metadata and cannot reference
   # a file. Those surfaces carry the number literally, so this job is what stops
@@ -395,6 +415,7 @@ jobs:
       - build
       - no-llm-dependencies
       - tokens
+      - faint-ink
       - bun-version
       - provenance
       - disclaimer

@@ -229,5 +229,5 @@
   font-family: var(--of-type-family-sans);
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }

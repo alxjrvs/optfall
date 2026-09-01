@@ -143,7 +143,7 @@
 }
 
 .of-bar__field::placeholder {
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
 
 /*

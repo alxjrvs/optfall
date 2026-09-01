@@ -71,8 +71,18 @@ import type { ReactNode } from "react";
 
 import "./Eyebrow.css";
 
-/** How loudly the label competes with the thing it labels. */
-export type EyebrowTone = "faint" | "muted" | "ink";
+/**
+ * How loudly the label competes with the thing it labels.
+ *
+ * THERE WAS A `"faint"` HERE, AND IT WAS THE DEFAULT. It is gone rather than
+ * demoted: an eyebrow is `type.size.micro`, `color.ink.faint` is the LARGE-text
+ * ink held to 3:1 rather than 4.5:1, and the two cannot be combined legibly at
+ * any call site. A tone no caller may correctly pass is not an option, it is a
+ * trap — and one `check:faint-ink` could not have caught, because the gate
+ * matches a colour and a font-size in the SAME rule and a `data-tone` rule
+ * carries no size of its own.
+ */
+export type EyebrowTone = "muted" | "ink";
 
 /**
  * The elements an eyebrow is allowed to be. Closed on purpose — see the
@@ -88,7 +98,13 @@ export interface EyebrowProps {
    * for a slot.
    */
   readonly children: ReactNode;
-  /** Defaults to `faint`, which is what most of the surveyed blocks used. */
+  /**
+   * Defaults to `muted`, the quietest tone that clears AA at this size.
+   *
+   * It defaulted to `faint` because that is what most of the surveyed blocks
+   * used — which described the defect being consolidated rather than the
+   * behaviour wanted, since most of those blocks were themselves below AA.
+   */
   readonly tone?: EyebrowTone;
   /** Defaults to `span`, the only one valid in every context. */
   readonly as?: EyebrowAs;
@@ -96,7 +112,7 @@ export interface EyebrowProps {
 
 export function Eyebrow({
   children,
-  tone = "faint",
+  tone = "muted",
   as = "span",
 }: EyebrowProps) {
   const Tag = as;

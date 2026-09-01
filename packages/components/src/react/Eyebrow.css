@@ -10,16 +10,26 @@
   font-size: var(--of-type-size-micro);
   letter-spacing: var(--of-type-tracking-wide);
   text-transform: uppercase;
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
+
+/* THIS WAS `ink.faint`, AND CONSOLIDATION IS WHAT MADE THAT SERIOUS. The
+   survey behind this primitive found faint-at-micro in most of the blocks it
+   replaced and made the majority the default — which is how a rule broken in
+   several page stylesheets became one rule broken for every caller at once.
+   `check:faint-ink` fails on exactly this pairing and named this file first.
+
+   `ink.faint` is the LARGE-text ink, held to 3:1 rather than 4.5:1 on purpose,
+   and an eyebrow is `type.size.micro` by definition. So faint is not merely the
+   wrong default here — it is unreachable as a correct value, which is why the
+   tone is gone from the union rather than left available. See
+   `packages/theme/src/tokens.test.ts`. */
 
 /* `data-tone` selectors rather than modifier classes — see the component's
    docblock. Only the colour changes; an eyebrow that also changed size or
-   tracking between tones would be two components wearing one name. */
+   tracking between tones would be two components wearing one name.
 
-.of-eyebrow[data-tone="muted"] {
-  color: var(--of-color-ink-muted);
-}
+   `data-tone="muted"` needs no rule of its own: it is what the base sets. */
 
 .of-eyebrow[data-tone="ink"] {
   color: var(--of-color-ink);

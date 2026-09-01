@@ -85,5 +85,5 @@
    markdown. */
 .of-alias {
   display: block;
-  color: var(--of-color-ink-faint);
+  color: var(--of-color-ink-muted);
 }
