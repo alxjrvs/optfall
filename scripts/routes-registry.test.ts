@@ -26,7 +26,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { ROOT } from "./lib/root";
-
 const PAGES = join(ROOT, "apps/site/ssg/pages");
 const ROUTES = join(ROOT, "apps/site/ssg/routes.ts");
 
