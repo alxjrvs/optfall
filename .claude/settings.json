@@ -48,6 +48,7 @@
       "Bash(bun run check:built-tokens)",
       "Bash(bun run check:bun-version)",
       "Bash(bun run check:provenance)",
+      "Bash(bun run check:coverage)",
       "Bash(bun run check:disclaimer)",
       "Bash(bun run check:card-notice)",
       "Bash(bun run check:a11y)",
