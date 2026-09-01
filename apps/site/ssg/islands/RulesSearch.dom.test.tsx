@@ -83,6 +83,7 @@ import {
   buildIndex,
   chapters,
   decodeIndex,
+  search,
   type SearchResult,
 } from "../../src/lib/search";
 import { RulesSearch } from "./RulesSearch";
@@ -98,7 +99,19 @@ import { searchIndexClient } from "./useSearchIndex";
  * for keeping `newest` local.
  */
 const encoded = buildIndex(CORPUS);
-const browse: readonly SearchResult[] = chapters(decodeIndex(encoded));
+/**
+ * The decoded index, kept so a test can ask the ENGINE what it should be
+ * looking at.
+ *
+ * NOT A SECOND SOURCE OF TRUTH — IT IS THE OTHER SIDE OF THE ASSERTION. Two
+ * tests below check that what reached the DOM is exactly what the engine
+ * produced, for a notice and for a page of results. Spelling the expected
+ * strings out by hand would make those tests about the corpus (and break on
+ * every rules release); deriving them here makes them about the component,
+ * which is the only thing this file is for.
+ */
+const index = decodeIndex(encoded);
+const browse: readonly SearchResult[] = chapters(index);
 
 /**
  * Three addresses, because this component has three states and they are told
@@ -114,6 +127,20 @@ const GOOD_URL = "/assets/rules-index-under-test.json";
 const SLOW_URL = "/assets/rules-index-in-flight.json";
 /** A request that fails every attempt. */
 const DEAD_URL = "/assets/rules-index-missing.json";
+/**
+ * An address ONE test uses and nothing else does.
+ *
+ * IT HAS TO BE ITS OWN, or the test that asks whether the component fetched
+ * its prop cannot tell a request from a cache hit left by an earlier test. The
+ * first version of that test used `GOOD_URL` and was a tautology: `settle()`
+ * spins until the cache entry exists, so asserting the entry exists could not
+ * fail, and a warm entry from a previous test meant it passed against a
+ * component that made no request at all.
+ */
+const PROP_URL = "/assets/rules-index-from-the-prop.json";
+
+/** Every address the component has actually asked for, in order. */
+const requested: string[] = [];
 
 /*
  * RETRIES OFF FOR THE FAILING ADDRESS ONLY. The shipped client retries twice
@@ -136,7 +163,8 @@ searchIndexClient.setQueryDefaults(["search-index", DEAD_URL], {
  */
 globalThis.fetch = (async (input: RequestInfo | URL): Promise<Response> => {
   const url = typeof input === "string" ? input : String(input);
-  if (url === GOOD_URL) {
+  requested.push(url);
+  if (url === GOOD_URL || url === PROP_URL) {
     return new Response(JSON.stringify(encoded), {
       headers: { "content-type": "application/json" },
     });
@@ -158,9 +186,9 @@ const VERSION = "0.0.0-under-test";
  * resting on that returns before anything has happened. It throws rather than
  * giving up quietly.
  */
-async function settle(): Promise<void> {
+async function settle(url: string = GOOD_URL): Promise<void> {
   for (let tick = 0; tick < 50; tick += 1) {
-    if (searchIndexClient.getQueryData(["search-index", GOOD_URL])) {
+    if (searchIndexClient.getQueryData(["search-index", url])) {
       /* ONE MORE FLUSH, BECAUSE THE CACHE LANDS BEFORE THE RENDER DOES. The
          entry appears the moment the promise resolves; the subscription that
          turns it into a re-render is React's, and returning between the two
@@ -176,7 +204,7 @@ async function settle(): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, 1));
     });
   }
-  throw new Error("the rules index never finished loading");
+  throw new Error(`the rules index at ${url} never finished loading`);
 }
 
 /**
@@ -239,7 +267,7 @@ async function mount(options: MountOptions = {}): Promise<Root> {
 /** Mount, and wait for the index. Every test that asks a question needs both. */
 async function answered(options: MountOptions = {}): Promise<void> {
   await mount(options);
-  await settle();
+  await settle(options.indexUrl ?? GOOD_URL);
 }
 
 /** Tear a root down mid-test, for the tests that are ABOUT unmounting. */
@@ -464,15 +492,20 @@ describe("a question nothing can answer YET is not a question nothing matches", 
   });
 
   test("the index is fetched from the `indexUrl` prop and nowhere else", async () => {
-    /* The fetch stub throws on any other address, so a component that built its
-       own path — or cached the first one it ever saw — fails here by name
-       rather than by rendering an index that never arrives. */
+    /*
+     * THE REQUESTS ARE COUNTED, NOT THE CACHE. Asserting that a cache entry
+     * exists cannot fail after `settle()` has spun until it does, and the
+     * client is a module constant with `gcTime: Infinity`, so a warm entry from
+     * an earlier test would carry the assertion for a component that made no
+     * request at all. `PROP_URL` is asked for here and nowhere else, and the
+     * log says what actually went over the wire.
+     */
     window.history.replaceState(null, "", "/cr?q=dominate");
-    await answered({ indexUrl: GOOD_URL });
+    const before = requested.length;
+    await answered({ indexUrl: PROP_URL });
 
-    expect(
-      searchIndexClient.getQueryData(["search-index", GOOD_URL]),
-    ).toBeDefined();
+    expect(requested.slice(before)).toEqual([PROP_URL]);
+    expect(rows()).toBe(9);
   });
 });
 
@@ -507,8 +540,18 @@ describe("the wording under a query", () => {
     const notices = [...document.querySelectorAll(".of-rules__notice")].map(
       (node) => node.textContent ?? "",
     );
+    /*
+     * COMPARED AGAINST THE ENGINE'S OWN OUTPUT, WORD FOR WORD. This asserted
+     * `toContain("the")` first, which is satisfied by almost any English
+     * sentence — including the rephrasing the test exists to forbid, since the
+     * engine's own notice contains "the document". Asking the engine what it
+     * said and demanding the DOM show exactly that is the property; it also
+     * survives a rules release, which a hand-copied string would not.
+     */
+    expect(notices).toEqual(
+      search(index, "the", 60, 0).notices.map((n) => n.text),
+    );
     expect(notices.length).toBeGreaterThan(0);
-    expect(notices.join(" ")).toContain("the");
   });
 
   test("a row says why the ranking put it there", async () => {
@@ -552,9 +595,20 @@ describe("every view is a URL, and the URL is read exactly once", () => {
     await answered();
 
     expect(count()).toBe("188 sections match. Page 3 of 4.");
-    /* And the rows are page three's, not page one's re-labelled. */
-    const first = document.querySelector(".of-citation__rule-id")?.textContent;
-    expect(first).toBeDefined();
+
+    /*
+     * AND THE ROWS ARE PAGE THREE'S, NOT PAGE ONE'S UNDER A PAGE-THREE LABEL.
+     * This was a `toBeDefined()` on the first citation, which passes for any
+     * row on any page — the count line above was carrying the whole test while
+     * the comment claimed otherwise. The ids the engine returns for the third
+     * slice are what the page has to be showing.
+     */
+    const shown = [...document.querySelectorAll(".of-citation__rule-id")].map(
+      (node) => node.textContent,
+    );
+    expect(shown).toEqual(
+      search(index, "attack", 60, 120).results.map((r) => r.id),
+    );
   });
 
   test("a keystroke is a new answer, so it goes back to page one", async () => {
