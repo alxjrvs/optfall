@@ -12,8 +12,9 @@
  * actually needed here is not caching — the URL is content-hashed and the
  * service worker already answers it from disk — it is the STATE MACHINE around a
  * fetch that the page cannot render without. Three states have to reach the
- * screen and be told apart: not here yet, here, and it failed. `docs/PLAN.md`'s
- * "degrade visibly" makes the third one non-optional, and an island that renders
+ * screen and be told apart: not here yet, here, and it failed.
+ * `LLM_STATEMENT.md` — where Optfall does not know something it says so —
+ * makes the third one non-optional, and an island that renders
  * an empty result list while the index is in flight is the one shape that rule
  * forbids — a confident wrong answer. Query is that machine, plus retry with
  * backoff, plus deduplication if a second island on a page ever wants the same

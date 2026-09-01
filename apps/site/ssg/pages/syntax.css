@@ -3,8 +3,9 @@
  *
  * A PAGE MAY HAVE A STYLESHEET, and this is the first one that does. The rule
  * that decides whether a rule belongs here or in `optfall-components` is
- * `docs/PLAN.md`'s: "a screen that needs new CSS is a signal the library is
- * missing a primitive". A scrollable table wrapper and a definition list are
+ * `CLAUDE.md`'s house rule — compose, never restyle: "a screen that needs new
+ * CSS is a signal that `packages/components` is missing a primitive". A
+ * scrollable table wrapper and a definition list are
  * genuinely this page's — no other surface has an operator table — so they stay
  * here rather than becoming a primitive with one caller.
  *

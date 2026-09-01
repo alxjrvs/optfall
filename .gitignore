@@ -1,5 +1,10 @@
 # --- Dependencies ---------------------------------------------------------
-node_modules/
+# No trailing slash, deliberately: `node_modules/` matches DIRECTORIES only,
+# and a SYMLINK named node_modules is a file. One got committed from an agent
+# worktree that had linked the root install to run tests, and it broke every CI
+# job with an install step — the link pointed at an absolute path that exists
+# only on the machine that made it. Without the slash this pattern covers both.
+node_modules
 .bun/
 .pnp.*
 
@@ -49,3 +54,10 @@ yarn-error.log*
 
 # --- Agent worktrees ------------------------------------------------------
 .claude/worktrees/
+
+# --- Per-developer Claude Code settings -----------------------------------
+# `/permissions` writes here. `.claude/settings.json` is the SHARED allowlist
+# and is argued over carefully — which commands are pre-approved, and the two
+# that deliberately are not. A personal grant committed into that argument
+# would widen it for everyone without anyone deciding to.
+.claude/settings.local.json

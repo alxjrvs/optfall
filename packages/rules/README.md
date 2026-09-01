@@ -3,7 +3,8 @@
 The Flesh and Blood **Comprehensive Rules**, parsed into permanently
 addressable sections.
 
-`docs/PLAN.md`, Phase 4: *"The permalink is the product."* Legend Story Studios
+`docs/ROADMAP.md`, Phase 4 — every Comprehensive Rules paragraph at a permanent
+URL, citable by number. *The permalink is the product.* Legend Story Studios
 already publishes a stable hierarchy — `1.0.`, `1.0.1.`, `1.0.1a` — and the
 document's own preface says so:
 
@@ -25,8 +26,8 @@ bun packages/rules/src/cli.ts --pdf ./en-fab-cr.pdf # parse a local copy instead
 ```
 
 The PDF and the extracted corpus are **not committed**. The fetch downloads to
-a temp directory; publication is a deliberate act with a reviewed diff, per
-`docs/PLAN.md`'s "scheduled jobs, not services".
+a temp directory; publication is a deliberate act with a reviewed diff — this
+project runs scheduled jobs, not services.
 
 Committed instead: `src/fixtures/cr-2.14.0-excerpt.txt`, 16 KB of real
 `pdftotext -layout` output covering the title page and the first five pages of
@@ -68,7 +69,7 @@ can reach a browser bundle.
 
 ## No language model
 
-Every line here is deterministic string work. `docs/PLAN.md` rules out
+Every line here is deterministic string work. `LLM_STATEMENT.md` rules out
 LLM-assisted parsing in the document pipeline exactly as much as it rules out a
 chat box, and every string this package emits is either an identifier derived
 mechanically from LSS's own numbering or text copied verbatim out of the

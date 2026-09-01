@@ -12,10 +12,22 @@
  * EVERY OPERATOR BELOW WAS READ OFF THE PARSER, not remembered. The field list
  * is `FIELD_OPERATORS`, the legality list is `STATE_OPERATORS` crossed with
  * `FORMAT_ALIASES`, the booleans are `tokenise()` in `lib/query.ts`, and the
- * comparison rule is the branch in `lib/card-search.ts`. When one of those
- * changes this page is wrong, and there is no test that will say so — the
- * honest mitigation is that they sit three files apart and this comment names
- * all three.
+ * comparison rule is a branch under `lib/card-search/`.
+ *
+ * THERE IS NOW A TEST, AND THIS COMMENT USED TO DENY IT. `syntax.test.ts` sits
+ * beside this file and runs in both directions: every operator the grammar
+ * accepts must be named here, every operator this page documents must be one
+ * the grammar accepts, and every example printed here is executed through
+ * `parseCardQuery`. Omit an operator, document a refused one, or leave a stale
+ * example, and the suite goes red.
+ *
+ * WHAT IT STILL CANNOT SEE IS PROSE. The test is a text search for the
+ * operator's NAME, so a sentence that has gone stale around a name it still
+ * contains is invisible to it — `syntax.test.ts` says so itself rather than
+ * implying more coverage than it has. That is the residual gap, and it is
+ * narrower than "no test will say so", which is what this comment claimed
+ * until 2026-09-01 and which CLAUDE.md and the search-filter skill both
+ * repeated on this file's authority.
  *
  * The tone is the project's: it documents what the engine DOES, including the
  * two places it deliberately refuses to guess. A syntax page that quietly omits
@@ -40,13 +52,13 @@ import "./syntax.css";
  * copies, so it is rendered as `<code>` and never as a sentence that happens to
  * mention it.
  */
-interface Row {
+export interface Row {
   readonly example: string;
   readonly meaning: string;
   readonly aliases?: readonly string[];
 }
 
-const FIELDS: readonly Row[] = [
+export const FIELDS: readonly Row[] = [
   { example: "name:dash", meaning: "The card's name contains this word." },
   {
     example: "text:dominate",
@@ -77,8 +89,8 @@ const FIELDS: readonly Row[] = [
   {
     example: "power>defence",
     meaning:
-      "Compare two printed values on the same card. Scryfall's pow>tou works too. Cards printing X or nothing have no place in the order and do not match.",
-    aliases: ["pow>tou", "power=defence"],
+      "Compare two printed values on the same card. Cards printing X or nothing have no place in the order and do not match.",
+    aliases: ["pow>def", "power=defence"],
   },
   {
     example: "year:2024",
@@ -111,7 +123,7 @@ const FIELDS: readonly Row[] = [
   },
 ];
 
-const BOOLEANS: readonly Row[] = [
+export const BOOLEANS: readonly Row[] = [
   {
     example: "dash dagger",
     meaning:
@@ -139,7 +151,7 @@ const BOOLEANS: readonly Row[] = [
   },
 ];
 
-const ORDERING: readonly Row[] = [
+export const ORDERING: readonly Row[] = [
   {
     example: "order:cost",
     meaning: "Sort by printed cost instead of by relevance.",
@@ -181,7 +193,7 @@ const ORDERING: readonly Row[] = [
   },
 ];
 
-const LEGALITY: readonly Row[] = [
+export const LEGALITY: readonly Row[] = [
   { example: "legal:cc", meaning: "Legal in Classic Constructed." },
   { example: "banned:blitz", meaning: "Banned in Blitz." },
   { example: "suspended:cc", meaning: "Suspended in Classic Constructed." },
