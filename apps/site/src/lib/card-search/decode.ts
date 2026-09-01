@@ -79,6 +79,23 @@ export interface CardIndex {
    */
   readonly undatedCards: number;
   readonly rarities: readonly (readonly string[])[];
+  /**
+   * Every set code the corpus knows, and every rarity — the operands `set:` and
+   * `rarity:` can possibly match.
+   *
+   * CARRIED SO A QUERY CAN TELL "NO SUCH SET" FROM "NO CARDS MATCH". They are
+   * the same empty page otherwise, and `docs/DESIGN.md` is explicit that a
+   * query which silently does something other than what it says is the one
+   * failure that breaks the grammar for good. `legal:` has always named the six
+   * formats when it does not recognise one; these two returned nothing and
+   * explained nothing.
+   *
+   * Sets rather than a count, because the notice names what it could not
+   * resolve rather than counting what it could — the same rule `/about` follows
+   * about the keyword join.
+   */
+  readonly setCodes: ReadonlySet<string>;
+  readonly rarityNames: ReadonlySet<string>;
   /** Every artist credited on any printing of the card. */
   readonly artists: readonly (readonly string[])[];
   /** Six bitmasks per card, in {@link FORMATS} order. */
@@ -281,6 +298,11 @@ export function decodeCardIndex(encoded: EncodedCardIndex): CardIndex {
         });
 
   return {
+    /* Lower-cased, because that is the form a parsed operand arrives in — the
+       grammar folds its operands and these dictionaries hold upstream's own
+       casing. Comparing without this makes `set:WTR` unknown. */
+    setCodes: new Set(setDict.map((code) => code.toLowerCase())),
+    rarityNames: new Set(rarityDict.map((name) => name.toLowerCase())),
     commit: encoded.commit,
     confirmed: encoded.confirmed,
     labels,
