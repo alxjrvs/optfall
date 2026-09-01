@@ -127,8 +127,8 @@
 
     Getting this wrong is not cosmetic on a phone: with the row wider than a
     375px viewport, a visible overflow makes the whole DOCUMENT scroll sideways,
-    which `docs/PLAN.md`'s mobile rule states as the one thing that may never
-    happen.
+    which `CLAUDE.md`'s mobile rule — "six numbers, not an adjective" — states
+    as the one thing that may never happen.
   */
   overflow-x: clip;
 }

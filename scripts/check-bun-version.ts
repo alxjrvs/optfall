@@ -91,18 +91,50 @@ const drifted = surfaces.filter((s) => s.actual !== s.expected);
  * version in the workflow is the exact state this change removed.
  */
 const workflow = read(".github/workflows/ci.yml");
+const deployWorkflow = read(".github/workflows/deploy-cloudflare.yml");
+const setupAction = read(".github/actions/setup/action.yml");
+
+/*
+  THE PIN MOVED INTO A COMPOSITE ACTION, SO THIS FOLLOWS IT — and then asserts
+  the move was total.
+
+  `ci.yml` and `deploy-cloudflare.yml` used to carry ten and two copies of the
+  setup-bun step respectively; they now call `.github/actions/setup`. Scanning
+  only `ci.yml`, as this did, would find zero setup-bun steps and report that
+  the workflow had stopped reading `.bun-version` at all.
+
+  The consolidation also creates a NEW way to go wrong that did not exist when
+  every job spelled it out: a single job quietly reintroducing its own
+  setup-bun with a different pin, while the composite action keeps the other
+  eleven honest and this check keeps passing. So the workflows are asserted to
+  contain none, rather than merely not counted.
+*/
 const setupBunSteps =
-  workflow.match(/uses:[ \t]*oven-sh\/setup-bun@/g)?.length ?? 0;
+  setupAction.match(/uses:[ \t]*oven-sh\/setup-bun@/g)?.length ?? 0;
 const fromFile =
-  workflow.match(/^[ \t]*bun-version-file:[ \t]*\.bun-version[ \t]*$/gm)
+  setupAction.match(/^[ \t]*bun-version-file:[ \t]*\.bun-version[ \t]*$/gm)
     ?.length ?? 0;
+
+const strayWorkflows = (
+  [
+    [".github/workflows/ci.yml", workflow],
+    [".github/workflows/deploy-cloudflare.yml", deployWorkflow],
+  ] as const
+).filter(([, text]) => /uses:[ \t]*oven-sh\/setup-bun@/.test(text));
 // `[ \t]` rather than `\s`, deliberately: `\s` crosses newlines, so the job
 // named `bun-version:` below matched as a hardcoded pin whose "value" was the
 // `name:` on the next line.
-const hardcoded = workflow.match(/^[ \t]*bun-version:[ \t]*\S+/gm) ?? [];
+const hardcoded = [workflow, deployWorkflow, setupAction].flatMap(
+  (text) => text.match(/^[ \t]*bun-version:[ \t]*\S+/gm) ?? [],
+);
 
 const workflowProblems: string[] = [];
 
+for (const [name] of strayWorkflows) {
+  workflowProblems.push(
+    `${name} uses setup-bun directly — \`.github/actions/setup\` is the only place it belongs, so that one pin governs every job.`,
+  );
+}
 if (setupBunSteps === 0) {
   workflowProblems.push(
     "ci.yml sets up Bun nowhere — this check cannot see what CI runs on, which is a failure, not a pass.",
@@ -133,6 +165,41 @@ if (drifted.length > 0 || workflowProblems.length > 0) {
   process.exit(1);
 }
 
+/*
+  THE RUNNING BINARY, WHICH THIS SCRIPT USED TO IGNORE ENTIRELY.
+
+  Everything above compares DECLARATIONS to each other: `.bun-version`,
+  `engines.bun`, the `@types/bun` pin, the setup-bun steps. All of them can
+  agree perfectly while the Bun actually executing is a different version — and
+  on 2026-09-01 that was exactly the case, with this check reporting success on
+  a 1.3.11 runtime against a 1.4.0 pin.
+
+  `ci.yml` states the risk this is supposed to cover: "Bun here is the runtime,
+  the test runner and the script runner, so a laptop on a different Bun runs
+  different tests — not merely a different install resolution." That is a claim
+  about the binary, and nothing was checking the binary.
+
+  IT WARNS RATHER THAN FAILS, and that is deliberate. A hard failure would make
+  every `bun run check` unusable the moment someone's toolchain lags a patch
+  release, including in a container they do not control — which is how a check
+  gets commented out rather than fixed. CI pins exactly via setup-bun, so the
+  gate is unaffected either way; what this buys is that a local run says so out
+  loud instead of quietly testing something else.
+*/
+const running = Bun.version;
+if (running !== expected) {
+  console.warn(`⚠ Running Bun ${running}, but .bun-version pins ${expected}.`);
+  console.warn(
+    "  Declarations agree with each other; the binary executing this does not.",
+  );
+  console.warn(
+    "  CI uses the pin, so the gate is unaffected — but local results here are",
+  );
+  console.warn(
+    `  from ${running}, and the test runner is part of what the pin exists for.`,
+  );
+}
+
 console.log(
-  `✓ Bun ${expected} pinned consistently: ${setupBunSteps} CI step(s) read .bun-version, and ${surfaces.length} declaration(s) agree with it.`,
+  `✓ Bun ${expected} pinned consistently: ${setupBunSteps} CI step(s) read .bun-version, ${surfaces.length} declaration(s) agree with it, and the running binary is ${running}.`,
 );

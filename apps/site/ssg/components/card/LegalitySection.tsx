@@ -9,11 +9,15 @@
  *
  * THIS IS THE DIFFERENTIATOR, WHICH IS WHY IT LEADS. `docs/SCRYFALL-GAP.md` §3:
  * "our legality table is already better than Scryfall's … put it on the card
- * page above the fold — it is the differentiator that is already finished." It
- * is also the surface Phase 3 changes when `packages/legality` is finally
- * wired, so having it in a file of its own is worth more than the line count
- * suggests: the timeline lands here, and it lands in eighty lines rather than
- * in the middle of fifteen hundred.
+ * page above the fold — it is the differentiator that is already finished."
+ *
+ * It reads upstream's per-format flags through `verdictFor`, and that is the
+ * whole implementation rather than a placeholder for one. A `packages/legality`
+ * that would have replaced this with a computed ban-and-retirement timeline was
+ * deleted on 2026-09-01 along with the phase it belonged to; nothing here is
+ * waiting on it. Having this in a file of its own is still worth more than the
+ * line count suggests: it lands in eighty lines rather than in the middle of
+ * fifteen hundred.
  *
  * The CSS stays in `CardEntry.css` — see `PrintingsSection` for why.
  */

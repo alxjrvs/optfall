@@ -1,0 +1,38 @@
+/* The small-caps label. Five declarations, which is the whole point: this file
+   exists so that those five stop being re-derived in ten page stylesheets.
+
+   Every value is a `var(--of-*)` reference. `check:tokens` scans
+   `packages/components/src` and fails the build on a raw hex or length here,
+   which is what keeps a primitive from quietly becoming a one-off. */
+
+.of-eyebrow {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+
+/* `data-tone` selectors rather than modifier classes — see the component's
+   docblock. Only the colour changes; an eyebrow that also changed size or
+   tracking between tones would be two components wearing one name. */
+
+.of-eyebrow[data-tone="muted"] {
+  color: var(--of-color-ink-muted);
+}
+
+.of-eyebrow[data-tone="ink"] {
+  color: var(--of-color-ink);
+}
+
+/* NO MARGIN, DELIBERATELY. Every surveyed block set its own spacing from the
+   thing below it, and those distances differed — a filter label sits closer to
+   its control than a section kicker sits to its section. Spacing is the
+   caller's, because it is a property of the relationship rather than of the
+   label. A `margin-block-end` here would be wrong in most places it landed and
+   would have to be overridden in a page stylesheet, which is the duplication
+   this primitive removes.
+
+   `display` is likewise unset: `as="span"` stays inline where it is used beside
+   text, and `as="dt"`, `as="p"` and the headings bring their own block display
+   from the user-agent sheet. */
