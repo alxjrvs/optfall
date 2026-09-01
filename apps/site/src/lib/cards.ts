@@ -67,6 +67,9 @@ import type { PitchValue, StateTone } from "optfall-theme";
    safe: the module that loads the 18 MB corpus depends on the parser, never the
    other way round. */
 import { plainCardText } from "./card-text";
+/* Steps 1-3 of the slug rule, shared with the search tokeniser so that a
+   name folds the same way whether it is becoming a URL or an index entry. */
+import { foldLatin } from "./fold-latin";
 import { faceKeyFor, orientationOfFace } from "./faces";
 /* Imported as well as re-exported: a re-export creates no local binding, and
    `CARD_ROUTES` below both calls `facesOf` and names `PrintingRef`. */
@@ -239,42 +242,6 @@ export const LAST_CONFIRMED = dateOf(CORPUS.source.committedAt);
 /* -------------------------------------------------------------------------- */
 
 /**
- * Characters Unicode decomposition cannot fold to ASCII on its own.
- *
- * NFKD turns `é` into `e` + a combining acute, and `ā`, `ō`, `ṣ` likewise — so
- * stripping combining marks handles four of the five non-ASCII names in the
- * corpus. `ð` has no decomposition at all: it is a letter in its own right, and
- * without an entry here "Jarl Vetreiði" would slug to `jarl-vetrei-i`, because
- * the fallback rule turns any unmapped character into a separator.
- *
- * The table is deliberately larger than today's corpus needs. Every entry is a
- * standard romanisation rather than a judgement call, and pre-declaring them
- * means an upstream card named `Ærlig` produces `aerlig` on the day it lands
- * instead of `rlig` — a slug we would then be stuck with or would have to break
- * a permalink to fix.
- */
-const TRANSLITERATIONS: Readonly<Record<string, string>> = {
-  æ: "ae",
-  Æ: "ae",
-  œ: "oe",
-  Œ: "oe",
-  ø: "o",
-  Ø: "o",
-  ð: "d",
-  Ð: "d",
-  đ: "d",
-  Đ: "d",
-  þ: "th",
-  Þ: "th",
-  ß: "ss",
-  ł: "l",
-  Ł: "l",
-  ı: "i",
-  "’": "",
-  "'": "",
-};
-
-/**
  * The slug rule, stated once and applied everywhere.
  *
  * 1. Decompose with NFKD, so accented letters split into a base letter and a
@@ -292,12 +259,7 @@ const TRANSLITERATIONS: Readonly<Record<string, string>> = {
  * no build order.
  */
 export function slugify(name: string): string {
-  const folded = [...name.normalize("NFKD")]
-    .map((character) => TRANSLITERATIONS[character] ?? character)
-    .join("");
-  return folded
-    .toLowerCase()
-    .replace(/[̀-ͯ]/g, "")
+  return foldLatin(name)
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }

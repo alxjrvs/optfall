@@ -2,6 +2,11 @@
 /* Tokenising                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/* The shared fold. A value import, and safe: `fold-latin` imports nothing.
+   The type-only rule this directory observes is about `../cards`, which
+   would drag the corpus into the island bundle. */
+import { foldLatin } from "../fold-latin";
+
 /**
  * Words carrying no discriminating power in card text.
  *
@@ -57,9 +62,21 @@ export const STOPWORDS: ReadonlySet<string> = new Set([
  *
  * Single letters are dropped; single digits are not — "Arcane Barrier 2" is a
  * real thing to search for and `2` is the discriminating half of it.
+ *
+ * IT FOLDS BEFORE IT MATCHES, AND FOR A WHILE IT DID NOT. This was
+ * `text.toLowerCase().match(/[a-z0-9]+/g)`, which treats an accented letter as
+ * a SEPARATOR rather than as a letter — so `Vetreiði` indexed as `vetrei` and
+ * an ASCII keyboard could never reach it. The URL for that same card is
+ * `/card/ajv/001-rf/jarl-vetreidi` and always worked, because `slugify` folded
+ * and this did not: five cards were reachable by typing their address and not
+ * by typing their name.
+ *
+ * `foldLatin` is the one rule both use now. It lives in its own module because
+ * `slugify` is in `cards.ts`, which loads the 18 MB corpus at module scope and
+ * which this file may only import from TYPE-ONLY.
  */
 export function tokeniseCard(text: string): string[] {
-  const raw = text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  const raw = foldLatin(text).match(/[a-z0-9]+/g) ?? [];
   return raw.filter(
     (token) => !STOPWORDS.has(token) && (token.length > 1 || /\d/.test(token)),
   );
