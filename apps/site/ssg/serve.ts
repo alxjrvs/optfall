@@ -49,26 +49,43 @@ if (Number.isNaN(PORT)) {
  * server that will hand out `~/.ssh/id_rsa` to a page in a browser tab is a
  * real thing to avoid on a machine that has one.
  */
-function fileFor(pathname: string): string | undefined {
+function filesFor(pathname: string): readonly string[] {
   let decoded: string;
   try {
     decoded = decodeURIComponent(pathname);
   } catch {
-    return undefined;
+    return [];
   }
 
   /*
-   * A request with an extension is asking for that exact file — `/favicon.svg`,
-   * `/assets/tokens.css`, `/symbols/icon_p.png`. Anything else is a route, and
-   * routes map through `outputPathFor` so this server and the generator cannot
-   * disagree about where a page lives.
+   * BOTH SPELLINGS, ROUTE FIRST — rather than choosing between them by looking
+   * at the URL.
+   *
+   * THIS USED TO SNIFF FOR AN EXTENSION: a trailing `.` plus alphanumerics
+   * meant "an exact file", anything else meant "a route". The reasoning was
+   * sound for `/favicon.svg` and `/assets/tokens.css` and wrong for the thing
+   * this site is full of — a rule permalink. `/cr/8.3.4b` ends in a dot and
+   * alphanumerics because RULE IDS DO, so it resolved to `dist/cr/8.3.4b`,
+   * which does not exist, and 1,269 of the 1,278 rule pages 404ed under
+   * `bun run dev` while sitting on disk the whole time.
+   *
+   * A URL cannot be asked which kind of thing it is; the filesystem can. The
+   * caller already tests each candidate for existence, so both spellings are
+   * offered and the first that exists wins. Route first, because that is the
+   * mapping this server exists to share with the generator — the header above
+   * makes the point that two resolvers is how they drift, and sniffing was a
+   * second resolver wearing a regex.
+   *
+   * The cost is one extra `stat` on a miss, on a dev server, on localhost.
    */
-  const relative = /\.[a-z0-9]+$/i.test(decoded)
-    ? decoded.replace(/^\/+/, "")
-    : outputPathFor(decoded);
+  const within = (relative: string): string | undefined => {
+    const resolved = normalize(join(ROOT, relative));
+    return resolved.startsWith(ROOT) ? resolved : undefined;
+  };
 
-  const resolved = normalize(join(ROOT, relative));
-  return resolved.startsWith(ROOT) ? resolved : undefined;
+  return [outputPathFor(decoded), decoded.replace(/^\/+/, "")]
+    .map(within)
+    .filter((path): path is string => path !== undefined);
 }
 
 Bun.serve({
@@ -76,8 +93,7 @@ Bun.serve({
   async fetch(request) {
     const { pathname } = new URL(request.url);
 
-    const path = fileFor(pathname);
-    if (path !== undefined) {
+    for (const path of filesFor(pathname)) {
       const file = Bun.file(path);
       if (await file.exists()) return new Response(file);
     }

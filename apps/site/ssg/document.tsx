@@ -25,6 +25,7 @@ import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { THEME_COLOUR } from "./assets";
 import { SiteHeader } from "./SiteHeader";
 import type { PageResult } from "./types";
+import { SERVICE_WORKER_REGISTRATION } from "./inlineScripts";
 
 const SITE_ORIGIN = "https://optfall.com";
 
@@ -34,14 +35,6 @@ const SITE_ORIGIN = "https://optfall.com";
  * Written as a string rather than as a source file because it is the one script
  * inlined into every page — see the comment at its use.
  */
-const SERVICE_WORKER_REGISTRATION = `
-if ("serviceWorker" in navigator) {
-  addEventListener("load", function () {
-    navigator.serviceWorker.register("/sw.js").catch(function () {});
-  });
-}
-`.trim();
-
 /** The absolute, trailing-slashed canonical for a route. */
 export function canonicalFor(route: string, override?: string): string {
   const path = override ?? route;
@@ -142,6 +135,20 @@ export function Document({
           of six: an SVG icon is served to every engine that supports one, and
           nothing here enumerates raster favicon sizes.
         */}
+        {/*
+          Every card page loads its face from a different origin, so the DNS
+          lookup and TLS handshake for `images.optfall.com` sit on the critical
+          path of the one image the page is about. `preconnect` starts them
+          while the HTML is still parsing.
+
+          Emitted on every page rather than only on card pages: the index and
+          search surfaces load faces too, and a preconnect that goes unused on
+          a handful of prose pages costs one speculative connection, where
+          getting the condition wrong costs a round trip on the pages that
+          matter most.
+        */}
+        <link rel="preconnect" href="https://images.optfall.com" />
+        <link rel="dns-prefetch" href="https://images.optfall.com" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {/*
           Installability, in the two channels that exist.
@@ -186,6 +193,33 @@ export function Document({
         ))}
       </head>
       <body>
+        {/*
+          FIRST FOCUSABLE THING ON EVERY PAGE, and it has to be first in the
+          DOM rather than merely positioned first — a skip link that is not the
+          initial tab stop skips nothing.
+
+          The header carries a nav and a search field, so without this a
+          keyboard user tabs through both on every one of 12,777 pages before
+          reaching the content they came for. Landmarks already exist and serve
+          screen readers; this is the other half, for people navigating by
+          keyboard without one.
+
+          NO AUTOMATED RULE CATCHES ITS ABSENCE, WHICH IS WHY IT IS EASY TO GO
+          WITHOUT. axe's `bypass` is the closest, and it is satisfied by a
+          `<main>` landmark alone — measured, by stripping this link from a
+          built page and re-running: no violation either way. So this is here
+          on the merits for keyboard users, not to make a check go green, and
+          `scripts/check-a11y.ts` will not notice if somebody deletes it.
+
+          IT IS EMITTED HERE RATHER THAN BY `SiteHeader`, AND THAT IS NOT A
+          PLACEMENT DETAIL. `section: "none"` removes the whole bar on the front
+          door, so a skip link that lived in the header would be missing from
+          the one page whose entire content is a form. The `<main id="main">`
+          target below is unconditional for the same reason.
+        */}
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
         <div className="shell">
           {/*
             THE HEADER IS THE SHELL'S, NOT A PAGE'S, and `section: "none"` is
@@ -194,28 +228,6 @@ export function Document({
             it, and the one that forgot would be the one nobody could navigate
             away from.
           */}
-          {/*
-            THE FIRST THING IN THE TAB ORDER, ON EVERY PAGE, BECAUSE THE HEADER
-            IS TOO. The bar carries a wordmark, a search field and a nav, so a
-            keyboard reader who wants the page itself passes about ten stops to
-            reach it — and on a reference work "the page itself" is the card
-            they looked up, so that toll is paid on every lookup rather than
-            once a session.
-
-            IT IS EMITTED HERE RATHER THAN BY THE HEADER, and that is not a
-            detail: `section: "none"` removes the whole bar on the front door,
-            and a skip link that disappeared with it would be missing from the
-            one page whose whole content is a form. The target below is
-            unconditional for the same reason.
-
-            VISIBLE ON FOCUS, NOT HIDDEN OUTRIGHT. `display: none` would take it
-            out of the tab order and leave the affordance to nobody; it is
-            clipped until focused, which is the one state a sighted keyboard
-            user needs it in.
-          */}
-          <a className="skip-link" href="#main">
-            Skip to content
-          </a>
           {result.section === "none" ? null : (
             <SiteHeader
               section={result.section}
@@ -306,7 +318,7 @@ export function Document({
             <p className="legal">{CARD_IMAGE_COPYRIGHT}</p>
             {/*
             Unchanged, and still last: `check-disclaimer.ts` reads this string
-            verbatim off all 12,776 built pages.
+            verbatim off all 12,777 built pages.
           */}
             <p className="legal">{LSS_DISCLAIMER}</p>
           </div>
@@ -328,7 +340,7 @@ export function Document({
           THE SERVICE WORKER, REGISTERED INLINE AND ON EVERY PAGE.
 
           Inline because the alternative — a one-line module fetched from a
-          hashed url — costs a round trip on every one of 12,776 pages to
+          hashed url — costs a round trip on every one of 12,777 pages to
           deliver about two hundred bytes, and this is the one script that has
           to run everywhere rather than only where an island lives.
 

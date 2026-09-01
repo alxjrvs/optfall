@@ -4,9 +4,9 @@ Optfall exists inside a written grant from Legend Story Studios. This document i
 the operational form of that grant: what we were given, what we owe in return,
 where each obligation is enforced in the codebase, and what would break it.
 
-It is derived from the **Permission envelope** section of
-[`PLAN.md`](PLAN.md) and does not supersede it. Where the two disagree,
-`PLAN.md` is the specification and this file has a bug.
+It is derived from [`DISCLAIMER.md`](DISCLAIMER.md), which carries the
+**Permission envelope**, and does not supersede it. Where the two disagree,
+`DISCLAIMER.md` is the specification and this file has a bug.
 
 **Treat this as a checklist, not an essay.** Every requirement below has an
 enforcement point. A requirement whose only enforcement is "remember it" is not
@@ -47,8 +47,8 @@ enforced, and should be read as an open action rather than a satisfied one.
 >
 > The disclaimer is no longer subject to any of this. It is asserted
 > byte-for-byte against the live page's own Third Party Apps clause, and matches
-> in all four documents that carry it — `README.md`, `PLAN.md`, `DATA-TERMS.md`
-> and this one.
+> in all four documents that carry it — `README.md`, `DISCLAIMER.md`,
+> `DATA-TERMS.md` and this one.
 
 ---
 
@@ -76,8 +76,31 @@ Both conditions appear in the checklist below.
 Six obligations. Each is a section: the requirement, where it is enforced, what
 would break it, and how we would find out.
 
-Enforcement points name files that mostly do not exist yet — Phase 0 is the
-phase that creates them. Status is marked honestly.
+Every file named as an enforcement point below is on `main` — all seventeen of
+them, checked one by one on 2026-08-31, from `scripts/repo-settings.sh` to
+`data/brand/brand.json`. *(This paragraph read "Enforcement points name files
+that mostly do not exist yet — Phase 0 is the phase that creates them" until
+that date. Phase 0 shipped and the sentence did not move, which is the failure
+mode the chips below exist to make visible: a claim about state, written once,
+owned by nobody.)*
+
+### How to read a chip
+
+Each obligation carries one, and the word is a commitment about **what fails
+when the obligation is broken**, not a mood. They are drawn in the state palette
+`packages/theme/src/tokens.ts` reserves for a `StatePill` — the same colours a
+card page spends on legality — so a chip here and a chip on the site are the
+same object.
+
+| Chip | What it commits to |
+|---|---|
+| ![Enforced][chip-enforced] | A check in the aggregate gate fails the build. Breaking this cannot merge. |
+| ![Structural][chip-structural] | No check, because violating it needs a capability the stack does not have. Not a promise — an absence somebody would have to build past, in a conspicuous diff. |
+| ![Partial][chip-partial] | A machine check exists but does not run on every change — a schedule, or an assertion narrower than the requirement. Read the section for the gap. |
+| ![Open][chip-open] | Acknowledged, and enforced by nothing but a human remembering. Per the preamble, this is an open action rather than a satisfied one. |
+| ![Blocked][chip-blocked] | Waiting on something outside this repository. |
+| ![Planned][chip-planned] | Specified and not yet started. |
+| ![Done][chip-done] | Closed. Used in *Open actions* below, where a closed row keeps its original text struck through beside the date it closed, rather than being deleted. |
 
 ### 1. Individual, never a commercial entity
 
@@ -104,13 +127,13 @@ project of an individual and must stay one.
 - The hosting account, the domain and any future Patreon are held on the same
   personal account.
 
-**Status. Partially enforced, and an open action.** The ownership assertion is
-real and machine-checked, but it runs weekly rather than continuously, and until
-the `REPO_SETTINGS_TOKEN` secret exists the scheduled run warns and stops — so
-today this control is *declared but not yet active*. Per this document's own
-preamble, that makes it an open action rather than an enforced control. The
-hosting, domain and funding accounts are caught only by a human noticing, and
-always were.
+![Partial][chip-partial] The ownership assertion is real and machine-checked,
+but it runs weekly rather than continuously, and until the
+`REPO_SETTINGS_TOKEN` secret exists the scheduled run warns and stops — so today
+this control is *declared but not yet active*. Per this document's own preamble,
+that makes it an open action rather than an enforced control. The hosting,
+domain and funding accounts are caught only by a human noticing, and always
+were.
 
 **Open action:** create `REPO_SETTINGS_TOKEN` — a personal access token with
 `repo` scope, added as an Actions secret — to activate the weekly assertion.
@@ -125,8 +148,9 @@ and stops.
 - A sponsor, employer or client acquiring any ownership interest.
 - Accepting contributions under a corporate CLA that vests rights in a company.
 
-`PLAN.md` is explicit that this is expensive to undo, which is why it is decided
-before the first commit rather than after.
+`ROADMAP.md` records Phase 0 as satisfying the envelope before the first public
+commit. This is expensive to undo, which is why it is decided then rather than
+after.
 
 **How we would find out.** The drift check above fails the build on an owner
 change or an org transfer. Everything outside the repository — the hosting
@@ -148,7 +172,9 @@ explicitly permitted.
 - `package.json` dependency review — a payments SDK appearing in a lockfile is
   the earliest visible signal.
 
-**Status.** In force by construction.
+![Structural][chip-structural] In force by construction, and by nothing else.
+There is no gate to fail here, which is why the two bullets above are the whole
+of it.
 
 **What would break it.** A paid tier, a subscription, a rate-limited "pro" API
 key, selling the dataset, or selling placement *within* game content.
@@ -209,7 +235,7 @@ on the argument that "what exists" and "where do I get one" are different
 questions, then removed outright, which answers the same question by subtraction.
 The face button is what is left of commerce on a card page.
 **No price, ever** — that is a separate decision on separate grounds, recorded in
-that module and in `docs/PLAN.md`'s collector-economy exclusion.
+that module and in `ROADMAP.md`'s collector-economy exclusion.
 
 **What is still not settled**, and should not be overstated: this is a reading of
 published terms plus a live precedent, not written approval, and the grant is
@@ -357,8 +383,9 @@ mark, not just borrowed assets.
 
 **Enforced at.**
 
-- **The design tokens.** `PLAN.md` requires the no-logo constraint be written
-  into the token layer rather than left as a thing to remember. Concretely:
+- **The design tokens.** `DISCLAIMER.md` bars FAB and LSS logos in the app, and
+  that constraint is written into the token layer rather than left as a thing
+  to remember. Concretely:
   set identity is **typographic** — a set code rendered in type — and there is
   no set-symbol icon token, no icon slot on set chrome that could accept one,
   and no `set-symbol` asset directory. The absence is the enforcement; adding
@@ -398,8 +425,11 @@ Three things make that argument checkable rather than asserted:
 - `data/symbols/symbols.json` records each file's URL, SHA-256, byte length and
   pixel box, plus a rights statement naming LSS and disclaiming relicensing.
 
-**Status.** Specified in `DESIGN.md` and `PLAN.md`; the token constraint landed
-with Phase 1, and the asset-provenance half is now enforced in CI.
+![Partial][chip-partial] Specified in `DESIGN.md` and `DISCLAIMER.md`; the
+token
+constraint landed with Phase 1, and the asset-provenance half is now enforced in
+CI. The half that is not is the judgement call — no check can tell a set symbol
+used as data from one used as a filter icon.
 
 **What would break it.**
 
@@ -459,7 +489,8 @@ makes, applied to bytes; review is still what judges the URL.
 **Requirement.** The disclaimer appears in the footer, verbatim.
 
 **The canonical text.** This is the single source of truth for the string. It is
-reproduced from `PLAN.md` ("Required disclaimer") and cross-checks against
+reproduced from `DISCLAIMER.md` ("Required disclaimer") and cross-checks
+against
 `README.md`. Line wrapping is not significant; the character sequence is,
 including the `®` after *Legend Story Studios* and the `™` after
 *Flesh and Blood*.
@@ -486,7 +517,7 @@ not a shortened version because the footer is crowded.
   obligation and the one-constant rule are unchanged — only the renderer moved,
   and the link above pointed at a file that no longer exists.)
 - [`scripts/canonical-disclaimer.ts`](../scripts/canonical-disclaimer.ts) reads
-  the canonical text out of `PLAN.md` itself, so no check compares a copy
+  the canonical text out of `DISCLAIMER.md` itself, so no check compares a copy
   against another copy. `scripts/canonical-disclaimer.test.ts` asserts that the
   site constant, `README.md` and this document all still say exactly that, and
   runs in the `test` job.
@@ -496,7 +527,8 @@ not a shortened version because the footer is crowded.
   `disclaimer` job in CI, which is wired into the aggregate `gate`. An empty
   output directory fails rather than passing vacuously.
 
-**Status.** Enforced. Text canonicalised in `PLAN.md`, rendered from one
+![Enforced][chip-enforced] Text canonicalised in `DISCLAIMER.md`, rendered from
+one
 constant, and asserted in CI on both the source and the built output.
 
 **What would break it.** Paraphrasing it. Reflowing it into a component that
@@ -569,9 +601,13 @@ never depended on the notice.
 `CardFaceGroup` was deleted with the move. It existed solely to hoist the notice
 — its wrapper and its context had no other behaviour — so keeping it would have
 left a primitive whose documented reason for existing had gone. The closed
-primitive set is thirteen.
+primitive set is `PRIMITIVES` in `packages/components/src/index.ts`, and the
+count is deliberately not restated here: it was written down as thirteen and was
+wrong at fourteen, sixteen and nineteen without anybody noticing.
 
-**Status.** **Enforced in the built output.**
+![Partial][chip-partial] **Enforced in the built output**, at page granularity
+rather than at image granularity — the gap is the subject of the rest of this
+section.
 
 **Both failures this project has actually had were page-level**, which is why
 the surviving enforcement is a check over built HTML rather than a component
@@ -597,8 +633,9 @@ was wrong.
 **Still open, and neither is small.** The second failure is not covered by
 anything: the check reads HTML, so it knows the notice is on the page and cannot
 know whether a stylesheet has put it where nobody reads it. That is the
-visual-regression bullet in [`PLAN.md`](PLAN.md) Phase 1 — committed Playwright
-screenshots rather than a hosted service — still unbuilt, and framework-neutral
+visual-regression half of Phase 1 ([`ROADMAP.md`](ROADMAP.md)) — committed
+Playwright screenshots rather than a hosted service — still unbuilt, and
+framework-neutral
 now that the Storybook it was once phrased against is gone. And the serving boundary is
 unbuilt — nothing applies the line at the image host, so a hotlinked face is an
 unmarked face.
@@ -626,7 +663,7 @@ better of the two ways that can end.
 
 *(This line previously said "enforced when Phase 1 … and Phase 3 … land". Both
 landed. `/data-terms` defers to this document where the two differ, so a stale
-status here is a stale claim on the page a recipient would actually read.)*
+chip here is a stale claim on the page a recipient would actually read.)*
 
 **What would break it.** Making the line a prop. Adding a `compact` or
 `bare` variant that drops it. A tooltip or hover-preview path that renders the
@@ -658,8 +695,11 @@ silently dropping them.
   and SPDX matching identify it cleanly. It therefore says nothing about data.
   The code/data split is stated in `README.md` and governed by `DATA-TERMS.md`.
 
-**Status.** `DATA-TERMS.md` lands with this document. The per-dataset files and
-the metadata block are enforced when the first dataset ships in Phase 2.
+![Partial][chip-partial] `DATA-TERMS.md` lands with this document, and its two
+disclaimer copies are asserted on every change by
+[`scripts/canonical-disclaimer.ts`](../scripts/canonical-disclaimer.ts) — which
+is narrower than the requirement. The per-dataset files and the metadata block
+are enforced when the first dataset ships in Phase 2.
 
 **What would break it.** Publishing a dataset with a bare `LICENSE` implying the
 whole file is ours to license. Applying an open licence to card names, card text
@@ -687,11 +727,16 @@ The answer we are committing to: **a rendering layer, and nothing else.**
 
 - **Rulings, rules and legality data are ours.** They are derived from published
   official documents and from named human authors, not from licensed assets.
-- **The legality package keys on stable identifiers, never on card text.**
-  `isLegal(deck, format, asOf)` resolves ids against a timeline of ban and
-  retirement events. Card *names* are a display-layer join, not a load-bearing
-  key. A legality verdict that requires the card's rules text to compute has
-  welded the product to the licence.
+- **Legality keys on stable identifiers, never on card text.** Card *names* are
+  a display-layer join, not a load-bearing key: a legality verdict that requires
+  the card's rules text to compute has welded the product to the licence.
+  `verdictFor` in `apps/site/src/lib/cards.ts` reads upstream's per-format flags
+  against a printing id, and satisfies this.
+
+  *This bullet described `isLegal(deck, format, asOf)` in `packages/legality`
+  until 2026-09-01, when that package was deleted along with Phase 3. The
+  requirement is unchanged and is met by the code that actually serves readers;
+  only the example moved.*
 - **Card images are a separate, droppable layer.** Phase 3 exists to serve the
   other phases, not to be a product — which is also why it is one week and
   explicitly minimal.
@@ -723,8 +768,10 @@ they are properties that erode silently unless something fails loudly.
   model-generated content; see [`DATA-TERMS.md`](DATA-TERMS.md), which states
   this as a warranty to consumers rather than an internal preference.
 - **Upstream dataset licence.** The community card dataset we depend on ships no
-  licence. See [`upstream-licence-issue.md`](upstream-licence-issue.md) for the
-  status and the interim position. Until it resolves, we do not republish that
+  licence. The request for one was drafted and never sent — see
+  [`ROADMAP.md`](ROADMAP.md#the-upstream-licence-request), which also records
+  that it is not a gate on the work behind it; the interim position is in
+  [`DATA-TERMS.md`](DATA-TERMS.md). Until it resolves, we do not republish that
   dataset's files verbatim.
 
 ---
@@ -751,11 +798,35 @@ calendars are ignored; these are events that are hard to miss.
 
 Carried, not closed. Each needs a human.
 
-| # | Action | Blocks |
-|---|---|---|
-| 1 | Read the LSS terms page end to end and ratify or correct this document — especially the copyright line and the logo clause. **Narrowed 2026-08-17**: the page has now been fetched and transcribed, and the disclaimer is asserted byte-for-byte against it, so what remains is a human confirming the judgement calls rather than the text | First public deploy |
-| 2 | ~~Decide the affiliate-link question (§2), or decide not to decide it and record that~~ **Decided 2026-08-17** — permitted as indirect monetisation, with the clause quoted and the precedent named in §2. ~~Links ship unwrapped until the TCGplayer partner application is approved; setting `AFFILIATE_ID` is the whole of the remaining work~~ **Approved and set 2026-08-18** — `AFFILIATE_ID` is `7630689`, links are wrapped and disclosed as paid | — |
-| 6 | ~~Click one live purchase link and confirm it lands and credits us~~ **Half closed 2026-08-18** — the redirect was read directly: `301` to the right product, `irpid=7630689` on the destination, so the inferred media segment is correct and clicks are attributed (§2). What is left is **confirming the click appears in Impact's own reporting**, which needs the dashboard | Trusting any revenue figure |
-| 3 | ~~Confirm the display typeface is licensed for webfont embedding~~ **Done.** Grenze, SIL OFL 1.1 — the grant names `embed` outright. The clause is quoted in `data/fonts/fonts.json` rather than summarised, and condition 2's obligation (each copy carries the copyright notice and the licence) is met by `apps/site/public/fonts/OFL.txt` | Phase 1 |
-| 4 | Post the upstream licence request | Phase 2/3 data work |
-| 5 | Write the revocation-drill test once the legality package exists | Phase 2 exit |
+| # | | Action | Blocks |
+|---|---|---|---|
+| 1 | ![Open][chip-open] | Read the LSS terms page end to end and ratify or correct this document — especially the copyright line and the logo clause. **Narrowed 2026-08-17**: the page has now been fetched and transcribed, and the disclaimer is asserted byte-for-byte against it, so what remains is a human confirming the judgement calls rather than the text | First public deploy |
+| 2 | ![Done][chip-done] | ~~Decide the affiliate-link question (§2), or decide not to decide it and record that~~ **Decided 2026-08-17** — permitted as indirect monetisation, with the clause quoted and the precedent named in §2. ~~Links ship unwrapped until the TCGplayer partner application is approved; setting `AFFILIATE_ID` is the whole of the remaining work~~ **Approved and set 2026-08-18** — `AFFILIATE_ID` is `7630689`, links are wrapped and disclosed as paid | — |
+| 6 | ![Partial][chip-partial] | ~~Click one live purchase link and confirm it lands and credits us~~ **Half closed 2026-08-18** — the redirect was read directly: `301` to the right product, `irpid=7630689` on the destination, so the inferred media segment is correct and clicks are attributed (§2). What is left is **confirming the click appears in Impact's own reporting**, which needs the dashboard | Trusting any revenue figure |
+| 3 | ![Done][chip-done] | ~~Confirm the display typeface is licensed for webfont embedding~~ **Done.** Grenze, SIL OFL 1.1 — the grant names `embed` outright. The clause is quoted in `data/fonts/fonts.json` rather than summarised, and condition 2's obligation (each copy carries the copyright notice and the licence) is met by `apps/site/public/fonts/OFL.txt` | Phase 1 |
+| 4 | ![Open][chip-open] | Post the upstream licence request | Phase 2/3 data work |
+| 5 | ![Open][chip-open] | Write the revocation-drill test once the legality package exists | Phase 2 exit |
+| 7 | ![Done][chip-done] | ~~Resolve the rights position on TCGplayer's mark, or remove it — `data/brand/brand.json` records its own rights as **unresolved**, and the mark ships on every card page.~~ **Resolved 2026-08-28** — the project owner, who holds the Impact partnership (account 7630689, campaign 21018), confirmed the placement is permitted. Recorded in `brand.json` as a human's determination and explicitly not as a quoted clause: resource 3737 remains unread by this repository's tooling, and `check-asset-provenance.ts` proves origin is recorded, never that use is permitted. Quoting the governing clause is still the stronger form if anyone reads it. | — |
+
+<!--
+  THE CHIP PALETTE, AND WHY IT IS SPELLED IN THREE FILES.
+  Every colour is a hex from the DARK set of `packages/theme/src/tokens.ts` —
+  the light set gives the same names different values. They are
+  `color.state.legal` for enforced and done, `color.brass` for structural,
+  `color.state.suspended` for partial, `color.state.banned` for open,
+  `color.state.restricted` for blocked, and `color.ink.faint` for planned. So a
+  chip in this document is the same object a `StatePill` draws on a card page.
+
+  Markdown has no link table shared across files, so `README.md` and
+  `ROADMAP.md` repeat the definitions they use. If a token moves, all three move. The legend
+  that says what each word COMMITS TO lives here and only here; the other two
+  files link to it rather than restating it.
+-->
+
+[chip-enforced]: https://img.shields.io/badge/enforced-2f7d4f?style=flat-square
+[chip-done]: https://img.shields.io/badge/done-2f7d4f?style=flat-square
+[chip-structural]: https://img.shields.io/badge/structural-b08d3f?style=flat-square
+[chip-partial]: https://img.shields.io/badge/partial-8f5415?style=flat-square
+[chip-open]: https://img.shields.io/badge/open-a3131b?style=flat-square
+[chip-blocked]: https://img.shields.io/badge/blocked-6f5aa6?style=flat-square
+[chip-planned]: https://img.shields.io/badge/planned-787878?style=flat-square

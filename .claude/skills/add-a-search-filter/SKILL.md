@@ -1,21 +1,30 @@
 ---
 name: add-a-search-filter
-description: Add, change or remove a card-search operator (name:, legal:, pitch:, order:, display: …). Use when asked to add a search filter, support a new query syntax, change what an operator accepts, or fix how a search term parses. Covers the four files that must move together and the one with no test behind it.
+description: Add, change or remove a card-search operator (name:, legal:, pitch:, order:, display: …). Use when asked to add a search filter, support a new query syntax, change what an operator accepts, or fix how a search term parses. Covers the three files that must move together and what the syntax-page test does and does not catch.
 ---
 
 # Adding a card-search operator
 
-Four files change together. Three are enforced by tests; **the fourth is not**,
-and it is the one that gets forgotten. `apps/site/ssg/pages/syntax.page.tsx`
-says so itself:
+Three files change together, and all three are enforced by tests.
 
-> When one of those changes this page is wrong, and there is no test that will
-> say so — the honest mitigation is that they sit three files apart and this
-> comment names all three.
+**This skill said "four files, and the fourth has no test" until 2026-09-01.
+Both halves were wrong, and if you have read an older copy, unlearn them:**
 
-This procedure is the mitigation, written down. It has been performed at least
-seven times (#84, #85, #88, #89, #116, #117, #125), so treat it as mechanical
-rather than as a design problem.
+- `apps/site/ssg/pages/syntax.test.ts` has existed since #334 — 209 lines,
+  running in both directions, executing every example on the page. The syntax
+  page is enforced.
+- The `Supported: …` string used to be the fourth file. `supportedOperators()`
+  now derives it from the tables, so editing it by hand is editing generated
+  output.
+
+What the syntax-page test still cannot catch is stale **prose** around an
+operator name that is itself correct — it is a text search, and it says so in
+its own docblock. That is the residual gap. It is much narrower than "no test
+will say so".
+
+This procedure has been performed at least seven times (#84, #85, #88, #89,
+#116, #117, #125), so treat it as mechanical rather than as a design
+problem.
 
 ## Before you start
 
@@ -43,28 +52,39 @@ Nine tables define the grammar. Add your operator to whichever ones apply:
 Aliases live in the same table as their long form — `text` and `o`, `artist`
 and `a`, `flavour` and `ft`.
 
-## 2. The `Supported:` string — same file
+## The `Supported:` string — DERIVED, do not hand-edit
 
-Search for `is not an operator here. Supported:`. It is **hand-written prose**
-listing every operator, and nothing regenerates it. An operator added to the
-tables but not to this string produces an error message that denies the
-operator you just added exists.
+`supportedOperators()` in `grammar.ts` builds the unknown-operator error's list
+from `FIELD_OPERATORS`, `QUERY_OPTIONS` and `STATE_OPERATORS`. Its own comment
+is emphatic — "DERIVED, WHICH IS THE ENTIRE POINT" — because the string literal
+it replaced was wrong: it omitted `flavor`, `kw`, `pow`, `defense`, `def`, `tou`
+and `toughness`, all of which parse and return results.
 
-## 3. `apps/site/src/lib/query.ts` — only if tokenising changes
+So an operator in those three tables needs nothing here. Two cases still do:
+an operator added to `STAT_FIELDS`, `SORT_KEYS`, `DISPLAY_MODES` or
+`UNIQUE_MODES` will not appear in that list, and a new query *option* must be
+added to `QUERY_OPTIONS` by hand.
+
+## 2. `apps/site/src/lib/query.ts` — only if tokenising changes
 
 The tokeniser is shared with the rules search. Touch it only if your operator
 needs a value shape the tokeniser cannot already produce — a new quoting rule,
 a new comparison symbol. Adding a key to a table does **not** require a change
 here.
 
-## 4. `apps/site/ssg/pages/syntax.page.tsx` — the one with no test
+## 3. `apps/site/ssg/pages/syntax.page.tsx` — enforced, but only by name
 
 The public syntax reference. Four arrays — `FIELDS`, `BOOLEANS`, `ORDERING`,
 `LEGALITY` — each a table of rows rendered to `/syntax`. Add a row in the array
 that matches your operator's kind.
 
-Nothing checks this page against the parser. If you skip it, every test passes
-and the documentation is silently wrong.
+`syntax.test.ts` checks this page against the parser in both directions, and
+runs every example through `parseCardQuery`. Skip this step and the suite goes
+red — it does not pass silently.
+
+What it cannot check is the sentence AROUND the name. It searches the file's
+text for the operator, so prose that has gone stale about an operator still
+mentioned here is invisible to it. Read what you are adding a row next to.
 
 ## Decide the negated form in the same change
 
@@ -81,13 +101,16 @@ reason** rather than silently accepted and quietly wrong.
 
 ## The import rule that has already cost 9 MB
 
-`card-search/build.ts` and `decode.ts` must import `./cards` **type-only**:
+Any module under `card-search/` that imports the corpus must do so
+**type-only**, and the path is `../cards` — `cards.ts` is a SIBLING of the
+`card-search/` directory, not a member of it. Today `build.ts` is the only
+importer; `decode.ts` does not import it at all:
 
 ```ts
-import type { CardPage } from "./cards";
+import type { CardPage } from "../cards";
 ```
 
-A value import pulls the 16 MB corpus into the browser bundle. It happened
+A value import pulls the 18 MB corpus into the browser bundle. It happened
 once and shipped 9.28 MB to every reader. `ssg/build.ts` has an island-budget
 assertion that catches a recurrence, but it catches it late — write the
 `import type` first.
@@ -100,7 +123,8 @@ bun run check                                    # the loop command
 ```
 
 Then look at `/syntax` in `bun run --cwd apps/site dev` and confirm your
-operator is on the page. That is the step no test performs for you.
+operator is on the page. `syntax.test.ts` covers the operator's NAME being
+there; reading the surrounding sentence is the part no test performs for you.
 
 Add a case to `card-search.test.ts` covering the operator **and** its negation
 — including the refusal, if you refused it.
