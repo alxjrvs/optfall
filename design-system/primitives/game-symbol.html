@@ -774,6 +774,23 @@ figure img {
    rendering is a card that can disagree with the product without anything
    noticing. */
 
+/* Mirrors `Eyebrow.css` exactly, tones included, so the card cannot disagree
+   with the component. Note that `.eyebrow` above &mdash; the gallery's own
+   chrome &mdash; is the SAME five declarations plus a margin: this generator was
+   itself one of the twenty-nine copies the primitive was written to end. It
+   keeps its margin and its own name because gallery chrome is not product, and
+   the component deliberately has no margin at all. */
+
+.of-eyebrow {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+.of-eyebrow[data-tone="muted"] { color: var(--of-color-ink-muted); }
+.of-eyebrow[data-tone="ink"] { color: var(--of-color-ink); }
+
 .rule-ornamented {
   display: grid; grid-template-columns: 1fr auto 1fr;
   align-items: center; column-gap: var(--of-space-base);

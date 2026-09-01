@@ -507,6 +507,23 @@ figure img {
    rendering is a card that can disagree with the product without anything
    noticing. */
 
+/* Mirrors \`Eyebrow.css\` exactly, tones included, so the card cannot disagree
+   with the component. Note that \`.eyebrow\` above &mdash; the gallery's own
+   chrome &mdash; is the SAME five declarations plus a margin: this generator was
+   itself one of the twenty-nine copies the primitive was written to end. It
+   keeps its margin and its own name because gallery chrome is not product, and
+   the component deliberately has no margin at all. */
+
+.of-eyebrow {
+  font-family: var(--of-type-family-sans);
+  font-size: var(--of-type-size-micro);
+  letter-spacing: var(--of-type-tracking-wide);
+  text-transform: uppercase;
+  color: var(--of-color-ink-faint);
+}
+.of-eyebrow[data-tone="muted"] { color: var(--of-color-ink-muted); }
+.of-eyebrow[data-tone="ink"] { color: var(--of-color-ink); }
+
 .rule-ornamented {
   display: grid; grid-template-columns: 1fr auto 1fr;
   align-items: center; column-gap: var(--of-space-base);
@@ -1683,6 +1700,24 @@ cards.push({
   <p class="note"><strong>It is an <code>&lt;a&gt;</code>, never a <code>&lt;button&gt;</code>.</strong> The same argument the citation makes: middle click, "copy link address", ⌘-click and the browser's own focus order all arrive free with the right element and are unrecoverable without it.</p>
   <p class="note"><strong><code>rel</code> is required rather than defaulted</strong>, and that is a compliance decision rather than a fussy one. An affiliate link that omits <code>sponsored</code> is the failure <code>tcgplayer.ts</code> exists to prevent, and a default here would let a caller ship a paid link that discloses nothing simply by not thinking about it.</p>
   <p class="note"><strong>The label is the accessible name and the icon is <code>aria-hidden</code>.</strong> A mark and the word beside it are one thing to a reader and would otherwise be two to a screen reader. Where a page renders several of these, <code>detail</code> adds an off-screen qualifier — five links all named "Buy on TCGplayer" is WCAG 2.4.4. The card page renders one now and still passes a <code>detail</code>, for a different reason: it names which printing the link buys, which is the only place that fact is stated.</p>`,
+});
+
+cards.push({
+  path: "primitives/eyebrow.html",
+  group: "Primitives",
+  title: "Eyebrow",
+  body: `
+  <p class="note">The small-caps label above a thing. It is the one recipe this system repeated most, and until now it had no home: <strong>twenty-eight CSS blocks combined <code>text-transform: uppercase</code> with <code>--of-type-tracking-wide</code>, and ten of them were in <code>apps/site</code></strong> &mdash; ten page stylesheets that had each independently re-derived the same five declarations. A twenty-ninth was this generator's own chrome, which is why the card you are reading had an <code>.eyebrow</code> class before the library had the component.</p>
+  <div class="row" style="margin-block-start:var(--of-space-loose);flex-direction:column;align-items:flex-start;gap:var(--of-space-tight)">
+    <span class="of-eyebrow" data-tone="faint">Released</span>
+    <span class="of-eyebrow" data-tone="muted">Rarity</span>
+    <span class="of-eyebrow" data-tone="ink">Apparatus</span>
+  </div>
+  <p class="note" style="margin-block-start:var(--of-space-loose)"><strong>Three tones, because the survey found exactly three inks.</strong> <code>ink-faint</code>, <code>ink-muted</code> and full <code>ink</code>, in that order above. The difference between them is how loudly the label competes with what it labels, not a palette choice &mdash; which is why they are named for their loudness rather than exposed as a colour prop. A colour prop would put a raw value back in a page, and <code>check:tokens</code> would fail the build; correct, but a slow way to learn it.</p>
+  <p class="note"><strong>The element varies and the style does not, so <code>as</code> exists.</strong> The same recipe appears on a <code>&lt;dt&gt;</code> in a definition list, on a heading above an apparatus block, and on a plain <code>&lt;span&gt;</code> beside a year. Forcing one element would make the primitive unusable in two of those three; an eyebrow rendered as a <code>&lt;span&gt;</code> where a <code>&lt;dt&gt;</code> belongs breaks the list for a screen reader. The union is closed at six &mdash; a seventh should be somebody's decision, not a default.</p>
+  <p class="note"><strong>No margin, and that is the load-bearing omission.</strong> Every surveyed block set its own distance to the thing below it, and those distances differed: a filter label sits closer to its control than a section kicker sits to its section. Spacing is a property of the relationship, not of the label, so it stays with the caller. A <code>margin-block-end</code> here would be wrong in most places it landed and would be overridden in a page stylesheet &mdash; which is the duplication this primitive exists to remove.</p>
+  <p class="note"><strong>The migration was two call sites, not ten, and that is measured.</strong> Twenty-eight blocks share the five-declaration recipe; only three consist of the recipe and <em>nothing else</em>, and one of those is this component's own stylesheet. The other twenty-six each add something &mdash; <code>font-weight</code> in twelve of them, split three ways between medium, bold and regular, which is why weight is deliberately absent here &mdash; or a whole layout. Absorbing those would mean growing props for weight, spacing and display until this was a styling API rather than a primitive, which is the <em>restyle</em> that "compose, never restyle" is aimed at. The value from here is in what gets written next.</p>
+  <p class="note"><strong>What it deliberately does not absorb.</strong> Table headers in the printings and syntax tables keep their semantics from <code>&lt;th&gt;</code>. The wordmark is <code>size-base</code> at full ink and is not a label above anything. And the labels inside <code>BrassSeal</code>, <code>FactChip</code>, <code>Pagination</code>, <code>ResultRow</code>, <code>SearchField</code> and <code>StatePill</code> stay theirs &mdash; reaching into a sibling primitive to restyle its innards is the coupling this library exists to avoid. That duplication is deliberate; a shared type treatment is not a shared component.</p>`,
 });
 
 /* -------------------------------------------------------------------- Screens */
