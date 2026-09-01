@@ -30,6 +30,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, relative } from "node:path";
+import { ROOT, repoFile } from "./lib/root";
 
 /**
  * The modules permitted to read a corpus straight off disk, and what each one
@@ -73,10 +74,13 @@ describe("corpus files have one door each", () => {
   const offenders: { file: string; specifier: string }[] = [];
 
   for (const root of ROOTS) {
-    for (const path of sourceFiles(root)) {
-      const file = relative(".", path);
+    for (const path of sourceFiles(repoFile(root))) {
+      /* Relative to the REPOSITORY, not to the process. `READERS` is keyed by
+         repository-relative path, and so is every message this test prints, so
+         a run from another directory has to name files the same way. */
+      const file = relative(ROOT, path);
       if (file in READERS) continue;
-      const source = readFileSync(file, "utf8");
+      const source = readFileSync(path, "utf8");
       for (const match of source.matchAll(DATA_IMPORT)) {
         offenders.push({ file, specifier: match[1] ?? "" });
       }
@@ -95,7 +99,7 @@ describe("corpus files have one door each", () => {
     test(`${file} still reads a corpus and ${owes}`, () => {
       /* A reader that stops importing one has either moved or been retired, and
          either way this list is now describing something that is not there. */
-      const source = readFileSync(file, "utf8");
+      const source = readFileSync(repoFile(file), "utf8");
       expect([...source.matchAll(DATA_IMPORT)].length).toBeGreaterThan(0);
     });
   }

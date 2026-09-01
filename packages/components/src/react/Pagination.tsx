@@ -11,8 +11,9 @@
  *
  * EVERY CONTROL IS A LINK, AND THAT IS THE LOAD-BEARING DECISION.
  *
- * A page of results is an ADDRESS — the same claim `docs/PLAN.md` Phase 4 makes
- * about the query itself, "the permalink is the product", extended to the one
+ * A page of results is an ADDRESS — the same claim `docs/ROADMAP.md` Phase 4
+ * makes about the rules corpus, a permanent URL for every paragraph, extended
+ * to the one
  * part of the view a query string did not yet describe. Buttons would have made
  * page 4 of a search unshareable, unbookmarkable, and unopenable in a new tab,
  * which is precisely how a reader compares two pages of the same answer.

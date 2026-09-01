@@ -263,7 +263,10 @@ ${chainPaint()}
  * assumed, because the failure would have been a soft blur nobody notices in a
  * diff.
  */
-async function iconPng(safeZone: number, size: number): Promise<Uint8Array> {
+export async function iconPng(
+  safeZone: number,
+  size: number,
+): Promise<Uint8Array> {
   /*
    * IMPORTED HERE RATHER THAN AT THE TOP OF THE FILE, and for the same reason
    * `generatedAssets()` is a function: `THEME_COLOUR` lives in this module and

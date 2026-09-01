@@ -23,14 +23,37 @@
 
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
   FIELD_OPERATORS,
+  parseCardQuery,
   QUERY_OPTIONS,
   STATE_OPERATORS,
 } from "../../src/lib/card-search/grammar";
+/* The tables themselves, not their source text: the examples below are run
+   through the parser rather than pattern-matched, which is the whole point of
+   the last describe block in this file. */
+import { BOOLEANS, FIELDS, LEGALITY, ORDERING, type Row } from "./syntax.page";
 
-const PAGE = "apps/site/ssg/pages/syntax.page.tsx";
+/**
+ * The page's own source, resolved from THIS FILE rather than from the working
+ * directory.
+ *
+ * It was the bare repository-relative string, which is a path that only exists
+ * when `bun test` is run from the repository root — and running it from
+ * anywhere else made this file throw ENOENT during import, taking the whole
+ * suite's exit code with it while reporting zero failed assertions. The same
+ * defect was swept out of `scripts/` (see `scripts/lib/root.ts`); this was the
+ * last one left, and it is simpler here because the file being read is the
+ * test's own neighbour.
+ *
+ * `fileURLToPath` rather than `new URL(...).pathname`: the latter is
+ * percent-encoded, so a checkout under a path with a space in it — which
+ * `.claude/worktrees/` is one `git worktree add` away from — yields an ENOENT
+ * naming a path that visibly exists.
+ */
+const PAGE = fileURLToPath(new URL("./syntax.page.tsx", import.meta.url));
 const source = readFileSync(PAGE, "utf8");
 
 /**
@@ -108,5 +131,97 @@ describe("the page documents nothing the grammar refuses", () => {
     test(`${operator}: in an example is a real operator`, () => {
       expect(ACCEPTED).toContain(operator);
     });
+  }
+});
+
+/**
+ * The page's own examples, run through the parser.
+ *
+ * WHY THE TEXT SEARCH ABOVE WAS NOT ENOUGH. Everything above compares operator
+ * NAMES, and `pow>tou` shipped straight through it: `pow` is a real operator
+ * and the page named it, so both directions agreed while the example itself
+ * had stopped working. A reader who copied the page's own clickable example
+ * got no results and a message saying it was not a number. The extractor above
+ * could not even see it — it matches `example: "name:` and that row has no
+ * colon.
+ *
+ * So this asserts the stronger, still-checkable thing: every example and every
+ * alias PARSES. That is not the same as being true — the docblock at the top
+ * of this file is right that prose around a live name needs a human — but an
+ * example is not prose. It is the one part of the page a reader copies
+ * verbatim, and it can be executed.
+ */
+describe("every example on the page still parses", () => {
+  /*
+   * ORDERING IS DOCUMENTED AS MODIFIERS, AND HAS TO BE PROBED AS ONE. `order:`
+   * says how to arrange results, not which ones to find, and the engine
+   * declines it on its own — deliberately, with a notice that says exactly
+   * that. Running those rows bare would fail all eight for a reason that is
+   * the parser being right, so they are paired with a term, which is how the
+   * page's own prose tells a reader to use them.
+   */
+  const ROWS: readonly (Row & { readonly needsTerm?: boolean })[] = [
+    ...FIELDS,
+    ...BOOLEANS,
+    ...ORDERING.map((row) => ({ ...row, needsTerm: true })),
+    ...LEGALITY,
+  ];
+
+  const probe = (row: (typeof ROWS)[number], query: string) =>
+    row.needsTerm ? `dash ${query}` : query;
+
+  /** The notice kinds that mean "the engine did not understand this". */
+  const REFUSALS = new Set([
+    "operator-unknown",
+    "operand-unknown",
+    "operand-retired",
+    "operator-pending",
+    "quote-unbalanced",
+  ]);
+
+  const refusals = (query: string) =>
+    parseCardQuery(query)
+      .notices.map((notice) => notice.kind)
+      .filter((kind) => REFUSALS.has(kind));
+
+  test("there are rows to check", () => {
+    // Guards against an import that silently resolves to nothing, which would
+    // make every assertion below vacuously true.
+    expect(ROWS.length).toBeGreaterThan(30);
+  });
+
+  for (const row of ROWS) {
+    test(`${row.example} parses`, () => {
+      expect(refusals(probe(row, row.example))).toEqual([]);
+    });
+  }
+
+  /**
+   * An alias is written three ways in these tables, and all three are a thing
+   * a reader copies:
+   *
+   *   `class:`   a prefix — swap it for the example's operator
+   *   `pow>def`  a whole expression — use it as written
+   *   `defense`  an operand — swap it into the example's operand slot
+   *
+   * Rather than normalise the tables, the rule that tells them apart is
+   * written here: a table is a piece of documentation and its shape should
+   * suit the reader, not the test.
+   */
+  const asQuery = (row: Row, alias: string): string => {
+    if (alias.endsWith(":")) {
+      return `${alias}${row.example.replace(/^[a-z]+:/, "")}`;
+    }
+    if (alias.startsWith("!") || /[:<>=]/.test(alias)) return alias;
+    return row.example.replace(/:[^\s]+$/, `:${alias}`);
+  };
+
+  for (const row of ROWS) {
+    for (const alias of row.aliases ?? []) {
+      const query = probe(row, asQuery(row, alias));
+      test(`${alias} (as ${query}) parses`, () => {
+        expect(refusals(query)).toEqual([]);
+      });
+    }
   }
 });

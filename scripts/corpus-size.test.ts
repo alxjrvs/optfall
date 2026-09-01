@@ -9,8 +9,8 @@
  *
  * The figure was written when the corpus was 16 MB and stayed there while the
  * corpus grew to 18. It was repeated in twenty-one places across CLAUDE.md,
- * `docs/PLAN.md` and eighteen docblocks, so by the time anyone noticed, the
- * correction was a sweep rather than an edit. That is the shape of defect this
+ * the since-retired build plan and eighteen docblocks, so by the time anyone
+ * noticed, the correction was a sweep rather than an edit. That is the shape of defect this
  * repository corrects most often, and the only durable answer is to stop
  * asserting the number by hand.
  *
@@ -26,21 +26,37 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { extname, join } from "node:path";
+
+import { ROOT } from "./lib/root";
+import { repoFile } from "./lib/root";
 
 /** The file whose size the prose keeps claiming. */
-const CORPUS_PATH = "data/cards/cards.json";
+const CORPUS_PATH = repoFile("data/cards/cards.json");
 
 /**
- * Files that state the corpus size. Enumerated rather than discovered by
- * scanning the tree, for the reason `routes.ts` gives about its own registry: an
- * explicit list is a decision visible in a diff. A new docblock that quotes the
- * size and is not added here is not caught — but a wrong number in one of the
- * twenty places that already do is, and that is the failure that happened.
+ * Files known to state the corpus size, kept as an EXPECTED MINIMUM rather than
+ * as the search space.
+ *
+ * THIS LIST USED TO BE THE WHOLE TEST, and its own docblock conceded the hole:
+ * "a new docblock that quotes the size and is not added here is not caught". On
+ * 2026-09-01 three files were in exactly that position — `set-profiles.ts`,
+ * `sets.page.tsx` and the search-filter skill all still said 16 MB, all matched
+ * the patterns below, and none was on the list. The enumeration did not fail;
+ * it simply was not looking.
+ *
+ * The scan below now looks at every source and prose file, which closes the
+ * class rather than those three instances. This list survives for the opposite
+ * job: a file that STOPS claiming a size is also a change worth noticing, and
+ * only a named list can notice an absence.
+ *
+ * `routes.ts`'s explicit-registry argument does not transfer, and it is worth
+ * saying why: that registry is a DECISION SURFACE — what exists as a URL is
+ * chosen. This is not. Nobody decides which docblocks mention a number.
  */
 const CLAIMANTS: readonly string[] = [
   "CLAUDE.md",
-  "docs/PLAN.md",
   "apps/site/ssg/build.ts",
   "apps/site/ssg/hostConfig.ts",
   "apps/site/ssg/components/CardIndex.tsx",
@@ -85,12 +101,42 @@ const CLAIM_PATTERNS: readonly RegExp[] = [
   /\bin an?\s+(\d+(?:\.\d+)?)\s*MB\s+JSON\b/g,
 ];
 
-/** Every corpus-size figure a file states, as numbers. */
+/**
+ * Every corpus-size figure a file states, as numbers.
+ *
+ * Takes an ABSOLUTE path. Both callers already resolve — the tree walk yields
+ * absolute paths from `scannable(ROOT)`, and the named list joins `ROOT` at its
+ * call site — so resolving again in here double-prefixes and throws an ENOENT
+ * naming a path with the repository root in it twice.
+ */
 function megabytesClaimedIn(path: string): readonly number[] {
   const source = readFileSync(path, "utf8");
   return CLAIM_PATTERNS.flatMap((pattern) =>
     [...source.matchAll(pattern)].map((match) => Number(match[1])),
   );
+}
+
+/** Directories with nothing hand-written in them. */
+const SKIP = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  "data",
+  "design-system",
+  ".wrangler",
+]);
+
+const READ = new Set([".ts", ".tsx", ".md", ".css", ".jsonc", ".yml"]);
+
+/** Every hand-written source and prose file in the repository. */
+function scannable(dir: string, out: string[] = []): string[] {
+  for (const entry of readdirSync(dir)) {
+    if (SKIP.has(entry)) continue;
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) scannable(path, out);
+    else if (READ.has(extname(entry))) out.push(path);
+  }
+  return out;
 }
 
 describe("the corpus size in prose", () => {
@@ -105,17 +151,34 @@ describe("the corpus size in prose", () => {
     expect(Math.round(binary)).toBe(expected);
   });
 
+  const files = scannable(ROOT);
+  const claiming = files
+    .map((path) => ({ path, claimed: megabytesClaimedIn(path) }))
+    .filter((entry) => entry.claimed.length > 0);
+
+  test("the scan found files to check", () => {
+    /* A walker that silently matches nothing passes forever. */
+    expect(files.length).toBeGreaterThan(100);
+    expect(claiming.length).toBeGreaterThan(0);
+  });
+
+  test(`every corpus-size claim in the tree says ${expected} MB`, () => {
+    /* Reported as paths rather than as a count, because the person reading
+       this failure needs the list of files to edit. */
+    const wrong = claiming
+      .filter((entry) => entry.claimed.some((mb) => mb !== expected))
+      .map((entry) => `${entry.path}: ${entry.claimed.join(", ")} MB`);
+
+    expect(wrong).toEqual([]);
+  });
+
   for (const path of CLAIMANTS) {
-    test(`${path} states ${expected} MB`, () => {
-      const claimed = megabytesClaimedIn(path);
-
-      /* A file listed here and no longer claiming a size is a silent hole: the
-         list would keep passing while covering nothing. */
-      expect(claimed.length).toBeGreaterThan(0);
-
-      for (const value of claimed) {
-        expect(value).toBe(expected);
-      }
+    test(`${path} still states the size`, () => {
+      /* The absence half. A file that stops claiming a size is not caught by
+         the scan above — the scan can only judge what it finds — so the named
+         list is what notices the claim going missing. */
+      const claimed = megabytesClaimedIn(join(ROOT, path));
+      expect(`${path}: ${claimed.length > 0}`).toBe(`${path}: true`);
     });
   }
 });

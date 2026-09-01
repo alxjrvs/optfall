@@ -34,6 +34,7 @@
  */
 
 import { readableDate } from "optfall-components";
+import { Eyebrow } from "optfall-components/react";
 import { FactChip, RarityBar } from "optfall-components/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -315,7 +316,7 @@ export function SetIndex({ entries }: SetIndexProps) {
             in it. A `<button>` says "this acts here", which is the truth.
           */}
           <p className="of-sets__suggestions">
-            <span className="of-sets__suggestions-label">Try</span>
+            <Eyebrow>Try</Eyebrow>
             {SUGGESTIONS.map((term) => (
               <button
                 className="of-sets__suggestion"

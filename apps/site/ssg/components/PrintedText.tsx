@@ -26,8 +26,9 @@
  * document underwrites.
  *
  * STILL NO JAVASCRIPT, and now trivially so. The toggle was two radio inputs and
- * a `:has()` selector precisely to avoid turning a 12,278-page static route into
- * an island; with one view there is no state left to hold.
+ * a `:has()` selector precisely to avoid turning every card page — the largest
+ * set of static routes in the build — into an island; with one view there is no
+ * state left to hold.
  *
  * NO PLATE OF ITS OWN. This sat in a `BevelledPlate emphasis="raised"`, which
  * drew a bevelled, padded, differently-toned box around the text INSIDE the

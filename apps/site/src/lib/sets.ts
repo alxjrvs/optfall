@@ -14,8 +14,8 @@
  * AN UNKNOWN CODE KEEPS ITS CODE. Every decode below falls back to the raw
  * value rather than to a blank or a guess — if upstream adds a rarity Optfall
  * has not re-synced, the page shows `Z` rather than an empty cell, which is a
- * visible gap instead of a silent one. `docs/PLAN.md`: a stale Optfall must
- * look stale.
+ * visible gap instead of a silent one. `docs/DATA-TERMS.md`, "What we
+ * warrant": a stale Optfall is required to look stale.
  */
 
 import corpus from "../../../../data/sets/sets.json";

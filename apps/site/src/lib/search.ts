@@ -2,9 +2,10 @@
  * Lexical search over the Comprehensive Rules — the index builder that runs at
  * build time, and the query engine that runs in the browser.
  *
- * `docs/PLAN.md`, "Rules that hold across every phase": **no language model in
- * the shipped product.** Nothing here embeds, ranks by a learned model, or
- * composes prose. It is an inverted index and a comparison function, which
+ * `LLM_STATEMENT.md`: **no language model runs in this site, and none was used
+ * to produce anything it tells you about a card or a rule.** Nothing here
+ * embeds, ranks by a learned model, or composes prose. It is an inverted index
+ * and a comparison function, which
  * buys the two properties this project trades on:
  *
  * - **Deterministic.** The same query returns the same results, in the same
@@ -358,7 +359,8 @@ const PENDING_OPERATORS: Readonly<Record<string, string>> = {
   // said so. The card layer answers them now, so the sentence changed the day
   // it landed: an operator that WORKS ELSEWHERE is a redirection, not a
   // pending feature, and describing it as unbuilt would be the same lie in the
-  // other direction. `docs/PLAN.md`, "degrade visibly".
+  // other direction. `LLM_STATEMENT.md`: where Optfall does not know
+  // something, it says so.
   pitch: "searches cards, which live at /",
   class: "searches cards, which live at /",
   type: "searches cards, which live at /",
