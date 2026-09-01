@@ -177,8 +177,9 @@ export interface CardSearchProps {
    * The count, the pin and the type-line browse.
    *
    * WHAT THE PAGE CAN SAY WITH NO INDEX, and the reason moving the index out
-   * costs this surface nothing. `docs/PLAN.md` requires every surface to show
-   * when its data was last confirmed, so the pin cannot wait on a request — a
+   * costs this surface nothing. `docs/DATA-TERMS.md` warrants that every
+   * surface shows when its data was last confirmed, so the pin cannot wait on
+   * a request — a
    * provenance line that appears only once a fetch succeeds is missing exactly
    * when something has gone wrong. 805 bytes, against the 909,626 they replace.
    */
@@ -367,8 +368,9 @@ export function CardSearch({
   /**
    * A QUESTION NOTHING CAN ANSWER YET, WHICH IS NOT THE SAME AS NO MATCHES.
    *
-   * `docs/PLAN.md`'s "degrade visibly" is the whole of this distinction. The
-   * empty-result copy names a number — "Nothing in the 4,941 cards matches" —
+   * `LLM_STATEMENT.md`'s rule — where Optfall does not know something it says
+   * so — is the whole of this distinction. The empty-result copy names a
+   * number — "Nothing in the 4,941 cards matches" —
    * so rendering it while the index is in flight is not a vague inaccuracy, it
    * is a specific claim about a corpus that has not been read yet.
    */
@@ -809,8 +811,9 @@ export function CardSearch({
    * here is a list somebody has to remember to update.
    *
    * THE PIN IS NOT DECORATION AND IT DID NOT MOVE OFF THE PAGE.
-   * `docs/PLAN.md`: "Every surface shows when its data was last confirmed. A
-   * stale Optfall must look stale." The commit and the confirmation date are
+   * `docs/DATA-TERMS.md`: "every surface shows when its data was last
+   * confirmed. A stale Optfall is required to look stale." The commit and the
+   * confirmation date are
    * still printed, still without a fetch, in the same faint voice the rest of
    * the site states provenance in — they are simply no longer the first and
    * loudest sentence a reader meets.
@@ -975,7 +978,7 @@ export function CardSearch({
         <>
           {/*
             DEGRADE VISIBLY. Every card is still addressable — that is what the
-            12,776 pages are for, and it does not depend on the index — so the
+            12,777 pages are for, and it does not depend on the index — so the
             failure is stated alongside the routes that still work rather than
             as a bare apology, and the browse is drawn under it for the same
             reason: those links are ordinary hrefs and they never needed an
@@ -1115,7 +1118,7 @@ export function CardSearch({
           </p>
         )
       ) : (
-        <>{browse}</>
+        browse
       )}
     </>
   );

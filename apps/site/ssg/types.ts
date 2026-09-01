@@ -1,8 +1,8 @@
 /**
  * The page contract, and it is deliberately Astro's.
  *
- * `docs/PLAN.md` Phase 6 moves this site off Astro onto a static generator we
- * own. The single decision that makes that a port rather than a rewrite is
+ * `docs/ROADMAP.md` Phase 6 moved this site off Astro onto a static generator
+ * we own. The single decision that makes that a port rather than a rewrite is
  * this file: **a page is `{ pattern, getStaticPaths, page }`**, which is
  * `getStaticPaths` with a different spelling.
  *
@@ -15,9 +15,9 @@
  *
  * What it buys here specifically: `CARD_ROUTES` in `lib/cards.ts` already
  * returns `{ params, props }[]`, because that is what Astro wanted. It feeds
- * this generator with no adapter at all, which means the 13,675-page route
- * table — the part of the build most expensive to get wrong — moves across
- * untouched and provably identical.
+ * this generator with no adapter at all, which means the card route table — the
+ * part of the build most expensive to get wrong, and by some distance the
+ * largest — moves across untouched and provably identical.
  */
 
 import type { ReactNode } from "react";
@@ -122,7 +122,7 @@ export interface PageResult {
    * ONE PAGE SETS IT, AND THE NARROWNESS IS THE POINT. `/search` is the only
    * surface that can answer a card query without navigating, so it is the only
    * one that should pay for the field to be React's. Every other page — `/cr`,
-   * every set page, the 12,776 documents — keeps the static form it has always
+   * every set page, the 12,777 documents — keeps the static form it has always
    * had, which submits and navigates exactly as it does with scripting off.
    *
    * DECLARED RATHER THAN DERIVED FROM {@link PageResult.islands}, for the same
