@@ -67,6 +67,7 @@ import { BevelledPlate } from "./BevelledPlate";
 import { BrassSeal } from "./BrassSeal";
 import { CardFace } from "./CardFace";
 import { Citation } from "./Citation";
+import { Eyebrow } from "./Eyebrow";
 import { FactChip } from "./FactChip";
 import { FiligreeCorner } from "./FiligreeCorner";
 import { GameSymbol } from "./GameSymbol";
@@ -226,6 +227,27 @@ const CASES: readonly Case[] = [
       semantics: "description",
     },
     wrap: ["<dl>", "</dl>"],
+  },
+
+  /* Three cases rather than one, because the `as` prop changes the ELEMENT and
+     the element is what the four document-level rules judge. `dt` is wrapped in
+     a `<dl>` for the same reason `FactChip`'s description case is: a bare `dt`
+     is invalid regardless of anything this component does, and axe would be
+     reporting the fixture rather than the primitive. The heading case is here
+     because an eyebrow rendered as `h3` is a real heading in the outline, and a
+     heading whose only content is uppercase micro-type is exactly the shape
+     worth having a machine look at. */
+  { name: "Eyebrow default", component: Eyebrow, props: { children: "Set" } },
+  {
+    name: "Eyebrow as dt",
+    component: Eyebrow,
+    props: { as: "dt" as const, tone: "muted" as const, children: "Rarity" },
+    wrap: ["<dl>", "<dd>Majestic</dd></dl>"],
+  },
+  {
+    name: "Eyebrow as heading",
+    component: Eyebrow,
+    props: { as: "h3" as const, tone: "ink" as const, children: "Apparatus" },
   },
 
   { name: "BevelledPlate flat", component: BevelledPlate, props: {} },

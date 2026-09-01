@@ -44,7 +44,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { OrnamentalRule } from "optfall-components/react";
+import { Eyebrow, OrnamentalRule } from "optfall-components/react";
 
 import { CORPUS as RULES } from "../../src/lib/rules";
 import { CORPUS } from "../../src/lib/cards";
@@ -306,7 +306,9 @@ function page(): PageResult {
           <dl className="of-about__sources">
             {SOURCES.map((source) => (
               <div className="of-about__source" key={source.what}>
-                <dt>{source.what}</dt>
+                <Eyebrow as="dt" tone="muted">
+                  {source.what}
+                </Eyebrow>
                 <dd>
                   <a href={source.href}>{source.label}</a>
                   <span className="of-about__source-note">{source.note}</span>
