@@ -133,6 +133,41 @@ if (drifted.length > 0 || workflowProblems.length > 0) {
   process.exit(1);
 }
 
+/*
+  THE RUNNING BINARY, WHICH THIS SCRIPT USED TO IGNORE ENTIRELY.
+
+  Everything above compares DECLARATIONS to each other: `.bun-version`,
+  `engines.bun`, the `@types/bun` pin, the setup-bun steps. All of them can
+  agree perfectly while the Bun actually executing is a different version — and
+  on 2026-09-01 that was exactly the case, with this check reporting success on
+  a 1.3.11 runtime against a 1.4.0 pin.
+
+  `ci.yml` states the risk this is supposed to cover: "Bun here is the runtime,
+  the test runner and the script runner, so a laptop on a different Bun runs
+  different tests — not merely a different install resolution." That is a claim
+  about the binary, and nothing was checking the binary.
+
+  IT WARNS RATHER THAN FAILS, and that is deliberate. A hard failure would make
+  every `bun run check` unusable the moment someone's toolchain lags a patch
+  release, including in a container they do not control — which is how a check
+  gets commented out rather than fixed. CI pins exactly via setup-bun, so the
+  gate is unaffected either way; what this buys is that a local run says so out
+  loud instead of quietly testing something else.
+*/
+const running = Bun.version;
+if (running !== expected) {
+  console.warn(`⚠ Running Bun ${running}, but .bun-version pins ${expected}.`);
+  console.warn(
+    "  Declarations agree with each other; the binary executing this does not.",
+  );
+  console.warn(
+    "  CI uses the pin, so the gate is unaffected — but local results here are",
+  );
+  console.warn(
+    `  from ${running}, and the test runner is part of what the pin exists for.`,
+  );
+}
+
 console.log(
-  `✓ Bun ${expected} pinned consistently: ${setupBunSteps} CI step(s) read .bun-version, and ${surfaces.length} declaration(s) agree with it.`,
+  `✓ Bun ${expected} pinned consistently: ${setupBunSteps} CI step(s) read .bun-version, ${surfaces.length} declaration(s) agree with it, and the running binary is ${running}.`,
 );
