@@ -38,7 +38,22 @@ import {
   type Tier,
 } from "./placeholder";
 
-/** The bucket the ingest writes to. Named once, here and in the ingest tool. */
+/**
+ * The bucket this host reads and the ingest writes. Named once, HERE.
+ *
+ * `scripts/ingest-card-images.ts` imports this rather than repeating it. It
+ * used to declare its own copy under a comment saying the two "must equal" each
+ * other, and nothing checked that they did — which made this export a constant
+ * nothing imported, and the rule a sentence rather than a mechanism.
+ *
+ * `packages/theme/src/index.ts` warns about exactly that shape: a constant
+ * nothing imported is "a rule written in the shape of code that could not
+ * enforce it". An import is the enforcement, and it costs nothing.
+ *
+ * The third copy is `bucket_name` in `apps/images/wrangler.jsonc`, which is
+ * JSON read by Cloudflare rather than by TypeScript and so genuinely cannot
+ * import this. That one stays a copy, and the wrangler file says so.
+ */
 export const BUCKET_NAME = "optfall-card-faces";
 
 /**
