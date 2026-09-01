@@ -203,7 +203,7 @@ export function SiteHeader({
           gives us for free: it opens on click and on Enter/Space, it is in the
           accessibility tree as a disclosure with its state announced, and it
           needs no JavaScript on a header that is rendered by the shell into
-          12,776 static documents. A checkbox and a label would look the same and
+          12,777 static documents. A checkbox and a label would look the same and
           announce as a checkbox; a real `<button>` would need an island in the
           one component that must never depend on one.
 

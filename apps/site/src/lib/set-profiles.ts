@@ -16,7 +16,7 @@
  * NOTHING HERE IMPORTS REACT AND NOTHING HERE RENDERS. The generator's pages
  * and the `/sets` island both need these figures, and the island receives them
  * as JSON in an attribute — so a module that reached for a component would
- * either be unusable on one side or would drag the 16 MB corpus into the
+ * either be unusable on one side or would drag the 18 MB corpus into the
  * browser bundle. See `Island`: what may cross that boundary is data.
  *
  * COUNTED IN NAMES, VERSIONS AND PRINTINGS, ALL THREE, BECAUSE THEY ARE THREE

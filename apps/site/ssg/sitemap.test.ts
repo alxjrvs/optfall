@@ -14,6 +14,7 @@
 
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
+import { repoFile } from "../../../scripts/lib/root";
 
 import {
   renderRobots,
@@ -31,14 +32,14 @@ describe("the sitemap flag has a consumer", () => {
      * that rendered a page and checked the output would pass while the flag was
      * ignored, which is the state this is here to catch.
      */
-    const build = readFileSync("apps/site/ssg/build.ts", "utf8");
+    const build = readFileSync(repoFile("apps/site/ssg/build.ts"), "utf8");
     expect(build).toContain("registration.sitemap");
     expect(build).toContain("renderSitemap");
     expect(build).toContain("renderRobots");
   });
 
   test("routes.ts still declares it", () => {
-    const source = readFileSync("apps/site/ssg/routes.ts", "utf8");
+    const source = readFileSync(repoFile("apps/site/ssg/routes.ts"), "utf8");
     expect(source).toContain("sitemap");
   });
 });

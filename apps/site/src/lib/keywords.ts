@@ -1,9 +1,10 @@
 /**
  * The join between a card's keywords and the rules that govern them.
  *
- * THIS IS THE THING NOTHING ELSE IN THE GAME HAS. `docs/PLAN.md` Phase 4 calls
- * it "Card ↔ rules cross-reference, the join nothing currently makes", and
- * `docs/SCRYFALL-GAP.md` §6 moved it forward because it is what makes a card
+ * THIS IS THE THING NOTHING ELSE IN THE GAME HAS — the card ↔ rules
+ * cross-reference, the join nothing currently makes. `docs/ROADMAP.md` Phase 4
+ * is the surface it hangs off, and `docs/SCRYFALL-GAP.md` §6 moved it forward
+ * because it is what makes a card
  * page a reference rather than a stat block: `Dominate` on the card, `cr:8.3.4`
  * beside it, one click to the text.
  *
@@ -12,8 +13,8 @@
  * itself is exact string matching over a closed vocabulary extracted with one
  * regex. There is no embedding, no similarity, no judgement — a keyword either
  * matches a rule the Comprehensive Rules itself names, or it is reported as
- * unmatched. `docs/PLAN.md`: "Parsers are deterministic code whose output diffs
- * cleanly and fails loudly."
+ * unmatched. `LLM_STATEMENT.md`: "the parsers are deterministic code whose
+ * output diffs cleanly and fails loudly."
  *
  * HOW THE VOCABULARY IS EXTRACTED. Chapter 8 of the Comprehensive Rules is
  * *Keywords*. Its rules carry no titles, but the parsed text of every
@@ -42,8 +43,8 @@
  *
  * WHAT IS LEFT OVER IS PUBLISHED, NOT SWALLOWED. {@link keywordCoverage}
  * returns the gap as `unmatched`, and `/about` renders it, so it is a number on
- * a page rather than a silence. `docs/PLAN.md`: "A stale Optfall must look
- * stale."
+ * a page rather than a silence. `docs/DATA-TERMS.md`: "A stale Optfall is
+ * required to look stale."
  */
 
 import { RULE_NAMESPACE, type CorpusSection, type RulesCorpus } from "./search";
@@ -344,8 +345,9 @@ export interface RuleCardLink {
  * Which cards each rule governs — the direction that makes a rules corpus worth
  * visiting.
  *
- * `docs/PLAN.md` Phase 4: "a rule knows which interactions cite it, so a change
- * tells you exactly what it invalidates." This is the card half of that, and it
+ * `docs/DESIGN.md`, screen 4: "a rule knows which interactions cite it, so a
+ * change tells you exactly what it invalidates." This is the card half of
+ * that, and it
  * is the same join read backwards, so the two directions cannot disagree.
  *
  * Keyed by rule NUMBER rather than id, because that is what the `/cr/` route

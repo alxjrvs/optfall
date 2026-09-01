@@ -6,7 +6,7 @@
  * registration a `sitemap: boolean` since it was written, defaulted to true and
  * documented as "whether these URLs belong in the sitemap". Nothing ever read
  * it. There was no sitemap to belong to, and no `robots.txt` either, on a
- * reference site of 12,776 pages whose entire proposition is being findable.
+ * reference site of 12,777 pages whose entire proposition is being findable.
  *
  * The intent was never in doubt: `apps/images/public/robots.txt` disallows the
  * image host and says why in a comment — "the pages that give those images
@@ -15,7 +15,7 @@
  *
  * ONE SITEMAP, NOT A SHARDED SET, and that is a measurement rather than an
  * oversight. The protocol caps a file at 50,000 URLs and 50 MB uncompressed.
- * This build emits about 12,776 URLs at roughly ninety bytes each: a quarter of
+ * This build emits about 12,777 URLs at roughly ninety bytes each: a quarter of
  * the URL limit and around two per cent of the size limit. A sitemap index
  * would add a second file format and a second thing to get wrong, to solve a
  * problem four times further away than it looks. {@link SITEMAP_URL_LIMIT}
@@ -60,7 +60,7 @@ function escapeXml(value: string): string {
  * NO `lastmod`, `changefreq` OR `priority`, and each omission is deliberate.
  * This is a static build with no per-page modification date that means
  * anything — every file is written at the same instant by the same run, so a
- * `lastmod` would say "the last deploy" 12,776 times, which is worse than
+ * `lastmod` would say "the last deploy" 12,777 times, which is worse than
  * silence because it looks like information. Google has said publicly it
  * ignores `priority` and `changefreq`; emitting them is noise that also has to
  * be maintained.
