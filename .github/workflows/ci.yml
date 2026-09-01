@@ -340,6 +340,18 @@ jobs:
       - name: Assert every card face on a built page came from CardFace
         run: bun run check:card-notice
 
+      # The four document-level axe rules `a11y.test.tsx` deliberately cannot
+      # run — `region`, `landmark-one-main`, `page-has-heading-one`, `bypass`.
+      # A fragment cannot satisfy them, so the component suite disables them and
+      # defers to this. It said so before this existed, which meant the four
+      # were enforced nowhere at all.
+      #
+      # It samples one page per ROUTE KIND rather than sweeping 12,776, because
+      # the pages come from a handful of templates and a second card page only
+      # re-tests the first one's template.
+      - name: Assert every page kind satisfies the document-level a11y rules
+        run: bun run check:a11y
+
   # THIS JOB ASSERTS SOMETHING WEAKER THAN IT USED TO, AND SAYS SO.
   #
   # It was written because `astro build` resolved SSR modules through Rollup

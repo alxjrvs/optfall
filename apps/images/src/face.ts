@@ -109,7 +109,20 @@ function placeholderResponse(orientation: Orientation, status = 200): Response {
     status,
     headers: {
       "content-type": PLACEHOLDER_CONTENT_TYPE,
-      "cache-control": PROVISIONAL,
+      /*
+        A MISS IS PROVISIONAL. A FAILURE IS NOT CACHEABLE AT ALL.
+
+        Both branches used to send `PROVISIONAL`, which granted five minutes of
+        freshness to a 503 — an explicit instruction to keep serving a failure
+        after the store has recovered, in every browser and every intermediary
+        that honoured it. HTTP caches do not normally store a 503; this was
+        opting into it.
+
+        The 200 keeps its five minutes, and for the original reason: a miss
+        means no art is published YET, so the tool self-corrects within one
+        cache lifetime of upstream publishing it.
+      */
+      "cache-control": status === 200 ? PROVISIONAL : "no-store",
       "access-control-allow-origin": "*",
       // Names the reason in a header rather than only in the pixels, so a
       // caller debugging a grid of grey rectangles can tell "no art published"
@@ -271,7 +284,19 @@ export const makeFaceHandler =
     if (!parsed) {
       return new Response("Not found", {
         status: 404,
-        headers: { "cache-control": PROVISIONAL },
+        headers: {
+          "cache-control": PROVISIONAL,
+          /*
+            Typed and non-sniffable, on a host that answers attacker-chosen
+            paths and serves `image/svg+xml` elsewhere with
+            `access-control-allow-origin: *`. Neither header was here before.
+            The body is a constant, so this is hardening rather than a fix —
+            but an untyped response from this origin is the one shape worth
+            never leaving to a browser's guess.
+          */
+          "content-type": "text/plain; charset=utf-8",
+          "x-content-type-options": "nosniff",
+        },
       });
     }
 

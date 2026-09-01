@@ -570,7 +570,7 @@ export const QUERY_OPTIONS: readonly string[] = [
  * own name — `text: "text"` against `o: "text"` — which is a property of the
  * table rather than a second list to maintain.
  */
-export function supportedOperators(): string {
+function supportedOperators(): string {
   const byField = new Map<string, { primary: string; aliases: string[] }>();
 
   for (const [name, field] of Object.entries(FIELD_OPERATORS)) {

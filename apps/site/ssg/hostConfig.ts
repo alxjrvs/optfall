@@ -56,6 +56,50 @@ export interface HeaderRule {
   readonly headers: Readonly<Record<string, string>>;
 }
 
+/*
+  A PARTIAL CSP, AND THE MISSING DIRECTIVE IS NAMED RATHER THAN FORGOTTEN.
+
+  `script-src` is absent on purpose. Three inline scripts exist, and two of them
+  are fixed module constants whose hashes could be computed at build time — but
+  the third is `CardEntry.tsx`'s, which embeds a per-card JSON literal, so its
+  hash differs on every one of 12,776 card pages. `_headers` is pattern-based
+  and capped at 100 rules, so a per-page hash allowlist cannot be expressed. The
+  honest options are `unsafe-inline` (which would make the directive
+  decorative) or extracting those scripts to hashed files first. Neither is this
+  change.
+
+  What IS here is everything that does not depend on that: clickjacking,
+  base-tag injection, plugin embedding, form exfiltration, and an image policy
+  that names the one external host this site loads from.
+
+  `frame-ancestors` is the reason this is a header rather than a `<meta>` tag —
+  it is ignored in `<meta>`, and it is the directive doing the most work here.
+*/
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'none'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "img-src 'self' https://images.optfall.com data:",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
+  "connect-src 'self'",
+].join("; ");
+
+/*
+  HSTS. A year, subdomains included, no `preload`.
+
+  `includeSubDomains` covers `images.optfall.com`, which is HTTPS-only anyway,
+  so it costs nothing and closes the one sibling host.
+
+  `preload` is deliberately ABSENT and should stay absent unless somebody
+  decides otherwise with the consequence in front of them: submitting to the
+  preload list is baked into browser binaries and is slow and awkward to undo.
+  That is a commitment about every future subdomain, not a header.
+*/
+const STRICT_TRANSPORT_SECURITY = "max-age=31536000; includeSubDomains";
+
 /**
  * The response headers the host adds.
  *
@@ -102,6 +146,9 @@ export const HEADERS: readonly HeaderRule[] = [
     headers: {
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Content-Security-Policy": CONTENT_SECURITY_POLICY,
+      "Strict-Transport-Security": STRICT_TRANSPORT_SECURITY,
+      "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
     },
   },
   /*

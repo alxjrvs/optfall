@@ -19,6 +19,9 @@
     "bun": ">=1.4.0"
   },
   "catalog": {
+    "axe-core": "4.13.0",
+    "jsdom": "30.0.1",
+    "@types/jsdom": "30.0.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "react": "19.2.8",
@@ -28,17 +31,18 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && bun run --filter './packages/*' --filter './apps/*' typecheck",
-    "lint": "biome lint .",
+    "lint": "biome lint --error-on-warnings .",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "test": "bun test",
     "build": "bun run --filter './packages/*' --filter './apps/*' build",
     "check": "bun run format:check && bun run lint && bun run check:tokens && bun run check:bun-version && bun run check:provenance && bun run check:no-llm && bun run check:ci-aggregator && bun run typecheck && bun run test",
-    "check:full": "bun run check && bun run build && bun run check:disclaimer && bun run check:built-tokens && bun run check:card-notice && bun run check:dev-server",
+    "check:full": "bun run check && bun run build && bun run check:disclaimer && bun run check:built-tokens && bun run check:card-notice && bun run check:a11y && bun run check:dev-server",
     "check:ci-aggregator": "bun scripts/check-ci-aggregator.ts",
     "check:no-llm": "bun scripts/check-no-llm-deps.ts",
     "check:disclaimer": "bun scripts/check-disclaimer.ts",
     "check:card-notice": "bun scripts/check-card-notice.ts",
+    "check:a11y": "bun scripts/check-a11y.ts",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:repo-settings": "scripts/repo-settings.sh --check",
     "check:bun-version": "bun scripts/check-bun-version.ts",
@@ -61,6 +65,9 @@
     "@types/bun": "1.4.0",
     "sharp": "catalog:",
     "typescript": "7.0.2",
-    "wrangler": "4.127.1"
+    "wrangler": "4.127.1",
+    "axe-core": "catalog:",
+    "jsdom": "catalog:",
+    "@types/jsdom": "catalog:"
   }
 }

@@ -148,7 +148,15 @@ describe("the two figures that look wrong and are not", () => {
     expect(byLevel.get("subrule")).toBe(634);
 
     /* The published subtotal, and the total it is nine short of. */
-    expect(87 + 548 + 634).toBe(1269);
+    /* This line was `expect(87 + 548 + 634).toBe(1269)` — constants on both
+       sides, so it could not fail. The three assertions above are the live
+       ones; this now checks the same sum against the figure actually derived
+       from the corpus, which is what it was presumably always meant to do. */
+    const subtotal =
+      (byLevel.get("section") ?? 0) +
+      (byLevel.get("rule") ?? 0) +
+      (byLevel.get("subrule") ?? 0);
+    expect(subtotal).toBe(1269);
     expect(1269 + 9).toBe(RULE_PAGES.length);
   });
 

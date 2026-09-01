@@ -1117,7 +1117,7 @@ export function CardSearch({
           </p>
         )
       ) : (
-        <>{browse}</>
+        browse
       )}
     </>
   );
