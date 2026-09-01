@@ -1,10 +1,20 @@
 # Deploy to Cloudflare: production on merge to `main`, a preview URL per PR.
 #
 # The build runs here rather than on the platform. Workers Builds exists, but
-# keeping the build in Actions means one build path, one place for path
-# filtering, and the whole aggregate gate in front of every deploy — a deploy
-# that succeeded where `CI Success` failed would be a lie about the state of
-# `main`.
+# keeping the build in Actions means one build path and one place for path
+# filtering.
+#
+# THIS WORKFLOW DOES NOT DEPEND ON THE GATE, AND SAID IT DID UNTIL 2026-09-01.
+# There is no `needs:` and no `workflow_run:` here: on a push to `main` this
+# runs in PARALLEL with `ci.yml`, and on a pull request the preview upload runs
+# whether or not `CI Success` passed.
+#
+# What actually keeps a red commit off production is the ruleset, not this
+# file: `scripts/repo-settings.sh` requires the `CI Success` context with
+# `strict_required_status_checks_policy`, so only a green, up-to-date head can
+# reach `main` in the first place. That is a real guarantee — it is just a
+# property of branch protection rather than of anything written here, and the
+# previous wording claimed the latter.
 #
 # EVERY JOB SKIPS RATHER THAN FAILS WHEN `CLOUDFLARE_API_TOKEN` IS ABSENT. That
 # is the state of the world until the secret is added, and a workflow that fails

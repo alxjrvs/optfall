@@ -287,8 +287,6 @@ TOPICS=(
   deck-legality
   rules-engine
   typescript
-  astro
-  svelte
 )
 
 echo

@@ -36,12 +36,20 @@ Aim the loop — it is fast when scoped. Wall clock, Apple silicon,
 
 The date is on that table because the previous one had drifted **in both
 directions** and nobody could tell: `theme` had grown from 0.2 s to about a
-second as its suite went from 92 tests to 104, while `components`,
+second as its suite went from 92 tests to 110, while `components`,
 `apps/site` and `check` had all got two to three times faster and were
 still advertised at their old cost. A table that overstates is worse than
 one that is merely old — it argues against running the very commands it
 exists to encourage, and `check:full` is *required* for anything touching
 rendered output.
+
+**The `theme` row is under suspicion and has not been re-measured on the
+hardware this table names.** On 2026-09-01, on Linux under Bun 1.3.11, that
+suite ran in **29 ms** against the ~1 s claimed here. Slower hardware running
+35× faster is not a hardware difference, so one of the two figures is wrong and
+it is probably this one. Re-measure on Apple silicon before trusting the row —
+and per the paragraph above, an overstated cost is the failure direction that
+matters.
 
 ## Before you touch these, read this
 
@@ -136,12 +144,12 @@ All enforced somewhere, all easy to violate on a first pass.
 Two procedures in this repository are mechanical, multi-file, and have been
 performed enough times to be worth encoding. Both are in `.claude/skills/`:
 
-- **`add-a-search-filter`** — the four places a card-search operator touches, and
-  the one of them with no test behind it.
+- **`add-a-search-filter`** — the three places a card-search operator touches,
+  and what the syntax-page test does and does not catch.
 - **`add-a-design-system-primitive`** — the seven places a primitive touches,
   all test-enforced.
 
-## Pre-approved commands, and the two that are not
+## Pre-approved commands, and the three that are not
 
 `.claude/settings.json` pre-approves the read-only and build commands that
 recur here — `bun test`, `bun run build`, `rg`, the read-only `gh` subcommands,
@@ -150,9 +158,17 @@ and the `check:*` scripts **enumerated one by one**.
 **The `check:*` entries are listed individually rather than globbed, and that is
 deliberate.** A `Bash(bun run check:*)` wildcard reads as "the safe local
 checks" and is not: it also covers `check:symbols`, which re-fetches every game
-symbol from `rules.fabtcg.com`, and `check:repo-settings`, which makes
-authenticated `gh api` calls against the live repository. Neither is a loop
-command, and neither should run without someone deciding to run it.
+symbol from `rules.fabtcg.com`; `check:repo-settings`, which makes authenticated
+`gh api` calls against the live repository; and `check:face-orientation`, which
+makes **11,376 ranged requests against the live face host**. None is a loop
+command, and none should run without someone deciding to run it.
+
+This section said "the two that are not" until 2026-09-01 and named only the
+first two — undercounting a list whose entire job is completeness, and omitting
+the largest of the three. `check-face-orientation.ts`'s own docblock already
+cited this list as its reason for staying out of it. `packages/rules`'
+`rules:parse` and its CLI also reach the network; neither is reachable through a
+pre-approved wildcard, but neither is a loop command either.
 
 **`bun run corpus:*` and `bun run symbols` are excluded for the same reason,
 plus one more.** Both hit the network, and both rewrite committed provenance
@@ -160,25 +176,43 @@ data — `data/symbols/symbols.json` carries a per-file SHA-256 and a rights
 statement that `check:provenance` verifies. Regenerating either is a decision
 with a diff attached, not a step in a loop.
 
-## Adding a search operator — four places, and one has no test
+## Adding a search operator — three places, and one partly-guarded page
 
-`apps/site/ssg/pages/syntax.page.tsx` says it outright: when the parser changes,
-that page is wrong and no test will say so.
+**This section said "four places, and one has no test" until 2026-09-01, and
+both halves were wrong.** `apps/site/ssg/pages/syntax.test.ts` is 209 lines and
+has existed since #334: it asserts every operator the grammar accepts is named
+on the page, every operator the page documents is one the grammar accepts, and
+every example printed there parses. What it cannot see is stale PROSE around a
+name that is still correct — it is a text search, and it says so itself. That
+is a real gap, and a much narrower one than "no test will say so".
+
+The `Supported: …` string was the fourth place. It is now derived from the
+tables (`supportedOperators()`), so it is no longer a place at all.
 
 1. `apps/site/src/lib/card-search/grammar.ts` — `FIELD_OPERATORS`, `STATE_OPERATORS`,
    `FORMAT_ALIASES`, `STAT_FIELDS`, `SORT_KEYS`, `DISPLAY_MODES`,
    `UNIQUE_MODES`, `WORD_VALUED`, and `PENDING_OPERATORS` / `RETIRED_OPERATORS`
    for an operator this refuses on purpose — the refusal tables are how a
    dead link answers instead of vanishing
-2. the hand-written `Supported: …` string in the unknown-operator error
-3. `apps/site/src/lib/query.ts`, if tokenising changes
-4. **`apps/site/ssg/pages/syntax.page.tsx`** — the one everyone forgets
+2. `apps/site/src/lib/query.ts`, if tokenising changes
+3. **`apps/site/ssg/pages/syntax.page.tsx`** — a missing operator, a documented
+   refusal or a stale example now fails `syntax.test.ts`; wrong prose around a
+   correct name still does not
+
+`supportedOperators()` (`grammar.ts`) derives the unknown-operator error's
+`Supported: …` list from `FIELD_OPERATORS`, `QUERY_OPTIONS` and
+`STATE_OPERATORS`, so those need no hand edit. An operator added to
+`STAT_FIELDS`, `SORT_KEYS`, `DISPLAY_MODES` or `UNIQUE_MODES` still will not
+appear there, and a new query *option* must be added to `QUERY_OPTIONS` by
+hand.
 
 Decide the negated form (`-op:`, `op!=`) in the same change. A filter once
 shipped without one and needed a follow-up PR to refuse it.
 
-Every module under `card-search/` must import `./cards` **type-only**. A value
-import once shipped a 9.28 MB bundle to every reader.
+Every module under `card-search/` that imports the corpus must do so
+**type-only**, and the path is `../cards` — `cards.ts` is a SIBLING of that
+directory, not a member of it. Today only `card-search/build.ts` imports it. A
+value import once shipped a 9.28 MB bundle to every reader.
 
 ## Adding a primitive — seven places, all test-enforced
 
@@ -228,5 +262,8 @@ document indistinguishable from a current one.
 ## Worktrees
 
 Agent worktrees live in `.claude/worktrees/` and are gitignored. Reap them with
-`boom code reap` — squash-merge rewrites SHAs, so plain git will insist a fully
-merged branch is still ahead.
+`boom code reap`, which is an external personal CLI and is **not installed by
+this repository** — it is unavailable in a fresh clone and in Claude Code on the
+web. Without it, delete them by hand: squash-merge rewrites SHAs, so
+`git branch -d` will insist a fully merged branch is still ahead and
+`git worktree remove` plus `git branch -D` is the plain-git equivalent.
