@@ -143,6 +143,11 @@ export interface CardNotice {
     | "operand-retired"
     | "term-ignored"
     | "phrase-approximate"
+    /* THE QUERY IS MALFORMED AND WAS ANSWERED ANYWAY. Distinct from every kind
+       above, which describe a decision the engine made about a token it
+       understood: this one says the tokeniser could not see the query the
+       reader meant to write, because a quote never closed. */
+    | "quote-unbalanced"
     /* The engine answered, and is telling you what it could not see. Distinct
        from `operator-pending`, which means it did not answer at all. */
     | "coverage-partial";
@@ -402,7 +407,9 @@ const UNIQUE_MODES: Readonly<Record<string, CardUniqueMode>> = {
  * word they know should get the value they meant rather than an error telling
  * them this game uses a different noun.
  */
-const STAT_FIELDS: Readonly<Record<string, "cost" | "power" | "defence">> = {
+export const STAT_FIELDS: Readonly<
+  Record<string, "cost" | "power" | "defence">
+> = {
   cost: "cost",
   power: "power",
   pow: "power",
@@ -411,13 +418,29 @@ const STAT_FIELDS: Readonly<Record<string, "cost" | "power" | "defence">> = {
   def: "defence",
 };
 
-const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
+/**
+ * What `order:` will sort by.
+ *
+ * EVERY SPELLING OF A STAT IN {@link STAT_FIELDS} HAS TO APPEAR HERE, and one
+ * did not. `pow` was deliberately kept when `tou` and `toughness` were retired
+ * — power is a word this game uses, and only the other two were another
+ * game's — but the retirement changed `STAT_FIELDS` and left this table alone.
+ * The result was a reader being encouraged to type `pow:6`, doing so, and then
+ * being told `order:pow` names nothing this can sort by. A filter and a sort
+ * disagreeing about what a stat is called is the kind of thing that reads as
+ * the search being broken rather than as a missing alias.
+ *
+ * `card-search.test.ts` asserts the two tables agree, so the next stat spelling
+ * to arrive or depart cannot land in one of them only.
+ */
+export const SORT_KEYS: Readonly<Record<string, CardSortKey>> = {
   name: "name",
   released: "released",
   release: "released",
   pitch: "pitch",
   cost: "cost",
   power: "power",
+  pow: "power",
   defence: "defence",
   defense: "defence",
   def: "defence",
@@ -547,7 +570,7 @@ export const QUERY_OPTIONS: readonly string[] = [
  * own name — `text: "text"` against `o: "text"` — which is a property of the
  * table rather than a second list to maintain.
  */
-export function supportedOperators(): string {
+function supportedOperators(): string {
   const byField = new Map<string, { primary: string; aliases: string[] }>();
 
   for (const [name, field] of Object.entries(FIELD_OPERATORS)) {
@@ -750,9 +773,10 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
         corpus cannot support.
 
         So the operator that has a defensible meaning is offered and the one
-        that does not is named. `docs/PLAN.md`, "degrade visibly": an engine
-        that cannot answer honestly says so rather than picking whichever
-        answer looks reasonable.
+        that does not is named. `LLM_STATEMENT.md`: where Optfall does not
+        know something it says so, rather than generating a plausible sentence
+        to fill the gap — an engine that cannot answer honestly says so rather
+        than picking whichever answer looks reasonable.
       */
       if (token.compare === "!=") {
         note(
@@ -808,8 +832,12 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
           FIELD-TO-FIELD, WHICH IS THE OTHER HALF OF A COMPARISON. `power>defence`
           asks a question about one card against itself — "is this attack worth
           more than it blocks" — and there is no number that expresses it.
-          Scryfall spells it `pow>tou`; the aliases below make both spellings
-          work, because a reader arriving from there types theirs.
+          Scryfall spells it `pow>tou`, and this file used to accept that
+          spelling for the sake of a reader arriving from there. It no longer
+          does: `tou` is another game's word for defence and was retired along
+          with `toughness` and `o`. `pow>def` and `power>defence` are the
+          spellings this game uses, and `pow>tou` now answers with the
+          retirement message rather than pretending not to recognise it.
 
           Encoded with a `@` prefix rather than as a bare field name so the
           matcher can tell `power>2` from `power>defence` without inspecting the
@@ -832,6 +860,21 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
             compare: token.compare,
             label: `${field} ${token.compare} ${against}`,
           };
+        }
+
+        /*
+          A RETIRED NAME ON THE RIGHT-HAND SIDE GETS THE SAME ANSWER IT GETS ON
+          THE LEFT. `RETIRED_OPERATORS` was only ever consulted for a token
+          shaped `field:value`, so `tou:3` explained itself and `pow>tou` — the
+          spelling this very file used to advertise — fell through to the
+          generic message below and said only that it was not a number. That is
+          the worse of the two answers, and it was reaching the reader who had
+          followed our own documentation.
+        */
+        const retired = RETIRED_OPERATORS[operand];
+        if (retired !== undefined) {
+          note("operand-retired", `${operand} ${retired}.`);
+          return null;
         }
 
         if (!/^\d+$/.test(operand)) {
@@ -923,6 +966,24 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
      `?display=` parameter that predates this operator. */
   let display: CardDisplayMode | null = null;
 
+  /*
+    AN ODD NUMBER OF QUOTES IS ANSWERED, NOT SWALLOWED. `type:"illusionist
+    action` — a closing quote simply forgotten — cannot match the quoted-field
+    alternative, so it falls to `field:value`, which takes `"illusionist` as
+    the operand and leaves `action` behind as an ordinary REQUIRED term. The
+    engine still answers, and the answer is not the question that was asked.
+    Tokenising cannot repair this without guessing where the quote belonged, so
+    the reader is told instead: this file's rule is that the engine degrades
+    visibly, and the shape it degrades into here is not one anybody would
+    predict from what they typed.
+  */
+  if ((raw.match(/"/g) ?? []).length % 2 === 1) {
+    note(
+      "quote-unbalanced",
+      "There is an odd number of quotes here, so one phrase runs to the end of the query rather than where it was meant to close. Results may include terms you meant to keep together.",
+    );
+  }
+
   const remaining = tokenise(raw).filter((token) => {
     if (token.kind !== "field") return true;
     if (
@@ -1012,7 +1073,11 @@ export function parseCardQuery(raw: string): ParsedCardQuery {
     if (key === undefined) {
       note(
         "operand-unknown",
-        `order:${token.value} names nothing this can sort by. The seven are ${[...new Set(Object.values(SORT_KEYS))].join(", ")}.`,
+        /* NO COUNT IN FRONT OF A LIVE LIST. This read "The seven are" before a
+           list the line itself interpolates, and had been wrong since the
+           eighth key landed — a spelled number in front of a computed list can
+           only ever be right by coincidence. */
+        `order:${token.value} names nothing this can sort by. The options are ${[...new Set(Object.values(SORT_KEYS))].join(", ")}.`,
       );
       return false;
     }

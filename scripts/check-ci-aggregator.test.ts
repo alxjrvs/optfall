@@ -20,6 +20,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { ROOT } from "./lib/root";
+
 import { describe, expect, test } from "bun:test";
 
 import {
@@ -30,7 +32,7 @@ import {
   WorkflowParseError,
 } from "./check-ci-aggregator";
 
-const REPO_ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+const REPO_ROOT = ROOT;
 
 const read = (relative: string) =>
   readFileSync(join(REPO_ROOT, relative), "utf8");

@@ -8,3 +8,34 @@
 
 User-agent: *
 Disallow: /
+
+# UNFURL BOTS ARE NOT SEARCH CRAWLERS, AND BLANKET-DISALLOWING THEM BROKE
+# SOMETHING. Card pages set `og:image` to a URL on this host, and several link
+# preview services honour robots.txt before fetching one — so a shared card
+# link rendered with no image, on a page whose Twitter card type is chosen
+# BECAUSE an image exists. Nothing in the repository connected the two files.
+#
+# These agents fetch a named image to render a preview of a page that links to
+# it. They do not index, and they do not crawl the 22,752 URLs here — which is
+# the thing `Disallow: /` is actually protecting against.
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Slackbot-LinkExpanding
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: TelegramBot
+Allow: /

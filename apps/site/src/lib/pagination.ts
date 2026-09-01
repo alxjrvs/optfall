@@ -18,7 +18,8 @@
  * different page would have ranked differently.
  *
  * THE PAGE IS IN THE URL, WHICH IS THE WHOLE REASON IT IS HERE AND NOT IN A
- * COMPONENT'S STATE. `docs/PLAN.md` Phase 4: "the permalink is the product".
+ * COMPONENT'S STATE. `docs/ROADMAP.md` Phase 4 puts every rules paragraph at
+ * a permanent URL, citable by number — the permalink is the product.
  * Page 4 of a search has to be an address, or comparing two pages of one answer
  * means two windows of the same one.
  *

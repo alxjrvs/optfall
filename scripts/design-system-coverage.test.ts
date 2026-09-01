@@ -29,7 +29,7 @@
  *   already drifted inside it unnoticed: the citation was captioned
  *   "monospaced" after that face was retired from the system, and the brass
  *   seal was a flat badge with no version band, the one field
- *   `docs/PLAN.md` Phase 5 requires be impossible to miss.
+ *   `docs/DATA-TERMS.md` Layer 3 requires be impossible to miss.
  *
  * A gallery is the failure worth naming, because it looks like coverage.
  *

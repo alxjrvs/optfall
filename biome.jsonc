@@ -84,11 +84,18 @@
       "!**/node_modules",
       "!**/dist",
       "!**/coverage",
-      // Committed build artefacts. Formatting them would make the checked-in
-      // copy differ from what the generator emits, which is the one thing
-      // their drift checks exist to catch.
-      "!data",
-      "!**/*-snapshots"
+      // Belt-and-braces, and UNREACHABLE TODAY — say so rather than implying it
+      // is doing work. `data/` sits at the repository root, outside every
+      // positive glob above, so Biome never reaches it: `biome check
+      // data/cards/sample.json` returns nothing. The line matters only if
+      // `includes` is ever widened to `**`.
+      //
+      // The reason it would matter then is real: `data/` is generated and
+      // committed, and formatting it would make the checked-in copy differ
+      // from what the generator emits — which is exactly what the drift checks
+      // exist to catch. `design-system/` is in the same position and is
+      // likewise outside the globs.
+      "!data"
     ]
   },
   "formatter": {
@@ -120,6 +127,14 @@
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error"
+      },
+      // Turned on explicitly rather than left to whatever `recommended`
+      // happens to include. `packages/components` has a real axe suite behind
+      // it — 78 cases through jsdom under the generated stylesheet — but that
+      // harness never sees `apps/site/ssg`, which is where the pages are. This
+      // is the cheapest coverage available for the page-level JSX.
+      "a11y": {
+        "recommended": true
       },
       "complexity": {
         // OFF, BECAUSE THE BRACKETS ARE CARRYING INFORMATION HERE.

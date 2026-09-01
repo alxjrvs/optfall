@@ -2,9 +2,10 @@
  * Accessibility, asserted on every primitive. The React port of
  * `src/svelte/a11y.test.ts`, case for case.
  *
- * `docs/PLAN.md` Phase 1: "The accessibility addon runs on every story in CI,
- * which turns the pitch jewel's contract — shape, numeral and colour carrying
- * the same fact three times — from an intention into a test."
+ * `docs/DESIGN.md`, "What the accessibility work covers": every primitive is
+ * rendered through axe-core in CI, which turns the pitch jewel's contract —
+ * shape, numeral and colour carrying the same fact three times — from an
+ * intention into a test. That section names this file as where it happens.
  *
  * WHY THIS FILE EXISTS SEPARATELY rather than the Svelte one having been edited
  * in place: Phase 6 deleted the Svelte sources, and this is the coverage that
@@ -66,6 +67,7 @@ import { BevelledPlate } from "./BevelledPlate";
 import { BrassSeal } from "./BrassSeal";
 import { CardFace } from "./CardFace";
 import { Citation } from "./Citation";
+import { Eyebrow } from "./Eyebrow";
 import { FactChip } from "./FactChip";
 import { FiligreeCorner } from "./FiligreeCorner";
 import { GameSymbol } from "./GameSymbol";
@@ -96,7 +98,7 @@ import { StatGlyph } from "./StatGlyph";
  */
 interface Case {
   readonly name: string;
-  // biome-ignore lint/suspicious/noExplicitAny: the table is heterogeneous by design — fourteen components with fourteen prop types. Each row's props are checked against its own component where it is written; the table's element type only has to hold them.
+  // biome-ignore lint/suspicious/noExplicitAny: the table is heterogeneous by design — one row per primitive, each with its own prop type. Each row's props are checked against its own component where it is written; the table's element type only has to hold them.
   readonly component: ComponentType<any>;
   readonly props: Record<string, unknown>;
   readonly wrap?: readonly [string, string];
@@ -225,6 +227,27 @@ const CASES: readonly Case[] = [
       semantics: "description",
     },
     wrap: ["<dl>", "</dl>"],
+  },
+
+  /* Three cases rather than one, because the `as` prop changes the ELEMENT and
+     the element is what the four document-level rules judge. `dt` is wrapped in
+     a `<dl>` for the same reason `FactChip`'s description case is: a bare `dt`
+     is invalid regardless of anything this component does, and axe would be
+     reporting the fixture rather than the primitive. The heading case is here
+     because an eyebrow rendered as `h3` is a real heading in the outline, and a
+     heading whose only content is uppercase micro-type is exactly the shape
+     worth having a machine look at. */
+  { name: "Eyebrow default", component: Eyebrow, props: { children: "Set" } },
+  {
+    name: "Eyebrow as dt",
+    component: Eyebrow,
+    props: { as: "dt" as const, tone: "muted" as const, children: "Rarity" },
+    wrap: ["<dl>", "<dd>Majestic</dd></dl>"],
+  },
+  {
+    name: "Eyebrow as heading",
+    component: Eyebrow,
+    props: { as: "h3" as const, tone: "ink" as const, children: "Apparatus" },
   },
 
   { name: "BevelledPlate flat", component: BevelledPlate, props: {} },
@@ -746,8 +769,17 @@ async function runAxe(dom: JSDOM): Promise<axe.Result[]> {
   const results = await axe.run(window.document.body, {
     // Rules that need a whole document rather than a fragment would fail every
     // component for reasons that are a property of this harness, not of the
-    // component. Landmarks, page titles and region structure belong to the
-    // page-level check on the built site, not here.
+    // component.
+    //
+    // THE PAGE-LEVEL CHECK THIS DEFERS TO DOES NOT EXIST YET. This comment
+    // said landmarks, page titles and region structure "belong to the
+    // page-level check on the built site" — and there is no axe run over
+    // `apps/site` or `apps/site/dist` anywhere in the repository. So the four
+    // rules disabled below are currently checked NOWHERE.
+    //
+    // Deferring them here is still right; claiming something else covers them
+    // was not. `scripts/check-a11y.ts` is that check: it runs these four rules
+    // over one built page per route kind, and `check:full` runs it.
     runOnly: {
       type: "tag",
       values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"],

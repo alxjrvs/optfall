@@ -9,7 +9,7 @@
  * `®` or the `™`. The only permitted variation from Legend Story Studios'
  * template is the substitution of the application name — already made.
  *
- * Reproduced character for character from `docs/PLAN.md` ("Required
+ * Reproduced character for character from `docs/DISCLAIMER.md` ("Required
  * disclaimer") and `docs/COMPLIANCE.md` (the canonical text block). It is a
  * single source line on purpose: a literal grep of this file, of any component
  * that inlines it, and of the built HTML must all match the same byte string.

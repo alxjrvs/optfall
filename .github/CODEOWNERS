@@ -1,0 +1,24 @@
+# Review is requested automatically on the paths where a well-meaning change is
+# most likely to break something the diff does not show.
+#
+# THIS IS NOT A GENERAL REVIEW REQUIREMENT, and that is deliberate. The default
+# branch requires no approving review — `scripts/repo-settings.sh` explains why:
+# an agent cannot approve its own pull request, so a blanket requirement would
+# block the automated completion path forever. That reasoning holds for code.
+# It does not hold for the four areas below, where the cost of a silent mistake
+# is a compliance problem, a broken gate, or a deploy that stops happening.
+
+# Legally load-bearing, machine-parsed, or both.
+/docs/                      @alxjrvs
+/LLM_STATEMENT.md           @alxjrvs
+/SECURITY.md                @alxjrvs
+
+# The gate, the deploy, and the script that asserts the repository's own
+# settings. A change here can turn every other check decorative.
+/.github/                   @alxjrvs
+/scripts/repo-settings.sh   @alxjrvs
+
+# The map every contributor and agent reads before acting.
+/CLAUDE.md                  @alxjrvs
+/CONTRIBUTING.md            @alxjrvs
+/.claude/                   @alxjrvs
