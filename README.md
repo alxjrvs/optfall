@@ -119,6 +119,19 @@ checks that read its output, and `dev-server`. Those are `check:full`, and
 **a green `check` is not a green gate**: anything touching rendered output, the
 disclaimer, or the token stylesheet needs `check:full` before it is pushed.
 
+**Contributing?** [`CONTRIBUTING.md`](CONTRIBUTING.md) is short and routes to
+the traps worth knowing before a first PR — chief among them that
+[`docs/DISCLAIMER.md`](docs/DISCLAIMER.md) is parsed programmatically, so a
+character changed there fails the build in five places. The fuller map is
+[`CLAUDE.md`](CLAUDE.md): it is named for the coding agents that work here, but
+it is where every convention in this repository is written down and a human
+gets more out of it than out of anything else.
+
+Found a wrong ruling, legality verdict or card fact? That is the failure this
+project cares most about — please
+[open an issue](https://github.com/alxjrvs/optfall/issues). Security problems go
+to [`SECURITY.md`](SECURITY.md) instead, privately.
+
 ## Licence
 
 Code is MIT. Published datasets are openly licensed over the structural work

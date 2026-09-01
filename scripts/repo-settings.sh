@@ -305,6 +305,30 @@ if [[ "$CHECK_ONLY" == false ]]; then
   # Dependabot alerts. A separate endpoint, and a PUT with no body.
   gh api -X PUT "repos/${REPO}/vulnerability-alerts" --silent
 
+  # Private vulnerability reporting. ANOTHER separate endpoint, another bodyless
+  # PUT, and the one that matters most for a live public site: without it the
+  # only channel a reporter has is a public issue, which publishes the
+  # vulnerability as the first step of reporting it. SECURITY.md names this as
+  # the way in, so the setting and the document have to agree.
+  gh api -X PUT "repos/${REPO}/private-vulnerability-reporting" --silent
+
+  # Secret scanning and push protection. Free on public repositories, and not
+  # merely belt-and-braces here: `scripts/.env.r2` establishes the pattern of a
+  # committed env-shaped file whose contents are `op://` REFERENCES rather than
+  # values. That file is fine. The next one, written by someone who copied its
+  # shape without reading its header, is what push protection is for.
+  #
+  # These live under `security_and_analysis`, a nested object, so they cannot
+  # ride along with the flat `-F key=value` PATCH above.
+  gh api -X PATCH "repos/${REPO}" --input - --silent <<'SECURITY_JSON'
+{
+  "security_and_analysis": {
+    "secret_scanning": { "status": "enabled" },
+    "secret_scanning_push_protection": { "status": "enabled" }
+  }
+}
+SECURITY_JSON
+
   note "applied"
   # Re-read so the assertions below judge what GitHub actually stored, not what
   # we asked it to store. If that re-read fails, keep the pre-apply snapshot:
@@ -345,6 +369,28 @@ elif [[ "$api_status" == "404" ]]; then
 else
   unk "vulnerability_alerts — HTTP ${api_status}; this token cannot read Dependabot alert status"
 fi
+
+# Same 204/404/403 shape as above.
+if api_get "repos/${REPO}/private-vulnerability-reporting" >/dev/null 2>&1; then
+  ok "private_vulnerability_reporting = true"
+elif [[ "$api_status" == "404" ]]; then
+  bad "private_vulnerability_reporting = false (expected true) — the only way to report a vulnerability is currently a public issue"
+else
+  unk "private_vulnerability_reporting — HTTP ${api_status}; this token cannot read it"
+fi
+
+# `security_and_analysis` is omitted entirely for a token without admin, which
+# is why an absent field reports unknown rather than drift. See the header: a
+# --check that cannot read a setting must say so, never guess.
+for feature in secret_scanning secret_scanning_push_protection; do
+  status="$(jq -r --arg f "$feature" \
+    '.security_and_analysis[$f].status // "unreadable"' <<<"$live_settings")"
+  case "$status" in
+    enabled) ok "${feature} = enabled" ;;
+    unreadable) unk "${feature} — not returned; this token cannot read security settings" ;;
+    *) bad "${feature} = ${status} (expected enabled)" ;;
+  esac
+done
 
 # ---------------------------------------------------------------------------
 # Default-branch ruleset
