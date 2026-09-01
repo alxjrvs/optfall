@@ -129,6 +129,20 @@ export function Document({
           of six: an SVG icon is served to every engine that supports one, and
           nothing here enumerates raster favicon sizes.
         */}
+        {/*
+          Every card page loads its face from a different origin, so the DNS
+          lookup and TLS handshake for `images.optfall.com` sit on the critical
+          path of the one image the page is about. `preconnect` starts them
+          while the HTML is still parsing.
+
+          Emitted on every page rather than only on card pages: the index and
+          search surfaces load faces too, and a preconnect that goes unused on
+          a handful of prose pages costs one speculative connection, where
+          getting the condition wrong costs a round trip on the pages that
+          matter most.
+        */}
+        <link rel="preconnect" href="https://images.optfall.com" />
+        <link rel="dns-prefetch" href="https://images.optfall.com" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {/*
           Installability, in the two channels that exist.
@@ -173,6 +187,27 @@ export function Document({
         ))}
       </head>
       <body>
+        {/*
+          FIRST FOCUSABLE THING ON EVERY PAGE, and it has to be first in the
+          DOM rather than merely positioned first — a skip link that is not the
+          initial tab stop skips nothing.
+
+          The header carries a nav and a search field, so without this a
+          keyboard user tabs through both on every one of 12,776 pages before
+          reaching the content they came for. Landmarks already exist and serve
+          screen readers; this is the other half, for people navigating by
+          keyboard without one.
+
+          NO AUTOMATED RULE CATCHES ITS ABSENCE, WHICH IS WHY IT IS EASY TO GO
+          WITHOUT. axe's `bypass` is the closest, and it is satisfied by a
+          `<main>` landmark alone — measured, by stripping this link from a
+          built page and re-running: no violation either way. So this is here
+          on the merits for keyboard users, not to make a check go green, and
+          `scripts/check-a11y.ts` will not notice if somebody deletes it.
+        */}
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
         <div className="shell">
           {/*
             THE HEADER IS THE SHELL'S, NOT A PAGE'S, and `section: "none"` is
@@ -188,7 +223,9 @@ export function Document({
               fieldIsland={result.headerSearchIsland ?? false}
             />
           )}
-          <main data-width={result.width ?? "measure"}>{result.children}</main>
+          <main id="main" data-width={result.width ?? "measure"}>
+            {result.children}
+          </main>
         </div>
         {/*
           THE DISCLAIMER IS EMITTED BY THE SHELL, NOT BY A PAGE, and it is not

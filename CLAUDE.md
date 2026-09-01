@@ -16,8 +16,12 @@ assertion, typecheck and tests. Ordered cheapest first, so the commonest
 failures surface in under two seconds.
 
 The other three need a full 12,776-page build and are `bun run check:full`
-(under 2 min): `build` itself, the `disclaimer`, `built-tokens` and
-`card-notice` checks that read its output, and `dev-server`.
+(under 2 min): `build` itself, the `disclaimer`, `built-tokens`, `card-notice`
+and `a11y` checks that read its output, and `dev-server`.
+
+`check:a11y` runs the four document-level axe rules that `a11y.test.tsx`
+deliberately cannot — a fragment cannot satisfy `region`, `landmark-one-main`,
+`page-has-heading-one` or `bypass` — over one built page per route kind.
 
 **Anything touching rendered output, the disclaimer, attribution copy or the
 token stylesheet needs `check:full` before it is pushed.** A green `check` is

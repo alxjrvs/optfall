@@ -50,6 +50,7 @@
       "Bash(bun run check:provenance)",
       "Bash(bun run check:disclaimer)",
       "Bash(bun run check:card-notice)",
+      "Bash(bun run check:a11y)",
       "Bash(bun run check:dev-server)",
       "Bash(bun run check:design-system)",
       "Bash(bun run typecheck)",

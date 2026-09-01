@@ -753,12 +753,11 @@ async function runAxe(dom: JSDOM): Promise<axe.Result[]> {
     // said landmarks, page titles and region structure "belong to the
     // page-level check on the built site" — and there is no axe run over
     // `apps/site` or `apps/site/dist` anywhere in the repository. So the four
-    // rules disabled below are currently checked NOWHERE, and one of them,
-    // `bypass`, is what would catch a missing skip link.
+    // rules disabled below are currently checked NOWHERE.
     //
     // Deferring them here is still right; claiming something else covers them
-    // was not. Building that check is queued work, and when it lands this
-    // comment should name it rather than describe it.
+    // was not. `scripts/check-a11y.ts` is that check: it runs these four rules
+    // over one built page per route kind, and `check:full` runs it.
     runOnly: {
       type: "tag",
       values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"],

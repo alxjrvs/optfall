@@ -42,8 +42,13 @@
     //
     // No `not_found_handling`: a miss here must reach the Worker, because the
     // Worker's whole job is to answer for paths no file exists at.
-    "directory": "./public",
-    "binding": "ASSETS"
+    "directory": "./public"
+    // NO `binding`. It declared `ASSETS` and nothing read it: `Env` in
+    // `src/index.ts` names only `FACES`, and no code in this app references
+    // `env.ASSETS`. Asset serving does not need it — Cloudflare matches
+    // `robots.txt` and answers it BEFORE the Worker is invoked, which is the
+    // whole reason that file is here rather than in the handler. A binding
+    // exists to let code fetch an asset itself, and no code here does.
   },
   "r2_buckets": [
     {
