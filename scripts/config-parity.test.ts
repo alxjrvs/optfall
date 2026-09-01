@@ -18,7 +18,6 @@ import { join } from "node:path";
 import { ROOT } from "./lib/root";
 
 import { DARK_TOKENS } from "../packages/theme/src/tokens";
-
 const read = (path: string): string => readFileSync(join(ROOT, path), "utf8");
 
 /* ------------------------------------------------------------------------ */
