@@ -17,9 +17,17 @@
  * ONE KIND OF ROUTE NOW, WHERE THERE WERE THREE. The old `CardRoute` was a
  * discriminated union of card / shared-name / printing, and its exhaustiveness
  * was load-bearing: it caught the printing route's own arrival at build time.
- * There is nothing left to discriminate — `/card/<slug>` and `/card/<name>` are
- * redirects — so the union collapsed to a record and the branching in this file
- * went with it.
+ * There is nothing left to discriminate — `/card/<slug>` and `/card/<name>` do
+ * not resolve at all — so the union collapsed to a record and the branching in
+ * this file went with it.
+ *
+ * THAT SENTENCE SAID "ARE REDIRECTS" UNTIL IT WAS CHECKED. They were, while
+ * `hostConfig.ts` still carried 12,278 exact-path rules; they have 404'd since
+ * the commit that retired the table, and the comment went on describing the
+ * build it was written against. Two reader-facing paragraphs repeated the claim
+ * — `search.page.tsx`'s `<noscript>` and `CardSearch.tsx`'s index-failure
+ * notice — so a stale comment here was not merely stale: it was the reason the
+ * site told people to visit a URL that returns nothing.
  *
  * EVERY PATH IS EMITTED AT BUILD TIME. There is no fallback renderer: a URL
  * either names a printing Legend Story Studios has published or it 404s, which
