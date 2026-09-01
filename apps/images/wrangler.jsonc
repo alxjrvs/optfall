@@ -23,6 +23,16 @@
   // This file is public and contains no secrets, and must never contain one.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "optfall-images",
+  // NO `<name>.workers.dev` COPY OF THE FACE HOST, and this file's own sibling
+  // already argues why. `deploy-cloudflare.yml` refuses to build a preview for
+  // this Worker because that would be "another public host serving licensed
+  // card art under a URL nobody is watching" — and the default workers.dev
+  // subdomain is exactly that, created automatically rather than by anyone
+  // deciding to.
+  //
+  // `preview_urls` is the same hazard on the per-version URLs.
+  "workers_dev": false,
+  "preview_urls": false,
   "main": "./src/index.ts",
   "compatibility_date": "2026-08-18",
   "assets": {

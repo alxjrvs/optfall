@@ -92,6 +92,34 @@ export const HEADERS: readonly HeaderRule[] = [
       "Referrer-Policy": "strict-origin-when-cross-origin",
     },
   },
+  /*
+    EVERY FILE UNDER `/assets/` CARRIES ITS OWN DIGEST, WHICH IS WHAT MAKES A
+    YEAR HONEST. Vite sets no `assetFileNames`, so its default
+    `assets/[name]-[hash][extname]` applies to the stylesheet and the island
+    bundles, and `searchIndexes.ts` writes `assets/${name}-${digest}.json`.
+    Content that changes gets a new name, so a cached copy can never be the
+    wrong answer — the same argument the face host makes for its own
+    `immutable`.
+
+    Until this rule existed there was NO `Cache-Control` here at all, and the
+    platform default made a returning reader revalidate every asset on every
+    navigation. That is a conditional round trip per asset per page view, paid
+    forever, to re-fetch bytes that are addressed by their own hash.
+
+    `/*` IS DELIBERATELY LEFT ALONE. Pages must revalidate: the corpus syncs,
+    and a stale card page is a wrong answer rather than a slow one — which is
+    the whole product. Do not "finish the job" by adding a long TTL to the
+    wildcard; the asymmetry is the point.
+
+    This block sits BELOW the wildcard on purpose. Cloudflare applies the most
+    specific match, but a later same-pattern block REPLACES an earlier one
+    rather than merging — the failure `headersFor` was written to avoid — so
+    the ordering here is kept explicit rather than incidental.
+  */
+  {
+    pattern: "/assets/*",
+    headers: { "Cache-Control": "public, max-age=31536000, immutable" },
+  },
   {
     pattern: "/manifest.webmanifest",
     headers: { "Content-Type": "application/manifest+json" },

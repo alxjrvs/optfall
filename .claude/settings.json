@@ -1,6 +1,20 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
+    "deny": [
+      "Read(./data/cards/cards.json)",
+      "Read(data/cards/cards.json)",
+      "Bash(grep:*data/cards/cards.json*)",
+      "Bash(rg:*data/cards/cards.json*)",
+      "Bash(cat:*data/cards/cards.json*)",
+      "Bash(head:*data/cards/cards.json*)",
+      "Bash(tail:*data/cards/cards.json*)",
+      "Bash(bun run corpus:*)",
+      "Bash(bun run symbols)",
+      "Bash(bun run check:symbols)",
+      "Bash(bun run check:repo-settings)",
+      "Bash(bun run check:face-orientation)"
+    ],
     "allow": [
       "Bash(bun install)",
       "Bash(bun run check)",
