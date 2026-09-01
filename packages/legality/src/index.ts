@@ -498,9 +498,11 @@ export function isLegal(
  *
  * `isLegal` still throws {@link NotImplementedError}: joining these two needs
  * the card dataset, and the community dataset ships no licence (see
- * `docs/PHASE-2-REPORT.md`). Both halves work today regardless — a caller can
- * read `FORMAT_RULES` for construction limits and `statusAsOf` for card status
- * without waiting for that licence.
+ * `docs/ROADMAP.md`, "The upstream licence request", which records that the
+ * request was drafted and never sent, and that it is not a gate on this work).
+ * Both halves work today regardless — a caller can read `FORMAT_RULES` for
+ * construction limits and `statusAsOf` for card status without waiting for
+ * that licence.
  *
  * This is a module cycle: both files import `isFormatId`/`isIsoDate`/`FORMATS`
  * from here. It is a safe one — neither reads a binding from this module at

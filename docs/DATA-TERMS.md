@@ -103,7 +103,7 @@ possible to disagree with it on the merits:
 
 3. **We are asking upstream for a permissive licence.** Optfall's dependency on
    the community card dataset turns on that maintainer choosing permissive terms
-   (see [`upstream-licence-issue.md`](upstream-licence-issue.md)). Asking for
+   (see [`ROADMAP.md`](ROADMAP.md#the-upstream-licence-request)). Asking for
    permissive while giving copyleft is bad faith, and it weakens the ask.
 
 4. **ShareAlike over a mixed corpus is a trap for the people who trust us.**
@@ -209,9 +209,10 @@ underlying game content. So, until that resolves:
 - Consumers who want the card corpus itself should go to the upstream repository
   and form their own view of what its absent licence permits.
 
-We have drafted a courteous request for an explicit licence
-([`upstream-licence-issue.md`](upstream-licence-issue.md)). This section gets
-rewritten when it resolves.
+We have drafted a courteous request for an explicit licence and have not sent
+it; its status is in
+[`ROADMAP.md`](ROADMAP.md#the-upstream-licence-request), and the drafted text is
+in the git history. This section gets rewritten when it resolves.
 
 ---
 

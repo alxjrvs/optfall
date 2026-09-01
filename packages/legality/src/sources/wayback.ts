@@ -6,10 +6,10 @@
  *
  * `docs/PLAN.md` calls the existence of a public archive of past
  * banned-and-restricted revisions "the question that decides a headline
- * feature". `docs/PHASE-2-REPORT.md` answers it: **yes, and the Wayback
- * Machine is the route.** LSS's own host returns HTTP 403 to automated
- * fetches; the archive serves the same documents without complaint and needs
- * no API key.
+ * feature". `docs/ROADMAP.md` answers it under "Phase 3 — Legality that
+ * remembers", in "What blocks it": **yes, and the Wayback Machine is the
+ * route.** LSS's own host returns HTTP 403 to automated fetches; the archive
+ * serves the same documents without complaint and needs no API key.
  *
  * ## What this module does, and deliberately does not do
  *
@@ -21,10 +21,11 @@
  * the prose, and that omission is a decision rather than an unfinished edge.
  * The announcements are editorial prose, not tables — the 21 Sep 2021 article
  * says "removing Seeds of Agony from the Classic Constructed format", not a
- * field called `banned`. `docs/PHASE-2-REPORT.md` fixes the only admissible
- * method: closed-vocabulary matching against the card dataset (which is
- * currently unlicensed, so it does not exist here yet), with **human review of
- * every extracted entry before publication**. A wrong ban date is precisely
+ * field called `banned`. `docs/ROADMAP.md` fixes the only admissible method
+ * ("Phase 3 — Legality that remembers", under "What blocks it"):
+ * closed-vocabulary matching against the card dataset (which is currently
+ * unlicensed, so it does not exist here yet), with **human review of every
+ * extracted entry before publication**. A wrong ban date is precisely
  * the failure this project exists to eliminate, so the retrieval layer stops
  * where the guessing would start.
  *

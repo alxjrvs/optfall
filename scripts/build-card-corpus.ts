@@ -59,7 +59,11 @@
  *
  * The argument was sound and the delivery was missing, which is the only reason
  * it went. If a published data product is wanted, it is a good design: build it
- * again, serve it from the site or a release, and say so in `docs/SOURCES.md`.
+ * again, serve it from the site or a release, and say where it came from and
+ * what may be done with it — the upstream commit this script records is the
+ * provenance half, and `docs/DATA-TERMS.md` carries the terms half for
+ * everything Optfall publishes. (That clause named a per-upstream
+ * source-verification document, retired 2026-09-01; it is in the git history.)
  * A file nobody can fetch is not a smaller download, it is a bigger repository.
  *
  * WHAT IS DELIBERATELY NOT HERE. No slug, no permalink, no derived legality

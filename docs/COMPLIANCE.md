@@ -757,8 +757,10 @@ they are properties that erode silently unless something fails loudly.
   model-generated content; see [`DATA-TERMS.md`](DATA-TERMS.md), which states
   this as a warranty to consumers rather than an internal preference.
 - **Upstream dataset licence.** The community card dataset we depend on ships no
-  licence. See [`upstream-licence-issue.md`](upstream-licence-issue.md) for the
-  request and the interim position. Until it resolves, we do not republish that
+  licence. The request for one was drafted and never sent — see
+  [`ROADMAP.md`](ROADMAP.md#the-upstream-licence-request), which also records
+  that it is not a gate on the work behind it; the interim position is in
+  [`DATA-TERMS.md`](DATA-TERMS.md). Until it resolves, we do not republish that
   dataset's files verbatim.
 
 ---

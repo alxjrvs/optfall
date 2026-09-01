@@ -737,8 +737,9 @@ describe("the retrieval pipeline, end to end", () => {
 
   test("this module stops at retrieval: nothing here names a card or a ban", () => {
     // Extraction is closed-vocabulary matching against the card dataset, with
-    // human review before publication (docs/PHASE-2-REPORT.md). It is not
-    // implemented, and its absence is the design rather than a gap.
+    // human review before publication (docs/ROADMAP.md, "Phase 3 — Legality
+    // that remembers", under "What blocks it"). It is not implemented, and its
+    // absence is the design rather than a gap.
     const exported = Object.keys({
       buildCdxUrl,
       parseCdxResponse,
