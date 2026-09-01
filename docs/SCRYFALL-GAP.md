@@ -4,8 +4,9 @@
 
 This document is a comparative analysis of Optfall as it stands on `main` against
 Scryfall, and a remove/update/extend plan to close the distance. It exists
-because the repository currently contradicts itself: `docs/PLAN.md` was rewritten
-on 2026-08-11 to make the card layer the product, and `docs/DESIGN.md` was not.
+because the repository currently contradicts itself: the build plan — now
+`docs/ROADMAP.md` — was rewritten on 2026-08-11 to make the card layer the
+product, and `docs/DESIGN.md` was not.
 Every symptom below traces back to that one unreconciled edit.
 
 ---
@@ -28,24 +29,29 @@ all), and `RulesSearch` mounts on `/cr`. The Astro page named here,
 [#107](https://github.com/alxjrvs/optfall/pull/107) deleted it.
 
 **`docs/DESIGN.md` still encodes the abandoned position, in two named places.**
+✅ Fixed — both are struck through in `DESIGN.md` itself, with the replacement
+beside them, which is this repository's convention for a reversed decision.
 
 - The principles table, row 5: *"The unit is the verdict, not the card. Card
   pages exist, but the shareable objects are `/i/…` interactions and `/cr/…`
-  rules."*
+  rules."* — now struck, replaced by *"The unit is the card, and the rules and
+  rulings attach to it."*
 - Screen 5: *"Card page — **supporting cast, explicitly not a destination.**"*
+  — now struck, replaced by *"The destination."*
 
-`docs/PLAN.md` Phase 2 now says the opposite in as many words: *"cards are what
-people arrive for,"* and *"a card page that cannot be linked is a lookup rather
-than a reference."* Both documents are checked in, both are published, and they
-disagree about what the product is.
+`docs/ROADMAP.md` Phase 2 says the same thing: search, card pages and printings
+are the product, because cards are what people arrive for and a card page that
+cannot be linked is a lookup rather than a reference. The two documents agreed
+some time ago; this section went on
+saying they did not, which is the failure it was itself written to describe.
 
 **The two searches are strangers.** `/search` answers rules, `/cards` answers
 cards, and the card query parser explicitly refuses to bridge them —
-`PENDING_OPERATORS` in `apps/site/src/lib/card-search.ts` documents `cr:` as
+`PENDING_OPERATORS` in `apps/site/src/lib/card-search/grammar.ts` documents `cr:` as
 *"searches the Comprehensive Rules — that lives at /search, not here."* A card
-page links to no rule; a rule page lists no card. `docs/PLAN.md` Phase 4 lists
-*"Card ↔ rules cross-reference, the join nothing currently makes"* as a
-deliverable, and it is scheduled two phases after the surface that needs it.
+page links to no rule; a rule page lists no card. The card ↔ rules
+cross-reference — the join nothing currently makes — was a Phase 4 deliverable
+(`docs/ROADMAP.md`), scheduled two phases after the surface that needs it.
 
 **And no card has ever had a face.** `image_url` is present on 16,498 of 16,502
 printings, typed on `CardPrinting`, carried through the corpus build — and
@@ -155,7 +161,7 @@ Deletions first, because most of the confusion is *surplus*, not absence.
 - **`docs/DESIGN.md` principles table, row 5** — *"The unit is the verdict, not
   the card."* Replaced by the card as the unit, with interactions and rules as
   objects that attach to it. Record the change in place rather than deleting it,
-  the way `PLAN.md` records its own reordering.
+  the way `ROADMAP.md` records its own reordering.
 - **`docs/DESIGN.md` Screen 5's framing** — *"supporting cast, explicitly not a
   destination."* It is now Screen 1.
 - **`docs/DESIGN.md` open question "Card rendering"** — the position that the
@@ -256,8 +262,8 @@ promise is load-bearing: it is the
 "no uptime story to fail" the Stack section is built on. Serving images needs a
 function. Putting that function on the main site would trade the guarantee for
 the whole product; putting it on its own deploy confines the runtime to the one
-layer `docs/PLAN.md` already designates as expendable: *"Losing images costs a
-rendering layer, never the product."* The main site stays a pile of static
+layer this project already designates as expendable: losing images costs a
+rendering layer, never the product. The main site stays a pile of static
 files, and if the image host is down, cards render as NO IMAGE and every fact on
 every page is still correct.
 
@@ -594,8 +600,8 @@ found" — which is the honest output and exactly what "degrade visibly" asks fo
 - **On a card page**, each keyword becomes a citation to the rule that governs
   it. `Dominate` on the card, `cr:8.3.4` beside it, one click to the text.
 - **On a rule page**, the reverse — the cards carrying that keyword. This is the
-  join `docs/PLAN.md` calls "the join nothing currently makes", and it is the
-  content that makes a rules corpus worth visiting.
+  join nothing currently makes, and it is the content that makes a rules
+  corpus worth visiting.
 - **In the query language**, `cr:8.3.4` finds every card the rule governs, and
   `cr:dominate` resolves the name to the same set. The operator stops being an
   apology and starts being the thing no other tool has.
@@ -812,7 +818,7 @@ everything else renders against exists before anything tries to render.
 | **G** ✅ | `set.json` + decode tables; `/sets`; `unique:`; `order:released` | ~2 days | The corpus gets a spine |
 | **H** ✅ | Grammar: AST, negation/`OR`/parens, comparisons, `flavor:` | ~1 week | Search becomes a language |
 
-Reconciling `DESIGN.md` with `PLAN.md` folded into **E**, as planned: the
+Reconciling `DESIGN.md` with the build plan folded into **E**, as planned: the
 redesign is where those positions became code.
 
 **Every row has shipped.** One item planned for E landed in G instead —
@@ -837,7 +843,8 @@ table had drifted the same way and has been corrected — it listed `artist`,
 
 **What is deliberately still open is `is:`**, and it is not schedulable: it
 filters judge-verified rulings, which need the interaction corpus from
-`docs/PLAN.md` Phase 5, which is gated on judges rather than on code. The engine
+`docs/ROADMAP.md` Phase 5, which is gated on judges rather than on code. The
+engine
 says exactly that when anybody types it.
 
 **One thing E gained that was not planned**: pitch versions became one tabbed
@@ -852,7 +859,8 @@ are banned at one pitch and legal at another.
 ## 9. Still out of scope, and why
 
 - **Prices and the collector economy.** The most contested territory in the game
-  (`docs/PLAN.md`), and the one addition here that would need a refresh cadence
+  (`docs/ROADMAP.md`), and the one addition here that would need a refresh
+  cadence
   — which is the thing a corpus pinned by commit cannot give it. A stale price
   is the confidently-wrong answer this project claims it cannot produce.
   **Purchase links are not this**, and shipped separately: a link says "this

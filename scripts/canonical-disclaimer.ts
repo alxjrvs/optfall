@@ -1,8 +1,8 @@
 /**
- * The canonical Legend Story Studios disclaimer, read from `docs/PLAN.md`.
+ * The canonical Legend Story Studios disclaimer, read from `docs/DISCLAIMER.md`.
  *
- * `docs/PLAN.md` ("Required disclaimer") is the specification, so this module
- * reads the string out of it rather than restating it. Nothing here retypes the
+ * `docs/DISCLAIMER.md` ("Required disclaimer") is the specification, so this
+ * module reads the string out of it rather than restating it. Nothing here retypes the
  * text — a copy that can be edited independently is exactly the failure mode
  * `docs/COMPLIANCE.md` §4 is written to prevent.
  *
@@ -15,11 +15,29 @@
  * Run directly to print it:  `bun scripts/canonical-disclaimer.ts`
  */
 import { readFileSync } from "node:fs";
+import { repoFile } from "./lib/root";
 
-/** Where the specification lives, relative to the repository root. */
-const PLAN_PATH = "docs/PLAN.md";
+/**
+ * Where the specification lives, relative to the repository root.
+ *
+ * This was `docs/PLAN.md` until that file was retired. A legally load-bearing
+ * specification living inside a roadmap is what made an ordinary prose edit
+ * able to change it, so it now has a file whose only job is to be this.
+ */
+const DISCLAIMER_PATH = repoFile("docs/DISCLAIMER.md");
 
 const HEADING = "### Required disclaimer";
+
+/**
+ * The shortest string that could be the whole disclaimer.
+ *
+ * The real one is 241 characters. This is deliberately well below that rather
+ * than exact — the requirement is LSS's and could legitimately be reworded, and
+ * a threshold that has to move on every wording change is one somebody edits
+ * without reading. It only has to be far enough above a truncation to catch it:
+ * the first sentence alone is 58 characters.
+ */
+const MINIMUM_LENGTH = 120;
 
 /**
  * Markdown prose with its blockquote markers removed and every run of
@@ -59,18 +77,25 @@ export function normalizeHtmlWhitespace(html: string): string {
 }
 
 /**
- * Extract the disclaimer from the text of `docs/PLAN.md`.
+ * Extract the disclaimer from the text of `docs/DISCLAIMER.md`.
  *
  * Throws rather than returning a fallback: a missing section means the
  * specification moved, and a checker that quietly compares against `""` would
  * pass on every page in the site.
+ *
+ * THE PARTIAL CASE IS THE DANGEROUS ONE, and it is why {@link MINIMUM_LENGTH}
+ * exists. A blank line inside the blockquote ends the loop below early, and the
+ * result is a PREFIX of the real disclaimer — which is still present, in full,
+ * on every built page. So `check-disclaimer.ts` would find it and pass, having
+ * silently narrowed what it checks for. An empty result fails loudly; a
+ * truncated one did not, until this threshold was added.
  */
-export function canonicalDisclaimer(planMarkdown: string): string {
-  const lines = planMarkdown.split(/\r?\n/);
+export function canonicalDisclaimer(disclaimerMarkdown: string): string {
+  const lines = disclaimerMarkdown.split(/\r?\n/);
   const start = lines.findIndex((line) => line.trim() === HEADING);
   if (start === -1) {
     throw new Error(
-      `${PLAN_PATH} has no "${HEADING}" section — the disclaimer specification moved, and every check that reads it is now blind.`,
+      `${DISCLAIMER_PATH} has no "${HEADING}" section — the disclaimer specification moved, and every check that reads it is now blind.`,
     );
   }
 
@@ -88,16 +113,26 @@ export function canonicalDisclaimer(planMarkdown: string): string {
 
   if (quoted.length === 0) {
     throw new Error(
-      `${PLAN_PATH}'s "${HEADING}" section contains no blockquote — the disclaimer must stay a blockquote, since that is what identifies it.`,
+      `${DISCLAIMER_PATH}'s "${HEADING}" section contains no blockquote — the disclaimer must stay a blockquote, since that is what identifies it.`,
     );
   }
 
-  return normalizeProse(quoted.join("\n"));
+  const disclaimer = normalizeProse(quoted.join("\n"));
+
+  if (disclaimer.length < MINIMUM_LENGTH) {
+    throw new Error(
+      `${DISCLAIMER_PATH}'s "${HEADING}" blockquote extracted to ${disclaimer.length} characters, below the ${MINIMUM_LENGTH} a complete disclaimer runs to. A blank line inside the blockquote ends extraction early, and the truncation would still be found on every built page — so this fails here rather than passing everywhere. Received: ${JSON.stringify(disclaimer)}`,
+    );
+  }
+
+  return disclaimer;
 }
 
 /** Read and extract in one step, for callers running from the repository root. */
-export function readCanonicalDisclaimer(planPath: string = PLAN_PATH): string {
-  return canonicalDisclaimer(readFileSync(planPath, "utf8"));
+export function readCanonicalDisclaimer(
+  disclaimerPath: string = DISCLAIMER_PATH,
+): string {
+  return canonicalDisclaimer(readFileSync(disclaimerPath, "utf8"));
 }
 
 if (import.meta.main) {

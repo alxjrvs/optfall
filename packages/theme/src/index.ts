@@ -323,7 +323,7 @@ function indentBlock(block: string, pad: string): string {
  * Emitting both from one function is what keeps the two modes in step. There is
  * no build step that could apply to one and not the other, and no hand-written
  * CSS file to fall out of date with the tokens — which is the mechanism behind
- * `docs/PLAN.md`'s claim that a theme is swapped "at the token layer alone".
+ * the claim that a theme is swapped at the token layer alone.
  *
  * `color-scheme` IS EMITTED HERE, KEYED TO THE SAME SELECTORS AS THE PALETTE,
  * and that pairing is the whole point. It governs the chrome the *browser*
@@ -338,8 +338,7 @@ function indentBlock(block: string, pad: string): string {
  * got the dark palette and light system chrome. Keyed to the attribute instead,
  * the scheme cannot disagree with the tokens it ships beside, because the same
  * three selectors carry both — and every surface that installs this stylesheet
- * gets it without restating it. `docs/PLAN.md`: swapped at the token layer
- * alone.
+ * gets it without restating it: swapped at the token layer alone.
  *
  * EVERY SELECTOR HERE IS `:root`, which is a real limit rather than an
  * incidental one: this styles a *document*, so it cannot put the light palette

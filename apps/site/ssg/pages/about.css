@@ -78,14 +78,6 @@
   border-block-start: var(--of-ornament-rule-width) solid var(--of-color-rule);
 }
 
-.of-about__source dt {
-  font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-micro);
-  letter-spacing: var(--of-type-tracking-wide);
-  text-transform: uppercase;
-  color: var(--of-color-ink-muted);
-}
-
 .of-about__source dd {
   margin: 0;
   display: grid;

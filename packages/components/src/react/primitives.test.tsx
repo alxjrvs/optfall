@@ -478,7 +478,7 @@ describe("ResultRow", () => {
      * The caller's mark is commonly a component that returns `null` — a card
      * with no pitch draws no stone — and a component is a truthy element even
      * when it renders nothing, so a wrapper here would put an empty span,
-     * carrying whatever margin it owned, on every such row in a 12,776-page
+     * carrying whatever margin it owned, on every such row in a 12,777-page
      * build.
      */
     const Nothing = () => null;
@@ -570,8 +570,9 @@ describe("Pagination", () => {
   test("every control is a real link, because a page of results is an address", () => {
     /*
      * The whole reason this component takes `href` callbacks rather than
-     * rendering buttons: `docs/PLAN.md` Phase 4, "the permalink is the
-     * product". Buttons would make page 4 of a search unshareable and
+     * rendering buttons: `docs/ROADMAP.md` Phase 4 puts every rules paragraph
+     * at a permanent URL, and the permalink is the product. Buttons would make
+     * page 4 of a search unshareable and
      * unopenable in a new tab, which is how a reader compares two pages of one
      * answer.
      */
