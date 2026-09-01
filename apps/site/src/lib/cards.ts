@@ -63,6 +63,10 @@
 
 import type { PitchValue, StateTone } from "optfall-theme";
 
+/* `card-text` imports `card-symbols` and nothing else, so this direction is
+   safe: the module that loads the 18 MB corpus depends on the parser, never the
+   other way round. */
+import { plainCardText } from "./card-text";
 import { faceKeyFor, orientationOfFace } from "./faces";
 /* Imported as well as re-exported: a re-export creates no local binding, and
    `CARD_ROUTES` below both calls `facesOf` and names `PrintingRef`. */
@@ -1470,8 +1474,17 @@ export function titleFor(page: CardPage, label: string = page.label): string {
  * and legality lives on the page, where it is dated and evidenced.
  *
  * The card text is flattened to one line because an HTML attribute cannot carry
- * a newline. That is the only change made to it, it is made here and nowhere
- * else, and the page body renders every line break intact.
+ * a newline, and it is flattened through {@link plainCardText} rather than by
+ * collapsing whitespace.
+ *
+ * THAT DISTINCTION IS A BUG FIX, AND THIS COMMENT USED TO STATE THE BUG AS A
+ * VIRTUE. It read "That is the only change made to it" — which was accurate and
+ * was exactly the problem. Upstream writes emphasis as `**bold**` and symbols as
+ * `{p}`, so a whitespace-only flatten published "6 or more {p} … **intimidate**"
+ * to the one surface that cannot render either: Markdown reached 7,927 of 11,378
+ * card pages and symbol tokens 5,704, and `og:description` inherits this string,
+ * so it is what a search result and a chat unfurl both show. The page body was
+ * always correct; only the description was not.
  */
 export function descriptionFor(page: CardPage): string {
   const stats = page.stats.map((stat) => `${stat.label} ${stat.value}`);
@@ -1480,7 +1493,7 @@ export function descriptionFor(page: CardPage): string {
   const head = [page.card.type_text.trim(), stats.join(" · ")]
     .filter((part) => part !== "")
     .join(". ");
-  const body = page.card.functional_text.replace(/\s+/g, " ").trim();
+  const body = plainCardText(page.card.functional_text);
 
   if (body === "") {
     return truncateAtWord(
