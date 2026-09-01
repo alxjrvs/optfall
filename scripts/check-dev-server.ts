@@ -62,6 +62,7 @@
  * disagree when there is only one of them.
  */
 import { CARD_ROUTES } from "../apps/site/src/lib/cards";
+import { RULE_PAGES } from "../apps/site/src/lib/rules";
 import { serveReadyLine } from "../apps/site/ssg/serveBanner";
 
 /**
@@ -81,7 +82,7 @@ import { serveReadyLine } from "../apps/site/ssg/serveBanner";
 const PORT = 4399;
 
 /**
- * Generous, because `dev` BUILDS before it serves — 12,776 pages plus a Vite
+ * Generous, because `dev` BUILDS before it serves — 12,777 pages plus a Vite
  * bundle, on a cold CI runner. The old value was 120s and covered a dev server
  * that rendered nothing up front.
  */
@@ -125,6 +126,32 @@ if (!defaultRoute || !alternateRoute) {
   process.exit(1);
 }
 
+/*
+ * A RULE PERMALINK, AND DELIBERATELY A LETTERED ONE.
+ *
+ * `/cr` was checked and no `/cr/<id>` ever was, so this file reported all
+ * routes serving while 1,269 of the 1,278 rule pages returned 404 under
+ * `bun run dev`. The server decided file-versus-route by testing the URL for a
+ * trailing dot and alphanumerics — which is the exact shape of a rule id, so
+ * `/cr/8.3.4b` was looked up as a literal file and missed the `index.html`
+ * sitting beside it.
+ *
+ * Picked from `RULE_PAGES` rather than written out, for the reason the card
+ * routes above are: a hardcoded id rots the first time the CR is re-cut. The
+ * subrule letter is what makes it a regression test rather than a smoke test —
+ * a bare `/cr/1` never reproduced the bug.
+ */
+const rulePage = RULE_PAGES.find((page) =>
+  /^\d+(?:\.\d+)+[a-z]$/.test(page.section.number),
+);
+
+if (!rulePage) {
+  console.log(
+    "::error::RULE_PAGES has no lettered subrule, so the permalink shape that broke the dev server is unchecked. That is a broken corpus, not a reason to skip.",
+  );
+  process.exit(1);
+}
+
 const checks: Check[] = [
   { path: "/", contentType: "text/html" },
   { path: "/search", contentType: "text/html" },
@@ -145,7 +172,7 @@ const checks: Check[] = [
    * THE PWA SURFACE, which is a fourth mechanism: the manifest and the install
    * icon are derived like the favicon, and `sw.js` is written by Workbox after
    * everything else exists. Every page links the manifest and registers the
-   * worker, so a missing one of these is 12,776 pages pointing at nothing.
+   * worker, so a missing one of these is 12,777 pages pointing at nothing.
    */
   { path: "/manifest.webmanifest", contentType: "application/manifest+json" },
   { path: "/icon.svg", contentType: "image/svg+xml" },
@@ -177,6 +204,7 @@ const checks: Check[] = [
   { path: "/sw-purge.js", contentType: "text/javascript" },
   { path: defaultRoute.href, contentType: "text/html" },
   { path: alternateRoute.href, contentType: "text/html" },
+  { path: `/cr/${rulePage.section.number}`, contentType: "text/html" },
   /*
    * THE 404 PAGE, WHICH NOTHING ELSE HERE WOULD NOTICE VANISHING.
    *

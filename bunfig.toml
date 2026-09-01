@@ -17,8 +17,15 @@
 # render real primitives instead of mocks. It also made `bun test` fail
 # completely when run from anywhere but the repository root, because the preload
 # path was resolved from the working directory. Both the loader and the
-# constraint are gone with the Svelte sources — `bun test` now works from any
-# directory.
+# constraint are gone with the Svelte sources.
+#
+# THAT SENTENCE ENDED "`bun test` now works from any directory", AND IT WAS NOT
+# TRUE. Six test files read repository paths as bare relative strings, so they
+# resolved against the process's working directory and threw ENOENT from
+# anywhere but the root. It is true now: those reads go through
+# `scripts/lib/root.ts`, which resolves from `import.meta.url`. Keep it that way
+# — a test that says `readFileSync("docs/…")` re-breaks it silently, because it
+# still passes from the root.
 
 [install]
 exact = true

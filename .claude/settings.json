@@ -1,6 +1,43 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-data.sh"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
+    "deny": [
+      "Read(./data/cards/cards.json)",
+      "Read(data/cards/cards.json)",
+      "Bash(grep:*data/cards/cards.json*)",
+      "Bash(rg:*data/cards/cards.json*)",
+      "Bash(cat:*data/cards/cards.json*)",
+      "Bash(head:*data/cards/cards.json*)",
+      "Bash(tail:*data/cards/cards.json*)",
+      "Bash(bun run corpus:*)",
+      "Bash(bun run symbols)",
+      "Bash(bun run check:symbols)",
+      "Bash(bun run check:repo-settings)",
+      "Bash(bun run check:face-orientation)"
+    ],
     "allow": [
       "Bash(bun install)",
       "Bash(bun run check)",
@@ -12,8 +49,10 @@
       "Bash(bun run check:built-tokens)",
       "Bash(bun run check:bun-version)",
       "Bash(bun run check:provenance)",
+      "Bash(bun run check:coverage)",
       "Bash(bun run check:disclaimer)",
       "Bash(bun run check:card-notice)",
+      "Bash(bun run check:a11y)",
       "Bash(bun run check:dev-server)",
       "Bash(bun run check:design-system)",
       "Bash(bun run typecheck)",
@@ -29,7 +68,16 @@
       "Bash(gh run view:*)",
       "Bash(gh run list:*)",
       "Bash(rg:*)",
-      "Bash(git worktree list:*)"
+      "Bash(git worktree list:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(bun run format)",
+      "Bash(bun run --cwd apps/site dev)",
+      "Bash(bun pm ls:*)",
+      "Bash(bun pm untrusted)"
     ]
   }
 }

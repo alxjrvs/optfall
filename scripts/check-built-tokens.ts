@@ -35,22 +35,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { DARK_TOKENS } from "../packages/theme/src/index";
+import { builtPages } from "./lib/built-pages";
 
 const args = process.argv.slice(2);
-const verbose = args.includes("--verbose");
-const outputDirectory =
-  args.find((arg) => !arg.startsWith("--")) ?? "apps/site/dist";
-
-const pages = [
-  ...new Bun.Glob("**/*.html").scanSync({ cwd: outputDirectory, dot: false }),
-].toSorted();
-
-if (pages.length === 0) {
-  console.log(
-    `::error::No HTML found in ${outputDirectory}. Run \`bun run build\` first — an empty build is a failure here, not a pass.`,
-  );
-  process.exit(1);
-}
+const { directory: outputDirectory, pages, verbose } = builtPages(args);
 
 const expected = Object.keys(DARK_TOKENS).map(
   (id) => `--of-${id.replaceAll(".", "-")}`,
@@ -72,7 +60,7 @@ function stylesheetHrefs(html: string): string[] {
   return found;
 }
 
-/** Read once per file rather than once per page — there are 12,776 pages. */
+/** Read once per file rather than once per page — there are 12,777 pages. */
 const sheetCache = new Map<string, string | undefined>();
 
 function sheetContents(href: string): string | undefined {
@@ -98,7 +86,7 @@ function sheetContents(href: string): string | undefined {
  *
  * The failures below are systemic by construction — "the generated theme
  * stylesheet did not reach this page" is not a property one page has and its
- * neighbour does not — so the realistic failure is all 12,776 at once, where
+ * neighbour does not — so the realistic failure is all 12,777 at once, where
  * the first annotation already carries the whole diagnosis. Twelve thousand
  * copies of it bury the summary underneath rather than reinforcing it.
  *

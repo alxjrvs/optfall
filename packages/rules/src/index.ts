@@ -1,8 +1,10 @@
 /**
  * `optfall-rules` — the Flesh and Blood Comprehensive Rules, made addressable.
  *
- * `docs/PLAN.md`, Phase 4: **"The permalink is the product."** Legend Story
- * Studios already publishes a stable hierarchy — `1.0.`, `1.0.1.`, `1.0.1a` —
+ * `docs/ROADMAP.md`, Phase 4 — every Comprehensive Rules paragraph at a
+ * permanent URL, citable by number. **The permalink is the product.** Legend
+ * Story Studios already publishes a stable hierarchy — `1.0.`, `1.0.1.`,
+ * `1.0.1a` —
  * and this package preserves it rather than inventing an addressing scheme of
  * its own. `cr:1.0.1a` is a citation that exists today and will keep meaning
  * the same thing as long as LSS's numbering does.

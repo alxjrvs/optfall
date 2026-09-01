@@ -336,8 +336,9 @@ find where it started, on a hundred and twelve rows. A fact is an object, and
 something, and what it means is state. A release date and a card count are not
 state, so the chip is a plain rectangle and `StatePill` is still the only thing
 in the system wearing the chamfer. A chip that borrowed it would spend the one
-ornament this design has on the commonest object on the page — and print status,
-which genuinely *is* a state, deliberately does **not** get a pill either, because
+ornament this design has on the commonest object on the page — and whether a set
+is in print, which genuinely *is* a state, deliberately does **not** get a pill
+either, because
 a notched chip in a strip of plain ones reads as a legality verdict.
 
 **No colour.** Every filled mark here carries a *data* colour — the pitch
@@ -393,7 +394,7 @@ the footer were not `OrnamentalRule`s at all — each was a `border-block-start`
 `border-block-end` on the box itself, the same hairline at the same weight in the
 same ink, spelled a second way. A border has no middle, so those four were the
 only dividers on the site that *could not* carry the mark, and they were four of
-the most-seen: the footer's is on all 12,776 built pages and the header's on
+the most-seen: the footer's is on all 12,777 built pages and the header's on
 12,775 of them — the front door is the one surface that opts the header out.
 They compose the primitive now, with a `flush` variant that drops the vertical
 rhythm a border never had: at a container's edge the host already owns the space
@@ -498,8 +499,9 @@ interactions cite it, so a change tells you exactly what it invalidates.
 ### 5. Card page — `optfall.com/card/arc/159/command-and-conquer`
 
 **The destination.** ~~Supporting cast, explicitly not a destination.~~ That was
-this document's position and it is now wrong: `PLAN.md` was rewritten on
-2026-08-11 to make the card layer the product, and this page was not updated
+this document's position and it is now wrong: the build plan — now
+`ROADMAP.md` — was rewritten on 2026-08-11 to make the card layer the product,
+and this page was not updated
 with it. The correction is recorded rather than silently applied, because the
 old position was argued at length and a reader deserves to see what replaced it.
 
@@ -594,7 +596,7 @@ as its workbench. Tokens are the only source of truth, a lint rule fails the
 build on a raw hex or pixel value inside a component, and axe-core runs over
 every primitive in CI.
 
-See [`PLAN.md`](PLAN.md) Phase 1.
+See [`ROADMAP.md`](ROADMAP.md) Phase 1.
 
 ### What the accessibility work covers
 

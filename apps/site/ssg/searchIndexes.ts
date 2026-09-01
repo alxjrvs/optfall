@@ -176,9 +176,10 @@ export const CARD_INDEX: SearchIndexAsset<EncodedCardIndex> = indexAsset(
  * into the search that answers it. Neither needs an index to do it, and until
  * now both loaded one anyway.
  *
- * IT CARRIES THE PIN, WHICH IS NOT DECORATION. `docs/PLAN.md`: "Every surface
- * shows when its data was last confirmed. A stale Optfall must look stale." The
- * count, the upstream commit and the confirmation date are that sentence on this
+ * IT CARRIES THE PIN, WHICH IS NOT DECORATION. `docs/DATA-TERMS.md`, "What we
+ * warrant": "every surface shows when its data was last confirmed. A stale
+ * Optfall is required to look stale." The count, the upstream commit and the
+ * confirmation date are that sentence on this
  * page, so they have to render without a fetch — a provenance line that appears
  * only once a request succeeds is a provenance line that is absent exactly when
  * something is wrong.

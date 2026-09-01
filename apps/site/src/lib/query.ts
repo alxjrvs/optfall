@@ -67,26 +67,49 @@ export type Token =
  * THE ORDER OF THE ALTERNATIVES IS THE WHOLE CORRECTNESS ARGUMENT, because a
  * regex alternation is first-match-wins:
  *
- * 1. `!"exact name"` and `!bare` — the exact-name operator, before anything
+ * 1. A lone `-` that introduces something structured — see below.
+ * 2. `!"exact name"` and `!bare` — the exact-name operator, before anything
  *    else can claim the `!`.
- * 2. `field:"quoted operand"` — before the bare-quote case, or
+ * 3. `field:"quoted operand"` — before the bare-quote case, or
  *    `type:"Illusionist Action"` splits into a junk term and a stray word. That
  *    was a real bug in the old tokeniser and its comment is worth keeping.
- * 3. `field>=value` — comparisons, before the plain `field:value` case, since
+ * 4. `field>=value` — comparisons, before the plain `field:value` case, since
  *    `>` is not a `:`.
- * 4. `field:value`
- * 5. `"quoted phrase"`
- * 6. parentheses and bare words.
+ * 5. `field:value`
+ * 6. `"quoted phrase"`
+ * 7. parentheses and bare words.
+ *
+ * WHY NEGATION IS MATCHED SEPARATELY, AND FIRST. The bare-word alternative is
+ * `[^\s()]+`: it excludes parentheses and whitespace but NOT the quote, and it
+ * ran before the `-` branch below could ever see the token. Two silent
+ * inversions fell out of that, both reported with no notice at all:
+ *
+ *   `-type:"illusionist action"` — the bare alternative stopped at the space,
+ *   so the remainder re-tokenised from `type:"illusionist`, which has lost its
+ *   closing quote. The negation applied to the first word and the SECOND word
+ *   came back as an ordinary required term — the opposite of what was typed.
+ *
+ *   `-(banned:cc)` — `(` is excluded from the bare alternative, so the match
+ *   was the lone `-`, which fails the `word.length > 1` guard below and was
+ *   emitted as a free term, then discarded downstream as noise. The query ran
+ *   as `(banned:cc)`: an exact inversion, silently.
+ *
+ * Matching the `-` on its own, only where something structured follows, fixes
+ * both without touching the bare-word path: the scan resumes after it and the
+ * operand matches its own alternative with its quotes intact. `-attack` and
+ * `silver-age` never reach this alternative, because neither is followed by a
+ * paren, a quote, or a `field:`.
  */
 const TOKEN = new RegExp(
   [
-    /!(?:"([^"]*)"|([^\s()]+))/, // 1: !exact
-    /([a-zA-Z][a-zA-Z-]*):"([^"]*)"/, // 2: field:"quoted"
-    /([a-zA-Z][a-zA-Z-]*)\s*(>=|<=|!=|=|>|<)\s*([^\s()]+)/, // 3: field>=value
-    /([a-zA-Z][a-zA-Z-]*):([^\s()]*)/, // 4: field:value
-    /"([^"]*)"/, // 5: "phrase"
-    /([()])/, // 6: parens
-    /([^\s()]+)/, // 7: bare
+    /(-)(?=[("]|!|[a-zA-Z][a-zA-Z-]*\s*(?::|>=|<=|!=|=|>|<))/, // 1: negation
+    /!(?:"([^"]*)"|([^\s()]+))/, // 2: !exact
+    /([a-zA-Z][a-zA-Z-]*):"([^"]*)"/, // 3: field:"quoted"
+    /([a-zA-Z][a-zA-Z-]*)\s*(>=|<=|!=|=|>|<)\s*([^\s()]+)/, // 4: field>=value
+    /([a-zA-Z][a-zA-Z-]*):([^\s()]*)/, // 5: field:value
+    /"([^"]*)"/, // 6: "phrase"
+    /([()])/, // 7: parens
+    /([^\s()]+)/, // 8: bare
   ]
     .map((part) => part.source)
     .join("|"),
@@ -99,6 +122,7 @@ export function tokenise(raw: string): readonly Token[] {
   for (const match of raw.matchAll(TOKEN)) {
     const [
       ,
+      negation,
       exactQuoted,
       exactBare,
       quotedField,
@@ -113,6 +137,16 @@ export function tokenise(raw: string): readonly Token[] {
       bare,
     ] = match;
 
+    /*
+     * A `-` in front of something structured. The operand is NOT consumed here
+     * — the scan simply resumes after the `-`, so `type:"a b"` matches the
+     * quoted-field alternative with both words and its closing quote intact,
+     * and `(` opens a group the parser already knows how to negate.
+     */
+    if (negation !== undefined) {
+      out.push({ kind: "not" });
+      continue;
+    }
     if (exactQuoted !== undefined || exactBare !== undefined) {
       out.push({
         kind: "exact",
