@@ -15,6 +15,7 @@
  * Run directly to print it:  `bun scripts/canonical-disclaimer.ts`
  */
 import { readFileSync } from "node:fs";
+import { repoFile } from "./lib/root";
 
 /**
  * Where the specification lives, relative to the repository root.
@@ -23,7 +24,7 @@ import { readFileSync } from "node:fs";
  * specification living inside a roadmap is what made an ordinary prose edit
  * able to change it, so it now has a file whose only job is to be this.
  */
-const DISCLAIMER_PATH = "docs/DISCLAIMER.md";
+const DISCLAIMER_PATH = repoFile("docs/DISCLAIMER.md");
 
 const HEADING = "### Required disclaimer";
 

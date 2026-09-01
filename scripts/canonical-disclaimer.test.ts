@@ -20,6 +20,7 @@ import {
 } from "./canonical-disclaimer";
 import { LSS_DISCLAIMER } from "../apps/site/src/lib/compliance";
 import { CARD_IMAGE_COPYRIGHT } from "../packages/components/src/index";
+import { repoFile } from "./lib/root";
 
 const expected = readCanonicalDisclaimer();
 
@@ -39,14 +40,14 @@ describe("the canonical disclaimer", () => {
   });
 
   test("appears in README.md", () => {
-    expect(normalizeProse(readFileSync("README.md", "utf8"))).toContain(
-      expected,
-    );
+    expect(
+      normalizeProse(readFileSync(repoFile("README.md"), "utf8")),
+    ).toContain(expected);
   });
 
   test("appears in docs/COMPLIANCE.md", () => {
     expect(
-      normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8")),
+      normalizeProse(readFileSync(repoFile("docs/COMPLIANCE.md"), "utf8")),
     ).toContain(expected);
   });
 
@@ -56,7 +57,9 @@ describe("the canonical disclaimer", () => {
   // applications that took us at our word, which is the worst place for this
   // sentence to be wrong and the reason it cannot be left out of the check.
   test("appears in docs/DATA-TERMS.md, including the copy consumers reproduce", () => {
-    const source = normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8"));
+    const source = normalizeProse(
+      readFileSync(repoFile("docs/DATA-TERMS.md"), "utf8"),
+    );
     expect(source).toContain(expected);
 
     const occurrences = source.split(expected).length - 1;
@@ -80,10 +83,10 @@ describe("the card-image copyright line", () => {
 
   test("is mandated in the same words by both compliance documents", () => {
     expect(
-      normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8")),
+      normalizeProse(readFileSync(repoFile("docs/COMPLIANCE.md"), "utf8")),
     ).toContain(MANDATED_NOTICE);
     expect(
-      normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8")),
+      normalizeProse(readFileSync(repoFile("docs/DATA-TERMS.md"), "utf8")),
     ).toContain(MANDATED_NOTICE);
   });
 

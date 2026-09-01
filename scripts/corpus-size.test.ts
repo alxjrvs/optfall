@@ -30,9 +30,10 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 
 import { ROOT } from "./lib/root";
+import { repoFile } from "./lib/root";
 
 /** The file whose size the prose keeps claiming. */
-const CORPUS_PATH = "data/cards/cards.json";
+const CORPUS_PATH = repoFile("data/cards/cards.json");
 
 /**
  * Files known to state the corpus size, kept as an EXPECTED MINIMUM rather than
@@ -100,7 +101,14 @@ const CLAIM_PATTERNS: readonly RegExp[] = [
   /\bin an?\s+(\d+(?:\.\d+)?)\s*MB\s+JSON\b/g,
 ];
 
-/** Every corpus-size figure a file states, as numbers. */
+/**
+ * Every corpus-size figure a file states, as numbers.
+ *
+ * Takes an ABSOLUTE path. Both callers already resolve — the tree walk yields
+ * absolute paths from `scannable(ROOT)`, and the named list joins `ROOT` at its
+ * call site — so resolving again in here double-prefixes and throws an ENOENT
+ * naming a path with the repository root in it twice.
+ */
 function megabytesClaimedIn(path: string): readonly number[] {
   const source = readFileSync(path, "utf8");
   return CLAIM_PATTERNS.flatMap((pattern) =>

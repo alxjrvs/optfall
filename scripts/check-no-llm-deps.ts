@@ -25,6 +25,7 @@
  * same one.
  */
 import { readFileSync } from "node:fs";
+import { ROOT, repoFile } from "./lib/root";
 
 // Exact package names.
 const BANNED_EXACT = new Set([
@@ -124,17 +125,20 @@ export function banned(name: string): boolean {
   return candidateNames(name).some(isBannedName);
 }
 
+/** One forbidden dependency, and where it was declared. */
+export interface Violation {
+  readonly file: string;
+  readonly field: string;
+  readonly name: string;
+}
+
 // Tracked manifests first: that skips node_modules and untracked
 // scratch for free.
 function fromGit(): string[] {
-  const listed = Bun.spawnSync([
-    "git",
-    "ls-files",
-    "-z",
-    "--",
-    "package.json",
-    "*/package.json",
-  ]);
+  const listed = Bun.spawnSync({
+    cmd: ["git", "ls-files", "-z", "--", "package.json", "*/package.json"],
+    cwd: ROOT,
+  });
   if (listed.exitCode !== 0) return [];
   return listed.stdout
     .toString()
@@ -145,10 +149,112 @@ function fromGit(): string[] {
 // Fallback for a tree where nothing is committed yet, so that running
 // this check by hand before the first commit is not a vacuous pass.
 function fromDisk(): string[] {
-  return [...new Bun.Glob("**/package.json").scanSync({ cwd: ".", dot: false })]
+  return [
+    ...new Bun.Glob("**/package.json").scanSync({ cwd: ROOT, dot: false }),
+  ]
     .map((path) => path.replaceAll("\\", "/"))
     .filter((path) => !path.split("/").includes("node_modules"))
     .sort();
+}
+
+/**
+ * Every manifest to scan: what git tracks, or what is on disk if git has none.
+ *
+ * BOTH SOURCES RESOLVE FROM `ROOT`, NOT FROM THE PROCESS. This script is run
+ * from the repository root by `bun run check:no-llm`, but a test that imports
+ * it is not, and `git ls-files` and a `cwd: "."` glob would both come back
+ * empty from anywhere else — which the new empty guard would then correctly
+ * report as a failure, on a repository that is perfectly fine. The paths it
+ * RETURNS stay repository-relative, because they are what the error messages
+ * name; callers resolve them.
+ */
+export function manifestPaths(): readonly string[] {
+  const tracked = fromGit();
+  return tracked.length > 0 ? tracked : fromDisk();
+}
+
+/**
+ * Every forbidden name declared in one parsed manifest.
+ *
+ * Recursive, because `overrides` and `resolutions` nest: npm's
+ * `{"some-lib": {"openai": "^6"}}` pins a TRANSITIVE dependency, and a
+ * top-level-keys-only walk reads the outer name and calls it clean. That is a
+ * pin whose entire purpose is to control an LLM SDK version, passing a gate
+ * named for banning LLM SDKs.
+ */
+export function scanManifest(
+  file: string,
+  manifest: Record<string, unknown>,
+): readonly Violation[] {
+  const violations: Violation[] = [];
+
+  const walk = (
+    block: Record<string, unknown>,
+    field: string,
+    depth = 0,
+  ): void => {
+    if (depth > 8) return; // pathological nesting; nothing real goes this deep
+    for (const [name, value] of Object.entries(block)) {
+      if (banned(name)) violations.push({ file, field, name });
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        walk(value as Record<string, unknown>, field, depth + 1);
+      }
+    }
+  };
+
+  for (const field of DEPENDENCY_FIELDS) {
+    const block = manifest[field];
+    if (!block || typeof block !== "object") continue;
+
+    // `trustedDependencies` is an ARRAY of names, not a map, so the
+    // object walk below never reached it — it sat in the field list
+    // reading as coverage while scanning nothing.
+    if (Array.isArray(block)) {
+      for (const entry of block) {
+        if (typeof entry === "string" && banned(entry)) {
+          violations.push({ file, field, name: entry });
+        }
+      }
+      continue;
+    }
+
+    walk(block as Record<string, unknown>, field);
+  }
+
+  return violations;
+}
+
+/**
+ * Every forbidden name in the resolved tree, and how many packages it saw.
+ *
+ * Manifests only describe what WE declared. `bun.lock` describes what will be
+ * installed — so an LLM SDK arriving as somebody else's transitive dependency
+ * ships in the built product while every manifest stays clean.
+ * `LLM_STATEMENT.md`'s rule is about what the product CONTAINS, not about what
+ * we chose to type, so the lockfile is the authority and a manifest-only scan
+ * is a gate with a hole in it.
+ */
+export function scanLockfile(lock: string): {
+  readonly packages: number;
+  readonly violations: readonly Violation[];
+} {
+  const violations: Violation[] = [];
+  const seen = new Set<string>();
+
+  // Entries look like:  "js-yaml": ["js-yaml@4.3.1", "", {...}, "sha512-…"],
+  // The resolved specifier is the reliable name source, since keys may be
+  // nested paths like "astro/js-yaml".
+  for (const match of lock.matchAll(/"((?:@[^"/]+\/)?[^"@\s/]+)@[^"]*"/g)) {
+    const name = match[1];
+    if (name && !seen.has(name)) {
+      seen.add(name);
+      if (banned(name)) {
+        violations.push({ file: "bun.lock", field: "resolved tree", name });
+      }
+    }
+  }
+
+  return { packages: seen.size, violations };
 }
 
 /**
@@ -158,60 +264,36 @@ function fromDisk(): string[] {
  * top-level scan would run — and `process.exit(1)` — during the import.
  */
 if (import.meta.main) {
-  const tracked = fromGit();
-  const manifests = tracked.length > 0 ? tracked : fromDisk();
+  const manifests = manifestPaths();
 
-  type Violation = { file: string; field: string; name: string };
-  const violations: Violation[] = [];
-
-  // Walks a dependency block, descending into nested override maps.
-  function walk(
-    block: Record<string, unknown>,
-    file: string,
-    field: string,
-    depth = 0,
-  ): void {
-    if (depth > 8) return; // pathological nesting; nothing real goes this deep
-    for (const [name, value] of Object.entries(block)) {
-      if (banned(name)) violations.push({ file, field, name });
-      if (value && typeof value === "object" && !Array.isArray(value)) {
-        walk(value as Record<string, unknown>, file, field, depth + 1);
-      }
-    }
+  /*
+   * AN EMPTY MANIFEST LIST IS A FAILURE, NOT A PASS, and it was neither until
+   * now. `fromGit` returns `[]` when git exits non-zero — no repository, a
+   * broken checkout, `git` absent from the image — and if the disk fallback
+   * also finds nothing the scan below iterates over nothing, collects no
+   * violations, and reports success. A gate that passes over zero files is the
+   * failure this script's own lockfile branch already guards against: "without
+   * one the resolved tree is unknown, and a pass here would be a pass over
+   * nothing". The manifest half needed the same sentence.
+   */
+  if (manifests.length === 0) {
+    console.log(
+      "::error::No package.json manifests were found, so nothing was scanned. A pass over zero files is not a pass — check that this is running inside the repository.",
+    );
+    process.exit(1);
   }
+
+  const violations: Violation[] = [];
 
   for (const file of manifests) {
     let manifest: Record<string, unknown>;
     try {
-      manifest = JSON.parse(readFileSync(file, "utf8"));
+      manifest = JSON.parse(readFileSync(repoFile(file), "utf8"));
     } catch (error) {
       console.log(`::error file=${file}::${file} is not valid JSON: ${error}`);
       process.exit(1);
     }
-
-    for (const field of DEPENDENCY_FIELDS) {
-      const block = manifest[field];
-      if (!block || typeof block !== "object") continue;
-
-      // `trustedDependencies` is an ARRAY of names, not a map, so the
-      // object walk below never reached it — it sat in the field list
-      // reading as coverage while scanning nothing.
-      if (Array.isArray(block)) {
-        for (const entry of block) {
-          if (typeof entry === "string" && banned(entry)) {
-            violations.push({ file, field, name: entry });
-          }
-        }
-        continue;
-      }
-
-      // Recursive, because `overrides` and `resolutions` nest: npm's
-      // `{"some-lib": {"openai": "^6"}}` pins a TRANSITIVE dependency,
-      // and a top-level-keys-only walk reads the outer name and calls
-      // it clean. That is a pin whose entire purpose is to control an
-      // LLM SDK version, passing a gate named for banning LLM SDKs.
-      walk(block as Record<string, unknown>, file, field);
-    }
+    violations.push(...scanManifest(file, manifest));
   }
 
   // The lockfile, which is where the rule is actually decided.
@@ -223,22 +305,11 @@ if (import.meta.main) {
   // contains, not about what we chose to type, so the lockfile is the
   // authority and a manifest-only scan is a gate with a hole in it.
   try {
-    const lock = readFileSync("bun.lock", "utf8");
-    // Entries look like:  "js-yaml": ["js-yaml@4.3.1", "", {...}, "sha512-…"],
-    // The resolved specifier is the reliable name source, since keys may
-    // be nested paths like "astro/js-yaml".
-    const seen = new Set<string>();
-    for (const match of lock.matchAll(/"((?:@[^"/]+\/)?[^"@\s/]+)@[^"]*"/g)) {
-      const name = match[1];
-      if (name && !seen.has(name)) {
-        seen.add(name);
-        if (banned(name)) {
-          violations.push({ file: "bun.lock", field: "resolved tree", name });
-        }
-      }
-    }
+    const lock = readFileSync(repoFile("bun.lock"), "utf8");
+    const { packages, violations: fromLock } = scanLockfile(lock);
+    violations.push(...fromLock);
     console.log(
-      `Scanned bun.lock — ${seen.size} distinct package(s) in the resolved tree.`,
+      `Scanned bun.lock — ${packages} distinct package(s) in the resolved tree.`,
     );
   } catch {
     // No lockfile is itself a finding: without one the resolved tree is

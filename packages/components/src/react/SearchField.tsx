@@ -146,6 +146,29 @@ export function SearchField({
             <Mark size="md" decorative />
           </span>
           {/*
+            `onInput`, NOT `onChange`, AND THE SAME REASONING AS
+            `HeaderSearch`, WHICH FOUND IT FIRST. In React these are the same
+            event: `onChange` on a text input IS the native `input` event,
+            renamed, so nothing a reader does changes. What differs is the
+            path — `onInput` is a plain passthrough, while `onChange` goes
+            through React's ChangeEventPlugin and its value tracker, and that
+            tracker does not work under happy-dom: a dispatched `input` event
+            leaves `onChange` silent while `onInput` fires normally.
+
+            That is not a test detail dressed up as a fix. This field is the
+            one on `/cr` and on `/search`, and until this changed NOTHING
+            could drive it in a test — `RulesSearch.dom.test.tsx` typed into
+            it, saw the value reverted by the next render, and asserted
+            against a component that had never heard a keystroke. The two
+            spellings of this field in the repository now agree, which is the
+            other half of the value: `HeaderSearch` renders its own raw input
+            and already shipped this pattern.
+
+            The empty `onChange` is what stops React warning that a `value`
+            prop was given to a form field with no change handler. It is a
+            requirement of the controlled-input contract, not a leftover.
+          */}
+          {/*
             EVERY COMBOBOX ATTRIBUTE IS CONDITIONAL ON `listboxId`, WHICH IS
             THE POINT OF THEM. With no list to expand they all evaluate to
             `undefined` and none of them renders — an `aria-expanded` on a

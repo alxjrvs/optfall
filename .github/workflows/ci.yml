@@ -111,6 +111,17 @@ jobs:
       - name: Test
         run: bun run test
 
+      # Reports line coverage and holds it at the floor committed in
+      # `scripts/check-coverage.ts`. A separate step rather than a separate job:
+      # it re-runs the same suite, so it wants the install this job already did,
+      # and a job of its own would pay a second checkout and install to do it.
+      #
+      # NOT part of `bun run check`. That is the loop command, and doubling the
+      # suite in it would make the loop slower for a number that only moves when
+      # tests are added or removed.
+      - name: Coverage
+        run: bun run check:coverage
+
   build:
     name: build
     runs-on: ubuntu-latest
