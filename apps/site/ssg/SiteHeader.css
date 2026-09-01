@@ -113,9 +113,16 @@
 /*
   A CONTROL, NOT A CAPTION. This was 26.5px tall in a 51.5px bar — a field with
   the padding of a table cell, which read as small next to the wordmark and gave
-  a thumb almost nothing to hit. The type stays at `small`, because the bar's
-  scale is right and the field should not shout; what grows is the box around
-  it, which is what makes it look like something you can type into.
+  a thumb almost nothing to hit. What grew first was the box around it, which is
+  what makes it look like something you can type into.
+
+  THE TYPE FOLLOWED LATER, AND THIS COMMENT ARGUED AGAINST IT. It read "the type
+  stays at `small`, because the bar's scale is right and the field should not
+  shout" — a reasonable typographic position that a platform overrules: iOS
+  Safari zooms the layout viewport whenever a FOCUSED control is under 16px, and
+  the only way to decline is `maximum-scale`, which buys the field at the cost
+  of a reader's own pinch zoom. `type.size.field` is 16px for that reason and no
+  other; see its docblock in `packages/theme/src/tokens.ts`.
 */
 /*
   NOT A `BevelledPlate`, AND IT CANNOT BE ONE. An audit read the three
@@ -139,7 +146,7 @@
   background: var(--of-color-sunken);
   color: var(--of-color-ink);
   font-family: var(--of-type-family-sans);
-  font-size: var(--of-type-size-small);
+  font-size: var(--of-type-size-field);
 }
 
 .of-bar__field::placeholder {
@@ -274,7 +281,25 @@
   display: flex;
 }
 
+/*
+  THE TARGET, AND NOT ONLY THE INK. These set colour and text-decoration and
+  nothing else, so each link was 16.5px tall — measured — against WCAG 2.2 SC
+  2.5.8's 24x24 floor. The comment above `.of-bar__menu-button` argues that
+  exact SC and sizes the BUTTON to 44px; the links that button reveals never got
+  the same treatment, so the control that opens the menu was compliant and every
+  destination inside it was not.
+
+  `layout.target.min` rather than a number, and `min-block-size` rather than a
+  padding that adds up to it — both arguments are already made at length in that
+  token's docblock, which records a mark whose padding summed to 24px until
+  somebody shrank the thing inside it and the comment went on asserting
+  compliance. A floor stated as a minimum holds whatever is put in it.
+*/
 .of-bar__links a {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--of-layout-target-min);
+  padding-inline: var(--of-space-tight);
   color: var(--of-color-ink-muted);
   text-decoration: none;
 }

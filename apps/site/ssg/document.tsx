@@ -210,6 +210,12 @@ export function Document({
           built page and re-running: no violation either way. So this is here
           on the merits for keyboard users, not to make a check go green, and
           `scripts/check-a11y.ts` will not notice if somebody deletes it.
+
+          IT IS EMITTED HERE RATHER THAN BY `SiteHeader`, AND THAT IS NOT A
+          PLACEMENT DETAIL. `section: "none"` removes the whole bar on the front
+          door, so a skip link that lived in the header would be missing from
+          the one page whose entire content is a form. The `<main id="main">`
+          target below is unconditional for the same reason.
         */}
         <a className="skip-link" href="#main">
           Skip to content
@@ -229,7 +235,17 @@ export function Document({
               fieldIsland={result.headerSearchIsland ?? false}
             />
           )}
-          <main id="main" data-width={result.width ?? "measure"}>
+          {/*
+            `tabIndex={-1}` IS WHAT MAKES THE SKIP LINK ACTUALLY SKIP. Following
+            `#main` sets the sequential-navigation START POINT, so the next Tab
+            continues from here — but focus itself does not move to a target
+            that cannot hold it, and a screen reader is never told it arrived.
+            The link would look like it worked, silently, to the readers it
+            exists for. `-1` makes `<main>` programmatically focusable without
+            adding a tab stop of its own, which is the same trick
+            `.of-index__count` uses as a post-pagination focus target.
+          */}
+          <main id="main" tabIndex={-1} data-width={result.width ?? "measure"}>
             {result.children}
           </main>
         </div>

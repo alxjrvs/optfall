@@ -102,6 +102,20 @@ const STRUCTURE: TokenTable = {
   "type.size.micro": "0.75rem",
   "type.size.small": "0.875rem",
   "type.size.base": "0.9375rem",
+  /* THE ONE SIZE CHOSEN BY A PLATFORM RATHER THAN BY THIS SCALE, which is why
+     it sits between `base` and `large` instead of on a step of its own making.
+
+     iOS Safari zooms the layout viewport whenever a focused form control is
+     under 16px, and there is no way to decline it that does not also block a
+     reader from pinching — `maximum-scale=1` buys the field at the cost of
+     zoom, which is a trade this site refuses. So a control's text is 16px and
+     the page it sits on is not: `base` is 15px, deliberately, and reading text
+     has no such threshold to clear.
+
+     It is `1rem` rather than `16px` for the reason the whole scale is in rem —
+     a reader who scales their type up scales this with it, and the platform
+     rule is about the RESULT, not about the number in the stylesheet. */
+  "type.size.field": "1rem",
   "type.size.large": "1.125rem",
   "type.size.title": "1.5rem",
   "type.size.display": "2.25rem",
