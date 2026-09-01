@@ -40,7 +40,6 @@ const CORPUS_PATH = "data/cards/cards.json";
  */
 const CLAIMANTS: readonly string[] = [
   "CLAUDE.md",
-  "docs/PLAN.md",
   "apps/site/ssg/build.ts",
   "apps/site/ssg/hostConfig.ts",
   "apps/site/ssg/components/CardIndex.tsx",
