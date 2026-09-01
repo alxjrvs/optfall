@@ -33,16 +33,36 @@ import { ROOT } from "./lib/root";
 /**
  * The floor, as a percentage of executable lines.
  *
- * MEASURED, NOT CHOSEN. The first CI run of this script reported **88.58%
- * (9491/10715 lines)** across 1,067 tests in 40 files. Eighty-eight is that
- * figure rounded DOWN to a whole percent, which leaves half a point of room —
- * enough that adding a file with no tests does not fail the build on the commit
- * that adds it, and little enough that a real regression still does.
+ * MEASURED, NOT CHOSEN, AND RAISED ONLY BY THE COMMIT THAT EARNED IT.
+ *
+ * | When | Coverage | Tests | Floor |
+ * |---|---|---|---|
+ * | First run of this script | 88.58% (9491/10715) | 1,067 in 40 files | 88 |
+ * | After Wave 11's tests | **95.99% (10185/10610)** | 1,199 in 47 files | **95** |
+ *
+ * NINETY-FIVE WAS ASKED FOR AND NINETY-FIVE IS WHAT THE TREE DOES, which is
+ * the only order those two facts may arrive in. A floor set above what the
+ * suite achieves is how a project ends up writing tests that satisfy a number
+ * rather than tests that would catch something — the failure the audit that
+ * prompted this check warned about by name — so the number moved after the
+ * seven test files did, not before them.
+ *
+ * ROUNDED DOWN, as the header says. That leaves a whole point of room, which
+ * is more than the half point the first floor had and is worth having: an
+ * island or a script added with no tests should not fail the build on the
+ * commit that adds it, and a real regression still will.
+ *
+ * WHAT IS LEFT UNCOVERED IS MOSTLY `import.meta.main`. The three worst files
+ * are all `scripts/` entry points whose bodies only run when the script is
+ * invoked, this one included at 45.2%. Refactoring a CLI into exported
+ * functions PURELY to move this number would be the same failure in a
+ * different costume; `check-no-llm-deps.ts` was refactored that way only
+ * because doing it closed a vacuous pass, which is a reason of its own.
  *
  * Raise it when coverage rises. Do not lower it to make a change pass; see the
  * header for why that is the failure this check exists to prevent.
  */
-const FLOOR = 88;
+const FLOOR = 95;
 
 const COVERAGE_DIR = join(ROOT, "coverage");
 const LCOV = join(COVERAGE_DIR, "lcov.info");
