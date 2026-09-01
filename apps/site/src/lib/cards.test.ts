@@ -2,9 +2,10 @@
  * The legality derivation, pinned.
  *
  * WHY THIS FILE EXISTS, STATED PLAINLY. `verdictFor` is the single piece of
- * logic the project's positioning rests on: `docs/PLAN.md` Phase 3 names an
- * incumbent with real commercial backing that "ships *incorrect* banned flags
- * on legal cards", and says "being right is the entire product". Until this
+ * logic the project's positioning rests on: `README.md` names an incumbent
+ * with real commercial backing that "ships incorrect banned flags on legal
+ * cards", and `docs/DATA-TERMS.md` says "being right is the entire product".
+ * Until this
  * file landed, nothing in the aggregate gate asserted that Optfall does not
  * ship the same bug. The derivation was correct, and a future edit could have
  * reintroduced exactly the incumbent failure and gone green.

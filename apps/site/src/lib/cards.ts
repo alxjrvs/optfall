@@ -1,8 +1,9 @@
 /**
  * The card corpus, shaped once for the 11,378 pages that serve it.
  *
- * `docs/PLAN.md` Phase 2: **cards are what people arrive for**, and "every view
- * is a URL" — `/card/arc/159/command-and-conquer` is the product, not
+ * `docs/ROADMAP.md` Phase 2: the card layer — search, card pages, printings —
+ * **is the product**, and `docs/DESIGN.md` keeps Scryfall's **"Every view is a
+ * URL"** — so `/card/arc/159/command-and-conquer` is the product, not
  * decoration on it. Everything in this module exists to make one permanent URL
  * per PRINTING cheap enough that emitting all of them statically is
  * unremarkable.
@@ -37,8 +38,9 @@
  * play it" — every one of the 51 `cc_banned` cards is also flagged `cc_legal`
  * upstream, because the flag means "in the Classic Constructed card pool". A
  * surface that renders `cc_legal` as a Legal pill marks all 51 banned cards
- * legal, which is precisely the incumbent bug `docs/PLAN.md` Phase 3 cites as
- * the reason this project exists.
+ * legal, which is precisely the incumbent bug this project exists in order not
+ * to repeat: `README.md` opens on it — the commercially-backed alternative
+ * ships incorrect banned flags on legal cards.
  *
  * **The states are not collapsed, and more than one can be true at once.**
  * One card in this corpus carries `cc_banned` and `cc_living_legend`
@@ -48,15 +50,15 @@
  *
  * **Every verdict ships its evidence.** {@link FormatVerdict.evidence} carries
  * the raw upstream keys and values the verdict was computed from, so the page
- * can print them beside the pill. `docs/PLAN.md`: the tool is auditable rather
- * than merely assertive, which is what matters when the commercially-backed
- * incumbent ships incorrect flags.
+ * can print them beside the pill. `docs/DESIGN.md`, screen 2: the tool is
+ * auditable rather than merely assertive, which is what matters when the
+ * commercially-backed incumbent ships incorrect flags.
  *
  * **An upstream flag this module does not know about fails the build.** See
  * {@link assertEveryFlagIsClaimed}. The alternative is a new format, or a new
  * kind of restriction, arriving in a scheduled sync and simply not appearing on
- * any page — stale by silence, which `docs/PLAN.md` calls the thing that killed
- * three Flesh and Blood tools.
+ * any page — stale by silence, and `docs/DATA-TERMS.md` counts three Flesh and
+ * Blood tools that have already died or decayed.
  */
 
 import type { PitchValue, StateTone } from "optfall-theme";
@@ -410,9 +412,14 @@ export interface Format {
 }
 
 /**
- * The six formats `docs/PLAN.md` Phase 3 names, in the order a Flesh and Blood
- * player would look for them: the two constructed formats people actually
- * queue for first.
+ * The six formats this corpus carries, in the order a Flesh and Blood player
+ * would look for them: the two constructed formats people actually queue for
+ * first.
+ *
+ * This list was duplicated in `packages/legality/src/formats.ts` until that
+ * package was deleted on 2026-09-01. This is now the only place the format
+ * order is stated, which is a simplification rather than a loss — the copy
+ * there was never imported by anything that shipped.
  *
  * The key lists are not guesses — they are the keys this corpus actually
  * carries, censused before this file was written. Note what is absent as much
@@ -696,8 +703,9 @@ export function verdictFor(card: Card, format: Format): FormatVerdict {
  * The failure this prevents is silent rather than loud. A scheduled sync adds
  * `upf_legal`, or a seventh format, or a new kind of restriction; every page
  * still renders, every check still passes, and the new fact simply never
- * appears anywhere. `docs/PLAN.md` calls staleness by neglect the thing that
- * killed three Flesh and Blood tools — so the honest behaviour is to stop the
+ * appears anywhere. `docs/DATA-TERMS.md` counts three Flesh and Blood tools
+ * that have already died or decayed of exactly that neglect — so the honest
+ * behaviour is to stop the
  * build and make somebody look, exactly as `scripts/build-card-corpus.ts` does
  * for an unknown upstream field.
  */
@@ -1396,7 +1404,8 @@ export const CARD_ROUTES: readonly CardRoute[] = (() => {
    * today — it is here because the two failures are different sizes and only
    * one of them is loud. A card missing from this list is missing from the
    * SITE, and a reference index that has quietly stopped carrying a card is
-   * precisely the "stale by silence" failure `docs/PLAN.md` is written against.
+   * precisely the "stale by silence" failure `docs/DATA-TERMS.md` warrants
+   * against: every surface shows when its data was last confirmed.
    */
   const addressed = new Set(routes.map((route) => route.page.card.unique_id));
   if (addressed.size !== CARD_PAGES.length) {
@@ -1458,8 +1467,9 @@ export function titleFor(page: CardPage, label: string = page.label): string {
  * cached by a chat client for six months. Unfurl previews are snapshotted at
  * paste time and never revisited; a ban lifts, the page corrects itself, and
  * the preview goes on asserting the old verdict in the same conversation where
- * someone is deciding what to sleeve. `docs/PLAN.md`: "a tool that lies about
- * freshness is worse than one obviously behind." So the description carries the
+ * someone is deciding what to sleeve. `docs/DATA-TERMS.md`, "What we warrant":
+ * a stale Optfall is required to look stale, and a tool that lies about
+ * freshness is worse than one obviously behind. So the description carries the
  * facts that do not move — the type line, the stat block and the card text —
  * and legality lives on the page, where it is dated and evidenced.
  *

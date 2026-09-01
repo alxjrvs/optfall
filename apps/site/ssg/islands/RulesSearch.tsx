@@ -7,8 +7,8 @@
  *    those results: the query is read from the URL on load, written back as you
  *    type (`replaceState`, so the back button is not filled with keystrokes) and
  *    pushed on submit. A search box whose results cannot be linked breaks the
- *    thing this project is for — `docs/PLAN.md` Phase 4: "the permalink is the
- *    product".
+ *    thing this project is for — `docs/ROADMAP.md` Phase 4 puts every rules
+ *    paragraph at a permanent URL, and the permalink is the product.
  * 2. **The form degrades to a static browse; live results need JavaScript.**
  *    The form is a real `GET`, so a browser with no islands running still
  *    produces a shareable URL and still reaches the chapter list and every
@@ -38,8 +38,9 @@
  * **AND THAT ADDS A STATE THIS COMPONENT DID NOT HAVE: a query nothing can
  * answer YET.** It is not the same as a query nothing matches, and rendering the
  * second while the first is true would tell a reader the Comprehensive Rules do
- * not contain a word they can see in them. `docs/PLAN.md`'s "degrade visibly"
- * makes that the one shape to refuse, so there are three branches under the rule
+ * not contain a word they can see in them. `LLM_STATEMENT.md` — where Optfall
+ * does not know something it says so — makes that the one shape to refuse, so
+ * there are three branches under the rule
  * where there were two, and the live region announces all three.
  *
  * The URL sync and the announcement are two separate debounced effects, as they
@@ -257,8 +258,9 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
   /**
    * A QUESTION NOTHING CAN ANSWER YET, WHICH IS NOT THE SAME AS NO MATCHES.
    *
-   * `docs/PLAN.md`'s "degrade visibly" is the whole of this distinction.
-   * Rendering the empty-result copy while the index is in flight would tell a
+   * `LLM_STATEMENT.md`'s rule — where Optfall does not know something it says
+   * so — is the whole of this distinction. Rendering the empty-result copy
+   * while the index is in flight would tell a
    * reader that the Comprehensive Rules do not contain the word they just typed
    * — a confident wrong answer, which is the one failure shape that rule
    * forbids outright, and the one this component could not previously produce
@@ -594,8 +596,9 @@ export function RulesSearch({ indexUrl, browse, version }: RulesSearchProps) {
             saying "1,278 sections, version 2.14.0" is not emphasis.
 
             THE PROVENANCE LINE IS THE ONE THAT STAYS, and the choice between
-            them is not arbitrary: `docs/PLAN.md` requires every surface to show
-            when its data was last confirmed, so that paragraph is load-bearing
+            them is not arbitrary: `docs/DATA-TERMS.md` warrants that every
+            surface shows when its data was last confirmed, so that paragraph
+            is load-bearing
             and this one is a greeting. It is also the more complete of the two,
             and it is always on the page, where this appears only until the
             reader types.

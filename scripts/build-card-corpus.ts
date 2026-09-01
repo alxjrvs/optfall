@@ -2,15 +2,16 @@
 /**
  * Regenerates the committed card corpus at `data/cards/`.
  *
- * `docs/PLAN.md` Phase 2 makes the card layer the product, and makes one
- * operational rule the thing the project lives or dies by: **"Sync, never
- * curate … Card data comes from the actively-maintained upstream on a scheduled
- * pull, pinned by commit, with fixes contributed upstream rather than forked …
- * it is the single most important operational rule in this document."** This
- * script is that pull. It fetches one file from one upstream repository at one
- * immutable commit, drops the fields the product does not serve, and writes the
- * result as committed JSON — which `docs/PLAN.md`, Stack, calls "simultaneously
- * the storage layer, the public API, the backup and the audit trail".
+ * `docs/ROADMAP.md` Phase 2 makes the card layer the product, and one
+ * operational rule is the thing the project lives or dies by: **sync, never
+ * curate.** Card data comes from the actively-maintained upstream on a
+ * scheduled pull, pinned by commit, with fixes contributed upstream rather
+ * than forked — the single most important operational rule this build has.
+ * This script is that pull. It fetches one file from one upstream repository
+ * at one immutable commit, drops the fields the product does not serve, and
+ * writes the result as committed JSON — which `docs/DATA-TERMS.md`, "What we
+ * warrant", calls "simultaneously the storage layer, the public API, the
+ * backup and the audit trail".
  *
  * It is a sibling of `scripts/build-rules-corpus.ts` and deliberately shares
  * its guarantees, because those guarantees are what make a dataset citable.
@@ -30,8 +31,9 @@
  * no hostname and no tool version anywhere below. The one date recorded —
  * {@link CorpusSource.committedAt} — is the upstream commit's own date, which
  * is a property of the commit rather than of our run, so it is stable under
- * regeneration and still answers "how fresh is this?" for `docs/PLAN.md`'s
- * "degrade visibly" rule.
+ * regeneration and still answers "how fresh is this?" for
+ * `docs/DATA-TERMS.md`'s warranty that every surface shows when its data was
+ * last confirmed.
  *
  * WHY THE FILES ARE PRETTY-PRINTED. Cards are errata'd, banned, unbanned and
  * retired to Living Legend, and when that happens **the diff is the changelog**.
@@ -59,7 +61,11 @@
  *
  * The argument was sound and the delivery was missing, which is the only reason
  * it went. If a published data product is wanted, it is a good design: build it
- * again, serve it from the site or a release, and say so in `docs/SOURCES.md`.
+ * again, serve it from the site or a release, and say where it came from and
+ * what may be done with it — the upstream commit this script records is the
+ * provenance half, and `docs/DATA-TERMS.md` carries the terms half for
+ * everything Optfall publishes. (That clause named a per-upstream
+ * source-verification document, retired 2026-09-01; it is in the git history.)
  * A file nobody can fetch is not a smaller download, it is a bigger repository.
  *
  * WHAT IS DELIBERATELY NOT HERE. No slug, no permalink, no derived legality
@@ -105,9 +111,9 @@ const CORPUS_DIRECTORY = "data/cards";
 const FULL_FILE = "cards.json";
 
 /**
- * The upstream, named in `docs/PLAN.md` Phase 2 as "the actively-maintained
- * upstream". One repository, one file, one commit — a fork is what this project
- * has promised not to do ("Contribute upstream, never fork").
+ * The actively-maintained upstream — the card layer `docs/ROADMAP.md` Phase 2
+ * built. One repository, one file, one commit — a fork is what this project
+ * has promised not to do: contribute upstream, never fork.
  */
 const UPSTREAM_REPOSITORY = "the-fab-cube/flesh-and-blood-cards";
 const UPSTREAM_PATH = "json/english/card.json";
@@ -121,8 +127,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 /**
  * The rights notice carried by the corpus.
  *
- * `docs/PLAN.md`, "Required of us" and "MIT code, open data": card names and
- * card text are Legend Story Studios' property, displayed under their
+ * `docs/DISCLAIMER.md`, "Required of us", and `docs/DATA-TERMS.md`: card names
+ * and card text are Legend Story Studios' property, displayed under their
  * third-party application policy, and **never relicensed by us**. What Optfall
  * openly licenses is its structural work — the selection, the pinning, the
  * envelope. A bulk export that travels without this line is an export that
@@ -148,8 +154,8 @@ const RIGHTS =
  *
  * Printed on every run and asserted against the retrieved file, so a dropped
  * field is a decision on the record rather than an absence somebody has to
- * notice. `docs/PLAN.md` is explicit that being right is the product; quietly
- * losing a field is the cheapest way to stop being right.
+ * notice. `docs/DATA-TERMS.md` is explicit that being right is the entire
+ * product; quietly losing a field is the cheapest way to stop being right.
  */
 const DROPPED_CARD_FIELDS: Readonly<Record<string, string>> = {
   functional_text_plain:
@@ -223,10 +229,10 @@ const PRINTING_FIELDS = [
 /**
  * Every per-format legality boolean, in upstream's order.
  *
- * All of them are carried into **both** files. `docs/PLAN.md` Phase 2:
- * "per-format legality already computed … So the first release answers 'is this
- * legal' without any of our own legality work." This is that answer, so it is
- * the last thing to trim.
+ * All of them are carried into **both** files. Upstream computes per-format
+ * legality already, so the first release answers "is this legal" without any
+ * of our own legality work — which is what let `docs/ROADMAP.md` put Phase 2
+ * ahead of Phase 3. This is that answer, so it is the last thing to trim.
  *
  * ── A TRAP, MEASURED RATHER THAN ASSUMED ───────────────────────────────────
  *
@@ -242,9 +248,9 @@ const PRINTING_FIELDS = [
  *
  * So `cc_legal` means "in the Classic Constructed card pool", not "you may play
  * it": a consumer that renders `cc_legal` as a Legal pill marks all 51 banned
- * cards legal. `docs/PLAN.md` Phase 3 names the commercially-backed incumbent
- * shipping "incorrect banned flags on legal cards" as the reason this project
- * exists, and this is the exact shape of that bug. A verdict is
+ * cards legal. `README.md` names the commercially-backed alternative shipping
+ * "incorrect banned flags on legal cards" as the reason this project exists,
+ * and this is the exact shape of that bug. A verdict is
  * `legal && !banned && !suspended && !living_legend`, computed by the consumer;
  * this corpus mirrors upstream's flags and does not pre-chew them, because a
  * derived verdict is a field that has to be re-verified on every sync.
@@ -274,8 +280,8 @@ const LEGALITY_FLAGS = [
  * applies to.
  *
  * These are the most valuable fields in the file relative to their size — 7 KB
- * that are the only machine-readable seed anywhere for `docs/PLAN.md` Phase 3's
- * "legality that knows about time". Trimming them to save bytes would have cut
+ * that are the only machine-readable seed anywhere for `docs/ROADMAP.md` Phase
+ * 3, "legality that remembers". Trimming them to save bytes would have cut
  * the one thing no other card database carries.
  */
 const LEGALITY_START_FIELDS = [
@@ -407,7 +413,8 @@ interface CorpusSource {
   /**
    * The upstream commit this corpus was built from — the pin.
    *
-   * `docs/PLAN.md` Phase 2: "pinned by commit". Re-run with `--ref <commit>`
+   * Pinned by commit, as `docs/DATA-TERMS.md` describes the upstream being
+   * consumed. Re-run with `--ref <commit>`
    * and the output is byte-identical, forever, regardless of what upstream has
    * done since.
    */
@@ -482,8 +489,8 @@ function describe(value: unknown): string {
  *
  * A card whose `name` is not a string is upstream breaking its own schema, and
  * the honest response is a crash naming the card — not a corpus with the string
- * `"undefined"` in it. `docs/PLAN.md`: "Parsers are deterministic code whose
- * output diffs cleanly and **fails loudly**."
+ * `"undefined"` in it. `LLM_STATEMENT.md`: "the parsers are deterministic code
+ * whose output diffs cleanly and **fails loudly**."
  */
 function text(record: JsonRecord, key: string, where: string): string {
   const value = record[key];

@@ -1,8 +1,9 @@
 /**
  * The disclaimer says the same thing everywhere it is written down.
  *
- * `docs/PLAN.md` is the specification; `apps/site/src/lib/compliance.ts` is the
- * constant the site renders; `README.md` and `docs/COMPLIANCE.md` each carry a
+ * `docs/DISCLAIMER.md` is the specification; `apps/site/src/lib/compliance.ts`
+ * is the constant the site renders; `README.md` and `docs/COMPLIANCE.md` each
+ * carry a
  * copy for readers who never open the source. Four copies of one legally
  * load-bearing sentence is three chances for a typo, so their agreement is
  * asserted rather than assumed.
@@ -19,11 +20,12 @@ import {
 } from "./canonical-disclaimer";
 import { LSS_DISCLAIMER } from "../apps/site/src/lib/compliance";
 import { CARD_IMAGE_COPYRIGHT } from "../packages/components/src/index";
+import { repoFile } from "./lib/root";
 
 const expected = readCanonicalDisclaimer();
 
 describe("the canonical disclaimer", () => {
-  test("is extracted from docs/PLAN.md and is not empty", () => {
+  test("is extracted from docs/DISCLAIMER.md and is not empty", () => {
     expect(expected.length).toBeGreaterThan(100);
     expect(expected.startsWith("Optfall is in no way affiliated")).toBe(true);
   });
@@ -38,14 +40,14 @@ describe("the canonical disclaimer", () => {
   });
 
   test("appears in README.md", () => {
-    expect(normalizeProse(readFileSync("README.md", "utf8"))).toContain(
-      expected,
-    );
+    expect(
+      normalizeProse(readFileSync(repoFile("README.md"), "utf8")),
+    ).toContain(expected);
   });
 
   test("appears in docs/COMPLIANCE.md", () => {
     expect(
-      normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8")),
+      normalizeProse(readFileSync(repoFile("docs/COMPLIANCE.md"), "utf8")),
     ).toContain(expected);
   });
 
@@ -55,7 +57,9 @@ describe("the canonical disclaimer", () => {
   // applications that took us at our word, which is the worst place for this
   // sentence to be wrong and the reason it cannot be left out of the check.
   test("appears in docs/DATA-TERMS.md, including the copy consumers reproduce", () => {
-    const source = normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8"));
+    const source = normalizeProse(
+      readFileSync(repoFile("docs/DATA-TERMS.md"), "utf8"),
+    );
     expect(source).toContain(expected);
 
     const occurrences = source.split(expected).length - 1;
@@ -79,10 +83,10 @@ describe("the card-image copyright line", () => {
 
   test("is mandated in the same words by both compliance documents", () => {
     expect(
-      normalizeProse(readFileSync("docs/COMPLIANCE.md", "utf8")),
+      normalizeProse(readFileSync(repoFile("docs/COMPLIANCE.md"), "utf8")),
     ).toContain(MANDATED_NOTICE);
     expect(
-      normalizeProse(readFileSync("docs/DATA-TERMS.md", "utf8")),
+      normalizeProse(readFileSync(repoFile("docs/DATA-TERMS.md"), "utf8")),
     ).toContain(MANDATED_NOTICE);
   });
 

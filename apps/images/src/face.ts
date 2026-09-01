@@ -19,10 +19,11 @@
  *
  * WHY THIS IS A SEPARATE WORKER FROM THE MAIN SITE. `apps/site` is served
  * entirely from static assets with no Worker script at all, and that is what
- * "no uptime story to fail" in `docs/PLAN.md` rests on. Serving images needs
- * code. Confining that code to its own Worker keeps the runtime inside the one
- * layer the plan already calls expendable: losing images costs a rendering
- * layer, never the product. If this host is down, every card page still renders
+ * having no uptime story to fail rests on — `docs/ROADMAP.md`, Phase 6 and
+ * *Settled*: a static generator this project owns, on Cloudflare hosting.
+ * Serving images needs code. Confining that code to its own Worker keeps the
+ * runtime inside the one layer the plan already calls expendable: losing
+ * images costs a rendering layer, never the product. If this host is down, every card page still renders
  * and every fact on it is still correct.
  *
  * A MISS RETURNS THE PLACEHOLDER WITH 200, NOT A 404, and that is the one
@@ -37,7 +38,22 @@ import {
   type Tier,
 } from "./placeholder";
 
-/** The bucket the ingest writes to. Named once, here and in the ingest tool. */
+/**
+ * The bucket this host reads and the ingest writes. Named once, HERE.
+ *
+ * `scripts/ingest-card-images.ts` imports this rather than repeating it. It
+ * used to declare its own copy under a comment saying the two "must equal" each
+ * other, and nothing checked that they did — which made this export a constant
+ * nothing imported, and the rule a sentence rather than a mechanism.
+ *
+ * `packages/theme/src/index.ts` warns about exactly that shape: a constant
+ * nothing imported is "a rule written in the shape of code that could not
+ * enforce it". An import is the enforcement, and it costs nothing.
+ *
+ * The third copy is `bucket_name` in `apps/images/wrangler.jsonc`, which is
+ * JSON read by Cloudflare rather than by TypeScript and so genuinely cannot
+ * import this. That one stays a copy, and the wrangler file says so.
+ */
 export const BUCKET_NAME = "optfall-card-faces";
 
 /**
@@ -93,7 +109,20 @@ function placeholderResponse(orientation: Orientation, status = 200): Response {
     status,
     headers: {
       "content-type": PLACEHOLDER_CONTENT_TYPE,
-      "cache-control": PROVISIONAL,
+      /*
+        A MISS IS PROVISIONAL. A FAILURE IS NOT CACHEABLE AT ALL.
+
+        Both branches used to send `PROVISIONAL`, which granted five minutes of
+        freshness to a 503 — an explicit instruction to keep serving a failure
+        after the store has recovered, in every browser and every intermediary
+        that honoured it. HTTP caches do not normally store a 503; this was
+        opting into it.
+
+        The 200 keeps its five minutes, and for the original reason: a miss
+        means no art is published YET, so the tool self-corrects within one
+        cache lifetime of upstream publishing it.
+      */
+      "cache-control": status === 200 ? PROVISIONAL : "no-store",
       "access-control-allow-origin": "*",
       // Names the reason in a header rather than only in the pixels, so a
       // caller debugging a grid of grey rectangles can tell "no art published"
@@ -255,7 +284,19 @@ export const makeFaceHandler =
     if (!parsed) {
       return new Response("Not found", {
         status: 404,
-        headers: { "cache-control": PROVISIONAL },
+        headers: {
+          "cache-control": PROVISIONAL,
+          /*
+            Typed and non-sniffable, on a host that answers attacker-chosen
+            paths and serves `image/svg+xml` elsewhere with
+            `access-control-allow-origin: *`. Neither header was here before.
+            The body is a constant, so this is hardening rather than a fix —
+            but an untyped response from this origin is the one shape worth
+            never leaving to a browser's guess.
+          */
+          "content-type": "text/plain; charset=utf-8",
+          "x-content-type-options": "nosniff",
+        },
       });
     }
 
