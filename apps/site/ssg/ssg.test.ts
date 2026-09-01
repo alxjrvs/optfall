@@ -30,6 +30,7 @@ import {
   REDIRECTS,
   renderHeaders,
   renderRedirects,
+  TOKENS_PATH,
 } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { CARD_NEWEST } from "./searchIndexes";
@@ -2950,17 +2951,53 @@ describe("_headers and _redirects say what the host is told", () => {
     }
   });
 
-  test("hashed assets are immutable, and pages are not", () => {
-    /* The asymmetry IS the assertion. `/assets/*` is content-addressed — Vite's
-       default `[name]-[hash][extname]` plus `searchIndexes.ts`'s digested JSON
-       — so a year is honest there. `/*` must keep revalidating, because the
-       corpus syncs and a stale card page is a WRONG answer rather than a slow
-       one. A future edit that gives the wildcard a long TTL fails here. */
-    const assets = HEADERS.find((rule) => rule.pattern === "/assets/*");
-    expect(assets?.headers["Cache-Control"]).toBe(
-      "public, max-age=31536000, immutable",
+  test("nothing promises immutability over a name the build reuses", () => {
+    /*
+     * THIS TEST REPLACES ONE THAT ASSERTED THE BUG. It read "hashed assets are
+     * immutable, and pages are not" and checked that `/assets/*` carried a
+     * year plus `immutable` — restating, as its own justification, the claim
+     * that every file under `/assets/` is content-addressed. That claim was
+     * false: `build.ts` writes `assets/tokens.css` there itself, under a fixed
+     * name, generated from `packages/theme`. So the rule pinned the one
+     * stylesheet that changes whenever a design token does, and the test
+     * agreed with it.
+     *
+     * `immutable` is why it mattered more than a wrong TTL usually would — a
+     * browser is told not to revalidate even on reload, so a single page load
+     * while that header was served pins that reader for a year.
+     *
+     * SO THE ASSERTION IS INVERTED: instead of naming the rule that should
+     * exist, this names the file that must never be covered by one. It holds
+     * whether the cache rules are absent (as now) or per-file (as #326 makes
+     * them), and it fails for the next fixed-name asset somebody adds.
+     */
+    const immutable = HEADERS.filter((rule) =>
+      (rule.headers["Cache-Control"] ?? "").includes("immutable"),
     );
 
+    /* Glob semantics, kept deliberately crude: a rule covers a path if its
+       pattern matches with `*` standing for any run of characters. Anything
+       cleverer here would be a second implementation of Cloudflare's matcher
+       and could disagree with it. */
+    const covers = (pattern: string, path: string): boolean =>
+      new RegExp(
+        `^${pattern
+          .split("*")
+          .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join(".*")}$`,
+      ).test(path);
+
+    const pinned = immutable
+      .filter((rule) => covers(rule.pattern, `/${TOKENS_PATH}`))
+      .map((rule) => rule.pattern);
+
+    expect(pinned).toEqual([]);
+  });
+
+  test("pages keep revalidating", () => {
+    /* The corpus syncs, so a stale card page is a WRONG answer rather than a
+       slow one — which is the whole product. An edit that gives the wildcard a
+       long TTL fails here. */
     const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
     expect(wildcard?.headers["Cache-Control"]).toBeUndefined();
   });
