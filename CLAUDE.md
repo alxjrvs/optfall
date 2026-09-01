@@ -141,14 +141,35 @@ All enforced somewhere, all easy to violate on a first pass.
 
 ## Skills
 
-Two procedures in this repository are mechanical, multi-file, and have been
-performed enough times to be worth encoding. Both are in `.claude/skills/`:
+Three procedures in this repository are mechanical, multi-file, and have been
+performed enough times to be worth encoding. All are in `.claude/skills/`:
 
 - **`add-a-search-filter`** — the three places a card-search operator touches,
   and what the syntax-page test does and does not catch.
 - **`add-a-design-system-primitive`** — the seven places a primitive touches,
   all test-enforced.
+- **`change-the-disclaimer`** — the parsed specification, the five surfaces
+  asserted against it, and why a green `bun run check` is not enough here.
 
+`/verify-claims` (`.claude/commands/`) re-derives the numbers and lists this
+file states, and reports the ones that no longer match. It exists because the
+rule at the top of this file — never assert what you have not just verified —
+is the one nothing can enforce, and its numeric instances at least are
+checkable.
+
+## Hooks
+
+`.claude/settings.json` registers two, and `.claude/hooks/` holds them.
+
+- **`session-start.sh`** runs `bun install --frozen-lockfile` on Claude Code on
+  the web, because a fresh clone cannot run `bun test`, `lint`, `format:check`
+  or `typecheck` until it has — every requirement is a devDependency. It is a
+  no-op on a local machine.
+- **`guard-data.sh`** refuses writes under `data/`. The `permissions.deny` list
+  already refuses the `corpus:*` builders; this covers editing a committed data
+  file by hand, which is worse, because it produces a plausible file with no
+  provenance and `check:provenance` verifies that an origin is RECORDED rather
+  than true.
 ## Pre-approved commands, and the three that are not
 
 `.claude/settings.json` pre-approves the read-only and build commands that
