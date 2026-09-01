@@ -2950,6 +2950,21 @@ describe("_headers and _redirects say what the host is told", () => {
     }
   });
 
+  test("hashed assets are immutable, and pages are not", () => {
+    /* The asymmetry IS the assertion. `/assets/*` is content-addressed — Vite's
+       default `[name]-[hash][extname]` plus `searchIndexes.ts`'s digested JSON
+       — so a year is honest there. `/*` must keep revalidating, because the
+       corpus syncs and a stale card page is a WRONG answer rather than a slow
+       one. A future edit that gives the wildcard a long TTL fails here. */
+    const assets = HEADERS.find((rule) => rule.pattern === "/assets/*");
+    expect(assets?.headers["Cache-Control"]).toBe(
+      "public, max-age=31536000, immutable",
+    );
+
+    const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
+    expect(wildcard?.headers["Cache-Control"]).toBeUndefined();
+  });
+
   test("the security posture the site ships with is stated here", () => {
     const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
     expect(wildcard?.headers["X-Content-Type-Options"]).toBe("nosniff");

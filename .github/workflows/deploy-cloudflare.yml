@@ -88,6 +88,20 @@ jobs:
           OPTFALL_PREVIEW: ${{ github.event_name == 'pull_request' && '1' || '0' }}
         run: bun run build
 
+      # WRANGLER IS PINNED IN `package.json`, NOT FLOATED HERE. These commands
+      # read `bunx wrangler`, which resolves the exact version the
+      # `bun install --frozen-lockfile` above just installed.
+      #
+      # They said `wrangler@4` until 2026-09-01, and that was the one floating
+      # executable in this repository — resolved fresh from npm at deploy time,
+      # in a step holding a token that can deploy to the live zone. Every
+      # argument this project already makes applied to it and to nothing else:
+      # `ci.yml` on why a floating Bun means a green gate can attest to a build
+      # that never produced the deploy preview, `bunfig.toml` on exact pinning,
+      # and every action in this file pinned to a SHA.
+      #
+      # In the manifest it is also a version Dependabot moves, which a `bunx`
+      # range never was.
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -102,7 +116,7 @@ jobs:
           fi
 
           if [ "$IS_PR" != "true" ]; then
-            bunx wrangler@4 deploy -c apps/site/wrangler.jsonc
+            bunx wrangler deploy -c apps/site/wrangler.jsonc
             exit 0
           fi
 
@@ -111,7 +125,7 @@ jobs:
           # deploy. The alias is per-PR, so a second push replaces the first
           # rather than accumulating URLs nobody will revisit.
           set +e
-          bunx wrangler@4 versions upload \
+          bunx wrangler versions upload \
             -c apps/site/wrangler.jsonc \
             --preview-alias "pr-${PR_NUMBER}" 2>&1 | tee upload.log
           status=${PIPESTATUS[0]}
@@ -175,4 +189,4 @@ jobs:
             echo "Add the secret to enable Cloudflare deploys."
             exit 0
           fi
-          bunx wrangler@4 deploy -c apps/images/wrangler.jsonc
+          bunx wrangler deploy -c apps/images/wrangler.jsonc

@@ -19,6 +19,33 @@
   // Workers request quota.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "optfall",
+  // NO `<name>.workers.dev` COPY OF THIS SITE. Left at its default, Cloudflare
+  // also publishes every Worker on that subdomain — which for this one is a
+  // second, fully public copy of all 12,776 pages at a hostname nothing here
+  // controls.
+  //
+  // The canonical tags in `ssg/document.tsx` point at optfall.com and would
+  // eventually sort it out, but `X-Robots-Tag: noindex` would NOT: the build
+  // merges that for PR previews only (`hostConfig.ts`, `headersFor`), so the
+  // workers.dev copy ships without it. Turning the subdomain off is the fix
+  // that does not rely on a crawler agreeing with us.
+  "workers_dev": false,
+  // AND PREVIEW URLS MUST THEN BE TURNED BACK ON EXPLICITLY, or the line above
+  // silently deletes PR previews — which `deploy-cloudflare.yml` calls
+  // load-bearing on this project specifically, because a legality bug is
+  // visible in a preview and invisible in a diff.
+  //
+  // Cloudflare's documented default is the trap: "Preview URLs are disabled by
+  // default when `workers_dev` is disabled", and from wrangler v4.44.0 the
+  // preview setting follows the workers.dev setting unless it is stated. We
+  // pin 4.127.1, so that is the behaviour we get. Stating it means the two
+  // settings can never drift apart on a wrangler upgrade.
+  //
+  // These are different hosts doing different jobs: `<name>.workers.dev` is a
+  // second permanent copy of the whole site with no `X-Robots-Tag`, and a
+  // preview URL is a per-PR build the deploy step already noindexes via
+  // `OPTFALL_PREVIEW`. Killing the first must not kill the second.
+  "preview_urls": true,
   // Only matters once a Worker script exists, which today it does not. Set
   // anyway so that adding one later does not silently pick up whatever runtime
   // baseline happens to be current on that day.

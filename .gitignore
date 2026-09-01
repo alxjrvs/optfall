@@ -49,3 +49,10 @@ yarn-error.log*
 
 # --- Agent worktrees ------------------------------------------------------
 .claude/worktrees/
+
+# --- Per-developer Claude Code settings -----------------------------------
+# `/permissions` writes here. `.claude/settings.json` is the SHARED allowlist
+# and is argued over carefully — which commands are pre-approved, and the two
+# that deliberately are not. A personal grant committed into that argument
+# would widen it for everyone without anyone deciding to.
+.claude/settings.local.json
