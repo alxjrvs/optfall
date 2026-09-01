@@ -38,6 +38,7 @@ import { HEADER_FIELD_ID } from "./islands/HeaderSearch";
 import { fillPattern, renderRoute, resolveRoutes } from "./render";
 import { routes } from "./routes";
 import type { PageModule, PageResult } from "./types";
+import { createHash } from "node:crypto";
 
 /**
  * Where a card lives, by slug.
@@ -3388,4 +3389,66 @@ describe("the newest release the browse state opens on", () => {
     const keys = CARD_NEWEST.cards.map((card) => card.key);
     expect(new Set(keys).size).toBe(keys.length);
   });
+});
+
+describe("every inline script the site renders is admitted by the CSP", () => {
+  /*
+   * THE DIRECTION THAT MATTERS. `inlineScripts.ts` derives the hashes from the
+   * constants it exports, so a script whose BODY changes moves its own hash and
+   * cannot drift. What that arrangement cannot catch is a script added to a page
+   * and never added to `INLINE_SCRIPT_HASHES` — it renders, the policy does not
+   * name it, and the browser blocks it. That failure surfaces in a console on a
+   * live page, not in CI.
+   *
+   * So this reads the built markup and works backwards: every inline `<script>`
+   * that actually renders must have its hash in the policy. A `src=` script is
+   * skipped — those are covered by `'self'` — and an empty body is skipped
+   * because React emits none.
+   *
+   * The three routes are one per shape that carries a script: the shell's
+   * service-worker registration is on all of them, `/search` adds the prefill,
+   * and a card page adds the pitch redirect, which is the one whose body was
+   * per-card until it was moved to `data-pitch-targets`.
+   */
+  const INLINE = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g;
+
+  const policy = (): string => {
+    const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
+    return wildcard?.headers["Content-Security-Policy"] ?? "";
+  };
+
+  const routesToCheck = (): readonly string[] => {
+    const card = RESOLVED.find((resolved) =>
+      resolved.route.startsWith("/card/"),
+    );
+    return ["/", "/search", card?.route].filter(
+      (route): route is string => typeof route === "string",
+    );
+  };
+
+  for (const route of routesToCheck()) {
+    test(`${route} renders no inline script the policy omits`, () => {
+      const resolved = RESOLVED.find((entry) => entry.route === route);
+      expect(resolved).toBeDefined();
+
+      const html = resolved?.render([], undefined) ?? "";
+      const bodies = [...html.matchAll(INLINE)]
+        .map((match) => match[1] ?? "")
+        .filter((body) => body.trim() !== "");
+
+      /* A route that stopped rendering any inline script would pass this
+         vacuously, and the pitch redirect disappearing is exactly the kind of
+         regression worth failing on. */
+      expect(bodies.length).toBeGreaterThan(0);
+
+      const missing = bodies
+        .map(
+          (body) =>
+            `'sha256-${createHash("sha256").update(body, "utf8").digest("base64")}'`,
+        )
+        .filter((expression) => !policy().includes(expression));
+
+      expect(missing).toEqual([]);
+    });
+  }
 });

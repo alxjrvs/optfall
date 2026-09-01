@@ -1,3 +1,5 @@
+import { INLINE_SCRIPT_HASHES } from "./inlineScripts";
+
 /**
  * The two files the host reads and never serves: `_headers` and `_redirects`.
  *
@@ -57,26 +59,44 @@ export interface HeaderRule {
 }
 
 /*
-  A PARTIAL CSP, AND THE MISSING DIRECTIVE IS NAMED RATHER THAN FORGOTTEN.
+  `SCRIPT-SRC` IS NOW STRICT, AND NO `UNSAFE-INLINE` ANYWHERE IN IT.
 
-  `script-src` is absent on purpose. Three inline scripts exist, and two of them
-  are fixed module constants whose hashes could be computed at build time — but
-  the third is `CardEntry.tsx`'s, which embeds a per-card JSON literal, so its
-  hash differs on every one of 12,776 card pages. `_headers` is pattern-based
-  and capped at 100 rules, so a per-page hash allowlist cannot be expressed. The
-  honest options are `unsafe-inline` (which would make the directive
-  decorative) or extracting those scripts to hashed files first. Neither is this
-  change.
+  This block previously explained why it could not be. Three inline scripts
+  exist; two were fixed constants, but `CardEntry.tsx`'s embedded a per-card
+  JSON literal, giving each of the 12,776 card pages a different body and so a
+  different hash. `_headers` is pattern-based and capped at 100 rules, so a
+  per-page hash allowlist was not expressible, and the honest options were
+  `unsafe-inline` — a decorative directive — or extracting the scripts first.
 
-  What IS here is everything that does not depend on that: clickjacking,
-  base-tag injection, plugin embedding, form exfiltration, and an image policy
-  that names the one external host this site loads from.
+  Extracting them is what happened. The per-card data now travels as
+  `data-pitch-targets` on the script element and the body reads it through
+  `document.currentScript`. A CSP hash covers the body and not the attributes,
+  so ONE hash admits every card page, and all three scripts are constants in
+  `ssg/inlineScripts.ts`.
+
+  THE HASHES ARE DERIVED FROM THE SAME STRINGS THE PAGES RENDER, which is the
+  property worth protecting. `INLINE_SCRIPT_HASHES` is computed by hashing the
+  exported constants, so editing a script body moves its hash in the same build.
+  A hash written into this table by hand would instead start blocking the page's
+  own script the next time somebody fixed a typo in it — and that failure
+  appears in a browser console, not in CI.
+
+  `style-src` KEEPS `'unsafe-inline'` AND THAT IS NOT AN OVERSIGHT. The build
+  emits inline `style` attributes for per-card layout values, and CSP hashes do
+  not apply to style attributes at all — only `'unsafe-hashes'` or a nonce would
+  reach them, and a nonce is impossible on a static site with no server to
+  generate one per response. Narrowing this is a real piece of work and is not
+  smuggled in here.
+
+  The rest is unchanged: clickjacking, base-tag injection, plugin embedding,
+  form exfiltration, and an image policy naming the one external host.
 
   `frame-ancestors` is the reason this is a header rather than a `<meta>` tag —
   it is ignored in `<meta>`, and it is the directive doing the most work here.
 */
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
+  `script-src 'self' ${INLINE_SCRIPT_HASHES.join(" ")}`,
   "base-uri 'none'",
   "object-src 'none'",
   "frame-ancestors 'none'",

@@ -25,6 +25,7 @@ import { LSS_DISCLAIMER } from "../src/lib/compliance";
 import { THEME_COLOUR } from "./assets";
 import { SiteHeader } from "./SiteHeader";
 import type { PageResult } from "./types";
+import { SERVICE_WORKER_REGISTRATION } from "./inlineScripts";
 
 const SITE_ORIGIN = "https://optfall.com";
 
@@ -34,14 +35,6 @@ const SITE_ORIGIN = "https://optfall.com";
  * Written as a string rather than as a source file because it is the one script
  * inlined into every page — see the comment at its use.
  */
-const SERVICE_WORKER_REGISTRATION = `
-if ("serviceWorker" in navigator) {
-  addEventListener("load", function () {
-    navigator.serviceWorker.register("/sw.js").catch(function () {});
-  });
-}
-`.trim();
-
 /** The absolute, trailing-slashed canonical for a route. */
 export function canonicalFor(route: string, override?: string): string {
   const path = override ?? route;
