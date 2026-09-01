@@ -62,6 +62,7 @@
  * disagree when there is only one of them.
  */
 import { CARD_ROUTES } from "../apps/site/src/lib/cards";
+import { RULE_PAGES } from "../apps/site/src/lib/rules";
 import { serveReadyLine } from "../apps/site/ssg/serveBanner";
 
 /**
@@ -125,6 +126,32 @@ if (!defaultRoute || !alternateRoute) {
   process.exit(1);
 }
 
+/*
+ * A RULE PERMALINK, AND DELIBERATELY A LETTERED ONE.
+ *
+ * `/cr` was checked and no `/cr/<id>` ever was, so this file reported all
+ * routes serving while 1,269 of the 1,278 rule pages returned 404 under
+ * `bun run dev`. The server decided file-versus-route by testing the URL for a
+ * trailing dot and alphanumerics — which is the exact shape of a rule id, so
+ * `/cr/8.3.4b` was looked up as a literal file and missed the `index.html`
+ * sitting beside it.
+ *
+ * Picked from `RULE_PAGES` rather than written out, for the reason the card
+ * routes above are: a hardcoded id rots the first time the CR is re-cut. The
+ * subrule letter is what makes it a regression test rather than a smoke test —
+ * a bare `/cr/1` never reproduced the bug.
+ */
+const rulePage = RULE_PAGES.find((page) =>
+  /^\d+(?:\.\d+)+[a-z]$/.test(page.section.number),
+);
+
+if (!rulePage) {
+  console.log(
+    "::error::RULE_PAGES has no lettered subrule, so the permalink shape that broke the dev server is unchecked. That is a broken corpus, not a reason to skip.",
+  );
+  process.exit(1);
+}
+
 const checks: Check[] = [
   { path: "/", contentType: "text/html" },
   { path: "/search", contentType: "text/html" },
@@ -177,6 +204,7 @@ const checks: Check[] = [
   { path: "/sw-purge.js", contentType: "text/javascript" },
   { path: defaultRoute.href, contentType: "text/html" },
   { path: alternateRoute.href, contentType: "text/html" },
+  { path: `/cr/${rulePage.section.number}`, contentType: "text/html" },
   /*
    * A REDIRECT IS A ROUTE THE SITE OWNS. There is exactly one left — the 12,278
    * card-scheme rules were retired — and it reaches the reader through a

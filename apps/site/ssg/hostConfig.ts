@@ -1,3 +1,5 @@
+import { INLINE_SCRIPT_HASHES } from "./inlineScripts";
+
 /**
  * The two files the host reads and never serves: `_headers` and `_redirects`.
  *
@@ -56,6 +58,68 @@ export interface HeaderRule {
   readonly headers: Readonly<Record<string, string>>;
 }
 
+/*
+  `SCRIPT-SRC` IS NOW STRICT, AND NO `UNSAFE-INLINE` ANYWHERE IN IT.
+
+  This block previously explained why it could not be. Three inline scripts
+  exist; two were fixed constants, but `CardEntry.tsx`'s embedded a per-card
+  JSON literal, giving each of the 12,776 card pages a different body and so a
+  different hash. `_headers` is pattern-based and capped at 100 rules, so a
+  per-page hash allowlist was not expressible, and the honest options were
+  `unsafe-inline` — a decorative directive — or extracting the scripts first.
+
+  Extracting them is what happened. The per-card data now travels as
+  `data-pitch-targets` on the script element and the body reads it through
+  `document.currentScript`. A CSP hash covers the body and not the attributes,
+  so ONE hash admits every card page, and all three scripts are constants in
+  `ssg/inlineScripts.ts`.
+
+  THE HASHES ARE DERIVED FROM THE SAME STRINGS THE PAGES RENDER, which is the
+  property worth protecting. `INLINE_SCRIPT_HASHES` is computed by hashing the
+  exported constants, so editing a script body moves its hash in the same build.
+  A hash written into this table by hand would instead start blocking the page's
+  own script the next time somebody fixed a typo in it — and that failure
+  appears in a browser console, not in CI.
+
+  `style-src` KEEPS `'unsafe-inline'` AND THAT IS NOT AN OVERSIGHT. The build
+  emits inline `style` attributes for per-card layout values, and CSP hashes do
+  not apply to style attributes at all — only `'unsafe-hashes'` or a nonce would
+  reach them, and a nonce is impossible on a static site with no server to
+  generate one per response. Narrowing this is a real piece of work and is not
+  smuggled in here.
+
+  The rest is unchanged: clickjacking, base-tag injection, plugin embedding,
+  form exfiltration, and an image policy naming the one external host.
+
+  `frame-ancestors` is the reason this is a header rather than a `<meta>` tag —
+  it is ignored in `<meta>`, and it is the directive doing the most work here.
+*/
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  `script-src 'self' ${INLINE_SCRIPT_HASHES.join(" ")}`,
+  "base-uri 'none'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "img-src 'self' https://images.optfall.com data:",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
+  "connect-src 'self'",
+].join("; ");
+
+/*
+  HSTS. A year, subdomains included, no `preload`.
+
+  `includeSubDomains` covers `images.optfall.com`, which is HTTPS-only anyway,
+  so it costs nothing and closes the one sibling host.
+
+  `preload` is deliberately ABSENT and should stay absent unless somebody
+  decides otherwise with the consequence in front of them: submitting to the
+  preload list is baked into browser binaries and is slow and awkward to undo.
+  That is a commitment about every future subdomain, not a header.
+*/
+const STRICT_TRANSPORT_SECURITY = "max-age=31536000; includeSubDomains";
+
 /**
  * The response headers the host adds.
  *
@@ -84,14 +148,69 @@ export interface HeaderRule {
  * DO NOT "SIMPLIFY" THIS BY DELETING IT ON THE GROUNDS THAT IT CHANGES NOTHING.
  * That is true, it is why this paragraph exists, and it is not the argument.
  */
+/**
+ * The one file the build writes into `/assets/` under a name it reuses.
+ *
+ * IT LIVES HERE BECAUSE IT IS A CONSTRAINT ON THE RULES BELOW, not because
+ * this module writes it — `build.ts` does, from `packages/theme`'s generator,
+ * and imports the path back from here. A `/assets/*` cache rule once claimed
+ * that every file in that directory carried its own digest; this one does not,
+ * and naming it beside the rules is what lets `ssg.test.ts` assert that no
+ * rule covers it without importing `build.ts`, which runs the build on import.
+ */
+export const TOKENS_PATH = "assets/tokens.css";
+
 export const HEADERS: readonly HeaderRule[] = [
   {
     pattern: "/*",
     headers: {
       "X-Content-Type-Options": "nosniff",
       "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Content-Security-Policy": CONTENT_SECURITY_POLICY,
+      "Strict-Transport-Security": STRICT_TRANSPORT_SECURITY,
+      "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
     },
   },
+  /*
+    ~~EVERY FILE UNDER `/assets/` CARRIES ITS OWN DIGEST, WHICH IS WHAT MAKES A
+    YEAR HONEST.~~ **IT DOES NOT, AND THE RULE THAT SAID SO IS WITHDRAWN.**
+
+    THE CLAIM WAS FALSE WHEN IT WAS WRITTEN, AND CHECKING IT TOOK ONE `ls`.
+    Vite's default `assets/[name]-[hash][extname]` does cover the stylesheets
+    and the island bundles, and `searchIndexes.ts` does write
+    `assets/${name}-${digest}.json`. But `build.ts` writes one more file into
+    that directory itself, under a FIXED name — `TOKENS_PATH =
+    "assets/tokens.css"`, generated from `packages/theme` — so a rule over
+    `/assets/*` promised a year of immutability for the one stylesheet in the
+    build that changes whenever a design token does.
+
+    `immutable` IS WHY THIS WAS WORTH REVERTING RATHER THAN SHORTENING. It
+    tells a browser not to revalidate even when the reader presses reload, so
+    the damage is not proportional to how long the header is live: one page
+    load while it was served pins that reader's token stylesheet for a year,
+    and every later token change silently fails to reach them. Measured on the
+    built output — `dist/assets/` holds eight files and `tokens.css` is the
+    one with no digest in its name.
+
+    NO PATTERN OVER THIS DIRECTORY CAN BE RIGHT, which is the reason this is a
+    deletion rather than a narrower glob. Inferring hashedness from the shape
+    of a filename is the fix that looks obvious and is not — it has to be
+    right about every file the build emits now and every one it emits later,
+    and it is wrong the first time somebody adds a second fixed-name asset.
+    The cache rule has to be derived from what Vite actually hashed, which
+    means `build.ts` reading its own manifest and handing the list over.
+
+    That work already exists, written independently and with tests, in the
+    branch behind #326 — which was authored against a tree that had no rule
+    here at all. Removing this restores exactly the state it expects, so the
+    correct version lands there rather than being hand-rolled twice.
+
+    `/*` IS DELIBERATELY LEFT ALONE, and that half of the original argument
+    still stands. Pages must revalidate: the corpus syncs, and a stale card
+    page is a wrong answer rather than a slow one — which is the whole
+    product. Do not "finish the job" by adding a long TTL to the wildcard; the
+    asymmetry is the point.
+  */
   {
     pattern: "/manifest.webmanifest",
     headers: { "Content-Type": "application/manifest+json" },

@@ -2,8 +2,8 @@
 /**
  * The static generator. `bun ssg/build.ts`.
  *
- * `docs/PLAN.md` Phase 6. **This is the build now.** It rendered alongside Astro
- * into `dist-next/` for four layers, matched it at 12,776 pages, and layer 5
+ * `docs/ROADMAP.md` Phase 6. **This is the build now.** It rendered alongside
+ * Astro into `dist-next/` for four layers, matched it at 12,776 pages, and layer 5
  * deleted the other one — so the output is `dist/`, which is what gets
  * published and what every compliance check reads.
  *
@@ -43,7 +43,12 @@ import { themeStylesheet } from "optfall-theme";
 
 import { generatedAssets } from "./assets";
 import { canonicalFor } from "./document";
-import { headersFor, renderHeaders, renderRedirects } from "./hostConfig";
+import {
+  headersFor,
+  renderHeaders,
+  renderRedirects,
+  TOKENS_PATH,
+} from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { routes } from "./routes";
 import { writeServiceWorker } from "./serviceWorker";
@@ -55,6 +60,28 @@ import {
 } from "./sitemap";
 
 const OUT_DIR = new URL("../dist/", import.meta.url).pathname;
+
+/**
+ * Files allowed in one Workers Static Assets version.
+ *
+ * Cloudflare's number, not ours. Verify against their docs before changing it;
+ * the build fails rather than letting a deploy discover it.
+ */
+const STATIC_ASSET_FILE_LIMIT = 20_000;
+
+/** Every file under a directory, recursively. */
+async function countFiles(directory: string): Promise<number> {
+  const { readdirSync, statSync } = await import("node:fs");
+  const { join } = await import("node:path");
+
+  let total = 0;
+  for (const entry of readdirSync(directory)) {
+    const path = join(directory, entry);
+    if (statSync(path).isDirectory()) total += await countFiles(path);
+    else total += 1;
+  }
+  return total;
+}
 const CONFIG = new URL("./vite.config.ts", import.meta.url).pathname;
 const VITE_BIN = new URL("../node_modules/.bin/vite", import.meta.url).pathname;
 
@@ -74,7 +101,15 @@ const VITE_BIN = new URL("../node_modules/.bin/vite", import.meta.url).pathname;
  * is no `.css` to import; there is a function that returns one, and this is
  * where its output becomes a file.
  */
-const TOKENS_PATH = "assets/tokens.css";
+/*
+  DECLARED IN `hostConfig.ts` RATHER THAN HERE, AND IMPORTED BACK. It is the
+  one file this build writes into `/assets/` under a fixed name, which makes it
+  a fact the HEADER RULES have to respect — a cache rule that covers it
+  promises immutability for a stylesheet that changes whenever a design token
+  does, which is exactly what shipped once. Keeping the constant beside those
+  rules is what lets a test assert the relationship without importing this
+  module, which runs the whole build on import.
+*/
 
 interface ManifestEntry {
   readonly file: string;
@@ -497,6 +532,34 @@ async function main(): Promise<void> {
    * would be shipped inside the service worker's.
    */
   const sw = await writeServiceWorker(OUT_DIR);
+
+  /*
+    THE PER-VERSION FILE CEILING, FAILED LOUDLY RATHER THAN DISCOVERED AT
+    DEPLOY.
+
+    Workers Static Assets caps the number of files in one version. Cross it and
+    `wrangler deploy` refuses — after a full build, in CI, on a change that had
+    nothing to do with it. `assets.ts` records parity measured at 13,675 files,
+    so this is not a distant ceiling: the count grows with every set release,
+    and each card page is a file.
+
+    This is the same treatment `sitemap.ts` already gives the 50,000-URL
+    protocol limit, and for the same reason it gives it — a ceiling nobody
+    measures is a ceiling somebody hits.
+
+    The limit is Cloudflare's rather than ours, so it is stated here as a
+    figure to re-verify rather than derived from anything. If it moves, this
+    number moves with it.
+  */
+  const files = await countFiles(OUT_DIR);
+  if (files > STATIC_ASSET_FILE_LIMIT) {
+    throw new Error(
+      `${files} files in dist/, over the ${STATIC_ASSET_FILE_LIMIT} a single ` +
+        `Workers Static Assets version accepts. The deploy will refuse this ` +
+        `build. Splitting the output or pruning generated files is the fix; ` +
+        `raising this number is only correct if Cloudflare has raised theirs.`,
+    );
+  }
 
   console.log(
     `[ssg] ${count} page(s), ` +

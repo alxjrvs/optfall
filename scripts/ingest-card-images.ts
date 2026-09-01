@@ -59,10 +59,7 @@ import {
   faceKeyFor,
   type FaceTier,
 } from "../apps/site/src/lib/faces";
-
-/** Must equal `BUCKET_NAME` in `apps/images/src/face.ts` and the
- * `bucket_name` in `apps/images/wrangler.jsonc`. Public, not a secret. */
-const BUCKET_NAME = "optfall-card-faces";
+import { BUCKET_NAME } from "../apps/images/src/face";
 
 /**
  * WebP quality.

@@ -11,8 +11,8 @@
  *
  * The whole file is deterministic string work. There is no model here, and
  * there is nowhere one could be added without it being obvious — which is the
- * point: `docs/PLAN.md` rules out LLM-assisted parsing in the document pipeline
- * exactly as much as it rules out a chat box.
+ * point: `LLM_STATEMENT.md` rules out LLM-assisted parsing in the document
+ * pipeline exactly as much as it rules out a chat box.
  *
  * @packageDocumentation
  */

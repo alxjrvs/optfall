@@ -17,7 +17,7 @@
  * WHAT THIS FILE STILL OWNS is the data. Every figure the island draws is
  * computed here, at build time, from the corpus: the island receives an array
  * of flat records as JSON and never imports `cards.ts`. That division is not
- * stylistic — `Island` documents it — the 16 MB corpus stays on the build
+ * stylistic — `Island` documents it — the 18 MB corpus stays on the build
  * machine and about 34 kB of derived facts cross to the browser.
  *
  * NEWEST FIRST, because somebody opening a set list is far more often looking

@@ -13,10 +13,10 @@
  * new applicants since late 2024, but that is the lesser reason: a price needs a
  * refresh cadence, and this project's whole provenance story is committed JSON
  * pinned by commit. A stale price is exactly the confidently-wrong answer
- * `README.md` says this tool cannot produce. `docs/PLAN.md` puts the collector
- * economy out of scope and it stays there — a link says "this printing is
- * purchasable, here", which is a fact about the world that does not rot in
- * hours.
+ * `README.md` says this tool cannot produce. `docs/ROADMAP.md` puts the
+ * collector economy out of scope — and names this file where it amends the
+ * line — so it stays there: a link says "this printing is purchasable, here",
+ * which is a fact about the world that does not rot in hours.
  *
  * WHY WE MAY DO THIS AT ALL. LSS's Terms of Use permit card databases to
  * monetise indirectly, naming "ad-sense on YouTube videos and website traffic",

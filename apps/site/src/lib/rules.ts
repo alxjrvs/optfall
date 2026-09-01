@@ -2,7 +2,9 @@
  * The Comprehensive Rules corpus, shaped once for the ~1,278 pages that serve
  * it.
  *
- * `docs/PLAN.md` Phase 4: **the permalink is the product.** A judge pasting
+ * `docs/ROADMAP.md` Phase 4 — every Comprehensive Rules paragraph at a
+ * permanent URL, citable by number: **the permalink is the product.** A judge
+ * pasting
  * `cr:8.3.4b` into Discord instead of describing which paragraph they mean is
  * the unprompted-share moment the whole phase is built for, so everything in
  * this module exists to make one URL per published section cheap enough that
@@ -18,8 +20,9 @@
  *
  * **The corpus is read at build time and never at runtime.** It is imported as
  * committed JSON, so the whole document is resolved by the bundler, baked into
- * static HTML, and nothing ships to a browser. `docs/PLAN.md`, "Static by
- * default": no backend means no uptime story to fail.
+ * static HTML, and nothing ships to a browser. `docs/ROADMAP.md`, *Settled*:
+ * a static generator this project owns, so no backend means no uptime story to
+ * fail.
  *
  * **The shaping is one pass, not one pass per page.** `optfall-rules` exports
  * `pathOf`, `childrenOf` and `sectionById`, and every one of them is a linear
@@ -28,9 +31,9 @@
  * and `RULE_PAGES` is materialised from them. The helper functions are not
  * wrong; they are the wrong shape for this caller.
  *
- * **Nothing here composes prose.** `docs/PLAN.md`, "Rules that hold across
- * every phase": no language model, and every string served traces to a parsed
- * official document. The two functions at the bottom that build a `<title>` and
+ * **Nothing here composes prose.** `LLM_STATEMENT.md`: no language model, and
+ * every string served traces to a parsed official document or a named human
+ * author. The two functions at the bottom that build a `<title>` and
  * a `<meta name="description">` assemble *fixed labels* around *verbatim text*
  * and nothing else. The description may be truncated — a preview card has a
  * budget — and where it is, it says so with an ellipsis. The page body is never
@@ -71,7 +74,8 @@ export interface CorpusSource {
    * It is on the page for one reason: a reader who does not trust us can
    * download the same URL, hash it, and compare. That is what makes the
    * citation auditable rather than merely assertive, which is the entire
-   * positioning in `docs/PLAN.md`, "The thesis".
+   * positioning `docs/ROADMAP.md` opens on: Scryfall, for Flesh and Blood,
+   * with every card and every rule citable.
    */
   readonly sha256: string;
 }

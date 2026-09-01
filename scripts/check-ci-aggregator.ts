@@ -53,7 +53,9 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const REPO_ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+import { ROOT } from "./lib/root";
+
+const REPO_ROOT = ROOT;
 
 const WORKFLOW = ".github/workflows/ci.yml";
 const WORKFLOW_DIR = ".github/workflows";

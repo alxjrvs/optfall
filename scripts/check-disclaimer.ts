@@ -9,19 +9,20 @@
  * editor autocorrecting `®` or `™`, a page rendered outside the shared layout,
  * or a component that splits the sentence across elements.
  *
- * The expected text comes from `docs/PLAN.md`, never from the site source —
- * checking the build against a constant the build itself imports would only
- * prove the build is self-consistent.
+ * The expected text comes from `docs/DISCLAIMER.md`, never from the site
+ * source — checking the build against a constant the build itself imports
+ * would only prove the build is self-consistent.
  *
  * Empty output is a FAILURE, not a vacuous pass. "No pages, therefore no page
  * is missing the disclaimer" is exactly how this check would rot into
  * decoration.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import {
   readCanonicalDisclaimer,
   normalizeHtmlWhitespace,
 } from "./canonical-disclaimer";
+import { builtPages } from "./lib/built-pages";
 
 const args = process.argv.slice(2);
 
@@ -35,9 +36,7 @@ const args = process.argv.slice(2);
  * prevent. The count still prints; the enumeration is now something you ask
  * for.
  */
-const verbose = args.includes("--verbose");
-const outputDirectory =
-  args.find((arg) => !arg.startsWith("--")) ?? "apps/site/dist";
+const { directory: outputDirectory, pages, verbose } = builtPages(args);
 
 /**
  * How many failing pages get their own `::error` line.
@@ -51,24 +50,6 @@ const outputDirectory =
 const MAX_REPORTED = 10;
 
 const expected = readCanonicalDisclaimer();
-
-if (!existsSync(outputDirectory)) {
-  console.log(
-    `::error::Output directory ${outputDirectory} does not exist. Run \`bun run build\` first — a missing build is a failure here, not a pass.`,
-  );
-  process.exit(1);
-}
-
-const pages = [...new Bun.Glob("**/*.html").scanSync({ cwd: outputDirectory })]
-  .map((path) => path.replaceAll("\\", "/"))
-  .toSorted();
-
-if (pages.length === 0) {
-  console.log(
-    `::error::No HTML pages found under ${outputDirectory}. Run the site build first; an empty output directory is a failure here, not a pass.`,
-  );
-  process.exit(1);
-}
 
 const missing: string[] = [];
 
@@ -112,7 +93,9 @@ if (missing.length === 0) {
 }
 
 console.log("");
-console.log('The expected text, from docs/PLAN.md ("Required disclaimer"):');
+console.log(
+  'The expected text, from docs/DISCLAIMER.md ("Required disclaimer"):',
+);
 console.log(`  ${expected}`);
 console.log("");
 console.log(

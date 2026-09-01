@@ -13,9 +13,11 @@ on:
     branches: [main]
 
 # NO DEPENDENCY CACHE, AND THAT IS MEASURED RATHER THAN OVERLOOKED. Six jobs
-# below each run `bun install --frozen-lockfile`, which looks like five
-# redundant installs and reads like an obvious `actions/cache` candidate. It is
-# not one. Timed on run 32324572946:
+# below pass `install: "true"` to `.github/actions/setup`, which runs
+# `bun install --frozen-lockfile` — five apparently redundant installs, and an
+# obvious-looking `actions/cache` candidate. It is not one. Timed on run
+# 32324572946, when each job spelled the install out itself; the work is the
+# same, so the figures still hold:
 #
 #   dev-server 1s   build 1s   lint 2s   test 1s   typecheck 2s   disclaimer 2s
 #
@@ -63,19 +65,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Typecheck
         run: bun run typecheck
@@ -88,19 +81,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Lint
         run: bun run lint
@@ -119,22 +103,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Test
         run: bun run test
+
+      # Reports line coverage and holds it at the floor committed in
+      # `scripts/check-coverage.ts`. A separate step rather than a separate job:
+      # it re-runs the same suite, so it wants the install this job already did,
+      # and a job of its own would pay a second checkout and install to do it.
+      #
+      # NOT part of `bun run check`. That is the loop command, and doubling the
+      # suite in it would make the loop slower for a number that only moves when
+      # tests are added or removed.
+      - name: Coverage
+        run: bun run check:coverage
 
   build:
     name: build
@@ -144,19 +130,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Build
         run: bun run build
@@ -169,16 +146,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
-      # Enforces the project-wide rule in docs/PLAN.md ("Rules that hold across
-      # every phase"): no language model in the shipped product.
+      # Enforces the rule stated in LLM_STATEMENT.md: no language model in the
+      # shipped product. That statement describes this job in as many words —
+      # "continuous integration fails if a language model so much as appears in
+      # a dependency manifest".
       #
       # This matches dependency NAMES declared in package.json manifests. It
-      # deliberately does NOT grep source or documentation: docs/PLAN.md
+      # deliberately does NOT grep source or documentation: LLM_STATEMENT.md
       # discusses language models at length and by name, and a content grep
       # would fail the build on the very document that states the rule.
       #
@@ -189,10 +166,10 @@ jobs:
       - name: Assert no language-model or AI SDK dependency
         run: bun run check:no-llm
 
-  # docs/PLAN.md Phase 1: "A lint rule fails the build on a raw hex or a raw
-  # pixel value inside a component." This is that rule, and it is a required
-  # job because the plan is explicit that the difference between a design
-  # language and a folder of screenshots is enforcement rather than intent.
+  # docs/ROADMAP.md Phase 1: a raw hex or raw length inside a component fails
+  # the build. This is that rule, and it is a required job because the roadmap
+  # is explicit that the difference between a design language and a folder of
+  # screenshots is enforcement rather than intent.
   #
   # It is a separate job from `lint` because it is a different KIND of check:
   # `check-tokens.ts` reads the project's `.css` files and asserts them against
@@ -216,10 +193,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       - name: Assert components consume tokens, never literals
         run: bun run check:tokens
@@ -238,10 +213,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       - name: Assert every Bun version declaration matches .bun-version
         run: bun run check:bun-version
@@ -269,10 +242,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       - name: Assert every committed binary asset has a verified origin
         run: bun run check:provenance
@@ -285,19 +256,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       # docs/COMPLIANCE.md §4 names this as an enforcement point, and it is the
       # only one that catches what review does not: a reflow, an editor
@@ -307,11 +269,12 @@ jobs:
       # That costs a second build and buys independence — this job fails on its
       # own evidence, not on an artifact another job says is fine.
       #
-      # The expected text is read from docs/PLAN.md, never from the site
+      # The expected text is read from docs/DISCLAIMER.md, never from the site
       # source: comparing the build against a constant the build imports would
       # only prove the build is self-consistent. The matching source-side
-      # assertion (constant == PLAN.md == README.md == COMPLIANCE.md) lives in
-      # scripts/canonical-disclaimer.test.ts and runs in the `test` job.
+      # assertion (constant == DISCLAIMER.md == README.md == COMPLIANCE.md)
+      # lives in scripts/canonical-disclaimer.test.ts and runs in the `test`
+      # job.
       - name: Build the site
         run: bun run build
 
@@ -336,6 +299,18 @@ jobs:
       # one beside it.
       - name: Assert every card face on a built page came from CardFace
         run: bun run check:card-notice
+
+      # The four document-level axe rules `a11y.test.tsx` deliberately cannot
+      # run — `region`, `landmark-one-main`, `page-has-heading-one`, `bypass`.
+      # A fragment cannot satisfy them, so the component suite disables them and
+      # defers to this. It said so before this existed, which meant the four
+      # were enforced nowhere at all.
+      #
+      # It samples one page per ROUTE KIND rather than sweeping 12,776, because
+      # the pages come from a handful of templates and a second card page only
+      # re-tests the first one's template.
+      - name: Assert every page kind satisfies the document-level a11y rules
+        run: bun run check:a11y
 
   # THIS JOB ASSERTS SOMETHING WEAKER THAN IT USED TO, AND SAYS SO.
   #
@@ -365,19 +340,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Set up
+        uses: ./.github/actions/setup
         with:
-          bun-version-file: .bun-version
-
-      - name: Install dependencies
-        run: |
-          set -euo pipefail
-          # No fallback branch. bun.lock is committed, so the only thing an
-          # `else` could ever do is let a pull request that DELETES the lockfile
-          # silently downgrade every job to an unpinned install and still go
-          # green — which is the one case where failing loudly is the point.
-          bun install --frozen-lockfile
+          install: "true"
 
       - name: Assert the dev server serves every kind of route
         run: bun run check:dev-server
@@ -434,29 +400,35 @@ jobs:
       - disclaimer
       - dev-server
     steps:
+      # THIS STEP IS WHY `strict` IS ON, and the story is worth keeping even
+      # now that the pin lives in the composite action rather than here.
+      #
+      # It once pinned `${{ env.BUN_VERSION }}` inline and reached main anyway,
+      # because the PR that added the step and the PR that added the rule
+      # forbidding it were each green against a main that did not yet have the
+      # other, and required checks were not `strict` — so the combination was
+      # never run until a third PR inherited it.
+      #
+      # That is the incident that turned `strict` ON; see the ruleset note in
+      # scripts/repo-settings.sh. It cannot recur the same way.
+      #
+      # The inline-pin half cannot recur either: `.github/actions/setup` is now
+      # the only place `setup-bun` appears, and `check:bun-version` asserts
+      # that — so a job cannot quietly reintroduce its own copy with a
+      # different version.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          # `.bun-version`, like the other ten steps in this file. This one
-          # pinned `${{ env.BUN_VERSION }}` inline and reached main anyway,
-          # because the PR that added the step and the PR that added the rule
-          # were each green against a main that did not yet have the other, and
-          # required checks were not `strict` — so the combination was never run
-          # until a third PR inherited it.
-          #
-          # That is the incident that turned `strict` ON; see the ruleset note
-          # in scripts/repo-settings.sh. It cannot recur the same way.
-          bun-version-file: .bun-version
+      - name: Set up
+        uses: ./.github/actions/setup
 
       # A gate can only aggregate what it was told to need, and `needs:` above
       # is maintained by hand. Adding a job to this workflow and forgetting to
       # list it there is a silent downgrade: the gate goes green without it and
-      # nothing anywhere says so. docs/PLAN.md schedules exactly that change for
-      # Phase 1 ("a11y and visual-regression checks wired into the aggregate
-      # gate"), so the trigger is already on the roadmap.
+      # nothing anywhere says so. Wiring the a11y and visual-regression checks
+      # into this aggregate gate is exactly that change, and the
+      # visual-regression half is still unbuilt — docs/COMPLIANCE.md tracks it
+      # as an open action.
       #
       # THIS WAS FORTY LINES OF INLINE awk AND jq, AND IT IS A SCRIPT NOW.
       # Inline, it could not be run before pushing, could not be tested, and

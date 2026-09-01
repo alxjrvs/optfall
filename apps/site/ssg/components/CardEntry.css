@@ -1917,6 +1917,13 @@
      history, not an address. The other copy that still exists is
      `.of-citation__sr-only` in `packages/components/src/react/Citation.css`;
      if this technique ever needs to change, it needs to change in both. */
+/* biome-ignore lint/style/noDescendingSpecificity: the earlier, more specific
+   `.of-card__collector .of-card__visually-hidden` sets `user-select` and
+   nothing else; this sets position and size and nothing else. The properties
+   are disjoint, so neither rule can override the other and the ordering the
+   rule warns about cannot produce the bug it exists to catch. Moving this
+   block ahead of that one to satisfy the rule would reorder 200 lines of a
+   1,930-line stylesheet for no behavioural difference. */
 .of-card__visually-hidden {
   position: absolute;
   inline-size: var(--of-space-hair);

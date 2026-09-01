@@ -294,7 +294,20 @@ function Corner({
   }
   if (mirror !== null) {
     return (
-      // biome-ignore lint/a11y/noAriaHiddenOnFocusable: a corner is a `<div>` and nothing it holds is focusable — a mark, a stone. The rule fires on the literal `"true"`; the same attribute two branches up, written as an expression, does not trip it. Keep the corners non-interactive: a focusable thing in here WOULD be the bug this rule is about, because the mirror renders it a second time.
+      /*
+        KEEP THE CORNERS NON-INTERACTIVE. A corner is a `<div>` holding a mark
+        or a stone, and nothing in it is focusable — which is the only reason
+        `aria-hidden` is safe here. Putting something focusable inside WOULD be
+        the bug `noAriaHiddenOnFocusable` is about, and worse than usual,
+        because the mirror renders it a second time.
+
+        THIS CARRIED A `biome-ignore` FOR THAT RULE AND THE IGNORE DID NOTHING.
+        It justified itself with "the rule fires on the literal `true`" — Biome
+        reports the suppression as unused, so the rule does not fire here at
+        all, on the literal or otherwise. The claim was wrong, or stopped being
+        true and nothing said so. The reasoning above is worth keeping; the
+        directive was not.
+      */
       <div
         className={`of-card__badges of-card__badges--${side} of-card__corner-mirror`}
         aria-hidden="true"
@@ -314,6 +327,7 @@ const CORNER_FOR: Record<string, "start" | "end" | undefined> = {
 };
 
 import { addressInSet, pitchRank } from "../../src/lib/card-versions";
+import { PITCH_REDIRECT } from "../inlineScripts";
 
 export function CardEntry({ page, selected = 0 }: CardEntryProps) {
   const { card } = page;
@@ -1103,23 +1117,18 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
         before the reader reads anything.
       */}
       <script
-        // Safe because the only variable is a JSON literal built above.
-        dangerouslySetInnerHTML={{
-          __html: `{
-  const targets = ${pitchTargets};
-  const wanted = new URLSearchParams(window.location.search).get("pitch");
-  if (wanted !== null) {
-    const target = targets[wanted];
-    if (target && target !== window.location.pathname.replace(/\\/$/, "")) {
-      const url = new URL(target, window.location.origin);
-      for (const [key, value] of new URLSearchParams(window.location.search)) {
-        if (key !== "pitch") url.searchParams.set(key, value);
-      }
-      window.location.replace(url.href);
-    }
-  }
-}`,
-        }}
+        /*
+          THE TARGET MAP TRAVELS AS AN ATTRIBUTE, AND THAT IS WHAT MAKES THE CSP
+          POSSIBLE. It used to be interpolated into the body, which gave every
+          one of the 12,776 card pages a different script and therefore a
+          different hash — unexpressible in `_headers`, which is pattern-based
+          with a 100-rule cap, and the reason `script-src` stayed permissive.
+          A CSP hash covers the body only, so moving the data here makes one
+          hash admit every card page. React escapes the attribute; the body is
+          now a constant in `inlineScripts.ts`, hashed from the same string.
+        */
+        data-pitch-targets={pitchTargets}
+        dangerouslySetInnerHTML={{ __html: PITCH_REDIRECT }}
       />
 
       <article>

@@ -1,0 +1,68 @@
+# The pinned Bun, and optionally dependencies. Run AFTER actions/checkout.
+#
+# WHY THIS EXISTS. `ci.yml` repeated a byte-identical setup-bun step ten times
+# and an eight-line install block six times. `deploy-cloudflare.yml` repeated
+# them twice more, WITHOUT the install block's comment, so the rationale was
+# already inconsistent across the two files that shared it.
+#
+# `actions/checkout` STAYS IN EVERY JOB AND CANNOT MOVE HERE. A local composite
+# action is read from the workspace, so it does not exist on the runner until
+# the repository has been checked out — putting checkout inside it is circular,
+# and the runner says so:
+#
+#   Can't find 'action.yml' ... under '.github/actions/setup'.
+#   Did you forget to run actions/checkout before running your local action?
+#
+# That is not a style constraint to work around. Every job therefore keeps its
+# own checkout step, and this action starts after it.
+#
+# WHAT DELIBERATELY DID NOT MOVE. The essays in `ci.yml` are job-level, not
+# step-level: the arguments for why `tokens` is separate from `lint`, why
+# `disclaimer` rebuilds rather than trusting another job's artifact, why
+# `repo-settings` is scheduled rather than gated, and the whole `gate` design
+# all sit above `jobs.<id>` and are untouched. The only prose that moved is the
+# one paragraph that was previously copied six times, and it is below, once.
+#
+# THIS DOES NOT SHORTEN THE REPOSITORY, AND SAYING OTHERWISE WOULD BE THE KIND
+# OF UNVERIFIED CLAIM CLAUDE.md WARNS ABOUT. Measured: `ci.yml` 525 -> 484 and
+# `deploy-cloudflare.yml` 203 -> 196, against 58 lines here. That is ten lines
+# MORE in total, because checkout could not move and because this file explains
+# itself at length.
+#
+# The value is single-sourcing, not brevity. The setup-bun SHA and the
+# `.bun-version` reference were spelled thirteen times and are now spelled once,
+# and `check:bun-version` asserts that `setup-bun` appears HERE AND NOWHERE
+# ELSE. The `gate` job's own comment records why that matters: a step there once
+# pinned Bun inline and reached main, and the inline-pin half of that incident
+# is now mechanically impossible rather than merely discouraged.
+#
+# THE COST, STATED. The `setup-bun` pin lives one directory away from the jobs
+# using it. Dependabot's `github-actions` ecosystem does update composite
+# actions, so it still moves.
+name: Set up
+description: Install the pinned Bun, optionally with dependencies. Requires actions/checkout to have run.
+
+inputs:
+  install:
+    description: Run `bun install --frozen-lockfile` as well.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      with:
+        bun-version-file: .bun-version
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        # No fallback branch. bun.lock is committed, so the only thing an
+        # `else` could ever do is let a pull request that DELETES the lockfile
+        # silently downgrade every job to an unpinned install and still go
+        # green — which is the one case where failing loudly is the point.
+        bun install --frozen-lockfile

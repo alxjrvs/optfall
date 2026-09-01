@@ -1,8 +1,8 @@
 /**
  * The page contract, and it is deliberately Astro's.
  *
- * `docs/PLAN.md` Phase 6 moves this site off Astro onto a static generator we
- * own. The single decision that makes that a port rather than a rewrite is
+ * `docs/ROADMAP.md` Phase 6 moved this site off Astro onto a static generator
+ * we own. The single decision that makes that a port rather than a rewrite is
  * this file: **a page is `{ pattern, getStaticPaths, page }`**, which is
  * `getStaticPaths` with a different spelling.
  *
@@ -15,9 +15,9 @@
  *
  * What it buys here specifically: `CARD_ROUTES` in `lib/cards.ts` already
  * returns `{ params, props }[]`, because that is what Astro wanted. It feeds
- * this generator with no adapter at all, which means the 13,675-page route
- * table — the part of the build most expensive to get wrong — moves across
- * untouched and provably identical.
+ * this generator with no adapter at all, which means the card route table — the
+ * part of the build most expensive to get wrong, and by some distance the
+ * largest — moves across untouched and provably identical.
  */
 
 import type { ReactNode } from "react";

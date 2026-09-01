@@ -17,8 +17,9 @@
  * nothing.
  *
  * **The rules version is a first-class field, not a parenthetical.**
- * `docs/PLAN.md` Phase 5: "every entry records the rules version it was answered
- * under; a bump flags it for review rather than silently serving stale law". A
+ * `docs/DATA-TERMS.md`, Layer 3: "every verified entry carries a name, a date
+ * and the rules version it was answered under" — a bump flags it for review
+ * rather than silently serving stale law. A
  * version that a reader has to hunt for cannot do that job, so it gets its own
  * struck band across the foot of the plate rather than a trailing note in small
  * text.
