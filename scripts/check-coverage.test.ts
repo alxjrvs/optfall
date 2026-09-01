@@ -14,7 +14,7 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { percentage, totalsFromLcov } from "./check-coverage";
+import { percentage, totalsFromLcov, worstFiles } from "./check-coverage";
 
 const RECORD = (file: string, found: number, hit: number): string =>
   [`SF:${file}`, `LF:${found}`, `LH:${hit}`, "end_of_record"].join("\n");
@@ -85,5 +85,47 @@ describe("percentage", () => {
    */
   test("no executable lines is 0, not 100", () => {
     expect(percentage(0, 0)).toBe(0);
+  });
+});
+
+describe("worstFiles ranks by missed lines, not by percentage", () => {
+  /*
+   * THE RANKING IS THE WHOLE VALUE OF THIS FUNCTION. A 40-line helper at 50%
+   * is missing twenty lines and looks alarming; a 1,800-line renderer at 94%
+   * is missing over a hundred and looks fine. Anyone trying to raise the total
+   * needs the renderer first, because moving the number means covering LINES.
+   * Sorting by percentage would invert exactly that, so it is asserted rather
+   * than assumed.
+   */
+  const lcov = [
+    RECORD("small-helper.ts", 40, 20),
+    RECORD("big-renderer.ts", 1800, 1692),
+    RECORD("fully-covered.ts", 500, 500),
+  ].join("\n");
+
+  test("the file missing the most lines comes first", () => {
+    expect(worstFiles(lcov, 10).map((entry) => entry.file)).toEqual([
+      "big-renderer.ts",
+      "small-helper.ts",
+    ]);
+  });
+
+  test("a fully covered file is omitted rather than listed at zero", () => {
+    expect(
+      worstFiles(lcov, 10).some((entry) => entry.file === "fully-covered.ts"),
+    ).toBe(false);
+  });
+
+  test("missed is found minus hit", () => {
+    const [worst] = worstFiles(lcov, 10);
+    expect(`${worst?.file} ${worst?.missed}`).toBe("big-renderer.ts 108");
+  });
+
+  test("the limit is honoured", () => {
+    expect(worstFiles(lcov, 1)).toHaveLength(1);
+  });
+
+  test("an empty report yields nothing rather than throwing", () => {
+    expect(worstFiles("", 10)).toEqual([]);
   });
 });

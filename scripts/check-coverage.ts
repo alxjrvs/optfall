@@ -69,6 +69,58 @@ export function percentage(found: number, hit: number): number {
   return found === 0 ? 0 : (hit / found) * 100;
 }
 
+/** One file's line coverage, as lcov records it. */
+export interface FileCoverage {
+  readonly file: string;
+  readonly found: number;
+  readonly hit: number;
+  readonly missed: number;
+}
+
+/**
+ * Per-file coverage, worst first, ranked by MISSED LINES rather than by
+ * percentage.
+ *
+ * That ranking is the point. A 40-line helper at 50% is missing twenty lines
+ * and looks alarming; a 1,800-line renderer at 94% is missing over a hundred
+ * and looks fine. Sorting by percentage puts the helper first and buries the
+ * renderer, which is backwards for anyone trying to raise the total — moving
+ * the number means covering LINES, and the file with the most uncovered lines
+ * is where they are.
+ *
+ * This exists because per-suite coverage cannot answer the question. Running
+ * one directory at a time reports a file as barely covered when another
+ * directory's tests are what exercise it; only the whole-suite union is true,
+ * and this is where that union gets read.
+ */
+export function worstFiles(
+  lcov: string,
+  limit: number,
+): readonly FileCoverage[] {
+  const files: FileCoverage[] = [];
+  let file = "";
+  let found = 0;
+  let hit = 0;
+
+  for (const line of lcov.split(/\r?\n/)) {
+    if (line.startsWith("SF:")) {
+      file = line.slice(3);
+      found = 0;
+      hit = 0;
+    } else if (line.startsWith("LF:")) found = Number(line.slice(3)) || 0;
+    else if (line.startsWith("LH:")) hit = Number(line.slice(3)) || 0;
+    else if (line === "end_of_record" && file !== "") {
+      files.push({ file, found, hit, missed: found - hit });
+      file = "";
+    }
+  }
+
+  return files
+    .filter((entry) => entry.missed > 0)
+    .sort((a, b) => b.missed - a.missed)
+    .slice(0, limit);
+}
+
 if (import.meta.main) {
   rmSync(COVERAGE_DIR, { recursive: true, force: true });
 
@@ -108,6 +160,22 @@ if (import.meta.main) {
 
   const summary = `Line coverage ${rounded}% (${hit}/${found} lines), floor ${FLOOR}%`;
   console.log(summary);
+
+  /* Printed unconditionally, not only on failure. Someone raising the floor
+     needs this list BEFORE the build is red, and the whole-suite union is the
+     only place it is true — a per-directory run reports a file as uncovered
+     when another directory's tests are what exercise it. */
+  const worst = worstFiles(readFileSync(LCOV, "utf8"), 15);
+  if (worst.length > 0) {
+    console.log(`\nMost uncovered lines, worst first:`);
+    for (const entry of worst) {
+      const pct = Math.round(percentage(entry.found, entry.hit) * 10) / 10;
+      const name = entry.file.replace(`${ROOT}/`, "");
+      console.log(
+        `  ${String(entry.missed).padStart(5)} missed  ${String(pct).padStart(5)}%  ${name}`,
+      );
+    }
+  }
 
   /* GitHub renders this on the run's summary page, so the number is visible
      without opening a log. Absent locally, which is why it is guarded. */

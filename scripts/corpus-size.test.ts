@@ -30,9 +30,10 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 
 import { ROOT } from "./lib/root";
+import { repoFile } from "./lib/root";
 
 /** The file whose size the prose keeps claiming. */
-const CORPUS_PATH = "data/cards/cards.json";
+const CORPUS_PATH = repoFile("data/cards/cards.json");
 
 /**
  * Files known to state the corpus size, kept as an EXPECTED MINIMUM rather than
@@ -102,7 +103,7 @@ const CLAIM_PATTERNS: readonly RegExp[] = [
 
 /** Every corpus-size figure a file states, as numbers. */
 function megabytesClaimedIn(path: string): readonly number[] {
-  const source = readFileSync(path, "utf8");
+  const source = readFileSync(repoFile(path), "utf8");
   return CLAIM_PATTERNS.flatMap((pattern) =>
     [...source.matchAll(pattern)].map((match) => Number(match[1])),
   );
