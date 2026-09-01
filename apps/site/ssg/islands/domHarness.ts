@@ -1,28 +1,39 @@
 /**
  * One happy-dom registration, shared by every runtime test in the repository.
  *
- * WHY THIS IS NOT JUST `GlobalRegistrator.register()` IN EACH FILE. That is
- * what the first runtime test did, and it was correct while there was one of
- * them. The second one broke it in two ways at once, and both are teardown
- * races rather than anything either test does wrong:
+ * WHY COUNT INSTEAD OF REGISTERING PER FILE — AND WHAT THAT CLAIM IS AND IS
+ * NOT. An earlier version of this docblock said per-file
+ * `register()`/`unregister()` was simply broken. **That was too strong, and
+ * the tree disproves it:** `CardSearch.dom.test.tsx` and
+ * `RulesSearch.dom.test.tsx` both register for themselves, the three files
+ * that use this module do not, and all five pass together — 95 assertions,
+ * exit 0. Per-file registration works.
  *
- * - **Two registrations swap `document` under a live React root.** `bun test`
- *   runs every file in one process, and a second `register()` installs fresh
- *   globals over the first. React's event system holds the nodes it was given;
- *   handed a new `document`, it dereferences an instance that is now null and
- *   throws `null is not an object (evaluating 'inst.tag')` — attributed to the
- *   FIRST file, which had already passed.
- * - **The first `unregister()` pulls the DOM out from under work the scheduler
- *   has queued.** React's `performWorkUntilDeadline` reads `window.event`, so a
- *   callback scheduled during the last test of a file and run after its
- *   `afterAll` throws `window is not defined`. `bun test` reports it as an
- *   unhandled error between tests, counts zero failures — and exits 1.
+ * What is real is the failure that produced this module, reproduced at the
+ * time on two files and worth naming because it is easy to hit again:
  *
- * SO REGISTRATION IS COUNTED RATHER THAN REPEATED. The first file to ask gets
- * the DOM; the last one to let go takes it down. That is correct whether Bun
- * imports the test files one at a time or all of them up front, which is the
- * property that matters, because it is not a thing this repository should have
- * to know.
+ * - **A second `register()` can swap `document` under a live React root.**
+ *   `bun test` runs every file in one process, and fresh globals land over the
+ *   old ones. React's event system holds the nodes it was given; handed a new
+ *   `document` it dereferences an instance that is now null and throws `null is
+ *   not an object (evaluating 'inst.tag')` — attributed to the FIRST file,
+ *   which had already passed.
+ * - **An `unregister()` can pull the DOM out from under queued work.** React's
+ *   `performWorkUntilDeadline` reads `window.event`, so a callback scheduled
+ *   during a file's last test and run after its `afterAll` throws `window is
+ *   not defined`. `bun test` reports that as an unhandled error between tests,
+ *   counts ZERO failures — and exits 1.
+ *
+ * Both need a file to leave work pending at teardown. The case that did was a
+ * test holding a fetch that never settles, to exercise an island's in-flight
+ * state; a file whose roots are all unmounted and whose promises have all
+ * resolved tears down cleanly on its own.
+ *
+ * SO THIS IS INSURANCE RATHER THAN A FIX FOR A LIVE BUG. Counting makes the
+ * DOM's lifetime independent of how many files want one and what order Bun
+ * loads them in — the first to ask gets it, the last to let go takes it down —
+ * which is a property worth having precisely because nothing in a test file
+ * makes it obvious that it has left a timer running.
  *
  * IT IS STILL HANDED BACK, AND THAT IS THE WHOLE POINT OF COUNTING RATHER THAN
  * LEAKING. A `window` left standing reaches the 61 assertions in

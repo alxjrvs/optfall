@@ -99,7 +99,6 @@ dataset that was never built. The legality on card pages is upstream's own
 flags, read by `apps/site/src/lib/cards.ts` — which is what has always actually
 served readers. The work is in the git history if the decision reverses.
 
-
 ## Working on it
 
 Built on **[the Butter Stack](https://alxjrvs.github.io/butter/)** — Bun · Unified workspace · TypeScript · TanStack · Edge-deployed · React.

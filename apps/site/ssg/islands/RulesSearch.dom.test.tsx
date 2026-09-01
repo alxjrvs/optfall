@@ -1,523 +1,875 @@
 /**
  * `RulesSearch` against a real DOM — the second runtime test in this repo.
  *
- * WHY IT EXISTS. This is the island the whole of Phase 4 rests on: `docs/
- * ROADMAP.md` puts every rules paragraph at a permanent URL, and this component
- * is what turns a typed word into one of those URLs. It was the second-worst
- * file in the tree by uncovered lines — **134 of them** — because everything it
- * does is a browser doing it. `ssg.test.ts` renders its markup and reads
- * strings, which sees the server render and nothing after it: the URL sync, the
- * three index states, Escape, submit, popstate and the page turn are all
- * invisible to a test that never hydrates.
+ * WHY IT EXISTS. This island was 611 lines with no direct coverage of any kind,
+ * and the reason that mattered is not the line count: almost everything it does
+ * is a fact about a browser. `ssg.test.ts` renders `/cr` to a string and can see
+ * the chapter browse, because the chapter browse is the SERVER render — the
+ * query lives in `?q=`, a static document cannot know it, and the index arrives
+ * over `fetch`. So the three states this component was rebuilt around when the
+ * index moved out of `data-props` — not here yet, here, failed — were invisible
+ * to every test that existed, and the one shape `docs/PLAN.md` forbids outright
+ * (telling a reader the Comprehensive Rules do not contain a word while the
+ * index is still in flight) could have shipped without a single assertion
+ * moving.
  *
- * WHAT IS HERE, AND WHAT DELIBERATELY IS NOT. The ranking itself is covered
- * exhaustively by `src/lib/search.test.ts` against the real corpus, and the
- * pager's arithmetic by `src/lib/pagination.test.ts`. Repeating either would be
- * slower and no truer. What is here is the seam: the things that are only true
- * once there is a `window`, a `history` and a `fetch`.
+ * SCOPED THE WAY `CardSearch.dom.test.tsx` IS SCOPED. What a rules query returns
+ * is the engine's business and is not re-asked here through a DOM; what is here
+ * is the handful of things that are only true once there is a `window`. The
+ * fixtures are chosen to make the difference visible rather than to explore the
+ * corpus: `dominate` is 9 sections and `attack` is 188, which is the only thing
+ * either is used for.
  *
- * THE DOM IS TAKEN AND HANDED BACK THROUGH `./domHarness.ts`, for the reasons
- * `CardSearch.dom.test.tsx` sets out at length — `bun test` runs every file in
- * one process, and a DOM left standing reaches the 61 assertions in
- * `packages/components/src/react/a11y.test.tsx`, which build their own. What
- * this file added is the second holder, and with it the two teardown races a
- * single `register()`/`unregister()` pair per file cannot survive. Both are
- * written up in that module.
+ * HAPPY-DOM IS REGISTERED HERE TOO, AND THAT IS A CHANGE TO WHAT
+ * `CardSearch.dom.test.tsx` SAYS. Its docblock required itself to be the ONLY
+ * file that registers, and the invariant it was protecting is real — a11y.test
+ * builds its own JSDOM and axe reaches for the globals, so 61 assertions break
+ * if a `window` outlives the file that wanted one. But "only one file
+ * registers" was a way of stating that invariant, not the invariant itself.
+ *
+ * MEASURED, BECAUSE THE ANSWER TURNS ON HOW `bun test` SCHEDULES FILES: it
+ * loads a file, runs its tests, and only then loads the next. A file's module
+ * body therefore executes inside its own window between the previous file's
+ * `afterAll` and the next file's load — so register-and-unregister PER FILE
+ * scopes the DOM exactly as tightly as one registration did. Verified both
+ * ways round: a second registering file sorting before `CardSearch` and after
+ * it leaves the suite at 0 failures either way. The invariant that has to hold
+ * is that every file which registers also unregisters, and that is what the
+ * `afterAll` at the bottom of each of these two files is for.
+ *
+ * ONE SHIPPED-CODE CHANGE CAME OUT OF WRITING THIS, and it is named here
+ * because a test file is a strange place to discover it. `SearchField` wired
+ * its input with `onChange`, and React's ChangeEventPlugin is silent under
+ * happy-dom for a dispatched `input` event — `HeaderSearch` had already
+ * measured that and switched to `onInput` for its own field. So the primitive
+ * this island is built on could not be typed into by a test at all, and every
+ * behaviour that begins with a keystroke was unreachable. `SearchField` now
+ * makes the same choice `HeaderSearch` made, for the same reason, and the two
+ * fields agree again.
+ *
+ * WHAT IS STILL NOT COVERED, STATED RATHER THAN LEFT LOOKING COVERED. Escape
+ * clears this field through React's `onKeyDown` prop, and React 19's delegated
+ * keydown never fires under happy-dom whatever the container is — the same
+ * measurement `HeaderSearch` records, which is why THAT island listens for
+ * keydown natively. Driving Escape here would need the same move, which is a
+ * change to shipped behaviour rather than a test, so it is not made and the
+ * hole is written down instead.
  */
 
-import { holdDom, releaseDom } from "./domHarness";
+import { GlobalRegistrator } from "@happy-dom/global-registrator";
 
-holdDom("https://optfall.com/cr");
+GlobalRegistrator.register({ url: "https://optfall.com/cr" });
 
-/* React's own flag. Without it `act` does not flush and every assertion below
-   races the update it is asserting on — see `CardSearch.dom.test.tsx`. */
+/* React's own flag. Without it `act` does not flush and the suite goes green
+   for the wrong reason — see the same note in `CardSearch.dom.test.tsx`. */
 (
   globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "bun:test";
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { createRoot, hydrateRoot, type Root } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 
 import { CORPUS } from "../../src/lib/rules";
-import { buildIndex, chapters, decodeIndex } from "../../src/lib/search";
+import {
+  buildIndex,
+  chapters,
+  decodeIndex,
+  search,
+  type SearchResult,
+} from "../../src/lib/search";
 import { RulesSearch } from "./RulesSearch";
 import { searchIndexClient } from "./useSearchIndex";
 
 /**
- * The real index, for the same reason `CardSearch.dom.test.tsx` uses a real
- * one: a stub would let a query "work" while returning nothing, which is the
- * shape of bug this file is here to catch.
+ * The real index, built here rather than imported from `ssg/searchIndexes.ts`.
+ *
+ * THAT MODULE IS THE BUILD'S, and it reaches the card corpus on the way past —
+ * 18 MB this island has no use for. It is also the module that DERIVES the
+ * browse prop, so importing both from it would make the fixture and the thing
+ * under test one expression. The same argument `CardSearch.dom.test.tsx` makes
+ * for keeping `newest` local.
  */
 const encoded = buildIndex(CORPUS);
-const browse = chapters(decodeIndex(encoded));
+/**
+ * The decoded index, kept so a test can ask the ENGINE what it should be
+ * looking at.
+ *
+ * NOT A SECOND SOURCE OF TRUTH — IT IS THE OTHER SIDE OF THE ASSERTION. Two
+ * tests below check that what reached the DOM is exactly what the engine
+ * produced, for a notice and for a page of results. Spelling the expected
+ * strings out by hand would make those tests about the corpus (and break on
+ * every rules release); deriving them here makes them about the component,
+ * which is the only thing this file is for.
+ */
+const index = decodeIndex(encoded);
+const browse: readonly SearchResult[] = chapters(index);
 
-/** Where the index is served from, asserted rather than ignored. */
-const INDEX_URL = "/assets/rules-index-under-test.json";
-/** An address whose fetch never settles, for the in-flight state. */
-const PENDING_URL = "/assets/rules-index-never-arrives.json";
-/** An address that answers 503, for the failed state. */
-const FAILING_URL = "/assets/rules-index-broken.json";
+/**
+ * Three addresses, because this component has three states and they are told
+ * apart by what happens to a request.
+ *
+ * ONE URL PER STATE, AND THEY MUST NOT BE SHARED. `searchIndexClient` is a
+ * module constant with `staleTime: Infinity` and `gcTime: Infinity`, so a cache
+ * entry outlives the test that made it — and the URL is the key. Two states on
+ * one address would be one state, whichever ran first.
+ */
+const GOOD_URL = "/assets/rules-index-under-test.json";
+/** A request that never settles: the index is on its way and has not arrived. */
+const SLOW_URL = "/assets/rules-index-in-flight.json";
+/** A request that fails every attempt. */
+const DEAD_URL = "/assets/rules-index-missing.json";
+/**
+ * An address ONE test uses and nothing else does.
+ *
+ * IT HAS TO BE ITS OWN, or the test that asks whether the component fetched
+ * its prop cannot tell a request from a cache hit left by an earlier test. The
+ * first version of that test used `GOOD_URL` and was a tautology: `settle()`
+ * spins until the cache entry exists, so asserting the entry exists could not
+ * fail, and a warm entry from a previous test meant it passed against a
+ * component that made no request at all.
+ */
+const PROP_URL = "/assets/rules-index-from-the-prop.json";
 
+/** Every address the component has actually asked for, in order. */
+const requested: string[] = [];
+
+/*
+ * RETRIES OFF FOR THE FAILING ADDRESS ONLY. The shipped client retries twice
+ * with Query's exponential backoff, which is right for a reader and costs a
+ * test three seconds of waiting to reach a state it can already describe. This
+ * is a default keyed to a URL nothing but this file asks for, so the shipped
+ * policy is untouched — and it is the retry SCHEDULE being skipped, not the
+ * error path, which is the thing under test.
+ */
+searchIndexClient.setQueryDefaults(["search-index", DEAD_URL], {
+  retry: false,
+});
+
+/**
+ * The one thing the browser provides and the test environment does not.
+ *
+ * THE ADDRESS IS ASSERTED RATHER THAN IGNORED, as it is in the card harness: an
+ * island that fetched something other than its `indexUrl` prop would otherwise
+ * look like an island whose index never loads.
+ */
 globalThis.fetch = (async (input: RequestInfo | URL): Promise<Response> => {
   const url = typeof input === "string" ? input : String(input);
-  if (url === INDEX_URL) {
+  requested.push(url);
+  if (url === GOOD_URL || url === PROP_URL) {
     return new Response(JSON.stringify(encoded), {
       headers: { "content-type": "application/json" },
     });
   }
-  if (url === FAILING_URL) return new Response("no", { status: 503 });
-  /* Never settles. The component has to say what it is waiting for while this
-     is outstanding, which is the whole of the `pending` branch. */
-  if (url === PENDING_URL) return new Promise<Response>(() => {});
+  if (url === DEAD_URL) return new Response("no", { status: 404 });
+  if (url === SLOW_URL) return new Promise<Response>(() => {});
   throw new Error(`unexpected fetch: ${url}`);
 }) as typeof fetch;
 
-/** The rules version, as `cr.page.tsx` passes it. */
-const VERSION = CORPUS.version;
+/** The corpus version, as a value no corpus could produce. See `version`. */
+const VERSION = "0.0.0-under-test";
 
 /**
  * Wait for the index request to land.
  *
- * IT WAITS FOR THE CACHED DATA, NOT FOR `isFetching() === 0` — "nothing is
- * fetching" is also true in the tick BEFORE React's effect starts the request,
- * so a helper resting on it returns immediately and settles nothing. It throws
- * rather than giving up quietly, because a settle helper that returns after N
- * ticks whether or not anything happened is how a suite passes for the wrong
- * reason.
+ * IT WAITS FOR THE CACHED DATA, NOT FOR "NOTHING IS FETCHING", for the reason
+ * the card harness sets out at length: React starts the request in an effect,
+ * so nothing is in flight for the first tick after a render and a helper
+ * resting on that returns before anything has happened. It throws rather than
+ * giving up quietly.
  */
-async function settle(url = INDEX_URL): Promise<void> {
+async function settle(url: string = GOOD_URL): Promise<void> {
   for (let tick = 0; tick < 50; tick += 1) {
-    if (searchIndexClient.getQueryData(["search-index", url])) return;
-    await tick_();
+    if (searchIndexClient.getQueryData(["search-index", url])) {
+      /* ONE MORE FLUSH, BECAUSE THE CACHE LANDS BEFORE THE RENDER DOES. The
+         entry appears the moment the promise resolves; the subscription that
+         turns it into a re-render is React's, and returning between the two
+         hands every caller a component still showing the loading state. Found
+         by writing this helper without the tick and watching a settled index
+         render nine rows as zero. */
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      });
+      return;
+    }
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+    });
   }
-  throw new Error("the rules index never finished loading");
+  throw new Error(`the rules index at ${url} never finished loading`);
 }
 
-/** One flushed macrotask. */
-async function tick_(): Promise<void> {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1));
-  });
-}
-
-/** Let both debounced effects fire. See `SETTLE` in the component. */
+/**
+ * Let the two debounced effects fire.
+ *
+ * REAL TIME RATHER THAN A FAKE CLOCK. `SETTLE` is 600 ms and there are two
+ * effects behind it — the address bar and the live region — which is the whole
+ * reason they are separate. Faking the clock would mean faking it inside `act`
+ * for React's scheduler too; waiting is three lines and cannot be wrong.
+ */
 async function debounce(): Promise<void> {
   await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    await new Promise((resolve) => setTimeout(resolve, 800));
   });
 }
 
-interface Mounted {
-  readonly unmount: () => void;
+/**
+ * EVERY ROOT THIS FILE MAKES, TORN DOWN AFTER THE TEST THAT MADE IT.
+ *
+ * NOT TIDINESS — A FAILING ASSERTION IS WHY. `useFocusShortcut` listens on
+ * `window`, which outlives a root, so a test that threw before reaching its own
+ * `unmount()` left a live `/` handler behind and the NEXT test's assertion
+ * about an unmounted island failed for a reason that had nothing to do with it.
+ * Measured: one broken assertion produced two failures, and the second one
+ * pointed at the wrong code. Teardown that cannot be skipped costs four lines
+ * and removes that whole class of misdirection.
+ */
+const roots: Root[] = [];
+
+/** An empty page with a mount point, the way `Island` leaves one. */
+function host(): HTMLElement {
+  document.body.innerHTML = `<main><div id="root"></div></main>`;
+  const node = document.getElementById("root");
+  if (node === null) throw new Error("no root");
+  return node;
 }
 
-/** Mount the island into `#root`, at whatever address the test has set. */
-async function mount(indexUrl = INDEX_URL): Promise<Mounted> {
-  document.body.innerHTML = `<main><div id="root"></div></main>`;
-  const host = document.getElementById("root");
-  if (host === null) throw new Error("no root");
-  const root: Root = createRoot(host);
+interface MountOptions {
+  readonly indexUrl?: string;
+  readonly browse?: readonly SearchResult[];
+  readonly version?: string;
+}
+
+/** Mount the island the way `islands.client.ts` does, minus the hydration. */
+async function mount(options: MountOptions = {}): Promise<Root> {
+  const root: Root = createRoot(host());
+  roots.push(root);
   await act(async () => {
     root.render(
-      <RulesSearch indexUrl={indexUrl} browse={browse} version={VERSION} />,
+      <RulesSearch
+        indexUrl={options.indexUrl ?? GOOD_URL}
+        browse={options.browse ?? browse}
+        version={options.version ?? VERSION}
+      />,
     );
   });
-  if (indexUrl === INDEX_URL) await settle();
-  /* One more flush so the mount effect's `setQuery` from `?q=` has rendered.
-     Without it every test that arrives with a query asserts the browse. */
-  await tick_();
-  return { unmount: () => root.unmount() };
+  return root;
 }
 
-/** The field the island renders and owns. */
-function fieldNode(): HTMLInputElement {
-  const field = document.querySelector(".of-search__field");
-  if (!(field instanceof HTMLInputElement)) throw new Error("no field");
-  return field;
+/** Mount, and wait for the index. Every test that asks a question needs both. */
+async function answered(options: MountOptions = {}): Promise<void> {
+  await mount(options);
+  await settle(options.indexUrl ?? GOOD_URL);
 }
 
-/** The count line, which is what the page is claiming to have found. */
+/** Tear a root down mid-test, for the tests that are ABOUT unmounting. */
+async function unmount(root: Root): Promise<void> {
+  await act(async () => root.unmount());
+  const at = roots.indexOf(root);
+  if (at !== -1) roots.splice(at, 1);
+}
+
+function field(): HTMLInputElement {
+  const node = document.querySelector("input[type=search]");
+  if (!(node instanceof HTMLInputElement)) throw new Error("no field");
+  return node;
+}
+
+/** The count line — the loading line, the failure line and the summary share it. */
 function count(): string {
   return document.querySelector(".of-rules__count")?.textContent?.trim() ?? "";
 }
 
-/** Every citation on the page, in order — the answer itself. */
-function cited(): string[] {
-  return [...document.querySelectorAll(".of-rules__result")].map(
-    (row) => row.querySelector(".of-citation")?.textContent?.trim() ?? "",
-  );
-}
-
-/** What the live region is currently announcing. */
+/** What the live region is currently saying. Behind the results, deliberately. */
 function announced(): string {
   return (
     document.querySelector(".of-rules__announcement")?.textContent?.trim() ?? ""
   );
 }
 
-/** The address, as a reader would copy it. */
-function address(): string {
-  return `${window.location.pathname}${window.location.search}`;
+function rows(): number {
+  return document.querySelectorAll(".of-rules__result").length;
 }
 
 /**
- * Set an input's value the way a KEYSTROKE does, past React's value tracker.
+ * Type into the field the way a browser does.
  *
- * `field.value = text` does not work on a controlled input and fails silently:
- * React installs its own `value` setter as its change detection, so an ordinary
- * assignment updates the tracker in the same breath and `onChange` never fires.
- * `CardSearch.dom.test.tsx` carries the full account.
+ * THE PROTOTYPE SETTER, PAST REACT'S VALUE TRACKER. `field.value = text` on a
+ * controlled input goes through the own property React installed, which updates
+ * the tracker in the same breath, so React compares the two, finds them equal
+ * and fires nothing — it looks exactly like typing and is not. The card harness
+ * carries the full measurement.
  */
-function nativeValue(field: HTMLInputElement, text: string): void {
+async function type(text: string): Promise<void> {
+  const input = field();
   const setter = Object.getOwnPropertyDescriptor(
     HTMLInputElement.prototype,
     "value",
   )?.set;
   if (setter === undefined) throw new Error("no prototype value setter");
-  setter.call(field, text);
-}
-
-/** Type, as a real `input` event rather than as a state poke. */
-async function type(text: string): Promise<void> {
-  const field = fieldNode();
   await act(async () => {
-    nativeValue(field, text);
-    field.dispatchEvent(new Event("input", { bubbles: true }));
+    setter.call(input, text);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
   });
 }
 
-/** Go to an address without reloading, the way a test arranges its scenario. */
-function at(url: string): void {
-  window.history.replaceState(null, "", url);
+/** Submit the field's form, the way Enter does. */
+async function submit(): Promise<void> {
+  const form = field().form;
+  if (form === null) throw new Error("no form");
+  await act(async () => {
+    form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    );
+  });
 }
 
 beforeEach(() => {
-  at("/cr");
-  /* THE QUERY CACHE OUTLIVES A TEST, because the client is a module constant —
-     which is what makes it a cache in the first place. Without this, the test
-     that asserts the in-flight state would find the previous test's index
-     already sitting under its own key. */
-  searchIndexClient.clear();
+  window.history.replaceState(null, "", "/cr");
 });
 
+afterEach(async () => {
+  const standing = roots.splice(0, roots.length);
+  await act(async () => {
+    for (const root of standing) root.unmount();
+  });
+});
+
+/*
+ * HANDED BACK, BECAUSE THIS PROCESS IS SHARED. Every file that registers
+ * happy-dom has to unregister it, or the next file's assertions run against a
+ * `window` they were written without — `packages/components/src/react/
+ * a11y.test.tsx` builds its own JSDOM and axe reaches for the globals, so it
+ * finds somebody else's document instead of the one under test.
+ * `CardSearch.dom.test.tsx` carries the measurement of what that costs. This is
+ * the price of not putting a DOM in `bunfig.toml`'s preload, and it is much
+ * cheaper than the alternative.
+ */
 afterAll(async () => {
-  await releaseDom();
+  await GlobalRegistrator.unregister();
 });
 
-describe("before anything is asked", () => {
-  test("the chapter browse is the page, and it needs no index", async () => {
-    const root = await mount();
+/* -------------------------------------------------------------------------- */
+/* The page before anybody has asked it anything                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * NOTHING HERE CALLS `settle()`, AND THAT IS THE PROPERTY UNDER TEST. `/cr` is
+ * reached from the nav and from every `cr:` citation on the site, and what it
+ * shows a reader who has typed nothing must not depend on a fetch: a browse
+ * that waited for the index would be a blank page on a slow connection. Two of
+ * these mount against `SLOW_URL`, whose request never settles, so the assertion
+ * is not merely that the browse arrives first — it is that it arrives at all.
+ */
+describe("the browse stands up without an index", () => {
+  test("the chapter list is the PROP, not something derived from the index", async () => {
+    /*
+     * HANDED THREE ROWS WHERE THE INDEX HOLDS NINE. This is the whole reason
+     * `browse` is a prop: it used to be `useMemo(() => chapters(rules), …)`,
+     * which forced a 204 kB index into the page to render nine links. A
+     * component that quietly went back to deriving them would pass every other
+     * assertion in this file and print nine rows here.
+     */
+    await mount({ indexUrl: SLOW_URL, browse: browse.slice(0, 3) });
+
+    expect(rows()).toBe(3);
     expect(count()).toBe("Start with a chapter, or type above.");
-    /* The nine chapters, by citation, so this cannot pass on some other list.
-       They come from the `browse` prop — the reason `/cr` renders without a
-       fetch at all for a reader who has not typed. */
-    expect(cited()).toEqual(browse.map((chapter) => chapter.id));
-    root.unmount();
   });
 
-  test("the rule above the fold is named Chapters, not Results", async () => {
-    const root = await mount();
-    /* `OrnamentalRule` puts its label on the `<hr>` as an accessible name
-       rather than as visible text, so this is the only place it can be read —
-       and it is the one thing on the page that says which of the two things
-       under the field is being shown. */
+  test("the rule between the field and the list says which list it is", async () => {
+    /* "Chapters" before a query, "Results" after one. It is the only thing on
+       the page naming what is underneath it, and it is an `aria-label` on an
+       `<hr>`, so nothing visual would show it drifting. */
+    await mount({ indexUrl: SLOW_URL });
+
     expect(
-      document.querySelector(".of-rule__line")?.getAttribute("aria-label"),
+      document.querySelector("hr.of-rule__line")?.getAttribute("aria-label"),
     ).toBe("Chapters");
-    root.unmount();
   });
 
-  test("and it says Results once something has been asked", async () => {
-    at("/cr?q=dominate");
-    const root = await mount();
-    expect(
-      document.querySelector(".of-rule__line")?.getAttribute("aria-label"),
-    ).toBe("Results");
-    root.unmount();
-  });
-});
+  test("the live region exists before it has anything to say", async () => {
+    /* Always present, never emptied: a live region added to the page at the
+       moment it has something to announce is a live region that says nothing,
+       because assistive technology has nothing subscribed to it yet. */
+    await mount({ indexUrl: SLOW_URL });
 
-describe("the query in the URL is the answer on the page", () => {
-  test("`?q=` is read on mount and answered", async () => {
-    at("/cr?q=dominate");
-    const root = await mount();
-    expect(fieldNode().value).toBe("dominate");
-    expect(count()).toBe("9 sections match.");
-    expect(cited().length).toBe(9);
-    root.unmount();
-  });
-
-  test("`?page=` and `?per=` are read with it", async () => {
-    at("/cr?q=attack&page=2&per=30");
-    const root = await mount();
-    /* 188 matches at 30 a page is seven pages, and this is the second. */
-    expect(count()).toBe("188 sections match. Page 2 of 7.");
-    expect(cited().length).toBe(30);
-    root.unmount();
-  });
-
-  /*
-   * THE CLAMP, which is the only path that ranks twice. A pasted link can name
-   * a page a smaller answer no longer has; the component re-runs the search
-   * against the clamped window rather than rendering an empty list under a
-   * count that says there are results.
-   */
-  test("a page past the end renders the last page rather than nothing", async () => {
-    at("/cr?q=dominate&page=9");
-    const root = await mount();
-    expect(cited().length).toBeGreaterThan(0);
-    expect(count()).toContain("9 sections match.");
-    root.unmount();
+    const region = document.querySelector(".of-rules__announcement");
+    expect(region?.getAttribute("role")).toBe("status");
+    expect(region?.getAttribute("aria-live")).toBe("polite");
+    expect(region?.textContent).toBe("");
   });
 });
 
-describe("each ranking tier explains why the row is there", () => {
-  /*
-   * `why()` turns `matchedIn` into the words under a result. Every branch of it
-   * is reachable from the committed CR corpus, and each query below was chosen
-   * by asking the index which tier it produces rather than by reading the rules.
-   */
-  const meta = (): string[] =>
-    [...document.querySelectorAll(".of-rules__why")].map(
-      (node) => node.textContent?.trim() ?? "",
-    );
+/* -------------------------------------------------------------------------- */
+/* The three states the fetch created                                          */
+/* -------------------------------------------------------------------------- */
 
-  test("a section id matched as an id", async () => {
-    at("/cr?q=1.0.1a");
-    const root = await mount();
-    expect(meta()).toContain("section id");
-    root.unmount();
+/**
+ * THE REASON THIS FILE EXISTS.
+ *
+ * When the index travelled in `data-props` this component had two branches
+ * under a query — matches, and no matches — and both were true the moment it
+ * rendered. Fetching the index added a third that is neither: a question
+ * nothing can answer YET. `docs/PLAN.md`'s "degrade visibly" makes rendering
+ * the second while the first is true the one shape to refuse, because it is a
+ * confident wrong answer — it tells a reader the Comprehensive Rules do not
+ * contain a word they can see in them.
+ *
+ * All three are unreachable without a browser, which is why none of them had an
+ * assertion before this file.
+ */
+describe("a question nothing can answer YET is not a question nothing matches", () => {
+  test("while the index is in flight the page says so, in both places", async () => {
+    window.history.replaceState(null, "", "/cr?q=dominate");
+    await mount({ indexUrl: SLOW_URL });
+
+    /* The count line, which is what a reader sees. */
+    expect(count()).toContain("Loading the rules index to answer");
+    expect(count()).toContain("dominate");
+    /* AND NOT THE OTHER THING, asserted rather than implied. The empty-result
+       copy is what this state must never be mistaken for. */
+    expect(count()).not.toContain("Nothing");
+
+    /* And the live region, once it settles — a listener told "nothing matches"
+       while the index is still coming has been told the wrong thing, and told
+       it first. */
+    await debounce();
+    expect(announced()).toBe("Loading the rules index to answer dominate.");
+
+    /* No results list at all, rather than an empty one. */
+    expect(rows()).toBe(0);
   });
 
-  test("a parent matched through its children", async () => {
-    at("/cr?q=1.0");
-    const root = await mount();
-    expect(meta().some((why) => why.startsWith("under "))).toBe(true);
-    root.unmount();
-  });
+  test("an index that never loads leaves every section still reachable", async () => {
+    /*
+     * DEGRADE VISIBLY. The claim `/cr` makes is that every section has a
+     * permanent URL, and that claim does not depend on the index — so the
+     * failure is stated alongside the two routes that still work rather than as
+     * a bare apology. The chapter list under the failure line is the SAME list
+     * the empty query renders, named once in the component precisely so the
+     * error path cannot be the copy that drifts.
+     */
+    window.history.replaceState(null, "", "/cr?q=dominate");
+    await mount({ indexUrl: DEAD_URL });
 
-  test("a heading matched as a heading, and body text as its terms", async () => {
-    at("/cr?q=attack");
-    const root = await mount();
-    expect(meta()).toContain("heading");
-    /* The text tier prints the matched words themselves, joined by a middot. */
-    expect(meta()).toContain("attack");
-    root.unmount();
-  });
-});
+    for (
+      let tick = 0;
+      tick < 50 && !count().includes("did not load");
+      tick += 1
+    ) {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      });
+    }
 
-describe("what the engine says, the page says", () => {
-  test("a notice is rendered in the engine's own words", async () => {
-    at("/cr?q=the");
-    const root = await mount();
-    const notices = [...document.querySelectorAll(".of-rules__notice")].map(
-      (node) => node.textContent?.trim() ?? "",
-    );
-    /* `the` is indexed out as too common; the engine's notice says so and this
-       surface reprints it rather than paraphrasing. */
-    expect(notices.length).toBeGreaterThan(0);
-    expect(notices.join(" ")).toContain("the");
-    root.unmount();
-  });
-
-  test("nothing matching says so, and names the version it looked in", async () => {
-    at("/cr?q=zzzznotaword");
-    const root = await mount();
-    expect(count()).toContain("zzzznotaword");
-    expect(count()).toContain(VERSION);
-    expect(cited()).toEqual([]);
-    root.unmount();
-  });
-});
-
-describe("a question nothing can answer yet is not a question nothing matches", () => {
-  /*
-   * THIS IS THE DISTINCTION `LLM_STATEMENT.md` MAKES NON-OPTIONAL. Rendering
-   * the empty-result copy while the index is in flight tells a reader the
-   * Comprehensive Rules do not contain a word they can see in them — a
-   * confident wrong answer, which is the one shape that rule forbids outright.
-   */
-  test("in flight, the page says what it is waiting for", async () => {
-    at("/cr?q=dominate");
-    const root = await mount(PENDING_URL);
-    expect(count()).toContain("Loading the rules index");
+    expect(count()).toContain("The rules index did not load");
     expect(count()).toContain("dominate");
     expect(count()).not.toContain("Nothing");
-    root.unmount();
+    /* The direct route, spelled out for a reader who cannot search. */
+    expect(count()).toContain("/cr/8.3.4b");
+    /* And the chapters, all of them. */
+    expect(rows()).toBe(browse.length);
   });
 
-  test("failed, it says so and offers the chapters that still work", async () => {
+  test("once the index lands the same question is answered", async () => {
+    window.history.replaceState(null, "", "/cr?q=dominate");
+    await answered();
+
+    expect(rows()).toBe(9);
+    expect(count()).toBe("9 sections match.");
+    /* The rule renames itself, which is the other half of the browse test. */
+    expect(
+      document.querySelector("hr.of-rule__line")?.getAttribute("aria-label"),
+    ).toBe("Results");
+  });
+
+  test("the index is fetched from the `indexUrl` prop and nowhere else", async () => {
     /*
-     * RETRY IS OFF FOR THIS ONE TEST, and it is the harness rather than the
-     * subject. The shipped policy is two retries with exponential backoff,
-     * which is right for a reader and would spend three seconds of wall clock
-     * here to reach a state the first attempt already determines. What is under
-     * test is what the component renders once `failed` is true, not how many
-     * attempts it took to get there.
+     * THE REQUESTS ARE COUNTED, NOT THE CACHE. Asserting that a cache entry
+     * exists cannot fail after `settle()` has spun until it does, and the
+     * client is a module constant with `gcTime: Infinity`, so a warm entry from
+     * an earlier test would carry the assertion for a component that made no
+     * request at all. `PROP_URL` is asked for here and nowhere else, and the
+     * log says what actually went over the wire.
      */
-    const defaults = searchIndexClient.getDefaultOptions();
-    searchIndexClient.setDefaultOptions({
-      ...defaults,
-      queries: { ...defaults.queries, retry: false },
-    });
-    try {
-      at("/cr?q=dominate");
-      const root = await mount(FAILING_URL);
-      for (let tick = 0; tick < 50 && count().includes("Loading"); tick += 1) {
-        await tick_();
-      }
-      expect(count()).toContain("did not load");
-      /* DEGRADE VISIBLY: every section is still addressable, so the failure is
-         stated alongside the routes that still work rather than as an apology.
-         The chapter browse is that route, and it is the same list the empty
-         query renders — spelled once in the component for exactly this reason. */
-      expect(cited()).toEqual(browse.map((chapter) => chapter.id));
-      root.unmount();
-    } finally {
-      searchIndexClient.setDefaultOptions(defaults);
-    }
+    window.history.replaceState(null, "", "/cr?q=dominate");
+    const before = requested.length;
+    await answered({ indexUrl: PROP_URL });
+
+    expect(requested.slice(before)).toEqual([PROP_URL]);
+    expect(rows()).toBe(9);
   });
 });
 
-describe("the field", () => {
-  test("typing answers in place and puts the query in the address", async () => {
-    const root = await mount();
-    await type("dominate");
-    expect(count()).toBe("9 sections match.");
-    /* Debounced: the address follows the field, one navigation per query
-       rather than one per letter. */
-    expect(address()).toBe("/cr");
-    await debounce();
-    expect(address()).toBe("/cr?q=dominate");
-    root.unmount();
+/* -------------------------------------------------------------------------- */
+/* What the component says in its own voice                                    */
+/* -------------------------------------------------------------------------- */
+
+describe("the wording under a query", () => {
+  test("the empty-result line cites the `version` prop, not the index", async () => {
+    /*
+     * THE VERSION STOPPED BEING READ OFF THE INDEX when the index left the
+     * page, and it is one short string the page already had — so it travels as
+     * a prop rather than becoming a fourth thing to wait for. `VERSION` is a
+     * value no corpus could produce, which is what makes this an assertion
+     * about the prop rather than about the corpus.
+     */
+    window.history.replaceState(null, "", "/cr?q=zzzznotarule");
+    await answered();
+
+    expect(count()).toContain(VERSION);
+    expect(count()).toContain("zzzznotarule");
+    expect(rows()).toBe(0);
   });
 
-  /*
-   * TYPING RESETS THE PAGE AND READING THE URL MUST NOT. The component makes
-   * that a handler on the field rather than an effect on `query`, because an
-   * effect cannot tell a keystroke from the mount lifting `?q=` out of the URL
-   * — and resetting on the latter opens a pasted `?page=3` link on page one.
-   */
-  test("a keystroke is page one; arriving on page three is not", async () => {
-    at("/cr?q=attack&page=3");
-    const root = await mount();
-    expect(count()).toContain("Page 3 of");
-    await type("dominate");
-    expect(count()).toBe("9 sections match.");
-    await debounce();
-    expect(address()).toBe("/cr?q=dominate");
-    root.unmount();
+  test("a notice is printed in the engine's words, not rephrased", async () => {
+    /* A notice is a statement about what the query engine DID, and a surface
+       free to rephrase it is a surface free to describe behaviour it does not
+       have. `the` is ignored as a term, and the engine says so. */
+    window.history.replaceState(null, "", "/cr?q=the");
+    await answered();
+
+    const notices = [...document.querySelectorAll(".of-rules__notice")].map(
+      (node) => node.textContent ?? "",
+    );
+    /*
+     * COMPARED AGAINST THE ENGINE'S OWN OUTPUT, WORD FOR WORD. This asserted
+     * `toContain("the")` first, which is satisfied by almost any English
+     * sentence — including the rephrasing the test exists to forbid, since the
+     * engine's own notice contains "the document". Asking the engine what it
+     * said and demanding the DOM show exactly that is the property; it also
+     * survives a rules release, which a hand-copied string would not.
+     */
+    expect(notices).toEqual(
+      search(index, "the", 60, 0).notices.map((n) => n.text),
+    );
+    expect(notices.length).toBeGreaterThan(0);
   });
 
-  /*
-   * ESCAPE IS NOT TESTED HERE, AND IT IS NOT AN OVERSIGHT. This component
-   * clears the field from `SearchField`'s `onKeyDown`, which is one of React's
-   * DELEGATED listeners — and React's delegated keydown does not fire under
-   * happy-dom at all. `HeaderSearch` hit the same wall and answered it by
-   * attaching a native `keydown` listener to the node it owns; that was worth
-   * doing there because the field belongs to another root and the listener had
-   * to be native anyway.
+  test("a row says why the ranking put it there", async () => {
+    /* `why()` is four branches over `matchedIn`, and nothing else renders it.
+       A section id is the one a reader is most likely to have typed on
+       purpose. */
+    window.history.replaceState(null, "", "/cr?q=8.3.4b");
+    await answered();
+
+    expect(rows()).toBe(1);
+    expect(document.querySelector(".of-rules__why")?.textContent).toBe(
+      "section id",
+    );
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* Every view is a URL                                                         */
+/* -------------------------------------------------------------------------- */
+
+describe("every view is a URL, and the URL is read exactly once", () => {
+  test("`?q=` on arrival fills the field and answers it", async () => {
+    window.history.replaceState(null, "", "/cr?q=dominate");
+    await answered();
+
+    expect(field().value).toBe("dominate");
+    expect(rows()).toBe(9);
+  });
+
+  test("a pasted `?q=…&page=3` opens on page 3", async () => {
+    /*
+     * THE DEFECT THE `type` CALLBACK EXISTS TO PREVENT, and until now nothing
+     * held it. Resetting the page from an effect on `query` cannot tell a
+     * keystroke from the mount effect lifting `?q=` out of the URL, so it fires
+     * on arrival and throws a pasted link back to page one — which is the exact
+     * failure paging exists to fix. The reset lives on the field instead,
+     * because the field knows something an effect cannot: a keystroke is always
+     * a new answer.
+     */
+    window.history.replaceState(null, "", "/cr?q=attack&page=3");
+    await answered();
+
+    expect(count()).toBe("188 sections match. Page 3 of 4.");
+
+    /*
+     * AND THE ROWS ARE PAGE THREE'S, NOT PAGE ONE'S UNDER A PAGE-THREE LABEL.
+     * This was a `toBeDefined()` on the first citation, which passes for any
+     * row on any page — the count line above was carrying the whole test while
+     * the comment claimed otherwise. The ids the engine returns for the third
+     * slice are what the page has to be showing.
+     */
+    const shown = [...document.querySelectorAll(".of-citation__rule-id")].map(
+      (node) => node.textContent,
+    );
+    expect(shown).toEqual(
+      search(index, "attack", 60, 120).results.map((r) => r.id),
+    );
+  });
+
+  test("a keystroke is a new answer, so it goes back to page one", async () => {
+    /* The other half of the pair. Without it the assertion above is satisfied
+       by a component that never resets the page at all. */
+    window.history.replaceState(null, "", "/cr?q=attack&page=3");
+    await answered();
+    expect(count()).toBe("188 sections match. Page 3 of 4.");
+
+    await type("attack ");
+
+    expect(count()).toBe("188 sections match. Page 1 of 4.");
+  });
+
+  /**
+   * Two entries of our own to fall back onto, and they are not decoration.
    *
-   * Restructuring this island's handler purely so a test could reach it would
-   * be changing shipped code to satisfy a harness, which is the failure the
-   * audit that prompted this work warned about by name. So the gap is recorded
-   * instead: Escape clears the field in a browser and nothing here proves it.
+   * `window` OUTLIVES A TEST, so the history stack is whatever every test
+   * before this one left on it — which makes "what is one entry back" a
+   * question about the file's execution order rather than about the component.
+   * Pushing a known pair first makes the assertion below local: what matters is
+   * WHICH of the two the back button reaches, and both are this test's.
+   *
+   * IT WAITS FOR THE MOUNT'S OWN URL EFFECT FIRST. That effect is debounced too
+   * and writes a `replace` for the empty query; left pending it would fire
+   * after these pushes and overwrite the second sentinel with `/cr`, which
+   * looks exactly like the bug under test.
    */
-
-  test("submitting pushes a history entry and gives the field back", async () => {
-    const root = await mount();
-    await type("dominate");
-    const before = window.history.length;
-    const form = document.querySelector("form.of-search");
-    if (!(form instanceof HTMLFormElement)) throw new Error("no form");
+  async function sentinels(): Promise<void> {
+    await debounce();
     await act(async () => {
-      form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true }),
+      window.history.pushState({}, "", "/cr?q=sentinel-one");
+      window.history.pushState({}, "", "/cr?q=sentinel-two");
+    });
+  }
+
+  test("typing REPLACES the address rather than filling history", async () => {
+    /*
+     * A QUERY IS ONE NAVIGATION, NOT ONE PER LETTER. A back button that walks
+     * backwards through "domin", "domi", "dom" is a back button nobody can use,
+     * so the debounced write is a `replaceState`.
+     *
+     * TWO SETTLED KEYSTROKES AND ONE `back()`, AND THE SENTINEL PAIR IS WHAT
+     * MAKES IT AN ASSERTION. Going back one entry passes under `push` as
+     * readily as under `replace` — it merely lands somewhere else — so the
+     * first version of this test survived mutating `replace` to `push`.
+     * Landing on sentinel ONE can only happen if both keystrokes overwrote
+     * sentinel two; under `push` the entry behind is `?q=dom`.
+     */
+    await answered();
+    await sentinels();
+
+    await type("dom");
+    await debounce();
+    expect(window.location.search).toBe("?q=dom");
+
+    await type("domin");
+    await debounce();
+    expect(window.location.search).toBe("?q=domin");
+
+    await act(async () => {
+      window.history.back();
+    });
+    expect(window.location.search).toBe("?q=sentinel-one");
+  });
+
+  test("submitting PUSHES, because it is the deliberate act", async () => {
+    /* The other half of the same rule, and the same sentinel argument the
+       other way round: landing on sentinel TWO means the submit added an entry
+       rather than consuming one. */
+    await answered();
+    await sentinels();
+
+    /* Typed and submitted in separate tasks, the way Enter after typing is. */
+    await type("attack");
+    await submit();
+    expect(window.location.search).toBe("?q=attack");
+
+    await act(async () => {
+      window.history.back();
+    });
+    expect(window.location.search).toBe("?q=sentinel-two");
+  });
+
+  test("back and forward re-run the query, not just the address bar", async () => {
+    /* `popstate` has to put the query back into the FIELD and the results back
+       under it. An address that moves on its own is a page that has lied about
+       what it is showing. */
+    window.history.replaceState(null, "", "/cr?q=dominate");
+    await answered();
+    expect(rows()).toBe(9);
+
+    await type("attack");
+    await submit();
+    expect(window.location.search).toBe("?q=attack");
+    expect(count()).toBe("188 sections match. Page 1 of 4.");
+
+    await act(async () => {
+      window.history.back();
+    });
+
+    expect(window.location.search).toBe("?q=dominate");
+    expect(field().value).toBe("dominate");
+    expect(rows()).toBe(9);
+  });
+});
+
+/* -------------------------------------------------------------------------- */
+/* Hydration                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * THE ONE THING THE `useState("")` DOCBLOCK ASKS FOR AND NOTHING CHECKED.
+ *
+ * `useState(queryFromUrl)` is the obvious spelling and it is wrong here: the
+ * server renders this island without a `window`, so it renders the chapter
+ * browse, and a client initialising from `?q=dominate` renders nine results
+ * instead. React reports error #418 — "the server rendered text didn't match
+ * the client" — which it did, on the first page this island was mounted on.
+ *
+ * The comment explaining that has been sitting above a line anybody could
+ * "tidy" without a single assertion moving. This is that assertion.
+ */
+describe("the first client render reproduces the server's", () => {
+  test("hydrating on a URL that carries a query recovers from nothing", async () => {
+    /*
+     * THE SERVER RENDER HAPPENS WITH NO QUERY IN THE ADDRESS, AND THAT IS THE
+     * WHOLE FIDELITY OF THIS TEST. `/cr` is built ONCE, at build time, with no
+     * reader and no `?q=`; the document that markup comes back as is then
+     * served at `/cr?q=dominate`. Rendering the string while `window.location`
+     * already carried the query is what the first version of this test did, and
+     * it made both sides read the same URL — so seeding the state from the URL
+     * during render, the exact mistake the `useState("")` docblock is about,
+     * passed it. Verified by making that mutation.
+     */
+    window.history.replaceState(null, "", "/cr");
+    const node = host();
+    node.innerHTML = renderToString(
+      <RulesSearch indexUrl={GOOD_URL} browse={browse} version={VERSION} />,
+    );
+    expect(rows()).toBe(browse.length);
+
+    /* And now the reader arrives on the address the link carried. */
+    window.history.replaceState(null, "", "/cr?q=dominate");
+
+    const recovered: unknown[] = [];
+    await act(async () => {
+      roots.push(
+        hydrateRoot(
+          node,
+          <RulesSearch indexUrl={GOOD_URL} browse={browse} version={VERSION} />,
+          { onRecoverableError: (error) => recovered.push(error) },
+        ),
       );
     });
-    /* A submit is the deliberate act, so it is the one that gets a real entry
-       — typing only ever replaces. */
-    expect(address()).toBe("/cr?q=dominate");
-    expect(window.history.length).toBeGreaterThan(before - 1);
-    expect(document.activeElement).not.toBe(fieldNode());
-    root.unmount();
+    await settle();
+
+    expect(recovered).toEqual([]);
+    /* And the correction lands immediately after, so the reader who pasted the
+       link still gets their answer. */
+    expect(field().value).toBe("dominate");
+    expect(rows()).toBe(9);
   });
 });
 
-describe("the live region", () => {
-  /*
-   * The results move on every keystroke because that is what makes the field
-   * feel like a tool; announcing on every keystroke would make a screen reader
-   * unusable, since each interruption cancels the last. So the region settles
-   * and speaks once — which means it is SILENT immediately after typing, and
-   * that silence is the assertion.
-   */
-  test("it settles before it speaks, then speaks once", async () => {
-    const root = await mount();
-    await type("dominate");
-    expect(announced()).toBe("");
-    await debounce();
-    expect(announced()).toBe("9 sections match.");
-    root.unmount();
-  });
+/* -------------------------------------------------------------------------- */
+/* Paging, and the `/` shortcut                                                */
+/* -------------------------------------------------------------------------- */
 
-  test("it is on the page before it has anything to say", async () => {
-    const root = await mount();
-    const region = document.querySelector(".of-rules__announcement");
-    /* Added at the moment it has something to say, it would say nothing: a
-       live region has to be in the document before the text changes. */
-    expect(region?.getAttribute("aria-live")).toBe("polite");
-    expect(region?.getAttribute("role")).toBe("status");
-    root.unmount();
-  });
-});
-
-describe("history", () => {
-  test("back and forward re-answer rather than leaving the last result up", async () => {
-    at("/cr?q=dominate");
-    const root = await mount();
-    expect(count()).toBe("9 sections match.");
-
-    /* What a back button does: change the address, then fire `popstate`. */
-    at("/cr?q=attack&per=30");
-    await act(async () => {
-      window.dispatchEvent(new Event("popstate"));
-    });
-    expect(fieldNode().value).toBe("attack");
-    expect(count()).toBe("188 sections match. Page 1 of 7.");
-    root.unmount();
-  });
-});
-
-describe("turning a page", () => {
-  test("moves the answer, the address and the focus together", async () => {
-    at("/cr?q=attack&per=30");
-    const root = await mount();
-    const first = cited();
-
-    const next = document.querySelector('.of-pages a[aria-label="Page 2"]');
-    if (!(next instanceof HTMLElement)) throw new Error("no link to page 2");
+describe("turning a page moves the reader, not just the rows", () => {
+  /** The pager's own "Next", as a reader's unmodified left click. */
+  async function clickNext(): Promise<void> {
+    const next = document.querySelector('.of-pages__step[rel="next"]');
+    if (!(next instanceof HTMLAnchorElement)) throw new Error("no next link");
     await act(async () => {
       next.dispatchEvent(
-        new MouseEvent("click", { bubbles: true, cancelable: true }),
+        new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }),
       );
     });
+  }
 
-    expect(count()).toContain("Page 2 of 7");
-    expect(cited()).not.toEqual(first);
-    /* The order is the URL's own: `writeQueryUrl` edits the parameters that
-       are already there and appends the ones that are not, so `per` — which
-       arrived in the address — keeps its place ahead of the `page` this click
-       added. */
-    expect(address()).toBe("/cr?q=attack&per=30&page=2");
+  test("focus lands on the count, not on the pager the reader left", async () => {
     /*
-      FOCUS GOES WHERE THE SCROLL WENT. `pushState` moves no focus, so without
-      this the reader ends up reading page 2 with focus still on page 1's pager
-      — and the live region cannot cover it, because it settles for 600ms before
-      it speaks and a click has already happened.
-    */
+     * `pushState` MOVES NO FOCUS, so without the move the reader who clicked
+     * "Next" is scrolled to the top of page 2 with focus still on an anchor now
+     * sitting under page 2's foot. This surface is also the one the live region
+     * cannot cover: the region settles for 600 ms before it speaks, which is
+     * right for a field that re-runs on every keystroke and wrong for a click
+     * that already happened.
+     */
+    window.history.replaceState(null, "", "/cr?q=attack");
+    await answered();
+    expect(document.querySelectorAll(".of-pages").length).toBe(1);
+
+    await clickNext();
+
+    expect(window.location.search).toContain("page=2");
+    expect(count()).toBe("188 sections match. Page 2 of 4.");
     expect(document.activeElement?.className).toContain("of-rules__count");
-    root.unmount();
+  });
+
+  test("the count is reachable by script and never by Tab", async () => {
+    /* `tabIndex={-1}` is the whole contract: a reader who never turns a page
+       must not acquire a stop in the tab order for the privilege. */
+    window.history.replaceState(null, "", "/cr?q=attack");
+    await answered();
+
+    expect(
+      document.querySelector(".of-rules__count")?.getAttribute("tabindex"),
+    ).toBe("-1");
+  });
+});
+
+describe("`/` reaches the field, and only when it should", () => {
+  /*
+   * `useFocusShortcut` IS SHARED WITH `CardSearch` AND TESTED FROM NEITHER SIDE
+   * UNTIL NOW. The two halves it exists to keep identical are reached
+   * differently — this island holds a ref to its own input, the card one looks
+   * the header's field up in the DOM — so the getter this island passes is the
+   * half that can only be exercised here.
+   */
+  async function press(target: EventTarget): Promise<KeyboardEvent> {
+    const key = new KeyboardEvent("keydown", {
+      key: "/",
+      bubbles: true,
+      cancelable: true,
+    });
+    await act(async () => {
+      target.dispatchEvent(key);
+    });
+    return key;
+  }
+
+  test("it focuses the field from anywhere else on the page", async () => {
+    await mount({ indexUrl: SLOW_URL });
+
+    const key = await press(document.body);
+
+    expect(key.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(field());
+  });
+
+  test("it inserts a slash when a field already has focus", async () => {
+    /* The guard that makes the key usable at all: `/` typed inside any field
+       has to reach it, or the shortcut takes the character away in the one
+       place a search box is most likely to already be focused. */
+    await mount({ indexUrl: SLOW_URL });
+
+    const key = await press(field());
+
+    expect(key.defaultPrevented).toBe(false);
+  });
+
+  test("it releases the window when the island goes", async () => {
+    /* The listener is on `window`, which outlives the root. One that survived
+       unmount would move focus into a field that is no longer on the page. */
+    const root = await mount({ indexUrl: SLOW_URL });
+    await unmount(root);
+
+    const key = await press(document.body);
+
+    expect(key.defaultPrevented).toBe(false);
   });
 });

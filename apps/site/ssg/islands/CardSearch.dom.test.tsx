@@ -17,24 +17,27 @@
  * here would be slower and no truer. What is here is the handful of things that
  * are only true once a browser is involved.
  *
- * HAPPY-DOM IS REGISTERED FOR THIS FILE, NOT IN A PRELOAD, and that is
+ * HAPPY-DOM IS REGISTERED IN THIS FILE, NOT IN A PRELOAD, and that is
  * deliberate. `bunfig.toml`'s `preload` would give every test in the repo a
  * `window`, and most of this codebase's modules branch on not having one —
  * `queryFromUrl` reads `window.location`, the generator renders to a string on
  * purpose. Giving 790 server-side assertions a DOM to change their minds about
- * is a large, silent change to buy one file an environment. The cost of the
- * narrow version is that the DOM has to be handed back, and ~~that this file
- * must be the only one that registers it~~ — **there are two runtime test files
- * now, and `./domHarness.ts` counts the holders so the last one out turns the
- * lights off.** Registering twice swapped `document` under a live React root
- * and unregistering once pulled it out from under the scheduler; that module
- * records both failures. The suite is run after this landed to prove nothing
- * else moved.
+ * is a large, silent change to buy one file an environment. The suite is run
+ * after this landed to prove nothing else moved.
+ *
+ * ~~The cost of the narrow version is that this file must be the only one that
+ * registers it.~~ **The cost is that every file which registers must also
+ * UNREGISTER**, which is a smaller claim and the one that was actually being
+ * relied on. `RulesSearch.dom.test.tsx` registers too, and carries the
+ * measurement: `bun test` loads a file, runs its tests, and only then loads the
+ * next, so a second file's module body executes between the previous file's
+ * `afterAll` and its own — inside its own window either way. Verified with the
+ * second file sorting both before and after this one.
  */
 
-import { holdDom, releaseDom } from "./domHarness";
+import { GlobalRegistrator } from "@happy-dom/global-registrator";
 
-holdDom("https://optfall.com/search");
+GlobalRegistrator.register({ url: "https://optfall.com/search" });
 
 /*
  * REACT'S OWN FLAG, AND WITHOUT IT `act` DOES NOT FLUSH. React logs "the
@@ -325,7 +328,7 @@ beforeEach(() => {
  * `bunfig.toml`'s preload, and it is much cheaper than the alternative.
  */
 afterAll(async () => {
-  await releaseDom();
+  await GlobalRegistrator.unregister();
 });
 
 describe("the island drives the field the shell renders", () => {

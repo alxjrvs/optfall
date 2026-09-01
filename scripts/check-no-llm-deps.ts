@@ -296,6 +296,14 @@ if (import.meta.main) {
     violations.push(...scanManifest(file, manifest));
   }
 
+  // The lockfile, which is where the rule is actually decided.
+  //
+  // Manifests only describe what WE declared. `bun.lock` describes what
+  // will be installed — so an LLM SDK arriving as somebody else's
+  // transitive dependency ships in the built product while every
+  // manifest stays clean. LLM_STATEMENT.md's rule is about what the product
+  // contains, not about what we chose to type, so the lockfile is the
+  // authority and a manifest-only scan is a gate with a hole in it.
   try {
     const lock = readFileSync(repoFile("bun.lock"), "utf8");
     const { packages, violations: fromLock } = scanLockfile(lock);
