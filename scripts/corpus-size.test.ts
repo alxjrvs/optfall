@@ -101,9 +101,16 @@ const CLAIM_PATTERNS: readonly RegExp[] = [
   /\bin an?\s+(\d+(?:\.\d+)?)\s*MB\s+JSON\b/g,
 ];
 
-/** Every corpus-size figure a file states, as numbers. */
+/**
+ * Every corpus-size figure a file states, as numbers.
+ *
+ * Takes an ABSOLUTE path. Both callers already resolve — the tree walk yields
+ * absolute paths from `scannable(ROOT)`, and the named list joins `ROOT` at its
+ * call site — so resolving again in here double-prefixes and throws an ENOENT
+ * naming a path with the repository root in it twice.
+ */
 function megabytesClaimedIn(path: string): readonly number[] {
-  const source = readFileSync(repoFile(path), "utf8");
+  const source = readFileSync(path, "utf8");
   return CLAIM_PATTERNS.flatMap((pattern) =>
     [...source.matchAll(pattern)].map((match) => Number(match[1])),
   );
