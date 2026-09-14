@@ -67,7 +67,7 @@
     "@types/bun": "1.4.0",
     "sharp": "catalog:",
     "typescript": "7.0.2",
-    "wrangler": "4.129.0",
+    "wrangler": "4.131.0",
     "axe-core": "catalog:",
     "jsdom": "catalog:",
     "@types/jsdom": "catalog:"
