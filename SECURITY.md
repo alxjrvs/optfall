@@ -58,7 +58,7 @@ Set by `.github/gate.sh` in [alxjrvs/dotFiles](https://github.com/alxjrvs/dotFil
 and re-checked by that repository's nightly upkeep, so that turning one off is
 drift rather than a silent change:
 
-- Dependabot alerts and security updates
+- Dependabot alerts, and security updates (set, but not re-checked)
 - Secret scanning, with push protection
 - A required `CI Success` check on `main`, with no bypass actors
 

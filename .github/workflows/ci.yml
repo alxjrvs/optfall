@@ -422,7 +422,7 @@ jobs:
       - disclaimer
       - dev-server
     steps:
-      # THIS STEP IS WHY `strict` IS ON, and the story is worth keeping even
+      # THIS STEP IS WHY `strict` WAS ON, and the story is worth keeping even
       # now that the pin lives in the composite action rather than here.
       #
       # It once pinned `${{ env.BUN_VERSION }}` inline and reached main anyway,
@@ -431,10 +431,12 @@ jobs:
       # other, and required checks were not `strict` — so the combination was
       # never run until a third PR inherited it.
       #
-      # That is the incident that turned `strict` ON. It cannot recur the same
-      # way.
+      # That incident turned `strict` on. `.github/gate.sh` in alxjrvs/dotFiles
+      # sets it off, so parallel pull requests do not queue behind each other.
+      # Two green PRs can still combine red, but the push to main runs this
+      # workflow, so the combination goes red on main, not in a third PR.
       #
-      # The inline-pin half cannot recur either: `.github/actions/setup` is now
+      # The inline-pin half cannot recur: `.github/actions/setup` is now
       # the only place `setup-bun` appears, and `check:bun-version` asserts
       # that — so a job cannot quietly reintroduce its own copy with a
       # different version.

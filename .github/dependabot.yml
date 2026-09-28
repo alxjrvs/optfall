@@ -2,8 +2,9 @@ version: 2
 
 # One grouped pull request per ecosystem for every minor and patch bump.
 # `dependabot/fetch-metadata` reports a group's highest semver change, so the
-# minor/patch allowlist in dependabot-auto-merge.yml still decides; a major
-# arrives on its own and waits for a human.
+# minor/patch allowlist in the workflow dependabot-auto-merge.yml calls, in
+# alxjrvs/dotFiles, still decides; a major arrives on its own and waits for a
+# human.
 updates:
   - package-ecosystem: bun
     directory: /
