@@ -10,8 +10,7 @@
 # whether or not `CI Success` passed.
 #
 # What actually keeps a red commit off production is the ruleset, not this
-# file: `scripts/repo-settings.sh` requires the `CI Success` context with
-# `strict_required_status_checks_policy`, so only a green, up-to-date head can
+# file: it requires the `CI Success` context, so only a head that passed it can
 # reach `main` in the first place. That is a real guarantee — it is just a
 # property of branch protection rather than of anything written here, and the
 # previous wording claimed the latter.

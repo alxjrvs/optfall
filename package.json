@@ -45,7 +45,6 @@
     "check:a11y": "bun scripts/check-a11y.ts",
     "check:tokens": "bun scripts/check-tokens.ts",
     "check:faint-ink": "bun scripts/check-faint-ink.ts",
-    "check:repo-settings": "scripts/repo-settings.sh --check",
     "check:bun-version": "bun scripts/check-bun-version.ts",
     "check:built-tokens": "bun scripts/check-built-tokens.ts",
     "check:dev-server": "bun scripts/check-dev-server.ts",

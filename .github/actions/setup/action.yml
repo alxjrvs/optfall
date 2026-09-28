@@ -18,8 +18,8 @@
 #
 # WHAT DELIBERATELY DID NOT MOVE. The essays in `ci.yml` are job-level, not
 # step-level: the arguments for why `tokens` is separate from `lint`, why
-# `disclaimer` rebuilds rather than trusting another job's artifact, why
-# `repo-settings` is scheduled rather than gated, and the whole `gate` design
+# `disclaimer` rebuilds rather than trusting another job's artifact, why the
+# settings check is scheduled rather than gated, and the whole `gate` design
 # all sit above `jobs.<id>` and are untouched. The only prose that moved is the
 # one paragraph that was previously copied six times, and it is below, once.
 #

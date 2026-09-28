@@ -369,7 +369,8 @@ jobs:
         run: bun run check:dev-server
 
   # NOTE: the repository-settings drift check deliberately does NOT live here.
-  # It runs on a schedule, in .github/workflows/repo-settings-check.yml.
+  # alxjrvs/dotFiles runs it nightly for every repository it owns, as
+  # `.github/gate.sh --check`.
   #
   # It was a required job wired into `gate`, and that was wrong in a way worth
   # recording so nobody re-adds it. Reading the allow_*/delete_branch_on_merge
@@ -386,10 +387,10 @@ jobs:
   # The single aggregate gate.
   #
   # This is the ONLY job that may be configured as a required status check on
-  # the default branch (the ruleset in scripts/repo-settings.sh requires exactly
-  # the name "CI Success"). Requiring the individual jobs above would strand
-  # them in "pending" forever whenever a path filter skips one, which blocks
-  # auto-merge permanently.
+  # the default branch (the ruleset `.github/gate.sh` in alxjrvs/dotFiles sets
+  # requires exactly the name "CI Success"). Requiring the individual jobs
+  # above would strand them in "pending" forever whenever a path filter skips
+  # one, which blocks auto-merge permanently.
   #
   # THE JOB KEY AND THE DISPLAY NAME DIFFER, DELIBERATELY. Branch protection
   # matches on the DISPLAY name — the check-run name, which is `name:` when a
@@ -430,8 +431,8 @@ jobs:
       # other, and required checks were not `strict` — so the combination was
       # never run until a third PR inherited it.
       #
-      # That is the incident that turned `strict` ON; see the ruleset note in
-      # scripts/repo-settings.sh. It cannot recur the same way.
+      # That is the incident that turned `strict` ON. It cannot recur the same
+      # way.
       #
       # The inline-pin half cannot recur either: `.github/actions/setup` is now
       # the only place `setup-bun` appears, and `check:bun-version` asserts
@@ -458,12 +459,11 @@ jobs:
       # context that names no job at all. `scripts/check-ci-aggregator.ts` is
       # the same rule with those cases covered and a test file behind it, and
       # `bun run check` runs it locally. It needs no `bun install` — it reads
-      # two files with node builtins.
+      # this file with node builtins.
       #
-      # It also stops hard-coding "gate": it reads the required status-check
-      # context out of scripts/repo-settings.sh and finds the job that reports
-      # it, so renaming the job and the ruleset together is a no-op here and
-      # renaming one without the other is a failure.
+      # It also stops hard-coding "gate": it finds the job that reports the
+      # required status-check context, "CI Success", so renaming the job's key
+      # is a no-op here and renaming its display name alone is a failure.
       #
       # This is not the only place it runs. `scripts/check-ci-aggregator.test.ts`
       # asserts the same thing about the real workflow, so the `test` job above —

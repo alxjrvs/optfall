@@ -54,15 +54,18 @@ on.
 
 ## Automated protections
 
-Enabled and asserted by `scripts/repo-settings.sh --check`, which runs on a
-schedule so that turning one off is drift rather than a silent change:
+Set by `.github/gate.sh` in [alxjrvs/dotFiles](https://github.com/alxjrvs/dotFiles)
+and re-checked by that repository's nightly upkeep, so that turning one off is
+drift rather than a silent change:
 
-- Dependabot alerts, and weekly updates for both the `bun` and `github-actions`
-  ecosystems
-- Private vulnerability reporting
+- Dependabot alerts and security updates
 - Secret scanning, with push protection
-- A required `CI Success` check on `main`, with a strict up-to-date policy and
-  no bypass actors
+- A required `CI Success` check on `main`, with no bypass actors
+
+Weekly Dependabot version updates for both the `bun` and `github-actions`
+ecosystems are `.github/dependabot.yml`. Private vulnerability reporting, which
+*Reporting a vulnerability* above relies on, is not in that script: nothing
+asserts it.
 
 `scripts/.env.r2` is committed on purpose and contains no secret: every value
 in it is a 1Password `op://` **reference**, which resolves to nothing without a

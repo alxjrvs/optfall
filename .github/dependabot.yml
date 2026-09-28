@@ -1,9 +1,9 @@
 version: 2
 
-# Deliberately ungrouped. `dependabot/fetch-metadata` reports no `update-type`
-# for a grouped pull request, so grouping would make the minor/patch allowlist
-# in dependabot-auto-merge.yml fail closed and nothing would ever auto-merge.
-# One pull request per dependency, with a low open limit to keep the noise down.
+# One grouped pull request per ecosystem for every minor and patch bump.
+# `dependabot/fetch-metadata` reports a group's highest semver change, so the
+# minor/patch allowlist in dependabot-auto-merge.yml still decides; a major
+# arrives on its own and waits for a human.
 updates:
   - package-ecosystem: bun
     directory: /
@@ -17,6 +17,17 @@ updates:
       prefix: deps
       prefix-development: deps-dev
       include: scope
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Pinned to `.bun-version` by `check:bun-version`, so it moves in the
+      # pull request that bumps Bun and never on its own.
+      - dependency-name: "@types/bun"
 
   - package-ecosystem: github-actions
     directory: /
@@ -29,3 +40,10 @@ updates:
     commit-message:
       prefix: ci
       include: scope
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
