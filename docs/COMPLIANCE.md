@@ -76,9 +76,9 @@ Both conditions appear in the checklist below.
 Six obligations. Each is a section: the requirement, where it is enforced, what
 would break it, and how we would find out.
 
-Every file named as an enforcement point below is on `main` — all seventeen of
-them, checked one by one on 2026-08-31, from `scripts/repo-settings.sh` to
-`data/brand/brand.json`. *(This paragraph read "Enforcement points name files
+Every file named as an enforcement point below is on `main`. §1's two
+repository-settings files were deleted on 2026-09-28; the rest were checked one
+by one on 2026-08-31. *(This paragraph read "Enforcement points name files
 that mostly do not exist yet — Phase 0 is the phase that creates them" until
 that date. Phase 0 shipped and the sentence did not move, which is the failure
 mode the chips below exist to make visible: a claim about state, written once,
@@ -111,34 +111,21 @@ project of an individual and must stay one.
 
 **Enforced at.**
 
-- [`scripts/repo-settings.sh`](../scripts/repo-settings.sh) — the repository is
-  declared as a script pinned to `alxjrvs/optfall`, and its `--check` mode
-  asserts against the live repository that the owner is that account **and that
-  the owner's type is `User`, not `Organization`**. That second assertion is the
-  compliance control: a transfer to an org is the failure this section exists to
-  catch, and it fails the build rather than waiting to be noticed.
-- `.github/workflows/repo-settings-check.yml` — runs that check **weekly**, not
-  per pull request, and opens an issue when it fails. It is deliberately not a
-  required check: reading the settings needs administrative read, which no
-  workflow token can be granted, so gating merges on it would block every pull
-  request until a human installed a personal access token. See the workflow's
-  own header for the full reasoning.
 - `LICENSE` — copyright held by `alxjrvs`, an individual, not an entity.
 - The hosting account, the domain and any future Patreon are held on the same
   personal account.
 
-![Partial][chip-partial] The ownership assertion is real and machine-checked,
-but it runs weekly rather than continuously, and until the
-`REPO_SETTINGS_TOKEN` secret exists the scheduled run warns and stops — so today
-this control is *declared but not yet active*. Per this document's own preamble,
-that makes it an open action rather than an enforced control. The hosting,
-domain and funding accounts are caught only by a human noticing, and always
-were.
+![Open][chip-open] Nothing machine-checks the owner. A script here once asserted
+that the owner's type is `User`, not `Organization`, but its weekly workflow
+never had the administrative token it needed, so the scheduled check never ran;
+both were deleted on 2026-09-28, when `.github/gate.sh` in
+[alxjrvs/dotFiles](https://github.com/alxjrvs/dotFiles) took over this
+repository's settings. `gate.sh` sets merge, security and ruleset settings,
+not ownership. The repository, like the hosting, domain and funding accounts, is
+caught only by a human noticing.
 
-**Open action:** create `REPO_SETTINGS_TOKEN` — a personal access token with
-`repo` scope, added as an Actions secret — to activate the weekly assertion.
-`scripts/repo-settings.sh` is what reads it; without it the scheduled run warns
-and stops.
+**Open action:** assert `owner.type == "User"` somewhere that runs — the nightly
+`gate.sh --check` in alxjrvs/dotFiles is the natural home.
 
 **What would break it.**
 
@@ -152,10 +139,10 @@ and stops.
 commit. This is expensive to undo, which is why it is decided then rather than
 after.
 
-**How we would find out.** The drift check above fails the build on an owner
-change or an org transfer. Everything outside the repository — the hosting
-account, the domain registrar, a funding account — is caught by a human
-noticing, which is exactly why it is written down here.
+**How we would find out.** A human noticing, until the open action above
+closes. Everything outside the repository — the hosting account, the domain
+registrar, a funding account — is caught the same way, which is exactly why it
+is written down here.
 
 ### 2. No direct monetisation
 

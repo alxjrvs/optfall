@@ -4,12 +4,12 @@
  *
  * WHY THIS EXISTS
  * ---------------
- * The ruleset in `scripts/repo-settings.sh` requires exactly one status check
- * on the default branch. That job is `if: always()` and decides pass/fail by
- * reading `toJSON(needs)` — so its verdict covers precisely the jobs listed in
- * its hand-maintained `needs:` array, and NOTHING else. A job missing from that
- * list still runs, still goes red, and still cannot fail the merge: it is
- * invisible to the only check anyone requires.
+ * The default-branch ruleset requires exactly one status check. That job is
+ * `if: always()` and decides pass/fail by reading `toJSON(needs)` — so its
+ * verdict covers precisely the jobs listed in its hand-maintained `needs:`
+ * array, and NOTHING else. A job missing from that list still runs, still goes
+ * red, and still cannot fail the merge: it is invisible to the only check
+ * anyone requires.
  *
  * That is the worst failure mode a gate can have. It does not break — it stops
  * gating, silently, and every pull request keeps showing green. Nothing in
@@ -20,14 +20,13 @@
  *
  * So: diff the two lists mechanically, on `bun run check` and in CI.
  *
- * IT HARDCODES NOTHING ABOUT WHICH JOBS EXIST, INCLUDING THE GATE'S OWN NAME.
- * Both sides of the diff are derived from the workflow at runtime, and the
- * aggregate job is located by the status-check context declared in
- * `scripts/repo-settings.sh` (`GATE_JOB`) rather than by a name written here.
- * That is deliberate: the aggregate job's identity IS the required check, so
- * the one place that already has to be right is the one place to read it from.
- * Rename the job and the context together and this check follows; rename one
- * without the other and it fails, which is the failure you want.
+ * IT HARDCODES NOTHING ABOUT WHICH JOBS EXIST. Both sides of the diff are
+ * derived from the workflow at runtime, and the aggregate job is located by the
+ * required status-check context (`REQUIRED_CONTEXT`) rather than by its key.
+ * That context is the one name written here, because the ruleset that requires
+ * it is set from outside this repository, by `.github/gate.sh` in
+ * alxjrvs/dotFiles. Rename the job's `name:` alone and this check fails, which
+ * is the failure you want.
  *
  * WHY A HAND-ROLLED PARSE AND NOT A YAML LIBRARY
  * ----------------------------------------------
@@ -59,7 +58,13 @@ const REPO_ROOT = ROOT;
 
 const WORKFLOW = ".github/workflows/ci.yml";
 const WORKFLOW_DIR = ".github/workflows";
-const SETTINGS = "scripts/repo-settings.sh";
+
+/**
+ * The required status-check context: `"CI Success"`, the cross-repo standard
+ * name (issue #132) that `.github/gate.sh` in alxjrvs/dotFiles requires on the
+ * default branch.
+ */
+export const REQUIRED_CONTEXT = "CI Success";
 
 /**
  * Jobs deliberately outside the gate, each with the reason it is outside.
@@ -86,9 +91,6 @@ const NEEDS_ITEM = /^ {6}-[ \t]+([A-Za-z0-9_-]+)[ \t]*(#.*)?$/;
 
 /** A block-scalar indicator (`run: |`, `run: >-`, …) opens literal content. */
 const BLOCK_SCALAR = /^\s*[^#\s][^\n]*[|>][-+]?\d*[ \t]*$/;
-
-/** `GATE_JOB="gate"` in scripts/repo-settings.sh. */
-const GATE_JOB = /^GATE_JOB=["']?([^"'#\n]+?)["']?[ \t]*(#.*)?$/m;
 
 export class WorkflowParseError extends Error {}
 
@@ -221,23 +223,6 @@ export function parseJobs(source: string): WorkflowJob[] {
   return jobs;
 }
 
-/**
- * The required status-check context, read from `scripts/repo-settings.sh`.
- *
- * That script is the declared source of truth for branch protection, so it is
- * also the source of truth for which job the gate is. Reading it here is what
- * keeps this check from carrying a third copy of the name.
- */
-export function requiredContext(settingsSource: string): string {
-  const context = settingsSource.match(GATE_JOB)?.[1];
-  if (!context) {
-    throw new WorkflowParseError(
-      `no \`GATE_JOB=\` assignment found in ${SETTINGS}`,
-    );
-  }
-  return scalar(context);
-}
-
 export type Audit = {
   /** The aggregate job, or null when the required context matches no job. */
   aggregator: WorkflowJob | null;
@@ -275,8 +260,8 @@ export function audit(options: {
   if (!aggregator) {
     problems.push(
       `no job in ${WORKFLOW} is named \`${context}\`, which is the required ` +
-        `status check. Either the job was renamed without updating ` +
-        `${SETTINGS}, or the reverse — and until they agree, the required ` +
+        `status check. Either the job was renamed without updating the ` +
+        `ruleset, or the reverse — and until they agree, the required ` +
         `check is a context nothing reports.`,
     );
     return { aggregator: null, gated: [], problems };
@@ -340,9 +325,8 @@ export function audit(options: {
  *
  * `needs:` does not reach across files, so a required context contributed by
  * another workflow would be entirely invisible here. Today the ruleset requires
- * exactly one context and `ci.yml` provides it — `scripts/repo-settings.sh`
- * asserts that in its `--check` mode — but the day that stops being true, this
- * output should already have named the files nobody checked.
+ * exactly one context and `ci.yml` provides it, but the day that stops being
+ * true, this output should already have named the files nobody checked.
  */
 export function otherWorkflows(dir: string): string[] {
   return readdirSync(dir)
@@ -369,10 +353,9 @@ export function main(argv: string[] = Bun.argv.slice(2)): never {
     argv.find((arg) => arg.startsWith("--job="))?.slice("--job=".length) ??
     process.env["CI_AGGREGATOR_JOB"];
 
-  let context: string;
+  const context = override?.trim() || REQUIRED_CONTEXT;
   let jobs: WorkflowJob[];
   try {
-    context = override?.trim() || requiredContext(read(SETTINGS));
     jobs = parseJobs(read(WORKFLOW));
   } catch (error) {
     if (error instanceof WorkflowParseError) fail(`ERROR: ${error.message}.`);
@@ -399,7 +382,7 @@ export function main(argv: string[] = Bun.argv.slice(2)): never {
       console.log(
         `  The ruleset requires exactly one context ("${aggregator.name}"),`,
       );
-      console.log(`  which this workflow provides — see ${SETTINGS}.`);
+      console.log("  which this workflow provides.");
     }
     process.exit(0);
   }
@@ -414,7 +397,7 @@ export function main(argv: string[] = Bun.argv.slice(2)): never {
   console.error(
     aggregator
       ? `    ${WORKFLOW} → ${aggregator.key}: → needs:`
-      : `    ${WORKFLOW}, or GATE_JOB in ${SETTINGS} — the two disagree.`,
+      : `    ${WORKFLOW}, or REQUIRED_CONTEXT in scripts/check-ci-aggregator.ts — the two disagree.`,
   );
   process.exit(1);
 }

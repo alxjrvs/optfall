@@ -53,9 +53,10 @@ that says what each word commits to.
 search and a rules search. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for what
 each phase covers and what remains.
 
-- ![Live][chip-live] **Repository and CI** — a single aggregate gate,
-  squash-only merges with linear history, and a weekly drift check that opens
-  an issue when the live settings stop matching `scripts/repo-settings.sh`.
+- ![Live][chip-live] **Repository and CI** — a single aggregate gate and
+  squash-only merges, with the repository's settings set by `.github/gate.sh`
+  in [alxjrvs/dotFiles](https://github.com/alxjrvs/dotFiles) and checked there
+  nightly.
 - ![Live][chip-live] **The token layer** — light and dark palettes with no
   component styles, and a lint rule in the gate that fails the build on a raw
   hex or length in a component. Contrast, colour-cast and pitch-numeral

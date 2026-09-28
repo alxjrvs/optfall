@@ -1,66 +1,9 @@
-name: Dependabot auto-merge
-
-# `pull_request`, never `pull_request_target`. `pull_request_target` would run
-# this workflow with a writable token in the context of the base branch while
-# checking out contributor-controlled code, which is the standard privilege
-# escalation. Dependabot pull requests trigger `pull_request` with Dependabot's
-# own read-only token, raised to exactly the two scopes below.
+name: dependabot-auto-merge
 on: pull_request
-
-# Nothing at workflow level: a write scope declared here is inherited by every
-# job the file ever gains, including one added later for an unrelated reason.
-# Scoping to the single job that needs it means a future job starts from
-# nothing and has to ask.
 permissions: {}
-
 jobs:
   auto-merge:
-    name: auto-merge
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
     permissions:
       contents: write
       pull-requests: write
-    # Both checks matter: `github.actor` is who triggered the run, and
-    # `pull_request.user.login` is who actually opened the pull request.
-    if: >-
-      github.event.pull_request.user.login == 'dependabot[bot]' &&
-      github.actor == 'dependabot[bot]'
-    steps:
-      - name: Fetch Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      # An allowlist, never `!= major`. A denylist silently auto-merges every
-      # update type Dependabot invents later — security-only bumps, ecosystem
-      # migrations, anything unrecognised. This fires for minor and patch and
-      # nothing else; everything else waits for a human.
-      - name: Enable auto-merge for minor and patch updates
-        if: >-
-          steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
-          steps.metadata.outputs.update-type == 'version-update:semver-patch'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        # `--auto` hands the pull request to GitHub's own gate: it merges only
-        # once every merge requirement is satisfied, and never sooner. That is
-        # the required `CI Success` check from ci.yml AND — since the ruleset
-        # turned `strict` on — the branch being up to date with the default
-        # branch. Dependabot rebases its own pull requests when the base moves,
-        # so the second one costs a re-run rather than a stall.
-        # Requires "Allow auto-merge" on the repository, which
-        # scripts/repo-settings.sh sets and its --check mode asserts.
-        run: gh pr merge --auto --squash "$PR_URL"
-
-      - name: Report a skipped update
-        if: >-
-          steps.metadata.outputs.update-type != 'version-update:semver-minor' &&
-          steps.metadata.outputs.update-type != 'version-update:semver-patch'
-        env:
-          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
-        run: |
-          set -euo pipefail
-          echo "Update type '${UPDATE_TYPE:-unknown}' is outside the minor/patch allowlist."
-          echo "Auto-merge was not enabled. Review and merge this pull request by hand."
+    uses: alxjrvs/dotFiles/.github/workflows/dependabot-auto-merge.yml@main

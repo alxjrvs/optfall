@@ -28,7 +28,7 @@ import {
   audit,
   otherWorkflows,
   parseJobs,
-  requiredContext,
+  REQUIRED_CONTEXT,
   WorkflowParseError,
 } from "./check-ci-aggregator";
 
@@ -117,23 +117,6 @@ describe("parseJobs", () => {
   test("refuses to report zero jobs as a pass", () => {
     /* A parse that silently returns nothing is a gate that silently passes. */
     expect(() => parseJobs("name: CI\non:\n  pull_request:\n")).toThrow(
-      WorkflowParseError,
-    );
-  });
-});
-
-describe("requiredContext", () => {
-  test("reads GATE_JOB out of the settings script", () => {
-    expect(requiredContext('set -euo pipefail\nGATE_JOB="gate"\n')).toBe(
-      "gate",
-    );
-    expect(requiredContext('GATE_JOB="CI Success" # the context\n')).toBe(
-      "CI Success",
-    );
-  });
-
-  test("throws rather than guessing when the assignment is gone", () => {
-    expect(() => requiredContext("set -euo pipefail\n")).toThrow(
       WorkflowParseError,
     );
   });
@@ -246,10 +229,9 @@ describe("this repository", () => {
   test("gates every job in ci.yml", () => {
     /* THE LIVE ASSERTION. This is the check itself, running in the `test` job —
        which is in `gate`'s own `needs:` list, so it cannot pass unnoticed. */
-    const context = requiredContext(read("scripts/repo-settings.sh"));
     const jobs = parseJobs(read(".github/workflows/ci.yml"));
 
-    const { aggregator, problems } = audit({ jobs, context });
+    const { aggregator, problems } = audit({ jobs, context: REQUIRED_CONTEXT });
 
     expect(problems).toEqual([]);
     expect(aggregator).not.toBeNull();

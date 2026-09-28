@@ -9,12 +9,14 @@
 # runs in PARALLEL with `ci.yml`, and on a pull request the preview upload runs
 # whether or not `CI Success` passed.
 #
-# What actually keeps a red commit off production is the ruleset, not this
-# file: `scripts/repo-settings.sh` requires the `CI Success` context with
-# `strict_required_status_checks_policy`, so only a green, up-to-date head can
-# reach `main` in the first place. That is a real guarantee — it is just a
+# What actually keeps a red pull request off production is the ruleset, not
+# this file: it requires the `CI Success` context, so only a head that passed it
+# can reach `main` in the first place. That is a real guarantee — it is just a
 # property of branch protection rather than of anything written here, and the
-# previous wording claimed the latter.
+# previous wording claimed the latter. It is also narrower than it sounds:
+# `.github/gate.sh` in alxjrvs/dotFiles sets the ruleset without `strict`, so
+# two green PRs can merge into a red `main`, and this deploys it while the
+# `ci.yml` run beside it says so.
 #
 # EVERY JOB SKIPS RATHER THAN FAILS WHEN `CLOUDFLARE_API_TOKEN` IS ABSENT. That
 # is the state of the world until the secret is added, and a workflow that fails
