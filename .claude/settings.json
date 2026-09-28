@@ -35,7 +35,6 @@
       "Bash(bun run corpus:*)",
       "Bash(bun run symbols)",
       "Bash(bun run check:symbols)",
-      "Bash(bun run check:repo-settings)",
       "Bash(bun run check:face-orientation)"
     ],
     "allow": [
