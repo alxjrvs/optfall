@@ -13,9 +13,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tanstack/react-query": "5.103.2",
-    "@tanstack/react-store": "0.11.1",
-    "@tanstack/store": "0.11.1",
+    "@tanstack/react-query": "5.104.0",
+    "@tanstack/react-store": "0.11.2",
+    "@tanstack/store": "0.11.2",
     "optfall-components": "workspace:*",
     "optfall-theme": "workspace:*",
     "react": "catalog:",

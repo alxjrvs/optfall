@@ -61,12 +61,12 @@
     "design-system": "bun scripts/build-design-system.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
+    "@biomejs/biome": "2.5.15",
     "@happy-dom/global-registrator": "20.14.5",
     "@types/bun": "1.4.0",
     "sharp": "catalog:",
     "typescript": "7.0.2",
-    "wrangler": "4.140.0",
+    "wrangler": "4.146.0",
     "axe-core": "catalog:",
     "jsdom": "catalog:",
     "@types/jsdom": "catalog:"
