@@ -19,8 +19,8 @@
  * gate fails with the file to change and the number to write.
  *
  * ROUNDED, AND THE UNIT DOES NOT MATTER — which is luck rather than design, and
- * is worth stating so nobody "fixes" it. 18,357,117 bytes is 18.4 MB decimal and
- * 17.5 MiB binary, and both round to 18. If the corpus ever lands where the two
+ * is worth stating so nobody "fixes" it. 19,439,500 bytes is 19.4 MB decimal and
+ * 18.5 MiB binary, and both round to 19. If the corpus ever lands where the two
  * conventions disagree, this test fails and whoever sees it has to pick one and
  * write it down. That is the right moment to have the argument, not now.
  */

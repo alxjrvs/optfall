@@ -3,7 +3,7 @@
  *
  * The unit tests below are cheap; the corpus assertions are the ones that
  * matter. A key rule that is correct on six hand-written examples and collides
- * on the real 16,502 printings would serve one card's art under another card's
+ * on the real 17,193 printings would serve one card's art under another card's
  * name — a confident wrong answer, which is the one failure mode this project
  * is built to not have.
  */
@@ -268,11 +268,13 @@ describe("over the whole corpus", () => {
     expect(unresolved.map((printing) => printing.image_url)).toEqual([]);
   });
 
-  test("printings with no image are exactly the four upstream publishes as null", () => {
+  test("printings with no image are exactly the seven upstream publishes as null", () => {
+    // Four until the 2026-10 sync to upstream 01fc934, which added three:
+    // IAR158 twice (Gate to i'Arathael, Runechant) and AMA012.
     const withoutImage = printings.filter(
       (printing) => printing.image_url === null,
     );
-    expect(withoutImage).toHaveLength(4);
+    expect(withoutImage).toHaveLength(7);
   });
 
   test("no two different images are given the same key", () => {
@@ -291,12 +293,18 @@ describe("over the whole corpus", () => {
       .filter(([, urls]) => urls.size > 1)
       .map(([key, urls]) => `${key}: ${[...urls].join(" , ")}`);
 
-    // Exactly one, and it is the same image mirrored on two hosts — both were
-    // fetched and hashed while writing this and are byte-identical, so the two
-    // URLs collapsing to one blob is correct rather than lossy. If this list
-    // ever grows, the new entry is a real clash and needs a tiebreak.
+    // Exactly one, and it is the same image on two hosts, so the two URLs
+    // collapsing to one blob is correct rather than lossy. If this list ever
+    // grows, the new entry is a real clash and needs a tiebreak.
+    //
+    // ~~`LGS387.webp`, byte-identical on two hosts.~~ Upstream 01fc934 moved
+    // both of those URLs to one S3 host, so that pair is gone. `DYN244.webp`
+    // replaced it: Ponder's standard printing moved to S3 as WebP and its
+    // rainbow foil still points at the old fabmaster PNG. Both were fetched on
+    // 2026-10-13 — the same 546×762 art, NOT byte-identical (lossy WebP against
+    // lossless PNG; mean greyscale difference 3 of 255 at 90×126).
     expect(shared).toHaveLength(1);
-    expect(shared[0]).toStartWith("LGS387.webp:");
+    expect(shared[0]).toStartWith("DYN244.webp:");
   });
 
   test("the corpus needs far fewer faces than it has printings", () => {
@@ -307,8 +315,8 @@ describe("over the whole corpus", () => {
         .map((printing) => faceKeyFor(printing.image_url))
         .filter(Boolean),
     );
-    expect(printings.length).toBe(16502);
-    expect(keys.size).toBe(11376);
+    expect(printings.length).toBe(17193);
+    expect(keys.size).toBe(16975);
   });
 });
 
@@ -327,13 +335,15 @@ describe("a face key identifies a printing within its card", () => {
     // This is the per-card version of the corpus-wide claim above, and the
     // known mirror is allowed by name rather than by loosening the test.
     //
-    // `LGS387` on Batter to a Pulp is reached by two URLs — the same image on
-    // two hosts, fetched and hashed while the key rule was written and found
-    // byte-identical. `facesOf` dedupes by key, so the card has ONE address for
-    // that picture and it is unambiguous in every sense that matters. Anything
-    // else appearing here would be two different pictures fighting over one
-    // URL, which is the thing this test exists to catch.
-    const KNOWN_MIRROR = "Batter to a Pulp: LGS387.webp";
+    // ~~`LGS387` on Batter to a Pulp~~ — gone since upstream 01fc934 moved
+    // both its URLs to one host. `DYN244` on Ponder is reached by two URLs —
+    // the same art as S3 WebP and fabmaster PNG, compared by eye and by pixel
+    // on 2026-10-13 (see the corpus-wide test above). `facesOf` dedupes by
+    // key, so the card has ONE address for that picture and it is unambiguous
+    // in every sense that matters. Anything else appearing here would be two
+    // different pictures fighting over one URL, which is the thing this test
+    // exists to catch.
+    const KNOWN_MIRROR = "Ponder: DYN244.webp";
     const ambiguous: string[] = [];
 
     for (const card of CORPUS.cards) {

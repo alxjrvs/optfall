@@ -79,13 +79,46 @@ const pageNamed = (name: string): CardPage => {
 
 describe("the pinned corpus", () => {
   test("is the shape every other assertion here assumes", () => {
-    expect(CORPUS.schemaVersion).toBe(2);
-    expect(CORPUS.counts.cards).toBe(4941);
+    expect(CORPUS.schemaVersion).toBe(3);
+    expect(CORPUS.counts.cards).toBe(5193);
     expect(CORPUS.cards.length).toBe(CORPUS.counts.cards);
-    expect(CORPUS.counts.printings).toBe(16502);
-    expect(CORPUS.counts.names).toBe(3158);
+    expect(CORPUS.counts.printings).toBe(17193);
+    expect(CORPUS.counts.names).toBe(3322);
     expect(CORPUS.source.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(LAST_CONFIRMED).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  test("names the upstream cards it withheld for having no printing", () => {
+    /*
+     * `scripts/build-card-corpus.ts` withholds a card with zero printings —
+     * it has no address — and lists it here rather than dropping it. Pinned by
+     * name, so upstream adding the printings (the list shrinks) and a new
+     * printless card (it grows) are both a deliberate edit.
+     */
+    expect(
+      CORPUS.unprinted.map((card) => `${card.name} ${card.pitch}`),
+    ).toEqual([
+      "Rise to the Challenge 1",
+      "Rise to the Challenge 2",
+      "Rise to the Challenge 3",
+    ]);
+    const withheld = new Set(CORPUS.unprinted.map((card) => card.unique_id));
+    expect(CORPUS.cards.some((card) => withheld.has(card.unique_id))).toBe(
+      false,
+    );
+  });
+
+  test("no card names a card the corpus withheld", () => {
+    /*
+     * `references` resolves ids through `CARD_BY_ID` and quietly skips one it
+     * cannot find, so a reference to a withheld card would vanish from the
+     * page. Asserted here so that case fails instead of disappearing.
+     */
+    const withheld = new Set(CORPUS.unprinted.map((card) => card.unique_id));
+    const naming = CORPUS.cards
+      .filter((card) => card.referenced_cards.some((id) => withheld.has(id)))
+      .map((card) => card.name);
+    expect(naming).toEqual([]);
   });
 
   test("carries TCGplayer's product on the printings that have one", () => {
@@ -93,7 +126,7 @@ describe("the pinned corpus", () => {
      * THIS IS A DROP DETECTOR, not a coverage report. The fields sat in
      * `DROPPED_PRINTING_FIELDS` for most of this corpus's life, and the way
      * they would go missing again is a sync that quietly stops carrying them —
-     * which looks like nothing at all in an 18 MB JSON diff. A count that has to
+     * which looks like nothing at all in an 19 MB JSON diff. A count that has to
      * be updated deliberately is the cheapest alarm for that.
      */
     const printings = CORPUS.cards.flatMap((card) => card.printings);
@@ -101,8 +134,8 @@ describe("the pinned corpus", () => {
       (printing) => printing.tcgplayer_url !== undefined,
     );
 
-    expect(printings.length).toBe(16502);
-    expect(withProduct.length).toBe(15166);
+    expect(printings.length).toBe(17193);
+    expect(withProduct.length).toBe(16131);
 
     // Absent, never empty or null — upstream omits the key and so do we.
     for (const printing of printings) {
@@ -146,7 +179,7 @@ describe("the pinned corpus", () => {
     expect(published["blitz_banned"]).toBe(45);
     expect(published["ll_banned"]).toBe(5);
     expect(published["commoner_banned"]).toBe(10);
-    expect(published["silver_age_banned"]).toBe(78);
+    expect(published["silver_age_banned"]).toBe(87);
     expect(published["upf_banned"]).toBe(2);
     expect(published["cc_living_legend"]).toBe(42);
     expect(published["blitz_living_legend"]).toBe(21);
@@ -156,7 +189,7 @@ describe("the pinned corpus", () => {
     expect(cardsWithFlag("blitz_banned").length).toBe(45);
     expect(cardsWithFlag("ll_banned").length).toBe(5);
     expect(cardsWithFlag("commoner_banned").length).toBe(10);
-    expect(cardsWithFlag("silver_age_banned").length).toBe(78);
+    expect(cardsWithFlag("silver_age_banned").length).toBe(87);
     expect(cardsWithFlag("upf_banned").length).toBe(2);
     expect(cardsWithFlag("cc_living_legend").length).toBe(42);
     expect(cardsWithFlag("blitz_living_legend").length).toBe(21);
@@ -289,11 +322,11 @@ describe("a flag the dataset does not publish is never read as false", () => {
     );
   });
 
-  test("Ultimate Pit Fight is unknown on 4,939 cards and Banned on 2", () => {
+  test("Ultimate Pit Fight is unknown on 5,191 cards and Banned on 2", () => {
     const verdicts = CARD_PAGES.map((page) =>
       verdictFor(page.card, formatById("ultimate-pit-fight")),
     );
-    expect(verdicts.filter((verdict) => verdict.unknown).length).toBe(4939);
+    expect(verdicts.filter((verdict) => verdict.unknown).length).toBe(5191);
     expect(
       verdicts.filter((verdict) =>
         verdict.states.some((state) => state.tone === "banned"),
@@ -356,36 +389,36 @@ describe("the derived tone census", () => {
       return counts;
     };
 
-    // Classic Constructed: 4,798 cards are `cc_legal`, of which 51 are banned
-    // and 42 are Living Legend, with Winter's Wail in both — so 4,798 − 92 =
-    // 4,706 render Legal. That arithmetic is the whole point of the file.
+    // Classic Constructed: 5,045 cards are `cc_legal`, of which 51 are banned
+    // and 42 are Living Legend, with Winter's Wail in both — so 5,045 − 92 =
+    // 4,953 render Legal. That arithmetic is the whole point of the file.
     expect(census("classic-constructed")).toEqual({
-      legal: 4706,
-      "not-in-format": 143,
+      legal: 4953,
+      "not-in-format": 148,
       banned: 51,
       "living-legend": 42,
     });
     expect(census("blitz")).toEqual({
-      legal: 4751,
-      "not-in-format": 124,
+      legal: 4999,
+      "not-in-format": 128,
       banned: 45,
       "living-legend": 21,
     });
     expect(census("living-legend")).toEqual({
-      legal: 4773,
-      "not-in-format": 143,
+      legal: 5020,
+      "not-in-format": 148,
       restricted: 20,
       banned: 5,
     });
     expect(census("commoner")).toEqual({
-      legal: 2685,
-      "not-in-format": 2246,
+      legal: 2824,
+      "not-in-format": 2359,
       banned: 10,
     });
     expect(census("silver-age")).toEqual({
-      legal: 3780,
-      "not-in-format": 1083,
-      banned: 78,
+      legal: 3975,
+      "not-in-format": 1131,
+      banned: 87,
     });
     expect(census("ultimate-pit-fight")).toEqual({ banned: 2 });
   });
@@ -416,13 +449,15 @@ describe("addressing", () => {
     /*
      * ONE ROUTE PER DISTINCT FACE, AND THE DEFAULT IS NOT SPECIAL. The old
      * table was 4,941 card pages + 900 shared names + 6,437 non-default
-     * printings; it is 11,378 printings and nothing else, because
-     * `/card/<slug>` and `/card/<name>` are 301s.
+     * printings; it is one route per distinct face and nothing else, because
+     * `/card/<slug>` and `/card/<name>` are 301s. That was 11,378 routes;
+     * upstream 01fc934 gave foil printings their own image (`-RF`, `-CF`:
+     * 5,160 of the 5,604 new faces; 293 more are IAR) and it is now 16,977.
      */
-    expect(CARD_PAGES.length).toBe(4941);
-    expect(NAME_GROUPS.length).toBe(900);
-    expect(CARD_ROUTES.length).toBe(11378);
-    expect(CARD_ROUTES.filter((route) => route.isDefault).length).toBe(4941);
+    expect(CARD_PAGES.length).toBe(5193);
+    expect(NAME_GROUPS.length).toBe(944);
+    expect(CARD_ROUTES.length).toBe(16977);
+    expect(CARD_ROUTES.filter((route) => route.isDefault).length).toBe(5193);
   });
 
   test("set and number alone are NOT unique, which is why the name tail exists", () => {
@@ -633,7 +668,7 @@ describe("links to same-named cards are distinguishable by their text alone", ()
 describe("stats", () => {
   test("a printed 0 is a stat; an absent one is not", () => {
     const zeroPower = CORPUS.cards.filter((card) => card.power === "0");
-    expect(zeroPower.length).toBe(13);
+    expect(zeroPower.length).toBe(14);
     for (const card of zeroPower) {
       const page = CARD_PAGES.find(
         (candidate) => candidate.card.unique_id === card.unique_id,

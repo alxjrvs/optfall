@@ -74,7 +74,7 @@ import { SEARCH_PREFILL } from "../inlineScripts";
  * location: it is still made from the same shaped pages `/card/<slug>` renders,
  * which is what makes it impossible for a search result and the page it links to
  * to disagree about a slug, a label, a legality verdict or a face.
- * The 18 MB corpus still stays on the build machine.
+ * The 19 MB corpus still stays on the build machine.
  *
  * WHAT MOVED IS WHERE THE 909,626 BYTES GO. They were inside this page, in a
  * `data-props` attribute — the single largest document on the site, at 921 kB,
@@ -105,7 +105,7 @@ const islandProps = {
     and no strip.
 
     THIS IS ALSO WHERE THE TWO DECLARATIONS OF EACH SHAPE MEET. `CardSearch`
-    cannot import `searchIndexes.ts` — that module reads the 18 MB corpus at
+    cannot import `searchIndexes.ts` — that module reads the 19 MB corpus at
     module scope and this island's bundle would carry it — so `CardCorpusBrief`
     and `NewestRelease` are each spelled twice, and this assignment is the one
     place a compiler sees both spellings at once.

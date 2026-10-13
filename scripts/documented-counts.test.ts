@@ -34,6 +34,7 @@ import { ROOT } from "./lib/root";
 
 import { CARD_PAGES, CARD_ROUTES, CORPUS } from "../apps/site/src/lib/cards";
 import { RULE_PAGES } from "../apps/site/src/lib/rules";
+import { faceKeyFor } from "../apps/site/src/lib/faces";
 import { SETS } from "../apps/site/src/lib/sets";
 
 const SKIP = new Set(["node_modules", ".git", "dist", "data", "design-system"]);
@@ -103,20 +104,20 @@ const FIGURES: readonly {
   readonly live: number;
   readonly what: string;
 }[] = [
-  { literal: "4,941", live: CORPUS.counts.cards, what: "cards in the corpus" },
+  { literal: "5,193", live: CORPUS.counts.cards, what: "cards in the corpus" },
   {
-    literal: "16,502",
+    literal: "17,193",
     live: CORPUS.counts.printings,
     what: "printings across every set",
   },
   { literal: "1,278", live: RULE_PAGES.length, what: "rule permalinks" },
   {
-    literal: "11,378",
+    literal: "16,977",
     live: CARD_ROUTES.length,
     what: "card routes — the figure two files got wrong, two different ways",
   },
   {
-    literal: "12,777",
+    literal: "18,380",
     live: TOTAL_PAGES,
     what: "pages in the build, the most-quoted number in the repository",
   },
@@ -169,40 +170,44 @@ describe("the two figures that look wrong and are not", () => {
     expect(1269 + 9).toBe(RULE_PAGES.length);
   });
 
-  test("faces.ts counts URLs where a reader counts basenames", () => {
+  test("faces.ts counts URLs where a reader counts keys", () => {
     /*
-     * `faces.ts` says 11,377 distinct images and 11,376 distinct basenames in
-     * the same docblock, and names the single cause: `LGS387.webp` is served
-     * from two hosts, byte-identical, so collapsing it to one key is correct
-     * rather than lossy. Count the keys and the prose looks off by one; read the
-     * next sentence and it is exact.
+     * `faces.ts` says 16,975 face keys, and `printings.ts` beside it; the
+     * corpus has 16,976 distinct image URLs. The single cause is named there:
+     * Ponder's `DYN244` is published as an S3 WebP and a fabmaster PNG of the
+     * same art, and the key drops the extension, so two URLs are one face.
+     * Count the URLs and the prose looks off by one; read the next sentence
+     * and it is exact.
+     *
+     * ~~11,377 URLs and 11,376 basenames, the one being `LGS387.webp` on two
+     * hosts.~~ That was upstream 7a4822f. At 01fc934 the two `DYN244` URLs
+     * differ in extension, so the RAW basenames no longer collide — only the
+     * key does — and the test counts keys.
      */
     const urls = new Set<string>();
-    const basenames = new Set<string>();
+    const urlsByKey = new Map<string, Set<string>>();
     for (const card of CORPUS.cards) {
       for (const printing of card.printings ?? []) {
         const url = printing.image_url;
-        if (!url) continue;
+        const key = faceKeyFor(url);
+        if (!url || key === null) continue;
         urls.add(url);
-        basenames.add(url.split("/").pop() ?? "");
+        const seen = urlsByKey.get(key) ?? new Set<string>();
+        seen.add(url);
+        urlsByKey.set(key, seen);
       }
     }
 
-    expect(urls.size).toBe(11_377);
-    expect(basenames.size).toBe(11_376);
+    expect(urls.size).toBe(16_976);
+    expect(urlsByKey.size).toBe(16_975);
 
     /* Named in the docblock, so the "one collision" stays exactly one and stays
        the one the prose says it is. */
-    const perBasename = new Map<string, number>();
-    for (const url of urls) {
-      const base = url.split("/").pop() ?? "";
-      perBasename.set(base, (perBasename.get(base) ?? 0) + 1);
-    }
     expect(
-      [...perBasename.entries()]
-        .filter(([, count]) => count > 1)
-        .map(([base]) => base),
-    ).toEqual(["LGS387.webp"]);
+      [...urlsByKey.entries()]
+        .filter(([, seen]) => seen.size > 1)
+        .map(([key]) => key),
+    ).toEqual(["DYN244.webp"]);
   });
 });
 
@@ -230,12 +235,13 @@ describe("and they are quoted often enough to be worth owning", () => {
        * without anybody noticing. Either way the entry should be reconsidered
        * rather than left sitting here looking like coverage.
        *
-       * `11,378` is the exception and is allowed to be unquoted: the two
-       * comments that named it were removed for being wrong, and the point of
-       * keeping it here is that the next person to write it down gets it
-       * checked.
+       * The card-route count is the exception and is allowed to be unquoted:
+       * the two comments that named it (as `11,378`) were removed for being
+       * wrong, and the point of keeping it here is that the next person to
+       * write it down gets it checked. It is quoted today; the exemption
+       * stays so that removing those quotes is not a test failure.
        */
-      if (figure.literal === "11,378") return;
+      if (figure.what.startsWith("card routes")) return;
       expect(where.length).toBeGreaterThan(0);
     });
   }

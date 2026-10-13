@@ -105,7 +105,7 @@ row's subject changes, not when someone notices.*
 | Image grid results | default view | grid is the default | **have** |
 | Display modes | `display:grid/checklist/text/full` | `display:grid/list`, a query term | **narrowed** |
 | Sort control | `order:` × 15, `dir:` | `order:` × 9, `dir:`, documented | **have** |
-| Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<set>/<num>/<name>`, 11,378 of them — every distinct art, the default included | **have** |
+| Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<set>/<num>/<name>`, 16,977 of them — every distinct art, the default included | **have** |
 | Duplicate collapsing | `unique:cards/prints/art` | `unique:names` (default), `cards`, `art` | **have** |
 | Negation, `OR`, parentheses | yes | all three, documented at `/syntax` | **have** |
 | Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, against a number **or against each other** | **have** |
@@ -137,7 +137,7 @@ prints one word per format. Keep this, and put it on the card page above the
 fold — it is the differentiator that is already finished.
 
 **Our related-cards graph is better too.** `referenced_cards` is resolved in
-both directions across 4,941 cards, deduplicated, with the duplicates explained.
+both directions across 5,193 cards, deduplicated, with the duplicates explained.
 Scryfall's equivalent is narrower. This is free ground already taken.
 
 ---
@@ -215,6 +215,12 @@ are the parts that are right.
 ## 5. Add
 
 ### 5.1 Card images — the decision, with the arithmetic
+
+> **Measured at upstream `7a4822f`.** At `01fc934` (2026-10-13) upstream had
+> moved nearly every face to one S3 host and published most foils as their own
+> image: 17,193 printings, 16,976 distinct URLs, 16,975 keys, one key reached by
+> two URLs (`DYN244`, same art as WebP and PNG — see `faces.ts`). The
+> decision below stands; its 45% saving does not.
 
 The corpus carries 11,377 distinct image URLs across four hosts, all
 LSS-controlled:
@@ -424,7 +430,7 @@ a stopgap rather than left implicit.
   printing was addressable, but the CARD was still the addressable unit, and the
   name led the path.
 
-  It is now `/card/<set>/<number>/<slug>` for all 11,378 distinct arts, and
+  It is now `/card/<set>/<number>/<slug>` for all 16,977 distinct arts, and
   there is no card-level URL at all — `/card/<slug>` and `/card/<name>` are
   301s. Three things fall out of the order that did not out of the old one:
 
@@ -445,8 +451,8 @@ a stopgap rather than left implicit.
 
   **A non-default art canonicals to the card's default printing**, which is
   where this deliberately does NOT follow Scryfall. Scryfall lets every printing
-  self-canonical and indexes all of them; 11,378 pages differing only in one
-  image would bury the 4,941 that stand for a card. The address is a printing;
+  self-canonical and indexes all of them; 16,977 pages differing only in one
+  image would bury the 5,193 that stand for a card. The address is a printing;
   the indexed unit is still the card.
 - **`unique:cards` (default) and `unique:prints`** in search — collapse to one
   row per card, or show every printing as its own result.
@@ -587,6 +593,13 @@ Against it, the card corpus carries 167 distinct keyword strings, which reduce t
 | Exact match against the CR vocabulary | 71 |
 | Parameterised family — `<Hero> Specialization`, `<Element> Fusion`, `<Element> Bond`, `Essence of <X>`, `Channel <X>` | 66 |
 | **Total** | **137 of 145 — 94%** |
+
+> **Re-measured 2026-10-13**, at upstream `01fc934` (Usurp the Shadow Throne):
+> 175 strings, 154 base forms, 71 + 67 resolved — **138 of 154, 90%**. The eight
+> new misses (`binds`, `cure`, `decay`, `incarnate`, `shadow resist`,
+> `traverse`, `unique`, `usurp`) are keywords cards print and CR 2.14.0
+> does not define; a newer rules corpus is the fix. The table above is the
+> measurement the join was built against.
 
 The eight that do not resolve are named rather than swept up: `attack reaction`,
 `instant`, `stealth` and `pairs` are card *types* and belong to CR 8.1/8.2 rather
@@ -788,7 +801,7 @@ tool usable.
 - **`year:` / `date:`** — needs `set.json`. ✅ Both, with comparisons. A card
   matches if ANY of its printings does, because the corpus collapses a card
   across its sets and "released in 2024" can only mean "printed in 2024 at least
-  once". Seventeen of the 118 sets carry no upstream date, so 53 cards match no
+  once". Seventeen of the 122 sets carry no upstream date, so 48 cards match no
   date filter that can ever be written — and the search says so rather than
   returning a plausible short list.
 - **`is:`** — reserved. It stays pending until the interaction corpus exists, and

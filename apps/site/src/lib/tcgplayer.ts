@@ -121,7 +121,7 @@ interface Purchasable {
  * The href for a printing's storefront page, or `undefined` when upstream
  * published no product for it.
  *
- * `undefined` IS A REAL ANSWER HERE, not a failure. 1,336 of 16,502 printings
+ * `undefined` IS A REAL ANSWER HERE, not a failure. 1,062 of 17,193 printings
  * have no TCGplayer product — promos and organised-play sets, where WIN, SBL,
  * SBA, SLY, SGB and the armory sets carry none at all. A caller renders nothing
  * for those, exactly as the legality table renders a missing flag as absent

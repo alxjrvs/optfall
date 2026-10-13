@@ -152,11 +152,13 @@ describe("rulesForCard", () => {
 describe("coverage over the real corpus", () => {
   const coverage = keywordCoverage(vocabulary, everyCardKeyword);
 
-  test("is 94% of 145 base forms, and the split is stated", () => {
-    expect(coverage.baseForms).toBe(145);
+  test("is 90% of 154 base forms, and the split is stated", () => {
+    // 94% of 145 until the sync to upstream 01fc934 (Usurp the Shadow
+    // Throne): the set brought keywords CR 2.14.0 does not define.
+    expect(coverage.baseForms).toBe(154);
     expect(coverage.direct).toBe(71);
-    expect(coverage.viaFamily).toBe(66);
-    expect(coverage.percent).toBe(94);
+    expect(coverage.viaFamily).toBe(67);
+    expect(coverage.percent).toBe(90);
   });
 
   test("names every keyword it cannot resolve", () => {
@@ -165,15 +167,28 @@ describe("coverage over the real corpus", () => {
     // vocabulary the rules corpus has not caught up with, and a card is
     // silently losing a citation — which is exactly what the number on the page
     // exists to make visible.
+    //
+    // It grew by eight at upstream 01fc934: `binds`, `cure`, `decay`,
+    // `incarnate`, `shadow resist`, `traverse`, `unique` and `usurp` are
+    // printed on cards and absent from the CR 2.14.0 vocabulary. The fix is a
+    // newer rules corpus, not a change here.
     expect(coverage.unmatched).toEqual([
       "and lightning",
       "attack reaction",
+      "binds",
+      "cure",
+      "decay",
       "ice",
+      "incarnate",
       "instant",
       "pairs",
+      "shadow resist",
       "stealth",
       "the crowd boos",
       "the crowd cheers",
+      "traverse",
+      "unique",
+      "usurp",
     ]);
   });
 

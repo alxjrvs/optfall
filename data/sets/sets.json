@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "source": {
     "repository": "the-fab-cube/flesh-and-blood-cards",
-    "commit": "7a4822f3dab483a52a78206b7ad8696394e02dc0",
+    "commit": "01fc9344a612a41e5dc451ccc1422050a25a2667",
     "files": [
       "set.json",
       "rarity.json",
@@ -12,8 +12,8 @@
   },
   "rights": "Set names are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. Only Optfall's structural work over this data — the field selection, the upstream pin and this envelope — is openly licensed.",
   "counts": {
-    "sets": 118,
-    "dated": 101
+    "sets": 122,
+    "dated": 105
   },
   "decode": {
     "rarity": {
@@ -169,8 +169,26 @@
       ]
     },
     {
+      "id": "AMA",
+      "name": "Armory Deck - Malice",
+      "released": "2026-09-25",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "AMO",
+      "name": "Armory Deck - Dr. Mortimer",
+      "released": "2026-11-14",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
       "id": "AMX",
-      "name": "Amory Deck - Maxx",
+      "name": "Armory Deck - Maxx",
       "released": "2025-04-17",
       "outOfPrint": false,
       "editions": [
@@ -569,8 +587,8 @@
     },
     {
       "id": "IAR",
-      "name": "??? Set 20 ???",
-      "released": null,
+      "name": "Usurp the Shadow Throne",
+      "released": "2026-09-25",
       "outOfPrint": false,
       "editions": [
         "N"
@@ -674,6 +692,15 @@
       "editions": [
         "F",
         "U"
+      ]
+    },
+    {
+      "id": "MPA",
+      "name": "Mastery Pack Assassin",
+      "released": "2026-11-14",
+      "outOfPrint": false,
+      "editions": [
+        "N"
       ]
     },
     {
@@ -968,6 +995,15 @@
       "id": "SMP",
       "name": "Smash Palace",
       "released": "2025-08-29",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SPW",
+      "name": "Smash Palace - Chorus of Steel",
+      "released": null,
       "outOfPrint": false,
       "editions": [
         "N"

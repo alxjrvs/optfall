@@ -921,7 +921,7 @@ export function searchCards(
     TEXT POSTINGS ARE RESOLVED ONCE, BEFORE THE WALK. They are the only lookup
     that is not a linear scan, and the tree can mention the same term more than
     once — `text:strike or name:strike` — so resolving inside the per-card test
-    would redo a postings walk 4,941 times per occurrence. Every distinct text
+    would redo a postings walk 5,193 times per occurrence. Every distinct text
     value becomes a set here, and the leaf test is a membership check.
   */
   const textSets = new Map<string, ReadonlySet<number>>();

@@ -132,7 +132,7 @@ describe("the index", () => {
 
   test("round-trips every card without losing one", () => {
     expect(index.size).toBe(CARD_PAGES.length);
-    expect(index.size).toBe(4941);
+    expect(index.size).toBe(5193);
     expect(index.labels[0]).toBe(CARD_PAGES[0]?.label);
     expect(index.slugs[0]).toBe(CARD_PAGES[0]?.slug);
     expect(
@@ -141,7 +141,7 @@ describe("the index", () => {
   });
 
   test("carries no card text, only an inverted index over it", () => {
-    // The corpus is 18 MB; what ships is the index. A regression that started
+    // The corpus is 19 MB; what ships is the index. A regression that started
     // shipping the text would be invisible except as a page-weight change, so
     // it is asserted rather than trusted.
     const serialised = JSON.stringify(encoded);
@@ -241,14 +241,14 @@ describe("legality filters read the format they name", () => {
     expect(total("banned:blitz")).toBe(29);
     expect(total("banned:ll")).toBe(5);
     expect(total("banned:commoner")).toBe(8);
-    expect(total("banned:silver-age")).toBe(41);
+    expect(total("banned:silver-age")).toBe(45);
     expect(total("banned:upf")).toBe(2);
   });
 
   test("legal:cc is the pool minus every excluded card", () => {
-    expect(total("legal:cc")).toBe(2943);
-    expect(total("legal:blitz")).toBe(2984);
-    expect(total("legal:commoner")).toBe(1396);
+    expect(total("legal:cc")).toBe(3102);
+    expect(total("legal:blitz")).toBe(3144);
+    expect(total("legal:commoner")).toBe(1473);
   });
 
   test("nothing is legal in Ultimate Pit Fight, because nothing says so", () => {
@@ -614,7 +614,7 @@ describe("ranking", () => {
   test("the reported total is the true total, not the page size", () => {
     const outcome = searchCards(index, "legal:cc", 10);
     expect(outcome.results).toHaveLength(10);
-    expect(outcome.total).toBe(2943);
+    expect(outcome.total).toBe(3102);
   });
 
   test("an empty query returns nothing rather than everything", () => {
@@ -783,7 +783,7 @@ describe("negation, OR and grouping", () => {
     expect(
       total('type:"illusionist action" unique:cards') +
         total('-type:"illusionist action" unique:cards'),
-    ).toBe(4941);
+    ).toBe(5193);
   });
 
   test("negation composes with the exact-name and comparison operators", () => {
@@ -800,7 +800,7 @@ describe("negation, OR and grouping", () => {
     // A true complement again — an empty query returns nothing rather than
     // everything, so the whole corpus has to be named explicitly.
     expect(total("cost>=3 unique:cards") + total("-cost>=3 unique:cards")).toBe(
-      4941,
+      5193,
     );
   });
 
@@ -1332,7 +1332,7 @@ describe("release dates", () => {
       "(year<2020 or year>=2020) unique:cards",
       20000,
     ).total;
-    expect(covered).toBe(4941 - index.undatedCards);
+    expect(covered).toBe(5193 - index.undatedCards);
 
     // And the overlap is real rather than incidental — reprints exist.
     const before = searchCards(index, "year<2020 unique:cards", 20000).total;
@@ -1349,10 +1349,10 @@ describe("release dates", () => {
   });
 
   /*
-   * THE MISSING 53 ARE NAMED RATHER THAN DROPPED. Seventeen sets carry no
-   * upstream release date, so 53 cards match no date filter that can ever be
-   * written. A search that quietly returned 4,888 answers to a question about
-   * 4,941 cards would be exactly the confident wrongness this engine exists to
+   * THE MISSING 48 ARE NAMED RATHER THAN DROPPED. Seventeen sets carry no
+   * upstream release date, so 48 cards match no date filter that can ever be
+   * written. A search that quietly returned 5,145 answers to a question about
+   * 5,193 cards would be exactly the confident wrongness this engine exists to
    * avoid.
    */
   test("a date filter says how many cards it cannot see", () => {
@@ -1442,8 +1442,8 @@ describe("release dates", () => {
        `year:2024` is right and dropping it from `-year:2024` would not be. */
     const positive = total("year:2024 unique:cards");
     const negative = total("-year:2024 unique:cards");
-    expect(positive + negative).toBe(4941);
-    expect(negative - (4941 - index.undatedCards - positive)).toBe(
+    expect(positive + negative).toBe(5193);
+    expect(negative - (5193 - index.undatedCards - positive)).toBe(
       index.undatedCards,
     );
   });
@@ -1539,7 +1539,7 @@ describe("comparing two printed values", () => {
   test("a card with an unprintable value on either side is excluded", () => {
     /* Cards printing X, XX or nothing have no place in an order — the same
        decision `cost>=3` already makes, applied to both sides at once. */
-    expect(total("power>=0 defence>=0 unique:cards")).toBeLessThan(4941);
+    expect(total("power>=0 defence>=0 unique:cards")).toBeLessThan(5193);
   });
 
   test("an operand that is neither a number nor a field is refused", () => {
@@ -1725,7 +1725,7 @@ describe("a set-scoped search shows that set's printing", () => {
      * THE INVARIANT ABOVE IS TRUE OF THE OLD BEHAVIOUR TOO on a card printed in
      * one set — face and address both default, both agreeing — so it needs the
      * cards where the two answers genuinely differ. Those are the reprints, and
-     * they are most of the game: 2,239 of 4,941 cards.
+     * they are much of the game: 2,329 of 5,193 cards.
      *
      * SELECTED FROM THE INDEX, NOT FROM THE RESULTS, because "which rows did
      * this change move" is a fact about the corpus and asking the results is

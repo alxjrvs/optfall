@@ -110,7 +110,7 @@ importer; `decode.ts` does not import it at all:
 import type { CardPage } from "../cards";
 ```
 
-A value import pulls the 18 MB corpus into the browser bundle. It happened
+A value import pulls the 19 MB corpus into the browser bundle. It happened
 once and shipped 9.28 MB to every reader. `ssg/build.ts` has an island-budget
 assertion that catches a recurrence, but it catches it late — write the
 `import type` first.

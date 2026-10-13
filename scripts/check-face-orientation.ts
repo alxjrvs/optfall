@@ -11,7 +11,7 @@
  * it rotting silently.
  *
  * IT IS NOT PART OF `bun run check`, AND MUST NOT BECOME PART OF IT. It makes
- * one ranged request per distinct face — 11,376 of them — against the live face
+ * one ranged request per distinct face — 16,975 of them — against the live face
  * host. That is the same reason `check:symbols` and `corpus:*` are kept out of
  * the loop and out of `.claude/settings.json`'s pre-approved list: a command
  * that talks to the network is a decision somebody makes, not a step that runs

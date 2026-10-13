@@ -2,7 +2,7 @@
  * Printed card text, parsed into something renderable.
  *
  * THE GRAMMAR IS SMALL AND IT WAS MEASURED, NOT ASSUMED. A full scan of all
- * 4,941 cards finds exactly this and nothing else:
+ * 4,941 cards (upstream 7a4822f) found exactly this and nothing else:
  *
  *   - `**bold**`            5,659 — never spans a newline, occasionally nests a symbol
  *   - `{x}` symbols         3,803 — nine distinct markers, see `card-symbols.ts`
@@ -26,11 +26,12 @@
  *    are therefore resolved at BLOCK level, before any inline pass runs, so the
  *    inline pass never sees a line-leading `*`.
  *
- * 2. UPSTREAM HAS A TYPO AND IT MUST NOT PROPAGATE. Reality Refractor prints
- *    `{r]{r}` — a square bracket where a brace belongs. The symbol pattern
- *    requires a closing brace, so `{r]` simply does not match and survives as
- *    the literal text upstream published. That is the correct degradation for a
- *    reference work: show what is printed, do not repair it, do not drop it.
+ * 2. AN UPSTREAM TYPO MUST NOT PROPAGATE. Reality Refractor printed
+ *    `{r]{r}` — a square bracket where a brace belongs — until upstream fixed
+ *    it (present at 7a4822f, gone by 01fc934). The symbol pattern requires a
+ *    closing brace, so `{r]` simply does not match and survives as the literal
+ *    text upstream published. That is the correct degradation for a reference
+ *    work: show what is printed, do not repair it, do not drop it.
  */
 import { SYMBOLS, symbolForToken, type GameSymbol } from "./card-symbols";
 
@@ -196,7 +197,7 @@ export function parseCardText(source: string): readonly Block[] {
  *
  * Drives the per-card legend: a card page lists the symbols ON THAT CARD with
  * the rule that defines each, rather than printing a nine-row table on all
- * 4,941 pages. A legend for symbols a reader is not looking at is furniture.
+ * 5,193 cards. A legend for symbols a reader is not looking at is furniture.
  *
  * A STABLE ORDER RATHER THAN APPEARANCE ORDER, so the legend on one card is
  * comparable with the legend on the next — a reader who has learnt where the
