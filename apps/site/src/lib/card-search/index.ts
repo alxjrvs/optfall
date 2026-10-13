@@ -18,7 +18,7 @@
  * themselves render — so the search and the page cannot disagree about a card's
  * slug, its label or its legality. {@link decodeCardIndex} and
  * {@link searchCards} run in the browser against what it produced.
- * The 18 MB corpus never reaches a client.
+ * The 19 MB corpus never reaches a client.
  *
  * IT USED TO RUN IN THE PAGE MODULE, and moving it changed one thing worth
  * knowing: the encoded index is written to a content-hashed file and FETCHED by

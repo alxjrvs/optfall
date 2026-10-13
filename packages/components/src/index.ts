@@ -149,7 +149,7 @@ export type PlateCorner = "start-start" | "start-end" | "end-start" | "end-end";
  * the whole reason this type exists instead of a bare `number`. The obvious
  * spellings are `0` and `Infinity`, and both are values a caller can produce by
  * accident: `Number.parseInt("")` is `NaN`, a missing parameter is `undefined`
- * coerced to `0`, and either would silently mean "show 4,941 card images" at
+ * coerced to `0`, and either would silently mean "show 5,193 card images" at
  * the one place a mistake is most expensive. A string cannot be arrived at by
  * arithmetic.
  *

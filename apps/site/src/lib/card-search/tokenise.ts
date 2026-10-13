@@ -19,7 +19,7 @@ import { foldLatin } from "../fold-latin";
  *
  * THE THRESHOLD IS MEASURED, NOT TASTE. A word is here when it is a function
  * word AND it appears in a majority of cards, because a term in most documents
- * cannot separate one from another. Measured against this corpus, `you` is the
+ * cannot separate one from another. Measured at 4,941 cards (upstream 7a4822f), `you` is the
  * only content-ish word over half (2,528 of 4,941, 51.2%), and it is in the
  * list for that reason alone. `if` (47.4%), `your` (35.7%) and `may` (19.1%)
  * are all under it and all stay — the second-guess would have been to add
@@ -72,7 +72,7 @@ export const STOPWORDS: ReadonlySet<string> = new Set([
  * by typing their name.
  *
  * `foldLatin` is the one rule both use now. It lives in its own module because
- * `slugify` is in `cards.ts`, which loads the 18 MB corpus at module scope and
+ * `slugify` is in `cards.ts`, which loads the 19 MB corpus at module scope and
  * which this file may only import from TYPE-ONLY.
  */
 export function tokeniseCard(text: string): string[] {

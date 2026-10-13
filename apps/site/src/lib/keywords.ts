@@ -30,11 +30,11 @@
  *
  * HOW A CARD KEYWORD IS NORMALISED. Card keywords carry operands — `Ward 10`,
  * `Arcane Barrier 2`, `Amp 1`, `Opt X` — which are parameters rather than
- * different keywords, so the trailing number or `X` is stripped. That takes 167
- * distinct strings down to 145 base forms.
+ * different keywords, so the trailing number or `X` is stripped. That takes 175
+ * distinct strings down to 154 base forms.
  *
- * THEN ONE MORE PASS, AND IT IS THE INTERESTING ONE. 74 of those 145 do not
- * match a rule directly, and almost none of them is a miss: they are
+ * THEN ONE MORE PASS, AND IT IS THE INTERESTING ONE. 83 of those 154 do not
+ * match a rule directly, and most of them are not misses: they are
  * *parameterised families* the rules define once and cards instantiate many
  * times — 40-odd `<Hero> Specialization`, `<Element> Fusion`, `<Element> Bond`,
  * `Essence of <X>`, `Channel <X>`. The head term of each family is a real entry

@@ -43,7 +43,7 @@
  *
  * WHY UPSTREAM ORDER IS PRESERVED VERBATIM. Cards arrive sorted by name and
  * printings arrive in upstream's own order, which carries information we would
- * destroy by re-sorting — and re-sorting 4,941 records once would produce a
+ * destroy by re-sorting — and re-sorting 5,193 records once would produce a
  * diff that looks like a total rewrite. Determinism does not require *our*
  * order, only *an* order that is a function of the retrieved bytes, and
  * upstream's is exactly that.
@@ -88,6 +88,19 @@
  * discard. That is the one failure mode a trimming script must not have, so it
  * is loud. `--allow-warnings` exists for the case where a human has read the
  * list and decided the new field is not wanted.
+ *
+ * A CARD WITH NO PRINTING IS LEFT OUT, BY NAME. Upstream commit `01fc934` —
+ * the Usurp the Shadow Throne branch — carries three `Rise to the Challenge`
+ * records, one per pitch, with full rules text and an empty `printings` array:
+ * no set, no collector number, no image. Every card URL is
+ * `/card/<set>/<number>/<slug>`, so a card that was never printed has no
+ * address, and `cards.ts` throws on one rather than drop it silently — that
+ * throw is right and stays. The record is not ours to repair, and it is not
+ * ours to hide either, so the trade made here is the visible one: the card is
+ * withheld from `cards`, listed in the envelope's `unprinted` array with its
+ * `unique_id`, name and pitch, and printed on every run. When upstream adds
+ * the printings, the next sync moves the card from one array to the other and
+ * the diff says so.
  */
 
 import { createHash } from "node:crypto";
@@ -101,8 +114,10 @@ import { fileURLToPath } from "node:url";
  * Bumped when the *shape* changes — a field dropped, added or renamed — so a
  * consumer can refuse a file it does not understand instead of silently reading
  * a field that moved.
+ *
+ * 3: the envelope gained `unprinted` — see the header.
  */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 /** Where the committed corpus lives, relative to the repository root. */
 const CORPUS_DIRECTORY = "data/cards";
@@ -161,7 +176,7 @@ const DROPPED_CARD_FIELDS: Readonly<Record<string, string>> = {
   functional_text_plain:
     "the same text as functional_text with the ** emphasis markers removed; the marked-up form is the superset, and cards-search.json carries the plain form verbatim for the lede",
   cards_referenced_by:
-    "the exact inverse of referenced_cards, verified across all 4,941 cards; the site derives it in one pass, exactly as apps/site/src/lib/rules.ts derives children from parentId",
+    "the exact inverse of referenced_cards, verified across all 5,196 upstream cards at 01fc934; the site derives it in one pass, exactly as apps/site/src/lib/rules.ts derives children from parentId",
 };
 
 /** Upstream printing fields this corpus does **not** carry, each with the reason. */
@@ -169,7 +184,7 @@ const DROPPED_PRINTING_FIELDS: Readonly<Record<string, string>> = {
   set_printing_unique_id:
     "an opaque join key into an upstream table this corpus does not ship; (set_id, id, edition) identifies the same grouping in fields we do carry",
   flavor_text_plain:
-    "the same text as flavor_text with the ** emphasis markers removed; differs on 2 of 16,502 printings",
+    "the same text as flavor_text with the ** emphasis markers removed; differs on 2 of 17,193 printings",
 };
 
 /**
@@ -353,7 +368,7 @@ interface CorpusPrinting {
    * it. Both are upstream's, carried verbatim.
    *
    * OPTIONAL BECAUSE UPSTREAM OMITS THE KEYS, rather than publishing them as
-   * `null` or `""`. 1,336 of 16,502 printings have neither, concentrated in
+   * `null` or `""`. 1,062 of 17,193 printings have neither, concentrated in
    * promotional and organised-play sets — WIN, SBL, SBA, SLY, SGB and the
    * armory sets carry none at all. Omitting them here mirrors that exactly, so
    * a reader can tell "upstream published no product" from "we dropped it",
@@ -460,6 +475,18 @@ interface CorpusEnvelope {
    */
   readonly legalityFlags: readonly string[];
   readonly counts: CorpusCounts;
+  /**
+   * Upstream cards withheld from `cards` because they publish no printing.
+   * Not counted in {@link CorpusCounts}, which describes `cards` alone.
+   */
+  readonly unprinted: readonly UnprintedCard[];
+}
+
+/** Enough of a withheld card to find it upstream and to tell its pitches apart. */
+interface UnprintedCard {
+  readonly unique_id: string;
+  readonly name: string;
+  readonly pitch: string;
 }
 
 interface CardCorpus extends CorpusEnvelope {
@@ -678,7 +705,7 @@ function toFace(face: JsonRecord, where: string): DoubleSidedFace {
  * Explicit rather than a pass-through, for the reason
  * `scripts/build-rules-corpus.ts` gives about sections: the committed file's key
  * order is a decision made here, so a change upstream cannot silently reorder
- * 16,502 records and produce a diff that looks like a data change.
+ * 17,193 records and produce a diff that looks like a data change.
  */
 function toCorpusPrinting(printing: JsonRecord, where: string): CorpusPrinting {
   const faces =
@@ -739,7 +766,7 @@ function toCorpusCard(card: JsonRecord, where: string): CorpusCard {
     functional_text: text(card, "functional_text", where),
     type_text: text(card, "type_text", where),
     played_horizontally: flag(card, "played_horizontally", where),
-    // Present on 1,423 of 4,941 cards upstream; written as `[]` on the rest so
+    // Present on 1,530 of 5,196 cards upstream; written as `[]` on the rest so
     // every record has the same shape and a consumer never has to test for the
     // key. The inverse relation is not written at all — see DROPPED_CARD_FIELDS.
     referenced_cards:
@@ -1045,15 +1072,24 @@ const upstream: readonly JsonRecord[] = parsed.map((entry, index) => {
   );
 });
 
-const cards = upstream.map((card, index) =>
+const converted = upstream.map((card, index) =>
   toCorpusCard(
     card,
     `card ${String(index)} (${String(card["name"] ?? "unnamed")})`,
   ),
 );
 
+const cards = converted.filter((card) => card.printings.length > 0);
+const unprinted: readonly UnprintedCard[] = converted
+  .filter((card) => card.printings.length === 0)
+  .map((card) => ({
+    unique_id: card.unique_id,
+    name: card.name,
+    pitch: card.pitch,
+  }));
+
 const counts = countCorpus(cards);
-const warnings = [...unknownFields(upstream), ...duplicateIds(cards)];
+const warnings = [...unknownFields(upstream), ...duplicateIds(converted)];
 
 log.push(
   `upstream  ${UPSTREAM_REPOSITORY} ${UPSTREAM_PATH}`,
@@ -1077,6 +1113,12 @@ log.push(
     ([field, why]) => `  printings[].${field} — ${why}`,
   ),
   "",
+  `unprinted ${String(unprinted.length)} — withheld from cards, listed in the envelope`,
+  ...unprinted.map(
+    (card) =>
+      `  ${card.unique_id} ${card.name} (pitch ${card.pitch || "none"})`,
+  ),
+  "",
   `warnings  ${String(warnings.length)}`,
 );
 for (const warning of warnings)
@@ -1098,6 +1140,7 @@ if (warnings.length > 0 && !allowWarnings) {
     rights: RIGHTS,
     legalityFlags: [...SEARCH_FLAG_FIELDS],
     counts,
+    unprinted,
   };
 
   const outputs: readonly { readonly path: string; readonly body: string }[] = [

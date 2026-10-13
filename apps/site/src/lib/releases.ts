@@ -14,7 +14,7 @@
  * paraphrased: it is the argument that produced the number, and rewriting it
  * here would be rewriting evidence.
  *
- * BUILD-TIME ONLY. This module reads `./cards`, which reads the 18 MB corpus at
+ * BUILD-TIME ONLY. This module reads `./cards`, which reads the 19 MB corpus at
  * module scope. Nothing an island bundle can see may import it as a value —
  * that line is what `build.ts`'s island budget exists to police, and crossing
  * it once shipped a 9.28 MB bundle to every reader.

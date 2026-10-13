@@ -93,7 +93,7 @@ import { searchIndexClient } from "./useSearchIndex";
  * The real index, built here rather than imported from `ssg/searchIndexes.ts`.
  *
  * THAT MODULE IS THE BUILD'S, and it reaches the card corpus on the way past —
- * 18 MB this island has no use for. It is also the module that DERIVES the
+ * 19 MB this island has no use for. It is also the module that DERIVES the
  * browse prop, so importing both from it would make the fixture and the thing
  * under test one expression. The same argument `CardSearch.dom.test.tsx` makes
  * for keeping `newest` local.

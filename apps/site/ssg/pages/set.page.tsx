@@ -49,8 +49,8 @@ type Props = { readonly id: string; readonly cards: readonly CardPage[] };
  * that publishes art, in corpus order. So a card first printed in Welcome to
  * Rathe and reprinted in Mistveil carried the Rathe art on Mistveil's page:
  * the right card, the wrong picture, on the one surface whose entire subject is
- * a print run. Measured on this corpus: 2,239 of the 4,941 cards are printed in
- * more than one set, and every one of those 2,239 has at least one set whose art
+ * a print run. Measured on this corpus: 2,329 of the 5,193 cards are printed in
+ * more than one set, and every one of those 2,329 has at least one set whose art
  * differs from the default — so this is not a long-tail correction, it is most
  * of the reprints in the game. Monarch's page went from 307 rows carrying a mix
  * of other sets' art to 307 carrying Monarch's. (Those 307 cards are 155 rows
@@ -254,8 +254,8 @@ function groupByName(
 
 function getStaticPaths() {
   /*
-    Built once for the whole route rather than per page: 112 set pages each
-    re-scanning 4,941 cards is that work 112 times for an answer that does not
+    Built once for the whole route rather than per page: 116 set pages each
+    re-scanning 5,193 cards is that work 116 times for an answer that does not
     change. One pass, grouped.
   */
   const bySet = new Map<string, CardPage[]>();

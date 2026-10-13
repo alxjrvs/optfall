@@ -103,7 +103,7 @@ function headerField(): HTMLInputElement | null {
  * Everything this island prints before anybody has searched.
  *
  * DECLARED HERE RATHER THAN IMPORTED FROM `ssg/searchIndexes.ts`, which is where
- * it is built. That module reads the 18 MB corpus at module scope, and this file
+ * it is built. That module reads the 19 MB corpus at module scope, and this file
  * is reached by the island bundle — `build.ts`'s island budget exists because a
  * value import across exactly that line once shipped the whole corpus to every
  * reader. The two declarations are checked against each other at the one place
@@ -124,7 +124,7 @@ export interface CardCorpusBrief {
  * The newest release and the first few of its cards, for the browse state.
  *
  * DECLARED HERE RATHER THAN IMPORTED FROM `ssg/searchIndexes.ts`, for the
- * reason {@link CardCorpusBrief} above is: that module reads the 18 MB corpus
+ * reason {@link CardCorpusBrief} above is: that module reads the 19 MB corpus
  * at module scope, and this file is reached by the island bundle. The two
  * declarations are checked against each other at the one place both are in
  * scope, which is `search.page.tsx`.
@@ -370,7 +370,7 @@ export function CardSearch({
    *
    * `LLM_STATEMENT.md`'s rule — where Optfall does not know something it says
    * so — is the whole of this distinction. The empty-result copy names a
-   * number — "Nothing in the 4,941 cards matches" —
+   * number — "Nothing in the 5,193 cards matches" —
    * so rendering it while the index is in flight is not a vague inaccuracy, it
    * is a specific claim about a corpus that has not been read yet.
    */
@@ -978,7 +978,7 @@ export function CardSearch({
         <>
           {/*
             DEGRADE VISIBLY. Every card is still addressable — that is what the
-            12,777 pages are for, and it does not depend on the index — so the
+            18,380 pages are for, and it does not depend on the index — so the
             failure is stated alongside the routes that still work rather than
             as a bare apology, and the browse is drawn under it for the same
             reason: those links are ordinary hrefs and they never needed an

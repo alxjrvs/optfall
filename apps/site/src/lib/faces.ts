@@ -24,12 +24,24 @@
  * exactly where the source does: the 5,056 printings that share a face with a
  * sibling share a blob.
  *
+ * RE-MEASURED AT UPSTREAM 01fc934, AND THE SAVING MOSTLY WENT. Upstream now
+ * publishes most foils as their own image (`-RF`, `-CF`), so 17,193 printings
+ * resolve to 16,975 keys, and the dedupe saves about 1% rather than 45%. The
+ * key still dedupes exactly where the source does, which is the argument that
+ * survives; the figures above are the corpus it was written against (7a4822f).
+ *
  * THE ONE COLLISION IS NOT A COLLISION. Across the 11,377 distinct URLs there
- * are 11,376 distinct basenames — `LGS387.webp` is served from two hosts. Both
- * were fetched and hashed while writing this: **identical bytes**, the same
- * image mirrored. So collapsing them to one key is correct rather than lossy,
- * and it saves a duplicate. The ingest still hashes what it writes and refuses
- * to overwrite a key with different bytes, so a future basename clash between
+ * were 11,376 distinct basenames — `LGS387.webp` was served from two hosts.
+ * Both were fetched and hashed while writing this: **identical bytes**, the
+ * same image mirrored. So collapsing them to one key is correct rather than
+ * lossy, and it saves a duplicate. ~~`LGS387`~~ — at 01fc934 both its URLs
+ * are on one host, and the one key reached by two URLs is `DYN244` (Ponder):
+ * S3 WebP and fabmaster PNG of the same art, compared by pixel on 2026-10-13,
+ * NOT byte-identical. At 7a4822f both printings used the PNG, so its key
+ * should already be in the store, and the ingest skips a key it finds; that
+ * is inferred from the old corpus, not read from the bucket, and the first
+ * ingest after this sync is what checks it. The ingest still hashes what it
+ * writes and refuses to overwrite a key with different bytes, so a future basename clash between
  * genuinely different art fails loudly instead of silently serving one card's
  * face under another card's name.
  */
@@ -224,7 +236,8 @@ export function placeholderUrl(
  * KEEPING IT HONEST. `bun run check:face-orientation` re-measures the live
  * store against this list. It is deliberately NOT part of `bun run check` and
  * NOT pre-approved in `.claude/settings.json`, for the reason `check:symbols`
- * is not: it makes 11,376 network requests. Run it after a corpus sync.
+ * is not: it makes one request per face key — 16,975 at 01fc934. Run it after
+ * a corpus sync, and after the ingest that fills the store for it.
  *
  * `apps/images/src/face.ts` carries the same list, for the same
  * declares-no-dependencies reason `coldFoilSiblingKey` has a twin there.

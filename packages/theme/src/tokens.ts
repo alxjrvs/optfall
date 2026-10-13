@@ -582,25 +582,19 @@ export const DARK_TOKENS: TokenTable = {
   "color.pitch.three": "#3277bd",
   "color.pitch.three.ink": "#ffffff",
 
-  /* PITCH FOUR IS A TOKEN NOBODY CAN RENDER YET, AND THAT IS THE POINT OF IT.
-     A fourth pitch value has been shown on a preview of a Shadow resource gem
-     — a purple strip, card code IAR000.
+  /* ~~PITCH FOUR IS A TOKEN NOBODY CAN RENDER YET, AND THAT IS THE POINT OF
+     IT.~~ It renders now. The sync to upstream 01fc934 brought IAR000 — "Soul
+     of Existence", a Shadow Resource Gem — with `pitch: "4"`: one card of
+     5,193, and the only one. `IAR` is "Usurp the Shadow Throne", released
+     2026-09-25. Until then this read: a fourth pitch value had been shown on a
+     preview of IAR000, no card in `data/cards` carried `pitch: "4"`, and
+     whether the gem would ship as previewed was upstream's business.
 
-     THE ONE THING THIS REPOSITORY CAN BACK IS THE NARROW CLAIM: no card in
-     `data/cards` carries `pitch: "4"` — zero of the current 4,941 — so nothing
-     here renders this stone today. Note what is NOT claimed, because an earlier
-     wording claimed it and was wrong: the corpus does hold `IAR` cards already
-     ("Baalghor, Omen of the End" at IAR159 among them — one card, and the
-     comma is part of its name), so "no card from that set" is
-     false. What `data/sets/sets.json` says is set-level and still true — `IAR`
-     is "??? Set 20 ???" with `released: null`. Whether the gem ships as
-     previewed is upstream's business and not ours to assert.
-
-     THE PALETTE IS READY AHEAD OF THE DATA ON PURPOSE. The alternative is
-     discovering the gap on the day a `pitch: "4"` card enters the corpus — that
-     is the trigger, not the day `IAR` lands, which has partly happened already —
+     THE PALETTE WAS READY AHEAD OF THE DATA ON PURPOSE, and the day came. The alternative is
+     discovering the gap on the day a `pitch: "4"` card enters the corpus —
      in a decoder that answers `0` and a stylesheet that answers grey, neither of
-     which fails anything. Cheap now, silent later; that is the whole trade, and
+     which fails anything. On that day, 2026-10-13, `pitchValueOf` answered `4`,
+     the panel drew purple and `pitch:4` found the card. Cheap now, silent later; that is the whole trade, and
      it does not need the card to be certain to be worth taking.
 
      It is a token because it is exactly the shape of fact that gets hard-coded

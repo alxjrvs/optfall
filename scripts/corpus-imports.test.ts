@@ -7,7 +7,7 @@
  * second importer is not a style preference to lose an argument about; it is
  * the two failures this repository has already had.
  *
- * THE FIRST IS SIZE. `data/cards/cards.json` is 18 MB and `cards.ts` loads it
+ * THE FIRST IS SIZE. `data/cards/cards.json` is 19 MB and `cards.ts` loads it
  * at module scope, so a VALUE import from the wrong side of the island boundary
  * once shipped a 9.28 MB bundle to every reader. `build.ts` carries an island
  * budget because of it, and `card-search/` imports `../cards` type-only for the

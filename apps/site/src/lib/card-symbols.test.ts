@@ -79,17 +79,14 @@ describe("the table covers what the corpus actually prints", () => {
     // un-rendered brace. The rendered view claims to be complete, so the thing
     // that keeps it honest has to be a test rather than a promise.
     //
-    // The one exception is upstream's own typo — Reality Refractor prints
-    // `{r]{r}`, a square bracket where a brace belongs — and it is allowed BY
-    // NAME rather than by loosening the check to "mostly". A second entry
-    // appearing here is still a failure, which is the point: that would be a
-    // real symbol going unrendered, and the difference between the two cases is
-    // exactly what this test is for.
-    const KNOWN_TYPO = "{r]{r}";
+    // ~~The one exception is upstream's own typo — Reality Refractor prints
+    // `{r]{r}` — allowed BY NAME.~~ Upstream fixed it (present at 7a4822f,
+    // gone by 01fc934), so there is no exception. A typo arriving in a later
+    // sync belongs here by name, never by loosening the check to "mostly".
     const unknown = [...printed.keys()].filter(
       (token) => symbolForToken(token) === null,
     );
-    expect(unknown).toEqual([KNOWN_TYPO]);
+    expect(unknown).toEqual([]);
   });
 
   test("the nine symbols are all used, so none is a table entry for nothing", () => {
@@ -163,7 +160,7 @@ describe("parsing card text loses nothing", () => {
   test("every card's parse round-trips to its own printed text", () => {
     // THE ONE TEST THAT MATTERS. A renderer for a reference work is only
     // trustworthy if it provably cannot drop, reorder or invent a character —
-    // so the parse is flattened back to source and compared against all 4,941
+    // so the parse is flattened back to source and compared against all 5,193
     // cards, with only the list markers and the trim allowed to differ.
     const damaged: string[] = [];
 
@@ -180,7 +177,8 @@ describe("parsing card text loses nothing", () => {
   });
 
   test("upstream's `{r]{r}` typo survives as printed", () => {
-    // Reality Refractor. A permissive `\{[^}]*\}` would match `{r]{r}` whole
+    // Reality Refractor's, before upstream fixed it — kept as a synthetic
+    // case, because the next malformed marker is just as likely. A permissive `\{[^}]*\}` would match `{r]{r}` whole
     // and render a typo as a symbol; requiring a single letter and a closing
     // brace leaves `{r]` as text and takes only the well-formed `{r}`.
     const parsed = parseCardText("**Action** - {r]{r}: **Attack**");

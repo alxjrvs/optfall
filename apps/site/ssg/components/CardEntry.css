@@ -191,9 +191,9 @@
   --card-pitch: var(--of-color-pitch-three);
 }
 
-/* Pitch four is one previewed card and none in the pinned corpus — see
-     `color.pitch.four` in `tokens.ts` for how much of that this repository can
-     actually back. It is enumerated here rather than left to the default
+/* Pitch four is one card — Soul of Existence, IAR000 — since the sync to
+     upstream 01fc934; see `color.pitch.four` in `tokens.ts`. It is
+     enumerated here rather than left to the default
      because the default is the no-pitch grey, and a card that HAS a pitch value
      must not be drawn as one that does not. */
 .of-card__panel[data-pitch="4"] {

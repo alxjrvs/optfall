@@ -44,7 +44,7 @@ export interface RouteContext<Params, Props> {
  * THE HEAD IS DATA, NOT MARKUP, and that is worth defending. Every one of
  * these fields is asserted somewhere — `check-disclaimer.ts` reads the built
  * HTML, `cards.ts` composes titles and descriptions beside the data so the two
- * cannot drift, and the canonical rules for 6,437 printing pages are a page of
+ * cannot drift, and the canonical rules for 11,784 printing pages are a page of
  * reasoning in `pages/card.page.tsx`. A page that could emit arbitrary `<head>`
  * markup could emit two canonicals, or none, and nothing would say so.
  * Returning fields means the document shell is the only thing that writes them,
@@ -122,7 +122,7 @@ export interface PageResult {
    * ONE PAGE SETS IT, AND THE NARROWNESS IS THE POINT. `/search` is the only
    * surface that can answer a card query without navigating, so it is the only
    * one that should pay for the field to be React's. Every other page — `/cr`,
-   * every set page, the 12,777 documents — keeps the static form it has always
+   * every set page, the 18,380 documents — keeps the static form it has always
    * had, which submits and navigates exactly as it does with scripting off.
    *
    * DECLARED RATHER THAN DERIVED FROM {@link PageResult.islands}, for the same
