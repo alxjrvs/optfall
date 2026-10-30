@@ -50,6 +50,10 @@ on:
       - 'data/**'
       - 'bun.lock'
       - '.github/workflows/deploy-cloudflare.yml'
+  # For `spoilers.yml`, whose push to `main` is made with `GITHUB_TOKEN` and so
+  # triggers nothing on its own. A dispatch is not a pull request, so the site
+  # job deploys production; `images` stays push-only and is skipped.
+  workflow_dispatch:
 
 permissions:
   contents: read
