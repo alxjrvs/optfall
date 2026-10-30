@@ -81,6 +81,19 @@ export interface PageResult {
    */
   readonly image?: string | undefined;
   /**
+   * The page's own `<meta name="theme-color">`, where it has one.
+   *
+   * DISCORD COLOURS A LINK PREVIEW'S EDGE FROM THIS TAG AND NOTHING ELSE, so on
+   * a card page it is the card's pitch — grey, red, yellow, blue — and a pasted
+   * link says which strip of the card it is before anyone reads it. Omitted, the
+   * page takes the site's `THEME_COLOUR`, which is what most pages should do.
+   *
+   * IT IS ALSO THE BROWSER'S CHROME on that page, on the platforms that paint
+   * one. That is the same colour the face's pitch strip already shows, so the
+   * address bar agrees with the card rather than competing with it.
+   */
+  readonly themeColour?: string | undefined;
+  /**
    * Which nav item is current, or `"none"` for a page with no header at all.
    *
    * A UNION RATHER THAN A STRING, because a typo in a section name is silent:
