@@ -48,6 +48,7 @@ import {
   titleFor,
 } from "../../src/lib/cards";
 import { faceUrl } from "../../src/lib/faces";
+import { pitchColour } from "../../src/lib/pitchColour";
 import { setName } from "../../src/lib/sets";
 import { CardEntry } from "../components/CardEntry";
 import type { PageModule, PageResult, RouteContext } from "../types";
@@ -131,6 +132,14 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
       one would answer a question nobody asked.
     */
     image: faceUrl(route.ref.key, "normal"),
+    /*
+      THE PITCH, ON THE PREVIEW'S EDGE. Discord paints an embed's stripe from
+      `theme-color`, and the site's ground is a stripe nobody can see on
+      Discord's dark theme. A red, yellow or blue edge is the first thing a
+      reader of a pasted link learns about the card, and the one thing they
+      would otherwise have to open the image to find out.
+    */
+    themeColour: pitchColour(card.pitch),
     section: "cards",
     width: "wide",
     /*
