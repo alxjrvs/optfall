@@ -43,7 +43,7 @@
  *
  * WHY UPSTREAM ORDER IS PRESERVED VERBATIM. Cards arrive sorted by name and
  * printings arrive in upstream's own order, which carries information we would
- * destroy by re-sorting — and re-sorting 5,193 records once would produce a
+ * destroy by re-sorting — and re-sorting 5,205 records once would produce a
  * diff that looks like a total rewrite. Determinism does not require *our*
  * order, only *an* order that is a function of the retrieved bytes, and
  * upstream's is exactly that.
@@ -101,6 +101,9 @@
  * `unique_id`, name and pitch, and printed on every run. When upstream adds
  * the printings, the next sync moves the card from one array to the other and
  * the diff says so.
+ *
+ * That happened at upstream `74f8b5f`, which prints the three as IAR050–052:
+ * `unprinted` is empty there. The mechanism stays for the next one.
  */
 
 import { createHash } from "node:crypto";
@@ -176,7 +179,7 @@ const DROPPED_CARD_FIELDS: Readonly<Record<string, string>> = {
   functional_text_plain:
     "the same text as functional_text with the ** emphasis markers removed; the marked-up form is the superset, and cards-search.json carries the plain form verbatim for the lede",
   cards_referenced_by:
-    "the exact inverse of referenced_cards, verified across all 5,196 upstream cards at 01fc934; the site derives it in one pass, exactly as apps/site/src/lib/rules.ts derives children from parentId",
+    "the exact inverse of referenced_cards, verified across all 5,205 upstream cards at 74f8b5f; the site derives it in one pass, exactly as apps/site/src/lib/rules.ts derives children from parentId",
 };
 
 /** Upstream printing fields this corpus does **not** carry, each with the reason. */
@@ -184,7 +187,7 @@ const DROPPED_PRINTING_FIELDS: Readonly<Record<string, string>> = {
   set_printing_unique_id:
     "an opaque join key into an upstream table this corpus does not ship; (set_id, id, edition) identifies the same grouping in fields we do carry",
   flavor_text_plain:
-    "the same text as flavor_text with the ** emphasis markers removed; differs on 2 of 17,193 printings",
+    "the same text as flavor_text with the ** emphasis markers removed; differs on 2 of 17,291 printings",
 };
 
 /**
@@ -368,7 +371,7 @@ interface CorpusPrinting {
    * it. Both are upstream's, carried verbatim.
    *
    * OPTIONAL BECAUSE UPSTREAM OMITS THE KEYS, rather than publishing them as
-   * `null` or `""`. 1,062 of 17,193 printings have neither, concentrated in
+   * `null` or `""`. 1,154 of 17,291 printings have neither, concentrated in
    * promotional and organised-play sets — WIN, SBL, SBA, SLY, SGB and the
    * armory sets carry none at all. Omitting them here mirrors that exactly, so
    * a reader can tell "upstream published no product" from "we dropped it",
@@ -705,7 +708,7 @@ function toFace(face: JsonRecord, where: string): DoubleSidedFace {
  * Explicit rather than a pass-through, for the reason
  * `scripts/build-rules-corpus.ts` gives about sections: the committed file's key
  * order is a decision made here, so a change upstream cannot silently reorder
- * 17,193 records and produce a diff that looks like a data change.
+ * 17,291 records and produce a diff that looks like a data change.
  */
 function toCorpusPrinting(printing: JsonRecord, where: string): CorpusPrinting {
   const faces =

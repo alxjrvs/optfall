@@ -7,8 +7,8 @@
  * and until this module existed the only surface that computed any of it was
  * `/sets`, which counted names inline and used the number in one sentence.
  *
- * ONE PASS, AT BUILD TIME, FOR EVERY SET AT ONCE. The corpus is 5,193 cards and
- * 17,193 printings; walking it per set would be 116 walks for an answer that
+ * ONE PASS, AT BUILD TIME, FOR EVERY SET AT ONCE. The corpus is 5,205 cards and
+ * 17,291 printings; walking it per set would be 118 walks for an answer that
  * does not change between them. The same argument `set.page.tsx` makes for
  * building its route table once, applied to the numbers rather than to the
  * routes.
@@ -16,7 +16,7 @@
  * NOTHING HERE IMPORTS REACT AND NOTHING HERE RENDERS. The generator's pages
  * and the `/sets` island both need these figures, and the island receives them
  * as JSON in an attribute — so a module that reached for a component would
- * either be unusable on one side or would drag the 19 MB corpus into the
+ * either be unusable on one side or would drag the 20 MB corpus into the
  * browser bundle. See `Island`: what may cross that boundary is data.
  *
  * COUNTED IN NAMES, VERSIONS AND PRINTINGS, ALL THREE, BECAUSE THEY ARE THREE

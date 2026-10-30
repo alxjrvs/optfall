@@ -105,7 +105,7 @@ row's subject changes, not when someone notices.*
 | Image grid results | default view | grid is the default | **have** |
 | Display modes | `display:grid/checklist/text/full` | `display:grid/list`, a query term | **narrowed** |
 | Sort control | `order:` × 15, `dir:` | `order:` × 9, `dir:`, documented | **have** |
-| Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<set>/<num>/<name>`, 16,977 of them — every distinct art, the default included | **have** |
+| Printing-level URLs | `/card/<set>/<num>/<name>` | `/card/<set>/<num>/<name>`, 17,073 of them — every distinct art, the default included | **have** |
 | Duplicate collapsing | `unique:cards/prints/art` | `unique:names` (default), `cards`, `art` | **have** |
 | Negation, `OR`, parentheses | yes | all three, documented at `/syntax` | **have** |
 | Numeric comparison | `cmc>=3`, `pow>tou` | cost/power/defence, against a number **or against each other** | **have** |
@@ -137,7 +137,7 @@ prints one word per format. Keep this, and put it on the card page above the
 fold — it is the differentiator that is already finished.
 
 **Our related-cards graph is better too.** `referenced_cards` is resolved in
-both directions across 5,193 cards, deduplicated, with the duplicates explained.
+both directions across 5,205 cards, deduplicated, with the duplicates explained.
 Scryfall's equivalent is narrower. This is free ground already taken.
 
 ---
@@ -430,7 +430,7 @@ a stopgap rather than left implicit.
   printing was addressable, but the CARD was still the addressable unit, and the
   name led the path.
 
-  It is now `/card/<set>/<number>/<slug>` for all 16,977 distinct arts, and
+  It is now `/card/<set>/<number>/<slug>` for all 17,073 distinct arts, and
   there is no card-level URL at all — `/card/<slug>` and `/card/<name>` are
   301s. Three things fall out of the order that did not out of the old one:
 
@@ -451,8 +451,8 @@ a stopgap rather than left implicit.
 
   **A non-default art canonicals to the card's default printing**, which is
   where this deliberately does NOT follow Scryfall. Scryfall lets every printing
-  self-canonical and indexes all of them; 16,977 pages differing only in one
-  image would bury the 5,193 that stand for a card. The address is a printing;
+  self-canonical and indexes all of them; 17,073 pages differing only in one
+  image would bury the 5,205 that stand for a card. The address is a printing;
   the indexed unit is still the card.
 - **`unique:cards` (default) and `unique:prints`** in search — collapse to one
   row per card, or show every printing as its own result.

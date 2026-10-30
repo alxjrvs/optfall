@@ -3,12 +3,12 @@
  *
  * THE REGRESSION THIS PREVENTS ALREADY HAPPENED, and it cost 9.28 MB shipped to
  * every reader. `apps/site/ssg/build.ts` records it: a value import of the card
- * corpus from a module the islands pull in drags the whole 19 MB JSON into the
+ * corpus from a module the islands pull in drags the whole 20 MB JSON into the
  * browser bundle, because a value import is a runtime dependency and a type
  * import is erased.
  *
  * IT WAS ALREADY CAUGHT, BUT ONLY IN THE COMMAND PEOPLE SKIP. The island byte
- * budget in `build.ts` fails on it — after a full 18,380-page build, which is
+ * budget in `build.ts` fails on it — after a full 18,478-page build, which is
  * `check:full` at about two minutes. This is the same rule as a static read of
  * eight small files, which puts it in the 25-second loop where a mistake is
  * cheap to find.

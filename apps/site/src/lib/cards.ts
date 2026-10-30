@@ -1,5 +1,5 @@
 /**
- * The card corpus, shaped once for the 16,977 pages that serve it.
+ * The card corpus, shaped once for the 17,073 pages that serve it.
  *
  * `docs/ROADMAP.md` Phase 2: the card layer — search, card pages, printings —
  * **is the product**, and `docs/DESIGN.md` keeps Scryfall's **"Every view is a
@@ -64,7 +64,7 @@
 import type { PitchValue, StateTone } from "optfall-theme";
 
 /* `card-text` imports `card-symbols` and nothing else, so this direction is
-   safe: the module that loads the 19 MB corpus depends on the parser, never the
+   safe: the module that loads the 20 MB corpus depends on the parser, never the
    other way round. */
 import { plainCardText } from "./card-text";
 /* Steps 1-3 of the slug rule, shared with the search tokeniser so that a
@@ -162,7 +162,7 @@ export interface CardPrinting {
   }[];
   /**
    * TCGplayer's product identifier and storefront URL, carried verbatim from
-   * upstream. Absent on 1,062 of 17,193 printings — promos and organised play,
+   * upstream. Absent on 1,154 of 17,291 printings — promos and organised play,
    * where no product was ever listed — so both are optional and a consumer must
    * treat their absence as "upstream published none", never as an error.
    *
@@ -278,7 +278,7 @@ export function slugify(name: string): string {
  * How a card whose name is shared is told apart in the URL.
  *
  * **Why pitch, and not colour.** Both would work today, and pitch is the one
- * that is *guaranteed* to work: name + pitch is unique across all 5,193 cards
+ * that is *guaranteed* to work: name + pitch is unique across all 5,205 cards
  * in this corpus (measured: zero collisions), whereas colour is a separate
  * upstream field that already disagrees with pitch on one card — Goldfin
  * Harpoon carries `color: "Yellow"` with an empty `pitch`. Disambiguating on a
@@ -571,7 +571,7 @@ export interface FormatVerdict {
   /**
    * True when the format publishes no legality flag and no exclusion flag is
    * set, so Optfall knows nothing about this card in this format. Today this is
-   * Ultimate Pit Fight on 5,191 of 5,193 cards.
+   * Ultimate Pit Fight on 5,203 of 5,205 cards.
    */
   readonly unknown: boolean;
   /** Set when `ll_restricted_affects_full_cycle` is true on this card. */
@@ -829,7 +829,7 @@ export interface CardPage {
   readonly references: readonly CardLink[];
   /** Cards that name this one — derived, since upstream's inverse was dropped. */
   readonly referencedBy: readonly CardLink[];
-  /** 1-based position in corpus order, for "N of 5,193". */
+  /** 1-based position in corpus order, for "N of 5,205". */
   readonly ordinal: number;
 }
 
@@ -875,7 +875,7 @@ export interface NameGroup {
  * system's, and nothing on this site asks for it.
  *
  * `card-search/rank.ts` keeps its own copy as `STAT_LABELS` and cannot import
- * this one: a VALUE import from this module drags the 19 MB corpus into the
+ * this one: a VALUE import from this module drags the 20 MB corpus into the
  * island bundle, which is the failure `printings.ts` was split out to prevent.
  * The two are pinned against each other in `card-search.test.ts` instead.
  */
@@ -1007,7 +1007,7 @@ const CARD_BY_PRINTING_ID: ReadonlyMap<string, Card> = (() => {
  * from moving the scheme, so it is deliberately not made here.
  *
  * A CARD WITH NO ADDRESSABLE FACE THROWS rather than returning a fallback path.
- * Measured: all 5,193 cards publish at least one image, so this cannot fire
+ * Measured: all 5,205 cards publish at least one image, so this cannot fire
  * today. The three upstream records with no printing at all never reach it:
  * the corpus build withholds them and names them in the envelope's
  * `unprinted`. If a resync lands a card that has printings and publishes no
@@ -1314,11 +1314,11 @@ export interface CardRoute {
  * the addressable unit" means. The previous scheme deliberately skipped face 0 —
  * `/card/<slug>` already showed it, so a second URL for it would have been
  * 4,941 duplicates — and that argument dies with the page it was defending.
- * 16,977 routes rather than 11,784, and the card's own address is now simply
+ * 17,073 routes rather than 11,868, and the card's own address is now simply
  * the first of them.
  *
- * IT IS A FACE, NOT A PRINTING ROW. `facesOf` collapses the 17,193 rows onto
- * 16,977 distinct arts, because rows that share one picture — Regular and
+ * IT IS A FACE, NOT A PRINTING ROW. `facesOf` collapses the 17,291 rows onto
+ * 17,073 distinct arts, because rows that share one picture — Regular and
  * Rainbow Foil in one set, wherever upstream publishes a single image for
  * both — would be several URLs rendering one page, the definition of a
  * duplicate. (11,378 from 16,502 until upstream 01fc934 gave most foils their

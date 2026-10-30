@@ -3,7 +3,7 @@
  *
  * The unit tests below are cheap; the corpus assertions are the ones that
  * matter. A key rule that is correct on six hand-written examples and collides
- * on the real 17,193 printings would serve one card's art under another card's
+ * on the real 17,291 printings would serve one card's art under another card's
  * name — a confident wrong answer, which is the one failure mode this project
  * is built to not have.
  */
@@ -268,13 +268,14 @@ describe("over the whole corpus", () => {
     expect(unresolved.map((printing) => printing.image_url)).toEqual([]);
   });
 
-  test("printings with no image are exactly the seven upstream publishes as null", () => {
+  test("printings with no image are exactly the six upstream publishes as null", () => {
     // Four until the 2026-10 sync to upstream 01fc934, which added three:
-    // IAR158 twice (Gate to i'Arathael, Runechant) and AMA012.
+    // IAR158 twice (Gate to i'Arathael, Runechant) and AMA012. Seven until
+    // upstream 74f8b5f gave AMA012 its image.
     const withoutImage = printings.filter(
       (printing) => printing.image_url === null,
     );
-    expect(withoutImage).toHaveLength(7);
+    expect(withoutImage).toHaveLength(6);
   });
 
   test("no two different images are given the same key", () => {
@@ -315,8 +316,8 @@ describe("over the whole corpus", () => {
         .map((printing) => faceKeyFor(printing.image_url))
         .filter(Boolean),
     );
-    expect(printings.length).toBe(17193);
-    expect(keys.size).toBe(16975);
+    expect(printings.length).toBe(17291);
+    expect(keys.size).toBe(17071);
   });
 });
 

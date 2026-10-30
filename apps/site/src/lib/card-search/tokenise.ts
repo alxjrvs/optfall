@@ -72,7 +72,7 @@ export const STOPWORDS: ReadonlySet<string> = new Set([
  * by typing their name.
  *
  * `foldLatin` is the one rule both use now. It lives in its own module because
- * `slugify` is in `cards.ts`, which loads the 19 MB corpus at module scope and
+ * `slugify` is in `cards.ts`, which loads the 20 MB corpus at module scope and
  * which this file may only import from TYPE-ONLY.
  */
 export function tokeniseCard(text: string): string[] {

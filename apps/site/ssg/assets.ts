@@ -301,7 +301,7 @@ export async function iconPng(
  * literally spelled `display` is the one that says `standalone`.
  *
  * The intent is about what the site IS. Optfall's thesis is that every view is
- * a URL — 18,380 of them, each meant to be pasted. `standalone` removes the
+ * a URL — 18,478 of them, each meant to be pasted. `standalone` removes the
  * address bar, which removes the affordance the product is built around.
  * `minimal-ui` keeps a way to see and copy the URL while still installing to a
  * home screen.
@@ -516,7 +516,7 @@ export async function generatedAssets(): Promise<readonly GeneratedAsset[]> {
   /*
    * THE SEARCH INDEXES, AND THE IMPORT IS DYNAMIC FOR THIS FILE'S OWN STATED
    * REASON. `searchIndexes.ts` reads a corpus at module scope — the rules corpus
-   * today, the 19 MB card corpus once `/search` follows — and `THEME_COLOUR` is
+   * today, the 20 MB card corpus once `/search` follows — and `THEME_COLOUR` is
    * exported from this file and read by `document.tsx`, which `ssg.test.ts`
    * imports. A static import here would make asking WHAT COLOUR THE TAB IS load
    * a corpus, which is the same argument that already keeps sharp behind a call.

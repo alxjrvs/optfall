@@ -15,7 +15,7 @@ bun run check:full   # ~2 min — REQUIRED if you touched rendered output
 `bun run --cwd apps/site dev` serves the site.
 
 **A green `bun run check` is not a green gate.** It covers nine of the twelve
-things CI runs. The other three need a full 18,380-page build and only
+things CI runs. The other three need a full 18,478-page build and only
 `check:full` does them. If your change touches **rendered output, the
 disclaimer, attribution or licence copy, or the token stylesheet**, run
 `check:full` before you push.
@@ -37,7 +37,7 @@ explanations:
 | tidy `card.legality["ll_restricted_affects_full_cycle"]` into dot access | `CLAUDE.md` → "Upstream field names stay verbatim" |
 | add CSS to a page | `CLAUDE.md` → "Compose, never restyle" |
 | write a colour or a length in a component | `CLAUDE.md` → "Tokens or nothing" — `check:tokens` fails the build |
-| open `data/cards/cards.json` | don't — it is 19 MB. Use `data/cards/sample.json` |
+| open `data/cards/cards.json` | don't — it is 20 MB. Use `data/cards/sample.json` |
 | run anything under `bun run corpus:*` or `bun run symbols` | `CLAUDE.md` → "Never regenerate `data/`" — these hit the network and rewrite committed provenance |
 | add a search operator, or a design-system primitive | the skills in `.claude/skills/` document every file that must move together |
 

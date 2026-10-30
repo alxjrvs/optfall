@@ -18,11 +18,18 @@
  * to equal the real size, rounded. Nothing has to remember to update prose; the
  * gate fails with the file to change and the number to write.
  *
- * ROUNDED, AND THE UNIT DOES NOT MATTER — which is luck rather than design, and
- * is worth stating so nobody "fixes" it. 19,439,500 bytes is 19.4 MB decimal and
- * 18.5 MiB binary, and both round to 19. If the corpus ever lands where the two
- * conventions disagree, this test fails and whoever sees it has to pick one and
- * write it down. That is the right moment to have the argument, not now.
+ * ~~ROUNDED, AND THE UNIT DOES NOT MATTER — which is luck rather than design,
+ * and is worth stating so nobody "fixes" it. 19,439,500 bytes is 19.4 MB
+ * decimal and 18.5 MiB binary, and both round to 19. If the corpus ever lands
+ * where the two conventions disagree, this test fails and whoever sees it has
+ * to pick one and write it down. That is the right moment to have the
+ * argument, not now.~~
+ *
+ * ROUNDED, AND MB IS DECIMAL. The moment came with the sync to upstream
+ * 74f8b5f: 19,506,634 bytes is 19.5 MB decimal and 18.6 MiB binary, which
+ * round to 20 and 19. The prose writes "MB", and an MB is 10^6 bytes, so the
+ * figure follows the unit it is written in. Binary would only be right if the
+ * prose said MiB, and none of it does.
  */
 
 import { describe, expect, test } from "bun:test";
@@ -142,14 +149,7 @@ function scannable(dir: string, out: string[] = []): string[] {
 describe("the corpus size in prose", () => {
   const bytes = statSync(CORPUS_PATH).size;
   const decimal = bytes / 1_000_000;
-  const binary = bytes / 1_048_576;
   const expected = Math.round(decimal);
-
-  test("rounds the same way under both conventions", () => {
-    /* If this fails, the number below is ambiguous and the fix is to write the
-       unit rather than to nudge the figure. See the header. */
-    expect(Math.round(binary)).toBe(expected);
-  });
 
   const files = scannable(ROOT);
   const claiming = files

@@ -25,8 +25,8 @@
  * sibling share a blob.
  *
  * RE-MEASURED AT UPSTREAM 01fc934, AND THE SAVING MOSTLY WENT. Upstream now
- * publishes most foils as their own image (`-RF`, `-CF`), so 17,193 printings
- * resolve to 16,975 keys, and the dedupe saves about 1% rather than 45%. The
+ * publishes most foils as their own image (`-RF`, `-CF`), so at 74f8b5f 17,291
+ * printings resolve to 17,071 keys, and the dedupe saves about 1% rather than 45%. The
  * key still dedupes exactly where the source does, which is the argument that
  * survives; the figures above are the corpus it was written against (7a4822f).
  *
@@ -236,7 +236,7 @@ export function placeholderUrl(
  * KEEPING IT HONEST. `bun run check:face-orientation` re-measures the live
  * store against this list. It is deliberately NOT part of `bun run check` and
  * NOT pre-approved in `.claude/settings.json`, for the reason `check:symbols`
- * is not: it makes one request per face key — 16,975 at 01fc934. Run it after
+ * is not: it makes one request per face key — 17,071 at 74f8b5f. Run it after
  * a corpus sync, and after the ingest that fills the store for it.
  *
  * `apps/images/src/face.ts` carries the same list, for the same

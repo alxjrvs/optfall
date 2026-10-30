@@ -199,7 +199,7 @@ export function Document({
           initial tab stop skips nothing.
 
           The header carries a nav and a search field, so without this a
-          keyboard user tabs through both on every one of 18,380 pages before
+          keyboard user tabs through both on every one of 18,478 pages before
           reaching the content they came for. Landmarks already exist and serve
           screen readers; this is the other half, for people navigating by
           keyboard without one.
@@ -319,7 +319,7 @@ export function Document({
             <p className="legal">{CARD_IMAGE_COPYRIGHT}</p>
             {/*
             Unchanged, and still last: `check-disclaimer.ts` reads this string
-            verbatim off all 18,380 built pages.
+            verbatim off all 18,478 built pages.
           */}
             <p className="legal">{LSS_DISCLAIMER}</p>
           </div>
@@ -341,7 +341,7 @@ export function Document({
           THE SERVICE WORKER, REGISTERED INLINE AND ON EVERY PAGE.
 
           Inline because the alternative — a one-line module fetched from a
-          hashed url — costs a round trip on every one of 18,380 pages to
+          hashed url — costs a round trip on every one of 18,478 pages to
           deliver about two hundred bytes, and this is the one script that has
           to run everywhere rather than only where an island lives.
 

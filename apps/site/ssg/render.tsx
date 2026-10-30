@@ -13,7 +13,7 @@
  * is going to take over the tree. Nothing takes over these trees: the pages are
  * documents, and the interactive parts are islands mounted into their own
  * containers. Emitting hydration scaffolding for a root that never hydrates
- * would put bytes on 18,380 pages to describe a handover that does not happen.
+ * would put bytes on 18,478 pages to describe a handover that does not happen.
  */
 
 import type { ReactElement } from "react";
@@ -30,7 +30,7 @@ import type {
  * `/card/[slug]` + `{ slug: "head-jab" }` → `/card/head-jab`.
  *
  * A MISSING PARAMETER THROWS rather than rendering `/card/undefined`. This is
- * the failure that is invisible in a build log and obvious in production: 16,977
+ * the failure that is invisible in a build log and obvious in production: 17,073
  * pages emitted, one of them at a URL nobody meant, linked from nothing and
  * found by a crawler.
  */

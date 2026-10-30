@@ -17,7 +17,7 @@ import { INLINE_SCRIPT_HASHES } from "./inlineScripts";
  *
  * The OLD reason `_redirects` sat outside that registry was different and no
  * longer applies: it was derived from 4,941 cards, and giving `assets.ts` a
- * member that dragged an 19 MB corpus behind it would have made every importer
+ * member that dragged a 20 MB corpus behind it would have made every importer
  * pay for it. Nothing in this file touches the corpus. It is a constant.
  */
 
@@ -252,7 +252,7 @@ export function renderRedirects(
  *
  * PREVIEWS ARE LOAD-BEARING ON THIS PROJECT SPECIFICALLY — a legality bug is
  * visible in a preview and invisible in a diff — and a preview is therefore
- * another public host serving the same 18,380 pages. Two indexed copies of a
+ * another public host serving the same 18,478 pages. Two indexed copies of a
  * reference site is precisely the duplication the canonical tags exist to
  * prevent, so a preview must say `noindex` and production must not.
  *

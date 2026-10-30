@@ -21,7 +21,7 @@
  *
  * `generatedAssets()` IS CALLED ONCE, at module scope, and shared. It
  * rasterises four PNGs and dynamically imports `searchIndexes.ts`, which reads
- * the 19 MB card corpus — the two most expensive things in this directory.
+ * the 20 MB card corpus — the two most expensive things in this directory.
  * Calling it per test would multiply both by the number of tests for no extra
  * truth: it takes no arguments and is deterministic.
  */

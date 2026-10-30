@@ -65,16 +65,16 @@ export interface CardIndex {
    * Per card rather than per set because that is the shape both consumers want:
    * `order:released` takes the first, and `year:`/`date:` ask whether ANY of
    * them satisfies the test. Resolving the set codes once at decode beats doing
-   * it 5,193 times per query.
+   * it 5,205 times per query.
    */
   readonly released: readonly (readonly string[])[];
   /**
-   * How many cards have no release date at all — 48 of 5,193.
+   * How many cards have no release date at all — 48 of 5,205.
    *
    * Carried so a `year:`/`date:` query can SAY it excluded them. Seventeen of
    * the 118 sets are undated upstream (the judge, organised-play and promo
    * lines), and a card printed only there matches no date filter that will ever
-   * be written. Silently returning 5,145 cards for a question asked about 5,193
+   * be written. Silently returning 5,157 cards for a question asked about 5,205
    * is the kind of quiet wrongness this engine exists not to do.
    */
   readonly undatedCards: number;
@@ -148,7 +148,7 @@ function decodePostings(encoded: string): Map<string, number[]> {
  * One alternate art of a card, as a result row needs it.
  *
  * Deliberately smaller than `PrintingRef` in `cards.ts`: that one carries the
- * whole printing row, which is a build-time object sitting in an 19 MB corpus
+ * whole printing row, which is a build-time object sitting in a 20 MB corpus
  * the browser never sees. This is the three fields that survive the wire.
  */
 export interface ArtRef {

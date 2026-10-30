@@ -2,7 +2,7 @@
  * A card's faces, and the collector number that addresses one.
  *
  * WHY THIS IS ITS OWN MODULE, AND IT IS NOT ABOUT TIDINESS. Both functions here
- * lived in `cards.ts`, which imports the 19 MB card corpus and derives
+ * lived in `cards.ts`, which imports the 20 MB card corpus and derives
  * `CARD_PAGES` and `CARD_ROUTES` at module scope. `card-search/` imported them
  * from there, `CardSearch.tsx` imports `card-search/`, and the island bundle
  * imports `CardSearch.tsx` — so the whole corpus was reachable from the client
@@ -45,7 +45,7 @@ import type { Card, CardPrinting } from "./cards";
  * was 5,124 of them at 7a4822f: 16,502 printing rows and only 11,376 distinct
  * arts, because a card printed Regular / Rainbow Foil / Cold Foil in one set
  * was three rows sharing one image. Upstream 01fc934 publishes most foils as
- * their own image, so it is now 17,193 rows and 16,975 arts, and the rule
+ * their own image, so it is now 17,291 rows and 17,071 arts, and the rule
  * matters on far fewer rows — but it is the same rule. Giving each row its own
  * URL where rows share one image would mint addresses that render the
  * identical page — the definition of a duplicate — so the unit is the art,
@@ -103,7 +103,7 @@ export function numberFor(key: string, setCode: string): string {
  * every printing URL beneath it. Here the identity is upstream's own set code
  * and collector number, and the tail is the only part that can move.
  *
- * PURE, AND THAT IS LOAD-BEARING. `cards.ts` loads an 19 MB corpus at module
+ * PURE, AND THAT IS LOAD-BEARING. `cards.ts` loads a 20 MB corpus at module
  * scope; this module exists so the client can build a card URL without reaching
  * it (see the note at the top of this file). Every surface that links to a card
  * — the results page, the set pages, the random redirect — goes through here.

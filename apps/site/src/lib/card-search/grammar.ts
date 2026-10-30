@@ -6,7 +6,7 @@
  * `../query.ts` if tokenising changes, and `ssg/pages/syntax.page.tsx` — which
  * nothing checks against this file. See `.claude/skills/add-a-search-filter`.
  *
- * NOTHING HERE MAY IMPORT `../cards` BY VALUE. That module pulls the 19 MB
+ * NOTHING HERE MAY IMPORT `../cards` BY VALUE. That module pulls the 20 MB
  * corpus at module scope, and this one is reached from a client island, so a
  * value import would put the corpus in the browser bundle. It did once: 9.28 MB
  * shipped to every reader. `import type` is erased before the bundler sees it.
@@ -618,7 +618,7 @@ const WORD_VALUED: ReadonlySet<CardFilter["field"]> = new Set([
  * Parse the query into free terms and filters.
  *
  * COMPARISONS ARE NAMED AS UNSUPPORTED RATHER THAN GUESSED AT. `cost>=3` reads
- * like it should work, and it cannot here: 5,193 printed costs include `X`,
+ * like it should work, and it cannot here: 5,205 printed costs include `X`,
  * `XX`, `X1` and the empty string, so "greater than" has no total order over
  * the values this corpus actually carries. A silent no-op would be the worst of
  * the three options, so it produces a notice.

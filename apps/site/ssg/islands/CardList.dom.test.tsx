@@ -5,7 +5,7 @@
  * component's own docblock is the argument: "the rows arrive already built,
  * from the build, as this island's props". It never looks inside an entry — it
  * cuts the array, hands one page to `CardIndex` and keeps three values in the
- * address bar. Feeding it four hundred real cards would cost the 19 MB corpus
+ * address bar. Feeding it four hundred real cards would cost the 20 MB corpus
  * to exercise `Array.prototype.slice`, and every assertion below would be
  * identical. Where the data IS the subject — the set filter's four orders over
  * real dates and sizes — `SetIndex.dom.test.tsx` uses the real corpus for

@@ -4,7 +4,7 @@
  *
  * IT LIVES HERE BECAUSE THE TWO CALLERS CANNOT SHARE A FILE. `slugify` in
  * `cards.ts` builds the URL; `tokeniseCard` in `card-search/tokenise.ts` builds
- * the index a reader's typing is matched against. `cards.ts` loads the 19 MB
+ * the index a reader's typing is matched against. `cards.ts` loads the 20 MB
  * corpus at module scope and every module under `card-search/` must import it
  * TYPE-ONLY — a value import there once shipped the whole corpus to every
  * reader, which is what `build.ts`'s island budget exists to catch. So the rule

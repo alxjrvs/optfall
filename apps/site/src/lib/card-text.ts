@@ -197,7 +197,7 @@ export function parseCardText(source: string): readonly Block[] {
  *
  * Drives the per-card legend: a card page lists the symbols ON THAT CARD with
  * the rule that defines each, rather than printing a nine-row table on all
- * 5,193 cards. A legend for symbols a reader is not looking at is furniture.
+ * 5,205 cards. A legend for symbols a reader is not looking at is furniture.
  *
  * A STABLE ORDER RATHER THAN APPEARANCE ORDER, so the legend on one card is
  * comparable with the legend on the next — a reader who has learnt where the
