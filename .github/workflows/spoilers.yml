@@ -1,0 +1,101 @@
+# Daily: rebuild `data/spoilers/spoilers.json` and commit it to `main` if it
+# changed.
+#
+# WHAT IT RUNS. `bun run spoilers` — see `scripts/build-spoilers.ts` for the
+# source and what counts as a spoiler. That script writes no timestamp of its
+# own, so an unchanged upstream is an empty diff and this job ends without
+# committing anything.
+#
+# A DIRECT COMMIT RATHER THAN A PULL REQUEST, because that is what was asked
+# for: a reveal should reach the site the day it lands, without a merge. It
+# was built as a pull request first; see #387 for the trade.
+#
+# SO THIS JOB IS ITS OWN GATE. Nothing reviews the commit and `ci.yml` runs on
+# it only after it is on `main`, so before pushing, the job runs
+# `bun run check:full` — the same eleven jobs `CI Success` needs — against the
+# rebuilt file. A run that fails pushes nothing, and the job goes red.
+#
+# TWO SETTINGS OUTSIDE THIS FILE ARE NEEDED, and neither can be set from here.
+#
+#   1. The `main` ruleset requires `CI Success`, so the push is refused unless
+#      the pusher may bypass it. Either add a repository secret
+#      `SPOILERS_TOKEN` (a fine-grained token, Contents write on this
+#      repository, belonging to someone on the ruleset's bypass list), or add
+#      GitHub Actions itself to the bypass list. The ruleset is set by
+#      `.github/gate.sh` in alxjrvs/dotFiles.
+#   2. A push made with `GITHUB_TOKEN` does not trigger other workflows, so
+#      `deploy-cloudflare.yml` would not run. The last step dispatches it
+#      explicitly, which `GITHUB_TOKEN` IS allowed to do; with
+#      `SPOILERS_TOKEN` the push triggers it on its own and the dispatch is
+#      skipped.
+#
+# This file is public and contains no secrets, and must never contain one.
+name: Spoilers
+
+on:
+  schedule:
+    # Once a day. The hour is arbitrary.
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: spoilers
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: update spoilers
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # `secrets` cannot be read in a step's `if:`; an env value can.
+      HAS_SPOILERS_TOKEN: ${{ secrets.SPOILERS_TOKEN != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          token: ${{ secrets.SPOILERS_TOKEN || github.token }}
+
+      - name: Set up
+        uses: ./.github/actions/setup
+        with:
+          install: "true"
+
+      - name: Rebuild spoilers
+        run: bun run spoilers
+
+      - name: Anything new?
+        id: diff
+        run: |
+          if git diff --quiet -- data/spoilers; then
+            echo "No new spoilers."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Gate
+        if: steps.diff.outputs.changed == 'true'
+        run: bun run check:full
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/spoilers
+          count=$(bun -e 'console.log((await Bun.file("data/spoilers/spoilers.json").json()).counts.cards)')
+          git commit -m "Update spoilers ($count cards)"
+          git push origin HEAD:main
+
+      - name: Deploy
+        if: steps.diff.outputs.changed == 'true' && env.HAS_SPOILERS_TOKEN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-cloudflare.yml --ref main

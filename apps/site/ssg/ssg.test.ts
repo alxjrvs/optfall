@@ -3307,6 +3307,7 @@ describe("the nav collapses to a disclosure without a script", () => {
     for (const label of [
       "Cards",
       "Sets",
+      "Spoilers",
       "Rules",
       "Syntax",
       "Random",

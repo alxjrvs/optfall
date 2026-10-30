@@ -1,0 +1,1495 @@
+{
+  "schemaVersion": 1,
+  "repository": "the-fab-cube/flesh-and-blood-cards",
+  "sources": [
+    {
+      "branch": "outbreak",
+      "commit": "2ab4aeaeab9008cc8c345525b2b15661d6209f6e",
+      "committedAt": "2026-10-29T04:39:57Z"
+    },
+    {
+      "branch": "usurp-the-shadow-throne",
+      "commit": "74f8b5ff1d24d7669e84635e237713a931943b1e",
+      "committedAt": "2026-10-20T02:58:30Z"
+    }
+  ],
+  "rights": "Card names and card text are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. This dataset displays that content under LSS's third-party application policy and does not relicense it. Only Optfall's structural work over the dataset — the selection, the upstream pins and this envelope — is openly licensed. The upstream compilation is https://github.com/the-fab-cube/flesh-and-blood-cards, which publishes no licence of its own.",
+  "counts": {
+    "cards": 57,
+    "sets": 5
+  },
+  "sets": [
+    {
+      "id": "MPA",
+      "name": "Mastery Pack Assassin",
+      "released": "2026-11-14"
+    },
+    {
+      "id": "AMG",
+      "name": "Armory Deck - Min, Genius",
+      "released": null
+    },
+    {
+      "id": "OBK",
+      "name": "Outbreak",
+      "released": null
+    },
+    {
+      "id": "SFC",
+      "name": "Silver Age - α-01, First Cogwarden",
+      "released": null
+    },
+    {
+      "id": "SLV",
+      "name": "Silver Age - Mortimer, Living Virus",
+      "released": null
+    }
+  ],
+  "cards": [
+    {
+      "unique_id": "8HF69TPRhGhp9GCkjrqJz",
+      "name": "Min, Genius",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "40",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Chaos Mechanologist Hero",
+      "functional_text": "Cards you own are Mechanologist.\n\nAt the beginning of your end phase, flip this.",
+      "types": [
+        "Chaos",
+        "Mechanologist",
+        "Hero"
+      ],
+      "printings": [
+        {
+          "id": "AMG001",
+          "set_id": "AMG",
+          "rarity": "M"
+        },
+        {
+          "id": "OBK006",
+          "set_id": "OBK",
+          "rarity": "V"
+        }
+      ]
+    },
+    {
+      "unique_id": "9TcBHhhCRpnM8z8p67PBM",
+      "name": "Min, Mad",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "40",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Chaos Mechanologist Hero",
+      "functional_text": "Cards you own lose and can't gain class and talent types.\n\nAt the beginning of your end phase, flip this.",
+      "types": [
+        "Chaos",
+        "Mechanologist",
+        "Hero"
+      ],
+      "printings": [
+        {
+          "id": "AMG001",
+          "set_id": "AMG",
+          "rarity": "M"
+        },
+        {
+          "id": "OBK006",
+          "set_id": "OBK",
+          "rarity": "V"
+        }
+      ]
+    },
+    {
+      "unique_id": "NMwWqNFbRdFC9hj79nknm",
+      "name": "Unstable Plasma Pistol",
+      "pitch": "",
+      "cost": "",
+      "power": "2",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Mechanologist Weapon - Pistol (2H)",
+      "functional_text": "**Action** - {r}{r}: **Attack**\n\nIf you've banished a card an opponent owns from boosting this turn, this gets +2{p}.",
+      "types": [
+        "Chaos",
+        "Mechanologist",
+        "Weapon",
+        "Pistol",
+        "2H"
+      ],
+      "printings": [
+        {
+          "id": "AMG002",
+          "set_id": "AMG",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "JzkpPjgLfhPC8nqkwLFch",
+      "name": "Madness Spiral",
+      "pitch": "3",
+      "cost": "2",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Mechanologist Action - Attack",
+      "functional_text": "**Boost**\n\nIf you would banish this from boosting, instead banish it and the top card of each other hero's deck to boost.",
+      "types": [
+        "Chaos",
+        "Mechanologist",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "AMG023",
+          "set_id": "AMG",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "Q9mzkqzqwF8J9pR6FfnLf",
+      "name": "Revere the Copper Idol",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Mechanologist Instant",
+      "functional_text": "**Legendary**\n\nWhen this is banished from boosting, shuffle this into its owner's deck.\n\nShuffle up to 3 Mechanologist action cards with different names from your banished zone into your deck.",
+      "types": [
+        "Mechanologist",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "AMG027",
+          "set_id": "AMG",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "DDf7pH8DcRCBKMjWkmtGg",
+      "name": "Phial of Calamity",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Off-Hand",
+      "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - {r}, destroy this: Until end of turn, target dagger gets \"When this hits a hero, create a Frailty, Inertia, or Bloodrot Pox token under their control.\"",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Off-Hand"
+      ],
+      "printings": [
+        {
+          "id": "MPA006",
+          "set_id": "MPA",
+          "rarity": "L"
+        }
+      ]
+    },
+    {
+      "unique_id": "RTwrbfJKLNbRqzLJwLJwk",
+      "name": "Cadaver Handlers",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Arms",
+      "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - Destroy this: Cards defending target Assassin attack get -1{d} this chain link. Activate this only if the defending hero is infected.\n\n**Battleworn**",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Arms"
+      ],
+      "printings": [
+        {
+          "id": "MPA007",
+          "set_id": "MPA",
+          "rarity": "L"
+        }
+      ]
+    },
+    {
+      "unique_id": "qtNmMctTJkpz77KTtzg7c",
+      "name": "Bribe the Guards",
+      "pitch": "3",
+      "cost": "0",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\n**Instant** - Destroy a Silver you control: Target card defending this gets -1{d} this combat chain.",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA017",
+          "set_id": "MPA",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "RhhmTzwBtgFHjLjgKTfNh",
+      "name": "Continued Coercion",
+      "pitch": "2",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nWhen this leaves the combat chain, attacks get **go again** this chain link.",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA019",
+          "set_id": "MPA",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "N7cmt79CtPd8dJmwDdpFC",
+      "name": "Demoralize the Dracai",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish opponents' red cards. Whenever you complete this contract, create a Silver token.\n\nWhenever an attack action card you control hits a hero, banish the top card of their deck.",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA020",
+          "set_id": "MPA",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "KDhJbWGDwmtzDCJFdb9h8",
+      "name": "Flip the Script",
+      "pitch": "3",
+      "cost": "0",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nWhen this leaves the combat chain, attacks get +1{p} this chain link.",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA021",
+          "set_id": "MPA",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "LNDpF7dJmJ9CzczmmnQqp",
+      "name": "Tailored Targeting",
+      "pitch": "1",
+      "cost": "0",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this attacks, name a card.\n\n**Contract** - You are contracted to banish opponents' cards with the chosen name. Whenever you complete this contract, create a Silver token.\n\nWhenever you hit an opposing hero this chain link, banish the top card of their deck. If it's the named card, repeat this process",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA029",
+          "set_id": "MPA",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "7b6TTWCnh7FcBqwHhj6fN",
+      "name": "Outbreak",
+      "pitch": "3",
+      "cost": "3",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack action card gets +3{p} and \"When this hits a hero, create a Frailty, Inertia, and Bloodrot Pox token under their control.\"",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA031",
+          "set_id": "MPA",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "qTHBzPmndHhttPtrTTt8q",
+      "name": "Prolonged Illness",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Instant",
+      "functional_text": "Until end of turn, whenever a disease token is destroyed, if it's the first disease token with that name that's been destroyed this turn, create a token copy of it under the same hero's control.",
+      "types": [
+        "Assassin",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "MPA032",
+          "set_id": "MPA",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "whMLddCwLmFkWnHTL7LNw",
+      "name": "Seed Bloodrot",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Instant",
+      "functional_text": "Create a Bloodrot Pox token under each hero's control.",
+      "types": [
+        "Assassin",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "MPA125",
+          "set_id": "MPA",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "7wjbHgKFCTpf8kGQ9wRCf",
+      "name": "Seed Frailty",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Instant",
+      "functional_text": "Create a Frailty token under each hero's control.",
+      "types": [
+        "Assassin",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "MPA126",
+          "set_id": "MPA",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "kQQBTw9GqmkDJQhFknFgN",
+      "name": "Seed Inertia",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Instant",
+      "functional_text": "Create an Inertia token under each hero's control.",
+      "types": [
+        "Assassin",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "MPA127",
+          "set_id": "MPA",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "jDkMK8ncQnwRBGbRqw7tB",
+      "name": "Mortimer's Lab",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Outbreak Macro",
+      "functional_text": "The first time you hit an opposing hero each turn, they reveal the top card of their deck. If it's;\n- Red, create a Bloodrot Pox token under their control.\n- Yellow, create an Exertion token under their control.\n- Blue, create an Inertia token under their control.",
+      "types": [
+        "Outbreak",
+        "Macro"
+      ],
+      "printings": [
+        {
+          "id": "OBK000",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "gHj77G8cGHTfkD779c9jK",
+      "name": "Mortimer, Living Virus",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "20",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Chaos Assassin Hero - Young",
+      "functional_text": "**Instant** - {r}, {t}: Create a token copy of a disease token you control under each opponent's control. Activate this only during your turn.",
+      "types": [
+        "Chaos",
+        "Assassin",
+        "Hero",
+        "Young"
+      ],
+      "printings": [
+        {
+          "id": "OBK001",
+          "set_id": "OBK",
+          "rarity": "B"
+        },
+        {
+          "id": "SLV001",
+          "set_id": "SLV",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "6fdbbRdJnpTdgbHqmdtJm",
+      "name": "Min, Half-Genius",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "20",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Chaos Mechanologist Hero - Young",
+      "functional_text": "Cards you own are Mechanologist.\n\nAt the beginning of your end phase, flip this.",
+      "types": [
+        "Chaos",
+        "Mechanologist",
+        "Hero",
+        "Young"
+      ],
+      "printings": [
+        {
+          "id": "OBK007",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "dB7CprqC9mgQTBqnQtjz8",
+      "name": "Min, Half-Mad",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "20",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Chaos Mechanologist Hero - Young",
+      "functional_text": "Cards you own lose and can't gain class and talent types.\n\nAt the beginning of your end phase, flip this.",
+      "types": [
+        "Chaos",
+        "Mechanologist",
+        "Hero",
+        "Young"
+      ],
+      "printings": [
+        {
+          "id": "OBK007",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "kjK7Hm7RRHLbJ9PWBHKf9",
+      "name": "Vyle, Catalyst of Collapse",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "40",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Chaos Ranger Hero",
+      "functional_text": "**Instant** - {r}{r}, {t}: Each hero puts the top card of their deck face-up into their arsenal. Activate this only during your turn.\n\nIf an opponent has a face-up card in their arsenal, your arrow attacks get +1{p}.",
+      "types": [
+        "Chaos",
+        "Ranger",
+        "Hero"
+      ],
+      "printings": [
+        {
+          "id": "OBK012",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "K7JKp6wbHJBBffP9nnJFB",
+      "name": "Vyle",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "20",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Chaos Ranger Hero - Young",
+      "functional_text": "**Instant** - {r}{r}, {t}: Each hero puts the top card of their deck face-up into their arsenal. Activate this only during your turn.\n\nIf an opponent has a face-up card in their arsenal, your arrow attacks get +1{p}.",
+      "types": [
+        "Chaos",
+        "Ranger",
+        "Hero",
+        "Young"
+      ],
+      "printings": [
+        {
+          "id": "OBK013",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "FpnmfwjL9jhPPfdQGm8w9",
+      "name": "Curative Ceremony",
+      "pitch": "1",
+      "cost": "0",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Attack",
+      "functional_text": "As an additional cost to play this, each hero **cures** a disease they control if able. Choose a mode for each disease cured this way;\n\n- This gets +2{p}.\n- This gets **go again**.\n- This gets **veil**.",
+      "types": [
+        "Chaos",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK023",
+          "set_id": "OBK",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "DBtMkQRNHHpqDPdkCnkMf",
+      "name": "Extinction Level Event",
+      "pitch": "1",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Aura",
+      "functional_text": "When this enters the arena, name a disease token. Disease tokens with the chosen name lose and can't gain abilities while this is in the arena.\n\nAt the start of your turn, if there are 33 or more disease tokens in the arena, you win the game.",
+      "types": [
+        "Chaos",
+        "Action",
+        "Aura"
+      ],
+      "printings": [
+        {
+          "id": "OBK027",
+          "set_id": "OBK",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "CjRhCdD7DWFkK9mKB89PN",
+      "name": "Swap Spit",
+      "pitch": "1",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Defense Reaction",
+      "functional_text": "When this defends, choose a disease token you control at random. Target opponent chooses a disease token they control at random. Give them to each other.",
+      "types": [
+        "Chaos",
+        "Defense Reaction"
+      ],
+      "printings": [
+        {
+          "id": "OBK034",
+          "set_id": "OBK",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "TDFTtctpWr79RJkHtRd8F",
+      "name": "Swap Spit",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Defense Reaction",
+      "functional_text": "When this defends, choose a disease token you control at random. Target opponent chooses a disease token they control at random. Give them to each other.",
+      "types": [
+        "Chaos",
+        "Defense Reaction"
+      ],
+      "printings": [
+        {
+          "id": "OBK035",
+          "set_id": "OBK",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "nwCTgWjgJRmmBN6Nkjph6",
+      "name": "Swap Spit",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Defense Reaction",
+      "functional_text": "When this defends, choose a disease token you control at random. Target opponent chooses a disease token they control at random. Give them to each other.",
+      "types": [
+        "Chaos",
+        "Defense Reaction"
+      ],
+      "printings": [
+        {
+          "id": "OBK036",
+          "set_id": "OBK",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "7RQbHjJQFCDprbhb8Wpjn",
+      "name": "Incite Aggression",
+      "pitch": "1",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action",
+      "functional_text": "Each hero puts the top card of their deck face-up into their arsenal. If a red card is put face-up into an arsenal this way, your next attack this turn gets **go again**.\n\n**Go again**",
+      "types": [
+        "Chaos",
+        "Action"
+      ],
+      "printings": [
+        {
+          "id": "OBK037",
+          "set_id": "OBK",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "GcGgCD8wK8FHJ7cPCPwBP",
+      "name": "Incite Resolve",
+      "pitch": "3",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action",
+      "functional_text": "Each hero puts the top card of their deck face-up into their arsenal. If a blue card is put face-up into an arsenal this way, your next attack this turn gets +2{p}.\n\n**Go again**",
+      "types": [
+        "Chaos",
+        "Action"
+      ],
+      "printings": [
+        {
+          "id": "OBK039",
+          "set_id": "OBK",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "6TLzPd8NRmzGMWFck9BMb",
+      "name": "Back Alley Bloodbank",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Attack",
+      "functional_text": "When an activated ability or action card effect puts this face-up into a zone from your deck, create a Bloodrot Pox token under a hero's control.",
+      "types": [
+        "Chaos",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK040",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "kHq89LW6PTJcdbB8gmDj8",
+      "name": "Back Alley Bilebank",
+      "pitch": "2",
+      "cost": "1",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Attack",
+      "functional_text": "When an activated ability or action card effect puts this face-up into a zone from your deck, create an Exertion token under a hero's control.",
+      "types": [
+        "Chaos",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK041",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "zWLCtHgffkKdLgfQpr9mB",
+      "name": "Back Alley Plasmabank",
+      "pitch": "3",
+      "cost": "1",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Attack",
+      "functional_text": "When an activated ability or action card effect puts this face-up into a zone from your deck, create an Inertia token under a hero's control.",
+      "types": [
+        "Chaos",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK042",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "MfmcH9RPntmhjwTJnTtd9",
+      "name": "Bloodrot Courier",
+      "pitch": "1",
+      "cost": "2",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Attack",
+      "functional_text": "When this hits a hero, create a Bloodrot Pox token under the attacking and defending heroes' control.\n\n**Go again**",
+      "types": [
+        "Chaos",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK043",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "hTtbrDwGk9hHnrdMGLrPf",
+      "name": "Exertion Courier",
+      "pitch": "2",
+      "cost": "2",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Attack",
+      "functional_text": "When this hits a hero, create an Exertion token under the attacking and defending heroes' control.\n\n**Go again**",
+      "types": [
+        "Chaos",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK044",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "GkJbDtHwc7KdhCpNR9m8T",
+      "name": "Inertia Courier",
+      "pitch": "3",
+      "cost": "2",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Action - Attack",
+      "functional_text": "When this hits a hero, create an Inertia token under the attacking and defending heroes' control.\n\n**Go again**",
+      "types": [
+        "Chaos",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK045",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "FHDbh8LrjpQFGqFFCbTpf",
+      "name": "Exertion Bloom",
+      "pitch": "2",
+      "cost": "3",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Instant",
+      "functional_text": "This costs {r}{r}{r} less to play during your turn.\n\nCreate an Exertion token under each hero's control.",
+      "types": [
+        "Chaos",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "OBK066",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "KWPBmChF7BjFcMHh9wwpp",
+      "name": "Raging Streets",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Instant",
+      "functional_text": "Choose a random non-equipment card on the active chain link. It gets +3{p} +3{d} this chain link.",
+      "types": [
+        "Chaos",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "OBK069",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "JNMBTkhMTzGLRWFDR6WJ6",
+      "name": "Quiet Streets",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Chaos Instant",
+      "functional_text": "Choose a random non-equipment card on the active chain link. It gets -3{p} -3{d} this chain link.",
+      "types": [
+        "Chaos",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "OBK070",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "jFqkWjJM7JfJmKjRRHTcn",
+      "name": "Huxley, Racketeer",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "38",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Assassin Mechanologist Hero",
+      "functional_text": "Whenever you banish an action card with stealth from boosting, you may {t} this. If you do, you may play the banished card as though it were an instant this turn.",
+      "types": [
+        "Assassin",
+        "Mechanologist",
+        "Hero"
+      ],
+      "printings": [
+        {
+          "id": "OBK071",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "Pz6BNBRPcdNHCwKtTWfjG",
+      "name": "Huxley",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "19",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Assassin Mechanologist Hero - Young",
+      "functional_text": "Whenever you banish an action card with stealth from boosting, you may {t} this. If you do, you may play the banished card as though it were an instant this turn.",
+      "types": [
+        "Assassin",
+        "Mechanologist",
+        "Hero",
+        "Young"
+      ],
+      "printings": [
+        {
+          "id": "OBK072",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "Nw6hwpnJfGtBnM798jPGh",
+      "name": "Azalea, Ace of Spades",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "38",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Assassin Ranger Hero",
+      "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If its an arrow, it gets **veil** this turn.",
+      "types": [
+        "Assassin",
+        "Ranger",
+        "Hero"
+      ],
+      "printings": [
+        {
+          "id": "OBK080",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "HgLFRQrGzgLbTC6MBR8Dk",
+      "name": "Azalea, Lone Vigilante",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "19",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Assassin Ranger Hero - Young",
+      "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If its an arrow, it gets **veil** this turn.",
+      "types": [
+        "Assassin",
+        "Ranger",
+        "Hero",
+        "Young"
+      ],
+      "printings": [
+        {
+          "id": "OBK081",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "LKgRPgjPC6jCczFRw7jCB",
+      "name": "α-01, First Cogwarden",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "19",
+      "intelligence": "4",
+      "arcane": "",
+      "type_text": "Mechanologist Ranger Hero - Young",
+      "functional_text": "**Instant** - {r}, {t}: Put an arrow you've banished from boosting this turn face-up into your arsenal. If you do, put two +1{p} counters on it.\n\n**Instant** - {r}, {t}: The next arrow with a +1{p} counter you play this turn gets **go again**.",
+      "types": [
+        "Mechanologist",
+        "Ranger",
+        "Hero",
+        "Young"
+      ],
+      "printings": [
+        {
+          "id": "OBK089",
+          "set_id": "OBK",
+          "rarity": "B"
+        },
+        {
+          "id": "SFC001",
+          "set_id": "SFC",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "hmcmdFzjHFTmTwNtDTGTh",
+      "name": "Pauper's Knife",
+      "pitch": "",
+      "cost": "",
+      "power": "1",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Weapon - Dagger (1H)",
+      "functional_text": "**Action** - {r}{r}, {t}: **Attack**. **Go again**",
+      "types": [
+        "Assassin",
+        "Weapon",
+        "Dagger",
+        "1H"
+      ],
+      "printings": [
+        {
+          "id": "OBK097",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "W89FbdcbpPPtcRb7r8bcW",
+      "name": "Patient Zero",
+      "pitch": "1",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nWhen this hits a hero, give them a disease token you control.",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK126",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "tf86PwPg7qpG6fFkLqDPB",
+      "name": "Patient Zero",
+      "pitch": "2",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nWhen this hits a hero, give them a disease token you control.",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK127",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "fmQhbRpzhgJCBgpCrpncC",
+      "name": "Patient Zero",
+      "pitch": "3",
+      "cost": "0",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nWhen this hits a hero, give them a disease token you control.",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK128",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "9BBbJhRkJLwkPHPHQwTcK",
+      "name": "Cogwerx Dueling Pistol",
+      "pitch": "",
+      "cost": "",
+      "power": "2",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Mechanologist Weapon - Pistol (1H)",
+      "functional_text": "**Action** - {t}, remove a steam counter from this: **Attack**\n\n**Action** - {r}, {t}: If this has no steam counters, put a steam counter on it. **Go again**",
+      "types": [
+        "Mechanologist",
+        "Weapon",
+        "Pistol",
+        "1H"
+      ],
+      "printings": [
+        {
+          "id": "OBK136",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "BFHCGgGGPN8bLDBzhBWMB",
+      "name": "Bootlegger Bust-Up",
+      "pitch": "1",
+      "cost": "3",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Mechanologist Action - Attack",
+      "functional_text": "**Boost**\n\nThis gets +2{p} for each non-Mechanologist card banished from boosting this.",
+      "types": [
+        "Mechanologist",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK150",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "bfgQWP97NK6FQDGWCdHz9",
+      "name": "Bootlegger Bust-Up",
+      "pitch": "2",
+      "cost": "3",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Mechanologist Action - Attack",
+      "functional_text": "**Boost**\n\nThis gets +2{p} for each non-Mechanologist card banished from boosting this.",
+      "types": [
+        "Mechanologist",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK151",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "NHJC7zwG6mFrrGtndNgFp",
+      "name": "Bootlegger Bust-Up",
+      "pitch": "3",
+      "cost": "3",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Mechanologist Action - Attack",
+      "functional_text": "**Boost**\n\nThis gets +2{p} for each non-Mechanologist card banished from boosting this.",
+      "types": [
+        "Mechanologist",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK152",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "DGNGRqjMqnjM8cRHF9wKM",
+      "name": "One-Click Pinpointer",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Ranger Weapon - Bow (1H)",
+      "functional_text": "**Action** - {t}: Put all cards from your arsenal on the bottom of your deck. Put an arrow from your hand face-up into your arsenal. If you control a tapped bow, this costs {r} more to activate. **Go again**",
+      "types": [
+        "Ranger",
+        "Weapon",
+        "Bow",
+        "1H"
+      ],
+      "printings": [
+        {
+          "id": "OBK175",
+          "set_id": "OBK",
+          "rarity": "B"
+        }
+      ]
+    },
+    {
+      "unique_id": "8Bm8jLcNbJrJPKQ6BRCjR",
+      "name": "Incubator Implanter",
+      "pitch": "1",
+      "cost": "1",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Ranger Action - Arrow Attack",
+      "functional_text": "When this attacks a hero, if they are infected with Bloodrot Pox, this gets \"When this hits a hero, for the rest of the game, at the beginning of their end phase, create a Bloodrot Pox token under their control.\"",
+      "types": [
+        "Ranger",
+        "Action",
+        "Arrow",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK177",
+          "set_id": "OBK",
+          "rarity": "M"
+        }
+      ]
+    },
+    {
+      "unique_id": "7kB6HrHRkBLGN8qDmptHJ",
+      "name": "Max-Tension Shot",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Ranger Action - Arrow Attack",
+      "functional_text": "When this attacks, reveal the top card of your deck. If it's red, this gets **go again**.",
+      "types": [
+        "Ranger",
+        "Action",
+        "Arrow",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "OBK207",
+          "set_id": "OBK",
+          "rarity": "C"
+        }
+      ]
+    },
+    {
+      "unique_id": "WcRzC9HDdLLRqjHggtqH8",
+      "name": "Cure-All Elixir",
+      "pitch": "",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Action",
+      "functional_text": "Your next attack this turn gets +3{p}.\n\nYou may **cure** a disease you control. If you do, gain 1{h}.\n\n**Go again**",
+      "types": [
+        "Generic",
+        "Action"
+      ],
+      "printings": [
+        {
+          "id": "OBK256",
+          "set_id": "OBK",
+          "rarity": "R"
+        }
+      ]
+    },
+    {
+      "unique_id": "zGqKCptTKgPgqtgWBJGDw",
+      "name": "Exertion",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Token - Disease Aura",
+      "functional_text": "Whenever you play a card from hand, lose 1{h}.\n\nAt the beginning of your end phase, destroy this.",
+      "types": [
+        "Generic",
+        "Token",
+        "Disease",
+        "Aura"
+      ],
+      "printings": [
+        {
+          "id": "SLV035",
+          "set_id": "SLV",
+          "rarity": "B"
+        }
+      ]
+    }
+  ]
+}

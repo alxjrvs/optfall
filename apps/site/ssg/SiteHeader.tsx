@@ -33,7 +33,7 @@ import { Mark, OrnamentalRule } from "optfall-components/react";
 import { Island } from "./Island";
 import { HeaderSearch } from "./islands/HeaderSearch";
 
-export type HeaderSection = "cards" | "sets" | "rules" | "syntax";
+export type HeaderSection = "cards" | "sets" | "spoilers" | "rules" | "syntax";
 
 /**
  * The form's own attributes — the half of the field the shell keeps.
@@ -100,6 +100,7 @@ const LINKS: readonly {
 }[] = [
   { href: "/search", label: "Cards", key: "cards" },
   { href: "/sets", label: "Sets", key: "sets" },
+  { href: "/spoilers", label: "Spoilers", key: "spoilers" },
   { href: "/cr", label: "Rules", key: "rules" },
   { href: "/syntax", label: "Syntax", key: "syntax" },
   { href: "/random", label: "Random" },

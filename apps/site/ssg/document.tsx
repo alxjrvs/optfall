@@ -291,6 +291,7 @@ export function Document({
             <nav className="site-footer__links" aria-label="Optfall">
               <a href="/search">Cards</a>
               <a href="/sets">Sets</a>
+              <a href="/spoilers">Spoilers</a>
               <a href="/cr">Rules</a>
               <a href="/syntax">Syntax</a>
               <a href="/random">Random</a>
