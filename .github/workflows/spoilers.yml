@@ -1,33 +1,27 @@
-# Daily: rebuild `data/spoilers/spoilers.json` and commit it to `main` if it
-# changed.
+# Daily: rebuild `data/spoilers/spoilers.json` and, if it changed, open a pull
+# request that merges itself once `CI Success` passes.
 #
 # WHAT IT RUNS. `bun run spoilers` — see `scripts/build-spoilers.ts` for the
 # source and what counts as a spoiler. That script writes no timestamp of its
 # own, so an unchanged upstream is an empty diff and this job ends without
-# committing anything.
+# opening anything.
 #
-# A DIRECT COMMIT RATHER THAN A PULL REQUEST, because that is what was asked
-# for: a reveal should reach the site the day it lands, without a merge. It
-# was built as a pull request first; see #387 for the trade.
+# A PULL REQUEST WITH AUTO-MERGE, NOT A DIRECT COMMIT. The `main` ruleset set by
+# `.github/gate.sh` in alxjrvs/dotFiles has no bypass for anyone, so a push to
+# `main` is refused whoever makes it. The pull request goes through the same
+# `CI Success` gate as any other and lands minutes after the run, with no
+# review; its merge is a push to `main`, which deploys the site.
 #
-# SO THIS JOB IS ITS OWN GATE. Nothing reviews the commit and `ci.yml` runs on
-# it only after it is on `main`, so before pushing, the job runs
-# `bun run check:full` — the same eleven jobs `CI Success` needs — against the
-# rebuilt file. A run that fails pushes nothing, and the job goes red.
+# ONE BRANCH, `spoilers/update`, force-pushed from `main` each run, so there is
+# never more than one spoilers pull request open: a newer run replaces the
+# older one's commit.
 #
-# TWO SETTINGS OUTSIDE THIS FILE ARE NEEDED, and neither can be set from here.
-#
-#   1. The `main` ruleset requires `CI Success`, so the push is refused unless
-#      the pusher may bypass it. Either add a repository secret
-#      `SPOILERS_TOKEN` (a fine-grained token, Contents write on this
-#      repository, belonging to someone on the ruleset's bypass list), or add
-#      GitHub Actions itself to the bypass list. The ruleset is set by
-#      `.github/gate.sh` in alxjrvs/dotFiles.
-#   2. A push made with `GITHUB_TOKEN` does not trigger other workflows, so
-#      `deploy-cloudflare.yml` would not run. The last step dispatches it
-#      explicitly, which `GITHUB_TOKEN` IS allowed to do; with
-#      `SPOILERS_TOKEN` the push triggers it on its own and the dispatch is
-#      skipped.
+# IT NEEDS `SPOILERS_TOKEN`, a fine-grained token on this repository with
+# Contents and Pull requests read and write. `GITHUB_TOKEN` will not do: the
+# repository forbids Actions from creating pull requests, and a pull request
+# opened with `GITHUB_TOKEN` would never trigger `ci.yml`, so `CI Success`
+# would never report and the merge would wait forever. Without the secret the
+# job fails at checkout.
 #
 # This file is public and contains no secrets, and must never contain one.
 name: Spoilers
@@ -39,8 +33,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 concurrency:
   group: spoilers
@@ -51,15 +44,12 @@ jobs:
     name: update spoilers
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      # `secrets` cannot be read in a step's `if:`; an env value can.
-      HAS_SPOILERS_TOKEN: ${{ secrets.SPOILERS_TOKEN != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
-          token: ${{ secrets.SPOILERS_TOKEN || github.token }}
+          token: ${{ secrets.SPOILERS_TOKEN }}
 
       - name: Set up
         uses: ./.github/actions/setup
@@ -79,23 +69,23 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Gate
+      - name: Open or update the pull request
         if: steps.diff.outputs.changed == 'true'
-        run: bun run check:full
-
-      - name: Commit and push
-        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SPOILERS_TOKEN }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/spoilers
           count=$(bun -e 'console.log((await Bun.file("data/spoilers/spoilers.json").json()).counts.cards)')
+          git switch -c spoilers/update
+          git add data/spoilers
           git commit -m "Update spoilers ($count cards)"
-          git push origin HEAD:main
-
-      - name: Deploy
-        if: steps.diff.outputs.changed == 'true' && env.HAS_SPOILERS_TOKEN != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy-cloudflare.yml --ref main
+          git push --force origin spoilers/update
+          if ! gh pr view spoilers/update --json state --jq .state 2>/dev/null | grep -q OPEN; then
+            gh pr create --base main --head spoilers/update \
+              --title "Update spoilers" \
+              --body "Rebuilt by \`.github/workflows/spoilers.yml\`. Merges itself once \`CI Success\` passes."
+          fi
+          gh pr edit spoilers/update --title "Update spoilers ($count cards)"
+          gh pr merge spoilers/update --auto --squash
