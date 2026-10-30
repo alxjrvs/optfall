@@ -4,7 +4,7 @@ The Flesh and Blood **Comprehensive Rules**, parsed into permanently
 addressable sections.
 
 `docs/ROADMAP.md`, Phase 4 — every Comprehensive Rules paragraph at a permanent
-URL, citable by number. *The permalink is the product.* Legend Story Studios
+URL, citable by number. _The permalink is the product._ Legend Story Studios
 already publishes a stable hierarchy — `1.0.`, `1.0.1.`, `1.0.1a` — and the
 document's own preface says so:
 
@@ -39,14 +39,14 @@ the tests need no network.
 Comprehensive Rules **2.14.0**, dated 2026-6-10, 413,462 bytes,
 sha256 `fef01bb7c99da3d5e923521229c84b09ed544e8587dd0aaafaa666648fd44b85`:
 
-| | |
-|---|---|
-| chapters | 9 |
-| sections | 87 |
-| rules | 548 |
-| subrules | 634 |
+|                               |           |
+| ----------------------------- | --------- |
+| chapters                      | 9         |
+| sections                      | 87        |
+| rules                         | 548       |
+| subrules                      | 634       |
 | **total addressable entries** | **1,278** |
-| parse warnings | 0 |
+| parse warnings                | 0         |
 
 The 1,182 rules and subrules are an **exact set match** against an independent
 `grep` of the extracted text — no id in one and not the other.
@@ -54,7 +54,7 @@ The 1,182 rules and subrules are an **exact set match** against an independent
 ## Two things that would fail silently, and do not
 
 - **`pdftotext -layout`, not plain mode.** Plain mode discards the indentation
-  that separates a heading from a rule from a wrapped line, *and* welds
+  that separates a heading from a rule from a wrapped line, _and_ welds
   `attack-` + `target` into `attacktarget`. Neither produces an error.
 - **The version stamp is read, never assumed.** A title page this parser does
   not recognise throws. A corpus labelled with a guessed version is worse than
