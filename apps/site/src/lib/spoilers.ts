@@ -4,13 +4,15 @@
  * `scripts/build-spoilers.ts` writes the file and documents what counts as a
  * spoiler; this module reads it and shapes it for `/spoilers`. It is a separate
  * corpus from `cards.ts` on purpose: a spoiled card has no card page, no
- * legality and no face on our image host, and folding it into `CORPUS` would
- * hand every one of those code paths a card it cannot render. A spoiler
+ * legality and only a provisional face (see `spoilerFaceKeyFor` in
+ * `faces.ts`), and folding it into `CORPUS` would hand every one of those code
+ * paths a card it cannot render. A spoiler
  * graduates by appearing in the card corpus, at which point it leaves this
  * page — see {@link SPOILER_CARDS}.
  */
 
 import { CORPUS } from "./cards";
+import { spoilerFaceKeyFor } from "./faces";
 import { rarityName } from "./sets";
 
 import spoilers from "../../../../data/spoilers/spoilers.json";
@@ -28,6 +30,11 @@ export interface SpoilerPrinting {
   readonly id: string;
   readonly set_id: string;
   readonly rarity: string;
+  /**
+   * Upstream's image URL, or `null`. Read only to derive a face key — the
+   * page asks our host for the face, never this.
+   */
+  readonly image_url: string | null;
 }
 
 /** Upstream's field names, verbatim, as in `cards.ts`. Stats are strings. */
@@ -120,6 +127,24 @@ export const SPOILERS_AS_OF: string | null =
     .toSorted()
     .at(-1)
     ?.slice(0, 10) ?? null;
+
+/**
+ * The face to show for a card in one set's listing: the first of those
+ * printings that publishes an image, or `null` where none does.
+ *
+ * The set's own printing rather than the card's first, because a card listed
+ * under two sets is two different printings — the Armory Deck hero's Rainbow
+ * Foil under one, its Marvel under the other.
+ */
+export function spoilerFaceKey(
+  printings: readonly SpoilerPrinting[],
+): string | null {
+  for (const printing of printings) {
+    const key = spoilerFaceKeyFor(printing.image_url);
+    if (key !== null) return key;
+  }
+  return null;
+}
 
 /** `OBK041 · Majestic`. */
 export function printingLabel(printing: SpoilerPrinting): string {

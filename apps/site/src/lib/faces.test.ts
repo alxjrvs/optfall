@@ -20,6 +20,7 @@ import {
   orientationOfFace,
   placeholderUrl,
   coldFoilSiblingKey,
+  spoilerFaceKeyFor,
 } from "./faces";
 import { CORPUS } from "./cards";
 
@@ -435,5 +436,19 @@ describe("coldFoilSiblingKey", () => {
     /* Bare, extensionless input is exactly the mistake that caused the bug:
        it is not a key this codebase ever produces, and must not resolve. */
     expect(coldFoilSiblingKey("ANQ011-CF")).toBeNull();
+  });
+});
+
+describe("spoilerFaceKeyFor", () => {
+  test("is the face key, kept apart from the released card's", () => {
+    const url =
+      "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OBK041.webp";
+    expect(faceKeyFor(url)).toBe("OBK041.webp");
+    expect(spoilerFaceKeyFor(url)).toBe("spoiler-OBK041.webp");
+  });
+
+  test("has no key where upstream publishes no image", () => {
+    expect(spoilerFaceKeyFor(null)).toBeNull();
+    expect(spoilerFaceKeyFor("")).toBeNull();
   });
 });

@@ -3,13 +3,14 @@
  *
  * Asserted against the data rather than against figures, because the file
  * under it is rebuilt daily: whatever `SPOILER_GROUPS` holds, the page must
- * show every set and every card in it, and must not pretend a spoiled card has
- * a page of its own.
+ * show every set and every card in it, draw each card's face from our own
+ * host, and must not pretend a spoiled card has a page of its own.
  */
 
 import { describe, expect, test } from "bun:test";
 
-import { SPOILER_GROUPS } from "../../src/lib/spoilers";
+import { FACE_HOST } from "../../src/lib/faces";
+import { SPOILER_GROUPS, spoilerFaceKey } from "../../src/lib/spoilers";
 import { routes } from "../routes";
 
 const html =
@@ -53,6 +54,31 @@ describe("/spoilers", () => {
             `${printing.id}: true`,
           );
         }
+      }
+    }
+  });
+
+  test("draws a face for every card, from our host and under its own key", () => {
+    /* Faces only: printed text draws game symbols as images too. */
+    const sources = [
+      ...html.matchAll(/of-card-face__frame"><img src="([^"]+)"/g),
+    ].map((match) => match[1] ?? "");
+    const listed = SPOILER_GROUPS.reduce(
+      (sum, group) => sum + group.cards.length,
+      0,
+    );
+    expect(sources.length).toBe(listed);
+    /* Never LSS's bucket: the page asks our host, which the ingest fills. */
+    expect(sources.filter((src) => !src.startsWith(`${FACE_HOST}/`))).toEqual(
+      [],
+    );
+    for (const { cards } of SPOILER_GROUPS) {
+      for (const { printings } of cards) {
+        const key = spoilerFaceKey(printings);
+        if (key === null) continue;
+        expect(`${key}: ${html.includes(`${FACE_HOST}/normal/${key}`)}`).toBe(
+          `${key}: true`,
+        );
       }
     }
   });

@@ -3,7 +3,7 @@
  * published card art.
  *
  * The bytes behind https://images.optfall.com. Sources every distinct
- * face in `data/cards/cards.json`, transcodes it to the two WebP tiers
+ * face in `data/cards/cards.json` and `data/spoilers/spoilers.json`, transcodes it to the two WebP tiers
  * `apps/site/src/lib/faces.ts` publishes, and uploads both. The image bytes
  * never enter git — 11,377 faces at ~695 KB apiece is ~7.7 GB of source, and
  * even as WebP tiers it is hundreds of megabytes git would carry forever.
@@ -63,6 +63,7 @@ import {
   FACE_TIERS,
   faceKeyFor,
   type FaceTier,
+  spoilerFaceKeyFor,
 } from "../apps/site/src/lib/faces";
 import { BUCKET_NAME } from "../apps/images/src/face";
 
@@ -96,6 +97,11 @@ interface Card {
 }
 
 interface Corpus {
+  readonly cards: readonly Card[];
+}
+
+/** `data/spoilers/spoilers.json`, as far as this reads it. */
+interface Spoilers {
   readonly cards: readonly Card[];
 }
 
@@ -168,6 +174,12 @@ function etagDigest(etag: string | undefined): string | null {
 interface Face {
   readonly key: string;
   readonly url: string;
+  /**
+   * True for a spoiler's face, which is held to a weaker rule than a released
+   * one: a stored copy is kept without comparing it to upstream's. See
+   * `ingestTier`.
+   */
+  readonly provisional: boolean;
 }
 
 /**
@@ -202,11 +214,35 @@ function facesFrom(corpus: Corpus): {
   }
 
   const faces = [...byKey.entries()]
-    .map(([key, url]) => ({ key, url }))
+    .map(([key, url]) => ({ key, url, provisional: false }))
     .toSorted((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 
   return { faces, printingsWithoutImage, totalPrintings };
 }
+/**
+ * Every distinct face a spoiled printing publishes, keyed apart from the
+ * released corpus by `spoilerFaceKeyFor` — which says why.
+ *
+ * THIS IS HOW THE DAILY SPOILERS JOB GETS ITS FACES. That job's pull request
+ * changes `data/spoilers/`, its merge is a push under `data/**`, and the push
+ * runs this script in `deploy-cloudflare.yml`'s `faces` job. So a card
+ * revealed today has its face on our host minutes after its text lands, with
+ * no second job and no second set of R2 credentials.
+ */
+function spoilerFacesFrom(spoilers: Spoilers): readonly Face[] {
+  const byKey = new Map<string, string>();
+  for (const card of spoilers.cards) {
+    for (const printing of card.printings) {
+      const key = spoilerFaceKeyFor(printing.image_url);
+      if (key !== null && !byKey.has(key))
+        byKey.set(key, printing.image_url as string);
+    }
+  }
+  return [...byKey.entries()]
+    .map(([key, url]) => ({ key, url, provisional: true }))
+    .toSorted((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+}
+
 /**
  * Transcode one source image to one tier.
  *
@@ -269,12 +305,28 @@ async function main(): Promise<void> {
 
   const corpusPath = join(import.meta.dir, "..", "data", "cards", "cards.json");
   const corpus = JSON.parse(readFileSync(corpusPath, "utf8")) as Corpus;
-  const { faces, printingsWithoutImage, totalPrintings } = facesFrom(corpus);
+  const released = facesFrom(corpus);
+  const { printingsWithoutImage, totalPrintings } = released;
+
+  const spoilersPath = join(
+    import.meta.dir,
+    "..",
+    "data",
+    "spoilers",
+    "spoilers.json",
+  );
+  const spoilerFaces = spoilerFacesFrom(
+    JSON.parse(readFileSync(spoilersPath, "utf8")) as Spoilers,
+  );
+  const faces = [...released.faces, ...spoilerFaces];
 
   console.log(
     `corpus: ${totalPrintings.toLocaleString("en-GB")} printings → ` +
-      `${faces.length.toLocaleString("en-GB")} distinct faces ` +
+      `${released.faces.length.toLocaleString("en-GB")} distinct faces ` +
       `(${printingsWithoutImage} printings publish no image)`,
+  );
+  console.log(
+    `spoilers: ${spoilerFaces.length.toLocaleString("en-GB")} distinct faces`,
   );
 
   const store = r2Client();
@@ -350,6 +402,17 @@ async function main(): Promise<void> {
   ): Promise<void> => {
     const objectKey = `${tier}/${face.key}`;
     const bytes = await transcode(source, tier);
+
+    /* A SPOILER'S STORED FACE IS KEPT, NOT COMPARED. Its art can change before
+       release, and a key clash would fail the deploy over art that was always
+       provisional. Overwriting is no better: faces are served `immutable`, so
+       every cache that saw the first copy would keep it while the bucket held
+       the second. The first copy stands until the card releases and is
+       ingested under its own key. */
+    if (!force && face.provisional && present.has(objectKey)) {
+      outcome.skipped += 1;
+      return;
+    }
 
     if (!force && present.has(objectKey)) {
       // Present already, and we have just recomputed what we would write. If it
@@ -463,7 +526,7 @@ async function main(): Promise<void> {
     (key) => coldFoilSiblingKey(key) !== null,
   );
   if (coldFoilGaps.length > 0) {
-    const urlByKey = new Map(faces.map((face) => [face.key, face.url]));
+    const faceByKey = new Map(faces.map((face) => [face.key, face]));
     const faceKeys = new Set(faces.map((face) => face.key));
 
     const substitutes: Face[] = coldFoilGaps.flatMap((key) => {
@@ -482,9 +545,15 @@ async function main(): Promise<void> {
          have on every run after. */
       if (!force && tiers.every((tier) => present.has(`${tier}/${sibling}`)))
         return [];
-      const url = urlByKey.get(key);
-      if (url === undefined) return [];
-      return [{ key: sibling, url: url.replace(/-CF(?=\.[^.]+$)/, "") }];
+      const gap = faceByKey.get(key);
+      if (gap === undefined) return [];
+      return [
+        {
+          key: sibling,
+          url: gap.url.replace(/-CF(?=\.[^.]+$)/, ""),
+          provisional: gap.provisional,
+        },
+      ];
     });
 
     /* SAID OUT LOUD EVEN WHEN THERE IS NOTHING TO DO. The first version of this

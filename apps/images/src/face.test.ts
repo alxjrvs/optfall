@@ -54,6 +54,15 @@ describe("parseFacePath", () => {
     });
   });
 
+  test("accepts a spoiler's face, which the site keys `spoiler-<stem>`", () => {
+    // `spoilerFaceKeyFor` in apps/site/src/lib/faces.ts. Nothing here knows
+    // spoilers exist; the key only has to be inside the alphabet.
+    expect(parseFacePath("/normal/spoiler-OBK041.webp")).toEqual({
+      tier: "normal",
+      key: "normal/spoiler-OBK041.webp",
+    });
+  });
+
   test("rejects a tier it does not publish", () => {
     expect(parseFacePath("/huge/MST131.webp")).toBeNull();
     expect(parseFacePath("/art_crop/MST131.webp")).toBeNull();
