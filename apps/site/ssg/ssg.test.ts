@@ -20,6 +20,7 @@ import {
   variantSuffix,
 } from "../src/lib/cards";
 import { LSS_DISCLAIMER } from "../src/lib/compliance";
+import { FACE_HOST } from "../src/lib/faces";
 import { facesOf, hrefForPrinting } from "../src/lib/printings";
 import { editionLabel, setFor, setName } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
@@ -3526,4 +3527,31 @@ describe("every inline script the site renders is admitted by the CSP", () => {
       expect(missing).toEqual([]);
     });
   }
+});
+
+describe("the service worker may fetch the faces it routes", () => {
+  /*
+   * `/sw.js` is served under the `/*` policy, and its `NetworkOnly` rule for
+   * the face host is a `fetch()` from inside the worker — `connect-src`, not
+   * `img-src`. With only `'self'` there, every face broke for every reader
+   * the worker controlled while curl and a first visit both looked healthy.
+   * `hostConfig.ts` has the reproduction.
+   */
+  const directive = (name: string): readonly string[] => {
+    const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
+    const policy = wildcard?.headers["Content-Security-Policy"] ?? "";
+    const found = policy
+      .split(";")
+      .map((part) => part.trim().split(/\s+/))
+      .find(([head]) => head === name);
+    return found?.slice(1) ?? [];
+  };
+
+  test("connect-src names the face host", () => {
+    expect(directive("connect-src")).toContain(FACE_HOST);
+  });
+
+  test("img-src names the face host", () => {
+    expect(directive("img-src")).toContain(FACE_HOST);
+  });
 });

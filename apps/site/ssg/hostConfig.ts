@@ -104,7 +104,23 @@ const CONTENT_SECURITY_POLICY = [
   "img-src 'self' https://images.optfall.com data:",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
-  "connect-src 'self'",
+  /*
+    THE FACE HOST IS HERE TOO, AND `img-src` ALONE WAS NOT ENOUGH.
+
+    `/sw.js` is served under the `/*` rule below, so this policy is the
+    service worker's own. Its first runtime rule answers every
+    `images.optfall.com` request with `NetworkOnly`, and Workbox implements
+    that by calling `fetch()` from inside the worker — a fetch, governed by
+    `connect-src`, not by `img-src`. With `'self'` alone the worker's fetch
+    was refused, the `<img>` got a network error, and every card face drew
+    the browser's broken-image glyph for any reader the worker controlled:
+    everyone from their second page view on. curl, a first visit and a
+    private window all bypass the worker, which is why the host looked
+    healthy from every angle but a returning browser. Reproduced in Chromium
+    on 2026-10-30 with this exact `connect-src` and a cross-origin
+    `respondWith(fetch(...))`; adding the host is what made it load.
+  */
+  "connect-src 'self' https://images.optfall.com",
 ].join("; ");
 
 /*
