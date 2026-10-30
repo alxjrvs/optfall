@@ -28,7 +28,7 @@
  *
  * THE DUPLICATE-OUTPUT GUARD IS NOT DEFENSIVE PROGRAMMING. Two routes resolving
  * to one file is silent by default: the second write wins and a page vanishes
- * from a site that reported success. This project has 18,380 URLs derived from a
+ * from a site that reported success. This project has 18,478 URLs derived from a
  * corpus that resyncs on a schedule, and `cards.ts` already throws on exactly
  * this hazard at the route level. The generator asserts it again at the FILE
  * level, because that is where the collision actually lands and where a rule
@@ -403,7 +403,7 @@ async function main(): Promise<void> {
 
   /*
    * The non-page files, written before the pages so a failure to derive one
-   * stops the build before it emits 18,380 documents linking it.
+   * stops the build before it emits 18,478 documents linking it.
    */
   const generated = await generatedAssets();
   for (const asset of generated) {
@@ -499,7 +499,7 @@ async function main(): Promise<void> {
    * THE SITEMAP IS COLLECTED HERE RATHER THAN BUILT IN A SECOND PASS, because
    * this loop is the only place that has both the route and the HTML it
    * produced. Re-resolving the routes afterwards to ask each page for its
-   * canonical would render all 18,380 of them twice.
+   * canonical would render all 18,478 of them twice.
    */
   const sitemapUrls: string[] = [];
 
@@ -523,7 +523,7 @@ async function main(): Promise<void> {
       /*
        * A PAGE IS IN THE SITEMAP WHEN IT IS ITS OWN CANONICAL, and the test is
        * the tag the page actually emitted rather than anything this file
-       * recomputes. 11,784 of these routes are alternate printings that
+       * recomputes. 11,868 of these routes are alternate printings that
        * canonical to their card's default printing; listing them would
        * contradict, in the sitemap, the thing the `<head>` just said.
        */
@@ -546,7 +546,7 @@ async function main(): Promise<void> {
   /*
    * The sitemap is sorted so the file is stable between builds: the route order
    * is the registration order, which is a decision about the code rather than
-   * about the URLs, and a diff that reshuffles 18,380 lines because a page moved
+   * about the URLs, and a diff that reshuffles 18,478 lines because a page moved
    * in `routes.ts` hides the one line that actually changed.
    */
   sitemapUrls.sort();

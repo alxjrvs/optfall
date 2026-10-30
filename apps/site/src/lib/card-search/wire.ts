@@ -19,7 +19,7 @@ import type { StateTone } from "optfall-theme";
  *
  * **THE FORMAT STAYS, AND THE ARGUMENT FOR IT IS A PLAINER ONE NOW.** Six bytes
  * a quote was the dramatic number; the boring number is that an object per card
- * repeats every field NAME 5,193 times, and this does not repeat them at all.
+ * repeats every field NAME 5,205 times, and this does not repeat them at all.
  * Measured on this corpus: 888 KB as it stands. That is still what is fetched
  * and still what is parsed on the client, so it is still worth being small —
  * the escaping was an amplifier on a cost that exists without it.
@@ -72,12 +72,12 @@ export interface EncodedCardIndex {
    * has 16,502 printing rows and 11,378 distinct images, because Regular /
    * Rainbow Foil / Cold Foil in one set are three rows sharing one picture.
    * And it is NOT every art either — the card's own face is already in
-   * `faceKeys`, so listing it again would be 5,193 duplicated strings to say
+   * `faceKeys`, so listing it again would be 5,205 duplicated strings to say
    * something the index already says.
    *
-   * SO IT IS THE 11,784 NON-DEFAULT FACES. This used to be exactly the set
+   * SO IT IS THE 11,868 NON-DEFAULT FACES. This used to be exactly the set
    * `cards.ts` emits a URL for, and it is not any more — every one of the
-   * 16,977 has an address now, the default included. What survives the change
+   * 17,073 has an address now, the default included. What survives the change
    * is the omission itself: the default face's URL is DERIVABLE from
    * `faceKeys` and `faceSets`, which ship for the picture anyway, so carrying
    * it here would still be repetition. Every entry written here is still a page
@@ -103,8 +103,8 @@ export interface EncodedCardIndex {
    * every NON-default face, deliberately — the default one "is already in
    * `faceKeys`". True, and the omission made the default face the one printing
    * whose set was unknown, so a set-scoped search could resolve every art
-   * except the one it was most likely to want. Measured on this corpus: 2,329
-   * of the 5,193 cards are printed in more than one set, and ALL 2,329 have at
+   * except the one it was most likely to want. Measured on this corpus: 2,368
+   * of the 5,205 cards are printed in more than one set, and ALL 2,368 have at
    * least one set whose art differs from their default face — so every one of
    * them could show the wrong set's picture under a filter naming a set,
    * silently, and looking entirely correct.

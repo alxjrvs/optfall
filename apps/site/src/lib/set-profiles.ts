@@ -7,8 +7,8 @@
  * and until this module existed the only surface that computed any of it was
  * `/sets`, which counted names inline and used the number in one sentence.
  *
- * ONE PASS, AT BUILD TIME, FOR EVERY SET AT ONCE. The corpus is 5,193 cards and
- * 17,193 printings; walking it per set would be 116 walks for an answer that
+ * ONE PASS, AT BUILD TIME, FOR EVERY SET AT ONCE. The corpus is 5,205 cards and
+ * 17,291 printings; walking it per set would be 118 walks for an answer that
  * does not change between them. The same argument `set.page.tsx` makes for
  * building its route table once, applied to the numbers rather than to the
  * routes.
