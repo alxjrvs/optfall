@@ -17,7 +17,7 @@
  * compares, so a corpus refresh that changes the sample is a diff somebody
  * reviews rather than a fixture that silently describes last quarter's data.
  *
- * THE SELECTION IS COVERAGE-FIRST, NOT RANDOM. A random twenty out of 5,193 is
+ * THE SELECTION IS COVERAGE-FIRST, NOT RANDOM. A random twenty out of 5,205 is
  * ninety-five per cent ordinary cards: every pitch is 1, 2 or 3, nothing is
  * banned, nothing is double-faced, and an agent reasoning from it concludes the
  * shapes it never saw do not exist. So the buckets below claim one card each
@@ -119,7 +119,7 @@ for (const [, matches] of AXES) {
  *
  * The `|| 1` is not decoration. On a corpus smaller than `SAMPLE_SIZE` the
  * floor is 0, and `i += 0` never advances — so a shrunken or partially-built
- * corpus would hang this script rather than fail it. At 5,193 cards that is
+ * corpus would hang this script rather than fail it. At 5,205 cards that is
  * unreachable; it costs two characters to make it stay unreachable.
  */
 const stride = Math.floor(byId.length / SAMPLE_SIZE) || 1;

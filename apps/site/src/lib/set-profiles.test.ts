@@ -210,7 +210,7 @@ describe("names printed nowhere else", () => {
      * by whether the name has been seen. This collects the exclusive names into
      * a `Set` per set and takes its size — no counter, no guard, and therefore
      * no way to share the same mistake. A per-printing increment would exceed
-     * this on all 156 of Compendium of Rathe's names, which are printed more than
+     * this on all 155 of Compendium of Rathe's names, which are printed more than
      * once each; a per-VERSION increment would exceed it on every pitch cycle,
      * and that one is invisible to the `exclusive <= names` inequality above.
      */
@@ -249,7 +249,7 @@ describe("names printed nowhere else", () => {
     expect(disagreed).toEqual([]);
     /* And the set the paragraph above names, so the case is not vacuous if both
        derivations were ever to become the same one. */
-    expect(SET_PROFILES.get("PEN")?.exclusive).toBe(156);
+    expect(SET_PROFILES.get("PEN")?.exclusive).toBe(155);
   });
 });
 

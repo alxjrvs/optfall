@@ -15,7 +15,7 @@ tokens, faint-ink, bun-version, provenance, the no-language-model scan, the
 CI-aggregator assertion, typecheck and tests. Ordered cheapest first, so the
 commonest failures surface in under two seconds.
 
-The other three need a full 18,380-page build and are `bun run check:full`
+The other three need a full 18,478-page build and are `bun run check:full`
 (under 2 min): `build` itself, the `disclaimer`, `built-tokens`, `card-notice`
 and `a11y` checks that read its output, and `dev-server`.
 
@@ -185,7 +185,7 @@ deliberate.** A `Bash(bun run check:*)` wildcard reads as "the safe local
 checks" and is not: it also covers `check:symbols`, which re-fetches every game
 symbol from `rules.fabtcg.com`; `check:repo-settings`, which makes authenticated
 `gh api` calls against the live repository; and `check:face-orientation`, which
-makes **16,975 ranged requests against the live face host**. None is a loop
+makes **17,071 ranged requests against the live face host**. None is a loop
 command, and none should run without someone deciding to run it.
 
 This section said "the two that are not" until 2026-09-01 and named only the

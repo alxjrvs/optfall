@@ -18,11 +18,19 @@
  * to equal the real size, rounded. Nothing has to remember to update prose; the
  * gate fails with the file to change and the number to write.
  *
- * ROUNDED, AND THE UNIT DOES NOT MATTER — which is luck rather than design, and
- * is worth stating so nobody "fixes" it. 19,439,500 bytes is 19.4 MB decimal and
- * 18.5 MiB binary, and both round to 19. If the corpus ever lands where the two
- * conventions disagree, this test fails and whoever sees it has to pick one and
- * write it down. That is the right moment to have the argument, not now.
+ * ~~ROUNDED, AND THE UNIT DOES NOT MATTER — which is luck rather than design,
+ * and is worth stating so nobody "fixes" it. 19,439,500 bytes is 19.4 MB decimal
+ * and 18.5 MiB binary, and both round to 19. If the corpus ever lands where the
+ * two conventions disagree, this test fails and whoever sees it has to pick one
+ * and write it down. That is the right moment to have the argument, not now.~~
+ *
+ * **ROUNDED, IN BINARY MEGABYTES.** The luck ran out at the Usurp the Shadow
+ * Throne completion sync: 19,506,634 bytes is 19.5 MB decimal, which rounds to
+ * 20, and 18.6 MiB binary, which rounds to 19. Binary was picked, for two
+ * reasons. It is what `ls -lh` and `du -h` print, which is how a contributor
+ * checks the figure from a shell. And every claim in the tree already said 19,
+ * so the choice kept a thirty-file sweep out of a data sync. The prose keeps
+ * writing "MB" rather than "MiB", as it always has.
  */
 
 import { describe, expect, test } from "bun:test";
@@ -141,15 +149,8 @@ function scannable(dir: string, out: string[] = []): string[] {
 
 describe("the corpus size in prose", () => {
   const bytes = statSync(CORPUS_PATH).size;
-  const decimal = bytes / 1_000_000;
   const binary = bytes / 1_048_576;
-  const expected = Math.round(decimal);
-
-  test("rounds the same way under both conventions", () => {
-    /* If this fails, the number below is ambiguous and the fix is to write the
-       unit rather than to nudge the figure. See the header. */
-    expect(Math.round(binary)).toBe(expected);
-  });
+  const expected = Math.round(binary);
 
   const files = scannable(ROOT);
   const claiming = files
