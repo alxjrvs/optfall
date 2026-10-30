@@ -296,7 +296,7 @@ function pitchSegment(card: Card): string {
 }
 
 /** `0`, `1`, `2`, `3` or `4` — the jewel's own vocabulary. */
-export function pitchValueOf(card: Card): PitchValue {
+export function pitchValueOf(card: Pick<Card, "pitch">): PitchValue {
   return card.pitch === "1"
     ? 1
     : card.pitch === "2"

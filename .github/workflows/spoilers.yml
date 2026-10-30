@@ -1,0 +1,99 @@
+# Daily: rebuild `data/spoilers/spoilers.json` and open a pull request if it
+# changed.
+#
+# WHAT IT RUNS. `bun run spoilers` — see `scripts/build-spoilers.ts` for the
+# source and what counts as a spoiler. That script writes no timestamp of its
+# own, so an unchanged upstream is an empty diff and this job ends without
+# opening anything.
+#
+# A PULL REQUEST RATHER THAN A PUSH TO `main`, for two reasons. The ruleset on
+# `main` requires `CI Success`, so a direct push would be refused unless the
+# job were given a bypass; and a reveal is new text on a public page, which is
+# worth a glance before it ships. Every run reuses ONE branch,
+# `automation/spoilers`, force-pushed, so a week of reveals is one pull request
+# that keeps growing rather than seven.
+#
+# THE TOKEN, AND WHY THE DEFAULT ONE IS NOT ENOUGH ON ITS OWN. A pull request
+# opened or pushed with `GITHUB_TOKEN` does not trigger other workflows — a
+# GitHub rule that stops workflows recursing — so `ci.yml` would never run on it
+# and the required `CI Success` check would sit pending. Add a repository secret
+# `SPOILERS_TOKEN` (a fine-grained token with Contents and Pull requests write
+# on this repository) and this job uses it instead, which lets CI and the
+# preview deploy run as on any other PR. Without it the job still works; the PR
+# needs CI started by hand, and the repository setting "Allow GitHub Actions to
+# create and approve pull requests" must be on.
+#
+# This file is public and contains no secrets, and must never contain one.
+name: Spoilers
+
+on:
+  schedule:
+    # Once a day. The hour is arbitrary.
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: spoilers
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: update spoilers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BRANCH: automation/spoilers
+      GH_TOKEN: ${{ secrets.SPOILERS_TOKEN || github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ secrets.SPOILERS_TOKEN || github.token }}
+
+      - name: Set up
+        uses: ./.github/actions/setup
+        with:
+          install: "true"
+
+      - name: Rebuild spoilers
+        run: bun run spoilers
+
+      - name: Check the result
+        run: bun test apps/site/src/lib/spoilers.test.ts
+
+      - name: Open or update the pull request
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/spoilers; then
+            echo "No new spoilers."
+            exit 0
+          fi
+
+          # Skip a push that would change nothing: the branch is rebuilt from
+          # `main` each run, so without this an open PR would get a fresh,
+          # identical commit — and a fresh CI run — every day.
+          if git fetch --quiet origin "$BRANCH" 2>/dev/null &&
+            git diff --quiet FETCH_HEAD -- data/spoilers; then
+            echo "The open pull request already carries these spoilers."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add data/spoilers
+          count=$(bun -e 'console.log((await Bun.file("data/spoilers/spoilers.json").json()).counts.cards)')
+          git commit -m "Update spoilers ($count cards)"
+          git push --force origin "$BRANCH"
+
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create \
+              --head "$BRANCH" \
+              --base main \
+              --title "Update spoilers" \
+              --body "Daily rebuild of \`data/spoilers/spoilers.json\` from the upstream spoiler branches. See \`scripts/build-spoilers.ts\` for the source and \`/spoilers\` for the page."
+          fi

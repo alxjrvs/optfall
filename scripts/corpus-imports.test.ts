@@ -40,6 +40,7 @@ const READERS: Readonly<Record<string, string>> = {
   "apps/site/src/lib/cards.ts": "exports CORPUS, CARD_PAGES and CARD_ROUTES",
   "apps/site/src/lib/rules.ts": "exports CORPUS and the rule addressing",
   "apps/site/src/lib/sets.ts": "exports SETS",
+  "apps/site/src/lib/spoilers.ts": "exports SPOILERS and SPOILER_GROUPS",
   "apps/site/src/lib/card-symbols.ts": "exports the symbol lookup",
   /* Its own fixture generator: it reads the full corpus precisely so that
      everything else can read `sample.json` instead. */

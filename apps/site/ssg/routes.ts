@@ -36,6 +36,7 @@ import { rulePage } from "./pages/rule.page";
 import { setPage } from "./pages/set.page";
 import { searchPage } from "./pages/search.page";
 import { setsPage } from "./pages/sets.page";
+import { spoilersPage } from "./pages/spoilers.page";
 import { syntaxPage } from "./pages/syntax.page";
 import { renderRoute, resolveRoutes } from "./render";
 import type { PageModule } from "./types";
@@ -78,6 +79,7 @@ export const routes: readonly RouteRegistration[] = [
   register(dataTermsPage),
   register(syntaxPage),
   register(setsPage),
+  register(spoilersPage),
   register(setPage),
   register(crPage),
   register(rulePage),

@@ -54,6 +54,7 @@
     "check:face-orientation": "bun scripts/check-face-orientation.ts",
     "check:design-system": "bun test scripts/design-system-coverage.test.ts",
     "symbols": "bun scripts/ingest-game-symbols.ts",
+    "spoilers": "bun scripts/build-spoilers.ts",
     "corpus:rules": "bun scripts/build-rules-corpus.ts",
     "corpus:cards": "bun scripts/build-card-corpus.ts",
     "corpus:sets": "bun scripts/build-sets-corpus.ts",
