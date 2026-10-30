@@ -301,7 +301,7 @@ export async function iconPng(
  * literally spelled `display` is the one that says `standalone`.
  *
  * The intent is about what the site IS. Optfall's thesis is that every view is
- * a URL — 18,380 of them, each meant to be pasted. `standalone` removes the
+ * a URL — 18,478 of them, each meant to be pasted. `standalone` removes the
  * address bar, which removes the affordance the product is built around.
  * `minimal-ui` keeps a way to see and copy the URL while still installing to a
  * home screen.

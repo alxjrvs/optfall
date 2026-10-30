@@ -80,14 +80,14 @@ const VERSIONS_BY_NAME = ((): ReadonlyMap<
  * Every card page by its own address, for reaching a SIBLING's printings.
  *
  * A `CardLink` carries a name, a label, a pitch and one href — deliberately, so
- * that the four lists built out of them stay cheap across 5,193 cards. That is
+ * that the four lists built out of them stay cheap across 5,205 cards. That is
  * enough to LINK to a version and not enough to ask where else it was printed,
  * which is exactly what the version tabs need (see {@link addressInSet}). The
  * link's href IS the sibling's default address, and `CardPage.href` is built by
  * the same function from the same face, so it is a key rather than a guess.
  *
  * Module scope, like the keyword vocabulary above it: a fact about the corpus,
- * built once, not once per each of 16,977 pages.
+ * built once, not once per each of 17,073 pages.
  */
 const PAGE_BY_HREF: ReadonlyMap<string, CardPage> = new Map(
   CARD_PAGES.map((entry) => [entry.href, entry] as const),

@@ -29,7 +29,7 @@
  *
  * THE DECODE HAPPENS IN THE `queryFn`, NOT IN A `useMemo` OVER THE RESULT, and
  * that is the one performance decision in this file. `decodeIndex` walks 1,278
- * sections and `decodeCardIndex` walks 5,193 cards; doing either per render is
+ * sections and `decodeCardIndex` walks 5,205 cards; doing either per render is
  * the difference between a field that feels instant and one that does not, which
  * is the same reasoning the `useMemo` it replaces already carried. What the query
  * caches is therefore the DECODED index — the encoded form is a wire format and

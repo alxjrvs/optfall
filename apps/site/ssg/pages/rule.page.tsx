@@ -36,7 +36,7 @@
  *
  * THE HEAVIEST ROUTE IN THE PORT SO FAR, and the reason it is worth naming: the
  * keyword vocabulary and the card↔rule join are built ONCE at module scope. This
- * route emits 1,278 pages; rebuilding a 5,193-card index for each would be that
+ * route emits 1,278 pages; rebuilding a 5,205-card index for each would be that
  * work 1,278 times for an answer that does not change. Astro's frontmatter runs
  * per page and the original had the same note; module scope means the same thing
  * in both.

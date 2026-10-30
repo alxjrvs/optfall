@@ -3,11 +3,11 @@
   "source": {
     "repository": "the-fab-cube/flesh-and-blood-cards",
     "path": "json/english/card.json",
-    "commit": "01fc9344a612a41e5dc451ccc1422050a25a2667",
-    "committedAt": "2026-09-30T03:20:59Z",
-    "url": "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/01fc9344a612a41e5dc451ccc1422050a25a2667/json/english/card.json",
-    "bytes": 24436125,
-    "sha256": "06efd3ec22a15fee54c1640d036bb76160391d5d0ba313bb38627d9dbdf75136"
+    "commit": "74f8b5ff1d24d7669e84635e237713a931943b1e",
+    "committedAt": "2026-10-20T02:58:30Z",
+    "url": "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/74f8b5ff1d24d7669e84635e237713a931943b1e/json/english/card.json",
+    "bytes": 24522074,
+    "sha256": "a6a32059cad072d6bd0b5ef39678a9d43f9d97250719425ee54f7a70bc05a4b9"
   },
   "rights": "Card names, card text and card images are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. This dataset displays that content under LSS's third-party application policy and does not relicense it. Only Optfall's structural work over the dataset — the field selection, the upstream pin and this envelope — is openly licensed. The upstream compilation is https://github.com/the-fab-cube/flesh-and-blood-cards, which publishes no licence of its own.",
   "sample": {
@@ -35,26 +35,10 @@
     "ll_restricted",
     "ll_restricted_affects_full_cycle"
   ],
-  "unprinted": [
-    {
-      "unique_id": "98CqQctT9798DjgnBQ6Fg",
-      "name": "Rise to the Challenge",
-      "pitch": "1"
-    },
-    {
-      "unique_id": "rqqhfk6QgmJCNkQNGhqNg",
-      "name": "Rise to the Challenge",
-      "pitch": "2"
-    },
-    {
-      "unique_id": "wQNrNhFfjBdkDnQ8QkJqq",
-      "name": "Rise to the Challenge",
-      "pitch": "3"
-    }
-  ],
+  "unprinted": [],
   "counts": {
     "cards": 20,
-    "printings": 93,
+    "printings": 94,
     "names": 20
   },
   "cards": [
@@ -1874,18 +1858,18 @@
       ]
     },
     {
-      "unique_id": "7zdfJDbhwjMnMNqkDJ9Qb",
-      "name": "Savage Swing",
+      "unique_id": "7zjjndpnJwKGK9gLzmzKq",
+      "name": "Vexing Malice",
       "color": "Blue",
       "pitch": "3",
       "cost": "1",
-      "power": "5",
+      "power": "1",
       "defense": "3",
       "health": "",
       "intelligence": "",
-      "arcane": "",
+      "arcane": "2",
       "types": [
-        "Brute",
+        "Runeblade",
         "Action",
         "Attack"
       ],
@@ -1896,14 +1880,14 @@
       "granted_keywords": [],
       "removed_keywords": [],
       "interacts_with_keywords": [],
-      "functional_text": "As an additional cost to play this, discard a random card.",
-      "type_text": "Brute Action - Attack",
+      "functional_text": "When this attacks, deal 2 arcane damage to target hero.",
+      "type_text": "Runeblade Action - Attack",
       "played_horizontally": false,
       "referenced_cards": [],
       "legality": {
         "blitz_legal": true,
         "cc_legal": true,
-        "commoner_legal": true,
+        "commoner_legal": false,
         "ll_legal": true,
         "silver_age_legal": true,
         "blitz_living_legend": false,
@@ -1921,94 +1905,130 @@
       },
       "printings": [
         {
-          "unique_id": "kmCjdw6mDQMzcGQTwQb8f",
-          "id": "1HP033",
-          "set_id": "1HP",
+          "unique_id": "jqJqgr9cLWMNzk7JBbLGR",
+          "id": "LGS059",
+          "set_id": "LGS",
+          "edition": "N",
+          "foiling": "R",
+          "rarity": "P",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS059-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "250027",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/250027?Language=English&Printing=Rainbow+Foil"
+        },
+        {
+          "unique_id": "mmkbtgRtHWrK8JqgfCwjq",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "F",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MON234.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "rPMwTCLqQ8r7zQbtgcknr",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "F",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MON234-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "pkhqMMzhMQNkTzdQW6FNQ",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-MON234.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "cktnBQBPCC7zqNzN6rJbq",
+          "id": "MON234",
+          "set_id": "MON",
+          "edition": "U",
+          "foiling": "R",
+          "rarity": "R",
+          "expansion_slot": false,
+          "artists": [
+            "Henrique Lindner"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-MON234-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "237878",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "dR9KF9p9fkNrHQRfg6b6f",
+          "id": "SBW032",
+          "set_id": "SBW",
           "edition": "N",
           "foiling": "S",
-          "rarity": "C",
+          "rarity": "R",
           "expansion_slot": false,
           "artists": [
-            "Yulia Litvinova"
+            "Henrique Lindner"
           ],
           "art_variations": [],
-          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/1HP033.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "271284",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/271284?Language=English&Printing=Normal"
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SBW032.webp",
+          "image_rotation_degrees": 0
         },
         {
-          "unique_id": "cKhQFjbHKRDhfm6KNmfNL",
-          "id": "WTR022",
-          "set_id": "WTR",
-          "edition": "A",
+          "unique_id": "BFbh6QtPWB8PMDWgbGfcj",
+          "id": "SVI028",
+          "set_id": "SVI",
+          "edition": "N",
           "foiling": "S",
-          "rarity": "C",
+          "rarity": "R",
           "expansion_slot": false,
           "artists": [
-            "Yulia Litvinova"
+            "Henrique Lindner"
           ],
           "art_variations": [],
-          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/WTR022.webp",
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SVI028.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225039",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=1st+Edition+Normal"
-        },
-        {
-          "unique_id": "WhdKzKcMBWg8RhrpDb6Dd",
-          "id": "WTR022",
-          "set_id": "WTR",
-          "edition": "A",
-          "foiling": "R",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Yulia Litvinova"
-          ],
-          "art_variations": [],
-          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/WTR022-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225039",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=1st+Edition+Rainbow+Foil"
-        },
-        {
-          "unique_id": "zctTTwb6Gf6wtKMQpHrtQ",
-          "id": "WTR022",
-          "set_id": "WTR",
-          "edition": "U",
-          "foiling": "S",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Yulia Litvinova"
-          ],
-          "art_variations": [],
-          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-WTR022.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225039",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=Unlimited+Edition+Normal"
-        },
-        {
-          "unique_id": "W9WcrLPBQNMqCLCCFkwtk",
-          "id": "WTR022",
-          "set_id": "WTR",
-          "edition": "U",
-          "foiling": "R",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Yulia Litvinova"
-          ],
-          "art_variations": [],
-          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-WTR022-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225039",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+          "tcgplayer_product_id": "676830",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/676830?Language=English&Printing=Normal"
         }
       ]
     },
@@ -2595,12 +2615,12 @@
       ]
     },
     {
-      "unique_id": "CptjnpckCjtKHPhLPNKBq",
+      "unique_id": "cpWqf8tmzQgqmrPqc9hbM",
       "name": "Timidity Point",
-      "color": "Red",
-      "pitch": "1",
+      "color": "Blue",
+      "pitch": "3",
       "cost": "1",
-      "power": "5",
+      "power": "3",
       "defense": "3",
       "health": "",
       "intelligence": "",
@@ -2643,8 +2663,8 @@
       },
       "printings": [
         {
-          "unique_id": "h6GftttBNf9kqJBkG8HCL",
-          "id": "EVR097",
+          "unique_id": "PQWBMtmbQJfBzgtkHTn8T",
+          "id": "EVR099",
           "set_id": "EVR",
           "edition": "F",
           "foiling": "S",
@@ -2655,14 +2675,14 @@
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR097.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR099.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "261447",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/261447?Language=English&Printing=1st+Edition+Normal"
+          "tcgplayer_product_id": "261449",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/261449?Language=English&Printing=1st+Edition+Normal"
         },
         {
-          "unique_id": "hLPb98dRCqpPcKrBjCJDP",
-          "id": "EVR097",
+          "unique_id": "kkFtCnPP6mdjHLChPmMCG",
+          "id": "EVR099",
           "set_id": "EVR",
           "edition": "F",
           "foiling": "R",
@@ -2673,42 +2693,46 @@
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR097-RF.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR099-RF.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "261447",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/261447?Language=English&Printing=1st+Edition+Rainbow+Foil"
+          "tcgplayer_product_id": "261449",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/261449?Language=English&Printing=1st+Edition+Rainbow+Foil"
         }
       ]
     },
     {
-      "unique_id": "dLdBfMKhPbj8qppT6LgdL",
-      "name": "Bittering Thorns",
+      "unique_id": "dLHqbBN9bkQ6DtLtprJ7g",
+      "name": "Showdown",
       "color": "Red",
       "pitch": "1",
       "cost": "1",
-      "power": "4",
-      "defense": "2",
+      "power": "",
+      "defense": "3",
       "health": "",
       "intelligence": "",
       "arcane": "",
       "types": [
-        "Ninja",
-        "Action",
-        "Attack"
+        "Warrior",
+        "Action"
       ],
       "traits": [],
       "card_keywords": [
-        "Go again"
+        "Go again",
+        "Wager"
       ],
       "abilities_and_effects": [],
       "ability_and_effect_keywords": [],
       "granted_keywords": [],
       "removed_keywords": [],
-      "interacts_with_keywords": [],
-      "functional_text": "When this hits, your next attack this turn gets +1{p}.\n\n**Go again**",
-      "type_text": "Ninja Action - Attack",
+      "interacts_with_keywords": [
+        "Wager"
+      ],
+      "functional_text": "Your next sword attack this turn gets +3{p} and \"When this attacks, **wager** with the defending hero. The winner creates a Flurry token.\"\n\n**Go again**",
+      "type_text": "Warrior Action",
       "played_horizontally": false,
-      "referenced_cards": [],
+      "referenced_cards": [
+        "jdkmHT8QfQmMbPLBHPrHJ"
+      ],
       "legality": {
         "blitz_legal": true,
         "cc_legal": true,
@@ -2730,58 +2754,40 @@
       },
       "printings": [
         {
-          "unique_id": "BQCmtBCMPQmtdqj7WTHbp",
-          "id": "ASR007",
-          "set_id": "ASR",
+          "unique_id": "FDhfchr8zhdnbbh7LRbFQ",
+          "id": "MPW126",
+          "set_id": "MPW",
           "edition": "N",
           "foiling": "S",
           "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Maerel Hibadita"
+            "M Fakhrur Rozzi"
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ASR007.webp",
-          "image_rotation_degrees": 0
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPW126.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "708972",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/708972?Language=English&Printing=Normal"
         },
         {
-          "unique_id": "Qj9nLNK6cDcKPWdDbkDMn",
-          "id": "LGS445",
-          "set_id": "LGS",
+          "unique_id": "jd7987wntgGqChBdQD79G",
+          "id": "MPW126",
+          "set_id": "MPW",
           "edition": "N",
           "foiling": "R",
-          "rarity": "P",
-          "expansion_slot": false,
-          "artists": [
-            "Maerel Hibadita"
-          ],
-          "art_variations": [
-            "EA"
-          ],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS445-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "686343",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/686343?Language=English&Printing=Rainbow+Foil"
-        },
-        {
-          "unique_id": "FnzzFRkBQbMTddQpfHtdk",
-          "id": "TCC083",
-          "set_id": "TCC",
-          "edition": "N",
-          "foiling": "S",
           "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Maerel Hibadita"
+            "M Fakhrur Rozzi"
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/TCC083.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPW126-RF.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "517473",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/517473?Language=English&Printing=Normal"
+          "tcgplayer_product_id": "708972",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/708972?Language=English&Printing=Rainbow+Foil"
         }
       ]
     },

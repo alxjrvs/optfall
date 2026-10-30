@@ -370,7 +370,7 @@ export function CardSearch({
    *
    * `LLM_STATEMENT.md`'s rule — where Optfall does not know something it says
    * so — is the whole of this distinction. The empty-result copy names a
-   * number — "Nothing in the 5,193 cards matches" —
+   * number — "Nothing in the 5,205 cards matches" —
    * so rendering it while the index is in flight is not a vague inaccuracy, it
    * is a specific claim about a corpus that has not been read yet.
    */
@@ -978,7 +978,7 @@ export function CardSearch({
         <>
           {/*
             DEGRADE VISIBLY. Every card is still addressable — that is what the
-            18,380 pages are for, and it does not depend on the index — so the
+            18,478 pages are for, and it does not depend on the index — so the
             failure is stated alongside the routes that still work rather than
             as a bare apology, and the browse is drawn under it for the same
             reason: those links are ordinary hrefs and they never needed an

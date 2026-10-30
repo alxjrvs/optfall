@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "source": {
     "repository": "the-fab-cube/flesh-and-blood-cards",
-    "commit": "01fc9344a612a41e5dc451ccc1422050a25a2667",
+    "commit": "74f8b5ff1d24d7669e84635e237713a931943b1e",
     "files": [
       "set.json",
       "rarity.json",
@@ -12,8 +12,8 @@
   },
   "rights": "Set names are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. Only Optfall's structural work over this data — the field selection, the upstream pin and this envelope — is openly licensed.",
   "counts": {
-    "sets": 122,
-    "dated": 105
+    "sets": 124,
+    "dated": 107
   },
   "decode": {
     "rarity": {
@@ -866,6 +866,15 @@
       ]
     },
     {
+      "id": "SAT",
+      "name": "Silver Age - Prism, Advent of Thrones",
+      "released": "2026-09-18",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
       "id": "SAZ",
       "name": "Silver Age Chapter 2 - Azalea",
       "released": "2026-02-13",
@@ -896,6 +905,15 @@
       "id": "SBR",
       "name": "Silver Age Chapter 1 - Bravo, Flattering Showman",
       "released": "2026-02-13",
+      "outOfPrint": false,
+      "editions": [
+        "N"
+      ]
+    },
+    {
+      "id": "SBW",
+      "name": "Silver Age - Viserai, Between Worlds",
+      "released": "2026-09-18",
       "outOfPrint": false,
       "editions": [
         "N"

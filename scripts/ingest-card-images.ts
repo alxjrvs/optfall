@@ -46,6 +46,11 @@
  *   op run --env-file=scripts/.env.r2 -- bun scripts/ingest-card-images.ts
  *
  * A resolved secret that reaches stdout is a secret in a transcript.
+ *
+ * IT ALSO RUNS ON EVERY PRODUCTION DEPLOY that touches `data/`: the `faces` job
+ * in `.github/workflows/deploy-cloudflare.yml`, which skips until the three
+ * variables above exist as repository secrets. Run it by hand to backfill an
+ * empty bucket, or to retry what a deploy reported as unavailable.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

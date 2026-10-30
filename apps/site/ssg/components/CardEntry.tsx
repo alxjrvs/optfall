@@ -107,7 +107,7 @@ export interface CardEntryProps {
   readonly selected?: number;
 }
 
-/** The keyword vocabulary, built once for all 16,977 card pages. */
+/** The keyword vocabulary, built once for all 17,073 card pages. */
 const KEYWORD_VOCABULARY = buildKeywordVocabulary(RULES_CORPUS);
 
 /*
@@ -196,7 +196,7 @@ const PERMANENT_STATS = ["Life", "Intellect"] as const;
  * met on the card in their hand and, a few lines up this same page, inline in
  * its printed text. The card labels none of them, and neither does this: a word
  * beside a symbol a reader already knows is a translation of a language they
- * already speak, set 16,977 times in the tightest line on the page.
+ * already speak, set 17,073 times in the tightest line on the page.
  *
  * WHAT CARRIES THE WORD NOW. `StatGlyph` is `role="img"` with the stat spelled
  * out — "Power 4", "No printed power" — so nothing was lost for a reader
@@ -719,7 +719,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
    * disagree with the picture above it.
    *
    * SPLIT AT THE SET PREFIX, NOT COMPOSED FROM TWO FIELDS. Upstream's collector
-   * number already carries the set code (`1HP` + `101` — true of all 17,193
+   * number already carries the set code (`1HP` + `101` — true of all 17,291
    * printings in this corpus), so setting `id` whole after the set's name would
    * read `History Pack 1 #1HP101`. Where a number does NOT start with its set
    * code the whole of it is printed, because slicing off a prefix that is not
@@ -915,7 +915,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
     /*
      * `editionLabel` RETURNS `null`, NOT `undefined`, and the two are not
      * interchangeable here. `N` — "no specified edition", and the commonest
-     * edition in the corpus at 12,243 of 17,193 printings — comes back as
+     * edition in the corpus at 12,341 of 17,291 printings — comes back as
      * `null`, so a filter that only drops `undefined` leaves it in and `join`
      * renders it as an empty segment: "buy MST131, , Standard". The printings
      * table handles the same absence one column over, as `?? "—"`.
@@ -1057,7 +1057,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             step it exists for. `/search` is where such a card is found.
 
             NO PAGE IN THE PINNED CORPUS TAKES THAT BRANCH — counted on the
-            build, 0 of 16,977 card pages. It is defence against a field
+            build, 0 of 17,073 card pages. It is defence against a field
             upstream can leave empty, not a case the site is known to have, and
             saying so here is cheaper than the next reader measuring it again.
           */}
@@ -1820,7 +1820,7 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
       {/*
         THE SOURCE FOLD IS GONE, and it is deleted rather than collapsed.
 
-        Seven rows of hashes, URLs and a pinned commit, identical on all 16,977
+        Seven rows of hashes, URLs and a pinned commit, identical on all 17,073
         card pages — the corpus envelope, not a claim about this card. `/about`
         already states it once, with the file path and the commit, which is the
         version a reader can act on; repeating it under every card was the same

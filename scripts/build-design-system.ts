@@ -1737,7 +1737,7 @@ cards.push({
     </div>
     <p class="note" style="margin-block-start:var(--of-space-tight)"><code>pitch:3 class:guardian</code> is Card Vault's own syntax · <code>banned:cc</code> is ours · <code>/</code> returns here.</p>
     <div style="display:flex;flex-wrap:wrap;gap:var(--of-space-base) var(--of-space-looser);margin-block-start:var(--of-space-loosest);font-size:var(--of-type-size-small)">
-      <span style="color:var(--of-color-accent)">Browse all 5,193 cards</span>
+      <span style="color:var(--of-color-accent)">Browse all 5,205 cards</span>
       <span style="color:var(--of-color-accent)">Search the rules</span>
       <span style="color:var(--of-color-accent)">A card that is two things at once</span>
       <span style="color:var(--of-color-accent)">A rules permalink</span>

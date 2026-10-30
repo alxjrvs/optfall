@@ -30,7 +30,7 @@ function statMatches(printed: string, wanted: string): boolean {
  *
  * `text` is deliberately absent from this switch and is asserted against below:
  * it is the only filter answered by the inverted index rather than by a scan,
- * so resolving it per card would redo a postings walk 5,193 times per keystroke.
+ * so resolving it per card would redo a postings walk 5,205 times per keystroke.
  * `searchCards` in `./rank` resolves each text filter to a set once and tests
  * membership. A `text` filter reaching here would be a routing bug, and it
  * throws rather than quietly answering `false` — a silent `false` on a filter
@@ -89,7 +89,7 @@ export function passesFilter(
  * A printed stat compared against a number.
  *
  * ONLY NUMERIC VALUES TAKE PART, and that is the honest reading rather than a
- * limitation. 5,193 printed costs include `X`, `XX`, `X1` and the empty string;
+ * limitation. 5,205 printed costs include `X`, `XX`, `X1` and the empty string;
  * those have no place in an order, so `cost>=3` does not match them. The old
  * engine refused comparisons outright for this reason — a stated partial order
  * is strictly better than no answer, and the notice says which one is being

@@ -236,7 +236,7 @@ export function placeholderUrl(
  * KEEPING IT HONEST. `bun run check:face-orientation` re-measures the live
  * store against this list. It is deliberately NOT part of `bun run check` and
  * NOT pre-approved in `.claude/settings.json`, for the reason `check:symbols`
- * is not: it makes one request per face key — 16,975 at 01fc934. Run it after
+ * is not: it makes one request per face key — 17,071 at 74f8b5f. Run it after
  * a corpus sync, and after the ingest that fills the store for it.
  *
  * `apps/images/src/face.ts` carries the same list, for the same

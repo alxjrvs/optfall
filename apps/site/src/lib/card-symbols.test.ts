@@ -160,7 +160,7 @@ describe("parsing card text loses nothing", () => {
   test("every card's parse round-trips to its own printed text", () => {
     // THE ONE TEST THAT MATTERS. A renderer for a reference work is only
     // trustworthy if it provably cannot drop, reorder or invent a character —
-    // so the parse is flattened back to source and compared against all 5,193
+    // so the parse is flattened back to source and compared against all 5,205
     // cards, with only the list markers and the trim allowed to differ.
     const damaged: string[] = [];
 

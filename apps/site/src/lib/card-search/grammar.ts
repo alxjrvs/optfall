@@ -618,7 +618,7 @@ const WORD_VALUED: ReadonlySet<CardFilter["field"]> = new Set([
  * Parse the query into free terms and filters.
  *
  * COMPARISONS ARE NAMED AS UNSUPPORTED RATHER THAN GUESSED AT. `cost>=3` reads
- * like it should work, and it cannot here: 5,193 printed costs include `X`,
+ * like it should work, and it cannot here: 5,205 printed costs include `X`,
  * `XX`, `X1` and the empty string, so "greater than" has no total order over
  * the values this corpus actually carries. A silent no-op would be the worst of
  * the three options, so it produces a notice.

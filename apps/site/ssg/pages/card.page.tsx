@@ -1,5 +1,5 @@
 /**
- * The `/card/` route — 16,977 URLs, every one of them a printing.
+ * The `/card/` route — 17,073 URLs, every one of them a printing.
  *
  * `docs/DESIGN.md` keeps Scryfall's **"Every view is a URL"**, and a card page
  * that cannot be linked is a lookup rather than a reference.
@@ -77,7 +77,7 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
    * A printing page is a VIEW of a card, not a second card. It carries the same
    * name, rules text, legality and rulings as every other printing of it; one
    * image differs. That is a near-duplicate by every measure a search engine
-   * has, and there are 11,784 non-default ones — enough to bury the 5,193 pages
+   * has, and there are 11,868 non-default ones — enough to bury the 5,205 pages
    * that are the actual index if each competed on its own.
    *
    * WHAT IS DIFFERENT IS WHERE THEY POINT. They used to canonical to
@@ -89,14 +89,14 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
    *
    * A REVIEWER MAY WANT THE OTHER SIDE OF THIS. Scryfall lets every printing
    * self-canonical and indexes all of them. Doing that here is deleting this
-   * block; the trade is 16,977 competing near-duplicates against 5,193 pages
+   * block; the trade is 17,073 competing near-duplicates against 5,205 pages
    * that each stand for a card.
    */
   const canonical = route.isDefault ? undefined : card.href;
 
   /**
    * A PRINTING PAGE SAYS WHICH PRINTING IN ITS TITLE, and it has to. Every one
-   * of the 16,977 shares a name with the card. A browser with three of them
+   * of the 17,073 shares a name with the card. A browser with three of them
    * open, a bookmark bar, a pasted link's preview card — each shows the title
    * and nothing else.
    *
@@ -104,7 +104,7 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
    * That page is where the card LIVES: it is what every search result, every
    * reference link and every redirected old URL opens, so its title is the
    * card's title. Qualifying it would put a set code in front of a reader who
-   * never chose a printing, on the 5,193 pages most likely to be seen.
+   * never chose a printing, on the 5,205 pages most likely to be seen.
    */
   const title = route.isDefault
     ? titleFor(card)

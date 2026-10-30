@@ -86,7 +86,7 @@ jobs:
       # is visible in a preview and invisible in a diff, which is why this repo
       # cares about them more than most. Cloudflare noindexes Pages preview
       # deployments automatically; it does NOT do that for Workers preview URLs,
-      # so a preview would otherwise be a second indexable copy of all 18,380
+      # so a preview would otherwise be a second indexable copy of all 18,478
       # pages — the duplication the canonical tags exist to prevent.
       #
       # `OPTFALL_PREVIEW` makes the build merge `X-Robots-Tag: noindex` into the
@@ -200,3 +200,59 @@ jobs:
             exit 0
           fi
           bunx wrangler deploy -c apps/images/wrangler.jsonc
+
+  faces:
+    name: card faces (R2)
+    runs-on: ubuntu-latest
+    # Generous for an incremental run, which touches only the faces a sync
+    # added (96 for the Usurp the Shadow Throne completion). An empty bucket
+    # would need far longer than this, and backfilling one is a job for a
+    # person at a terminal, not for a deploy.
+    timeout-minutes: 60
+    # PRODUCTION ONLY, for the reason `images` gives: a preview has nowhere
+    # separate to put licensed art, and this writes to the live bucket.
+    #
+    # WHY IT RUNS ON DEPLOY. Until this job existed, every corpus sync shipped
+    # pages for faces the bucket did not have yet, and they showed NO IMAGE
+    # until someone remembered to run the ingest by hand. The path filter above
+    # already triggers on `data/**`, so the merge that brings new cards in also
+    # fills their faces.
+    #
+    # It runs beside `site` rather than before it. For the minute or two it
+    # takes, the new pages render NO IMAGE, which is the state they would be in
+    # anyway, and making the site deploy wait on LSS's CDN would let a slow
+    # upstream hold back a legality fix.
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up
+        uses: ./.github/actions/setup
+        with:
+          install: "true"
+
+      # The script is idempotent: it lists the bucket once and skips every key
+      # already there, so a merge that added no faces costs one LIST and exits.
+      # It fails the job on a key clash or on transient failures above 2%, and
+      # never on upstream's own 403s. See its docblock.
+      #
+      # SKIPS RATHER THAN FAILS WITHOUT THE R2 KEYS, for the same reason every
+      # job here skips without `CLOUDFLARE_API_TOKEN`. R2's S3 API needs its own
+      # access key pair; the deploy token cannot write objects. The values are
+      # passed through the environment and the script never prints them.
+      - name: Ingest new faces
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] \
+            || [ -z "${R2_ACCESS_KEY_ID:-}" ] \
+            || [ -z "${R2_SECRET_ACCESS_KEY:-}" ]; then
+            echo "::notice::R2 keys are not set — skipping the face ingest."
+            echo "Add CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY to enable it."
+            exit 0
+          fi
+          bun scripts/ingest-card-images.ts
