@@ -168,7 +168,7 @@ export function Document({
         */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
-        <meta name="theme-color" content={THEME_COLOUR} />
+        <meta name="theme-color" content={result.themeColour ?? THEME_COLOUR} />
         {/*
           PROOF OF OWNERSHIP, FOR IMPACT, AND IT SITS IN THE SHELL FOR THE SAME
           REASON THE DISCLAIMER SITS IN THE FOOTER. A verifier fetches whichever
