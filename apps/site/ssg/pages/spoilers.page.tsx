@@ -6,31 +6,48 @@
  * `scripts/build-spoilers.ts` for where it comes from and what counts as a
  * spoiler. This page only lays it out.
  *
- * ONE PAGE, NO CARD PAGES. A spoiled card is listed here in full — name,
- * pitch, stats, type line and printed text — and has no `/card/…` URL of its
- * own. Every card URL is meant to be a permanent, citable address, and a card
- * whose text can still change before release is not one yet. When the set
- * releases and the corpus syncs, the card gets its page and leaves this one.
+ * A VISUAL SPOILER: A GRID OF FACES, ONE CELL PER CARD. A set's reveals are
+ * read the way a reader meets them everywhere else — as pictures of cards —
+ * so each set is a grid at the density `CardIndex` draws, with the collector
+ * number and rarity under each face and the card's text one click away.
  *
- * NO FACES. Card images are served from our own host after an ingest that
- * applies the copyright line at the serving boundary (`docs/COMPLIANCE.md` §5),
- * and that ingest runs on the released corpus. Hotlinking LSS's bucket from here
- * would be the one image on the site outside that arrangement.
+ * THE TEXT STAYS ON THE PAGE, folded under each face. The face is a picture
+ * of the text, and a picture is no help to a screen reader, to search, or to a
+ * reader whose face has not reached our host yet; the folded text is all three
+ * of those. Closed `<details>` keep the grid a grid.
+ *
+ * ONE PAGE, NO CARD PAGES. A spoiled card has no `/card/…` URL of its own.
+ * Every card URL is meant to be a permanent, citable address, and a card whose
+ * text can still change before release is not one yet. When the set releases
+ * and the corpus syncs, the card gets its page and leaves this one — so no
+ * cell is a link.
+ *
+ * FACES COME FROM OUR HOST, NEVER LSS'S BUCKET. The daily job that rebuilds the
+ * data merges into `main`, and that push runs the face ingest
+ * (`scripts/ingest-card-images.ts`), which copies each spoiled face under a key
+ * of its own — `spoilerFaceKeyFor` in `faces.ts` says why it is not the
+ * released card's key. Until the ingest has run, the host answers with its NO
+ * IMAGE placeholder, which is the right shape and says what is true. Every
+ * spoiled face is drawn portrait: none is in `LANDSCAPE_FACE_KEYS`, because
+ * that list is measured from the store and these keys were never in it.
  *
  * GROUPED BY SET, soonest release first and undated sets after, which is the
  * file's own set order. A card reprinted across two upcoming products — an
  * Armory Deck hero that is also a Marvel in the booster — is listed under both.
  */
 
-import { FactChip, PitchBox } from "optfall-components/react";
+import { CardFace, FactChip, PitchBox } from "optfall-components/react";
 
 import { pitchValueOf } from "../../src/lib/cards";
+import { FACE_TIERS, faceUrl, placeholderUrl } from "../../src/lib/faces";
 import {
   printingLabel,
+  spoilerFaceKey,
   SPOILER_GROUPS,
   SPOILERS,
   SPOILERS_AS_OF,
   type SpoilerCard,
+  type SpoilerPrinting,
 } from "../../src/lib/spoilers";
 import { PrintedText } from "../components/PrintedText";
 import type { PageModule, PageResult } from "../types";
@@ -73,6 +90,58 @@ function Stats({ card }: { readonly card: SpoilerCard }) {
         />
       ))}
     </dl>
+  );
+}
+
+/**
+ * The box every face declares — the `normal` tier, as `CardIndex`'s grid asks
+ * for, because a cell is drawn wider than `thumb` and a third of an upscale is
+ * a blurred card.
+ */
+const FACE_BOX = FACE_TIERS.normal;
+
+/** The name, with ` (pitch 1)` after it where the card has a pitch. */
+function altFor(card: SpoilerCard): string {
+  return card.pitch === "" ? card.name : `${card.name} (pitch ${card.pitch})`;
+}
+
+function Cell({
+  card,
+  printings,
+}: {
+  readonly card: SpoilerCard;
+  readonly printings: readonly SpoilerPrinting[];
+}) {
+  const key = spoilerFaceKey(printings);
+  return (
+    <li className="of-spoilers__cell">
+      <CardFace
+        src={key === null ? placeholderUrl("portrait") : faceUrl(key, "normal")}
+        alt={altFor(card)}
+        width={FACE_BOX.width}
+        height={FACE_BOX.height}
+        loading="lazy"
+      />
+      <p className="of-spoilers__meta">
+        {printings.map(printingLabel).join(", ")}
+      </p>
+      <details className="of-spoilers__text">
+        <summary>
+          {card.name}
+          {card.pitch === "" ? null : (
+            <>
+              {" "}
+              <PitchBox value={pitchValueOf(card)} size="sm" />
+            </>
+          )}
+        </summary>
+        <p className="of-spoilers__meta">{card.type_text}</p>
+        <Stats card={card} />
+        {card.functional_text === "" ? null : (
+          <PrintedText text={card.functional_text} />
+        )}
+      </details>
+    </li>
   );
 }
 
@@ -127,27 +196,13 @@ function page(): PageResult {
                 · {cards.length} {cards.length === 1 ? "card" : "cards"}
               </p>
 
-              <ul className="of-spoilers__list">
+              <ul className="of-spoilers__grid">
                 {cards.map(({ card, printings }) => (
-                  <li className="of-spoilers__card" key={card.unique_id}>
-                    <h3 className="of-spoilers__name">
-                      {card.name}
-                      {card.pitch === "" ? null : (
-                        <>
-                          {" "}
-                          <PitchBox value={pitchValueOf(card)} size="sm" />
-                        </>
-                      )}
-                    </h3>
-                    <p className="of-spoilers__meta">
-                      {card.type_text} ·{" "}
-                      {printings.map(printingLabel).join(", ")}
-                    </p>
-                    <Stats card={card} />
-                    {card.functional_text === "" ? null : (
-                      <PrintedText text={card.functional_text} />
-                    )}
-                  </li>
+                  <Cell
+                    key={card.unique_id}
+                    card={card}
+                    printings={printings}
+                  />
                 ))}
               </ul>
             </section>

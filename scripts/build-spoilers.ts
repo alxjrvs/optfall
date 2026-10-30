@@ -45,11 +45,18 @@
  * outcome: its text is not news, and it already has a card page.
  *
  * WHAT IS CARRIED. Enough to read the card — name, pitch, stats, types and
- * printed text — and the collector number and rarity of each printing in an
- * unreleased set. No legality (an unreleased card is legal nowhere yet), no
- * images (faces are served from our own host after an ingest this does not
- * run), no artists or flavour text. Field names are upstream's, verbatim, as
- * in the card corpus.
+ * printed text — and the collector number, rarity and image URL of each
+ * printing in an unreleased set. No legality (an unreleased card is legal
+ * nowhere yet), no artists or flavour text. Field names are upstream's,
+ * verbatim, as in the card corpus.
+ *
+ * THE IMAGE URL IS UPSTREAM'S, AND NOTHING SHOWS IT. It is LSS's own bucket,
+ * exactly as in the card corpus, and it is here so that
+ * `scripts/ingest-card-images.ts` can copy the face onto our own host — which
+ * it does on the deploy this file's merge triggers. `/spoilers` asks our host
+ * for the face, never this URL; see `spoilerFaceKeyFor` in
+ * `apps/site/src/lib/faces.ts` for why a spoiler's face is kept apart from the
+ * face the same card gets once it releases.
  *
  * NO TIMESTAMP OF OUR OWN. The only dates written are the upstream commits'
  * own, so an unchanged upstream yields a byte-identical file and the daily job
@@ -71,7 +78,7 @@ import { dirname, join } from "node:path";
 import { ROOT } from "./lib/root";
 
 /** Bumped when the shape of the file changes. */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 const UPSTREAM_REPOSITORY = "the-fab-cube/flesh-and-blood-cards";
 const UPSTREAM_GIT = `https://github.com/${UPSTREAM_REPOSITORY}.git`;
@@ -124,6 +131,8 @@ interface SpoilerPrinting {
   readonly id: string;
   readonly set_id: string;
   readonly rarity: string;
+  /** Upstream's, or `null` where it publishes none — never `""`. */
+  readonly image_url: string | null;
 }
 
 type SpoilerCard = Record<(typeof CARD_TEXT_FIELDS)[number], string> & {
@@ -212,6 +221,21 @@ function text(record: JsonRecord, key: string, where: string): string {
 }
 
 /**
+ * A printing's image URL, or `null`.
+ *
+ * The first printing listed for a collector number wins, by the same `seen`
+ * rule that keeps one printing per number below. On the branches read
+ * 2026-10-30 that is the standard foiling wherever a number has one; a card
+ * printed only as a Rainbow Foil or a Marvel carries that face. An empty
+ * string is folded to `null`: "no image" and "an image at the empty string"
+ * are different claims, and `faces.ts` already treats both as none.
+ */
+function imageUrl(printing: JsonRecord): string | null {
+  const value = printing["image_url"];
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+/**
  * Each set's earliest release date on this branch, or `null` for a set with
  * no dated printing. Keyed by set code.
  */
@@ -278,6 +302,7 @@ for (const { branch, commit } of spoilerBranches()) {
         id: number,
         set_id: setId,
         rarity: text(printing, "rarity", where),
+        image_url: imageUrl(printing),
       });
     }
     if (printings.length === 0) continue;

@@ -17,6 +17,7 @@ import {
   SPOILER_GROUPS,
   SPOILERS,
   SPOILERS_AS_OF,
+  spoilerFaceKey,
 } from "./spoilers";
 
 describe("the spoilers file", () => {
@@ -89,8 +90,34 @@ describe("SPOILER_GROUPS", () => {
 
 describe("printingLabel", () => {
   test("decodes the rarity rather than printing upstream's letter", () => {
-    expect(printingLabel({ id: "OBK041", set_id: "OBK", rarity: "M" })).toBe(
-      "OBK041 · Majestic",
-    );
+    expect(
+      printingLabel({
+        id: "OBK041",
+        set_id: "OBK",
+        rarity: "M",
+        image_url: null,
+      }),
+    ).toBe("OBK041 · Majestic");
+  });
+});
+
+describe("spoilerFaceKey", () => {
+  const at = (id: string, image_url: string | null) => ({
+    id,
+    set_id: id.slice(0, 3),
+    rarity: "M",
+    image_url,
+  });
+  const s3 =
+    "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/";
+
+  test("takes the first printing that publishes an image", () => {
+    expect(
+      spoilerFaceKey([at("OBK006", null), at("OBK006", `${s3}OBK006-MV.webp`)]),
+    ).toBe("spoiler-OBK006-MV.webp");
+  });
+
+  test("is null where no printing publishes one", () => {
+    expect(spoilerFaceKey([at("OBK006", null)])).toBeNull();
   });
 });

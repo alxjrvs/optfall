@@ -179,6 +179,35 @@ export function coldFoilSiblingKey(faceKey: string): string | null {
     : null;
 }
 
+/**
+ * The key a SPOILED printing's face is stored under, or `null` where upstream
+ * publishes none.
+ *
+ * {@link faceKeyFor}'s key with `spoiler-` in front, so `OBK041.webp` before
+ * release is `spoiler-OBK041.webp`. The ingest writes it from
+ * `data/spoilers/spoilers.json` and `/spoilers` asks for it, both through this.
+ *
+ * A SEPARATE KEY, BECAUSE A SPOILER'S ART IS PROVISIONAL AND A FACE IS NOT.
+ * Upstream points a spoiled card at the same S3 URL the released card will
+ * use, so the plain key would be the released card's key. But a face is served
+ * `immutable` for a year, and the ingest refuses to overwrite a key with
+ * different bytes — both correct for released art, and both wrong for art
+ * that may still be swapped before release. Shared, a corrected image at
+ * release would stop the ingest with a key clash, and the card page would show
+ * the spoiler's art indefinitely. Apart, the released card is ingested fresh
+ * under its own key on the corpus sync that carries it, and the spoiler's copy
+ * is simply no longer asked for.
+ *
+ * The prefix keeps the key inside the alphabet both guards accept: it begins
+ * with a letter, and `-` is already legal.
+ */
+export function spoilerFaceKeyFor(
+  imageUrl: string | null | undefined,
+): string | null {
+  const key = faceKeyFor(imageUrl);
+  return key === null ? null : `spoiler-${key}`;
+}
+
 /** The absolute URL of one face at one tier. */
 export function faceUrl(key: string, tier: FaceTier): string {
   return `${FACE_HOST}/${tier}/${key}`;
