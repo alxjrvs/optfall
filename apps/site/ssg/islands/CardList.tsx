@@ -60,10 +60,25 @@ import {
   CardIndex,
   type CardIndexDisplay,
   type CardIndexEntry,
+  type CardIndexGroup,
 } from "../components/CardIndex";
 
 /** The parameter this page adds to the two `pagination.ts` already owns. */
 const DISPLAY_PARAM = "display";
+
+/**
+ * The parameter a GROUPED list adds: `?order=recent`. Absent means grouped,
+ * for the same one-address-per-view reason the other defaults are absences.
+ */
+const ORDER_PARAM = "order";
+
+/** A grouped list's two orders: its groups, or one run newest first. */
+type ListOrder = "set" | "recent";
+
+const LIST_ORDERS = [
+  ["set", "Set"],
+  ["recent", "Most recent"],
+] as const;
 
 export interface CardListProps {
   /**
@@ -80,6 +95,17 @@ export interface CardListProps {
    * island boundary as JSON in an attribute; see `Island.tsx`.
    */
   readonly subject: string;
+  /**
+   * The same rows cut into headed runs — `/spoilers`' upcoming sets — and the
+   * list's default view when given.
+   *
+   * A LIST WITH GROUPS HAS TWO ORDERS, and that is the whole of the
+   * difference. Grouped, every row is shown under its heading and there is no
+   * pager: a set's reveals are read as a set. "Most recent" is `entries`, which
+   * the caller has already put newest first, paged exactly as a set page is.
+   * A list without groups is a set page, and nothing about it changes.
+   */
+  readonly groups?: readonly CardIndexGroup[] | undefined;
 }
 
 /**
@@ -114,22 +140,27 @@ function displayFrom(raw: string | null): CardIndexDisplay | null {
 /** The three things this page keeps in the address bar. */
 function stateFromUrl(): {
   readonly display: CardIndexDisplay | null;
+  readonly order: ListOrder;
   readonly page: number;
   readonly size: PageSize;
 } {
   if (typeof window === "undefined") {
-    return { display: null, page: 1, size: parsePageSize(null) };
+    return { display: null, order: "set", page: 1, size: parsePageSize(null) };
   }
   const params = new URLSearchParams(window.location.search);
   return {
     display: displayFrom(params.get(DISPLAY_PARAM)),
+    /* Anything but `recent` is the default, rather than an error: a stale or
+       mistyped link should land on the list, not on nothing. */
+    order: params.get(ORDER_PARAM) === "recent" ? "recent" : "set",
     page: parsePage(params.get(PAGE_PARAM)),
     size: parsePageSize(params.get(SIZE_PARAM)),
   };
 }
 
-export function CardList({ entries, subject }: CardListProps) {
+export function CardList({ entries, subject, groups }: CardListProps) {
   const [display, setDisplay] = useState<CardIndexDisplay>("grid");
+  const [order, setOrder] = useState<ListOrder>("set");
   const [page, setPage] = useState(1);
   const [size, setSize] = useState<PageSize>(parsePageSize(null));
   /*
@@ -150,6 +181,7 @@ export function CardList({ entries, subject }: CardListProps) {
   useEffect(() => {
     const fromUrl = stateFromUrl();
     if (fromUrl.display !== null) setDisplay(fromUrl.display);
+    setOrder(fromUrl.order);
     setPage(fromUrl.page);
     setSize(fromUrl.size);
     setInteractive(true);
@@ -167,7 +199,12 @@ export function CardList({ entries, subject }: CardListProps) {
 
   /** Where a given page and size live. Defaults are omitted, never written. */
   const linkTo = useCallback(
-    (nextPage: number, nextSize: PageSize, nextDisplay: CardIndexDisplay) => {
+    (
+      nextPage: number,
+      nextSize: PageSize,
+      nextDisplay: CardIndexDisplay,
+      nextOrder: ListOrder = "set",
+    ) => {
       const params = new URLSearchParams(
         typeof window === "undefined" ? "" : window.location.search,
       );
@@ -178,6 +215,8 @@ export function CardList({ entries, subject }: CardListProps) {
       */
       if (nextDisplay === "grid") params.delete(DISPLAY_PARAM);
       else params.set(DISPLAY_PARAM, nextDisplay);
+      if (nextOrder === "set") params.delete(ORDER_PARAM);
+      else params.set(ORDER_PARAM, nextOrder);
       if (nextPage <= 1) params.delete(PAGE_PARAM);
       else params.set(PAGE_PARAM, String(nextPage));
       if (nextSize === parsePageSize(null)) params.delete(SIZE_PARAM);
@@ -195,12 +234,18 @@ export function CardList({ entries, subject }: CardListProps) {
   const countRef = useRef<HTMLParagraphElement>(null);
 
   const goTo = useCallback(
-    (nextPage: number, nextSize: PageSize, nextDisplay: CardIndexDisplay) => {
+    (
+      nextPage: number,
+      nextSize: PageSize,
+      nextDisplay: CardIndexDisplay,
+      nextOrder: ListOrder = "set",
+    ) => {
       setPage(nextPage);
       setSize(nextSize);
       setDisplay(nextDisplay);
+      setOrder(nextOrder);
       if (typeof window === "undefined") return;
-      const target = linkTo(nextPage, nextSize, nextDisplay);
+      const target = linkTo(nextPage, nextSize, nextDisplay, nextOrder);
       if (target !== `${window.location.pathname}${window.location.search}`) {
         window.history.pushState({}, "", target);
       }
@@ -225,6 +270,7 @@ export function CardList({ entries, subject }: CardListProps) {
     const onPop = () => {
       const fromUrl = stateFromUrl();
       setDisplay(fromUrl.display ?? "grid");
+      setOrder(fromUrl.order);
       setPage(fromUrl.page);
       setSize(fromUrl.size);
     };
@@ -246,12 +292,20 @@ export function CardList({ entries, subject }: CardListProps) {
     they are navigational: they tell a reader where they are and how much is
     left, which nothing else on the page does.
   */
+  /* GROUPED, THE WHOLE LIST IS ON SCREEN, so there is no slice to name and no
+     pager; the headings carry the counts. */
+  const grouped = groups !== undefined && order === "set";
+  /* Only a grouped list has an order to keep in the address. */
+  const listOrder: ListOrder = groups === undefined ? "set" : order;
+
   const summary =
     entries.length === 0
       ? `Optfall carries no cards from ${subject}.`
-      : slice.pages === 1
-        ? `Cards from ${subject}.`
-        : `Cards ${slice.from.toLocaleString("en-GB")}–${slice.to.toLocaleString("en-GB")} of ${slice.total.toLocaleString("en-GB")} from ${subject}.`;
+      : grouped
+        ? `Cards from ${subject}, by set.`
+        : slice.pages === 1
+          ? `Cards from ${subject}${groups === undefined ? "" : ", most recent first"}.`
+          : `Cards ${slice.from.toLocaleString("en-GB")}–${slice.to.toLocaleString("en-GB")} of ${slice.total.toLocaleString("en-GB")} from ${subject}.`;
 
   return (
     <CardIndex
@@ -262,7 +316,17 @@ export function CardList({ entries, subject }: CardListProps) {
          whichever way they are drawn — and a reader who has paged into the
          middle of a set and then wants the names of what they are looking at
          should get the names of what they are looking at. */
-      onDisplayChange={(next) => goTo(slice.page, size, next)}
+      onDisplayChange={(next) => goTo(slice.page, size, next, listOrder)}
+      /* A grouped list offers its two orders; a set page offers none. */
+      order={groups === undefined ? undefined : listOrder}
+      onOrderChange={
+        groups === undefined
+          ? undefined
+          : (next) =>
+              goTo(1, size, display, next === "recent" ? "recent" : "set")
+      }
+      orderOptions={groups === undefined ? undefined : LIST_ORDERS}
+      groups={grouped ? groups : undefined}
       summary={summary}
       /*
         THE SAME SENTENCE, SAID RATHER THAN PRINTED. Unconditional, because a
@@ -279,20 +343,20 @@ export function CardList({ entries, subject }: CardListProps) {
       controlName="set-display"
       interactive={interactive}
       pagination={
-        slice.needed ? (
+        slice.needed && !grouped ? (
           <Pagination
             from={slice.from}
-            href={(next) => linkTo(next, size, display)}
+            href={(next) => linkTo(next, size, display, listOrder)}
             label={`Pages of cards from ${subject}`}
-            onNavigate={(next) => goTo(next, size, display)}
+            onNavigate={(next) => goTo(next, size, display, listOrder)}
             /* CHANGING THE SIZE GOES BACK TO PAGE ONE: page 4 of 60-row pages
                and page 4 of 240-row pages are different rows of one answer, and
                no reading of "4" is true of both. */
-            onResize={(next) => goTo(1, next, display)}
+            onResize={(next) => goTo(1, next, display, listOrder)}
             page={slice.page}
             pages={slice.pages}
             size={slice.size}
-            sizeHref={(next) => linkTo(1, next, display)}
+            sizeHref={(next) => linkTo(1, next, display, listOrder)}
             sizes={PAGE_SIZES}
             to={slice.to}
             total={slice.total}

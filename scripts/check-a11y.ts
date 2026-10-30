@@ -57,7 +57,7 @@ const SAMPLE: readonly (readonly [string, string])[] = [
   ["cr/index.html", "the rules index — deep nested lists"],
   ["about/index.html", "prose rendered from Markdown at build time"],
   ["sets/index.html", "a grid index"],
-  ["spoilers/index.html", "a long list of cards with no card pages"],
+  ["spoilers/index.html", "a card index grouped under several headings"],
   ["data-terms/index.html", "the compliance surface"],
 ];
 

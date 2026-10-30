@@ -58,6 +58,7 @@
       "arcane": "",
       "type_text": "Chaos Mechanologist Hero",
       "functional_text": "Cards you own are Mechanologist.\n\nAt the beginning of your end phase, flip this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Mechanologist",
@@ -90,6 +91,7 @@
       "arcane": "",
       "type_text": "Chaos Mechanologist Hero",
       "functional_text": "Cards you own lose and can't gain class and talent types.\n\nAt the beginning of your end phase, flip this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Mechanologist",
@@ -122,6 +124,7 @@
       "arcane": "",
       "type_text": "Chaos Mechanologist Weapon - Pistol (2H)",
       "functional_text": "**Action** - {r}{r}: **Attack**\n\nIf you've banished a card an opponent owns from boosting this turn, this gets +2{p}.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Mechanologist",
@@ -150,6 +153,7 @@
       "arcane": "",
       "type_text": "Chaos Mechanologist Action - Attack",
       "functional_text": "**Boost**\n\nIf you would banish this from boosting, instead banish it and the top card of each other hero's deck to boost.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Mechanologist",
@@ -177,6 +181,7 @@
       "arcane": "",
       "type_text": "Mechanologist Instant",
       "functional_text": "**Legendary**\n\nWhen this is banished from boosting, shuffle this into its owner's deck.\n\nShuffle up to 3 Mechanologist action cards with different names from your banished zone into your deck.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Mechanologist",
         "Instant"
@@ -202,6 +207,7 @@
       "arcane": "",
       "type_text": "Assassin Equipment - Off-Hand",
       "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - {r}, destroy this: Until end of turn, target dagger gets \"When this hits a hero, create a Frailty, Inertia, or Bloodrot Pox token under their control.\"",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Equipment",
@@ -228,6 +234,7 @@
       "arcane": "",
       "type_text": "Assassin Equipment - Arms",
       "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - Destroy this: Cards defending target Assassin attack get -1{d} this chain link. Activate this only if the defending hero is infected.\n\n**Battleworn**",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Equipment",
@@ -254,6 +261,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "**Stealth**\n\n**Instant** - Destroy a Silver you control: Target card defending this gets -1{d} this combat chain.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Action",
@@ -280,6 +288,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "**Stealth**\n\nWhen this leaves the combat chain, attacks get **go again** this chain link.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Action",
@@ -306,6 +315,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "**Contract** - You are contracted to banish opponents' red cards. Whenever you complete this contract, create a Silver token.\n\nWhenever an attack action card you control hits a hero, banish the top card of their deck.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Action",
@@ -332,6 +342,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "**Stealth**\n\nWhen this leaves the combat chain, attacks get +1{p} this chain link.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Action",
@@ -358,6 +369,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "When this attacks, name a card.\n\n**Contract** - You are contracted to banish opponents' cards with the chosen name. Whenever you complete this contract, create a Silver token.\n\nWhenever you hit an opposing hero this chain link, banish the top card of their deck. If it's the named card, repeat this process",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Action",
@@ -384,6 +396,7 @@
       "arcane": "",
       "type_text": "Assassin Attack Reaction",
       "functional_text": "Target Assassin attack action card gets +3{p} and \"When this hits a hero, create a Frailty, Inertia, and Bloodrot Pox token under their control.\"",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Attack Reaction"
@@ -409,6 +422,7 @@
       "arcane": "",
       "type_text": "Assassin Instant",
       "functional_text": "Until end of turn, whenever a disease token is destroyed, if it's the first disease token with that name that's been destroyed this turn, create a token copy of it under the same hero's control.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Instant"
@@ -434,6 +448,7 @@
       "arcane": "",
       "type_text": "Assassin Instant",
       "functional_text": "Create a Bloodrot Pox token under each hero's control.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Instant"
@@ -459,6 +474,7 @@
       "arcane": "",
       "type_text": "Assassin Instant",
       "functional_text": "Create a Frailty token under each hero's control.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Instant"
@@ -484,6 +500,7 @@
       "arcane": "",
       "type_text": "Assassin Instant",
       "functional_text": "Create an Inertia token under each hero's control.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Assassin",
         "Instant"
@@ -509,6 +526,7 @@
       "arcane": "",
       "type_text": "Outbreak Macro",
       "functional_text": "The first time you hit an opposing hero each turn, they reveal the top card of their deck. If it's;\n- Red, create a Bloodrot Pox token under their control.\n- Yellow, create an Exertion token under their control.\n- Blue, create an Inertia token under their control.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Outbreak",
         "Macro"
@@ -534,6 +552,7 @@
       "arcane": "",
       "type_text": "Chaos Assassin Hero - Young",
       "functional_text": "**Instant** - {r}, {t}: Create a token copy of a disease token you control under each opponent's control. Activate this only during your turn.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Assassin",
@@ -567,6 +586,7 @@
       "arcane": "",
       "type_text": "Chaos Mechanologist Hero - Young",
       "functional_text": "Cards you own are Mechanologist.\n\nAt the beginning of your end phase, flip this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Mechanologist",
@@ -594,6 +614,7 @@
       "arcane": "",
       "type_text": "Chaos Mechanologist Hero - Young",
       "functional_text": "Cards you own lose and can't gain class and talent types.\n\nAt the beginning of your end phase, flip this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Mechanologist",
@@ -621,6 +642,7 @@
       "arcane": "",
       "type_text": "Chaos Ranger Hero",
       "functional_text": "**Instant** - {r}{r}, {t}: Each hero puts the top card of their deck face-up into their arsenal. Activate this only during your turn.\n\nIf an opponent has a face-up card in their arsenal, your arrow attacks get +1{p}.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Ranger",
@@ -647,6 +669,7 @@
       "arcane": "",
       "type_text": "Chaos Ranger Hero - Young",
       "functional_text": "**Instant** - {r}{r}, {t}: Each hero puts the top card of their deck face-up into their arsenal. Activate this only during your turn.\n\nIf an opponent has a face-up card in their arsenal, your arrow attacks get +1{p}.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Ranger",
@@ -674,6 +697,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Attack",
       "functional_text": "As an additional cost to play this, each hero **cures** a disease they control if able. Choose a mode for each disease cured this way;\n\n- This gets +2{p}.\n- This gets **go again**.\n- This gets **veil**.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Action",
@@ -700,6 +724,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Aura",
       "functional_text": "When this enters the arena, name a disease token. Disease tokens with the chosen name lose and can't gain abilities while this is in the arena.\n\nAt the start of your turn, if there are 33 or more disease tokens in the arena, you win the game.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Action",
@@ -726,6 +751,7 @@
       "arcane": "",
       "type_text": "Chaos Defense Reaction",
       "functional_text": "When this defends, choose a disease token you control at random. Target opponent chooses a disease token they control at random. Give them to each other.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Defense Reaction"
@@ -751,6 +777,7 @@
       "arcane": "",
       "type_text": "Chaos Defense Reaction",
       "functional_text": "When this defends, choose a disease token you control at random. Target opponent chooses a disease token they control at random. Give them to each other.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Defense Reaction"
@@ -776,6 +803,7 @@
       "arcane": "",
       "type_text": "Chaos Defense Reaction",
       "functional_text": "When this defends, choose a disease token you control at random. Target opponent chooses a disease token they control at random. Give them to each other.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Defense Reaction"
@@ -801,6 +829,7 @@
       "arcane": "",
       "type_text": "Chaos Action",
       "functional_text": "Each hero puts the top card of their deck face-up into their arsenal. If a red card is put face-up into an arsenal this way, your next attack this turn gets **go again**.\n\n**Go again**",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Action"
@@ -826,6 +855,7 @@
       "arcane": "",
       "type_text": "Chaos Action",
       "functional_text": "Each hero puts the top card of their deck face-up into their arsenal. If a blue card is put face-up into an arsenal this way, your next attack this turn gets +2{p}.\n\n**Go again**",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Action"
@@ -851,6 +881,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Attack",
       "functional_text": "When an activated ability or action card effect puts this face-up into a zone from your deck, create a Bloodrot Pox token under a hero's control.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Chaos",
         "Action",
@@ -877,6 +908,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Attack",
       "functional_text": "When an activated ability or action card effect puts this face-up into a zone from your deck, create an Exertion token under a hero's control.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Chaos",
         "Action",
@@ -903,6 +935,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Attack",
       "functional_text": "When an activated ability or action card effect puts this face-up into a zone from your deck, create an Inertia token under a hero's control.",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Chaos",
         "Action",
@@ -929,6 +962,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Attack",
       "functional_text": "When this hits a hero, create a Bloodrot Pox token under the attacking and defending heroes' control.\n\n**Go again**",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Chaos",
         "Action",
@@ -955,6 +989,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Attack",
       "functional_text": "When this hits a hero, create an Exertion token under the attacking and defending heroes' control.\n\n**Go again**",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Chaos",
         "Action",
@@ -981,6 +1016,7 @@
       "arcane": "",
       "type_text": "Chaos Action - Attack",
       "functional_text": "When this hits a hero, create an Inertia token under the attacking and defending heroes' control.\n\n**Go again**",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Chaos",
         "Action",
@@ -1007,6 +1043,7 @@
       "arcane": "",
       "type_text": "Chaos Instant",
       "functional_text": "This costs {r}{r}{r} less to play during your turn.\n\nCreate an Exertion token under each hero's control.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Instant"
@@ -1032,6 +1069,7 @@
       "arcane": "",
       "type_text": "Chaos Instant",
       "functional_text": "Choose a random non-equipment card on the active chain link. It gets +3{p} +3{d} this chain link.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Instant"
@@ -1057,6 +1095,7 @@
       "arcane": "",
       "type_text": "Chaos Instant",
       "functional_text": "Choose a random non-equipment card on the active chain link. It gets -3{p} -3{d} this chain link.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Chaos",
         "Instant"
@@ -1082,6 +1121,7 @@
       "arcane": "",
       "type_text": "Assassin Mechanologist Hero",
       "functional_text": "Whenever you banish an action card with stealth from boosting, you may {t} this. If you do, you may play the banished card as though it were an instant this turn.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Mechanologist",
@@ -1108,6 +1148,7 @@
       "arcane": "",
       "type_text": "Assassin Mechanologist Hero - Young",
       "functional_text": "Whenever you banish an action card with stealth from boosting, you may {t} this. If you do, you may play the banished card as though it were an instant this turn.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Mechanologist",
@@ -1135,6 +1176,7 @@
       "arcane": "",
       "type_text": "Assassin Ranger Hero",
       "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If its an arrow, it gets **veil** this turn.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Ranger",
@@ -1161,6 +1203,7 @@
       "arcane": "",
       "type_text": "Assassin Ranger Hero - Young",
       "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If its an arrow, it gets **veil** this turn.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Ranger",
@@ -1188,6 +1231,7 @@
       "arcane": "",
       "type_text": "Mechanologist Ranger Hero - Young",
       "functional_text": "**Instant** - {r}, {t}: Put an arrow you've banished from boosting this turn face-up into your arsenal. If you do, put two +1{p} counters on it.\n\n**Instant** - {r}, {t}: The next arrow with a +1{p} counter you play this turn gets **go again**.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Mechanologist",
         "Ranger",
@@ -1221,6 +1265,7 @@
       "arcane": "",
       "type_text": "Assassin Weapon - Dagger (1H)",
       "functional_text": "**Action** - {r}{r}, {t}: **Attack**. **Go again**",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Weapon",
@@ -1248,6 +1293,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "**Stealth**\n\nWhen this hits a hero, give them a disease token you control.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Action",
@@ -1274,6 +1320,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "**Stealth**\n\nWhen this hits a hero, give them a disease token you control.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Action",
@@ -1300,6 +1347,7 @@
       "arcane": "",
       "type_text": "Assassin Action - Attack",
       "functional_text": "**Stealth**\n\nWhen this hits a hero, give them a disease token you control.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
         "Action",
@@ -1326,6 +1374,7 @@
       "arcane": "",
       "type_text": "Mechanologist Weapon - Pistol (1H)",
       "functional_text": "**Action** - {t}, remove a steam counter from this: **Attack**\n\n**Action** - {r}, {t}: If this has no steam counters, put a steam counter on it. **Go again**",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Mechanologist",
         "Weapon",
@@ -1353,6 +1402,7 @@
       "arcane": "",
       "type_text": "Mechanologist Action - Attack",
       "functional_text": "**Boost**\n\nThis gets +2{p} for each non-Mechanologist card banished from boosting this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Mechanologist",
         "Action",
@@ -1379,6 +1429,7 @@
       "arcane": "",
       "type_text": "Mechanologist Action - Attack",
       "functional_text": "**Boost**\n\nThis gets +2{p} for each non-Mechanologist card banished from boosting this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Mechanologist",
         "Action",
@@ -1405,6 +1456,7 @@
       "arcane": "",
       "type_text": "Mechanologist Action - Attack",
       "functional_text": "**Boost**\n\nThis gets +2{p} for each non-Mechanologist card banished from boosting this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Mechanologist",
         "Action",
@@ -1431,6 +1483,7 @@
       "arcane": "",
       "type_text": "Ranger Weapon - Bow (1H)",
       "functional_text": "**Action** - {t}: Put all cards from your arsenal on the bottom of your deck. Put an arrow from your hand face-up into your arsenal. If you control a tapped bow, this costs {r} more to activate. **Go again**",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Ranger",
         "Weapon",
@@ -1458,6 +1511,7 @@
       "arcane": "",
       "type_text": "Ranger Action - Arrow Attack",
       "functional_text": "When this attacks a hero, if they are infected with Bloodrot Pox, this gets \"When this hits a hero, for the rest of the game, at the beginning of their end phase, create a Bloodrot Pox token under their control.\"",
+      "added": "2026-10-29T04:39:57Z",
       "types": [
         "Ranger",
         "Action",
@@ -1485,6 +1539,7 @@
       "arcane": "",
       "type_text": "Ranger Action - Arrow Attack",
       "functional_text": "When this attacks, reveal the top card of your deck. If it's red, this gets **go again**.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Ranger",
         "Action",
@@ -1512,6 +1567,7 @@
       "arcane": "",
       "type_text": "Generic Action",
       "functional_text": "Your next attack this turn gets +3{p}.\n\nYou may **cure** a disease you control. If you do, gain 1{h}.\n\n**Go again**",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Generic",
         "Action"
@@ -1537,6 +1593,7 @@
       "arcane": "",
       "type_text": "Generic Token - Disease Aura",
       "functional_text": "Whenever you play a card from hand, lose 1{h}.\n\nAt the beginning of your end phase, destroy this.",
+      "added": "2026-10-14T05:56:50Z",
       "types": [
         "Generic",
         "Token",
