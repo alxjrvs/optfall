@@ -472,6 +472,16 @@ async function main(): Promise<void> {
       /* A sibling that is its own printing was already fetched by the main
          pass. Only the orphans need anything. */
       if (faceKeys.has(sibling)) return [];
+      /* An orphan a previous run already stored is held too, by the same test
+         the main pass applies. Without it the orphan was re-fetched on every
+         run, because its `-CF` stays withheld, and today's transcode was
+         compared with bytes stored by an earlier one. For `FAB402` those
+         differ — today's source is a 546-wide WebP — but the art does not:
+         compared by pixel on 2026-10-30, a mean difference of 1.8/255. So the
+         deploy of 2026-10-30 reported a key clash that was not one, and would
+         have on every run after. */
+      if (!force && tiers.every((tier) => present.has(`${tier}/${sibling}`)))
+        return [];
       const url = urlByKey.get(key);
       if (url === undefined) return [];
       return [{ key: sibling, url: url.replace(/-CF(?=\.[^.]+$)/, "") }];
