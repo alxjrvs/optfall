@@ -41,6 +41,7 @@
 import { generateSW } from "workbox-build";
 
 import { FACE_HOST } from "../src/lib/faces";
+import { HEADERS } from "./hostConfig";
 
 /**
  * The host every card face is served from, written as a LITERAL inside the
@@ -348,6 +349,30 @@ export async function writeServiceWorker(
   });
 
   for (const warning of warnings) console.warn(`[sw] ${warning}`);
+
+  /*
+   * THE WORKER RUNS UNDER THE HEADERS IT WAS INSTALLED WITH, AND A BROWSER
+   * REINSTALLS IT ONLY WHEN `sw.js` CHANGES BYTE FOR BYTE.
+   *
+   * `/sw.js` is served under the `/*` rule, so the CSP there governs every
+   * `fetch()` the worker makes — including the `NetworkOnly` one for faces.
+   * #391 widened `connect-src` to let that fetch through, and the deploy
+   * changed nothing in this file. A reader whose worker predated it kept the
+   * old policy and kept the broken faces, because nothing told the browser
+   * there was a new worker to install.
+   *
+   * So the header rules are stamped in, hashed. A change to any of them now
+   * changes this file, and the next navigation's update check installs a
+   * worker that carries the new policy. A comment rather than a cache name,
+   * because renaming caches would throw away every reader's precache on every
+   * header change for no benefit.
+   */
+  const swPath = `${outDir}/sw.js`;
+  const headersRevision = Bun.hash(JSON.stringify(HEADERS)).toString(16);
+  await Bun.write(
+    swPath,
+    `// headers: ${headersRevision}\n${await Bun.file(swPath).text()}`,
+  );
 
   await assertPurgeScriptExists(outDir);
   assertRoutesEmitted(await Bun.file(`${outDir}/sw.js`).text());
