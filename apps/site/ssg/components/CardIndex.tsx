@@ -114,7 +114,23 @@ export type CardIndexOrder =
   | "power"
   | "defence"
   | "rarity"
-  | "set";
+  | "set"
+  | "recent";
+
+/**
+ * A run of rows under a heading of its own — one upcoming set on `/spoilers`.
+ *
+ * STRINGS, NOT NODES, because these cross the island boundary as JSON in an
+ * attribute, like every other field here. See `Island.tsx`.
+ */
+export interface CardIndexGroup {
+  /** Unique on the page; the heading's `id` is built from it. */
+  readonly id: string;
+  readonly heading: string;
+  /** One line under the heading — `OBK · releases 14 November 2026 · 12 cards`. */
+  readonly meta: string;
+  readonly entries: readonly CardIndexEntry[];
+}
 
 export type CardIndexDirection = "asc" | "desc";
 
@@ -302,6 +318,26 @@ export interface CardIndexProps {
    */
   readonly order?: CardIndexOrder | undefined;
   readonly onOrderChange?: ((order: CardIndexOrder) => void) | undefined;
+  /**
+   * The orders this surface can honour, labelled, where it is not `/search`'s.
+   *
+   * THE SAME RULE AS `order`, ONE LEVEL DOWN: a control offers only what its
+   * surface can perform. `/search` re-ranks with the query engine and offers
+   * all of {@link ORDERS}; `/spoilers` has two orders the build prepared — by
+   * set and by when a card was added — and offering it "Cost" would be the
+   * operable-looking control `order`'s note warns about.
+   */
+  readonly orderOptions?:
+    | readonly (readonly [CardIndexOrder, string])[]
+    | undefined;
+  /**
+   * The list again, cut into headed runs, drawn in place of `entries`.
+   *
+   * THE SAME VIEWS UNDER EACH HEADING, so a grouped list is still this
+   * component's grid or rows rather than a third way to show a card. Only the
+   * list is repeated: there is one control bar and one count above all of it.
+   */
+  readonly groups?: readonly CardIndexGroup[] | undefined;
   readonly direction?: CardIndexDirection | undefined;
   readonly onDirectionChange?:
     | ((direction: CardIndexDirection) => void)
@@ -808,6 +844,119 @@ const GRID_BOX = FACE_TIERS.normal;
 const ROW_BOX = FACE_TIERS.thumb;
 
 /**
+ * One run of rows in the current view — the whole list, or one group of it.
+ *
+ * A FUNCTION RATHER THAN INLINE, BECAUSE A GROUPED LIST DRAWS IT ONCE PER
+ * GROUP. The notes on each view are where they were, unchanged.
+ */
+function listOf(
+  entries: readonly CardIndexEntry[],
+  display: CardIndexDisplay,
+): ReactNode {
+  return display === "grid" ? (
+    /*
+          THE FACE IS THE ROW, and it is the default everywhere now rather than
+          on one page. Recognising a card by its art is faster than reading its
+          name, which is the whole argument for a visual index — and a set is a
+          print run, so it is the surface where the argument is strongest.
+
+          `CardFace` is the only sanctioned way to put a card image on a page:
+          COMPLIANCE.md §5 forbids a variant that drops the attribution the
+          universal footer carries.
+        */
+    <ul className="of-index__grid">
+      {entries.map((entry) => (
+        /*
+              A CELL IS A PICTURE AND NOTHING ELSE — no printed name under it,
+              no coloured rule under that. Both were removed together and for
+              one reason: the face IS the row. A card is designed to be
+              identified at a glance by its art and its frame, which is the
+              claim `docs/DESIGN.md` makes for showing pictures at all, and a
+              caption under every cell was the list saying it did not quite
+              believe its own argument. The reference has carried captionless
+              image results for a decade.
+
+              NOTHING IS LOST TO ANYTHING READING THE PAGE ALOUD. The name was
+              never the accessible name on its own — the face's `alt` carries
+              the qualified label and the type line, and it still does — so the
+              anchor announces exactly what it announced before. What is gone is
+              a visible duplicate of it, and `Variant`, which existed to hide
+              the pitch suffix inside that duplicate.
+
+              WHAT A SIGHTED READER LOSES IS THE SPELLING OF A NAME THEY CAN
+              SEE, and it is worth stating rather than glossing. 900 names in
+              this corpus belong to more than one card; those versions are now
+              ONE cell with the others stacked behind it, so the comparison that
+              used to need a suffix is a fan inside a single cell instead of two
+              cells that read alike. Where a query deliberately expands a name
+              back into its versions — `unique:cards`, `unique:art` — the cells
+              are told apart by their art, and by the list view, which prints
+              the name and the qualifier in full.
+            */
+        <li className="of-index__cell" key={entry.href}>
+          <CardStack entry={entry} />
+        </li>
+      ))}
+    </ul>
+  ) : (
+    /*
+          Rows: a face, a name, a pitch and what the card IS, and `ResultRow` is
+          exactly the primitive for it — a leading slot, a name, a trailing
+          slot, and one fact underneath. THE FACE LEADS AND THE BOX TRAILS THE
+          NAME, because this view has a line of type to hang a mark off, so it
+          can afford the rendering that spells the value out.
+
+          IT PRINTED THE STATS UNTIL IT DID NOT. Cost, Power, Defence, Life and
+          Intellect ran along this line under every name, and on a search a
+          word after them naming which field the query matched. Four to six
+          facts set in micro type under a name is a table pretending to be a
+          list — and the values it tabulated are on the card, which the row now
+          draws big enough to be worth looking at. What is left under a name is
+          the one fact the picture cannot carry at this size: what the card is.
+          `layout.card.row` records what the bigger picture cost in rows.
+
+          THE VALUES ARE NOT LOST, AND WHERE THEY WENT MATTERS. The card page
+          prints all five. Three of them — cost, power and defence — are what
+          the grammar's `STAT_FIELDS` filter on and what `SORT_KEYS` order by,
+          so a reader comparing costs asks for `order:cost` and gets the column
+          in an order no printed list of them ever had. Life and intellect are
+          in neither table; a reader after those goes to the card.
+
+          THE MARK LED THE ROW UNTIL IT DID NOT EARN THE COLUMN. Beside the
+          face it needed a slot as wide as three of them so that every row's
+          name started at the same x, which meant a one-version row put an empty
+          mark's width between a 44px picture and the name it labels. Trailing
+          the name, the mark is a qualifier ON the name — where a reader looking
+          up a pitch is already looking — and the names need no slot to line up
+          because nothing variable precedes them. See `.of-index__stones`.
+
+          ONE BOX PER PITCH VALUE, exactly as the grid draws one card
+          per value. A row stands for a NAME and a name is commonly three cards, so
+          a single box would be picking one of the three versions to speak for
+          the other two — which is the same "collapses two true facts into one"
+          failure the engine builds its whole verdict model to avoid.
+
+          AND NONE AT ALL WHERE THE CARD HAS NO PITCH, which most of the corpus
+          does not — see `PitchStones` for why an absence is drawn by drawing
+          nothing rather than by a grey box saying so.
+        */
+    <ol className="of-index__rows">
+      {entries.map((entry) => (
+        <ResultRow
+          key={entry.href}
+          href={entry.href}
+          label={entry.name}
+          qualifier={entry.qualifier}
+          lead={<RowFace entry={entry} />}
+          trail={<PitchStones versions={entry.versions} />}
+          meta={<span>{entry.typeLine}</span>}
+        />
+      ))}
+    </ol>
+  );
+}
+
+/**
  * The row's face — small, silent, and not a link.
  *
  * IT IS A RECOGNITION MARK RATHER THAN A PICTURE TO READ, and it is a bigger
@@ -881,6 +1030,8 @@ export function CardIndex({
   onDisplayChange,
   order,
   onOrderChange,
+  orderOptions,
+  groups,
   direction,
   onDirectionChange,
   pagination,
@@ -941,7 +1092,7 @@ export function CardIndex({
                 id={`${controlName}-order`}
                 label="Order by"
                 value={order}
-                options={ORDERS}
+                options={orderOptions ?? ORDERS}
                 onChange={onOrderChange}
               />
             </>
@@ -1002,107 +1153,19 @@ export function CardIndex({
         {summary}
       </p>
 
-      {display === "grid" ? (
-        /*
-          THE FACE IS THE ROW, and it is the default everywhere now rather than
-          on one page. Recognising a card by its art is faster than reading its
-          name, which is the whole argument for a visual index — and a set is a
-          print run, so it is the surface where the argument is strongest.
-
-          `CardFace` is the only sanctioned way to put a card image on a page:
-          COMPLIANCE.md §5 forbids a variant that drops the attribution the
-          universal footer carries.
-        */
-        <ul className="of-index__grid">
-          {entries.map((entry) => (
-            /*
-              A CELL IS A PICTURE AND NOTHING ELSE — no printed name under it,
-              no coloured rule under that. Both were removed together and for
-              one reason: the face IS the row. A card is designed to be
-              identified at a glance by its art and its frame, which is the
-              claim `docs/DESIGN.md` makes for showing pictures at all, and a
-              caption under every cell was the list saying it did not quite
-              believe its own argument. The reference has carried captionless
-              image results for a decade.
-
-              NOTHING IS LOST TO ANYTHING READING THE PAGE ALOUD. The name was
-              never the accessible name on its own — the face's `alt` carries
-              the qualified label and the type line, and it still does — so the
-              anchor announces exactly what it announced before. What is gone is
-              a visible duplicate of it, and `Variant`, which existed to hide
-              the pitch suffix inside that duplicate.
-
-              WHAT A SIGHTED READER LOSES IS THE SPELLING OF A NAME THEY CAN
-              SEE, and it is worth stating rather than glossing. 900 names in
-              this corpus belong to more than one card; those versions are now
-              ONE cell with the others stacked behind it, so the comparison that
-              used to need a suffix is a fan inside a single cell instead of two
-              cells that read alike. Where a query deliberately expands a name
-              back into its versions — `unique:cards`, `unique:art` — the cells
-              are told apart by their art, and by the list view, which prints
-              the name and the qualifier in full.
-            */
-            <li className="of-index__cell" key={entry.href}>
-              <CardStack entry={entry} />
-            </li>
+      {groups === undefined
+        ? listOf(entries, display)
+        : groups.map((group) => (
+            <section
+              className="of-index__group"
+              key={group.id}
+              aria-labelledby={`${controlName}-${group.id}`}
+            >
+              <h2 id={`${controlName}-${group.id}`}>{group.heading}</h2>
+              <p className="of-index__group-meta">{group.meta}</p>
+              {listOf(group.entries, display)}
+            </section>
           ))}
-        </ul>
-      ) : (
-        /*
-          Rows: a face, a name, a pitch and what the card IS, and `ResultRow` is
-          exactly the primitive for it — a leading slot, a name, a trailing
-          slot, and one fact underneath. THE FACE LEADS AND THE BOX TRAILS THE
-          NAME, because this view has a line of type to hang a mark off, so it
-          can afford the rendering that spells the value out.
-
-          IT PRINTED THE STATS UNTIL IT DID NOT. Cost, Power, Defence, Life and
-          Intellect ran along this line under every name, and on a search a
-          word after them naming which field the query matched. Four to six
-          facts set in micro type under a name is a table pretending to be a
-          list — and the values it tabulated are on the card, which the row now
-          draws big enough to be worth looking at. What is left under a name is
-          the one fact the picture cannot carry at this size: what the card is.
-          `layout.card.row` records what the bigger picture cost in rows.
-
-          THE VALUES ARE NOT LOST, AND WHERE THEY WENT MATTERS. The card page
-          prints all five. Three of them — cost, power and defence — are what
-          the grammar's `STAT_FIELDS` filter on and what `SORT_KEYS` order by,
-          so a reader comparing costs asks for `order:cost` and gets the column
-          in an order no printed list of them ever had. Life and intellect are
-          in neither table; a reader after those goes to the card.
-
-          THE MARK LED THE ROW UNTIL IT DID NOT EARN THE COLUMN. Beside the
-          face it needed a slot as wide as three of them so that every row's
-          name started at the same x, which meant a one-version row put an empty
-          mark's width between a 44px picture and the name it labels. Trailing
-          the name, the mark is a qualifier ON the name — where a reader looking
-          up a pitch is already looking — and the names need no slot to line up
-          because nothing variable precedes them. See `.of-index__stones`.
-
-          ONE BOX PER PITCH VALUE, exactly as the grid draws one card
-          per value. A row stands for a NAME and a name is commonly three cards, so
-          a single box would be picking one of the three versions to speak for
-          the other two — which is the same "collapses two true facts into one"
-          failure the engine builds its whole verdict model to avoid.
-
-          AND NONE AT ALL WHERE THE CARD HAS NO PITCH, which most of the corpus
-          does not — see `PitchStones` for why an absence is drawn by drawing
-          nothing rather than by a grey box saying so.
-        */
-        <ol className="of-index__rows">
-          {entries.map((entry) => (
-            <ResultRow
-              key={entry.href}
-              href={entry.href}
-              label={entry.name}
-              qualifier={entry.qualifier}
-              lead={<RowFace entry={entry} />}
-              trail={<PitchStones versions={entry.versions} />}
-              meta={<span>{entry.typeLine}</span>}
-            />
-          ))}
-        </ol>
-      )}
 
       {pagination}
     </>

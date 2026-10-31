@@ -370,3 +370,64 @@ describe("the sentence over the list", () => {
     expect(summary()).toBe("Optfall carries no cards from Mistveil.");
   });
 });
+
+describe("a grouped list — /spoilers", () => {
+  /* Two groups of three, and the flat run the caller puts newest first. */
+  const GROUPED = rows(6);
+  const GROUPS = [
+    { id: "aaa", heading: "Set A", meta: "AAA", entries: GROUPED.slice(0, 3) },
+    { id: "bbb", heading: "Set B", meta: "BBB", entries: GROUPED.slice(3) },
+  ];
+  const RECENT = GROUPED.toReversed();
+
+  async function mountGrouped(): Promise<Mounted> {
+    document.body.innerHTML = `<main><div id="root"></div></main>`;
+    const host = document.getElementById("root");
+    if (host === null) throw new Error("no root");
+    const root: Root = createRoot(host);
+    await act(async () => {
+      root.render(
+        <CardList entries={RECENT} subject={SUBJECT} groups={GROUPS} />,
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+    });
+    return { unmount: () => root.unmount() };
+  }
+
+  const headings = (): string[] =>
+    [...document.querySelectorAll(".of-index__group h2")].map(
+      (node) => node.textContent ?? "",
+    );
+
+  test("is grouped by default, every row under its heading", async () => {
+    live = await mountGrouped();
+    expect(headings()).toEqual(["Set A", "Set B"]);
+    expect(shown()).toEqual(GROUPED.map((entry) => entry.href));
+    expect(address()).toBe("/sets/mst");
+  });
+
+  test("Most recent is one run in the caller's order, and an address", async () => {
+    live = await mountGrouped();
+    await choose("set-display-order", "recent");
+    expect(headings()).toEqual([]);
+    expect(shown()).toEqual(RECENT.map((entry) => entry.href));
+    expect(address()).toBe("/sets/mst?order=recent");
+
+    await choose("set-display-order", "set");
+    expect(headings()).toEqual(["Set A", "Set B"]);
+    expect(address()).toBe("/sets/mst");
+  });
+
+  test("?order=recent is read from the address", async () => {
+    at("/sets/mst?order=recent");
+    live = await mountGrouped();
+    expect(shown()).toEqual(RECENT.map((entry) => entry.href));
+  });
+
+  test("a list without groups offers no order", async () => {
+    live = await mount(rows(3));
+    expect(document.getElementById("set-display-order")).toBeNull();
+  });
+});

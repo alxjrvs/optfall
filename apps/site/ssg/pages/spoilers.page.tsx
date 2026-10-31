@@ -6,142 +6,115 @@
  * `scripts/build-spoilers.ts` for where it comes from and what counts as a
  * spoiler. This page only lays it out.
  *
- * A VISUAL SPOILER: A GRID OF FACES, ONE CELL PER CARD. A set's reveals are
- * read the way a reader meets them everywhere else — as pictures of cards —
- * so each set is a grid at the density `CardIndex` draws, with the collector
- * number and rarity under each face and the card's text one click away.
+ * IT IS A SET PAGE, BECAUSE A SPOILER SEASON IS A PRINT RUN ARRIVING. The same
+ * `CardList` island `/sets/<code>` uses, drawing the same `CardIndex`: the grid
+ * and list views, pitch versions of one card collapsed into one row that fans
+ * on hover, and a page of its own behind every face —
+ * `spoiler-card.page.tsx`. What it adds is the one thing a set page has no
+ * need for: more than one set. So the default order groups the rows under
+ * each upcoming set, soonest release first, and "Most recent" lays them out
+ * as one paged run, newest addition first.
  *
- * THE TEXT STAYS ON THE PAGE, folded under each face. The face is a picture
- * of the text, and a picture is no help to a screen reader, to search, or to a
- * reader whose face has not reached our host yet; the folded text is all three
- * of those. Closed `<details>` keep the grid a grid.
+ * "MOST RECENT" MEANS ADDED TO THE COMPILATION, which is batched — see
+ * `added` in `build-spoilers.ts`. Within a batch the rows keep set and
+ * collector-number order.
  *
- * ONE PAGE, NO CARD PAGES. A spoiled card has no `/card/…` URL of its own.
- * Every card URL is meant to be a permanent, citable address, and a card whose
- * text can still change before release is not one yet. When the set releases
- * and the corpus syncs, the card gets its page and leaves this one — so no
- * cell is a link.
+ * FACES COME FROM OUR HOST, NEVER LSS'S BUCKET. The daily job's merge runs the
+ * face ingest, which stores each spoiled face under a key of its own —
+ * `spoilerFaceKeyFor` in `faces.ts` says why. Until it has run, the host
+ * answers with its NO IMAGE placeholder. Every spoiled face is drawn portrait:
+ * none is in `LANDSCAPE_FACE_KEYS`, because that list is measured from the
+ * store and these keys were never in it.
  *
- * FACES COME FROM OUR HOST, NEVER LSS'S BUCKET. The daily job that rebuilds the
- * data merges into `main`, and that push runs the face ingest
- * (`scripts/ingest-card-images.ts`), which copies each spoiled face under a key
- * of its own — `spoilerFaceKeyFor` in `faces.ts` says why it is not the
- * released card's key. Until the ingest has run, the host answers with its NO
- * IMAGE placeholder, which is the right shape and says what is true. Every
- * spoiled face is drawn portrait: none is in `LANDSCAPE_FACE_KEYS`, because
- * that list is measured from the store and these keys were never in it.
- *
- * GROUPED BY SET, soonest release first and undated sets after, which is the
- * file's own set order. A card reprinted across two upcoming products — an
- * Armory Deck hero that is also a Marvel in the booster — is listed under both.
+ * A CARD REPRINTED ACROSS TWO UPCOMING PRODUCTS — an Armory Deck hero that is
+ * also a Marvel in the booster — is a row under both sets, wearing each set's
+ * face, and once in "Most recent".
  */
 
-import { CardFace, FactChip, PitchBox } from "optfall-components/react";
-
-import { pitchValueOf } from "../../src/lib/cards";
-import { FACE_TIERS, faceUrl, placeholderUrl } from "../../src/lib/faces";
 import {
-  printingLabel,
-  spoilerFaceKey,
+  longDate,
+  namesIn,
   SPOILER_GROUPS,
+  SPOILER_PAGES,
   SPOILERS,
   SPOILERS_AS_OF,
-  type SpoilerCard,
-  type SpoilerPrinting,
+  releaseLine,
+  type SpoilerPage,
 } from "../../src/lib/spoilers";
-import { PrintedText } from "../components/PrintedText";
+import type { CardIndexEntry, CardIndexGroup } from "../components/CardIndex";
+import { Island } from "../Island";
+import { CardList } from "../islands/CardList";
 import type { PageModule, PageResult } from "../types";
 import "./spoilers.css";
 
 /**
- * The stats a card may print, labelled and ordered as `STAT_ORDER` in
- * `cards.ts`. Arcane is not among them for the reason given there: it is
- * written in the rules text, not struck into the frame.
+ * One row: a name in one set, and its pitch versions there.
+ *
+ * `entryFor` in `set.page.tsx`, for a card with no `/card/` page: the row
+ * opens the lowest pitch present and wears its face, and each version is a
+ * door to its own page. A sole card is a row of one.
  */
-const STATS: readonly (readonly [keyof SpoilerCard, string])[] = [
-  ["cost", "Cost"],
-  ["power", "Power"],
-  ["defense", "Defence"],
-  ["health", "Life"],
-  ["intelligence", "Intellect"],
-];
-
-/** `2026-11-14` → `14 November 2026`, in UTC so no build machine shifts it. */
-function longDate(iso: string): string {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+function entryFor(group: readonly SpoilerPage[]): CardIndexEntry {
+  const first = group[0];
+  if (first === undefined) throw new Error("entryFor: an empty name group");
+  const collapsed = group.length > 1;
+  return {
+    href: first.href,
+    label: collapsed ? first.card.name : first.label,
+    name: first.card.name,
+    qualifier: collapsed ? "" : first.label.slice(first.card.name.length),
+    typeLine: first.card.type_text,
+    faceKey: first.faceKey,
+    faceLandscape: false,
+    versions: group.map((version) => ({
+      pitch: version.pitch,
+      href: version.href,
+      label: version.label,
+      faceKey: version.faceKey,
+      faceLandscape: false,
+    })),
+  };
 }
 
-function Stats({ card }: { readonly card: SpoilerCard }) {
-  const present = STATS.filter(([key]) => card[key] !== "");
-  if (present.length === 0) return null;
-  return (
-    <dl className="of-spoilers__stats">
-      {present.map(([key, label]) => (
-        <FactChip
-          key={key}
-          label={label}
-          value={card[key] as string}
-          semantics="description"
-        />
-      ))}
-    </dl>
-  );
-}
+const ROWS = namesIn(SPOILER_PAGES);
+
+/** The default order: one group per upcoming set, as `SPOILER_GROUPS` has them. */
+const GROUPS: readonly CardIndexGroup[] = SPOILER_GROUPS.map(({ set }) => {
+  const rows = ROWS.filter((group) => group[0]?.set.id === set.id);
+  const cards = rows.reduce((sum, group) => sum + group.length, 0);
+  return {
+    id: set.id.toLowerCase(),
+    heading: set.name,
+    meta: `${set.id} · ${releaseLine(set)} · ${cards} ${cards === 1 ? "card" : "cards"}`,
+    entries: rows.map(entryFor),
+  };
+});
 
 /**
- * The box every face declares — the `normal` tier, as `CardIndex`'s grid asks
- * for, because a cell is drawn wider than `thumb` and a third of an upscale is
- * a blurred card.
+ * "Most recent": every row once, newest addition first.
+ *
+ * ONCE, where the grouped view may show a card twice: a reprint across two
+ * upcoming sets keeps its first set's row, since one addition is one event.
+ * The sort is stable, so a batch keeps set and collector-number order.
  */
-const FACE_BOX = FACE_TIERS.normal;
+const RECENT: readonly CardIndexEntry[] = (() => {
+  const seen = new Set<string>();
+  return ROWS.filter((group) => {
+    const ids = group.map((page) => page.card.unique_id).join(" ");
+    if (seen.has(ids)) return false;
+    seen.add(ids);
+    return true;
+  })
+    .toSorted((a, b) => newest(b).localeCompare(newest(a)))
+    .map(entryFor);
+})();
 
-/** The name, with ` (pitch 1)` after it where the card has a pitch. */
-function altFor(card: SpoilerCard): string {
-  return card.pitch === "" ? card.name : `${card.name} (pitch ${card.pitch})`;
-}
-
-function Cell({
-  card,
-  printings,
-}: {
-  readonly card: SpoilerCard;
-  readonly printings: readonly SpoilerPrinting[];
-}) {
-  const key = spoilerFaceKey(printings);
+function newest(group: readonly SpoilerPage[]): string {
   return (
-    <li className="of-spoilers__cell">
-      <CardFace
-        src={key === null ? placeholderUrl("portrait") : faceUrl(key, "normal")}
-        alt={altFor(card)}
-        width={FACE_BOX.width}
-        height={FACE_BOX.height}
-        loading="lazy"
-      />
-      <p className="of-spoilers__meta">
-        {printings.map(printingLabel).join(", ")}
-      </p>
-      <details className="of-spoilers__text">
-        <summary>
-          {card.name}
-          {card.pitch === "" ? null : (
-            <>
-              {" "}
-              <PitchBox value={pitchValueOf(card)} size="sm" />
-            </>
-          )}
-        </summary>
-        <p className="of-spoilers__meta">{card.type_text}</p>
-        <Stats card={card} />
-        {card.functional_text === "" ? null : (
-          <PrintedText text={card.functional_text} />
-        )}
-      </details>
-    </li>
+    group
+      .map((page) => page.card.added)
+      .toSorted()
+      .at(-1) ?? ""
   );
 }
 
@@ -151,6 +124,8 @@ function page(): PageResult {
     description:
       "Flesh and Blood cards revealed for sets that have not been released yet, updated daily.",
     section: "spoilers",
+    width: "index",
+    islands: true,
     children: (
       <>
         <h1 className="of-spoilers__heading">Spoilers</h1>
@@ -174,39 +149,40 @@ function page(): PageResult {
         {SPOILER_GROUPS.length === 0 ? (
           <p>Nothing has been revealed for an unreleased set right now.</p>
         ) : (
-          SPOILER_GROUPS.map(({ set, cards }) => (
-            <section
-              className="of-spoilers__set"
-              key={set.id}
-              aria-labelledby={`spoilers-${set.id}`}
+          <>
+            <Island
+              name="CardList"
+              props={{
+                entries: RECENT,
+                subject: "upcoming sets",
+                groups: GROUPS,
+              }}
             >
-              <h2 id={`spoilers-${set.id}`}>{set.name}</h2>
-              <p className="of-spoilers__set-meta">
-                {set.id} ·{" "}
-                {set.released === null ? (
-                  "release date not announced"
-                ) : (
-                  <>
-                    releases{" "}
-                    <time dateTime={set.released}>
-                      {longDate(set.released)}
-                    </time>
-                  </>
-                )}{" "}
-                · {cards.length} {cards.length === 1 ? "card" : "cards"}
-              </p>
+              <CardList
+                entries={RECENT}
+                subject="upcoming sets"
+                groups={GROUPS}
+              />
+            </Island>
 
-              <ul className="of-spoilers__grid">
-                {cards.map(({ card, printings }) => (
-                  <Cell
-                    key={card.unique_id}
-                    card={card}
-                    printings={printings}
-                  />
+            {/* THE WHOLE LIST FOR A READER WITH NO SCRIPTING, as the set page
+                ships one. The grouped view is fully server-rendered, so this
+                only adds what a collapsed row hides: each pitch version's own
+                link. */}
+            <noscript>
+              <h2 className="of-spoilers__noscript-heading">
+                Every spoiled card
+              </h2>
+              <ul className="of-spoilers__noscript-list">
+                {SPOILER_PAGES.map((spoiler) => (
+                  <li key={spoiler.href}>
+                    <a href={spoiler.href}>{spoiler.label}</a> ·{" "}
+                    {spoiler.set.name}
+                  </li>
                 ))}
               </ul>
-            </section>
-          ))
+            </noscript>
+          </>
         )}
       </>
     ),

@@ -16,6 +16,8 @@ import {
   SPOILER_CARDS,
   SPOILER_GROUPS,
   SPOILERS,
+  namesIn,
+  SPOILER_PAGES,
   SPOILERS_AS_OF,
   spoilerFaceKey,
 } from "./spoilers";
@@ -119,5 +121,36 @@ describe("spoilerFaceKey", () => {
 
   test("is null where no printing publishes one", () => {
     expect(spoilerFaceKey([at("OBK006", null)])).toBeNull();
+  });
+});
+
+describe("SPOILER_PAGES", () => {
+  test("every spoiler is dated, so 'Most recent' can place it", () => {
+    for (const card of SPOILERS.cards) {
+      expect(`${card.name}: ${/^\d{4}-\d{2}-\d{2}T/.test(card.added)}`).toBe(
+        `${card.name}: true`,
+      );
+    }
+  });
+
+  test("lives under /spoilers/, never /card/", () => {
+    for (const page of SPOILER_PAGES) {
+      expect(page.href.startsWith("/spoilers/")).toBe(true);
+    }
+  });
+
+  test("a shared name is told apart by pitch, in the label and the slug", () => {
+    for (const page of SPOILER_PAGES.filter((p) => p.disambiguated)) {
+      expect(page.label).toBe(`${page.card.name} (pitch ${page.pitch})`);
+      expect(page.slug.endsWith(`-${page.pitch}`)).toBe(true);
+    }
+  });
+
+  test("namesIn merges pitch versions, lowest first", () => {
+    for (const group of namesIn(SPOILER_PAGES)) {
+      const pitches = group.map((page) => page.pitch);
+      expect(pitches).toEqual(pitches.toSorted((a, b) => a - b));
+      expect(new Set(group.map((page) => page.card.name)).size).toBe(1);
+    }
   });
 });

@@ -62,6 +62,20 @@
  * own, so an unchanged upstream yields a byte-identical file and the daily job
  * that runs this has nothing to commit.
  *
+ * WHEN EACH CARD WAS ADDED, FOR `/spoilers`' "MOST RECENT" ORDER. `added` is
+ * the date of the first commit on the branch's first-parent history whose
+ * `card.json` carries the card — when it reached the compilation, which is the
+ * nearest thing to a reveal date any machine-readable source has. It is
+ * coarser than a reveal: upstream lands spoilers in batches ("Add last few
+ * weeks of spoilers"), so a batch shares one date and is ordered by collector
+ * number within it.
+ *
+ * IT IS CARRIED FORWARD, NOT RECOMPUTED. A card already in the previous file
+ * keeps its `added`; only a card new to this file walks the history, newest
+ * commit first, fetching `card.json` at each until the card is absent. On a
+ * daily run that is the head and its parent. Still no clock of ours: every
+ * date written is an upstream commit's.
+ *
  * USAGE
  *
  *   bun run spoilers
@@ -136,6 +150,8 @@ interface SpoilerPrinting {
 }
 
 type SpoilerCard = Record<(typeof CARD_TEXT_FIELDS)[number], string> & {
+  /** When the card reached the compilation, UTC to the second. See above. */
+  readonly added: string;
   readonly types: readonly string[];
   readonly printings: readonly SpoilerPrinting[];
 };
@@ -196,6 +212,72 @@ function committedAt(commit: string): string {
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
+}
+
+/** An upstream ISO date, normalised as `committedAt` writes one. */
+function utc(iso: string): string {
+  return new Date(iso).toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
+/**
+ * When each of `ids` first appeared in the branch's `card.json`, walking its
+ * first-parent history from `commit` back.
+ *
+ * NEWEST FIRST, STOPPING AS SOON AS EVERY CARD IS PLACED. A card is placed at
+ * the oldest commit in an unbroken run, from the head back, whose file carries
+ * it. The blobless fetch brings the history's commits and trees; each
+ * `card.json` is read from raw.githubusercontent.com, as the head's is.
+ */
+async function firstAdded(
+  commit: string,
+  ids: ReadonlySet<string>,
+): Promise<Map<string, string>> {
+  const placed = new Map<string, string>();
+  if (ids.size === 0) return placed;
+
+  const scratch = mkdtempSync(join(tmpdir(), "optfall-spoilers-"));
+  let history: { sha: string; at: string }[];
+  try {
+    git(["init", "--quiet", "--bare"], scratch);
+    git(
+      ["fetch", "--quiet", "--filter=blob:none", UPSTREAM_GIT, commit],
+      scratch,
+    );
+    history = git(
+      ["log", "--first-parent", "--format=%H %cI", commit, "--", CARD_PATH],
+      scratch,
+    )
+      .trim()
+      .split("\n")
+      .filter((line) => line !== "")
+      .map((line) => {
+        const [sha = "", at = ""] = line.split(" ");
+        return { sha, at: utc(at) };
+      });
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+
+  let pending = new Set(ids);
+  for (const { sha, at } of history) {
+    if (pending.size === 0) break;
+    /* Sequential on purpose: each step decides whether the next is needed,
+       and every step is a 20 MB file. */
+    const present = new Set(
+      records(await fetchJson(sha, CARD_PATH), CARD_PATH).map((card) =>
+        text(card, "unique_id", CARD_PATH),
+      ),
+    );
+    const still = new Set<string>();
+    for (const id of pending) {
+      if (present.has(id)) {
+        placed.set(id, at);
+        still.add(id);
+      }
+    }
+    pending = still;
+  }
+  return placed;
 }
 
 async function fetchJson(commit: string, path: string): Promise<unknown> {
@@ -266,9 +348,27 @@ const corpus = (await Bun.file(CORPUS_FILE).json()) as {
 };
 const released = new Set(corpus.cards.map((card) => card.unique_id));
 
+/** `added` from the previous run, by unique_id. See the header. */
+const carried = new Map<string, string>();
+try {
+  const previous = (await Bun.file(OUT_FILE).json()) as {
+    readonly cards?: readonly { unique_id: string; added?: string }[];
+  };
+  for (const card of previous.cards ?? []) {
+    if (typeof card.added === "string") carried.set(card.unique_id, card.added);
+  }
+} catch {
+  /* No previous file: every card walks the history once. */
+}
+
 const sources: Source[] = [];
 /** By unique_id; a later (newer) branch's copy replaces an earlier one's. */
-const cards = new Map<string, { card: SpoilerCard; at: string }>();
+const cards = new Map<
+  string,
+  { card: Omit<SpoilerCard, "added">; at: string }
+>();
+/** By unique_id: the earliest `added` any branch gives a card. */
+const addedAt = new Map<string, string>(carried);
 const sets = new Map<string, SpoilerSet>();
 
 for (const { branch, commit } of spoilerBranches()) {
@@ -285,6 +385,8 @@ for (const { branch, commit } of spoilerBranches()) {
 
   const upstream = records(await fetchJson(commit, CARD_PATH), CARD_PATH);
   let found = 0;
+  /** Spoilers on this branch that no previous run dated. */
+  const undated = new Set<string>();
 
   for (const card of upstream) {
     const id = text(card, "unique_id", CARD_PATH);
@@ -306,6 +408,7 @@ for (const { branch, commit } of spoilerBranches()) {
       });
     }
     if (printings.length === 0) continue;
+    if (!carried.has(id)) undated.add(id);
 
     const previous = cards.get(id);
     if (previous !== undefined && previous.at > at) continue;
@@ -334,7 +437,15 @@ for (const { branch, commit } of spoilerBranches()) {
     }
   }
 
-  console.log(`${branch} @ ${commit.slice(0, 7)} (${at}): ${found} spoilers`);
+  for (const [id, date] of await firstAdded(commit, undated)) {
+    const known = addedAt.get(id);
+    if (known === undefined || date < known) addedAt.set(id, date);
+  }
+
+  console.log(
+    `${branch} @ ${commit.slice(0, 7)} (${at}): ${found} spoilers, ` +
+      `${undated.size} newly dated`,
+  );
 }
 
 /* Undated sets last: calling an undated set the soonest is a claim the data
@@ -349,7 +460,17 @@ const orderedSets = [...sets.values()].toSorted(
 /* By collector number, then name and pitch: a function of the data, not of
    which branch was read first. */
 const orderedCards = [...cards.values()]
-  .map(({ card }) => card)
+  .map(({ card }): SpoilerCard => {
+    /* Every spoiler is dated: carried, or found by `firstAdded` on the branch
+       that carried it. A card the walk could not place is a bug in the walk,
+       and an undated card would sort nowhere in "Most recent". */
+    const added = addedAt.get(card.unique_id);
+    if (added === undefined) {
+      throw new Error(`${card.unique_id} (${card.name}): no added date`);
+    }
+    const { types, printings, ...fields } = card;
+    return { ...fields, added, types, printings };
+  })
   .toSorted(
     (a, b) =>
       (a.printings[0]?.id ?? "").localeCompare(b.printings[0]?.id ?? "") ||

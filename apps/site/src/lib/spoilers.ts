@@ -11,8 +11,11 @@
  * page — see {@link SPOILER_CARDS}.
  */
 
-import { CORPUS } from "./cards";
+import type { PitchValue } from "optfall-theme";
+
+import { CORPUS, labelFor, pitchValueOf, slugify } from "./cards";
 import { spoilerFaceKeyFor } from "./faces";
+import { numberFor } from "./printings";
 import { rarityName } from "./sets";
 
 import spoilers from "../../../../data/spoilers/spoilers.json";
@@ -50,6 +53,11 @@ export interface SpoilerCard {
   readonly arcane: string;
   readonly type_text: string;
   readonly functional_text: string;
+  /**
+   * When the card reached the compilation, UTC — the "Most recent" order.
+   * Batched upstream, so many cards share one; see `build-spoilers.ts`.
+   */
+  readonly added: string;
   readonly types: readonly string[];
   readonly printings: readonly SpoilerPrinting[];
 }
@@ -146,7 +154,117 @@ export function spoilerFaceKey(
   return null;
 }
 
+/** `2026-11-14` → `14 November 2026`, in UTC so no build machine shifts it. */
+export function longDate(iso: string): string {
+  return new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** `release date not announced`, or `releases 14 November 2026`. */
+export function releaseLine(set: SpoilerSet): string {
+  return set.released === null
+    ? "release date not announced"
+    : `releases ${longDate(set.released)}`;
+}
+
 /** `OBK041 · Majestic`. */
 export function printingLabel(printing: SpoilerPrinting): string {
   return `${printing.id} · ${rarityName(printing.rarity)}`;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Pages                                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One spoiled card as it is listed under one set: the page `/spoilers` links
+ * that set's cell to.
+ *
+ * A PAGE PER (CARD, SET), BECAUSE THAT IS WHAT A CELL IS. The Armory Deck hero
+ * reprinted as a Marvel in the booster is two cells on `/spoilers`, wearing two
+ * different faces, so it is two pages, each showing the face its cell showed —
+ * the rule `set.page.tsx`'s `printingForSet` states for released cards.
+ *
+ * UNDER `/spoilers/`, NEVER `/card/`. A `/card/` address is meant to be
+ * permanent, and a card whose text can change before release is not one yet;
+ * this address is explicitly provisional, and the card page it graduates to is
+ * a different URL. The shape is the card route's — `/spoilers/obk/041/<slug>`
+ * — so a reader who knows one knows the other.
+ */
+export interface SpoilerPage {
+  readonly card: SpoilerCard;
+  readonly set: SpoilerSet;
+  /** This card's printings in this set, collector-number order. */
+  readonly printings: readonly SpoilerPrinting[];
+  readonly pitch: PitchValue;
+  /** True where another spoiler shares this name, so the slug and label say pitch. */
+  readonly disambiguated: boolean;
+  /** `Swap Spit (pitch 2)` where the name is shared; the name otherwise. */
+  readonly label: string;
+  readonly slug: string;
+  readonly href: string;
+  /** See {@link spoilerFaceKey}. */
+  readonly faceKey: string | null;
+}
+
+/** How many spoilers carry each name. A shared name is pitch versions of one card. */
+const NAME_COUNTS: ReadonlyMap<string, number> = SPOILER_CARDS.reduce(
+  (counts, card) => counts.set(card.name, (counts.get(card.name) ?? 0) + 1),
+  new Map<string, number>(),
+);
+
+function pageFor(
+  card: SpoilerCard,
+  set: SpoilerSet,
+  printings: readonly SpoilerPrinting[],
+): SpoilerPage {
+  const pitch = pitchValueOf(card);
+  const disambiguated = (NAME_COUNTS.get(card.name) ?? 0) > 1;
+  /* The same suffix `cards.ts` gives a released card: the pitch, `0` for none. */
+  const slug = disambiguated
+    ? `${slugify(card.name)}-${pitch}`
+    : slugify(card.name);
+  const first = printings[0];
+  const number = first === undefined ? "" : numberFor(first.id, set.id);
+  return {
+    card,
+    set,
+    printings,
+    pitch,
+    disambiguated,
+    label: labelFor(card.name, pitch, disambiguated),
+    slug,
+    href: `/spoilers/${set.id.toLowerCase()}/${number}/${slug}`,
+    faceKey: spoilerFaceKey(printings),
+  };
+}
+
+/** Every spoiler page, in `SPOILER_GROUPS` order: set, then collector number. */
+export const SPOILER_PAGES: readonly SpoilerPage[] = SPOILER_GROUPS.flatMap(
+  ({ set, cards }) =>
+    cards.map(({ card, printings }) => pageFor(card, set, printings)),
+);
+
+/**
+ * One set's pages, grouped by name: pitch versions of one card are one ROW,
+ * pitch ascending — the collapse every card list on the site makes. See
+ * `groupByName` in `set.page.tsx`.
+ */
+export function namesIn(
+  pages: readonly SpoilerPage[],
+): readonly (readonly SpoilerPage[])[] {
+  const groups = new Map<string, SpoilerPage[]>();
+  for (const page of pages) {
+    const key = `${page.set.id} ${page.card.name}`;
+    const existing = groups.get(key);
+    if (existing) existing.push(page);
+    else groups.set(key, [page]);
+  }
+  return [...groups.values()].map((group) =>
+    group.toSorted((a, b) => a.pitch - b.pitch),
+  );
 }
