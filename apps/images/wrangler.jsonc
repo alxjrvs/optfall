@@ -59,6 +59,37 @@
       "bucket_name": "optfall-card-faces"
     }
   ],
+  // WORKERS CACHE, SO A FACE IS READ FROM R2 ONCE RATHER THAN ON EVERY REQUEST.
+  //
+  // Without this, every request to this host runs the Worker and makes an R2
+  // read, including the millionth request for the same immutable face, because
+  // nothing in front of a Worker caches its responses unless asked to. With
+  // it, Cloudflare answers a cached response without invoking the Worker at
+  // all, tiered and with concurrent misses collapsed:
+  // https://developers.cloudflare.com/workers/cache/
+  //
+  // THE WORKER ALREADY SAYS WHAT IS CACHEABLE, which is why this is one block
+  // and no code. Workers Cache honours `Cache-Control` and nothing else, and
+  // `src/face.ts` sends a year and `immutable` for a real face, five minutes
+  // for a placeholder or Cold Foil substitute (so new art still lands within
+  // one lifetime), and `no-store` for a 503 (so an outage is never cached).
+  //
+  // `cross_version_cache` IS ON BECAUSE THIS WORKER IS REDEPLOYED ON NEARLY
+  // EVERY MERGE. `deploy-cloudflare.yml` runs the `images` job on any push that
+  // touches `apps/site/**`, `data/**` or `packages/**`, and by default the
+  // Worker version is part of the cache key, so each of those deploys would
+  // start from an empty cache for bytes that never change. THE COST: a wrong
+  // header on a cached face outlives the deploy that fixes it, for up to the
+  // year it claimed. If that ever ships, purge the cache after the fix
+  // deploys.
+  //
+  // BILLING: with caching on, every request to this Worker is billed at the
+  // Worker request rate, including `robots.txt`, which is a free static asset
+  // today. Cache hits use no CPU time. Requires wrangler 4.107.0+.
+  "cache": {
+    "enabled": true,
+    "cross_version_cache": true
+  },
   "observability": {
     // On by default for new Workers, declared explicitly because it is the only
     // thing that makes a store failure visible at all. `face.ts` deliberately
