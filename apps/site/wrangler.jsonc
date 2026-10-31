@@ -37,9 +37,12 @@
   //
   // Cloudflare's documented default is the trap: "Preview URLs are disabled by
   // default when `workers_dev` is disabled", and from wrangler v4.44.0 the
-  // preview setting follows the workers.dev setting unless it is stated. We
-  // pin 4.127.1, so that is the behaviour we get. Stating it means the two
-  // settings can never drift apart on a wrangler upgrade.
+  // preview setting follows the workers.dev setting unless it is stated. The
+  // root `package.json` pins a version past that, so that is the behaviour we
+  // get. (This said "We pin 4.127.1" after the pin had moved on; the number
+  // lives in `package.json` and Dependabot moves it, so it is not repeated
+  // here.) Stating it means the two settings can never drift apart on a
+  // wrangler upgrade.
   //
   // These are different hosts doing different jobs: `<name>.workers.dev` is a
   // second permanent copy of the whole site with no `X-Robots-Tag`, and a
