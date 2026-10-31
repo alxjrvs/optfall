@@ -466,10 +466,12 @@ async function main(): Promise<void> {
   const preview = process.env["OPTFALL_PREVIEW"] === "1";
   /* DEDUPED, AND THE DUPLICATE IS REAL RATHER THAN THEORETICAL. `assets.styles`
      comes from `entries.flatMap` over the Vite manifest, and two entries list
-     the same `SearchField` stylesheet — which is also why it is linked twice in
-     every page's `<head>`. `renderHeaders` refuses a repeated pattern outright,
-     because a later block REPLACES an earlier one rather than merging, so a
-     duplicate here would silently drop a rule instead of adding one. */
+     the same `SearchField` stylesheet — which is also why it WAS linked twice
+     in every page's `<head>`, until `uniqueStylesheets` in `document.tsx`
+     began deduping it there too. `renderHeaders` refuses a repeated pattern
+     outright, because a later block REPLACES an earlier one rather than
+     merging, so a duplicate here would silently drop a rule instead of adding
+     one. */
   const immutable = [
     ...new Set([
       ...assets.styles.map((href) => `/${href}`),

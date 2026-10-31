@@ -42,6 +42,25 @@ export function canonicalFor(route: string, override?: string): string {
   return new URL(withSlash, SITE_ORIGIN).href;
 }
 
+/**
+ * Each stylesheet once, in the position of its LAST occurrence.
+ *
+ * THE DUPLICATE IS REAL. `build.ts` takes `assets.styles` from
+ * `entries.flatMap` over the Vite manifest, and two entries list the same
+ * `SearchField` sheet, so every one of the built pages linked it twice:
+ * `tokens`, `SearchField`, `styles`, `SearchField`. The `_headers` cache list
+ * already dedupes the same array for its own reason; the `<head>` did not.
+ *
+ * LAST, NOT FIRST, BECAUSE ORDER IS CASCADE. With the sheet linked twice, its
+ * second copy is the one that comes after `styles` and so wins every tie of
+ * specificity. Keeping the first occurrence would quietly move it ahead of
+ * `styles` and hand those ties the other way. Keeping the last removes the
+ * extra fetch and parse while leaving the cascade exactly as it rendered.
+ */
+export function uniqueStylesheets(hrefs: readonly string[]): readonly string[] {
+  return hrefs.filter((href, index) => hrefs.lastIndexOf(href) === index);
+}
+
 interface DocumentProps {
   readonly result: PageResult;
   readonly route: string;
@@ -188,7 +207,7 @@ export function Document({
           name="impact-site-verification"
           value="1134ebd0-ee7d-4058-a57f-b6f3da79a0d9"
         />
-        {styles.map((href) => (
+        {uniqueStylesheets(styles).map((href) => (
           <link key={href} rel="stylesheet" href={href} />
         ))}
       </head>

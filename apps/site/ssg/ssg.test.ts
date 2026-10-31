@@ -24,7 +24,7 @@ import { FACE_HOST } from "../src/lib/faces";
 import { facesOf, hrefForPrinting } from "../src/lib/printings";
 import { editionLabel, setFor, setName } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
-import { canonicalFor, Document } from "./document";
+import { canonicalFor, Document, uniqueStylesheets } from "./document";
 import {
   HEADERS,
   headersFor,
@@ -277,6 +277,36 @@ describe("the document shell", () => {
     expect(canonicalFor("/card/omn/243-cf/x", "/card/omn/001/x")).toBe(
       "https://optfall.com/card/omn/001/x/",
     );
+  });
+
+  test("each stylesheet is linked once, where it last appeared", () => {
+    /*
+     * The manifest hands `build.ts` the shared `SearchField` sheet twice, and
+     * every built page used to link it twice. The second copy is the one after
+     * `styles`, so it is the one that decided the cascade — which is why the
+     * survivor must be the LAST occurrence, not the first.
+     */
+    expect(
+      uniqueStylesheets(["/t.css", "/sf.css", "/s.css", "/sf.css"]),
+    ).toEqual(["/t.css", "/s.css", "/sf.css"]);
+
+    const html = renderRoute(
+      {
+        module: {
+          pattern: "/x",
+          page: () => ({ title: "t", description: "d", children: null }),
+        },
+        path: { params: {}, props: undefined },
+        route: "/x",
+      },
+      (r) =>
+        Document({
+          result: r,
+          route: "/x",
+          styles: ["/t.css", "/sf.css", "/s.css", "/sf.css"],
+        }),
+    );
+    expect(html.match(/href="\/sf\.css"/g)?.length).toBe(1);
   });
 
   test("it emits a doctype, which React cannot render on its own", () => {
