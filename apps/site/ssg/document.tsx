@@ -317,6 +317,9 @@ export function Document({
               <a href="/about">About</a>
               <a href="/data-terms">Data terms</a>
               <a href="https://github.com/alxjrvs/optfall">Source</a>
+              <a href="https://alxjrvs.com/" rel="author">
+                By Alex Jarvis
+              </a>
             </nav>
 
             {/*
