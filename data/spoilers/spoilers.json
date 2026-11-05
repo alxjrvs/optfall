@@ -4,21 +4,26 @@
   "sources": [
     {
       "branch": "outbreak",
-      "commit": "2ab4aeaeab9008cc8c345525b2b15661d6209f6e",
-      "committedAt": "2026-10-29T04:39:57Z"
+      "commit": "fa8e6bd71d7f9a789aadf082920ea4760bd08ced",
+      "committedAt": "2026-11-05T04:43:15Z"
     },
     {
       "branch": "usurp-the-shadow-throne",
-      "commit": "74f8b5ff1d24d7669e84635e237713a931943b1e",
-      "committedAt": "2026-10-20T02:58:30Z"
+      "commit": "ec42d952da9c56a6a94855de8f27daeef2d7730f",
+      "committedAt": "2026-11-05T03:18:31Z"
     }
   ],
   "rights": "Card names and card text are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. This dataset displays that content under LSS's third-party application policy and does not relicense it. Only Optfall's structural work over the dataset — the selection, the upstream pins and this envelope — is openly licensed. The upstream compilation is https://github.com/the-fab-cube/flesh-and-blood-cards, which publishes no licence of its own.",
   "counts": {
-    "cards": 57,
-    "sets": 5
+    "cards": 156,
+    "sets": 6
   },
   "sets": [
+    {
+      "id": "AMO",
+      "name": "Armory Deck - Dr. Mortimer",
+      "released": "2026-11-14"
+    },
     {
       "id": "MPA",
       "name": "Mastery Pack Assassin",
@@ -196,6 +201,402 @@
       ]
     },
     {
+      "unique_id": "bqDLrQHcfLRzhJG7HRknh",
+      "name": "Plague Mask",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Head",
+      "functional_text": "**Instant** - Destroy this: Disease tokens can't be created under your control this turn.\n\n**Blade Break**",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Head"
+      ],
+      "printings": [
+        {
+          "id": "AMO003",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO003-RF.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "nFdmFmRnTmw96bg8Pr6RG",
+      "name": "Isolation Vestment",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Chest",
+      "functional_text": "**Action** - Destroy this: Assassin attack action cards that target an infected hero cost you {r} less to play this turn. **Go again**\n\n**Blade Break**",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Chest"
+      ],
+      "printings": [
+        {
+          "id": "AMO004",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO004-RF.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "dJDWqFH9wN9DnTN7BRnp7",
+      "name": "Surgical Gloves",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "0",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Arms",
+      "functional_text": "**Instant** - **Cure** a disease an opponent controls: Target attack they control gets -1{p}. Destroy this at the beginning of the end phase.\n\n**Arcane Barrier 1**",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Arms"
+      ],
+      "printings": [
+        {
+          "id": "AMO005",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO005-RF.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "tPTJgdwp6QgtKpTbHnKqP",
+      "name": "Second Salvos",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Legs",
+      "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Instant** - Destroy this: {u} your hero.\n\n**Blade Break**",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Legs"
+      ],
+      "printings": [
+        {
+          "id": "AMO006",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO006-RF.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "prKmnQLKqnCN9rMwkTpth",
+      "name": "Escaped Subject",
+      "pitch": "1",
+      "cost": "0",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If the defending hero is infected, this gets **go again**.",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "AMO008",
+          "set_id": "AMO",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO008.webp"
+        },
+        {
+          "id": "MPA076",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA076.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "6bMzPkg7WrLFjMb9j7WqM",
+      "name": "Eviscerate the Enervated",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish infected opponents' cards. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "AMO009",
+          "set_id": "AMO",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO009.webp"
+        },
+        {
+          "id": "MPA079",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA079.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "kH96C8CLkdDDJtTJwMwTT",
+      "name": "Sneaking Rot",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you've played or activated an attack reaction this chain link, this gets \"When this hits a hero, create a Bloodrot Pox token under their control.\"",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "AMO012",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO012.webp"
+        },
+        {
+          "id": "MPA044",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA044.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "Nw7BBnKfCGchBdWhwHh7z",
+      "name": "Wound Extraction",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you've hit with a dagger this combat chain, this gets \"When this hits a hero, create a Frailty, Inertia, or Bloodrot Pox token under their control.\"",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "AMO013",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO013.webp"
+        },
+        {
+          "id": "MPA051",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA051.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "QCNnDd8HHm8QTrnBgGnCj",
+      "name": "Act on Intel: Whereabouts",
+      "pitch": "1",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack action card with contract gets +1{p} and \"When this hits a hero, they choose a card in their hand. Banish it.\"",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "AMO014",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO014.webp"
+        },
+        {
+          "id": "MPA054",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA054.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "bcQJw8TWLWNgTDtwpJT7F",
+      "name": "Pick Your Poison",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action",
+      "functional_text": "Each opposing hero chooses Frailty, Inertia, or Bloodrot Pox. Create the 2 tokens they didn't choose under their control.\n\n**Go again**",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Action"
+      ],
+      "printings": [
+        {
+          "id": "AMO023",
+          "set_id": "AMO",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO023.webp"
+        },
+        {
+          "id": "MPA124",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA124.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "hncGgJt68zkrcnFFCqfm9",
+      "name": "Languid Pace",
+      "pitch": "3",
+      "cost": "1",
+      "power": "3",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this attacks or defends, create an Inertia token under each hero's control.",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "AMO025",
+          "set_id": "AMO",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO025.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "CQ89nqTHqKHGrJ7RQHfGf",
+      "name": "Viral Sampling",
+      "pitch": "3",
+      "cost": "0",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\n**Contract** - You are contracted to hit an infected opposing hero. Whenever you complete this contract, create a Silver token.",
+      "added": "2026-11-05T03:08:11Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "AMO027",
+          "set_id": "AMO",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO027.webp"
+        },
+        {
+          "id": "MPA108",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA108.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "kQQBTw9GqmkDJQhFknFgN",
+      "name": "Seed Inertia",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Instant",
+      "functional_text": "Create an Inertia token under each hero's control.",
+      "added": "2026-10-29T04:39:57Z",
+      "types": [
+        "Assassin",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "AMO029",
+          "set_id": "AMO",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMO029.webp"
+        },
+        {
+          "id": "MPA127",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA127.webp"
+        }
+      ]
+    },
+    {
       "unique_id": "DDf7pH8DcRCBKMjWkmtGg",
       "name": "Phial of Calamity",
       "pitch": "",
@@ -250,6 +651,222 @@
       ]
     },
     {
+      "unique_id": "n8rRMB8CgDjGqzQHW8WGw",
+      "name": "Mask of One Million Eyes",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "0",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Head",
+      "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - Destroy this: Draw a card, then put a card from your hand on the bottom of your deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Head"
+      ],
+      "printings": [
+        {
+          "id": "MPA009",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA009.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "JTDcPmHQhdNMQCkGQwzW7",
+      "name": "Scouting Cloak",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "0",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Chest",
+      "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - Destroy this: Until end of turn, whenever you complete a contract, gain 1{h}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Chest"
+      ],
+      "printings": [
+        {
+          "id": "MPA010",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA010.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "qcLGHzDBbRWRCLR8cTmdp",
+      "name": "Plaguewarden's Wraps",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "0",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Arms",
+      "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - Destroy this: Target Assassin attack action card gets \"When this hits a hero, give them a disease you control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Arms"
+      ],
+      "printings": [
+        {
+          "id": "MPA011",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA011.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "mLnCrrw6qrF8WH8ffQhGq",
+      "name": "Step Overs",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "0",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Legs",
+      "functional_text": "While this is in your graveyard, at the start of your turn, you may destroy 2 Silver you control. If you do, equip this.\n\n**Attack Reaction** - Destroy this: Target Assassin attack action card gets **go again**. Activate this only if the defending hero has played a defense reaction this chain link.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Legs"
+      ],
+      "printings": [
+        {
+          "id": "MPA012",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA012.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "PhwT9zWcPPDrhbdNmwTjN",
+      "name": "Bounty Brim",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Head",
+      "functional_text": "**Action** - Destroy this: Until end of turn, whenever you complete a contract, create a Silver token. Activate this only if you are Arakni. **Go again**\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Head"
+      ],
+      "printings": [
+        {
+          "id": "MPA013",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA013.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "rLTdrcJ9nMD7FzNBKDr8L",
+      "name": "Stimtek Vest",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Chest",
+      "functional_text": "When you complete a contract, if you are Uzuri, you may destroy this. If you do, gain {r}{r}.\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Chest"
+      ],
+      "printings": [
+        {
+          "id": "MPA014",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA014.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "KPgNCGMNmRMnTtjBbd6qR",
+      "name": "Wristcuff Injectors",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Arms",
+      "functional_text": "**Action** - Destroy this: The next Assassin attack action card you play this turn gets \"When this hits a hero, create a Frailty, Inertia, or Bloodrot Pox token under their control.\" Activate this only if you are Mortimer. **Go again**\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Arms"
+      ],
+      "printings": [
+        {
+          "id": "MPA015",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA015.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "9RHwKNM7gNJKPHmbpT7Jh",
+      "name": "Murder Sprees",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Equipment - Legs",
+      "functional_text": "**Action** - Destroy this: The next time you complete a contract this turn, gain an action point. **Go again**\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Equipment",
+        "Legs"
+      ],
+      "printings": [
+        {
+          "id": "MPA016",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA016.webp"
+        }
+      ]
+    },
+    {
       "unique_id": "qtNmMctTJkpz77KTtzg7c",
       "name": "Bribe the Guards",
       "pitch": "3",
@@ -273,6 +890,33 @@
           "set_id": "MPA",
           "rarity": "M",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA017.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "bPGqKpHKddzgz8R6fQtgg",
+      "name": "Concoct Agony",
+      "pitch": "2",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nIf you've played or activated 3 or more attack reactions this chain link, this gets +3{p} and \"When this hits a hero, banish all cards in their arsenal.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA018",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA018.webp"
         }
       ]
     },
@@ -358,6 +1002,87 @@
       ]
     },
     {
+      "unique_id": "TTptwBRrQkqLFPHBFPgKR",
+      "name": "Painful Choice",
+      "pitch": "1",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nWhen this attacks, you may put a card from your hand on the bottom of your deck. If you do, this gets +4{p} unless the defending hero chooses a card in their hand. Banish the chosen card.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA023",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA023.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "m8NphHNdMKLqWNKqBrrjd",
+      "name": "Sick Intent",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to create disease tokens under opponents' control. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, create a Frailty, Inertia, or Bloodrot Pox token under their control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA027",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA027.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "z7TC669FKtwFw8DCJTkLJ",
+      "name": "Spike Slasher",
+      "pitch": "1",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nWhen this attacks, attack reaction cards cost {r} less to play this chain link.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA028",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA028.webp"
+        }
+      ]
+    },
+    {
       "unique_id": "LNDpF7dJmJ9CzczmmnQqp",
       "name": "Tailored Targeting",
       "pitch": "1",
@@ -381,6 +1106,32 @@
           "set_id": "MPA",
           "rarity": "M",
           "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA029.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "ftktTbdr99DhPBFp9KBFt",
+      "name": "Expense Not Spared",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "As an additional cost to play this, destroy 2 Silver you control.\n\nTarget Assassin attack action card gets +5{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA030",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA030.webp"
         }
       ]
     },
@@ -437,6 +1188,1718 @@
       ]
     },
     {
+      "unique_id": "Jcmb86nNQDLLdFQ9kf66M",
+      "name": "Decapitate the Disloyal",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish opponents' cards with no class or talent. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA033",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA033.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "jCKHWtcWCjfBg8KhfpFN8",
+      "name": "Decapitate the Disloyal",
+      "pitch": "2",
+      "cost": "2",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish opponents' cards with no class or talent. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA034",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA034.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "7DnBfJPWBJgqdL8HGFhfp",
+      "name": "Decapitate the Disloyal",
+      "pitch": "3",
+      "cost": "2",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish opponents' cards with no class or talent. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA035",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA035.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "jJdwCQBmCFF7cpBHGK7CN",
+      "name": "Feverish Strike",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you are infected, this gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA036",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA036.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "fHqHqfb6RNkPdhLGgWNmq",
+      "name": "Feverish Strike",
+      "pitch": "2",
+      "cost": "2",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you are infected, this gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA037",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA037.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "rfWMNbRC8HRdFbbkHwfWn",
+      "name": "Feverish Strike",
+      "pitch": "3",
+      "cost": "2",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you are infected, this gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA038",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA038.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "hNQdz8HcfQmc6hNm6rHLP",
+      "name": "Kill Confirmed",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this attacks, name a card, then the defending hero reveals the top card of their deck. If it's the named card, banish it and create a Silver token.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA039",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA039.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "m6nJLwwWQCrFdNFFHGrjd",
+      "name": "Lab Rat",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If the defending hero is infected, this gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA040",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA040.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "jWFrR9LN8bBDhGmjWRngh",
+      "name": "Lab Rat",
+      "pitch": "2",
+      "cost": "2",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If the defending hero is infected, this gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA041",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA041.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "QJCqzGppncLcbmNCCRGTn",
+      "name": "Lab Rat",
+      "pitch": "3",
+      "cost": "2",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If the defending hero is infected, this gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA042",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA042.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "rrKnnhk8c8WWCkHhbCpQR",
+      "name": "Sneaking Exhaustion",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you've played or activated an attack reaction this chain link, this gets \"When this hits a hero, create an Inertia token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA043",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA043.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "NRPBTRJBqHD6JhmMCcwCB",
+      "name": "Sneaking Weakness",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you've played or activated an attack reaction this chain link, this gets \"When this hits a hero, create a Frailty token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA045",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA045.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "DdNjQrFHj8wRDGDbPwjGg",
+      "name": "The Spider's Cut",
+      "pitch": "1",
+      "cost": "1",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "As an additional cost to play this, destroy a Silver you control.\n\nWhen this hits a hero, create 2 Silver tokens.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA046",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA046.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "8CmnzqQjzMzTW7nnHT9HF",
+      "name": "The Spider's Cut",
+      "pitch": "2",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "As an additional cost to play this, destroy a Silver you control.\n\nWhen this hits a hero, create 2 Silver tokens.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA047",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA047.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "zdnphTc7m8kP8jQbPMGJ6",
+      "name": "The Spider's Cut",
+      "pitch": "3",
+      "cost": "1",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "As an additional cost to play this, destroy a Silver you control.\n\nWhen this hits a hero, create 2 Silver tokens.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA048",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA048.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "FwWGm7jhG6fqmjjTcCpCb",
+      "name": "Wound Excavation",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you've hit with a dagger this combat chain, this gets \"When this hits a hero, they lose 1{h}.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA049",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA049.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "NrbNNmJkKCd7cjtWnHTRH",
+      "name": "Wound Excision",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you've hit with a dagger this combat chain, this gets \"When this hits a hero, banish the top 2 cards of their deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA050",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA050.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "zCbNCnkfKfkLJGNFDwrrh",
+      "name": "Act on Intel: Haunts",
+      "pitch": "3",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack action card with contract gets +1{p} and \"When this hits a hero, banish the top card of their deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA052",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA052.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "kdnRC8zRgzDw9wrWMLBRt",
+      "name": "Act on Intel: Plans",
+      "pitch": "2",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack action card with contract gets +1{p} and \"When this hits a hero, they choose a card in their arsenal. Banish it.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA053",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA053.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "cCb7DWttp9KKjc6trfcN7",
+      "name": "Pinpoint Elimination",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Name a card, then the defending hero reveals the top card of their deck. If it's the named card, banish it and create a Silver token.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA055",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA055.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "NpKJgggHggBkccChWmpwB",
+      "name": "Sickening Exhaustion",
+      "pitch": "3",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "If the defending hero is infected, put all cards in their arsenal on the bottom of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA057",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA057.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "BRcqTQNp7BMmtRbKQNRBc",
+      "name": "Sickening Rot",
+      "pitch": "3",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "If the defending hero is infected, deal 2 damage to them unless they pay {r}{r}{r}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA058",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA058.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "gMbJFKpC9wqdhkb6kWj76",
+      "name": "Sickening Weakness",
+      "pitch": "3",
+      "cost": "1",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "If the defending hero is infected, defending cards get -1{d} this chain link.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA059",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA059.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "BM8tHBGjfgkDpfc9bFHNz",
+      "name": "Viral Accelerant",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "For each disease token you control with a different name, create a token copy of it under the defending hero's control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA063",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA063.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "JzzFCczWQz6kngzHrpHPK",
+      "name": "Just My Type",
+      "pitch": "1",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Defense Reaction",
+      "functional_text": "When this defends, name a card, then the attacking hero reveals the top card of their deck. If it's the named card, banish it and create a Silver token.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Defense Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA064",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA064.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "m8KqPpHKdJRWgL8kFjJtc",
+      "name": "Patron's Lockbox: Carriers",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Item",
+      "functional_text": "**Go again**\n\nWhen you complete a contract, destroy this. If you do, create a Frailty, Inertia, or Bloodrot Pox token under an opposing hero's control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Item"
+      ],
+      "printings": [
+        {
+          "id": "MPA065",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA065.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "R7NfRbJ79J7GrHD7QFfHn",
+      "name": "Patron's Lockbox: Serums",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Item",
+      "functional_text": "**Go again**\n\nWhen you complete a contract, destroy this. If you do, gain 1 action point.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Item"
+      ],
+      "printings": [
+        {
+          "id": "MPA066",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA066.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "NC7dczrLWQRQNPwNHWknB",
+      "name": "Patron's Lockbox: Valuables",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Item",
+      "functional_text": "**Go again**\n\nWhen you complete a contract, destroy this. If you do, create 2 Silver tokens.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Item"
+      ],
+      "printings": [
+        {
+          "id": "MPA067",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA067.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "gpQMkm9FbjdFDQLb7hk8f",
+      "name": "Funded Research",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action",
+      "functional_text": "If you've completed a contract this turn, create a Frailty, Inertia, and Bloodrot Pox token under each opposing hero's control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action"
+      ],
+      "printings": [
+        {
+          "id": "MPA068",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA068.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "7zCCkPqW7L9tFNpC9JPk7",
+      "name": "Emergency Services",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Instant",
+      "functional_text": "**Cure** any number of diseases with different names an opponent controls.\n\nCreate twice that many Silver tokens.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Instant"
+      ],
+      "printings": [
+        {
+          "id": "MPA069",
+          "set_id": "MPA",
+          "rarity": "R",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA069.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "nzqMFbW76CKdbgjRPLpkK",
+      "name": "Break Down the Bloodline",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - If you are Arakni, you are contracted to banish opponents' Assassin cards. Whenever you complete this contract, create a Silver token.\n\nIf you are Arakni, this gets \"When this hits a hero, banish the top card of their deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA070",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA070.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "GHKfTkRGFwcGFzC6wRmjt",
+      "name": "Break Down the Bloodline",
+      "pitch": "2",
+      "cost": "2",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - If you are Arakni, you are contracted to banish opponents' Assassin cards. Whenever you complete this contract, create a Silver token.\n\nIf you are Arakni, this gets \"When this hits a hero, banish the top card of their deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA071",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA071.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "fpRMWTfkhFpPJRggdRGJC",
+      "name": "Break Down the Bloodline",
+      "pitch": "3",
+      "cost": "2",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - If you are Arakni, you are contracted to banish opponents' Assassin cards. Whenever you complete this contract, create a Silver token.\n\nIf you are Arakni, this gets \"When this hits a hero, banish the top card of their deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA072",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA072.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "8GcGc9TLRTBmKWzcbmWDR",
+      "name": "Desperate Drive",
+      "pitch": "1",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nIf you are infected, this gets **go again**.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA073",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA073.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "zwtHgF7CKMfgTc6pJqMgq",
+      "name": "Desperate Drive",
+      "pitch": "2",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nIf you are infected, this gets **go again**.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA074",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA074.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "MJnRTpDfqwtGtWmGKdnWb",
+      "name": "Desperate Drive",
+      "pitch": "3",
+      "cost": "0",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nIf you are infected, this gets **go again**.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA075",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA075.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "9TggKdqjNQD7cMpjkQm9M",
+      "name": "Escaped Subject",
+      "pitch": "2",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If the defending hero is infected, this gets **go again**.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA077",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA077.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "6GtcjnJBfNJLpfMKHmdBK",
+      "name": "Escaped Subject",
+      "pitch": "3",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If the defending hero is infected, this gets **go again**.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA078",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA078.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "PW6MGmmrzNkjMTt9tBdDr",
+      "name": "Eviscerate the Enervated",
+      "pitch": "2",
+      "cost": "1",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish infected opponents' cards. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA080",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA080.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "zTMRgNpTQWFBrgd77LtWK",
+      "name": "Eviscerate the Enervated",
+      "pitch": "3",
+      "cost": "1",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish infected opponents' cards. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA081",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA081.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "N789qhwnHPwzRDw6hMNMf",
+      "name": "In the Hot Zone",
+      "pitch": "1",
+      "cost": "1",
+      "power": "6",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this attacks, create a Bloodrot Pox token under your control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA082",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA082.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "Cnn7cJPJMh9bh8wKbdNB8",
+      "name": "In the Hot Zone",
+      "pitch": "2",
+      "cost": "1",
+      "power": "5",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this attacks, create a Bloodrot Pox token under your control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA083",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA083.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "HGMgBPgCjQcK86wQwhqHw",
+      "name": "In the Hot Zone",
+      "pitch": "3",
+      "cost": "1",
+      "power": "4",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this attacks, create a Bloodrot Pox token under your control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA084",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA084.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "qCjCqBkpzfCpfhhb8Rw8T",
+      "name": "Professional Rivalry",
+      "pitch": "3",
+      "cost": "0",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\n**Contract** - You are contracted to hit an Assassin hero. Whenever you complete this contract, create a Silver token.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA089",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA089.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "CHznnhPbWNQtKL97qB6DW",
+      "name": "Repeat Reconnaissance",
+      "pitch": "1",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nIf you are Uzuri, this gets \"When this is defended by 2 or more cards, you may put an attack action card with cost 2 from your graveyard on the bottom of your deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA090",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA090.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "tBM6QRCpgQf66TWTDrKdq",
+      "name": "Repeat Reconnaissance",
+      "pitch": "2",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nIf you are Uzuri, this gets \"When this is defended by 2 or more cards, you may put an attack action card with cost 2 from your graveyard on the bottom of your deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA091",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA091.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "jbQhgWrJB97QdmMWcGMCd",
+      "name": "Repeat Reconnaissance",
+      "pitch": "3",
+      "cost": "0",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\nIf you are Uzuri, this gets \"When this is defended by 2 or more cards, you may put an attack action card with cost 2 from your graveyard on the bottom of your deck.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA092",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA092.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "NHjMGfbhT6WnbGWqpnfwN",
+      "name": "Slice the Sickly",
+      "pitch": "1",
+      "cost": "0",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish infected opponents' cards. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA096",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA096.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "kkC9NGDWFJQmPPhdctFWD",
+      "name": "Slice the Sickly",
+      "pitch": "2",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish infected opponents' cards. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA097",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA097.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "9c6NwTQ9HmnTrhgnwHqJK",
+      "name": "Slice the Sickly",
+      "pitch": "3",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Contract** - You are contracted to banish infected opponents' cards. Whenever you complete this contract, create a Silver token.\n\nWhen this hits a hero, banish the top card of their deck.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA098",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA098.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "hNRPcbDBKD9bfdLMF76Gt",
+      "name": "Spawn Bloodrot",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this hits an Assassin hero, create a Bloodrot Pox token under their control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA100",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA100.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "zpWcH7zzcmH6wdtJcnc8C",
+      "name": "Spawn Frailty",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this hits an Assassin hero, create a Frailty token under their control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA101",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA101.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "dG6w6QqgLmpPFMmdcfWRF",
+      "name": "Spawn Inertia",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "When this hits an Assassin hero, create an Inertia token under their control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA102",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA102.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "JHkwcqCRfbH9bgjr76zhn",
+      "name": "Triple Blind",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you are Mortimer, this gets \"When this hits a hero, they choose Frailty, Inertia, or Bloodrot Pox. Create that token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA103",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA103.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "bWG7qfQrgGJqTTMfpcnCG",
+      "name": "Triple Blind",
+      "pitch": "2",
+      "cost": "1",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you are Mortimer, this gets \"When this hits a hero, they choose Frailty, Inertia, or Bloodrot Pox. Create that token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA104",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA104.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "Bq7DQMGKb6DNBrqRqhCnM",
+      "name": "Triple Blind",
+      "pitch": "3",
+      "cost": "1",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "If you are Mortimer, this gets \"When this hits a hero, they choose Frailty, Inertia, or Bloodrot Pox. Create that token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA105",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA105.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "Q7TpJ77BCKFPGDqKRDrJ6",
+      "name": "Viral Sampling",
+      "pitch": "1",
+      "cost": "0",
+      "power": "3",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\n**Contract** - You are contracted to hit an infected opposing hero. Whenever you complete this contract, create a Silver token.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA106",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA106.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "JKHQ6hCBnNMdq6np8Ng8c",
+      "name": "Viral Sampling",
+      "pitch": "2",
+      "cost": "0",
+      "power": "2",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Action - Attack",
+      "functional_text": "**Stealth**\n\n**Contract** - You are contracted to hit an infected opposing hero. Whenever you complete this contract, create a Silver token.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA107",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA107.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "c9jDKPRRdRBnq9RNtmFPM",
+      "name": "Easy Prey",
+      "pitch": "1",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack gets +3{p} while it's attacking an infected hero.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA115",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA115.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "BtJP8kzDwHB6bwkBRztjm",
+      "name": "Easy Prey",
+      "pitch": "2",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack gets +2{p} while it's attacking an infected hero.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA116",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA116.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "Kjdh9hrLNkzPfjjrR8n8P",
+      "name": "Easy Prey",
+      "pitch": "3",
+      "cost": "0",
+      "power": "",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack gets +1{p} while it's attacking an infected hero.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA117",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA117.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "Qkd9Cdwh6bRzJcWWKrHRt",
+      "name": "Festering Exhaustion",
+      "pitch": "2",
+      "cost": "1",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack action card gets **go again** and \"When this hits a hero, create an Inertia token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA118",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA118.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "dc7gp6Q6RjQM6RjgRrbPj",
+      "name": "Festering Rot",
+      "pitch": "2",
+      "cost": "1",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack action card gets **go again** and \"When this hits a hero, create a Bloodrot Pox token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA119",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA119.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "rwcwPjdMJtkkdjTKhDQ8z",
+      "name": "Festering Weakness",
+      "pitch": "2",
+      "cost": "1",
+      "power": "",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Assassin Attack Reaction",
+      "functional_text": "Target Assassin attack action card gets **go again** and \"When this hits a hero, create a Frailty token under their control.\"",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Assassin",
+        "Attack Reaction"
+      ],
+      "printings": [
+        {
+          "id": "MPA120",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA120.webp"
+        }
+      ]
+    },
+    {
       "unique_id": "whMLddCwLmFkWnHTL7LNw",
       "name": "Seed Bloodrot",
       "pitch": "3",
@@ -489,28 +2952,272 @@
       ]
     },
     {
-      "unique_id": "kQQBTw9GqmkDJQhFknFgN",
-      "name": "Seed Inertia",
-      "pitch": "3",
-      "cost": "0",
+      "unique_id": "wFhdQtTRnt9fFk9fmtQtL",
+      "name": "Puredew Panacea",
+      "pitch": "",
+      "cost": "",
       "power": "",
       "defense": "",
       "health": "",
       "intelligence": "",
       "arcane": "",
-      "type_text": "Assassin Instant",
-      "functional_text": "Create an Inertia token under each hero's control.",
-      "added": "2026-10-29T04:39:57Z",
+      "type_text": "Generic Equipment - Off-Hand",
+      "functional_text": "**Action** - Destroy this: **Cure** a disease you control. If you do, gain 1{h}. **Go again**",
+      "added": "2026-11-05T04:43:15Z",
       "types": [
-        "Assassin",
-        "Instant"
+        "Generic",
+        "Equipment",
+        "Off-Hand"
       ],
       "printings": [
         {
-          "id": "MPA127",
+          "id": "MPA132",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA132.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "LBhqb8DDP8GQm9tP9nfJb",
+      "name": "Needlebane Cowl",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Equipment - Head",
+      "functional_text": "When this defends a dagger, this gets +1{d}.\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Equipment",
+        "Head"
+      ],
+      "printings": [
+        {
+          "id": "MPA137",
           "set_id": "MPA",
           "rarity": "C",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA127.webp"
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA137.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "dBDcjnLWGqcWgpjfjcqfk",
+      "name": "Needlebane Coat",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Equipment - Chest",
+      "functional_text": "When this defends a dagger, this gets +1{d}.\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Equipment",
+        "Chest"
+      ],
+      "printings": [
+        {
+          "id": "MPA138",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA138.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "TjdKmg6CRbmnffztCNmqh",
+      "name": "Needlebane Gauntlets",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Equipment - Arms",
+      "functional_text": "When this defends a dagger, this gets +1{d}.\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Equipment",
+        "Arms"
+      ],
+      "printings": [
+        {
+          "id": "MPA139",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA139.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "TmFzFPCnBznFNdpHqqfHK",
+      "name": "Needlebane Steppers",
+      "pitch": "",
+      "cost": "",
+      "power": "",
+      "defense": "1",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Equipment - Legs",
+      "functional_text": "When this defends a dagger, this gets +1{d}.\n\n**Blade Break**",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Equipment",
+        "Legs"
+      ],
+      "printings": [
+        {
+          "id": "MPA140",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA140.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "gNrLqwbQNNnNrPBRDGNCw",
+      "name": "Banger!",
+      "pitch": "3",
+      "cost": "2",
+      "power": "1",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Action - Attack",
+      "functional_text": "If this is defended, it gets +6{p}.\n\n**Instant** - Discard this: Create a Silver token.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA141",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA141.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "j87TtQ8N8cpQfJ9GTGTpc",
+      "name": "Self-determination",
+      "pitch": "3",
+      "cost": "2",
+      "power": "4",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Action - Attack",
+      "functional_text": "**Instant** - Discard this: Until end of turn, opponents can't create tokens under your control.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA142",
+          "set_id": "MPA",
+          "rarity": "M",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA142.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "fb7MfdDMjFjhf8Lr86fLw",
+      "name": "Free of Burdens",
+      "pitch": "1",
+      "cost": "2",
+      "power": "6",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Action - Attack",
+      "functional_text": "**Once per Turn Instant** - Destroy an aura token you control: This gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA147",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA147.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "MkH9LhJw6Wrrf6rqTcztJ",
+      "name": "Free of Burdens",
+      "pitch": "2",
+      "cost": "2",
+      "power": "5",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Action - Attack",
+      "functional_text": "**Once per Turn Instant** - Destroy an aura token you control: This gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA148",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA148.webp"
+        }
+      ]
+    },
+    {
+      "unique_id": "QK7rMkzFhBjWDmMrhDKTq",
+      "name": "Free of Burdens",
+      "pitch": "3",
+      "cost": "2",
+      "power": "4",
+      "defense": "2",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "type_text": "Generic Action - Attack",
+      "functional_text": "**Once per Turn Instant** - Destroy an aura token you control: This gets +1{p}.",
+      "added": "2026-11-05T04:43:15Z",
+      "types": [
+        "Generic",
+        "Action",
+        "Attack"
+      ],
+      "printings": [
+        {
+          "id": "MPA149",
+          "set_id": "MPA",
+          "rarity": "C",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPA149.webp"
         }
       ]
     },
@@ -1175,7 +3882,7 @@
       "intelligence": "4",
       "arcane": "",
       "type_text": "Assassin Ranger Hero",
-      "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If its an arrow, it gets **veil** this turn.",
+      "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If it's an arrow, it gets **veil** this turn.",
       "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
@@ -1202,7 +3909,7 @@
       "intelligence": "4",
       "arcane": "",
       "type_text": "Assassin Ranger Hero - Young",
-      "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If its an arrow, it gets **veil** this turn.",
+      "functional_text": "**Instant** - {t}, put a card from your arsenal on the bottom of your deck: Put the top card of your deck face-up into your arsenal. If it has stealth, it gets +1{p} and **go again** this turn. If it's an arrow, it gets **veil** this turn.",
       "added": "2026-10-14T05:56:50Z",
       "types": [
         "Assassin",
