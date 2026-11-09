@@ -27,7 +27,7 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "sharp": "0.35.5",
-    "vite": "8.3.5"
+    "vite": "8.3.6"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && bun run --filter './packages/*' --filter './apps/*' typecheck",
@@ -62,12 +62,12 @@
     "design-system": "bun scripts/build-design-system.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.4",
+    "@biomejs/biome": "2.6.5",
     "@happy-dom/global-registrator": "21.0.4",
     "@types/bun": "1.4.0",
     "sharp": "catalog:",
     "typescript": "7.0.2",
-    "wrangler": "4.156.0",
+    "wrangler": "4.158.0",
     "axe-core": "catalog:",
     "jsdom": "catalog:",
     "@types/jsdom": "catalog:"
