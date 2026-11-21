@@ -3674,3 +3674,21 @@ describe("a page's structured breadcrumb says what its visible one says", () => 
     expect(html).toContain("\\u003c/script>");
   });
 });
+
+describe("a card's link preview is the padded rendition", () => {
+  test("a card page names the 1200×630 JPEG, with its size and type", () => {
+    const card = RESOLVED.find((entry) => entry.route.startsWith("/card/"));
+    const html = card?.render([], undefined) ?? "";
+    expect(html).toMatch(
+      /<meta property="og:image" content="https:\/\/images\.optfall\.com\/og\/[A-Za-z0-9._-]+\.jpg"\/>/,
+    );
+    expect(html).toContain(
+      '<meta property="og:image:type" content="image/jpeg"/>',
+    );
+    expect(html).toContain('<meta property="og:image:width" content="1200"/>');
+    expect(html).toContain('<meta property="og:image:height" content="630"/>');
+    expect(html).toContain(
+      '<meta name="twitter:card" content="summary_large_image"/>',
+    );
+  });
+});

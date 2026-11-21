@@ -16,7 +16,12 @@
  * over two functions and allocates nothing else. Hoisting it would mean caching
  * a binding across requests for no measurable gain.
  */
-import { makeFaceHandler, type FaceStore } from "./face";
+import {
+  makeFaceHandler,
+  type FaceFailureReporter,
+  type FaceStore,
+} from "./face";
+import { makeOgHandler, parseOgPath, type ImagesBinding } from "./og";
 
 /**
  * The slice of R2 this Worker uses, declared structurally.
@@ -38,7 +43,23 @@ interface R2Bucket {
 export interface Env {
   /** Bound to the `optfall-card-faces` bucket by `wrangler.jsonc`. */
   readonly FACES: R2Bucket;
+  /** Cloudflare Images, bound by `wrangler.jsonc`, for `/og/` alone. */
+  readonly IMAGES: ImagesBinding;
 }
+
+/**
+ * Where a failure goes: the Worker's log, which `observability` keeps.
+ *
+ * THIS WAS MISSING, AND THE CONFIG SAID OTHERWISE. `wrangler.jsonc` says
+ * observability is "the only thing that makes a store failure visible at all"
+ * and that `face.ts` "DOES report the store failing to answer". `face.ts`
+ * does call its reporter — but this entrypoint never passed one, so the
+ * default no-op swallowed every R2 failure in production and the log had
+ * nothing to show. `console.error` is what Workers Logs records.
+ */
+const report: FaceFailureReporter = (error, context) => {
+  console.error("optfall-images failure", context ?? {}, error);
+};
 
 /**
  * R2 answers with an object carrying a stream; the seam wants the stream or
@@ -61,10 +82,32 @@ export default {
      * skip that. `env.FACES` is typed as present, so this is the case the type
      * says cannot happen — which is exactly the kind that reaches production.
      */
-    const handler = makeFaceHandler(() => {
+    const openStore = (): FaceStore => {
       if (env.FACES === undefined) throw new Error("FACES binding is missing");
       return storeFor(env.FACES);
-    });
+    };
+
+    /* `/og/` FIRST, AND ONLY ON AN EXACT MATCH. Every other path is the face
+       handler's, exactly as before; a malformed `/og/…` falls through to it
+       and gets that handler's 404. The same missing-binding guard as the
+       store's, for the same reason: the og handler's catch turns it into a
+       redirect to the plain face rather than a platform 500. */
+    const og = parseOgPath(new URL(request.url).pathname);
+    if (og !== null) {
+      const handler = makeOgHandler(
+        openStore,
+        () => {
+          if (env.IMAGES === undefined) {
+            throw new Error("IMAGES binding is missing");
+          }
+          return env.IMAGES;
+        },
+        report,
+      );
+      return await handler(og);
+    }
+
+    const handler = makeFaceHandler(openStore, report);
     return await handler(request);
   },
 };

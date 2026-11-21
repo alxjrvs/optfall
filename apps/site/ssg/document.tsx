@@ -139,7 +139,22 @@ export function Document({
         />
         {result.image !== undefined && (
           <>
-            <meta property="og:image" content={result.image} />
+            <meta property="og:image" content={result.image.url} />
+            {/*
+              THE SIZE AND TYPE, STATED, so a client can lay out the card before
+              the image arrives — some render a share without the picture
+              until they have fetched it once to measure it. True of every
+              preview, because `previewImageFor` names a fixed canvas.
+            */}
+            <meta property="og:image:type" content={result.image.type} />
+            <meta
+              property="og:image:width"
+              content={String(result.image.width)}
+            />
+            <meta
+              property="og:image:height"
+              content={String(result.image.height)}
+            />
             {/*
               THE ALT TEXT IS THE CARD'S NAME, because that is what the picture
               is of and the title already says it. It is here rather than

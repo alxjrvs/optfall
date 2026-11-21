@@ -59,6 +59,20 @@
       "bucket_name": "optfall-card-faces"
     }
   ],
+  // CLOUDFLARE IMAGES, FOR `/og/` AND NOTHING ELSE. `src/og.ts` pads a face
+  // onto the 1200×630 canvas link previews are drawn at. A transform runs only
+  // for a key the bucket holds, and the cache block below stores each result
+  // for a year, so the most this can bill is one transform per face — the
+  // reasoning, and the fallback when the binding fails, are in `og.ts`.
+  //
+  // IF A TRANSFORM FAILS AT RUNTIME, `/og/` redirects to the plain face, so a
+  // preview degrades to what it was before rather than to nothing. NOT
+  // VERIFIED when this was written: whether a deploy succeeds on an account
+  // without Images transformations enabled. Check that before relying on the
+  // fallback to cover it.
+  "images": {
+    "binding": "IMAGES"
+  },
   // WORKERS CACHE, SO A FACE IS READ FROM R2 ONCE RATHER THAN ON EVERY REQUEST.
   //
   // Without this, every request to this host runs the Worker and makes an R2

@@ -22,6 +22,7 @@
 
 import type { ReactNode } from "react";
 
+import type { PreviewImage } from "../src/lib/faces";
 import type { HeaderSection } from "./SiteHeader";
 
 /** One URL a page owns, with whatever the renderer needs to draw it. */
@@ -67,11 +68,13 @@ export interface PageResult {
   /** Absolute URL. Omitted where the page is its own canonical. */
   readonly canonical?: string | undefined;
   /**
-   * An absolute image URL for the link preview, where the page has one.
+   * The link preview's image, where the page has one.
    *
    * OPTIONAL, AND MOST PAGES CORRECTLY OMIT IT. A card page has an obvious
-   * picture — the face itself, already served from R2 at a tier chosen for
-   * exactly this size — and `/about` does not. A generic fallback image would
+   * picture — the face itself, ~~already served from R2 at a tier chosen for
+   * exactly this size~~ now padded to the 1200×630 preview canvas by the face
+   * host's `/og/` route (`previewImageFor`), because the portrait tier was
+   * cropped to a strip by X — and `/about` does not. A generic fallback image would
    * put the same mark on every card ever shared, which is worse than the plain
    * link this replaces: it looks like a preview and carries no information.
    *
@@ -79,7 +82,7 @@ export interface PageResult {
    * `document.tsx`, so a page without a picture gets the card shape built for
    * not having one.
    */
-  readonly image?: string | undefined;
+  readonly image?: PreviewImage | undefined;
   /**
    * The page's own `<meta name="theme-color">`, where it has one.
    *

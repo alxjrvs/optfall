@@ -213,6 +213,33 @@ export function faceUrl(key: string, tier: FaceTier): string {
   return `${FACE_HOST}/${tier}/${key}`;
 }
 
+/** A link-preview image, and the facts a preview card wants up front. */
+export interface PreviewImage {
+  readonly url: string;
+  readonly width: number;
+  readonly height: number;
+  readonly type: string;
+}
+
+/**
+ * The link-preview image for a face: the face padded onto 1200×630, as a JPEG.
+ *
+ * SERVED BY THE FACE HOST'S `/og/` ROUTE (`apps/images/src/og.ts`), which says
+ * why the face itself made a poor preview: a portrait WebP that X cropped to a
+ * strip. The dimensions are stated rather than measured because that route
+ * produces exactly this canvas for every key, and stating them is what lets a
+ * client lay out the card before the image arrives.
+ */
+export function previewImageFor(key: string): PreviewImage {
+  const stem = key.replace(/\.webp$/, "");
+  return {
+    url: `${FACE_HOST}/og/${stem}.jpg`,
+    width: 1200,
+    height: 630,
+    type: "image/jpeg",
+  };
+}
+
 /**
  * The NO IMAGE placeholder, which is a real asset rather than a missing one.
  *

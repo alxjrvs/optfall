@@ -47,7 +47,7 @@ import {
   descriptionFor,
   titleFor,
 } from "../../src/lib/cards";
-import { faceUrl } from "../../src/lib/faces";
+import { previewImageFor } from "../../src/lib/faces";
 import { pitchColour } from "../../src/lib/pitchColour";
 import { setName } from "../../src/lib/sets";
 import { CardEntry } from "../components/CardEntry";
@@ -119,19 +119,22 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
     description: descriptionFor(card),
     canonical,
     /*
-      THE FACE THIS PAGE IS SHOWING, at the tier that already exists for it.
+      THE FACE THIS PAGE IS SHOWING, padded to the preview canvas.
 
-      `normal` rather than `thumb` because a preview card is rendered at a few
-      hundred pixels wide and the thumb is 180 — upscaled, on the one image a
-      reader judges the link by. It is the same URL the page itself loads, so
-      the preview costs the image host nothing it was not already serving and
-      arrives warm from its cache.
+      ~~At the tier that already exists for it — `normal`, the same URL the
+      page itself loads.~~ That was a 450×628 portrait WebP under
+      `summary_large_image`, and X draws large cards at about 1.91:1, so it
+      cropped the face to a strip through its middle. `previewImageFor` names
+      the face host's `/og/` rendition of the same key instead: the whole face,
+      padded onto 1200×630, as a JPEG (`apps/images/src/og.ts`). It is made
+      once per face and cached for a year, so the cost argument the old note
+      made still roughly holds.
 
       THE PRINTING'S OWN FACE, NOT THE CARD'S DEFAULT. A link to a specific
       printing is overwhelmingly a link to that art, and previewing a different
       one would answer a question nobody asked.
     */
-    image: faceUrl(route.ref.key, "normal"),
+    image: previewImageFor(route.ref.key),
     /*
       THE PITCH, ON THE PREVIEW'S EDGE. Discord paints an embed's stripe from
       `theme-color`, and the site's ground is a stripe nobody can see on
