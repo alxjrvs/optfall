@@ -43,7 +43,7 @@
  *
  * WHY UPSTREAM ORDER IS PRESERVED VERBATIM. Cards arrive sorted by name and
  * printings arrive in upstream's own order, which carries information we would
- * destroy by re-sorting — and re-sorting 5,205 records once would produce a
+ * destroy by re-sorting — and re-sorting 5,218 records once would produce a
  * diff that looks like a total rewrite. Determinism does not require *our*
  * order, only *an* order that is a function of the retrieved bytes, and
  * upstream's is exactly that.
@@ -187,7 +187,7 @@ const DROPPED_PRINTING_FIELDS: Readonly<Record<string, string>> = {
   set_printing_unique_id:
     "an opaque join key into an upstream table this corpus does not ship; (set_id, id, edition) identifies the same grouping in fields we do carry",
   flavor_text_plain:
-    "the same text as flavor_text with the ** emphasis markers removed; differs on 2 of 17,291 printings",
+    "the same text as flavor_text with the ** emphasis markers removed; differs on 2 of 17,318 printings",
 };
 
 /**
@@ -371,7 +371,7 @@ interface CorpusPrinting {
    * it. Both are upstream's, carried verbatim.
    *
    * OPTIONAL BECAUSE UPSTREAM OMITS THE KEYS, rather than publishing them as
-   * `null` or `""`. 1,154 of 17,291 printings have neither, concentrated in
+   * `null` or `""`. 1,180 of 17,318 printings have neither, concentrated in
    * promotional and organised-play sets — WIN, SBL, SBA, SLY, SGB and the
    * armory sets carry none at all. Omitting them here mirrors that exactly, so
    * a reader can tell "upstream published no product" from "we dropped it",
@@ -708,7 +708,7 @@ function toFace(face: JsonRecord, where: string): DoubleSidedFace {
  * Explicit rather than a pass-through, for the reason
  * `scripts/build-rules-corpus.ts` gives about sections: the committed file's key
  * order is a decision made here, so a change upstream cannot silently reorder
- * 17,291 records and produce a diff that looks like a data change.
+ * 17,318 records and produce a diff that looks like a data change.
  */
 function toCorpusPrinting(printing: JsonRecord, where: string): CorpusPrinting {
   const faces =

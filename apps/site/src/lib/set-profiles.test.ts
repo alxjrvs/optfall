@@ -249,7 +249,7 @@ describe("names printed nowhere else", () => {
     expect(disagreed).toEqual([]);
     /* And the set the paragraph above names, so the case is not vacuous if both
        derivations were ever to become the same one. */
-    expect(SET_PROFILES.get("PEN")?.exclusive).toBe(155);
+    expect(SET_PROFILES.get("PEN")?.exclusive).toBe(154);
   });
 });
 

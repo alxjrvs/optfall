@@ -478,8 +478,8 @@ describe("ResultRow", () => {
      * The caller's mark is commonly a component that returns `null` — a card
      * with no pitch draws no stone — and a component is a truthy element even
      * when it renders nothing, so a wrapper here would put an empty span,
-     * carrying whatever margin it owned, on every such row in a 18,478-page
-     * build.
+     * carrying whatever margin it owned, on every such row in every page of
+     * the build.
      */
     const Nothing = () => null;
     const html = renderToStaticMarkup(
