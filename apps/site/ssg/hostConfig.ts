@@ -268,7 +268,7 @@ export function renderRedirects(
  *
  * PREVIEWS ARE LOAD-BEARING ON THIS PROJECT SPECIFICALLY — a legality bug is
  * visible in a preview and invisible in a diff — and a preview is therefore
- * another public host serving the same 18,505 pages. Two indexed copies of a
+ * another public host serving the same pages. Two indexed copies of a
  * reference site is precisely the duplication the canonical tags exist to
  * prevent, so a preview must say `noindex` and production must not.
  *

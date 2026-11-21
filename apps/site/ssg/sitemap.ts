@@ -15,8 +15,8 @@
  *
  * ONE SITEMAP, NOT A SHARDED SET, and that is a measurement rather than an
  * oversight. The protocol caps a file at 50,000 URLs and 50 MB uncompressed.
- * This build emits about 18,505 URLs at roughly ninety bytes each: just over a
- * third of the URL limit and around three per cent of the size limit. A sitemap index
+ * This build emits well under half the URL limit, at roughly ninety bytes
+ * each, and a small fraction of the size limit. A sitemap index
  * would add a second file format and a second thing to get wrong, to solve a
  * problem four times further away than it looks. {@link SITEMAP_URL_LIMIT}
  * exists so the build fails loudly if that ever stops being true, rather than
@@ -60,7 +60,7 @@ function escapeXml(value: string): string {
  * NO `lastmod`, `changefreq` OR `priority`, and each omission is deliberate.
  * This is a static build with no per-page modification date that means
  * anything — every file is written at the same instant by the same run, so a
- * `lastmod` would say "the last deploy" 18,505 times, which is worse than
+ * `lastmod` would say "the last deploy" on every URL, which is worse than
  * silence because it looks like information. Google has said publicly it
  * ignores `priority` and `changefreq`; emitting them is noise that also has to
  * be maintained.

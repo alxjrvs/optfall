@@ -135,7 +135,7 @@ export interface PageResult {
    * ONE PAGE SETS IT, AND THE NARROWNESS IS THE POINT. `/search` is the only
    * surface that can answer a card query without navigating, so it is the only
    * one that should pay for the field to be React's. Every other page — `/cr`,
-   * every set page, the 18,505 documents — keeps the static form it has always
+   * every set page, every other document — keeps the static form it has always
    * had, which submits and navigates exactly as it does with scripting off.
    *
    * DECLARED RATHER THAN DERIVED FROM {@link PageResult.islands}, for the same

@@ -32,10 +32,9 @@ import { extname, join } from "node:path";
 
 import { ROOT } from "./lib/root";
 
-import { CARD_PAGES, CARD_ROUTES, CORPUS } from "../apps/site/src/lib/cards";
+import { CARD_ROUTES, CORPUS } from "../apps/site/src/lib/cards";
 import { RULE_PAGES } from "../apps/site/src/lib/rules";
 import { faceKeyFor } from "../apps/site/src/lib/faces";
-import { SETS } from "../apps/site/src/lib/sets";
 
 const SKIP = new Set(["node_modules", ".git", "dist", "data", "design-system"]);
 const READ = new Set([".ts", ".tsx", ".md", ".css"]);
@@ -58,43 +57,16 @@ const mentions = (literal: string): readonly string[] =>
     (path) => path.slice(ROOT.length),
   );
 
-/**
- * A set page exists for every set that has a card in the corpus AND a record in
- * `SETS` — grouped the way `set.page.tsx` groups them, and filtered the way it
- * filters. Recomputed here rather than imported: counting the generator's own
- * routes would make this agree with the generator by construction and check
- * nothing.
- *
- * The `SETS` filter is not incidental. The corpus carries printings whose set
- * has no record, and `set.page.tsx` drops them rather than emitting a page it
- * cannot title — so a count that skipped the filter would be a plausible-looking
- * number that no page corresponds to.
+/*
+ * ~~A set page exists for every set that has a card in the corpus AND a record
+ * in `SETS` … `FIXED_PAGES = 9` … `TOTAL_PAGES`.~~ RETIRED 2026-11-21. This
+ * derived the build's page total so prose could quote it, and the quoted total
+ * was already wrong: it left out the `/spoilers` pages, which change with every
+ * daily spoilers run. Jrvs chose to stop quoting the total rather than chase a
+ * figure that moves daily, so the prose now says "every page" or "a full site
+ * build" and there is no total left here to own. Do not reintroduce one in
+ * prose; if a page count is ever needed, read it off `apps/site/dist`.
  */
-const known = new Set(SETS.sets.map((set) => set.id));
-const setPages = new Set(
-  CARD_PAGES.flatMap((page) =>
-    page.card.printings.map((printing) => printing.set_id),
-  ),
-).intersection(known).size;
-
-/**
- * The pages with a single fixed URL: home, search, sets, cr, random, about,
- * syntax and data-terms — and `/404`, which is the ninth. Spelled here because
- * there is no list to import — an unregistered page is not a URL, by design, so
- * `routes.ts` is the only record and it mixes these with the generated ones.
- *
- * `/404` IS COUNTED EVEN THOUGH IT IS NOT AN ADDRESS. `routes.ts` registers it
- * `sitemap: false` and calls it "the only registration that is not an address",
- * which is right about what it IS — a response to a path that names nothing.
- * But this constant feeds a total that is quoted as what the BUILD EMITS, and
- * the build emits `404.html` like any other page: check:disclaimer walks it,
- * check:built-tokens walks it, check:card-notice walks it. A total that skipped
- * it would be a number no check in the gate could reproduce.
- */
-const FIXED_PAGES = 9;
-
-const TOTAL_PAGES =
-  CARD_ROUTES.length + RULE_PAGES.length + setPages + FIXED_PAGES;
 
 const format = (n: number) => n.toLocaleString("en-US");
 
@@ -115,11 +87,6 @@ const FIGURES: readonly {
     literal: "17,100",
     live: CARD_ROUTES.length,
     what: "card routes — the figure two files got wrong, two different ways",
-  },
-  {
-    literal: "18,505",
-    live: TOTAL_PAGES,
-    what: "pages in the build, the most-quoted number in the repository",
   },
 ];
 

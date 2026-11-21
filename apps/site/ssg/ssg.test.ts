@@ -317,7 +317,7 @@ describe("the document shell", () => {
   test("no hydration markers, because no root here hydrates", () => {
     // `renderToStaticMarkup`, not `renderToString`. The pages are documents;
     // interactivity arrives as islands in their own containers. Hydration
-    // scaffolding on 18,505 pages would describe a handover that never happens.
+    // scaffolding on every page would describe a handover that never happens.
     const html = render({ title: "t", description: "d", children: null }, "/x");
     expect(html).not.toContain("data-reactroot");
     expect(html).not.toContain("<!--$-->");
