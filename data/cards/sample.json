@@ -3,11 +3,11 @@
   "source": {
     "repository": "the-fab-cube/flesh-and-blood-cards",
     "path": "json/english/card.json",
-    "commit": "74f8b5ff1d24d7669e84635e237713a931943b1e",
-    "committedAt": "2026-10-20T02:58:30Z",
-    "url": "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/74f8b5ff1d24d7669e84635e237713a931943b1e/json/english/card.json",
-    "bytes": 24522074,
-    "sha256": "a6a32059cad072d6bd0b5ef39678a9d43f9d97250719425ee54f7a70bc05a4b9"
+    "commit": "ec42d952da9c56a6a94855de8f27daeef2d7730f",
+    "committedAt": "2026-11-05T03:18:31Z",
+    "url": "https://raw.githubusercontent.com/the-fab-cube/flesh-and-blood-cards/ec42d952da9c56a6a94855de8f27daeef2d7730f/json/english/card.json",
+    "bytes": 24563847,
+    "sha256": "890dd116eb87b5a249bec3fd41375fc755b5b3d456d5c8fae46c44b80b157af4"
   },
   "rights": "Card names, card text and card images are the property of Legend Story Studios. Optfall is in no way affiliated with Legend Story Studios. This dataset displays that content under LSS's third-party application policy and does not relicense it. Only Optfall's structural work over the dataset — the field selection, the upstream pin and this envelope — is openly licensed. The upstream compilation is https://github.com/the-fab-cube/flesh-and-blood-cards, which publishes no licence of its own.",
   "sample": {
@@ -38,7 +38,7 @@
   "unprinted": [],
   "counts": {
     "cards": 20,
-    "printings": 94,
+    "printings": 86,
     "names": 20
   },
   "cards": [
@@ -1858,18 +1858,18 @@
       ]
     },
     {
-      "unique_id": "7zjjndpnJwKGK9gLzmzKq",
-      "name": "Vexing Malice",
+      "unique_id": "7zdfJDbhwjMnMNqkDJ9Qb",
+      "name": "Savage Swing",
       "color": "Blue",
       "pitch": "3",
       "cost": "1",
-      "power": "1",
+      "power": "5",
       "defense": "3",
       "health": "",
       "intelligence": "",
-      "arcane": "2",
+      "arcane": "",
       "types": [
-        "Runeblade",
+        "Brute",
         "Action",
         "Attack"
       ],
@@ -1880,14 +1880,14 @@
       "granted_keywords": [],
       "removed_keywords": [],
       "interacts_with_keywords": [],
-      "functional_text": "When this attacks, deal 2 arcane damage to target hero.",
-      "type_text": "Runeblade Action - Attack",
+      "functional_text": "As an additional cost to play this, discard a random card.",
+      "type_text": "Brute Action - Attack",
       "played_horizontally": false,
       "referenced_cards": [],
       "legality": {
         "blitz_legal": true,
         "cc_legal": true,
-        "commoner_legal": false,
+        "commoner_legal": true,
         "ll_legal": true,
         "silver_age_legal": true,
         "blitz_living_legend": false,
@@ -1905,130 +1905,94 @@
       },
       "printings": [
         {
-          "unique_id": "jqJqgr9cLWMNzk7JBbLGR",
-          "id": "LGS059",
-          "set_id": "LGS",
+          "unique_id": "kmCjdw6mDQMzcGQTwQb8f",
+          "id": "1HP033",
+          "set_id": "1HP",
           "edition": "N",
-          "foiling": "R",
-          "rarity": "P",
-          "expansion_slot": false,
-          "artists": [
-            "Henrique Lindner"
-          ],
-          "art_variations": [
-            "EA"
-          ],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LGS059-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "250027",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/250027?Language=English&Printing=Rainbow+Foil"
-        },
-        {
-          "unique_id": "mmkbtgRtHWrK8JqgfCwjq",
-          "id": "MON234",
-          "set_id": "MON",
-          "edition": "F",
           "foiling": "S",
-          "rarity": "R",
+          "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Henrique Lindner"
+            "Yulia Litvinova"
           ],
           "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MON234.webp",
+          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/1HP033.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "237878",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Normal"
+          "tcgplayer_product_id": "271284",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/271284?Language=English&Printing=Normal"
         },
         {
-          "unique_id": "rPMwTCLqQ8r7zQbtgcknr",
-          "id": "MON234",
-          "set_id": "MON",
-          "edition": "F",
+          "unique_id": "cKhQFjbHKRDhfm6KNmfNL",
+          "id": "WTR022",
+          "set_id": "WTR",
+          "edition": "A",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Yulia Litvinova"
+          ],
+          "art_variations": [],
+          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/WTR022.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "225039",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=1st+Edition+Normal"
+        },
+        {
+          "unique_id": "WhdKzKcMBWg8RhrpDb6Dd",
+          "id": "WTR022",
+          "set_id": "WTR",
+          "edition": "A",
           "foiling": "R",
-          "rarity": "R",
+          "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Henrique Lindner"
+            "Yulia Litvinova"
           ],
           "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MON234-RF.webp",
+          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/WTR022-RF.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "237878",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=1st+Edition+Rainbow+Foil"
+          "tcgplayer_product_id": "225039",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=1st+Edition+Rainbow+Foil"
         },
         {
-          "unique_id": "pkhqMMzhMQNkTzdQW6FNQ",
-          "id": "MON234",
-          "set_id": "MON",
+          "unique_id": "zctTTwb6Gf6wtKMQpHrtQ",
+          "id": "WTR022",
+          "set_id": "WTR",
           "edition": "U",
           "foiling": "S",
-          "rarity": "R",
+          "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Henrique Lindner"
+            "Yulia Litvinova"
           ],
           "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-MON234.webp",
+          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-WTR022.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "237878",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Normal"
+          "tcgplayer_product_id": "225039",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=Unlimited+Edition+Normal"
         },
         {
-          "unique_id": "cktnBQBPCC7zqNzN6rJbq",
-          "id": "MON234",
-          "set_id": "MON",
+          "unique_id": "W9WcrLPBQNMqCLCCFkwtk",
+          "id": "WTR022",
+          "set_id": "WTR",
           "edition": "U",
           "foiling": "R",
-          "rarity": "R",
+          "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Henrique Lindner"
+            "Yulia Litvinova"
           ],
           "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-MON234-RF.webp",
+          "flavor_text": "\"I should have listened - no amount of money is worth coming to this wretched place.\"",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-WTR022-RF.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "237878",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/237878?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
-        },
-        {
-          "unique_id": "dR9KF9p9fkNrHQRfg6b6f",
-          "id": "SBW032",
-          "set_id": "SBW",
-          "edition": "N",
-          "foiling": "S",
-          "rarity": "R",
-          "expansion_slot": false,
-          "artists": [
-            "Henrique Lindner"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SBW032.webp",
-          "image_rotation_degrees": 0
-        },
-        {
-          "unique_id": "BFbh6QtPWB8PMDWgbGfcj",
-          "id": "SVI028",
-          "set_id": "SVI",
-          "edition": "N",
-          "foiling": "S",
-          "rarity": "R",
-          "expansion_slot": false,
-          "artists": [
-            "Henrique Lindner"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SVI028.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "676830",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/676830?Language=English&Printing=Normal"
+          "tcgplayer_product_id": "225039",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/225039?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
         }
       ]
     },
@@ -2274,41 +2238,35 @@
       ]
     },
     {
-      "unique_id": "9QkzLM66JjHbrMD9M6KDf",
-      "name": "Flood of Force",
-      "color": "Yellow",
-      "pitch": "2",
-      "cost": "0",
-      "power": "1",
+      "unique_id": "9QGbrGqFpTRQrq7WTGmGN",
+      "name": "Nerves of Steel",
+      "color": "Blue",
+      "pitch": "3",
+      "cost": "3",
+      "power": "",
       "defense": "3",
       "health": "",
       "intelligence": "",
       "arcane": "",
       "types": [
-        "Ninja",
+        "Guardian",
         "Action",
-        "Attack"
+        "Aura"
       ],
       "traits": [],
-      "card_keywords": [
-        "Combo",
-        "Go again"
-      ],
+      "card_keywords": [],
       "abilities_and_effects": [],
       "ability_and_effect_keywords": [],
       "granted_keywords": [],
       "removed_keywords": [],
       "interacts_with_keywords": [
-        "Combo"
+        "Battleworn",
+        "Temper"
       ],
-      "functional_text": "**Combo** - When this attacks, if Rushing River or Flood of Force was the last attack this combat chain, reveal the top card of your deck. If it's a card with **combo**, put it into your hand then this gets +3{p} and **go again**.",
-      "type_text": "Ninja Action - Attack",
+      "functional_text": "When this enters the arena, remove a -1{d} counter from a chest equipment you control.\n\n**Battleworn** and **temper** on equipment you control don't trigger if it defends an attack with 2 or less {p}.\n\nWhen your hero is dealt damage, destroy this.",
+      "type_text": "Guardian Action - Aura",
       "played_horizontally": false,
-      "referenced_cards": [
-        "wmN6kmKhktkmfhWtqLmHm",
-        "cdcnJRkcCzJkDmb7NwnPQ",
-        "tMDDnhBrcpCL8c9MW7BgC"
-      ],
+      "referenced_cards": [],
       "legality": {
         "blitz_legal": true,
         "cc_legal": true,
@@ -2330,124 +2288,70 @@
       },
       "printings": [
         {
-          "unique_id": "rkJfNF86LqnkNGHtKNhPq",
-          "id": "1HP099",
-          "set_id": "1HP",
-          "edition": "N",
-          "foiling": "S",
-          "rarity": "M",
-          "expansion_slot": false,
-          "artists": [
-            "Silvia Meiliani"
-          ],
-          "art_variations": [],
-          "flavor_text": "Every thunderstorm begins with a single drop of rain.",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/1HP099.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "270968",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/270968?Language=English&Printing=Normal"
-        },
-        {
-          "unique_id": "TQff9gM9wgQKnCqKFrKdB",
-          "id": "CRU055",
-          "set_id": "CRU",
+          "unique_id": "nnHBpjpfjG86tDQB9G9k9",
+          "id": "EVR023",
+          "set_id": "EVR",
           "edition": "F",
           "foiling": "S",
           "rarity": "M",
           "expansion_slot": false,
           "artists": [
-            "Silvia Meiliani"
+            "Nikolay Moskvin"
           ],
           "art_variations": [],
-          "flavor_text": "Every thunderstorm begins with a single drop of rain.",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/CRU055.webp",
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR023.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225955",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225955?Language=English&Printing=1st+Edition+Normal"
+          "tcgplayer_product_id": "261334",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/261334?Language=English&Printing=1st+Edition+Normal"
         },
         {
-          "unique_id": "FtRBCM8PtDC7rwDB66c9d",
-          "id": "CRU055",
-          "set_id": "CRU",
+          "unique_id": "fDLpmcdPNrDQ76MCFphfC",
+          "id": "EVR023",
+          "set_id": "EVR",
           "edition": "F",
           "foiling": "R",
           "rarity": "M",
           "expansion_slot": false,
           "artists": [
-            "Silvia Meiliani"
+            "Nikolay Moskvin"
           ],
           "art_variations": [],
-          "flavor_text": "Every thunderstorm begins with a single drop of rain.",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/CRU055-RF.webp",
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR023-RF.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225955",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225955?Language=English&Printing=1st+Edition+Rainbow+Foil"
-        },
-        {
-          "unique_id": "TbNRK6rLNNFWDhm8MPF68",
-          "id": "CRU055",
-          "set_id": "CRU",
-          "edition": "U",
-          "foiling": "S",
-          "rarity": "M",
-          "expansion_slot": false,
-          "artists": [
-            "Silvia Meiliani"
-          ],
-          "art_variations": [],
-          "flavor_text": "Every thunderstorm begins with a single drop of rain.",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-CRU055.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225955",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225955?Language=English&Printing=Unlimited+Edition+Normal"
-        },
-        {
-          "unique_id": "KWcjcQHKcGFfHzPKTDDrD",
-          "id": "CRU055",
-          "set_id": "CRU",
-          "edition": "U",
-          "foiling": "R",
-          "rarity": "M",
-          "expansion_slot": false,
-          "artists": [
-            "Silvia Meiliani"
-          ],
-          "art_variations": [],
-          "flavor_text": "Every thunderstorm begins with a single drop of rain.",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-CRU055-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225955",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225955?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+          "tcgplayer_product_id": "261334",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/261334?Language=English&Printing=1st+Edition+Rainbow+Foil"
         }
       ]
     },
     {
-      "unique_id": "BrHCD9dtfmWcwwRGg7PMj",
-      "name": "Zero to Sixty",
-      "color": "Yellow",
-      "pitch": "2",
+      "unique_id": "BRdKgPG6pJk8pGT7CWCpB",
+      "name": "Comet Collision",
+      "color": "Red",
+      "pitch": "1",
       "cost": "0",
-      "power": "3",
+      "power": "",
       "defense": "3",
       "health": "",
       "intelligence": "",
-      "arcane": "",
+      "arcane": "3",
       "types": [
-        "Mechanologist",
-        "Action",
-        "Attack"
+        "Lightning",
+        "Wizard",
+        "Action"
       ],
       "traits": [],
       "card_keywords": [
-        "Boost"
+        "Starfall"
       ],
       "abilities_and_effects": [],
       "ability_and_effect_keywords": [],
       "granted_keywords": [],
       "removed_keywords": [],
       "interacts_with_keywords": [],
-      "functional_text": "**Boost**",
-      "type_text": "Mechanologist Action - Attack",
+      "functional_text": "Deal 3 arcane damage to any target.\n\n**Starfall** - If an instant card has been put into your graveyard this turn, instead deal 4 arcane damage.",
+      "type_text": "Lightning Wizard Instant",
       "played_horizontally": false,
       "referenced_cards": [],
       "legality": {
@@ -2471,164 +2375,57 @@
       },
       "printings": [
         {
-          "unique_id": "CGKqfCnm8nCjNRr8jLdhh",
-          "id": "1HP212",
-          "set_id": "1HP",
+          "unique_id": "dpPgTNDqgj8gHckztM7gp",
+          "id": "OMN109",
+          "set_id": "OMN",
           "edition": "N",
           "foiling": "S",
           "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Fedor Barkhatov"
+            "Dzulfikar Aliy"
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/1HP212.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN109.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "271058",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/271058?Language=English&Printing=Normal"
+          "tcgplayer_product_id": "695183",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695183?Language=English&Printing=Normal"
         },
         {
-          "unique_id": "RW9QgW8TRgGdgczjgBhTJ",
-          "id": "AIO018",
-          "set_id": "AIO",
+          "unique_id": "dWKhjRKt76jN6FgPTpntm",
+          "id": "OMN109",
+          "set_id": "OMN",
           "edition": "N",
-          "foiling": "S",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Fedor Barkhatov"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AIO018.webp",
-          "image_rotation_degrees": 0
-        },
-        {
-          "unique_id": "7TktDKBfWhThfPbq6mw8t",
-          "id": "AMX021",
-          "set_id": "AMX",
-          "edition": "N",
-          "foiling": "S",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Fedor Barkhatov"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/AMX021.webp",
-          "image_rotation_degrees": 0
-        },
-        {
-          "unique_id": "zP7QPTdFNcfh6MWBJzLQh",
-          "id": "ARC027",
-          "set_id": "ARC",
-          "edition": "F",
-          "foiling": "S",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Fedor Barkhatov"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ARC027.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225614",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225614?Language=English&Printing=1st+Edition+Normal"
-        },
-        {
-          "unique_id": "f7tmT7drHkHTqwHRDHnCw",
-          "id": "ARC027",
-          "set_id": "ARC",
-          "edition": "F",
           "foiling": "R",
           "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Fedor Barkhatov"
-          ],
-          "art_variations": [
-            "AT"
-          ],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ARC027-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225614",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225614?Language=English&Printing=1st+Edition+Rainbow+Foil"
-        },
-        {
-          "unique_id": "RDMmRHq8jMLnN6rCdFkd6",
-          "id": "ARC027",
-          "set_id": "ARC",
-          "edition": "U",
-          "foiling": "S",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Fedor Barkhatov"
+            "Dzulfikar Aliy"
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-ARC027.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN109-RF.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225614",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225614?Language=English&Printing=Unlimited+Edition+Normal"
-        },
-        {
-          "unique_id": "mwq8qnqdJfrcNMffHF8nG",
-          "id": "ARC027",
-          "set_id": "ARC",
-          "edition": "U",
-          "foiling": "R",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Fedor Barkhatov"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-ARC027-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "225614",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/225614?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
-        },
-        {
-          "unique_id": "GWkD6R7QPM8rWB89RKqL8",
-          "id": "SDA026",
-          "set_id": "SDA",
-          "edition": "N",
-          "foiling": "S",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "Fedor Barkhatov"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/SDA026.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "676838",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/676838?Language=English&Printing=Normal"
+          "tcgplayer_product_id": "695183",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/695183?Language=English&Printing=Rainbow+Foil"
         }
       ]
     },
     {
-      "unique_id": "cpWqf8tmzQgqmrPqc9hbM",
-      "name": "Timidity Point",
-      "color": "Blue",
-      "pitch": "3",
-      "cost": "1",
-      "power": "3",
+      "unique_id": "CPNhjTPwJ9W6Mm6cNRFHd",
+      "name": "Feral Instinct",
+      "color": "Yellow",
+      "pitch": "2",
+      "cost": "3",
+      "power": "6",
       "defense": "3",
       "health": "",
       "intelligence": "",
       "arcane": "",
       "types": [
-        "Ranger",
+        "Brute",
         "Action",
-        "Arrow",
         "Attack"
       ],
       "traits": [],
@@ -2637,9 +2434,102 @@
       "ability_and_effect_keywords": [],
       "granted_keywords": [],
       "removed_keywords": [],
+      "interacts_with_keywords": [
+        "Intimidate"
+      ],
+      "functional_text": "If you've intimidated an opponent this turn, this costs {r}{r}{r} less to play.",
+      "type_text": "Brute Action - Attack",
+      "played_horizontally": false,
+      "referenced_cards": [],
+      "legality": {
+        "blitz_legal": true,
+        "cc_legal": true,
+        "commoner_legal": false,
+        "ll_legal": true,
+        "silver_age_legal": false,
+        "blitz_living_legend": false,
+        "cc_living_legend": false,
+        "blitz_banned": false,
+        "cc_banned": false,
+        "commoner_banned": false,
+        "ll_banned": false,
+        "silver_age_banned": false,
+        "upf_banned": false,
+        "blitz_suspended": false,
+        "cc_suspended": false,
+        "commoner_suspended": false,
+        "ll_restricted": false
+      },
+      "printings": [
+        {
+          "unique_id": "TMWhQjkdTJgfnmrPgKkGQ",
+          "id": "OMN229",
+          "set_id": "OMN",
+          "edition": "N",
+          "foiling": "S",
+          "rarity": "M",
+          "expansion_slot": true,
+          "artists": [
+            "Phu Thieu"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN229.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "693422",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/693422?Language=English&Printing=Normal"
+        },
+        {
+          "unique_id": "DcLgCnwGnLtG6khD8pWhn",
+          "id": "OMN229",
+          "set_id": "OMN",
+          "edition": "N",
+          "foiling": "C",
+          "rarity": "M",
+          "expansion_slot": true,
+          "artists": [
+            "Phu Thieu"
+          ],
+          "art_variations": [
+            "EA"
+          ],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/OMN229-CF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "693423",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/693423?Language=English&Printing=Cold+Foil"
+        }
+      ]
+    },
+    {
+      "unique_id": "DL7gtdthCmhqGfQq8RJjj",
+      "name": "Frazzle",
+      "color": "Red",
+      "pitch": "1",
+      "cost": "1",
+      "power": "5",
+      "defense": "3",
+      "health": "",
+      "intelligence": "",
+      "arcane": "",
+      "types": [
+        "Elemental",
+        "Ranger",
+        "Action",
+        "Arrow",
+        "Attack"
+      ],
+      "traits": [],
+      "card_keywords": [
+        "Lightning Fusion"
+      ],
+      "abilities_and_effects": [],
+      "ability_and_effect_keywords": [],
+      "granted_keywords": [],
+      "removed_keywords": [],
       "interacts_with_keywords": [],
-      "functional_text": "When this hits a hero, attacks they control lose and can't gain **dominate** during their next turn.",
-      "type_text": "Ranger Action - Arrow Attack",
+      "functional_text": "**Lightning Fusion**\n\nWhen this attacks, if this was **fused**, until end of turn if an attack would deal damage, instead it deals that much damage plus 1.",
+      "type_text": "Elemental Ranger Action - Arrow Attack",
       "played_horizontally": false,
       "referenced_cards": [],
       "legality": {
@@ -2663,131 +2553,94 @@
       },
       "printings": [
         {
-          "unique_id": "PQWBMtmbQJfBzgtkHTn8T",
-          "id": "EVR099",
-          "set_id": "EVR",
+          "unique_id": "qkhNChDtjHqmzMT6PcBQn",
+          "id": "ELE059",
+          "set_id": "ELE",
           "edition": "F",
           "foiling": "S",
           "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Mateusz Wiśniewski"
+            "Marco Wulfr"
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR099.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ELE059.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "261449",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/261449?Language=English&Printing=1st+Edition+Normal"
+          "tcgplayer_product_id": "248486",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248486?Language=English&Printing=1st+Edition+Normal"
         },
         {
-          "unique_id": "kkFtCnPP6mdjHLChPmMCG",
-          "id": "EVR099",
-          "set_id": "EVR",
+          "unique_id": "TnbbTgrFfmghQfHmgPq9D",
+          "id": "ELE059",
+          "set_id": "ELE",
           "edition": "F",
           "foiling": "R",
           "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "Mateusz Wiśniewski"
+            "Marco Wulfr"
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/EVR099-RF.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/ELE059-RF.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "261449",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/261449?Language=English&Printing=1st+Edition+Rainbow+Foil"
-        }
-      ]
-    },
-    {
-      "unique_id": "dLHqbBN9bkQ6DtLtprJ7g",
-      "name": "Showdown",
-      "color": "Red",
-      "pitch": "1",
-      "cost": "1",
-      "power": "",
-      "defense": "3",
-      "health": "",
-      "intelligence": "",
-      "arcane": "",
-      "types": [
-        "Warrior",
-        "Action"
-      ],
-      "traits": [],
-      "card_keywords": [
-        "Go again",
-        "Wager"
-      ],
-      "abilities_and_effects": [],
-      "ability_and_effect_keywords": [],
-      "granted_keywords": [],
-      "removed_keywords": [],
-      "interacts_with_keywords": [
-        "Wager"
-      ],
-      "functional_text": "Your next sword attack this turn gets +3{p} and \"When this attacks, **wager** with the defending hero. The winner creates a Flurry token.\"\n\n**Go again**",
-      "type_text": "Warrior Action",
-      "played_horizontally": false,
-      "referenced_cards": [
-        "jdkmHT8QfQmMbPLBHPrHJ"
-      ],
-      "legality": {
-        "blitz_legal": true,
-        "cc_legal": true,
-        "commoner_legal": true,
-        "ll_legal": true,
-        "silver_age_legal": true,
-        "blitz_living_legend": false,
-        "cc_living_legend": false,
-        "blitz_banned": false,
-        "cc_banned": false,
-        "commoner_banned": false,
-        "ll_banned": false,
-        "silver_age_banned": false,
-        "upf_banned": false,
-        "blitz_suspended": false,
-        "cc_suspended": false,
-        "commoner_suspended": false,
-        "ll_restricted": false
-      },
-      "printings": [
+          "tcgplayer_product_id": "248486",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248486?Language=English&Printing=1st+Edition+Rainbow+Foil"
+        },
         {
-          "unique_id": "FDhfchr8zhdnbbh7LRbFQ",
-          "id": "MPW126",
-          "set_id": "MPW",
+          "unique_id": "7HP9LRfnCnTbTQwDfFBQb",
+          "id": "ELE059",
+          "set_id": "ELE",
+          "edition": "U",
+          "foiling": "S",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Marco Wulfr"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-ELE059.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248486",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248486?Language=English&Printing=Unlimited+Edition+Normal"
+        },
+        {
+          "unique_id": "LTWPWR6tMBcFtjPQzWJHf",
+          "id": "ELE059",
+          "set_id": "ELE",
+          "edition": "U",
+          "foiling": "R",
+          "rarity": "C",
+          "expansion_slot": false,
+          "artists": [
+            "Marco Wulfr"
+          ],
+          "art_variations": [],
+          "flavor_text": "",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/U-ELE059-RF.webp",
+          "image_rotation_degrees": 0,
+          "tcgplayer_product_id": "248486",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/248486?Language=English&Printing=Unlimited+Edition+Rainbow+Foil"
+        },
+        {
+          "unique_id": "wD6WKN6n6RPkNpbqKwTrm",
+          "id": "LXI009",
+          "set_id": "LXI",
           "edition": "N",
           "foiling": "S",
           "rarity": "C",
           "expansion_slot": false,
           "artists": [
-            "M Fakhrur Rozzi"
+            "Marco Wulfr"
           ],
           "art_variations": [],
           "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPW126.webp",
+          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/LXI009.webp",
           "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "708972",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/708972?Language=English&Printing=Normal"
-        },
-        {
-          "unique_id": "jd7987wntgGqChBdQD79G",
-          "id": "MPW126",
-          "set_id": "MPW",
-          "edition": "N",
-          "foiling": "R",
-          "rarity": "C",
-          "expansion_slot": false,
-          "artists": [
-            "M Fakhrur Rozzi"
-          ],
-          "art_variations": [],
-          "flavor_text": "",
-          "image_url": "https://legendstory-production-s3-public.s3.amazonaws.com/media/cards/large/MPW126-RF.webp",
-          "image_rotation_degrees": 0,
-          "tcgplayer_product_id": "708972",
-          "tcgplayer_url": "https://www.tcgplayer.com/product/708972?Language=English&Printing=Rainbow+Foil"
+          "tcgplayer_product_id": "262504",
+          "tcgplayer_url": "https://www.tcgplayer.com/product/262504?Language=English&Printing=Normal"
         }
       ]
     },

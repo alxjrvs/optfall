@@ -80,10 +80,10 @@ const pageNamed = (name: string): CardPage => {
 describe("the pinned corpus", () => {
   test("is the shape every other assertion here assumes", () => {
     expect(CORPUS.schemaVersion).toBe(3);
-    expect(CORPUS.counts.cards).toBe(5205);
+    expect(CORPUS.counts.cards).toBe(5218);
     expect(CORPUS.cards.length).toBe(CORPUS.counts.cards);
-    expect(CORPUS.counts.printings).toBe(17291);
-    expect(CORPUS.counts.names).toBe(3329);
+    expect(CORPUS.counts.printings).toBe(17318);
+    expect(CORPUS.counts.names).toBe(3342);
     expect(CORPUS.source.commit).toMatch(/^[0-9a-f]{40}$/);
     expect(LAST_CONFIRMED).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
@@ -133,8 +133,8 @@ describe("the pinned corpus", () => {
       (printing) => printing.tcgplayer_url !== undefined,
     );
 
-    expect(printings.length).toBe(17291);
-    expect(withProduct.length).toBe(16137);
+    expect(printings.length).toBe(17318);
+    expect(withProduct.length).toBe(16138);
 
     // Absent, never empty or null — upstream omits the key and so do we.
     for (const printing of printings) {
@@ -321,11 +321,11 @@ describe("a flag the dataset does not publish is never read as false", () => {
     );
   });
 
-  test("Ultimate Pit Fight is unknown on 5,203 cards and Banned on 2", () => {
+  test("Ultimate Pit Fight is unknown on 5,216 cards and Banned on 2", () => {
     const verdicts = CARD_PAGES.map((page) =>
       verdictFor(page.card, formatById("ultimate-pit-fight")),
     );
-    expect(verdicts.filter((verdict) => verdict.unknown).length).toBe(5203);
+    expect(verdicts.filter((verdict) => verdict.unknown).length).toBe(5216);
     expect(
       verdicts.filter((verdict) =>
         verdict.states.some((state) => state.tone === "banned"),
@@ -340,7 +340,7 @@ describe("a flag the dataset does not publish is never read as false", () => {
 
   test("a false legal flag IS Not in format, which is a different claim", () => {
     // Commoner publishes `commoner_legal`, so `false` there is a statement
-    // rather than a silence — 2,365 cards are outside that pool.
+    // rather than a silence — 2,369 cards are outside that pool.
     const card = pageNamed("Command and Conquer").card;
     expect(card.legality["commoner_legal"]).toBe(false);
     expect(tonesFor(card, "commoner")).toEqual(["not-in-format"]);
@@ -388,34 +388,34 @@ describe("the derived tone census", () => {
       return counts;
     };
 
-    // Classic Constructed: 5,057 cards are `cc_legal`, of which 51 are banned
-    // and 42 are Living Legend, with Winter's Wail in both — so 5,057 − 92 =
-    // 4,965 render Legal. That arithmetic is the whole point of the file.
+    // Classic Constructed: 5,070 cards are `cc_legal`, of which 51 are banned
+    // and 42 are Living Legend, with Winter's Wail in both — so 5,070 − 92 =
+    // 4,978 render Legal. That arithmetic is the whole point of the file.
     expect(census("classic-constructed")).toEqual({
-      legal: 4965,
+      legal: 4978,
       "not-in-format": 148,
       banned: 51,
       "living-legend": 42,
     });
     expect(census("blitz")).toEqual({
-      legal: 5011,
+      legal: 5024,
       "not-in-format": 128,
       banned: 45,
       "living-legend": 21,
     });
     expect(census("living-legend")).toEqual({
-      legal: 5032,
+      legal: 5045,
       "not-in-format": 148,
       restricted: 20,
       banned: 5,
     });
     expect(census("commoner")).toEqual({
-      legal: 2830,
-      "not-in-format": 2365,
+      legal: 2839,
+      "not-in-format": 2369,
       banned: 10,
     });
     expect(census("silver-age")).toEqual({
-      legal: 3987,
+      legal: 4000,
       "not-in-format": 1131,
       banned: 87,
     });
@@ -451,12 +451,12 @@ describe("addressing", () => {
      * printings; it is one route per distinct face and nothing else, because
      * `/card/<slug>` and `/card/<name>` are 301s. That was 11,378 routes;
      * upstream 01fc934 gave foil printings their own image (`-RF`, `-CF`:
-     * 5,160 of the 5,604 new faces; 293 more are IAR) and it is now 17,073.
+     * 5,160 of the 5,604 new faces; 293 more are IAR) and it is now 17,100.
      */
-    expect(CARD_PAGES.length).toBe(5205);
+    expect(CARD_PAGES.length).toBe(5218);
     expect(NAME_GROUPS.length).toBe(947);
-    expect(CARD_ROUTES.length).toBe(17073);
-    expect(CARD_ROUTES.filter((route) => route.isDefault).length).toBe(5205);
+    expect(CARD_ROUTES.length).toBe(17100);
+    expect(CARD_ROUTES.filter((route) => route.isDefault).length).toBe(5218);
   });
 
   test("set and number alone are NOT unique, which is why the name tail exists", () => {

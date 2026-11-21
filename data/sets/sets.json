@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "source": {
     "repository": "the-fab-cube/flesh-and-blood-cards",
-    "commit": "74f8b5ff1d24d7669e84635e237713a931943b1e",
+    "commit": "ec42d952da9c56a6a94855de8f27daeef2d7730f",
     "files": [
       "set.json",
       "rarity.json",

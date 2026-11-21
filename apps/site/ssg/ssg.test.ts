@@ -272,7 +272,7 @@ describe("the document shell", () => {
   });
 
   test("a page may point its canonical somewhere else", () => {
-    // 11,868 printing pages do exactly this: they are views of a card, and they
+    // 11,882 printing pages do exactly this: they are views of a card, and they
     // say so rather than competing with it.
     expect(canonicalFor("/card/omn/243-cf/x", "/card/omn/001/x")).toBe(
       "https://optfall.com/card/omn/001/x/",
@@ -317,7 +317,7 @@ describe("the document shell", () => {
   test("no hydration markers, because no root here hydrates", () => {
     // `renderToStaticMarkup`, not `renderToString`. The pages are documents;
     // interactivity arrives as islands in their own containers. Hydration
-    // scaffolding on 18,478 pages would describe a handover that never happens.
+    // scaffolding on 18,505 pages would describe a handover that never happens.
     const html = render({ title: "t", description: "d", children: null }, "/x");
     expect(html).not.toContain("data-reactroot");
     expect(html).not.toContain("<!--$-->");
@@ -470,7 +470,7 @@ describe("the ported pages", () => {
      * Heavy Hitters' and Uprising's art — the right cards, the wrong print run,
      * on the one page whose entire subject IS the print run.
      *
-     * 2,368 of the 5,205 cards are printed in more than one set and every one
+     * 2,373 of the 5,218 cards are printed in more than one set and every one
      * of them has at least one set whose art differs from its default, so this
      * was most of the reprints in the game rather than a long tail.
      */
@@ -1300,9 +1300,9 @@ describe("the pitch tabs stay in the set the reader is already in", () => {
      *
      * OVER ROUTES RATHER THAN OVER CARDS, which is the half that matters: on a
      * card's default printing "the same set" and "the default address" are
-     * usually the same answer, so a sweep of the 5,205 default pages would
+     * usually the same answer, so a sweep of the 5,218 default pages would
      * exercise the fallback and not the rule. The stride is coarser to pay for
-     * the larger list — 17,073 printings, every twenty-fifth.
+     * the larger list — 17,100 printings, every twenty-fifth.
      */
     const served = new Set(CARD_ROUTES.map((route) => route.href));
     for (const route of CARD_ROUTES.filter((_, index) => index % 25 === 0)) {
@@ -1664,7 +1664,7 @@ describe("the printings table is how a reader reaches another art", () => {
      * only value true on every route.
      *
      * Every route is a printing now and the marked row's href is the URL being
-     * rendered, on every one of the 17,073. So the accurate value is `"page"`,
+     * rendered, on every one of the 17,100. So the accurate value is `"page"`,
      * and that is the one a screen reader announces as *this page*.
      *
      * ASSERTED ON BOTH A DEFAULT AND AN ALTERNATE, because "the row addresses

@@ -104,20 +104,20 @@ const FIGURES: readonly {
   readonly live: number;
   readonly what: string;
 }[] = [
-  { literal: "5,205", live: CORPUS.counts.cards, what: "cards in the corpus" },
+  { literal: "5,218", live: CORPUS.counts.cards, what: "cards in the corpus" },
   {
-    literal: "17,291",
+    literal: "17,318",
     live: CORPUS.counts.printings,
     what: "printings across every set",
   },
   { literal: "1,278", live: RULE_PAGES.length, what: "rule permalinks" },
   {
-    literal: "17,073",
+    literal: "17,100",
     live: CARD_ROUTES.length,
     what: "card routes — the figure two files got wrong, two different ways",
   },
   {
-    literal: "18,478",
+    literal: "18,505",
     live: TOTAL_PAGES,
     what: "pages in the build, the most-quoted number in the repository",
   },
@@ -172,8 +172,8 @@ describe("the two figures that look wrong and are not", () => {
 
   test("faces.ts counts URLs where a reader counts keys", () => {
     /*
-     * `faces.ts` says 17,071 face keys, and `printings.ts` beside it; the
-     * corpus has 17,072 distinct image URLs. The single cause is named there:
+     * `faces.ts` says 17,098 face keys, and `printings.ts` beside it; the
+     * corpus has 17,099 distinct image URLs. The single cause is named there:
      * Ponder's `DYN244` is published as an S3 WebP and a fabmaster PNG of the
      * same art, and the key drops the extension, so two URLs are one face.
      * Count the URLs and the prose looks off by one; read the next sentence
@@ -198,8 +198,8 @@ describe("the two figures that look wrong and are not", () => {
       }
     }
 
-    expect(urls.size).toBe(17_072);
-    expect(urlsByKey.size).toBe(17_071);
+    expect(urls.size).toBe(17_099);
+    expect(urlsByKey.size).toBe(17_098);
 
     /* Named in the docblock, so the "one collision" stays exactly one and stays
        the one the prose says it is. */

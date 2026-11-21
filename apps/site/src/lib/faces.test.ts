@@ -3,7 +3,7 @@
  *
  * The unit tests below are cheap; the corpus assertions are the ones that
  * matter. A key rule that is correct on six hand-written examples and collides
- * on the real 17,291 printings would serve one card's art under another card's
+ * on the real 17,318 printings would serve one card's art under another card's
  * name — a confident wrong answer, which is the one failure mode this project
  * is built to not have.
  */
@@ -318,8 +318,8 @@ describe("over the whole corpus", () => {
         .map((printing) => faceKeyFor(printing.image_url))
         .filter(Boolean),
     );
-    expect(printings.length).toBe(17291);
-    expect(keys.size).toBe(17071);
+    expect(printings.length).toBe(17318);
+    expect(keys.size).toBe(17098);
   });
 });
 

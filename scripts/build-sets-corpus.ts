@@ -31,7 +31,7 @@ import { join } from "node:path";
  * corpus belongs to, and — worse — could omit one that cards do reference, so a
  * printing would resolve to no set at all. One snapshot, one pin.
  */
-const COMMIT = "74f8b5ff1d24d7669e84635e237713a931943b1e";
+const COMMIT = "ec42d952da9c56a6a94855de8f27daeef2d7730f";
 const REPOSITORY = "the-fab-cube/flesh-and-blood-cards";
 const BASE = `https://raw.githubusercontent.com/${REPOSITORY}/${COMMIT}/json/english`;
 
