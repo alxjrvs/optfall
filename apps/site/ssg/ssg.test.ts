@@ -25,13 +25,14 @@ import { facesOf, hrefForPrinting } from "../src/lib/printings";
 import { editionLabel, setFor, setName } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document, uniqueStylesheets } from "./document";
+import { BreadcrumbData } from "./components/BreadcrumbData";
 import {
   HEADERS,
   headersFor,
   REDIRECTS,
   renderHeaders,
   renderRedirects,
-  TOKENS_PATH,
+  tokensPathFor,
 } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { CARD_NEWEST } from "./searchIndexes";
@@ -3043,11 +3044,28 @@ describe("_headers and _redirects say what the host is told", () => {
           .join(".*")}$`,
       ).test(path);
 
+    /* `tokens.css` WAS THE FIXED NAME THIS GUARDED, and it is gone: the token
+       stylesheet is named by its digest now. The fixed name stays here as the
+       canary, because a rule that would have pinned it is a rule that pins
+       whatever fixed-name file somebody adds next. */
     const pinned = immutable
-      .filter((rule) => covers(rule.pattern, `/${TOKENS_PATH}`))
+      .filter((rule) => covers(rule.pattern, "/assets/tokens.css"))
       .map((rule) => rule.pattern);
 
     expect(pinned).toEqual([]);
+  });
+
+  test("the token stylesheet is named by its bytes", () => {
+    /*
+     * What earns it a place on the immutable list. Same bytes, same name — so
+     * a deploy that changes no token costs a returning reader nothing. Any
+     * change, however small, a new name — so a deploy that does change one is
+     * never shadowed by a year-old copy.
+     */
+    const a = tokensPathFor(":root{--of-x:1px}");
+    expect(a).toBe(tokensPathFor(":root{--of-x:1px}"));
+    expect(a).not.toBe(tokensPathFor(":root{--of-x:2px}"));
+    expect(a).toMatch(/^assets\/tokens-[0-9a-f]{8}\.css$/);
   });
 
   test("pages keep revalidating", () => {
@@ -3142,11 +3160,12 @@ describe("_headers and _redirects say what the host is told", () => {
   });
 
   /*
-    THE EXCLUSION THIS WHOLE ARRANGEMENT EXISTS FOR. `assets/tokens.css` is
-    generated from `packages/theme` under a FIXED name, so it is the one file in
-    that directory whose bytes change while its URL does not. The obvious
-    implementation — a `/assets/*` pattern — would freeze the design system in a
-    returning reader's browser for a year, and it would do it silently.
+    THE EXCLUSION THIS WHOLE ARRANGEMENT EXISTS FOR. ~~`assets/tokens.css` is
+    generated from `packages/theme` under a FIXED name~~ — it was, until it was
+    named by its digest (`tokensPathFor`). The obvious implementation — a
+    `/assets/*` pattern — would have frozen the design system in a returning
+    reader's browser for a year, silently, and would do the same to the next
+    fixed-name file anybody writes there.
   */
   test("a pattern can never sweep assets/tokens.css into immutable", () => {
     const rendered = renderHeaders(
@@ -3509,14 +3528,17 @@ describe("every inline script the site renders is admitted by the CSP", () => {
    * So this reads the built markup and works backwards: every inline `<script>`
    * that actually renders must have its hash in the policy. A `src=` script is
    * skipped — those are covered by `'self'` — and an empty body is skipped
-   * because React emits none.
+   * because React emits none. So is `type="application/ld+json"`: a data block
+   * is never executed, so the CSP never evaluates it (`BreadcrumbData.tsx`
+   * says where in the HTML standard that is decided).
    *
    * The three routes are one per shape that carries a script: the shell's
    * service-worker registration is on all of them, `/search` adds the prefill,
    * and a card page adds the pitch redirect, which is the one whose body was
    * per-card until it was moved to `data-pitch-targets`.
    */
-  const INLINE = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g;
+  const INLINE =
+    /<script(?![^>]*\ssrc=)(?![^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/g;
 
   const policy = (): string => {
     const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
@@ -3583,5 +3605,90 @@ describe("the service worker may fetch the faces it routes", () => {
 
   test("img-src names the face host", () => {
     expect(directive("img-src")).toContain(FACE_HOST);
+  });
+});
+
+describe("a page's structured breadcrumb says what its visible one says", () => {
+  /*
+   * `BreadcrumbData` is fed from the same values as the `<nav>` beside it, and
+   * structured data that disagrees with the page is a documented reason for a
+   * search engine to ignore it. So for one page of each kind that carries a
+   * trail, this reads both out of the rendered HTML and compares them: every
+   * linked crumb's href and the JSON-LD `item` for the same position, and the
+   * current page's name.
+   */
+  const LD = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/;
+  const NAV =
+    /<nav class="of-lineage" aria-label="Breadcrumb">([\s\S]*?)<\/nav>/;
+
+  const kinds = ["/card/", "/sets/", "/cr/", "/spoilers/"] as const;
+  for (const prefix of kinds) {
+    test(`a ${prefix} page`, () => {
+      const resolved = RESOLVED.find(
+        (entry) =>
+          entry.route.startsWith(prefix) &&
+          NAV.test(entry.render([], undefined)),
+      );
+      expect(resolved).toBeDefined();
+      const html = resolved?.render([], undefined) ?? "";
+
+      const json = html.match(LD)?.[1];
+      expect(json).toBeDefined();
+      const list = JSON.parse(json ?? "{}") as {
+        readonly "@type": string;
+        readonly itemListElement: readonly {
+          readonly position: number;
+          readonly name: string;
+          readonly item?: string;
+        }[];
+      };
+      expect(list["@type"]).toBe("BreadcrumbList");
+
+      const nav = html.match(NAV)?.[1] ?? "";
+      const hrefs = [...nav.matchAll(/<a [^>]*href="([^"]+)"/g)].map(
+        (match) => match[1],
+      );
+      const linked = list.itemListElement.filter(
+        (element) => element.item !== undefined,
+      );
+      expect(linked.map((element) => element.item)).toEqual(
+        hrefs.map((href) => canonicalFor(href ?? "")),
+      );
+
+      /* The last crumb is the page itself: no URL, and positions run 1..n. */
+      const last = list.itemListElement.at(-1);
+      expect(last?.item).toBeUndefined();
+      expect(list.itemListElement.map((element) => element.position)).toEqual(
+        list.itemListElement.map((_, index) => index + 1),
+      );
+    });
+  }
+
+  test("a name cannot close the script it sits in", () => {
+    const html = renderToStaticMarkup(
+      createElement(BreadcrumbData, {
+        trail: [{ name: "Optfall", path: "/" }, { name: "</script><b>x" }],
+      }),
+    );
+    expect(html).not.toContain("</script><b>");
+    expect(html).toContain("\\u003c/script>");
+  });
+});
+
+describe("a card's link preview is the padded rendition", () => {
+  test("a card page names the 1200×630 JPEG, with its size and type", () => {
+    const card = RESOLVED.find((entry) => entry.route.startsWith("/card/"));
+    const html = card?.render([], undefined) ?? "";
+    expect(html).toMatch(
+      /<meta property="og:image" content="https:\/\/images\.optfall\.com\/og\/[A-Za-z0-9._-]+\.jpg"\/>/,
+    );
+    expect(html).toContain(
+      '<meta property="og:image:type" content="image/jpeg"/>',
+    );
+    expect(html).toContain('<meta property="og:image:width" content="1200"/>');
+    expect(html).toContain('<meta property="og:image:height" content="630"/>');
+    expect(html).toContain(
+      '<meta name="twitter:card" content="summary_large_image"/>',
+    );
   });
 });

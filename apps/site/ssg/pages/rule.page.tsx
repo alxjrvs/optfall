@@ -55,6 +55,7 @@ import {
   type RulePage,
   titleFor,
 } from "../../src/lib/rules";
+import { BreadcrumbData } from "../components/BreadcrumbData";
 import type { PageModule, PageResult, RouteContext } from "../types";
 import "./rule.css";
 
@@ -155,6 +156,23 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
               </span>
             </li>
           </ol>
+          {/*
+            An ancestor's name is its number and, where it has one, its title —
+            the `Citation` and the title span above, read as one phrase.
+          */}
+          <BreadcrumbData
+            trail={[
+              { name: "Optfall", path: "/" },
+              ...ancestors.map((ancestor) => ({
+                name:
+                  ancestor.title === null
+                    ? ancestor.id
+                    : `${ancestor.id} ${ancestor.title}`,
+                path: permalinkFor(ancestor),
+              })),
+              { name: section.id },
+            ]}
+          />
         </nav>
 
         <article>

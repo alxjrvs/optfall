@@ -19,7 +19,12 @@
 
 import { CardFace, FactChip, PitchBox } from "optfall-components/react";
 
-import { FACE_TIERS, faceUrl, placeholderUrl } from "../../src/lib/faces";
+import {
+  FACE_TIERS,
+  faceUrl,
+  placeholderUrl,
+  previewImageFor,
+} from "../../src/lib/faces";
 import { pitchColour } from "../../src/lib/pitchColour";
 import {
   longDate,
@@ -29,6 +34,7 @@ import {
   type SpoilerCard,
   type SpoilerPage,
 } from "../../src/lib/spoilers";
+import { BreadcrumbData } from "../components/BreadcrumbData";
 import { PrintedText } from "../components/PrintedText";
 import type { PageModule, PageResult, RouteContext } from "../types";
 import "../components/CardEntry.css";
@@ -78,7 +84,12 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
   return {
     title: `${spoiler.label} (spoiler) — Optfall`,
     description: `${spoiler.label}, revealed for ${set.name} (${set.id}). ${card.type_text}. Text can change before release.`,
-    image: face,
+    /* NO PREVIEW IMAGE FOR A SPOILER WITHOUT ART. It used to be the NO IMAGE
+       placeholder, which as a preview is a large grey card that looks like a
+       picture and carries no information — the case `PageResult.image` says to
+       omit — so it now takes the small `summary` card instead. */
+    image:
+      spoiler.faceKey === null ? undefined : previewImageFor(spoiler.faceKey),
     themeColour: pitchColour(spoiler.pitch),
     section: "spoilers",
     width: "wide",
@@ -96,6 +107,13 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
               <span aria-current="page">{spoiler.label}</span>
             </li>
           </ol>
+          <BreadcrumbData
+            trail={[
+              { name: "Optfall", path: "/" },
+              { name: "Spoilers", path: "/spoilers" },
+              { name: spoiler.label },
+            ]}
+          />
         </nav>
 
         <article className="of-card__page">
