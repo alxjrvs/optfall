@@ -25,6 +25,7 @@ import { facesOf, hrefForPrinting } from "../src/lib/printings";
 import { editionLabel, setFor, setName } from "../src/lib/sets";
 import { CardIndex } from "./components/CardIndex";
 import { canonicalFor, Document, uniqueStylesheets } from "./document";
+import { BreadcrumbData } from "./components/BreadcrumbData";
 import {
   HEADERS,
   headersFor,
@@ -3527,14 +3528,17 @@ describe("every inline script the site renders is admitted by the CSP", () => {
    * So this reads the built markup and works backwards: every inline `<script>`
    * that actually renders must have its hash in the policy. A `src=` script is
    * skipped — those are covered by `'self'` — and an empty body is skipped
-   * because React emits none.
+   * because React emits none. So is `type="application/ld+json"`: a data block
+   * is never executed, so the CSP never evaluates it (`BreadcrumbData.tsx`
+   * says where in the HTML standard that is decided).
    *
    * The three routes are one per shape that carries a script: the shell's
    * service-worker registration is on all of them, `/search` adds the prefill,
    * and a card page adds the pitch redirect, which is the one whose body was
    * per-card until it was moved to `data-pitch-targets`.
    */
-  const INLINE = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g;
+  const INLINE =
+    /<script(?![^>]*\ssrc=)(?![^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/g;
 
   const policy = (): string => {
     const wildcard = HEADERS.find((rule) => rule.pattern === "/*");
@@ -3601,5 +3605,72 @@ describe("the service worker may fetch the faces it routes", () => {
 
   test("img-src names the face host", () => {
     expect(directive("img-src")).toContain(FACE_HOST);
+  });
+});
+
+describe("a page's structured breadcrumb says what its visible one says", () => {
+  /*
+   * `BreadcrumbData` is fed from the same values as the `<nav>` beside it, and
+   * structured data that disagrees with the page is a documented reason for a
+   * search engine to ignore it. So for one page of each kind that carries a
+   * trail, this reads both out of the rendered HTML and compares them: every
+   * linked crumb's href and the JSON-LD `item` for the same position, and the
+   * current page's name.
+   */
+  const LD = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/;
+  const NAV =
+    /<nav class="of-lineage" aria-label="Breadcrumb">([\s\S]*?)<\/nav>/;
+
+  const kinds = ["/card/", "/sets/", "/cr/", "/spoilers/"] as const;
+  for (const prefix of kinds) {
+    test(`a ${prefix} page`, () => {
+      const resolved = RESOLVED.find(
+        (entry) =>
+          entry.route.startsWith(prefix) &&
+          NAV.test(entry.render([], undefined)),
+      );
+      expect(resolved).toBeDefined();
+      const html = resolved?.render([], undefined) ?? "";
+
+      const json = html.match(LD)?.[1];
+      expect(json).toBeDefined();
+      const list = JSON.parse(json ?? "{}") as {
+        readonly "@type": string;
+        readonly itemListElement: readonly {
+          readonly position: number;
+          readonly name: string;
+          readonly item?: string;
+        }[];
+      };
+      expect(list["@type"]).toBe("BreadcrumbList");
+
+      const nav = html.match(NAV)?.[1] ?? "";
+      const hrefs = [...nav.matchAll(/<a [^>]*href="([^"]+)"/g)].map(
+        (match) => match[1],
+      );
+      const linked = list.itemListElement.filter(
+        (element) => element.item !== undefined,
+      );
+      expect(linked.map((element) => element.item)).toEqual(
+        hrefs.map((href) => canonicalFor(href ?? "")),
+      );
+
+      /* The last crumb is the page itself: no URL, and positions run 1..n. */
+      const last = list.itemListElement.at(-1);
+      expect(last?.item).toBeUndefined();
+      expect(list.itemListElement.map((element) => element.position)).toEqual(
+        list.itemListElement.map((_, index) => index + 1),
+      );
+    });
+  }
+
+  test("a name cannot close the script it sits in", () => {
+    const html = renderToStaticMarkup(
+      createElement(BreadcrumbData, {
+        trail: [{ name: "Optfall", path: "/" }, { name: "</script><b>x" }],
+      }),
+    );
+    expect(html).not.toContain("</script><b>");
+    expect(html).toContain("\\u003c/script>");
   });
 });

@@ -29,6 +29,7 @@ import {
   type SpoilerCard,
   type SpoilerPage,
 } from "../../src/lib/spoilers";
+import { BreadcrumbData } from "../components/BreadcrumbData";
 import { PrintedText } from "../components/PrintedText";
 import type { PageModule, PageResult, RouteContext } from "../types";
 import "../components/CardEntry.css";
@@ -96,6 +97,13 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
               <span aria-current="page">{spoiler.label}</span>
             </li>
           </ol>
+          <BreadcrumbData
+            trail={[
+              { name: "Optfall", path: "/" },
+              { name: "Spoilers", path: "/spoilers" },
+              { name: spoiler.label },
+            ]}
+          />
         </nav>
 
         <article className="of-card__page">

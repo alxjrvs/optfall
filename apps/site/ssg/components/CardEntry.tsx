@@ -84,6 +84,7 @@ import {
   raritySlug,
   setName,
 } from "../../src/lib/sets";
+import { BreadcrumbData } from "./BreadcrumbData";
 import { LegalitySection } from "./card/LegalitySection";
 import { PrintingsSection } from "./card/PrintingsSection";
 import { RelatedCards } from "./card/RelatedCards";
@@ -1115,6 +1116,20 @@ export function CardEntry({ page, selected = 0 }: CardEntryProps) {
             </span>
           </li>
         </ol>
+        {/*
+          THE SAME TRAIL, FOR A CRAWLER, FROM THE SAME VALUES. `page.label` is
+          the name plus the pitch qualifier exactly where the crumb above draws
+          a `PitchBox`, so the words say what the mark shows.
+        */}
+        <BreadcrumbData
+          trail={[
+            { name: "Optfall", path: "/" },
+            shownCode === null
+              ? { name: "Cards", path: "/search" }
+              : { name: shownCode.setName, path: shownCode.href },
+            { name: page.disambiguated ? page.label : card.name },
+          ]}
+        />
       </nav>
 
       {/*

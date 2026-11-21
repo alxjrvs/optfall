@@ -34,6 +34,7 @@ import { editionLabel, setFor } from "../../src/lib/sets";
 import type { CardIndexEntry } from "../components/CardIndex";
 import { Island } from "../Island";
 import { CardList } from "../islands/CardList";
+import { BreadcrumbData } from "../components/BreadcrumbData";
 import type { PageModule, PageResult, RouteContext } from "../types";
 import "./set.css";
 
@@ -392,6 +393,13 @@ function page({ props }: RouteContext<Params, Props>): PageResult {
               <span aria-current="page">{set.name}</span>
             </li>
           </ol>
+          <BreadcrumbData
+            trail={[
+              { name: "Optfall", path: "/" },
+              { name: "Sets", path: "/sets" },
+              { name: set.name },
+            ]}
+          />
         </nav>
 
         {/*
