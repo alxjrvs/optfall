@@ -31,7 +31,7 @@ import {
   REDIRECTS,
   renderHeaders,
   renderRedirects,
-  TOKENS_PATH,
+  tokensPathFor,
 } from "./hostConfig";
 import { outputPathFor } from "./outputPath";
 import { CARD_NEWEST } from "./searchIndexes";
@@ -3043,11 +3043,28 @@ describe("_headers and _redirects say what the host is told", () => {
           .join(".*")}$`,
       ).test(path);
 
+    /* `tokens.css` WAS THE FIXED NAME THIS GUARDED, and it is gone: the token
+       stylesheet is named by its digest now. The fixed name stays here as the
+       canary, because a rule that would have pinned it is a rule that pins
+       whatever fixed-name file somebody adds next. */
     const pinned = immutable
-      .filter((rule) => covers(rule.pattern, `/${TOKENS_PATH}`))
+      .filter((rule) => covers(rule.pattern, "/assets/tokens.css"))
       .map((rule) => rule.pattern);
 
     expect(pinned).toEqual([]);
+  });
+
+  test("the token stylesheet is named by its bytes", () => {
+    /*
+     * What earns it a place on the immutable list. Same bytes, same name — so
+     * a deploy that changes no token costs a returning reader nothing. Any
+     * change, however small, a new name — so a deploy that does change one is
+     * never shadowed by a year-old copy.
+     */
+    const a = tokensPathFor(":root{--of-x:1px}");
+    expect(a).toBe(tokensPathFor(":root{--of-x:1px}"));
+    expect(a).not.toBe(tokensPathFor(":root{--of-x:2px}"));
+    expect(a).toMatch(/^assets\/tokens-[0-9a-f]{8}\.css$/);
   });
 
   test("pages keep revalidating", () => {
@@ -3142,11 +3159,12 @@ describe("_headers and _redirects say what the host is told", () => {
   });
 
   /*
-    THE EXCLUSION THIS WHOLE ARRANGEMENT EXISTS FOR. `assets/tokens.css` is
-    generated from `packages/theme` under a FIXED name, so it is the one file in
-    that directory whose bytes change while its URL does not. The obvious
-    implementation — a `/assets/*` pattern — would freeze the design system in a
-    returning reader's browser for a year, and it would do it silently.
+    THE EXCLUSION THIS WHOLE ARRANGEMENT EXISTS FOR. ~~`assets/tokens.css` is
+    generated from `packages/theme` under a FIXED name~~ — it was, until it was
+    named by its digest (`tokensPathFor`). The obvious implementation — a
+    `/assets/*` pattern — would have frozen the design system in a returning
+    reader's browser for a year, silently, and would do the same to the next
+    fixed-name file anybody writes there.
   */
   test("a pattern can never sweep assets/tokens.css into immutable", () => {
     const rendered = renderHeaders(

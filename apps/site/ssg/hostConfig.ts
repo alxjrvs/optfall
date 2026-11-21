@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { INLINE_SCRIPT_HASHES } from "./inlineScripts";
 
 /**
@@ -184,16 +186,31 @@ const STRICT_TRANSPORT_SECURITY = "max-age=31536000; includeSubDomains";
 const IMMUTABLE = "public, max-age=31536000, immutable";
 
 /**
- * The one file the build writes into `/assets/` under a name it reuses.
+ * Where the token stylesheet is served: under a digest of its own bytes.
  *
- * IT LIVES HERE BECAUSE IT IS A CONSTRAINT ON THE RULES BELOW, not because
- * this module writes it — `build.ts` does, from `packages/theme`'s generator,
- * and imports the path back from here. A `/assets/*` cache rule once claimed
- * that every file in that directory carried its own digest; this one does not,
- * and naming it beside the rules is what lets `ssg.test.ts` assert that no
- * rule covers it without importing `build.ts`, which runs the build on import.
+ * ~~The one file the build writes into `/assets/` under a name it reuses.~~
+ * **IT NO LONGER REUSES ONE.** It was `assets/tokens.css`, a fixed name, which
+ * is why no cache rule could ever cover it and why it was the one stylesheet
+ * on every page that a reader not yet under the service worker revalidated on
+ * every navigation — a render-blocking round trip for bytes that change only
+ * when a design token does. (The worker precaches it, so a returning reader
+ * was already spared the trip.) Naming it by its digest, the way
+ * `searchIndexes.ts` names the indexes, makes it the same kind of file as
+ * everything else in `/assets/`, and `build.ts` adds it to the immutable list
+ * on the same footing as Vite's output.
+ *
+ * IT STILL LIVES HERE, BECAUSE IT IS STILL A CONSTRAINT ON THE RULES BELOW:
+ * a rule may promise immutability only over a name that changes when the bytes
+ * do, and this function is what makes that true of this file. `ssg.test.ts`
+ * asserts it without importing `build.ts`, which runs the build on import.
+ *
+ * Eight hex characters, for the reason `searchIndexes.ts` gives for its own:
+ * this is a cache key, not a signature.
  */
-export const TOKENS_PATH = "assets/tokens.css";
+export function tokensPathFor(css: string): string {
+  const digest = createHash("sha256").update(css).digest("hex").slice(0, 8);
+  return `assets/tokens-${digest}.css`;
+}
 
 export const HEADERS: readonly HeaderRule[] = [
   {
@@ -217,7 +234,9 @@ export const HEADERS: readonly HeaderRule[] = [
     that directory itself, under a FIXED name — `TOKENS_PATH =
     "assets/tokens.css"`, generated from `packages/theme` — so a rule over
     `/assets/*` promised a year of immutability for the one stylesheet in the
-    build that changes whenever a design token does.
+    build that changes whenever a design token does. (Since then that file has
+    been named by its digest instead — see `tokensPathFor` — and `build.ts`
+    lists it among the immutable files. Neither change revives the pattern.)
 
     `immutable` IS WHY THIS WAS WORTH REVERTING RATHER THAN SHORTENING. It
     tells a browser not to revalidate even when the reader presses reload, so
@@ -298,10 +317,12 @@ export function headersFor(options: {
     ONE RULE PER FILE, RATHER THAN ONE PATTERN OVER `assets/`.
 
     The pattern is the tempting shape and it is wrong here for a reason this
-    file already knows: `assets/tokens.css` sits in that directory and is NOT
-    hashed — it is generated from `packages/theme` under a fixed name — so
-    `/assets/*` would promise a year of immutability for a stylesheet that
-    changes whenever a token does, in every returning reader's browser.
+    file already knows: ~~`assets/tokens.css` sits in that directory and is NOT
+    hashed~~ (it is hashed now — see `tokensPathFor` — but the argument does
+    not depend on that file): a pattern promises a year of immutability for
+    whatever lands in the directory NEXT, hashed or not, in every returning
+    reader's browser. A list of files cannot be wrong about a file it does not
+    name.
 
     Naming each file means the header is derived from what was actually
     emitted. Cloudflare caps this file at 100 rules; the build emits a handful

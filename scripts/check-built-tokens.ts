@@ -13,7 +13,8 @@
  * Astro inlined the whole generated stylesheet into every page with
  * `<style is:global set:html={tokens}>`, so "the tokens are defined" and "the
  * tokens reached this page" were one string to grep for. The generator writes
- * `assets/tokens.css` once and links it — 18 kB against 12,776 pages was 220 MB
+ * the sheet once (`assets/tokens-<digest>.css`, named by its bytes since
+ * 2026-11) and links it — 18 kB against 12,776 pages was 220 MB
  * of one repeated stylesheet, and it could not be cached separately from the
  * document it lived in.
  *
@@ -141,7 +142,7 @@ if (!verbose && failures > MAX_REPORTED) {
 if (failures > 0) {
   console.log("");
   console.log(
-    "The generator writes assets/tokens.css from themeStylesheet() and links it from",
+    "The generator writes assets/tokens-<digest>.css from themeStylesheet() and links it from",
   );
   console.log(
     "every page — see ssg/build.ts and ssg/document.tsx. Keep this check either way.",

@@ -14,7 +14,8 @@
  *      directory is one of them deleting the other's output.
  *   2. `vite build`: the client bundle, whose only real product is a
  *      content-hashed stylesheet collecting all fifteen component sheets.
- *   3. Write the token stylesheet, generated from `packages/theme`.
+ *   3. Write the token stylesheet, generated from `packages/theme` and
+ *      named by its digest.
  *   4. Read `dist/.vite/manifest.json` for the emitted CSS urls.
  *   5. Render every route.
  *   6. Delete the manifest, which is a build artefact and not a page.
@@ -47,7 +48,7 @@ import {
   headersFor,
   renderHeaders,
   renderRedirects,
-  TOKENS_PATH,
+  tokensPathFor,
 } from "./hostConfig";
 /* The two indexes this build hashes itself, named so `_headers` can cache
    them forever alongside Vite's own hashed output. */
@@ -105,13 +106,14 @@ const VITE_BIN = new URL("../node_modules/.bin/vite", import.meta.url).pathname;
  * where its output becomes a file.
  */
 /*
-  DECLARED IN `hostConfig.ts` RATHER THAN HERE, AND IMPORTED BACK. It is the
-  one file this build writes into `/assets/` under a fixed name, which makes it
-  a fact the HEADER RULES have to respect — a cache rule that covers it
-  promises immutability for a stylesheet that changes whenever a design token
-  does, which is exactly what shipped once. Keeping the constant beside those
-  rules is what lets a test assert the relationship without importing this
-  module, which runs the whole build on import.
+  ITS NAME IS DERIVED IN `hostConfig.ts` RATHER THAN HERE, AND IMPORTED BACK.
+  ~~It is the one file this build writes into `/assets/` under a fixed name~~
+  — it was, and a cache rule covering it once promised immutability for a
+  stylesheet that changed whenever a design token did. It is named by a digest
+  of its bytes now (`tokensPathFor`), which is what lets it join the immutable
+  list. Keeping that function beside the header rules is what lets a test
+  assert the relationship without importing this module, which runs the whole
+  build on import.
 */
 
 interface ManifestEntry {
@@ -399,7 +401,13 @@ async function main(): Promise<void> {
     throw new Error(`vite build failed with exit code ${vite.exitCode}`);
   }
 
-  await writeFile(join(OUT_DIR, TOKENS_PATH), themeStylesheet(), "utf-8");
+  /* NAMED BY ITS DIGEST, SO IT CAN BE CACHED LIKE EVERYTHING ELSE HERE —
+     see `tokensPathFor`. Computed once and written once, so the path the
+     pages link and the bytes on disk cannot come from two calls that
+     disagree. */
+  const tokensCss = themeStylesheet();
+  const tokensPath = tokensPathFor(tokensCss);
+  await writeFile(join(OUT_DIR, tokensPath), tokensCss, "utf-8");
 
   /*
    * The non-page files, written before the pages so a failure to derive one
@@ -447,14 +455,15 @@ async function main(): Promise<void> {
    * It used to be written above, beside `_redirects`, which was fine while it
    * carried nothing but two constant rules. It carries the cache policy now,
    * and that policy is a list of FILES rather than a pattern — `hostConfig.ts`
-   * says why at length, the short version being that `assets/tokens.css` is
-   * generated under a fixed name and a `/assets/*` rule would freeze the design
-   * system in a returning reader's browser for a year.
+   * says why at length, the short version being that a `/assets/*` rule
+   * promises a year for whatever lands in that directory next. (It used to be
+   * that `assets/tokens.css` was generated there under a fixed name; it is
+   * named by its digest now and listed below like any other hashed file.)
    *
    * THE NAMES COME FROM VITE'S MANIFEST, NOT FROM THEIR SHAPE. Everything in
    * `assets.styles` and `assets.islandChunks` was emitted by Vite with a
-   * content hash in its name, and the two search indexes are hashed by this
-   * build. That is the whole set: proven by construction rather than inferred
+   * content hash in its name, and the token stylesheet and the two search
+   * indexes are hashed by this build. That is the whole set: proven by construction rather than inferred
    * from the filename, which is a test that fails in both directions — see the
    * note above `IMMUTABLE`.
    *
@@ -476,6 +485,7 @@ async function main(): Promise<void> {
     ...new Set([
       ...assets.styles.map((href) => `/${href}`),
       ...assets.islandChunks.map((chunk) => `/${chunk}`),
+      `/${tokensPath}`,
       CARD_INDEX.url,
       RULES_INDEX.url,
     ]),
@@ -487,7 +497,7 @@ async function main(): Promise<void> {
   );
   if (preview) console.log("[ssg] preview build — _headers carries noindex");
   const styles: readonly string[] = [
-    `/${TOKENS_PATH}`,
+    `/${tokensPath}`,
     ...assets.styles.map((href) => `/${href}`),
   ];
   const islandScript =
